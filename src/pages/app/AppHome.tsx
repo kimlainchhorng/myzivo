@@ -61,7 +61,7 @@ const savedPlaceIconMap: Record<string, LucideIcon> = {
 const homeTabs = [
   { id: "rides", label: "Rides", icon: null, image: zivoRideIcon },
   { id: "eats", label: "Eats", icon: null, image: zivoEatsIcon },
-  { id: "flights", label: "Flights", icon: Plane, image: null },
+  { id: "flights", label: "Flights", icon: null, image: zivoFlightsIcon },
   { id: "hotels", label: "Hotels", icon: Hotel, image: null },
 ] as const;
 
