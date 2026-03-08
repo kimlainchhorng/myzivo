@@ -344,7 +344,11 @@ const AppHome = () => {
                     </div>
                   )}
                   <div className="w-[72px] h-[72px] rounded-2xl bg-muted/40 border border-border/30 flex items-center justify-center">
-                    <s.icon className="w-8 h-8 text-foreground" />
+                    {s.image ? (
+                      <img src={s.image} alt={s.label} className="w-10 h-10 object-contain" />
+                    ) : s.icon ? (
+                      <s.icon className="w-8 h-8 text-foreground" />
+                    ) : null}
                   </div>
                   <span className="text-xs font-medium text-foreground text-center leading-tight">{s.label}</span>
                 </motion.button>
