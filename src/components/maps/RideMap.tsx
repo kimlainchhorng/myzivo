@@ -224,6 +224,8 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
     [onMapReady]
   );
 
+  // Forward onCenterChanged to NativeGoogleMap via passthrough
+
   if (failed) {
     return (
       <MapFallback
