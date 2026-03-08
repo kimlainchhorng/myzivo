@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
         .find((code): code is string => Boolean(code));
 
       if (detectedAirportCode) {
-        const airportCodeQueries = [`${detectedAirportCode} arrivals`, `${detectedAirportCode} departures`, `${detectedAirportCode} pickup zone`];
+        const airportCodeQueries = [`${detectedAirportCode} terminal`, `${detectedAirportCode} arrivals`, `arrivals ${detectedAirportCode}`, `${detectedAirportCode} departures`, `departures ${detectedAirportCode}`, `${detectedAirportCode} pickup zone`];
         const airportCodePredictionGroups = await Promise.all(airportCodeQueries.map(fetchPredictions));
         mergedPredictions = [...mergedPredictions, ...airportCodePredictionGroups.flat()];
       }
