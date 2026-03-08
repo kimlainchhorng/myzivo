@@ -391,8 +391,8 @@ function spawnAmbientCars(
       map,
       icon: {
         url: "/vehicles/map-car-icon.png",
-        scaledSize: new google.maps.Size(32, 18),
-        anchor: new google.maps.Point(16, 9),
+        scaledSize: new google.maps.Size(44, 24),
+        anchor: new google.maps.Point(22, 12),
       },
       clickable: false,
       zIndex: 10,
