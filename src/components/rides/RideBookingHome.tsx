@@ -1324,40 +1324,46 @@ export default function RideBookingHome() {
               </div>
 
               {/* Action buttons row */}
-              <div className="flex gap-2.5 mt-4 pb-1 flex-wrap">
+              <div className="flex gap-2 mt-5 pb-1 flex-wrap">
                 <button
                   onClick={handleAddStop}
                   disabled={stops.length >= MAX_STOPS}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/15 border border-border/20 text-xs font-bold text-foreground whitespace-nowrap hover:bg-primary/10 hover:border-primary/20 active:scale-95 transition-all duration-200",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/30 text-[13px] font-semibold text-foreground whitespace-nowrap hover:border-primary/40 hover:shadow-sm active:scale-95 transition-all duration-200",
                     stops.length >= MAX_STOPS && "opacity-40 pointer-events-none"
                   )}
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <div className="w-5 h-5 rounded-full bg-muted/30 flex items-center justify-center">
+                    <Plus className="w-3 h-3" />
+                  </div>
                   Add Stop
                 </button>
                 <button
                   onClick={() => { setShowSchedule(!showSchedule); setShowPickupOther(false); }}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold whitespace-nowrap active:scale-95 transition-all duration-200",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-full border text-[13px] font-semibold whitespace-nowrap active:scale-95 transition-all duration-200",
                     showSchedule
-                      ? "bg-primary/15 border-primary/30 text-primary"
-                      : "bg-muted/15 border-border/20 text-foreground hover:bg-primary/10 hover:border-primary/20"
+                      ? "bg-primary/10 border-primary/40 text-primary shadow-sm shadow-primary/10"
+                      : "bg-card border-border/30 text-foreground hover:border-primary/40 hover:shadow-sm"
                   )}
                 >
-                  <CalendarClock className="w-3.5 h-3.5" />
+                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center", showSchedule ? "bg-primary/20" : "bg-muted/30")}>
+                    <CalendarClock className="w-3 h-3" />
+                  </div>
                   {scheduledDate ? `${scheduledDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${scheduleHour % 12 || 12}:${scheduleMinute.toString().padStart(2, "0")} ${scheduleHour >= 12 ? "PM" : "AM"}` : "Schedule"}
                 </button>
                 <button
                   onClick={() => { setShowPickupOther(!showPickupOther); setShowSchedule(false); }}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold whitespace-nowrap active:scale-95 transition-all duration-200",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-full border text-[13px] font-semibold whitespace-nowrap active:scale-95 transition-all duration-200",
                     showPickupOther
-                      ? "bg-primary/15 border-primary/30 text-primary"
-                      : "bg-muted/15 border-border/20 text-foreground hover:bg-primary/10 hover:border-primary/20"
+                      ? "bg-primary/10 border-primary/40 text-primary shadow-sm shadow-primary/10"
+                      : "bg-card border-border/30 text-foreground hover:border-primary/40 hover:shadow-sm"
                   )}
                 >
-                  <Users className="w-3.5 h-3.5" />
+                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center", showPickupOther ? "bg-primary/20" : "bg-muted/30")}>
+                    <Users className="w-3 h-3" />
+                  </div>
                   {otherName ? otherName.split(" ")[0] : "Pick up other"}
                 </button>
               </div>
