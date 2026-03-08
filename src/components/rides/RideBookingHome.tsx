@@ -1246,14 +1246,12 @@ export default function RideBookingHome() {
                     <div className="mt-3 rounded-2xl bg-muted/15 border border-border/30 p-3 space-y-3">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-foreground">Schedule ride</p>
-                        {scheduledDate && (
-                          <button
-                            onClick={() => { setScheduledDate(null); setShowSchedule(false); }}
-                            className="text-[10px] font-semibold text-destructive"
-                          >
-                            Clear
-                          </button>
-                        )}
+                        <button
+                          onClick={() => setShowSchedule(false)}
+                          className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5 text-muted-foreground" />
+                        </button>
                       </div>
                       {/* Date chips — today + next 6 days */}
                       <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
