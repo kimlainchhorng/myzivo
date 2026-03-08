@@ -1326,7 +1326,7 @@ export default function RideBookingHome() {
                 >
                   <p className="text-sm text-muted-foreground mb-4">Browse available rides</p>
                   <Button
-                    className="w-full h-12 rounded-2xl text-base font-bold bg-foreground text-background"
+                    className="w-full h-12 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90"
                     onClick={() => setViewStep("ride-options")}
                   >
                     See ride options
