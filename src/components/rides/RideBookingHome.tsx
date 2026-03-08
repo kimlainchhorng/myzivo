@@ -1576,69 +1576,17 @@ export default function RideBookingHome() {
               </div>
             )}
 
-            {/* Payment Section — Stripe Elements or Request button */}
-            {clientSecret ? (
-              <div className="rounded-2xl bg-card border border-border/20 p-4 mb-3">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Payment</p>
-                <Elements
-                  stripe={getStripe()}
-                  options={{
-                    clientSecret,
-                    appearance: {
-                      theme: "stripe",
-                      variables: {
-                        colorPrimary: "#16a34a",
-                        borderRadius: "12px",
-                      },
-                    },
-                  }}
-                >
-                  <StripePaymentForm
-                    onSuccess={handlePaymentSuccess}
-                    isSubmitting={isSubmitting}
-                    price={currentPrice}
-                    vehicleName={currentVehicle.name}
-                  />
-                </Elements>
-              </div>
-            ) : (
-              <>
-                {/* Pre-payment: show request button to create PI */}
-                <div className="rounded-2xl bg-card border border-border/20 p-4 mb-3">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Payment</p>
-                  <div className="flex items-center gap-3">
-                    <CreditCard className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-foreground flex-1">Card payment via Stripe</span>
-                    <Shield className="w-4 h-4 text-primary" />
-                  </div>
-                </div>
-
-                <Button
-                  className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
-                  onClick={handleRequestRide}
-                  disabled={isSubmitting}
-                >
-                  <Zap className="w-5 h-5" />
-                  {isSubmitting ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                      Setting up payment...
-                    </span>
-                  ) : (
-                    `Pay & Request · $${currentPrice.toFixed(2)}`
-                  )}
-                </Button>
-                <p className="text-[10px] text-muted-foreground text-center mt-2">
-                  Your card will be pre-authorized. Final charge after ride completion.
-                </p>
-              </>
-            )}
-
-            {paymentStep === "failed" && (
-              <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 mt-2 text-center">
-                <p className="text-sm text-destructive font-medium">Payment setup failed. Please try again.</p>
-              </div>
-            )}
+            {/* Payment Section — Saved cards + Add card + Apple Pay */}
+            <RidePaymentSection
+              price={currentPrice}
+              vehicleName={currentVehicle.name}
+              isSubmitting={isSubmitting}
+              onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
+              onAuthorizeWithNewCard={() => handleRequestRide()}
+              clientSecret={clientSecret}
+              onPaymentSuccess={handlePaymentSuccess}
+              paymentFailed={paymentStep === "failed"}
+            />
           </div>
         </div>
       )}
