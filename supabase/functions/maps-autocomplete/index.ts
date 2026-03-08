@@ -119,6 +119,11 @@ Deno.serve(async (req) => {
           `${detectedCode} pickup`,
           `${detectedCode} ground transportation`,
           `${detectedCode} baggage claim`,
+          `${detectedCode} American Airlines`,
+          `${detectedCode} Delta`,
+          `${detectedCode} United Airlines`,
+          `${detectedCode} Southwest Airlines`,
+          `${detectedCode} JetBlue`,
         ];
         const phase2Groups = await Promise.all(codeQueries.map(fetchPredictions));
         mergedPredictions = [...mergedPredictions, ...phase2Groups.flat()];
