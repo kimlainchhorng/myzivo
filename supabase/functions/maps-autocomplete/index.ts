@@ -46,10 +46,11 @@ Deno.serve(async (req) => {
     const fetchPredictions = async (query: string) => {
       let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
         `?input=${encodeURIComponent(query)}` +
+        `&components=country:us` +
         `&key=${encodeURIComponent(key)}`;
 
       if (proximity?.lat && proximity?.lng) {
-        url += `&location=${proximity.lat},${proximity.lng}&radius=80000`;
+        url += `&location=${proximity.lat},${proximity.lng}&radius=80000&strictbounds=true`;
       }
 
       const res = await fetch(url);
