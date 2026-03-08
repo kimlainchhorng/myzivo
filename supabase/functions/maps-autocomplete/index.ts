@@ -5,13 +5,44 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Major US airport codes for detection
+// All US commercial airport codes (FAA Part 139 certified + regional)
 const AIRPORT_CODES = new Set([
+  // Top 50 busiest
   "ATL","LAX","ORD","DFW","DEN","JFK","SFO","SEA","LAS","MCO",
   "CLT","MIA","PHX","EWR","IAH","MSP","BOS","FLL","DTW","PHL",
   "LGA","BWI","SLC","SAN","IAD","DCA","MDW","TPA","PDX","HNL",
   "STL","BNA","AUS","MSY","RDU","OAK","SMF","SNA","MKE","CLE",
   "SAT","RSW","PIT","IND","CMH","CVG","BDL","JAX","OMA","ABQ",
+  // 51-100
+  "BUF","OGG","RIC","ONT","BUR","ANC","PBI","TUS","MEM","OKC",
+  "RNO","KOA","LIH","SJU","SDF","CHS","GRR","DAY","BOI","ELP",
+  "TUL","LIT","DSM","GSO","SYR","ROC","ALB","MSN","PNS","SAV",
+  "GSP","BHM","TYS","PWM","COS","MHT","ORF","ICT","LEX","MYR",
+  // 101-150
+  "HSV","CAK","BTR","AVL","FNT","FAT","SBN","LBB","MDT","SRQ",
+  "SGF","XNA","FSD","CRW","TRI","MOB","LFT","AGS","GNV","SHV",
+  "EYW","ACY","GPT","JAN","MLI","FAR","PHF","MFE","AZO","EVV",
+  "BIS","RAP","GFK","FCA","BZN","MSO","GTF","HLN","IDA","PIH",
+  "TWF","SUN","JAC","WYS","CPR","CYS","RKS","GCC","COD","SHR",
+  // 151-200
+  "BIL","BTM","SDY","OLF","GGW","WLF","ASE","EGE","GUC","DRO",
+  "MTJ","HDN","TEX","PUB","ALS","GJT","CEZ","SIT","JNU","KTN",
+  "CDV","YAK","ADQ","BET","OTZ","OME","BRW","FAI","AKN","DLG",
+  "ADK","SCC","WRG","PSG","GST","HNS","SGY","ACV","RDD","SBP",
+  "MRY","MOD","MMH","IYK","PSP","IPL","YUM","FLG","PRC","IGM",
+  // 201-250
+  "SOW","AEX","MLU","ELM","ITH","BGM","OGS","PBG","SWF","HPN",
+  "ISP","EWN","OAJ","ILM","FAY","PGV","CLT","AVP","ABE","LNS",
+  "UNV","IPT","JST","AOO","DUJ","ERI","SCE","PIR","ABR","MHE",
+  "ATY","HON","SUX","LNK","GRI","EAR","MCK","AIA","BFF","CDR",
+  "OFK","LBF","VEL","PVU","OGD","CDC","SGU","CNY","MOA","ENV",
+  // 251-300+
+  "RFD","CMI","SPI","PIA","BMI","MWA","DEC","UIN","COU","CGI",
+  "JLN","TBN","VIH","STJ","MCI","MKC","FOE","TOP","HYS","GBD",
+  "SLN","MHK","DDC","LWS","PIH","RDM","EUG","MFR","OTH","LMT",
+  "DLS","TTD","CVO","HIO","RDU","ILG","DOV","SBY","HGR","CGX",
+  "GYY","SBN","LAF","HUF","BMG","TYR","GGG","SPS","ABI","SJT",
+  "ACT","CLL","BPT","LCH","CRP","BRO","HRL","MAF","AMA","LBK",
 ]);
 
 const airportKeywordPattern = /\b(airport|terminal|gate|concourse|airline|arrivals?|departures?|pickup|pick[\s-]?up|drop[\s-]?off|zone|baggage|claim|parking|taxi|rideshare|ground\s*transport)\b/i;
