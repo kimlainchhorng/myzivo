@@ -1315,23 +1315,35 @@ export default function RideBookingHome() {
           <div className="flex-1 overflow-hidden flex flex-col">
             {/* Route info */}
             <div className="px-5 pt-3 pb-2 shrink-0">
-              <div className="flex items-start gap-3 mb-2">
-                <div className="flex flex-col items-center mt-0.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-primary/20" />
-                  <div className="w-px flex-1 min-h-[20px] border-l-[2px] border-dashed border-muted-foreground/30 my-0.5" />
-                  <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
-                </div>
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <div>
-                    <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Pickup</p>
-                    <p className="text-sm font-semibold text-foreground truncate leading-tight">{pickup?.address || pickupDisplay}</p>
+                <div className="flex items-start gap-3 mb-2">
+                  <div className="flex flex-col items-center mt-0.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-primary/20" />
+                    {stops.map((stop) => (
+                      <div key={stop.id} className="flex flex-col items-center">
+                        <div className="w-px flex-1 min-h-[14px] border-l-[2px] border-dashed border-muted-foreground/30 my-0.5" />
+                        <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                      </div>
+                    ))}
+                    <div className="w-px flex-1 min-h-[20px] border-l-[2px] border-dashed border-muted-foreground/30 my-0.5" />
+                    <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
                   </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Destination</p>
-                    <p className="text-sm font-semibold text-foreground truncate leading-tight">{destination?.address || destinationDisplay}</p>
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <div>
+                      <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Pickup</p>
+                      <p className="text-sm font-semibold text-foreground truncate leading-tight">{pickup?.address || pickupDisplay}</p>
+                    </div>
+                    {stops.map((stop, idx) => (
+                      <div key={stop.id}>
+                        <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Stop {idx + 1}</p>
+                        <p className="text-xs font-medium text-foreground truncate leading-tight">{stop.place?.address || stop.display || "—"}</p>
+                      </div>
+                    ))}
+                    <div>
+                      <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Destination</p>
+                      <p className="text-sm font-semibold text-foreground truncate leading-tight">{destination?.address || destinationDisplay}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
               {routeData && (
                 <div className="flex items-center gap-1.5">
