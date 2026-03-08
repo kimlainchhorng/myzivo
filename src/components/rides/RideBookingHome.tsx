@@ -923,6 +923,7 @@ export default function RideBookingHome() {
   /* ─── Reset state ─── */
   const handleReset = () => {
     if (trackingIntervalRef.current) clearInterval(trackingIntervalRef.current);
+    pickupManuallySet.current = false;
     setViewStep("home");
     setPickup(null);
     setDestination(null);
