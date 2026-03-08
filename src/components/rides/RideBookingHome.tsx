@@ -752,6 +752,11 @@ export default function RideBookingHome() {
   /* ─── Fetch route ─── */
   const fetchRoute = async (from: PlaceData, to: PlaceData) => {
     if (!from.lat || !to.lat) return;
+    // Safety net: block same-location routes
+    if (isSameLocation(from, to)) {
+      toast.error("Pickup and destination can't be the same location");
+      return;
+    }
     setIsLoadingRoute(true);
     setRouteData(null);
 
