@@ -374,7 +374,7 @@ function spawnAmbientCars(
     // Keep trying until car is far enough from all pins
     do {
       const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.8;
-      const dist = 0.012 + Math.random() * 0.018;
+      const dist = 0.02 + Math.random() * 0.025;
       lat = center.lat + Math.sin(angle) * dist;
       lng = center.lng + Math.cos(angle) * dist * 1.3;
       attempts++;
