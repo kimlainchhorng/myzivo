@@ -23,10 +23,10 @@ interface ReorderItem {
 }
 
 const typeConfig = {
-  ride: { icon: Car, color: "text-emerald-500", bg: "bg-emerald-500/10", accent: "emerald" },
-  food: { icon: UtensilsCrossed, color: "text-orange-500", bg: "bg-orange-500/10", accent: "orange" },
-  flight: { icon: Plane, color: "text-sky-500", bg: "bg-sky-500/10", accent: "sky" },
-  hotel: { icon: Hotel, color: "text-amber-500", bg: "bg-amber-500/10", accent: "amber" },
+  ride: { icon: Car, color: "text-emerald-500", bg: "bg-emerald-500/10", accent: "emerald", vehicleImage: "/vehicles/economy-car-v2.png" },
+  food: { icon: UtensilsCrossed, color: "text-orange-500", bg: "bg-orange-500/10", accent: "orange", vehicleImage: null },
+  flight: { icon: Plane, color: "text-sky-500", bg: "bg-sky-500/10", accent: "sky", vehicleImage: null },
+  hotel: { icon: Hotel, color: "text-amber-500", bg: "bg-amber-500/10", accent: "amber", vehicleImage: null },
 };
 
 // Demo data
