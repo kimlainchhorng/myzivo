@@ -228,7 +228,12 @@ export default function RideOptionsSheet({
                       5+
                     </span>
                   )}
-                  <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                  {ride.id === "black-lane" && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-[10px] font-bold">
+                      <Crown className="w-3 h-3" />
+                      VIP
+                    </span>
+                  )}
                     <Users className="h-3 w-3" />
                     {ride.seats}
                   </span>
