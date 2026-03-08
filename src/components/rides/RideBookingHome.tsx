@@ -1063,10 +1063,9 @@ export default function RideBookingHome() {
             </div>
 
 
-          {/* Bottom sheet — Set your destination */}
-          <div
-            className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
-            style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
+            <div
+              className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
+            >
           >
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-2">
