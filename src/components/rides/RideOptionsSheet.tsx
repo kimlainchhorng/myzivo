@@ -266,6 +266,18 @@ export default function RideOptionsSheet({
                       ELITE
                     </span>
                   )}
+                  {ride.id === "pet" && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[10px] font-bold">
+                      <PawPrint className="w-3 h-3" />
+                      PET
+                    </span>
+                  )}
+                  {ride.id === "wheelchair" && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
+                      <Accessibility className="w-3 h-3" />
+                      WAV
+                    </span>
+                  )}
                   <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
                     <Users className="h-3 w-3" />
                     {ride.seats}
