@@ -124,8 +124,9 @@ export function AddressAutocomplete({
     setError(null);
 
     try {
-      // Try Place Details first
-      const selectedPlaceId = suggestion.canonical_place_id || suggestion.place_id;
+      // Use canonical_place_id for synthetic entries (::pickup, ::dropoff, ::terminal)
+      const rawPlaceId = suggestion.place_id;
+      const selectedPlaceId = suggestion.canonical_place_id || rawPlaceId.replace(/::(pickup|dropoff|terminal)$/, "");
       const { data, error: fnError } = await supabase.functions.invoke("maps-place-details", {
         body: { place_id: selectedPlaceId },
       });
