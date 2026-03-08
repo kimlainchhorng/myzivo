@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
         `&key=${encodeURIComponent(key)}`;
 
       if (proximity?.lat && proximity?.lng) {
-        url += `&location=${proximity.lat},${proximity.lng}&radius=80000&strictbounds=true`;
+        url += `&location=${proximity.lat},${proximity.lng}&radius=80000`;
       }
 
       const res = await fetch(url);
