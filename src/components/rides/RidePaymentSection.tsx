@@ -82,7 +82,7 @@ function AddCardForm({ onSuccess, onCancel, setupClientSecret }: {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <PaymentElement options={{ layout: "accordion", paymentMethodOrder: ["card", "apple_pay", "google_pay"] }} />
+      <PaymentElement options={{ layout: "accordion", paymentMethodOrder: ["card", "apple_pay", "google_pay"], wallets: { applePay: "auto", googlePay: "auto" } }} />
       {error && <p className="text-xs text-destructive text-center">{error}</p>}
       <div className="flex gap-2">
         <Button
