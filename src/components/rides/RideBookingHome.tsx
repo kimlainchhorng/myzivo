@@ -656,12 +656,24 @@ export default function RideBookingHome() {
     }
   };
 
+  const isSameLocation = useCallback((a: PlaceData | null, b: PlaceData | null) => {
+    if (!a || !b) return false;
+    const sameCoords = Math.abs(a.lat - b.lat) < 0.0001 && Math.abs(a.lng - b.lng) < 0.0001;
+    const sameAddress = a.address.trim().toLowerCase() === b.address.trim().toLowerCase();
+    return sameCoords || sameAddress;
+  }, []);
+
   const handlePickupSelect = useCallback((place: PlaceData) => {
     setPickup(place);
     setPickupDisplay(place.address);
   }, []);
 
   const handleDestinationSelect = useCallback((place: PlaceData) => {
+    if (isSameLocation(pickup, place)) {
+      toast.error("Pickup and destination can't be the same");
+      return;
+    }
+
     setDestination(place);
     setDestinationDisplay(place.address);
 
@@ -677,7 +689,7 @@ export default function RideBookingHome() {
     if (pickupData && place.lat && place.lng) {
       fetchRoute(pickupData, place);
     }
-  }, [pickup, userLocation]); // fetchRoute is intentionally omitted to avoid infinite loop
+  }, [pickup, userLocation, isSameLocation]); // fetchRoute is intentionally omitted to avoid infinite loop
 
   const handleSavedPlace = (address: string) => {
     setDestinationDisplay(address);
