@@ -389,6 +389,9 @@ export default function RideBookingHome() {
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [searchSheetY, setSearchSheetY] = useState(0); // 0 = half, negative = expanded
+  const [isReversingGeocode, setIsReversingGeocode] = useState(false);
+  const reverseGeocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // New state for enhanced flow
   const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
