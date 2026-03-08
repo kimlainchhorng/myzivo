@@ -692,6 +692,24 @@ export default function RideBookingHome() {
     }
   }, [pickup, userLocation, isSameLocation]); // fetchRoute is intentionally omitted to avoid infinite loop
 
+  /* ─── Multi-stop management ─── */
+  const MAX_STOPS = 3;
+  const handleAddStop = useCallback(() => {
+    if (stops.length >= MAX_STOPS) {
+      toast.error(`Maximum ${MAX_STOPS} stops allowed`);
+      return;
+    }
+    setStops(prev => [...prev, { id: Date.now().toString(), place: null, display: "" }]);
+  }, [stops.length]);
+
+  const handleStopSelect = useCallback((stopId: string, place: PlaceData) => {
+    setStops(prev => prev.map(s => s.id === stopId ? { ...s, place, display: place.address } : s));
+  }, []);
+
+  const handleRemoveStop = useCallback((stopId: string) => {
+    setStops(prev => prev.filter(s => s.id !== stopId));
+  }, []);
+
   const handleSavedPlace = (address: string) => {
     setDestinationDisplay(address);
     setDestination({ address, lat: 40.758, lng: -73.9855 });
