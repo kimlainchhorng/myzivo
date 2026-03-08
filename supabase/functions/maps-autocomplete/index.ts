@@ -31,9 +31,16 @@ Deno.serve(async (req) => {
     }
 
     const normalizedInput = input.trim();
-    const shouldBoostTerminalResults = /\b(airport|airline|terminal|gate|concourse|msy|jfk|lax|ord|atl|dfw)\b/i.test(normalizedInput);
-    const queryInputs = shouldBoostTerminalResults && !/\bterminal\b/i.test(normalizedInput)
-      ? [normalizedInput, `${normalizedInput} terminal`]
+    const airportKeywordPattern = /\b(airport|terminal|gate|concourse|airline|arrivals?|departures?|pickup|drop[\s-]?off|zone|msy|jfk|lax|ord|atl|dfw)\b/i;
+    const shouldBoostAirportContext = airportKeywordPattern.test(normalizedInput);
+
+    const queryInputs = shouldBoostAirportContext
+      ? Array.from(new Set([
+          normalizedInput,
+          /\bterminal\b/i.test(normalizedInput) ? "" : `${normalizedInput} terminal`,
+          /\b(zone|pickup|drop[\s-]?off)\b/i.test(normalizedInput) ? "" : `${normalizedInput} pickup zone`,
+          /\b(arrivals?|departures?)\b/i.test(normalizedInput) ? "" : `${normalizedInput} arrivals`,
+        ].filter((value): value is string => Boolean(value))))
       : [normalizedInput];
 
     const fetchPredictions = async (query: string) => {
