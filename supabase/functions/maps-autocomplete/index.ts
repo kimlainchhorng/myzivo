@@ -316,8 +316,14 @@ Deno.serve(async (req) => {
         }))
       : [];
 
-    const suggestions = [...syntheticZones, ...syntheticAirlines, ...baseSuggestions]
-      .slice(0, 20)
+    // Deduplicate synthetic + real by place_id, keep highest score
+    const allSuggestions = [...syntheticZones, ...syntheticAirlines, ...baseSuggestions];
+    const deduped = Array.from(
+      new Map(allSuggestions.map((s) => [s.place_id, s])).values()
+    ).sort((a, b) => b.score - a.score);
+
+    const suggestions = deduped
+      .slice(0, 25)
       .map(({ score: _score, ...item }) => item);
 
     console.log(`[maps-autocomplete] Returning ${suggestions.length} suggestions`);
