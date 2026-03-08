@@ -59,10 +59,24 @@ Deno.serve(async (req) => {
     if (isAirportSearch) {
       const base = normalizedInput;
       if (!/\bterminal\b/i.test(base)) queryInputs.push(`${base} terminal`);
-      if (!/\b(zone|pickup|pick[\s-]?up)\b/i.test(base)) queryInputs.push(`${base} pickup`);
-      if (!/\b(arrivals?|departures?)\b/i.test(base)) queryInputs.push(`${base} arrivals`);
+      if (!/\b(zone|pickup|pick[\s-]?up)\b/i.test(base)) queryInputs.push(`${base} pickup zone`);
+      if (!/\b(drop[\s-]?off)\b/i.test(base)) queryInputs.push(`${base} drop off zone`);
+      if (!/\b(arrivals?)\b/i.test(base)) queryInputs.push(`${base} arrivals`);
       if (!/\b(departures?)\b/i.test(base)) queryInputs.push(`${base} departures`);
-      if (!/\b(american|delta|united|southwest|jetblue|spirit|frontier|alaska|airline)\b/i.test(base)) queryInputs.push(`${base} American Airlines`);
+      if (!/\b(ground\s*transport)\b/i.test(base)) queryInputs.push(`${base} ground transportation`);
+      if (!/\b(baggage|claim)\b/i.test(base)) queryInputs.push(`${base} baggage claim`);
+      // Airlines
+      const hasAirline = /\b(american|delta|united|southwest|jetblue|spirit|frontier|alaska|airline)\b/i.test(base);
+      if (!hasAirline) {
+        queryInputs.push(`${base} American Airlines`);
+        queryInputs.push(`${base} Delta`);
+        queryInputs.push(`${base} United Airlines`);
+        queryInputs.push(`${base} Southwest Airlines`);
+        queryInputs.push(`${base} JetBlue`);
+        queryInputs.push(`${base} Spirit Airlines`);
+        queryInputs.push(`${base} Frontier Airlines`);
+        queryInputs.push(`${base} Alaska Airlines`);
+      }
       // Deduplicate
       const unique = Array.from(new Set(queryInputs.filter(Boolean)));
       queryInputs.length = 0;
