@@ -272,6 +272,18 @@ function VehicleRow({
               ELITE
             </span>
           )}
+          {vehicle.id === "pet" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[10px] font-bold">
+              <PawPrint className="w-3 h-3" />
+              PET
+            </span>
+          )}
+          {vehicle.id === "wheelchair" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
+              <Accessibility className="w-3 h-3" />
+              WAV
+            </span>
+          )}
           {vehicle.carSeat && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 text-[10px] font-bold">
               <Baby className="w-3 h-3" />
