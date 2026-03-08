@@ -280,7 +280,7 @@ function createPickupPinSvg(): string {
 }
 
 function createDropoffPinSvg(): string {
-  // Clean green pin with black dot center — minimal destination marker
+  // Green pin with white "Z" — clean ZIVO branded destination
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
       <defs>
@@ -290,7 +290,7 @@ function createDropoffPinSvg(): string {
       </defs>
       <path d="M20 51 C20 51 3 32 3 19 A17 17 0 1 1 37 19 C37 32 20 51 20 51Z" fill="#10b981" filter="url(#s2)"/>
       <circle cx="20" cy="19" r="9" fill="#fff"/>
-      <circle cx="20" cy="19" r="5" fill="#111827"/>
+      <text x="20" y="23.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#10b981">Z</text>
     </svg>
   `)}`;
 }
