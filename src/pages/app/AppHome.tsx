@@ -291,7 +291,7 @@ const AppHome = () => {
                 <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center">
                   <Search className="w-4.5 h-4.5 text-muted-foreground" />
                 </div>
-                <span className="text-muted-foreground font-medium text-[15px] flex-1 text-left">Where to?</span>
+                <span className="text-muted-foreground font-medium text-[15px] flex-1 text-left">{getSearchPlaceholder(activeHomeTab)}</span>
               </div>
             </motion.button>
           </div>
