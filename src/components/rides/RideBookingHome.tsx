@@ -1052,8 +1052,8 @@ export default function RideBookingHome() {
           <motion.div
             className="absolute left-0 right-0 z-40 bg-background rounded-t-[28px] shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col touch-none"
             style={{
-              bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
-              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - ${BOTTOM_NAV_HEIGHT}px - 80px)`,
+              bottom: 0,
+              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 80px)`,
             }}
             initial={{ y: 0 }}
             animate={{ y: searchSheetY }}
@@ -1192,7 +1192,7 @@ export default function RideBookingHome() {
             </div>
 
             {pickup && destination && (
-              <div className="px-4 pb-3 pt-2 shrink-0 bg-background border-t border-border/10">
+              <div className="px-4 pt-2 shrink-0 bg-background border-t border-border/10" style={{ paddingBottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM} + 12px)` }}>
                 <Button
                   className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
                   onClick={handleConfirmSearch}
