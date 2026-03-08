@@ -1124,7 +1124,7 @@ export default function RideBookingHome() {
               compact
               pickupCoords={null}
               dropoffCoords={destination}
-              userLocation={null}
+              userLocation={userLocation}
               onLocateUser={handleLocateUser}
               routePolyline={null}
               onCenterChanged={handleMapCenterChanged}

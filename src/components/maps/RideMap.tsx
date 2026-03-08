@@ -747,7 +747,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       userMarkerRef.current.setMap(null);
       userMarkerRef.current = null;
     }
-  }, [userLocation, pickupCoords]);
+  }, [showUserLocationDot, userLocation, pickupCoords]);
 
   // Cleanup on unmount
   useEffect(() => () => { clearAmbientCars(); }, [clearAmbientCars]);
