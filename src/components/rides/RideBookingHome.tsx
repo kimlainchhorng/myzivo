@@ -468,6 +468,20 @@ export default function RideBookingHome() {
   const [rating, setRating] = useState(0);
   const [tip, setTip] = useState<number | null>(null);
 
+  // Schedule state
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+  const [scheduleHour, setScheduleHour] = useState(() => {
+    const h = new Date().getHours();
+    return h < 23 ? h + 1 : 0;
+  });
+  const [scheduleMinute, setScheduleMinute] = useState(0);
+
+  // Pick up other state
+  const [showPickupOther, setShowPickupOther] = useState(false);
+  const [otherName, setOtherName] = useState("");
+  const [otherPhone, setOtherPhone] = useState("");
+
   // Viewport height for dynamic sheet sizing
   const [viewportHeight, setViewportHeight] = useState(800);
   useEffect(() => {
