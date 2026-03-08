@@ -305,7 +305,7 @@ Deno.serve(async (req) => {
       : [];
 
     const suggestions = [...syntheticZones, ...baseSuggestions]
-      .slice(0, 12)
+      .slice(0, 20)
       .map(({ score: _score, ...item }) => item);
 
     console.log(`[maps-autocomplete] Returning ${suggestions.length} suggestions`);
