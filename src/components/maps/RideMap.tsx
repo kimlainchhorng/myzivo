@@ -584,13 +584,25 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       );
     }
 
-    // Fit bounds with generous padding
+    // Fit bounds with generous padding — delay to allow layout to settle
     if (pickupCoords && dropoffCoords) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(pickupCoords);
       bounds.extend(dropoffCoords);
       if (driverCoords) bounds.extend(driverCoords);
-      map.fitBounds(bounds, { top: 80, bottom: 80, left: 50, right: 50 });
+      // Immediate fit
+      map.fitBounds(bounds, { top: 80, bottom: 280, left: 60, right: 60 });
+      // Cap max zoom for close points
+      const listener = google.maps.event.addListenerOnce(map, "idle", () => {
+        if ((map.getZoom() || 20) > 15) map.setZoom(15);
+      });
+      // Re-fit after layout settles (bottom sheet may resize)
+      setTimeout(() => {
+        map.fitBounds(bounds, { top: 80, bottom: 280, left: 60, right: 60 });
+        google.maps.event.addListenerOnce(map, "idle", () => {
+          if ((map.getZoom() || 20) > 15) map.setZoom(15);
+        });
+      }, 500);
     } else if (pickupCoords) {
       map.panTo(pickupCoords);
       map.setZoom(15);
