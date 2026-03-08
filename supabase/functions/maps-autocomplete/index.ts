@@ -46,12 +46,13 @@ const AIRPORT_CODES = new Set([
 ]);
 
 const airportKeywordPattern = /\b(airport|terminal|gate|concourse|airline|arrivals?|departures?|pickup|pick[\s-]?up|drop[\s-]?off|zone|baggage|claim|parking|taxi|rideshare|ground\s*transport)\b/i;
+const iataCodePattern = /^[A-Z]{3}$/;
 
 function isAirportCode(input: string): string | null {
   const upper = input.trim().toUpperCase();
-  // Check if the whole input or a word in it is a known code
+  // Match known US airport codes first, then fallback to any IATA-like 3-letter code
   for (const word of upper.split(/\s+/)) {
-    if (AIRPORT_CODES.has(word)) return word;
+    if (AIRPORT_CODES.has(word) || iataCodePattern.test(word)) return word;
   }
   return null;
 }
@@ -89,7 +90,12 @@ Deno.serve(async (req) => {
 
     if (isAirportSearch) {
       const base = normalizedInput;
+      if (matchedCode && !/\bairport\b/i.test(base)) queryInputs.push(`${matchedCode} airport`);
       if (!/\bterminal\b/i.test(base)) queryInputs.push(`${base} terminal`);
+      if (!/\bterminal\s*[0-9a-z]\b/i.test(base)) {
+        queryInputs.push(`${base} terminal 1`);
+        queryInputs.push(`${base} terminal a`);
+      }
       if (!/\b(zone|pickup|pick[\s-]?up)\b/i.test(base)) queryInputs.push(`${base} pickup zone`);
       if (!/\b(drop[\s-]?off)\b/i.test(base)) queryInputs.push(`${base} drop off zone`);
       if (!/\b(arrivals?)\b/i.test(base)) queryInputs.push(`${base} arrivals`);
@@ -97,7 +103,7 @@ Deno.serve(async (req) => {
       if (!/\b(ground\s*transport)\b/i.test(base)) queryInputs.push(`${base} ground transportation`);
       if (!/\b(baggage|claim)\b/i.test(base)) queryInputs.push(`${base} baggage claim`);
       // Airlines
-      const hasAirline = /\b(american|delta|united|southwest|jetblue|spirit|frontier|alaska|airline)\b/i.test(base);
+      const hasAirline = /\b(american|delta|united|southwest|jetblue|spirit|frontier|alaska|allegiant|hawaiian|sun\s*country|airline)\b/i.test(base);
       if (!hasAirline) {
         queryInputs.push(`${base} American Airlines`);
         queryInputs.push(`${base} Delta`);
@@ -107,6 +113,9 @@ Deno.serve(async (req) => {
         queryInputs.push(`${base} Spirit Airlines`);
         queryInputs.push(`${base} Frontier Airlines`);
         queryInputs.push(`${base} Alaska Airlines`);
+        queryInputs.push(`${base} Allegiant Air`);
+        queryInputs.push(`${base} Hawaiian Airlines`);
+        queryInputs.push(`${base} Sun Country Airlines`);
       }
       // Deduplicate
       const unique = Array.from(new Set(queryInputs.filter(Boolean)));
@@ -149,7 +158,7 @@ Deno.serve(async (req) => {
         for (const prediction of mergedPredictions) {
           const desc = String(prediction?.description ?? "");
           const match = desc.match(/\(([A-Z]{3})\)/);
-          if (match?.[1] && AIRPORT_CODES.has(match[1])) {
+          if (match?.[1] && iataCodePattern.test(match[1])) {
             detectedCode = match[1];
             break;
           }
@@ -175,6 +184,9 @@ Deno.serve(async (req) => {
           `${detectedCode} Spirit Airlines`,
           `${detectedCode} Frontier Airlines`,
           `${detectedCode} Alaska Airlines`,
+          `${detectedCode} Allegiant Air`,
+          `${detectedCode} Hawaiian Airlines`,
+          `${detectedCode} Sun Country Airlines`,
         ];
         const phase2Groups = await Promise.all(codeQueries.map(fetchPredictions));
         mergedPredictions = [...mergedPredictions, ...phase2Groups.flat()];
@@ -210,7 +222,7 @@ Deno.serve(async (req) => {
       if (v.includes("baggage") || v.includes("claim") || v.includes("ground transport") || v.includes("taxi") || v.includes("rideshare")) score += 5;
 
       // Medium: specific airlines at airport
-      if ((v.includes("american") || v.includes("delta") || v.includes("united") || v.includes("southwest") || v.includes("jetblue") || v.includes("spirit") || v.includes("frontier") || v.includes("alaska")) && isAirportRelated) score += 4;
+      if ((v.includes("american") || v.includes("delta") || v.includes("united") || v.includes("southwest") || v.includes("jetblue") || v.includes("spirit") || v.includes("frontier") || v.includes("alaska") || v.includes("allegiant") || v.includes("hawaiian") || v.includes("sun country")) && isAirportRelated) score += 4;
 
       // Rideshare / taxi pickup
       if ((v.includes("rideshare") || v.includes("taxi stand") || v.includes("uber") || v.includes("lyft")) && isAirportRelated) score += 5;
@@ -293,7 +305,7 @@ Deno.serve(async (req) => {
       : [];
 
     const suggestions = [...syntheticZones, ...baseSuggestions]
-      .slice(0, 12)
+      .slice(0, 20)
       .map(({ score: _score, ...item }) => item);
 
     console.log(`[maps-autocomplete] Returning ${suggestions.length} suggestions`);
