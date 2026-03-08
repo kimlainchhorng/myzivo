@@ -250,6 +250,12 @@ function VehicleRow({
               5+
             </span>
           )}
+          {vehicle.id === "black-lane" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-[10px] font-bold">
+              <Crown className="w-3 h-3" />
+              VIP
+            </span>
+          )}
           {vehicle.carSeat && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 text-[10px] font-bold">
               <Baby className="w-3 h-3" />
@@ -1124,6 +1130,12 @@ export default function RideBookingHome() {
                       <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-bold">
                         <Users className="w-3 h-3" />
                         5+
+                      </span>
+                    )}
+                    {v.id === "black-lane" && (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-[10px] font-bold">
+                        <Crown className="w-3 h-3" />
+                        VIP
                       </span>
                     )}
                     <div className="flex items-center gap-0.5">

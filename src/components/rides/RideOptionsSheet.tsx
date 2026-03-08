@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, CreditCard, Sparkles, TrendingDown, Users, Zap } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CreditCard, Crown, Sparkles, TrendingDown, Users, Zap } from "lucide-react";
 
 type RideCategory = "Popular" | "Premium";
 
@@ -226,6 +226,12 @@ export default function RideOptionsSheet({
                     <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-bold">
                       <Users className="w-3 h-3" />
                       5+
+                    </span>
+                  )}
+                  {ride.id === "black-lane" && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-[10px] font-bold">
+                      <Crown className="w-3 h-3" />
+                      VIP
                     </span>
                   )}
                   <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
