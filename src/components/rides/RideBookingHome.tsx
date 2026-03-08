@@ -226,6 +226,18 @@ function VehicleRow({
               EV
             </span>
           )}
+          {vehicle.id === "comfort" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[10px] font-bold">
+              <Sparkles className="w-3 h-3" />
+              TOP
+            </span>
+          )}
+          {vehicle.id === "share" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+              <Users className="w-3 h-3" />
+              SAVE
+            </span>
+          )}
           {vehicle.carSeat && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 text-[10px] font-bold">
               <Baby className="w-3 h-3" />
@@ -1076,6 +1088,18 @@ export default function RideBookingHome() {
                       <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
                         <Zap className="w-3 h-3" />
                         EV
+                      </span>
+                    )}
+                    {v.id === "comfort" && (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[10px] font-bold">
+                        <Sparkles className="w-3 h-3" />
+                        TOP
+                      </span>
+                    )}
+                    {v.id === "share" && (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                        <Users className="w-3 h-3" />
+                        SAVE
                       </span>
                     )}
                     <div className="flex items-center gap-0.5">
