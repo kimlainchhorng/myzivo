@@ -948,18 +948,20 @@ export default function RideBookingHome() {
                     onClick={() => {
                       setDestinationDisplay(dest.address.split(",")[0]);
                       setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
-                }}
-                className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
-              >
-                <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
-                  <History className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
-                  <p className="text-xs text-muted-foreground">{dest.time}</p>
-                </div>
-              </button>
-            ))}
+                    }}
+                    className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
+                      <History className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
+                      <p className="text-xs text-muted-foreground">{dest.time}</p>
+                    </div>
+                  </button>
+                ))}
+              </>
+            )}
           </div>
 
           {pickup && destination && (
