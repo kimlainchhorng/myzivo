@@ -1056,11 +1056,11 @@ export default function RideBookingHome() {
                 onClick={() => setViewStep("search")}
                 className="w-full flex items-center gap-3 bg-muted/15 border border-border/20 rounded-2xl px-4 py-3.5 transition-all duration-200 hover:bg-muted/25 hover:border-primary/20 active:scale-[0.98] group"
               >
-                <div className="w-6 h-6 rounded-md bg-foreground flex items-center justify-center shrink-0">
-                  <div className="w-2.5 h-2.5 rounded-sm bg-background" />
+                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                  <div className="w-2.5 h-2.5 rounded-full bg-primary-foreground" />
                 </div>
                 <span className="flex-1 text-left text-sm font-medium text-muted-foreground">Where to?</span>
-                <Navigation className="w-4 h-4 text-muted-foreground/50" />
+                <Navigation className="w-4 h-4 text-primary/60" />
               </button>
 
               {/* Search destination button */}
