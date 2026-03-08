@@ -96,9 +96,10 @@ Deno.serve(async (req) => {
       const mentionsAirportContext = value.includes("airport") || value.includes("terminal") || value.includes("gate") || value.includes("concourse") || value.includes("arrivals") || value.includes("departures") || value.includes("airline") || value.includes("msy");
 
       let score = 0;
-      if (value.includes("zone") && mentionsAirportContext) score += 4;
-      if (value.includes("pickup") || value.includes("drop off") || value.includes("drop-off") || value.includes("arrivals") || value.includes("departures")) score += 3;
-      if (value.includes("terminal") || value.includes("concourse") || value.includes("gate")) score += 3;
+      if (value.includes("zone") && mentionsAirportContext) score += 6;
+      if (value.includes("pickup") || value.includes("drop off") || value.includes("drop-off")) score += 4;
+      if (value.includes("arrivals") || value.includes("departures")) score += 6;
+      if (value.includes("terminal") || value.includes("concourse") || value.includes("gate")) score += 4;
       if (value.includes("airport")) score += 2;
       if (value.includes("airline") || value.includes("american") || value.includes("delta") || value.includes("united") || value.includes("southwest")) score += 2;
       if (value.includes("hotel") || value.includes("inn") || value.includes("rental") || value.includes("restaurant")) score -= 2;
