@@ -1906,7 +1906,7 @@ export default function RideBookingHome() {
           </div>
           <Button
             className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
-            onClick={handleRequestRide}
+            onClick={() => handleRequestRide()}
             disabled={isSubmitting}
           >
             <Zap className="w-5 h-5" />
