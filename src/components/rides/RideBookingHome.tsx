@@ -61,16 +61,12 @@ type ViewStep =
 type RideTab = "book" | "reserve" | "map" | "history";
 
 /* ─── Data ─── */
-const savedPlaces = [
-  { id: "home", name: "Home", address: "1234 Main St", icon: Home },
-  { id: "work", name: "Work", address: "400 Tech Blvd", icon: Building2 },
-];
-
-const recentDestinations = [
-  { id: "1", address: "Downtown Gym, 55 Fitness Ave", time: "Yesterday, 6:30 PM" },
-  { id: "2", address: "Grand Hotel, 200 Park Ave", time: "3 days ago" },
-  { id: "3", address: "Central Mall, 88 Shopping Dr", time: "Last week" },
-];
+/* Saved places & recent destinations now loaded from Supabase */
+const ICON_MAP: Record<string, React.ElementType> = {
+  home: Home,
+  work: Building2,
+  pin: MapPin,
+};
 
 const vehicleOptions = [
   // Popular
