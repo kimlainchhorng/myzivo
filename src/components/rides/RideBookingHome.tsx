@@ -624,6 +624,22 @@ export default function RideBookingHome() {
 
   /** When user drags map in search view, reverse geocode center → pickup */
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
+    // In home view: reverse geocode to show address in the destination field
+    if (viewStep === "home") {
+      if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
+      reverseGeocodeTimerRef.current = setTimeout(async () => {
+        setIsReversingGeocode(true);
+        try {
+          const address = await reverseGeocode(center.lat, center.lng);
+          setDestinationDisplay(address);
+        } catch {
+          setDestinationDisplay(`${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`);
+        } finally {
+          setIsReversingGeocode(false);
+        }
+      }, 600);
+      return;
+    }
     // Skip reverse geocode if user manually set pickup, or destination already chosen
     if (viewStep !== "search" || destination || pickupManuallySet.current) return;
 
