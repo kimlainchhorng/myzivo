@@ -54,7 +54,7 @@ const rideOptionsSeed: RideOption[] = [
     eta: "3:25 pm",
     description: "Electric, zero-emission rides",
     price: 27.50,
-    seats: 4,
+    seats: 3,
     image: "/vehicles/ev-car-v2.png",
   },
   {
