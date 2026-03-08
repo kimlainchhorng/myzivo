@@ -477,6 +477,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       });
 
       mapRef.current = map;
+      setMapReady(true);
       onMapReady?.(map);
       map.addListener("idle", () => {
         const c = map.getCenter();
