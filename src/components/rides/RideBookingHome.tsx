@@ -465,6 +465,7 @@ export default function RideBookingHome() {
   const [isReversingGeocode, setIsReversingGeocode] = useState(false);
   const reverseGeocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pickupManuallySet = useRef(false); // true when user selects pickup via autocomplete
+  const mapCenterRef = useRef<{ lat: number; lng: number } | null>(null);
 
   // New state for enhanced flow
   const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
@@ -626,6 +627,7 @@ export default function RideBookingHome() {
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
     // In home view: reverse geocode to show address in the destination field
     if (viewStep === "home") {
+      mapCenterRef.current = center;
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = setTimeout(async () => {
         setIsReversingGeocode(true);
@@ -1094,13 +1096,28 @@ export default function RideBookingHome() {
                 <Navigation className="w-4 h-4 text-primary/60 shrink-0" />
               </button>
 
-              {/* Search destination button */}
+              {/* Choose Ride button — use pin location as destination */}
               <Button
-                onClick={() => setViewStep("search")}
+                onClick={() => {
+                  const center = mapCenterRef.current;
+                  if (center && destinationDisplay) {
+                    const dest: PlaceData = { address: destinationDisplay, lat: center.lat, lng: center.lng };
+                    setDestination(dest);
+                    setPickupDisplay("Current Location");
+                    const pickupData = userLocation
+                      ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
+                      : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
+                    setPickup(pickupData);
+                    fetchRoute(pickupData, dest);
+                  } else {
+                    setViewStep("search");
+                  }
+                }}
+                disabled={isReversingGeocode}
                 className="w-full h-13 mt-3 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
                 size="lg"
               >
-                Search destination
+                {isReversingGeocode ? "Locating..." : destinationDisplay ? "Choose Ride" : "Search destination"}
               </Button>
             </div>
             </div>
