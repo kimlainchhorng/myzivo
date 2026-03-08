@@ -604,19 +604,20 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     }
 
     if (dropoffCoords) {
-      markersRef.current.push(
-        new google.maps.Marker({
-          position: dropoffCoords,
-          map,
-          icon: {
-            url: createDropoffPinSvg(),
-            scaledSize: new google.maps.Size(44, 44),
-            anchor: new google.maps.Point(22, 22),
-          },
-          title: "Dropoff",
-          zIndex: 79,
-        })
-      );
+      const dropoffMarker = new google.maps.Marker({
+        position: dropoffCoords,
+        map,
+        icon: {
+          url: createDropoffPinSvg(),
+          scaledSize: new google.maps.Size(44, 44),
+          anchor: new google.maps.Point(22, 22),
+        },
+        title: "Dropoff",
+        zIndex: 79,
+      });
+      markersRef.current.push(dropoffMarker);
+      // Store ref so route rendering can snap it to the actual endpoint
+      (markersRef as any).__dropoffMarker = dropoffMarker;
     }
 
     // Fit bounds with generous padding — delay to allow layout to settle
