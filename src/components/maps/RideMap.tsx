@@ -76,6 +76,7 @@ interface RideMapProps {
   routePolyline?: string | { lat: number; lng: number }[] | null;
   driverCoords?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
+  showUserLocationDot?: boolean;
   className?: string;
   onMapReady?: (map: google.maps.Map) => void;
   /** Fires with center lat/lng when the map stops moving (idle event) */
@@ -140,7 +141,7 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
   return googleMapsPromise;
 }
 
-export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, className, onMapReady, onCenterChanged }: RideMapProps) {
+export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
   const [isReady, setIsReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failedReason, setFailedReason] = useState<string>("");
@@ -269,6 +270,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
       routePolyline={routePolyline}
       driverCoords={driverCoords}
       userLocation={userLocation}
+      showUserLocationDot={showUserLocationDot}
       className={className}
       onMapReady={handleMapReady}
       onCenterChanged={onCenterChanged}
@@ -440,7 +442,7 @@ function spawnAmbientCars(
   return markers;
 }
 
-function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, className, onMapReady, onCenterChanged }: RideMapProps) {
+function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -731,7 +733,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    if (userLocation && !pickupCoords) {
+    if (showUserLocationDot && userLocation && !pickupCoords) {
       if (userMarkerRef.current) {
         userMarkerRef.current.setPosition(userLocation);
       } else {
@@ -745,7 +747,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       userMarkerRef.current.setMap(null);
       userMarkerRef.current = null;
     }
-  }, [userLocation, pickupCoords]);
+  }, [showUserLocationDot, userLocation, pickupCoords]);
 
   // Cleanup on unmount
   useEffect(() => () => { clearAmbientCars(); }, [clearAmbientCars]);
