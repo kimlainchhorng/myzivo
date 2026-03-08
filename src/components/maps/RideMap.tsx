@@ -750,7 +750,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
   // Cleanup on unmount
   useEffect(() => () => { clearAmbientCars(); }, [clearAmbientCars]);
 
-  return <div ref={mapContainerRef} className={`w-full h-full min-h-[200px] ${className || ""}`} />;
+  return <div ref={mapContainerRef} className={`w-full h-full min-h-[200px] rounded-xl overflow-hidden ${className || ""}`} />;
 }
 
 function MapFallback({
