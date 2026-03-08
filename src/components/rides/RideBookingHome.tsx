@@ -2,7 +2,7 @@
  * RideBookingHome — Complete ride booking flow
  * Flow: home → search → route-preview → ride-options → confirm-ride → searching → driver-assigned → driver-en-route → trip-in-progress → trip-complete
  */
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,7 +13,7 @@ import {
   Star, Phone, MessageSquare, Shield, Banknote,
   Smartphone, Wallet, X, Baby, Sparkles,
   Route, Timer, Bell, Package, Plane, Hotel, TrendingDown, Gem,
-  PawPrint, Accessibility
+  PawPrint, Accessibility, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ import RideMap from "@/components/maps/RideMap";
 import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import { useSavedLocations } from "@/hooks/useSavedLocations";
 
 /* ─── Types ─── */
 interface PlaceData {
