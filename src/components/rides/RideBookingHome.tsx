@@ -497,7 +497,7 @@ export default function RideBookingHome() {
 
   // Layout height constants
   const HEADER_HEIGHT = 56;
-  const TABS_HEIGHT = 48;
+  const TABS_HEIGHT = 52;
   const HEADER_TABS_HEIGHT = HEADER_HEIGHT + TABS_HEIGHT;
   const BOTTOM_NAV_HEIGHT = 64;
   const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
