@@ -251,3 +251,6 @@ verify_jwt = false
 
 [functions.capture-ride-payment]
 verify_jwt = false
+
+[functions.manage-payment-methods]
+verify_jwt = false
