@@ -1451,32 +1451,32 @@ export default function RideBookingHome() {
             </div>
 
             {/* Saved & Recent list */}
-            <div className="pt-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
+            <div className="pt-4">
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Saved Places</p>
               {savedPlaces.length > 0 ? savedPlaces.map((place) => {
                 const Icon = place.icon;
                 return (
                   <button
                     key={place.id}
                     onClick={() => handleSavedPlace(place.address)}
-                    className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                    className="w-full flex items-center gap-3 px-1 py-3.5 text-left hover:bg-muted/10 transition-all duration-200 active:scale-[0.98] border-b border-border/8"
                   >
-                    <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
-                      <Icon className="w-4 h-4 text-foreground" />
+                    <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center shrink-0">
+                      <Icon className="w-4.5 h-4.5 text-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-foreground">{place.name}</p>
-                      <p className="text-xs text-muted-foreground">{place.address}</p>
+                      <p className="text-xs text-muted-foreground truncate">{place.address}</p>
                     </div>
                   </button>
                 );
               }) : (
                 <button
                   onClick={() => toast.info("Save a location from your profile")}
-                  className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                  className="w-full flex items-center gap-3 px-1 py-3.5 text-left hover:bg-muted/10 transition-all duration-200 border-b border-border/8"
                 >
-                  <div className="w-9 h-9 rounded-full bg-muted/20 flex items-center justify-center shrink-0 border border-dashed border-border/40">
-                    <Plus className="w-4 h-4 text-muted-foreground" />
+                  <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 border border-dashed border-primary/20">
+                    <Plus className="w-4 h-4 text-primary/60" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-muted-foreground">Add a saved place</p>
@@ -1487,7 +1487,7 @@ export default function RideBookingHome() {
 
               {recentDestinations.length > 0 && (
                 <>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Recent</p>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2 mt-5">Recent</p>
                   {recentDestinations.map((dest) => (
                     <button
                       key={dest.id}
@@ -1495,9 +1495,9 @@ export default function RideBookingHome() {
                         setDestinationDisplay(dest.address.split(",")[0]);
                         setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
                       }}
-                      className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                      className="w-full flex items-center gap-3 px-1 py-3.5 text-left hover:bg-muted/10 transition-all duration-200 active:scale-[0.98] border-b border-border/8"
                     >
-                      <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center shrink-0">
                         <History className="w-4 h-4 text-muted-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
