@@ -1232,8 +1232,8 @@ export default function RideBookingHome() {
       {/* ═══════ RIDE OPTIONS — full-screen overlay ═══════ */}
       {viewStep === "ride-options" && (
         <div
-          className="absolute left-0 right-0 bottom-0 z-40 bg-background flex flex-col"
-          style={{ top: HEADER_HEIGHT }}
+          className="absolute left-0 right-0 z-40 bg-background flex flex-col"
+          style={{ top: HEADER_HEIGHT, bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
         >
           <div className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
             <h2 className="text-lg font-black text-foreground">Choose a ride</h2>
