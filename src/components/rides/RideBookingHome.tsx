@@ -2,7 +2,7 @@
  * RideBookingHome — Complete ride booking flow
  * Flow: home → search → route-preview → ride-options → confirm-ride → searching → driver-assigned → driver-en-route → trip-in-progress → trip-complete
  */
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,7 +13,7 @@ import {
   Star, Phone, MessageSquare, Shield, Banknote,
   Smartphone, Wallet, X, Baby, Sparkles,
   Route, Timer, Bell, Package, Plane, Hotel, TrendingDown, Gem,
-  PawPrint, Accessibility
+  PawPrint, Accessibility, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ import RideMap from "@/components/maps/RideMap";
 import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import { useSavedLocations } from "@/hooks/useSavedLocations";
 
 /* ─── Types ─── */
 interface PlaceData {
@@ -60,16 +61,12 @@ type ViewStep =
 type RideTab = "book" | "reserve" | "map" | "history";
 
 /* ─── Data ─── */
-const savedPlaces = [
-  { id: "home", name: "Home", address: "1234 Main St", icon: Home },
-  { id: "work", name: "Work", address: "400 Tech Blvd", icon: Building2 },
-];
-
-const recentDestinations = [
-  { id: "1", address: "Downtown Gym, 55 Fitness Ave", time: "Yesterday, 6:30 PM" },
-  { id: "2", address: "Grand Hotel, 200 Park Ave", time: "3 days ago" },
-  { id: "3", address: "Central Mall, 88 Shopping Dr", time: "Last week" },
-];
+/* Saved places & recent destinations now loaded from Supabase */
+const ICON_MAP: Record<string, React.ElementType> = {
+  home: Home,
+  work: Building2,
+  pin: MapPin,
+};
 
 const vehicleOptions = [
   // Popular
@@ -342,7 +339,43 @@ export default function RideBookingHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { getCurrentLocation } = useCurrentLocation();
+  const { data: savedLocations = [] } = useSavedLocations(user?.id);
 
+  // Recent ride destinations from Supabase
+  const [recentDestinations, setRecentDestinations] = useState<{ id: string; address: string; time: string }[]>([]);
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from("ride_requests")
+      .select("id, dropoff_address, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setRecentDestinations(
+            data
+              .filter((r: any) => r.dropoff_address)
+              .map((r: any) => ({
+                id: r.id,
+                address: r.dropoff_address,
+                time: new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+              }))
+          );
+        }
+      });
+  }, [user?.id]);
+
+  // Map saved locations to display format
+  const savedPlaces = useMemo(() =>
+    savedLocations.map((loc) => ({
+      id: loc.id,
+      name: loc.label,
+      address: loc.address,
+      icon: ICON_MAP[loc.icon] || MapPin,
+    })),
+    [savedLocations]
+  );
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const [viewStep, setViewStep] = useState<ViewStep>("home");
@@ -787,30 +820,32 @@ export default function RideBookingHome() {
             </button>
 
             {/* Saved places */}
-            <div className="mt-3 space-y-0">
-              {savedPlaces.map((place, i) => {
-                const Icon = place.icon;
-                return (
-                  <button
-                    key={place.id}
-                    onClick={() => handleSavedPlace(place.address)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-1 py-3 text-left transition-colors hover:bg-muted/10",
-                      i < savedPlaces.length - 1 && "border-b border-border/15"
-                    )}
-                  >
-                    <div className="w-9 h-9 rounded-full bg-muted/40 flex items-center justify-center shrink-0">
-                      <Icon className="w-4 h-4 text-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-foreground">{place.name}</p>
-                      <p className="text-xs text-muted-foreground">{place.address}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                );
-              })}
-            </div>
+            {savedPlaces.length > 0 ? (
+              <div className="mt-3 space-y-0">
+                {savedPlaces.map((place, i) => {
+                  const Icon = place.icon;
+                  return (
+                    <button
+                      key={place.id}
+                      onClick={() => handleSavedPlace(place.address)}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-1 py-3 text-left transition-colors hover:bg-muted/10",
+                        i < savedPlaces.length - 1 && "border-b border-border/15"
+                      )}
+                    >
+                      <div className="w-9 h-9 rounded-full bg-muted/40 flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4 text-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground">{place.name}</p>
+                        <p className="text-xs text-muted-foreground">{place.address}</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
 
             {/* Get anywhere service grid */}
             <div className="mt-4 border-t border-border/15 pt-3">
@@ -874,7 +909,7 @@ export default function RideBookingHome() {
 
           <div className="flex-1 overflow-y-auto px-4 pt-3 pb-20">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
-            {savedPlaces.map((place) => {
+            {savedPlaces.length > 0 ? savedPlaces.map((place) => {
               const Icon = place.icon;
               return (
                 <button
@@ -891,27 +926,44 @@ export default function RideBookingHome() {
                   </div>
                 </button>
               );
-            })}
-
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Recent</p>
-            {recentDestinations.map((dest) => (
+            }) : (
               <button
-                key={dest.id}
-                onClick={() => {
-                  setDestinationDisplay(dest.address.split(",")[0]);
-                  setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
-                }}
+                onClick={() => toast.info("Save a location from your profile")}
                 className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
               >
-                <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
-                  <History className="w-4 h-4 text-muted-foreground" />
+                <div className="w-9 h-9 rounded-full bg-muted/20 flex items-center justify-center shrink-0 border border-dashed border-border/40">
+                  <Plus className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
-                  <p className="text-xs text-muted-foreground">{dest.time}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Add a saved place</p>
+                  <p className="text-xs text-muted-foreground/60">Home, work, gym...</p>
                 </div>
               </button>
-            ))}
+            )}
+
+            {recentDestinations.length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Recent</p>
+                {recentDestinations.map((dest) => (
+                  <button
+                    key={dest.id}
+                    onClick={() => {
+                      setDestinationDisplay(dest.address.split(",")[0]);
+                      setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
+                    }}
+                    className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
+                      <History className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
+                      <p className="text-xs text-muted-foreground">{dest.time}</p>
+                    </div>
+                  </button>
+                ))}
+              </>
+            )}
           </div>
 
           {pickup && destination && (
