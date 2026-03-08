@@ -1596,7 +1596,9 @@ export default function RideBookingHome() {
                 </Button>
               </div>
             )}
-          </motion.div>
+              </motion.div>
+            );
+          })()}
         </>
       )}
 
