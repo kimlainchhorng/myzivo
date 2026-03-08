@@ -872,7 +872,7 @@ export default function RideBookingHome() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 pt-3">
+          <div className="flex-1 overflow-y-auto px-4 pt-3 pb-20">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
             {savedPlaces.map((place) => {
               const Icon = place.icon;
@@ -915,7 +915,7 @@ export default function RideBookingHome() {
           </div>
 
           {pickup && destination && (
-            <div className="px-4 pb-4 pt-2">
+            <div className="px-4 pb-4 pt-2" style={{ paddingBottom: 'calc(16px + 72px + env(safe-area-inset-bottom, 0px))' }}>
               <Button
                 className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                 onClick={handleConfirmSearch}
