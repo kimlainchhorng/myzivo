@@ -1225,22 +1225,24 @@ export default function RideBookingHome() {
             className="absolute left-0 right-0 z-40 bg-background rounded-t-[32px] shadow-[0_-12px_40px_hsl(var(--foreground)/0.1)] flex flex-col"
             style={{
               bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
-              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - ${BOTTOM_NAV_HEIGHT}px - 100px)`,
+              height: searchSheetY < -10
+                ? `calc(100dvh - ${HEADER_HEIGHT}px - ${BOTTOM_NAV_HEIGHT}px - 20px)`
+                : 'auto',
+              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - ${BOTTOM_NAV_HEIGHT}px - 20px)`,
             }}
             initial={{ y: 0 }}
             animate={{ y: searchSheetY }}
             drag="y"
-            dragConstraints={{ top: -(viewportHeight * 0.62), bottom: viewportHeight * 0.25 }}
+            dragConstraints={{ top: 0, bottom: viewportHeight * 0.25 }}
             dragElastic={0.12}
             onDragEnd={(_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
               if (info.offset.y < -60) {
-                // Drag up → expand nearly full screen
-                setSearchSheetY(-(viewportHeight * 0.58));
+                // Drag up → expand full (y stays 0, height grows via style)
+                setSearchSheetY(-1); // trigger expanded height
               } else if (info.offset.y > 80) {
-                // Drag down → collapse to peek (handle + title still visible)
+                // Drag down → collapse to peek
                 setSearchSheetY(viewportHeight * 0.22);
               } else {
-                // Snap back to default
                 setSearchSheetY(0);
               }
             }}
