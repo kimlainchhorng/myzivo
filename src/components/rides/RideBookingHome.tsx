@@ -620,7 +620,9 @@ export default function RideBookingHome() {
 
   /** When user drags map in search view, reverse geocode center → pickup */
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
-    if (viewStep !== "search") return;
+    // Lock pickup once destination is chosen to avoid overwriting pickup/destination labels
+    if (viewStep !== "search" || destination) return;
+
     // Debounce reverse geocode
     if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
     reverseGeocodeTimerRef.current = setTimeout(async () => {
@@ -636,7 +638,7 @@ export default function RideBookingHome() {
         setIsReversingGeocode(false);
       }
     }, 600);
-  }, [viewStep]);
+  }, [viewStep, destination]);
 
   const now = new Date();
   const hour = now.getHours();
@@ -686,6 +688,13 @@ export default function RideBookingHome() {
   }, []);
 
   const handleDestinationSelect = useCallback((place: PlaceData) => {
+    // Stop pending reverse-geocode updates so pickup doesn't get overwritten after destination select
+    if (reverseGeocodeTimerRef.current) {
+      clearTimeout(reverseGeocodeTimerRef.current);
+      reverseGeocodeTimerRef.current = null;
+    }
+    setIsReversingGeocode(false);
+
     // Determine effective pickup (including auto-fallback)
     let pickupData = pickup;
     if (!pickupData) {
@@ -695,13 +704,6 @@ export default function RideBookingHome() {
     }
 
     // Block same-location trips
-    console.log("[RideBooking] Same-location check:", {
-      pickupAddr: JSON.stringify(pickupData.address),
-      destAddr: JSON.stringify(place.address),
-      pickupCoords: { lat: pickupData.lat, lng: pickupData.lng },
-      destCoords: { lat: place.lat, lng: place.lng },
-      isSame: isSameLocation(pickupData, place),
-    });
     if (isSameLocation(pickupData, place)) {
       toast.error("Pickup and destination can't be the same");
       return;
