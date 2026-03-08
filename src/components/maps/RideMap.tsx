@@ -263,30 +263,34 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
 
 function createPickupPinSvg(): string {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="48" viewBox="0 0 36 48">
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
       <defs>
         <filter id="s" x="-20%" y="-10%" width="140%" height="130%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.25"/>
+          <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.3"/>
         </filter>
       </defs>
-      <path d="M18 47 C18 47 3 30 3 18 A15 15 0 1 1 33 18 C33 30 18 47 18 47Z" fill="#10b981" filter="url(#s)"/>
-      <circle cx="18" cy="18" r="7" fill="#fff"/>
-      <circle cx="18" cy="18" r="3.5" fill="#10b981"/>
+      <path d="M20 51 C20 51 3 32 3 19 A17 17 0 1 1 37 19 C37 32 20 51 20 51Z" fill="#10b981" filter="url(#s)"/>
+      <circle cx="20" cy="19" r="8" fill="#fff"/>
+      <text x="20" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#10b981">Z</text>
     </svg>
   `)}`;
 }
 
 function createDropoffPinSvg(): string {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="48" viewBox="0 0 36 48">
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
       <defs>
         <filter id="s" x="-20%" y="-10%" width="140%" height="130%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.25"/>
+          <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.3"/>
         </filter>
+        <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#111827"/>
+          <stop offset="100%" stop-color="#1f2937"/>
+        </linearGradient>
       </defs>
-      <path d="M18 47 C18 47 3 30 3 18 A15 15 0 1 1 33 18 C33 30 18 47 18 47Z" fill="#111827" filter="url(#s)"/>
-      <rect x="11" y="11" width="14" height="14" rx="2" fill="#fff"/>
-      <rect x="14" y="14" width="8" height="8" rx="1" fill="#111827"/>
+      <path d="M20 51 C20 51 3 32 3 19 A17 17 0 1 1 37 19 C37 32 20 51 20 51Z" fill="url(#g)" filter="url(#s)"/>
+      <circle cx="20" cy="19" r="8" fill="#fff"/>
+      <text x="20" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#111827">Z</text>
     </svg>
   `)}`;
 }
