@@ -339,7 +339,43 @@ export default function RideBookingHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { getCurrentLocation } = useCurrentLocation();
+  const { data: savedLocations = [] } = useSavedLocations(user?.id);
 
+  // Recent ride destinations from Supabase
+  const [recentDestinations, setRecentDestinations] = useState<{ id: string; address: string; time: string }[]>([]);
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from("ride_requests")
+      .select("id, dropoff_address, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setRecentDestinations(
+            data
+              .filter((r: any) => r.dropoff_address)
+              .map((r: any) => ({
+                id: r.id,
+                address: r.dropoff_address,
+                time: new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+              }))
+          );
+        }
+      });
+  }, [user?.id]);
+
+  // Map saved locations to display format
+  const savedPlaces = useMemo(() =>
+    savedLocations.map((loc) => ({
+      id: loc.id,
+      name: loc.label,
+      address: loc.address,
+      icon: ICON_MAP[loc.icon] || MapPin,
+    })),
+    [savedLocations]
+  );
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const [viewStep, setViewStep] = useState<ViewStep>("home");
