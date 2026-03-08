@@ -604,19 +604,20 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     }
 
     if (dropoffCoords) {
-      markersRef.current.push(
-        new google.maps.Marker({
-          position: dropoffCoords,
-          map,
-          icon: {
-            url: createDropoffPinSvg(),
-            scaledSize: new google.maps.Size(44, 44),
-            anchor: new google.maps.Point(22, 22),
-          },
-          title: "Dropoff",
-          zIndex: 79,
-        })
-      );
+      const dropoffMarker = new google.maps.Marker({
+        position: dropoffCoords,
+        map,
+        icon: {
+          url: createDropoffPinSvg(),
+          scaledSize: new google.maps.Size(44, 44),
+          anchor: new google.maps.Point(22, 22),
+        },
+        title: "Dropoff",
+        zIndex: 79,
+      });
+      markersRef.current.push(dropoffMarker);
+      // Store ref so route rendering can snap it to the actual endpoint
+      (markersRef as any).__dropoffMarker = dropoffMarker;
     }
 
     // Fit bounds with generous padding — delay to allow layout to settle
@@ -670,6 +671,12 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       });
       bgPolylineRef.current = bgLine;
       polylineRef.current = animatedLine;
+      // Snap dropoff marker to actual route endpoint
+      const dropoffMarker = (markersRef as any).__dropoffMarker as google.maps.Marker | undefined;
+      if (dropoffMarker) {
+        const lastPt = decodedRoute[decodedRoute.length - 1];
+        dropoffMarker.setPosition(lastPt);
+      }
       return;
     }
 
@@ -682,6 +689,11 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
             const path = result.routes[0]?.overview_path;
             if (path && path.length > 1) {
               const latLngs = path.map((p) => ({ lat: p.lat(), lng: p.lng() }));
+              // Snap dropoff marker to route's actual endpoint
+              const dm = (markersRef as any).__dropoffMarker as google.maps.Marker | undefined;
+              if (dm && latLngs.length > 0) {
+                dm.setPosition(latLngs[latLngs.length - 1]);
+              }
               const { bgLine, animatedLine } = animatePolyline(map, latLngs, (finalLine) => {
                 polylineRef.current = finalLine;
               });
