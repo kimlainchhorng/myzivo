@@ -302,7 +302,7 @@ const App = () => (
           <UTMProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                <Route path="/" element={<PreserveQueryRedirect to="/rides/hub" />} />
+                <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
 
