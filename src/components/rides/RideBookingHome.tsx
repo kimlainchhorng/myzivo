@@ -1090,6 +1090,18 @@ export default function RideBookingHome() {
                         EV
                       </span>
                     )}
+                    {v.id === "comfort" && (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[10px] font-bold">
+                        <Sparkles className="w-3 h-3" />
+                        TOP
+                      </span>
+                    )}
+                    {v.id === "share" && (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                        <Users className="w-3 h-3" />
+                        SAVE
+                      </span>
+                    )}
                     <div className="flex items-center gap-0.5">
                       <User className="w-3 h-3 text-muted-foreground" />
                       <span className="text-xs text-muted-foreground">{v.capacity}</span>

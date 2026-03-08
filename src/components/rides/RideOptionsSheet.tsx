@@ -204,6 +204,18 @@ export default function RideOptionsSheet({
                       EV
                     </span>
                   )}
+                  {ride.id === "comfort" && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[10px] font-bold">
+                      <Sparkles className="w-3 h-3" />
+                      TOP
+                    </span>
+                  )}
+                  {ride.id === "share" && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                      <Users className="w-3 h-3" />
+                      SAVE
+                    </span>
+                  )}
                   <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
                     <Users className="h-3 w-3" />
                     {ride.seats}
