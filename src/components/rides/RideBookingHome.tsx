@@ -684,6 +684,13 @@ export default function RideBookingHome() {
   }, []);
 
   const handlePickupSelect = useCallback((place: PlaceData) => {
+    pickupManuallySet.current = true;
+    // Cancel any pending reverse geocode
+    if (reverseGeocodeTimerRef.current) {
+      clearTimeout(reverseGeocodeTimerRef.current);
+      reverseGeocodeTimerRef.current = null;
+    }
+    setIsReversingGeocode(false);
     setPickup(place);
     setPickupDisplay(place.address);
   }, []);
