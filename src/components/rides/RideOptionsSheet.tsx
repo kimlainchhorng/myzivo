@@ -58,6 +58,16 @@ const rideOptionsSeed: RideOption[] = [
     image: "/vehicles/economy-car-v2.png",
   },
   {
+    id: "xl",
+    name: "ZIVO XL",
+    category: "Popular",
+    eta: "3:26 pm",
+    description: "Extra space for groups",
+    price: 35.00,
+    seats: 6,
+    image: "/vehicles/xl-car-v2.png",
+  },
+  {
     id: "black-lane",
     name: "ZIVO BLACK Lane",
     category: "Premium",
