@@ -683,7 +683,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       } else {
         driverMarkerRef.current = new google.maps.Marker({
           position: driverCoords, map,
-          icon: { url: createCarSvg(0), scaledSize: new google.maps.Size(32, 32), anchor: new google.maps.Point(16, 16) },
+          icon: { url: "/vehicles/map-car-icon.png", scaledSize: new google.maps.Size(40, 22), anchor: new google.maps.Point(20, 11) },
           title: "Driver", zIndex: 100,
         });
       }
