@@ -245,3 +245,9 @@ verify_jwt = false
 
 [functions.maps-geocode]
 verify_jwt = false
+
+[functions.create-ride-payment-intent]
+verify_jwt = false
+
+[functions.capture-ride-payment]
+verify_jwt = false
