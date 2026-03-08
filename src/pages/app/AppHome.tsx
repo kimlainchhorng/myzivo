@@ -6,13 +6,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import {
   Search, Plane, Car, Utensils, BedDouble,
   MapPin, Bell, LucideIcon, Package, Star, Sparkles,
   UtensilsCrossed, Heart, History, Hotel, Gift, Users, Share2, Clock,
   Wallet, CreditCard, Home, Briefcase, Plus, Timer, DollarSign,
   TrendingUp, Navigation, ChevronRight, ArrowRight, Zap, Shield,
-  Globe, Crown, Flame
+  Globe, Crown, Flame, Calendar
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +53,20 @@ const savedPlaceIconMap: Record<string, LucideIcon> = {
   star: Star,
   pin: MapPin,
 };
+
+// ─── Top service tabs (Uber-style) ───
+const homeTabs = [
+  { id: "rides", label: "Rides", icon: Car },
+  { id: "eats", label: "Eats", icon: UtensilsCrossed },
+] as const;
+
+// ─── Suggestions row (service shortcuts) ───
+const suggestions = [
+  { label: "Ride", icon: Car, href: "/rides", badge: "5%", badgeColor: "bg-destructive" },
+  { label: "Reserve", icon: Clock, href: "/scheduled", badge: "Promo", badgeColor: "bg-destructive" },
+  { label: "Rental Cars", icon: Car, href: "/rent-car", badge: "Promo", badgeColor: "bg-destructive" },
+  { label: "Hourly", icon: Timer, href: "/rides", badge: null, badgeColor: "" },
+];
 
 // ─── Restaurant Card (Premium) ───
 const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant; onNavigate: () => void }) => (
@@ -108,15 +123,6 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, onSeeAll }: { icon
   </div>
 );
 
-// ─── Quick Actions Grid (3x2 - Ultra Premium) ───
-const quickActions = [
-  { label: "Ride", icon: Car, href: "/rides", gradient: "from-emerald-500 to-green-600", bg: "bg-emerald-500/8", iconBg: "bg-gradient-to-br from-emerald-400/25 to-emerald-600/15", color: "text-emerald-600 dark:text-emerald-400", accent: "bg-emerald-500", tagline: "Go anywhere" },
-  { label: "Eats", icon: UtensilsCrossed, href: "/eats", gradient: "from-orange-500 to-red-500", bg: "bg-orange-500/8", iconBg: "bg-gradient-to-br from-orange-400/25 to-orange-600/15", color: "text-orange-600 dark:text-orange-400", accent: "bg-orange-500", tagline: "Order food" },
-  { label: "Delivery", icon: Package, href: "/delivery", gradient: "from-violet-500 to-purple-600", bg: "bg-violet-500/8", iconBg: "bg-gradient-to-br from-violet-400/25 to-violet-600/15", color: "text-violet-600 dark:text-violet-400", accent: "bg-violet-500", tagline: "Send packages" },
-  { label: "Flights", icon: Plane, href: "/flights", gradient: "from-sky-500 to-blue-600", bg: "bg-sky-500/8", iconBg: "bg-gradient-to-br from-sky-400/25 to-sky-600/15", color: "text-sky-600 dark:text-sky-400", accent: "bg-sky-500", tagline: "Best deals" },
-  { label: "Hotels", icon: BedDouble, href: "/hotels", gradient: "from-amber-500 to-orange-500", bg: "bg-amber-500/8", iconBg: "bg-gradient-to-br from-amber-400/25 to-amber-600/15", color: "text-amber-600 dark:text-amber-400", accent: "bg-amber-500", tagline: "Stay in style" },
-  { label: "Rentals", icon: Car, href: "/rent-car", gradient: "from-teal-500 to-cyan-600", bg: "bg-teal-500/8", iconBg: "bg-gradient-to-br from-teal-400/25 to-teal-600/15", color: "text-teal-600 dark:text-teal-400", accent: "bg-teal-500", tagline: "Drive free" },
-];
 
 // ─── Promo banners ───
 const promos = [
@@ -168,6 +174,7 @@ const AppHome = () => {
   const { user } = useAuth();
   useDeviceIntegrityCheck();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [activeHomeTab, setActiveHomeTab] = useState<"rides" | "eats">("rides");
   const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
   const { data: deals = [] } = useRecommendedDeals("all", 6);
@@ -216,108 +223,127 @@ const AppHome = () => {
     <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30" role="main">
       {/* Scrollable content */}
       <div className="overflow-y-auto pb-24 scroll-momentum">
-        {/* ─── PREMIUM HEADER ZONE ─── */}
-        <div className="bg-gradient-to-b from-primary/10 via-primary/4 to-background relative overflow-hidden">
-          {/* Animated decorative orbs */}
-          <div className="absolute -top-20 -right-20 w-48 h-48 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute top-16 -left-16 w-36 h-36 bg-emerald-500/8 rounded-full blur-3xl" />
-          <div className="absolute top-40 right-10 w-20 h-20 bg-sky-500/6 rounded-full blur-2xl" />
-
-          {/* Greeting bar */}
-          <div className="px-5 pt-4 pb-3 flex justify-between items-center safe-area-top relative z-10">
-            <div className="flex items-center gap-3">
-              <motion.div
-                whileTap={{ scale: 0.92 }}
-                className="relative"
-              >
-                <div className="w-12 h-12 rounded-2xl border-2 border-primary/25 p-0.5 overflow-hidden bg-card shadow-md shadow-primary/10">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} className="w-full h-full rounded-xl object-cover" alt="Profile" loading="lazy" />
-                  ) : (
-                    <div className="w-full h-full rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-sm font-bold text-primary">
-                      {initials}
-                    </div>
+        {/* ─── UBER-STYLE HEADER ─── */}
+        <div className="bg-background relative">
+          {/* Service Tabs: Rides | Eats */}
+          <div className="flex items-center border-b border-border/50 safe-area-top">
+            {homeTabs.map((tab) => {
+              const isActive = activeHomeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveHomeTab(tab.id)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2.5 py-4 text-base font-bold transition-all border-b-[3px] min-h-[56px] touch-manipulation",
+                    isActive
+                      ? "border-foreground text-foreground"
+                      : "border-transparent text-muted-foreground"
                   )}
-                </div>
-                {/* Online dot */}
-                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-background shadow-sm shadow-emerald-500/30" />
-              </motion.div>
-              <div>
-                <div className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em]">{greeting()}</div>
-                <div className="text-lg font-bold text-foreground -mt-0.5">{userName}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <motion.button
-                whileTap={{ scale: 0.88 }}
-                onClick={() => navigate("/rewards")}
-                className="w-10 h-10 min-w-[44px] min-h-[44px] bg-card/80 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-border/50 shadow-sm active:bg-muted/80 transition-all relative touch-manipulation"
-              >
-                <Gift className="w-[18px] h-[18px] text-primary" />
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.88 }}
-                onClick={() => navigate("/alerts")}
-                className="w-10 h-10 min-w-[44px] min-h-[44px] bg-card/80 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-border/50 shadow-sm active:bg-muted/80 transition-all relative touch-manipulation"
-              >
-                <Bell className="w-[18px] h-[18px] text-muted-foreground" />
-                <span className="absolute top-2 right-2.5 w-2.5 h-2.5 bg-destructive rounded-full ring-2 ring-background animate-pulse" />
-              </motion.button>
-            </div>
+                >
+                  <tab.icon className="w-5 h-5" />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
-          {/* ─── SEARCH BAR (Ultra Premium Glass) ─── */}
-          <div className="px-5 pb-3">
+          {/* Where to? Search Bar */}
+          <div className="px-5 pt-5 pb-3">
             <motion.button
               whileTap={{ scale: 0.985 }}
               onClick={() => setIsSearchOpen(true)}
               className="w-full touch-manipulation"
             >
-              <div className="bg-card/90 backdrop-blur-2xl border border-border/40 rounded-2xl px-4 py-4 flex items-center gap-3 shadow-lg shadow-black/[0.06] min-h-[56px] transition-all active:shadow-md hover:border-primary/20">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center border border-primary/10">
-                  <Search className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1 text-left">
-                  <span className="text-muted-foreground font-semibold text-sm block">Where to?</span>
-                  <span className="text-muted-foreground/50 text-[10px]">Flights · Hotels · Cars · Rides · Eats</span>
-                </div>
-                <div className="h-8 w-px bg-border/50" />
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <MapPin className="w-4.5 h-4.5 text-primary" />
-                </div>
+              <div className="bg-muted/50 rounded-full px-5 py-4 flex items-center gap-3 min-h-[56px] transition-all active:bg-muted/70">
+                <Search className="w-5 h-5 text-foreground" />
+                <span className="text-foreground font-semibold text-base flex-1 text-left">Where to?</span>
+                <div className="h-6 w-px bg-border" />
+                <button
+                  onClick={(e) => { e.stopPropagation(); navigate("/scheduled"); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-foreground hover:bg-muted transition-colors touch-manipulation"
+                >
+                  <Calendar className="w-4 h-4" />
+                  Later
+                </button>
               </div>
             </motion.button>
           </div>
 
-          {/* ─── SAVED PLACES ROW ─── */}
-          <div className="px-5 pb-5">
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-              {(savedLocations || []).slice(0, 4).map((loc) => {
-                const Icon = savedPlaceIconMap[loc.icon] || MapPin;
-                return (
-                  <motion.button
-                    key={loc.id}
-                    whileTap={{ scale: 0.94 }}
-                    onClick={() => navigate("/rides")}
-                    className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card/80 backdrop-blur-sm border border-border/40 shadow-sm transition-all touch-manipulation min-h-[40px] hover:border-primary/20 hover:shadow-md"
-                  >
-                    <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Icon className="w-3 h-3 text-primary" />
-                    </div>
-                    <span className="text-xs font-bold text-foreground whitespace-nowrap">{loc.label}</span>
-                  </motion.button>
-                );
-              })}
-              {(!savedLocations || savedLocations.length < 2) && (
+          {/* Recent / Saved Locations List */}
+          <div className="px-5 pb-3">
+            {(savedLocations || []).slice(0, 3).map((loc) => {
+              const Icon = savedPlaceIconMap[loc.icon] || MapPin;
+              return (
                 <motion.button
-                  whileTap={{ scale: 0.94 }}
-                  onClick={() => navigate("/account/saved-places")}
-                  className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-muted/30 border border-dashed border-border/60 transition-all touch-manipulation min-h-[40px] hover:border-primary/30"
+                  key={loc.id}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate("/rides")}
+                  className="w-full flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0 touch-manipulation text-left"
                 >
-                  <Plus className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Add Place</span>
+                  <div className="w-10 h-10 rounded-full bg-muted/60 flex items-center justify-center shrink-0">
+                    <Icon className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">{loc.label}</p>
+                    {loc.address && (
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{loc.address}</p>
+                    )}
+                  </div>
                 </motion.button>
-              )}
+              );
+            })}
+            {(!savedLocations || savedLocations.length === 0) && (
+              <>
+                {[
+                  { name: "Set your home address", sub: "Tap to save your home", icon: Home },
+                  { name: "Set your work address", sub: "Tap to save your work", icon: Briefcase },
+                ].map((placeholder) => (
+                  <motion.button
+                    key={placeholder.name}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate("/account/saved-places")}
+                    className="w-full flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0 touch-manipulation text-left"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-muted/60 flex items-center justify-center shrink-0">
+                      <placeholder.icon className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{placeholder.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{placeholder.sub}</p>
+                    </div>
+                  </motion.button>
+                ))}
+              </>
+            )}
+          </div>
+
+          {/* Suggestions Section */}
+          <div className="px-5 pt-4 pb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-foreground">Suggestions</h2>
+              <button onClick={() => navigate("/services")} className="w-8 h-8 flex items-center justify-center touch-manipulation">
+                <ArrowRight className="w-5 h-5 text-foreground" />
+              </button>
+            </div>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
+              {suggestions.map((s) => (
+                <motion.button
+                  key={s.label}
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => navigate(s.href)}
+                  className="shrink-0 flex flex-col items-center gap-2 w-[88px] touch-manipulation relative"
+                >
+                  {s.badge && (
+                    <div className={`absolute -top-1.5 right-1 z-10 bg-destructive text-destructive-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-md`}>
+                      {s.badge}
+                    </div>
+                  )}
+                  <div className="w-[72px] h-[72px] rounded-2xl bg-muted/40 border border-border/30 flex items-center justify-center">
+                    <s.icon className="w-8 h-8 text-foreground" />
+                  </div>
+                  <span className="text-xs font-medium text-foreground text-center leading-tight">{s.label}</span>
+                </motion.button>
+              ))}
             </div>
           </div>
         </div>
@@ -328,61 +354,8 @@ const AppHome = () => {
           {/* ─── LIVE TRIP TRACKER ─── */}
           <LiveTripTracker />
 
-          {/* ─── QUICK ESTIMATE CARD (Ultra Premium) ─── */}
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/rides")}
-            className="w-full rounded-2xl bg-gradient-to-br from-primary/10 via-emerald-500/5 to-primary/8 border border-primary/15 p-5 flex items-center gap-4 touch-manipulation text-left group relative overflow-hidden shadow-sm shadow-primary/5"
-          >
-            {/* Animated shine */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.04] to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/25 to-emerald-500/15 flex items-center justify-center border border-primary/15 shadow-inner">
-              <Zap className="w-7 h-7 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                Quick Ride
-                {estimate.surge && <Flame className="w-3.5 h-3.5 text-amber-500" />}
-              </div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                <span className="text-primary font-bold">{estimate.pickupEta}</span> pickup · <span className="font-bold text-foreground">{estimate.priceRange}</span> to Downtown
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <Badge variant="outline" className={`text-[9px] font-bold shrink-0 ${estimate.surge ? 'border-amber-500/30 text-amber-600 bg-amber-500/5' : 'border-primary/20 text-primary bg-primary/5'}`}>
-                {estimate.label}
-              </Badge>
-              <ArrowRight className="w-4 h-4 text-primary/60" />
-            </div>
-          </motion.button>
 
-          {/* ─── QUICK ACTIONS GRID (3x2 Ultra Premium) ─── */}
-          <div className="grid grid-cols-3 gap-3" role="navigation" aria-label="Quick actions">
-            {quickActions.map((action, i) => (
-              <motion.button
-                key={action.label}
-                whileTap={{ scale: 0.93 }}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06, duration: 0.35, ease: "easeOut" }}
-                onClick={() => navigate(action.href)}
-                className="relative flex flex-col items-center gap-2 py-5 px-2 rounded-2xl bg-card/90 backdrop-blur-sm border border-border/40 shadow-sm hover:shadow-lg transition-all duration-300 touch-manipulation overflow-hidden group min-h-[120px]"
-              >
-                {/* Top accent bar with gradient */}
-                <div className={`absolute top-0 left-3 right-3 h-[2.5px] rounded-b-full bg-gradient-to-r ${action.gradient} opacity-70 group-active:opacity-100 transition-opacity`} />
-                {/* Hover glow */}
-                <div className={`absolute inset-0 bg-gradient-to-b ${action.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity`} />
-                {/* Icon container */}
-                <div className={`w-14 h-14 rounded-2xl ${action.iconBg} border border-white/[0.08] flex items-center justify-center transition-all duration-300 group-active:scale-90 shadow-sm`}>
-                  <action.icon className={`w-7 h-7 ${action.color}`} strokeWidth={1.8} />
-                </div>
-                <div className="text-center">
-                  <span className="text-xs font-bold text-foreground tracking-tight block">{action.label}</span>
-                  <span className="text-[8px] text-muted-foreground/60 font-medium">{action.tagline}</span>
-                </div>
-              </motion.button>
-            ))}
-          </div>
+
 
           {/* ─── QUICK REORDER CAROUSEL ─── */}
           <QuickReorderCarousel />
