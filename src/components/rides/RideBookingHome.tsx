@@ -968,20 +968,20 @@ export default function RideBookingHome() {
     <div className="relative h-[100dvh] overflow-hidden bg-background">
 
       {/* ═══════ 1. HEADER — always visible ═══════ */}
-      <div className="relative z-20 flex items-center h-14 px-4 bg-background border-b border-border/20">
+      <div className="relative z-20 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
         <button
           onClick={handleBack}
-          className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation"
+          className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
           aria-label="Go back"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <h1 className="flex-1 text-center font-black text-lg tracking-tight">
           <span className="text-primary">Zivo</span> Ride
         </h1>
         <button
           onClick={() => navigate("/notifications")}
-          className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation"
+          className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
           aria-label="Notifications"
         >
           <Bell className="w-5 h-5 text-muted-foreground" />
@@ -990,16 +990,16 @@ export default function RideBookingHome() {
 
       {/* ═══════ 2. RIDE TABS — only on home step ═══════ */}
       {viewStep === "home" && (
-        <div className="relative z-20 flex gap-2 px-4 py-2.5 bg-background/95 backdrop-blur-sm border-b border-border/10 overflow-x-auto scrollbar-none">
+        <div className="relative z-20 flex gap-2 px-4 py-2.5 bg-background/95 backdrop-blur-xl border-b border-border/5 overflow-x-auto scrollbar-none">
           {rideTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={cn(
-                "flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 active:scale-95 touch-manipulation min-h-[40px]",
+                "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 active:scale-95 touch-manipulation min-h-[42px]",
                 activeTab === tab.id
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
-                  : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                  : "bg-muted/20 text-muted-foreground hover:bg-muted/40 hover:text-foreground border border-border/10"
               )}
             >
               <tab.icon className="w-4 h-4" />
