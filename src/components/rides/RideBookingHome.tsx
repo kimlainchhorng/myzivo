@@ -1066,7 +1066,7 @@ export default function RideBookingHome() {
               {/* Search destination button */}
               <Button
                 onClick={() => setViewStep("search")}
-                className="w-full h-13 mt-3 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 active:scale-[0.98] transition-all duration-200"
+                className="w-full h-13 mt-3 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
                 size="lg"
               >
                 Search destination
