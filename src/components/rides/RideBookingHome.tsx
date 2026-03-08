@@ -1540,6 +1540,7 @@ export default function RideBookingHome() {
                 </>
               )}
             </div>
+            </div>
 
             {pickup && destination && (
               <div className="px-4 pt-2 shrink-0 bg-background border-t border-border/10" style={{ paddingBottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM} + 12px)` }}>
