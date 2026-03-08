@@ -177,7 +177,7 @@ const AppHome = () => {
   const { user } = useAuth();
   useDeviceIntegrityCheck();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [activeHomeTab, setActiveHomeTab] = useState<"rides" | "eats">("rides");
+  const [activeHomeTab, setActiveHomeTab] = useState<"rides" | "eats" | "flights" | "hotels">("rides");
   const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
   const { data: deals = [] } = useRecommendedDeals("all", 6);
