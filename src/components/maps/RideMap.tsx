@@ -357,6 +357,15 @@ function animatePolyline(
   return { bgLine, animatedLine };
 }
 
+// ─── Ambient car icons by category ───
+const AMBIENT_CAR_ICONS = [
+  "/vehicles/economy-car-v2.png",   // Economy / Share / Pet
+  "/vehicles/economy-car-v2.png",   // weighted more (common)
+  "/vehicles/comfort-car-v2.png",   // Comfort
+  "/vehicles/xl-car-v2.png",        // XL / SUV
+  "/vehicles/black-lane-car-v2.png",// BLACK Lane
+];
+
 // ─── Ambient cars with minimum distance from pins ───
 function spawnAmbientCars(
   map: google.maps.Map,
@@ -365,13 +374,12 @@ function spawnAmbientCars(
   avoidPoints: { lat: number; lng: number }[] = []
 ): google.maps.Marker[] {
   const markers: google.maps.Marker[] = [];
-  const MIN_DISTANCE = 0.008; // ~0.8km minimum distance from pins
+  const MIN_DISTANCE = 0.008;
 
   for (let i = 0; i < count; i++) {
     let lat: number, lng: number;
     let attempts = 0;
 
-    // Keep trying until car is far enough from all pins
     do {
       const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.8;
       const dist = 0.02 + Math.random() * 0.025;
@@ -385,14 +393,14 @@ function spawnAmbientCars(
       )
     );
 
-    const rotation = Math.floor(Math.random() * 360);
+    const iconUrl = AMBIENT_CAR_ICONS[i % AMBIENT_CAR_ICONS.length];
     const marker = new google.maps.Marker({
       position: { lat, lng },
       map,
       icon: {
-        url: "/vehicles/map-car-icon.png",
-        scaledSize: new google.maps.Size(28, 15),
-        anchor: new google.maps.Point(14, 8),
+        url: iconUrl,
+        scaledSize: new google.maps.Size(30, 18),
+        anchor: new google.maps.Point(15, 9),
       },
       clickable: false,
       zIndex: 10,
