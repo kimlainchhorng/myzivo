@@ -340,6 +340,68 @@ const etaTime = (minutesFromNow: number) =>
     .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
     .toLowerCase();
 
+/* ─── Stripe Payment Form (inside Elements provider) ─── */
+function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
+  onSuccess: () => void;
+  isSubmitting: boolean;
+  price: number;
+  vehicleName: string;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setProcessing(true);
+    setErrorMsg(null);
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: window.location.href, // fallback — we handle inline
+      },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      setErrorMsg(error.message || "Payment failed");
+      setProcessing(false);
+    } else {
+      // Payment authorized successfully
+      setProcessing(false);
+      onSuccess();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <PaymentElement
+        options={{
+          layout: "tabs",
+        }}
+      />
+      {errorMsg && (
+        <p className="text-sm text-destructive text-center">{errorMsg}</p>
+      )}
+      <Button
+        type="submit"
+        className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
+        disabled={!stripe || processing || isSubmitting}
+      >
+        <Shield className="w-5 h-5" />
+        {processing ? "Authorizing..." : `Authorize $${price.toFixed(2)} · ${vehicleName}`}
+      </Button>
+      <p className="text-[10px] text-muted-foreground text-center">
+        Your card will be pre-authorized. Final charge applied after ride completion.
+      </p>
+    </form>
+  );
+}
+
 /* ─── Main Component ─── */
 export default function RideBookingHome() {
   const navigate = useNavigate();
