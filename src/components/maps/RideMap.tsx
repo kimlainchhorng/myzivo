@@ -61,6 +61,8 @@ interface RideMapProps {
   userLocation?: { lat: number; lng: number } | null;
   className?: string;
   onMapReady?: (map: google.maps.Map) => void;
+  /** Fires with center lat/lng when the map stops moving (idle event) */
+  onCenterChanged?: (center: { lat: number; lng: number }) => void;
 }
 
 // Singleton script loader
