@@ -615,7 +615,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     return () => {
       if ((pulseCircleRef as any).__interval) clearInterval((pulseCircleRef as any).__interval);
     };
-  }, [pickupCoords, dropoffCoords, driverCoords, clearAmbientCars]);
+  }, [pickupCoords, dropoffCoords, driverCoords, clearAmbientCars, mapReady]);
 
   // ─── Animated route rendering ───
   useEffect(() => {
