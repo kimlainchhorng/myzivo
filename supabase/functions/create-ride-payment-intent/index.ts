@@ -98,9 +98,9 @@ Deno.serve(async (req) => {
       piParams.payment_method = payment_method_id;
       piParams.confirm = true;
       piParams.off_session = true;
-      // No automatic_payment_methods when confirming with specific method
     } else {
-      piParams.automatic_payment_methods = { enabled: true };
+      // Only allow card and wallet (Apple Pay / Google Pay) — no Cash App
+      piParams.payment_method_types = ["card"];
     }
 
     const paymentIntent = await stripe.paymentIntents.create(piParams);
