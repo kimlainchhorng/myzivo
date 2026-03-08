@@ -1224,21 +1224,21 @@ export default function RideBookingHome() {
           <motion.div
             className="absolute left-0 right-0 z-40 bg-background rounded-t-[32px] shadow-[0_-12px_40px_hsl(var(--foreground)/0.1)] flex flex-col"
             style={{
-              bottom: 0,
-              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 180px)`,
+              bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
+              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - ${BOTTOM_NAV_HEIGHT}px - 100px)`,
             }}
             initial={{ y: 0 }}
             animate={{ y: searchSheetY }}
             drag="y"
-            dragConstraints={{ top: -(viewportHeight * 0.15), bottom: viewportHeight * 0.45 }}
-            dragElastic={0.15}
+            dragConstraints={{ top: -(viewportHeight * 0.1), bottom: viewportHeight * 0.25 }}
+            dragElastic={0.12}
             onDragEnd={(_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-              if (info.offset.y < -80) {
+              if (info.offset.y < -60) {
                 // Drag up → expand
-                setSearchSheetY(-(viewportHeight * 0.1));
-              } else if (info.offset.y > 100) {
-                // Drag down → collapse to peek (just the handle + title visible)
-                setSearchSheetY(viewportHeight * 0.4);
+                setSearchSheetY(-(viewportHeight * 0.08));
+              } else if (info.offset.y > 80) {
+                // Drag down → collapse to peek (handle + title still visible)
+                setSearchSheetY(viewportHeight * 0.22);
               } else {
                 // Snap back to default
                 setSearchSheetY(0);
