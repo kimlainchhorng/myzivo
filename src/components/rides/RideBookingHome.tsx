@@ -220,10 +220,16 @@ function VehicleRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-sm font-bold text-foreground">{vehicle.name}</span>
-          {vehicle.id === "ev" && (
-            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
-              <Zap className="w-3 h-3" />
-              EV
+          {vehicle.id === "economy" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
+              <TrendingDown className="w-3 h-3" />
+              LOW
+            </span>
+          )}
+          {vehicle.id === "share" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+              <Users className="w-3 h-3" />
+              SAVE
             </span>
           )}
           {vehicle.id === "comfort" && (
@@ -232,10 +238,16 @@ function VehicleRow({
               TOP
             </span>
           )}
-          {vehicle.id === "share" && (
-            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+          {vehicle.id === "ev" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
+              <Zap className="w-3 h-3" />
+              EV
+            </span>
+          )}
+          {vehicle.id === "xl" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-bold">
               <Users className="w-3 h-3" />
-              SAVE
+              6+
             </span>
           )}
           {vehicle.carSeat && (
