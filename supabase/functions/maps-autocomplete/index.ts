@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
         for (const prediction of mergedPredictions) {
           const desc = String(prediction?.description ?? "");
           const match = desc.match(/\(([A-Z]{3})\)/);
-          if (match?.[1] && AIRPORT_CODES.has(match[1])) {
+          if (match?.[1] && iataCodePattern.test(match[1])) {
             detectedCode = match[1];
             break;
           }
