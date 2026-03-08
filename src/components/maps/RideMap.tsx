@@ -428,6 +428,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const ambientCarsRef = useRef<google.maps.Marker[]>([]);
+  const [mapReady, setMapReady] = useState(false);
 
   const decodedRoute = useMemo(() => {
     if (!routePolyline) return null;
@@ -476,14 +477,16 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       });
 
       mapRef.current = map;
+      setMapReady(true);
       onMapReady?.(map);
       map.addListener("idle", () => {
         const c = map.getCenter();
         if (c && onCenterChanged) onCenterChanged({ lat: c.lat(), lng: c.lng() });
       });
 
-      // Spawn ambient cars
-      ambientCarsRef.current = spawnAmbientCars(map, center, 5);
+      // Spawn ambient cars (will be repositioned when coords arrive)
+      const carCenter = pickupCoords || userLocation || center;
+      ambientCarsRef.current = spawnAmbientCars(map, carCenter, 4, []);
 
       setTimeout(() => {
         if (!mapRef.current) return;
@@ -608,7 +611,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     return () => {
       if ((pulseCircleRef as any).__interval) clearInterval((pulseCircleRef as any).__interval);
     };
-  }, [pickupCoords, dropoffCoords, driverCoords, clearAmbientCars]);
+  }, [pickupCoords, dropoffCoords, driverCoords, clearAmbientCars, mapReady]);
 
   // ─── Animated route rendering ───
   useEffect(() => {
@@ -657,7 +660,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
         }
       );
     }
-  }, [decodedRoute, pickupCoords, dropoffCoords, clearRoute]);
+  }, [decodedRoute, pickupCoords, dropoffCoords, clearRoute, mapReady]);
 
   // ─── Driver marker (car icon) ───
   useEffect(() => {
