@@ -990,19 +990,19 @@ export default function RideBookingHome() {
 
       {/* ═══════ 2. RIDE TABS — only on home step ═══════ */}
       {viewStep === "home" && (
-        <div className="relative z-20 flex gap-1 px-4 py-2 bg-background border-b border-border/10 overflow-x-auto scrollbar-none">
+        <div className="relative z-20 flex gap-2 px-4 py-2.5 bg-background/95 backdrop-blur-sm border-b border-border/10 overflow-x-auto scrollbar-none">
           {rideTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all",
+                "flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 active:scale-95 touch-manipulation min-h-[40px]",
                 activeTab === tab.id
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:bg-muted/30"
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                  : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
               )}
             >
-              <tab.icon className="w-3.5 h-3.5" />
+              <tab.icon className="w-4 h-4" />
               {tab.label}
             </button>
           ))}

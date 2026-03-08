@@ -132,7 +132,7 @@ export default function RideHubPage() {
 
   return (
     <AppLayout
-      title="Ride Hub"
+      title="Zivo Ride"
       showBack
       onBack={() => navigate("/rides")}
       fixedHeight={activeTab === "book"}
