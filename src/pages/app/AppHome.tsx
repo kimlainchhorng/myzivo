@@ -59,6 +59,8 @@ const savedPlaceIconMap: Record<string, LucideIcon> = {
 const homeTabs = [
   { id: "rides", label: "Rides", icon: null, image: zivoRideIcon },
   { id: "eats", label: "Eats", icon: UtensilsCrossed, image: null },
+  { id: "flights", label: "Flights", icon: Plane, image: null },
+  { id: "hotels", label: "Hotels", icon: Hotel, image: null },
 ] as const;
 
 // ─── Suggestions row (service shortcuts) ───
