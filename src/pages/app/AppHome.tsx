@@ -7,12 +7,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import {
   Search, Plane, Car, Utensils, BedDouble,
   MapPin, Bell, LucideIcon, Package, Star, Sparkles,
   UtensilsCrossed, Heart, History, Hotel, Gift, Users, Share2, Clock,
   Wallet, CreditCard, Home, Briefcase, Plus, Timer, DollarSign,
   TrendingUp, Navigation, ChevronRight, ArrowRight, Zap, Shield,
-  Globe, Crown, Flame
+  Globe, Crown, Flame, Calendar
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
