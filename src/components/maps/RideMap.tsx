@@ -434,7 +434,12 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const ambientCarsRef = useRef<google.maps.Marker[]>([]);
+  const onCenterChangedRef = useRef<RideMapProps["onCenterChanged"]>(onCenterChanged);
   const [mapReady, setMapReady] = useState(false);
+
+  useEffect(() => {
+    onCenterChangedRef.current = onCenterChanged;
+  }, [onCenterChanged]);
 
   const decodedRoute = useMemo(() => {
     if (!routePolyline) return null;
@@ -487,7 +492,10 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       onMapReady?.(map);
       map.addListener("idle", () => {
         const c = map.getCenter();
-        if (c && onCenterChanged) onCenterChanged({ lat: c.lat(), lng: c.lng() });
+        const latestOnCenterChanged = onCenterChangedRef.current;
+        if (c && latestOnCenterChanged) {
+          latestOnCenterChanged({ lat: c.lat(), lng: c.lng() });
+        }
       });
 
       // Spawn ambient cars (will be repositioned when coords arrive)
