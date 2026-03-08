@@ -183,17 +183,7 @@ Deno.serve(async (req) => {
           `${detectedCode} baggage claim`,
           `${detectedCode} rideshare pickup`,
           `${detectedCode} taxi stand`,
-          `${detectedCode} American Airlines`,
-          `${detectedCode} Delta`,
-          `${detectedCode} United Airlines`,
-          `${detectedCode} Southwest Airlines`,
-          `${detectedCode} JetBlue`,
-          `${detectedCode} Spirit Airlines`,
-          `${detectedCode} Frontier Airlines`,
-          `${detectedCode} Alaska Airlines`,
-          `${detectedCode} Allegiant Air`,
-          `${detectedCode} Hawaiian Airlines`,
-          `${detectedCode} Sun Country Airlines`,
+          ...US_AIRLINES.map((airline) => `${detectedCode} ${airline}`),
         ];
         const phase2Groups = await Promise.all(codeQueries.map(fetchPredictions));
         mergedPredictions = [...mergedPredictions, ...phase2Groups.flat()];
