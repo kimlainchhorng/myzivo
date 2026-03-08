@@ -6,7 +6,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
+import { cn } from "@/lib/utils";
   Search, Plane, Car, Utensils, BedDouble,
   MapPin, Bell, LucideIcon, Package, Star, Sparkles,
   UtensilsCrossed, Heart, History, Hotel, Gift, Users, Share2, Clock,
