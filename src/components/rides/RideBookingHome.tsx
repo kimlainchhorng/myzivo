@@ -1258,12 +1258,12 @@ export default function RideBookingHome() {
               </div>
 
               {/* Action buttons row */}
-              <div className="flex gap-2 mt-3 overflow-x-auto scrollbar-none pb-1">
+              <div className="flex gap-2.5 mt-4 overflow-x-auto scrollbar-none pb-1">
                 <button
                   onClick={handleAddStop}
                   disabled={stops.length >= MAX_STOPS}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted/30 border border-border/30 text-xs font-semibold text-foreground whitespace-nowrap hover:bg-muted/50 active:scale-95 transition-all",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/15 border border-border/20 text-xs font-bold text-foreground whitespace-nowrap hover:bg-primary/10 hover:border-primary/20 active:scale-95 transition-all duration-200",
                     stops.length >= MAX_STOPS && "opacity-40 pointer-events-none"
                   )}
                 >
@@ -1273,10 +1273,10 @@ export default function RideBookingHome() {
                 <button
                   onClick={() => { setShowSchedule(!showSchedule); setShowPickupOther(false); }}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-semibold whitespace-nowrap active:scale-95 transition-all",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold whitespace-nowrap active:scale-95 transition-all duration-200",
                     showSchedule
-                      ? "bg-primary/10 border-primary/30 text-primary"
-                      : "bg-muted/30 border-border/30 text-foreground hover:bg-muted/50"
+                      ? "bg-primary/15 border-primary/30 text-primary"
+                      : "bg-muted/15 border-border/20 text-foreground hover:bg-primary/10 hover:border-primary/20"
                   )}
                 >
                   <CalendarClock className="w-3.5 h-3.5" />
@@ -1285,10 +1285,10 @@ export default function RideBookingHome() {
                 <button
                   onClick={() => { setShowPickupOther(!showPickupOther); setShowSchedule(false); }}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-semibold whitespace-nowrap active:scale-95 transition-all",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold whitespace-nowrap active:scale-95 transition-all duration-200",
                     showPickupOther
-                      ? "bg-primary/10 border-primary/30 text-primary"
-                      : "bg-muted/30 border-border/30 text-foreground hover:bg-muted/50"
+                      ? "bg-primary/15 border-primary/30 text-primary"
+                      : "bg-muted/15 border-border/20 text-foreground hover:bg-primary/10 hover:border-primary/20"
                   )}
                 >
                   <Users className="w-3.5 h-3.5" />
