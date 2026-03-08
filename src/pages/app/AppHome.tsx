@@ -68,10 +68,10 @@ const homeTabs = [
 
 // ─── Suggestions row (service shortcuts) ───
 const suggestions = [
-  { label: "Ride", icon: null, image: zivoRideIcon, href: "/rides", badge: "5%", badgeColor: "bg-destructive" },
-  { label: "Reserve", icon: Clock, image: null, href: "/scheduled", badge: "Promo", badgeColor: "bg-destructive" },
-  { label: "Rental Cars", icon: Car, image: null, href: "/rent-car", badge: "Promo", badgeColor: "bg-destructive" },
-  { label: "Hourly", icon: Timer, image: null, href: "/rides", badge: null, badgeColor: "" },
+  { label: "Ride", icon: null, image: zivoRideIcon, href: "/rides", badge: "5% Off", badgeVariant: "discount" as const },
+  { label: "Reserve", icon: Clock, image: null, href: "/scheduled", badge: "Promo", badgeVariant: "promo" as const },
+  { label: "Rental Cars", icon: Car, image: null, href: "/rent-car", badge: "Promo", badgeVariant: "promo" as const },
+  { label: "Hourly", icon: Timer, image: null, href: "/rides", badge: null, badgeVariant: null },
 ];
 
 // ─── Restaurant Card (Premium) ───
@@ -347,27 +347,34 @@ const AppHome = () => {
                 <ArrowRight className="w-5 h-5 text-foreground" />
               </button>
             </div>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 pr-5">
+            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 pr-5">
               {suggestions.map((s) => (
                 <motion.button
                   key={s.label}
                   whileTap={{ scale: 0.94 }}
                   onClick={() => navigate(s.href)}
-                  className="shrink-0 flex flex-col items-center gap-2 w-[88px] touch-manipulation relative"
+                  className="shrink-0 flex flex-col items-center gap-2.5 w-[80px] touch-manipulation relative group"
                 >
+                  {/* Badge */}
                   {s.badge && (
-                    <div className={`absolute -top-1.5 right-1 z-10 bg-destructive text-destructive-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-md`}>
+                    <div className={cn(
+                      "absolute -top-2 -right-1 z-10 text-[9px] font-bold px-2 py-[3px] rounded-full shadow-sm",
+                      s.badgeVariant === "discount"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                    )}>
                       {s.badge}
                     </div>
                   )}
-                  <div className="w-[72px] h-[72px] rounded-2xl bg-muted/40 border border-border/30 flex items-center justify-center">
+                  {/* Icon container */}
+                  <div className="w-[64px] h-[64px] rounded-2xl bg-card border border-border/40 shadow-sm flex items-center justify-center group-hover:shadow-md group-hover:border-primary/20 transition-all duration-200">
                     {s.image ? (
-                      <img src={s.image} alt={s.label} className="w-10 h-10 object-contain" />
+                      <img src={s.image} alt={s.label} className="w-9 h-9 object-contain" />
                     ) : s.icon ? (
-                      <s.icon className="w-8 h-8 text-foreground" />
+                      <s.icon className="w-7 h-7 text-foreground" />
                     ) : null}
                   </div>
-                  <span className="text-xs font-medium text-foreground text-center leading-tight">{s.label}</span>
+                  <span className="text-[11px] font-semibold text-foreground text-center leading-tight">{s.label}</span>
                 </motion.button>
               ))}
             </div>
