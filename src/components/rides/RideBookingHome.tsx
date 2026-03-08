@@ -673,7 +673,7 @@ export default function RideBookingHome() {
 
   const isSameLocation = useCallback((a: PlaceData | null, b: PlaceData | null) => {
     if (!a || !b) return false;
-    const sameCoords = Math.abs(a.lat - b.lat) < 0.0001 && Math.abs(a.lng - b.lng) < 0.0001;
+    const sameCoords = Math.abs(a.lat - b.lat) < 0.001 && Math.abs(a.lng - b.lng) < 0.001; // ~100m
     const sameAddress = a.address.trim().toLowerCase() === b.address.trim().toLowerCase();
     return sameCoords || sameAddress;
   }, []);
