@@ -262,35 +262,34 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
 // ─── SVG marker builders ───
 
 function createPickupPinSvg(): string {
-  // Green teardrop with pulsing ring effect built via CSS overlay
+  // Uber-inspired: green circle with ZIVO "Z" — flat, modern pickup marker
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="44" height="56" viewBox="0 0 44 56">
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
       <defs>
-        <filter id="s" x="-25%" y="-10%" width="150%" height="135%">
-          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.3"/>
+        <filter id="sp" x="-20%" y="-15%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.25"/>
         </filter>
       </defs>
-      <circle cx="22" cy="22" r="20" fill="#10b981" opacity="0.12"/>
-      <circle cx="22" cy="22" r="16" fill="#10b981" opacity="0.18"/>
-      <path d="M22 55 C22 55 5 35 5 21 A17 17 0 1 1 39 21 C39 35 22 55 22 55Z" fill="#10b981" filter="url(#s)"/>
-      <circle cx="22" cy="21" r="9" fill="#fff"/>
-      <text x="22" y="26" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#10b981">Z</text>
+      <circle cx="24" cy="24" r="22" fill="#10b981" opacity="0.12"/>
+      <circle cx="24" cy="24" r="17" fill="#10b981" filter="url(#sp)"/>
+      <circle cx="24" cy="24" r="11" fill="#fff"/>
+      <text x="24" y="28.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#10b981">Z</text>
     </svg>
   `)}`;
 }
 
 function createDropoffPinSvg(): string {
-  // Green pin with white "Z" — clean ZIVO branded destination
+  // Uber-inspired: dark rounded square with ZIVO "Z" — distinct from circular pickup
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
+    <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
       <defs>
-        <filter id="s2" x="-20%" y="-10%" width="140%" height="130%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.3"/>
+        <filter id="sd" x="-20%" y="-15%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.25"/>
         </filter>
       </defs>
-      <path d="M20 51 C20 51 3 32 3 19 A17 17 0 1 1 37 19 C37 32 20 51 20 51Z" fill="#10b981" filter="url(#s2)"/>
-      <circle cx="20" cy="19" r="9" fill="#fff"/>
-      <text x="20" y="23.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#10b981">Z</text>
+      <rect x="4" y="4" width="36" height="36" rx="10" fill="#111827" filter="url(#sd)"/>
+      <rect x="10" y="10" width="24" height="24" rx="6" fill="#fff"/>
+      <text x="22" y="27" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="15" fill="#111827">Z</text>
     </svg>
   `)}`;
 }
