@@ -428,6 +428,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const ambientCarsRef = useRef<google.maps.Marker[]>([]);
+  const [mapReady, setMapReady] = useState(false);
 
   const decodedRoute = useMemo(() => {
     if (!routePolyline) return null;
