@@ -63,10 +63,10 @@ const homeTabs = [
 
 // ─── Suggestions row (service shortcuts) ───
 const suggestions = [
-  { label: "Ride", icon: Car, href: "/rides", badge: "5%", badgeColor: "bg-destructive" },
-  { label: "Reserve", icon: Clock, href: "/scheduled", badge: "Promo", badgeColor: "bg-destructive" },
-  { label: "Rental Cars", icon: Car, href: "/rent-car", badge: "Promo", badgeColor: "bg-destructive" },
-  { label: "Hourly", icon: Timer, href: "/rides", badge: null, badgeColor: "" },
+  { label: "Ride", icon: null, image: zivoRideIcon, href: "/rides", badge: "5%", badgeColor: "bg-destructive" },
+  { label: "Reserve", icon: Clock, image: null, href: "/scheduled", badge: "Promo", badgeColor: "bg-destructive" },
+  { label: "Rental Cars", icon: Car, image: null, href: "/rent-car", badge: "Promo", badgeColor: "bg-destructive" },
+  { label: "Hourly", icon: Timer, image: null, href: "/rides", badge: null, badgeColor: "" },
 ];
 
 // ─── Restaurant Card (Premium) ───
