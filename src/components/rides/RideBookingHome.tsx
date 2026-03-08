@@ -621,8 +621,8 @@ export default function RideBookingHome() {
 
   /** When user drags map in search view, reverse geocode center → pickup */
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
-    // Lock pickup once destination is chosen to avoid overwriting pickup/destination labels
-    if (viewStep !== "search" || destination) return;
+    // Skip reverse geocode if user manually set pickup, or destination already chosen
+    if (viewStep !== "search" || destination || pickupManuallySet.current) return;
 
     // Debounce reverse geocode
     if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
