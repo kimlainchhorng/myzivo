@@ -284,7 +284,15 @@ const AppHome = () => {
           <div className="px-5 pt-4 pb-4">
             <motion.button
               whileTap={{ scale: 0.985 }}
-              onClick={() => setIsSearchOpen(true)}
+              onClick={() => {
+                const routes: Record<string, string> = {
+                  rides: "/rides",
+                  eats: "/eats",
+                  flights: "/flights",
+                  hotels: "/hotels",
+                };
+                navigate(routes[activeHomeTab] || "/rides");
+              }}
               className="w-full touch-manipulation"
             >
               <div className="bg-muted/40 backdrop-blur-sm rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] border border-border/40 shadow-sm transition-all active:bg-muted/60">
