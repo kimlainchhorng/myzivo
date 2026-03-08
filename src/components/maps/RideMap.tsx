@@ -270,6 +270,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
       routePolyline={routePolyline}
       driverCoords={driverCoords}
       userLocation={userLocation}
+      showUserLocationDot={showUserLocationDot}
       className={className}
       onMapReady={handleMapReady}
       onCenterChanged={onCenterChanged}
