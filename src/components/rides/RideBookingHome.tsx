@@ -1078,8 +1078,10 @@ export default function RideBookingHome() {
                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
                   <div className="w-2.5 h-2.5 rounded-full bg-primary-foreground" />
                 </div>
-                <span className="flex-1 text-left text-sm font-medium text-muted-foreground">Where to?</span>
-                <Navigation className="w-4 h-4 text-primary/60" />
+                <span className="flex-1 text-left text-sm font-medium truncate" style={{ color: destinationDisplay ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
+                  {destinationDisplay || "Where to Go"}
+                </span>
+                <Navigation className="w-4 h-4 text-primary/60 shrink-0" />
               </button>
 
               {/* Search destination button */}
