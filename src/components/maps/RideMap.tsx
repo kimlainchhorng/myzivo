@@ -421,6 +421,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const pulseCircleRef = useRef<google.maps.Circle | null>(null);
   const polylineRef = useRef<google.maps.Polyline | null>(null);
   const bgPolylineRef = useRef<google.maps.Polyline | null>(null);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
