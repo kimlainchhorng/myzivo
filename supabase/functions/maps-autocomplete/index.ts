@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
       if (value.includes("terminal") || value.includes("concourse") || value.includes("gate")) score += 4;
       if (value.includes("airport")) score += 2;
       if (value.includes("airline") || value.includes("american") || value.includes("delta") || value.includes("united") || value.includes("southwest")) score += 2;
-      if (value.includes("hotel") || value.includes("inn") || value.includes("rental") || value.includes("restaurant")) score -= 2;
+      if (value.includes("hotel") || value.includes("inn") || value.includes("rental") || value.includes("restaurant")) score -= 4;
       if (requiresAirportSpecificResults && !mentionsAirportContext) score -= 6;
 
       return score;
