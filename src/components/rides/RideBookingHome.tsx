@@ -924,7 +924,7 @@ export default function RideBookingHome() {
           <MapSection
             compact
             pickupCoords={pickup}
-            dropoffCoords={["route-preview", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep) ? destination : null}
+            dropoffCoords={["route-preview", "ride-options", "confirm-ride", "searching", "pickup-confirm", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep) ? destination : null}
             userLocation={userLocation}
             onLocateUser={handleLocateUser}
             routePolyline={viewStep !== "home" ? (routeData?.polyline ?? null) : null}
