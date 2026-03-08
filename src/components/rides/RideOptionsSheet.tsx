@@ -234,6 +234,7 @@ export default function RideOptionsSheet({
                       VIP
                     </span>
                   )}
+                  <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
                     <Users className="h-3 w-3" />
                     {ride.seats}
                   </span>

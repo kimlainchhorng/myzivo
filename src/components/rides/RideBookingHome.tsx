@@ -1131,6 +1131,12 @@ export default function RideBookingHome() {
                         5+
                       </span>
                     )}
+                    {v.id === "black-lane" && (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-[10px] font-bold">
+                        <Crown className="w-3 h-3" />
+                        VIP
+                      </span>
+                    )}
                     <div className="flex items-center gap-0.5">
                       <User className="w-3 h-3 text-muted-foreground" />
                       <span className="text-xs text-muted-foreground">{v.capacity}</span>
