@@ -90,7 +90,12 @@ Deno.serve(async (req) => {
 
     if (isAirportSearch) {
       const base = normalizedInput;
+      if (matchedCode && !/\bairport\b/i.test(base)) queryInputs.push(`${matchedCode} airport`);
       if (!/\bterminal\b/i.test(base)) queryInputs.push(`${base} terminal`);
+      if (!/\bterminal\s*[0-9a-z]\b/i.test(base)) {
+        queryInputs.push(`${base} terminal 1`);
+        queryInputs.push(`${base} terminal a`);
+      }
       if (!/\b(zone|pickup|pick[\s-]?up)\b/i.test(base)) queryInputs.push(`${base} pickup zone`);
       if (!/\b(drop[\s-]?off)\b/i.test(base)) queryInputs.push(`${base} drop off zone`);
       if (!/\b(arrivals?)\b/i.test(base)) queryInputs.push(`${base} arrivals`);
@@ -98,7 +103,7 @@ Deno.serve(async (req) => {
       if (!/\b(ground\s*transport)\b/i.test(base)) queryInputs.push(`${base} ground transportation`);
       if (!/\b(baggage|claim)\b/i.test(base)) queryInputs.push(`${base} baggage claim`);
       // Airlines
-      const hasAirline = /\b(american|delta|united|southwest|jetblue|spirit|frontier|alaska|airline)\b/i.test(base);
+      const hasAirline = /\b(american|delta|united|southwest|jetblue|spirit|frontier|alaska|allegiant|hawaiian|sun\s*country|airline)\b/i.test(base);
       if (!hasAirline) {
         queryInputs.push(`${base} American Airlines`);
         queryInputs.push(`${base} Delta`);
@@ -108,6 +113,9 @@ Deno.serve(async (req) => {
         queryInputs.push(`${base} Spirit Airlines`);
         queryInputs.push(`${base} Frontier Airlines`);
         queryInputs.push(`${base} Alaska Airlines`);
+        queryInputs.push(`${base} Allegiant Air`);
+        queryInputs.push(`${base} Hawaiian Airlines`);
+        queryInputs.push(`${base} Sun Country Airlines`);
       }
       // Deduplicate
       const unique = Array.from(new Set(queryInputs.filter(Boolean)));
