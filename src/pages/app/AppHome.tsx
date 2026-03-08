@@ -59,10 +59,10 @@ function getSearchPlaceholder(tab: string): string {
   if (tab === "rides") return "Where to Go";
   if (tab === "eats") {
     const hour = new Date().getHours();
-    if (hour >= 6 && hour < 11) return "Breakfast";
-    if (hour >= 11 && hour < 17) return "Lunch";
-    if (hour >= 17 && hour < 22) return "Dinner";
-    return "Late Night";
+    if (hour >= 6 && hour < 11) return "Breakfast time";
+    if (hour >= 11 && hour < 17) return "Lunch time";
+    if (hour >= 17 && hour < 22) return "Dinner time";
+    return "Late Night time";
   }
   if (tab === "flights") return "Search Flights";
   if (tab === "hotels") return "Search Hotels";
