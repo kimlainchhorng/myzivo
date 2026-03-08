@@ -967,51 +967,114 @@ export default function RideBookingHome() {
   return (
     <div className="relative h-[100dvh] overflow-hidden bg-background">
 
-      {/* ═══════ 1. HEADER — always visible ═══════ */}
-      <div className="relative z-20 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
-        <button
-          onClick={handleBack}
-          className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="w-5 h-5 text-foreground" />
-        </button>
-        <h1 className="flex-1 text-center font-black text-lg tracking-tight">
-          <span className="text-primary">Zivo</span> Ride
-        </h1>
-        <button
-          onClick={() => navigate("/notifications")}
-          className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
-          aria-label="Notifications"
-        >
-          <Bell className="w-5 h-5 text-muted-foreground" />
-        </button>
-      </div>
-
-      {/* ═══════ 2. RIDE TABS — only on home step ═══════ */}
-      {viewStep === "home" && (
-        <div className="relative z-20 flex gap-2 px-4 py-2.5 bg-background/95 backdrop-blur-xl border-b border-border/5 overflow-x-auto scrollbar-none">
-          {rideTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 active:scale-95 touch-manipulation min-h-[42px]",
-                activeTab === tab.id
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                  : "bg-muted/20 text-muted-foreground hover:bg-muted/40 hover:text-foreground border border-border/10"
-              )}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          ))}
+      {/* ═══════ 1. HEADER — visible on non-home steps ═══════ */}
+      {viewStep !== "home" && (
+        <div className="relative z-20 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
+          <button
+            onClick={handleBack}
+            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <h1 className="flex-1 text-center font-black text-lg tracking-tight">
+            <span className="text-primary">Zivo</span> Ride
+          </h1>
+          <button
+            onClick={() => navigate("/notifications")}
+            className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+            aria-label="Notifications"
+          >
+            <Bell className="w-5 h-5 text-muted-foreground" />
+          </button>
         </div>
       )}
 
-      {/* ═══════ 3. MAP VIEWPORT LAYER ═══════ */}
-      {(viewStep === "home"
-        || viewStep === "route-preview"
+      {/* ═══════ 2. HOME — Full-screen map with floating UI ═══════ */}
+      {viewStep === "home" && (
+        <>
+          {/* Full-screen map */}
+          <div className="absolute inset-0 z-0">
+            <MapSection
+              compact
+              pickupCoords={null}
+              dropoffCoords={null}
+              userLocation={userLocation}
+              showUserLocationDot
+              onLocateUser={handleLocateUser}
+              routePolyline={null}
+              onCenterChanged={handleMapCenterChanged}
+            >
+              {/* Center destination pin */}
+              <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center shadow-lg">
+                    <div className="w-3 h-3 rounded-sm bg-background" />
+                  </div>
+                  <div className="w-2 h-5 bg-foreground -mt-0.5" />
+                  <div className="w-4 h-1.5 rounded-full bg-foreground/20 mt-0.5 blur-[1px]" />
+                </div>
+              </div>
+            </MapSection>
+          </div>
+
+          {/* Floating back button */}
+          <div className="absolute top-4 left-4 z-30" style={{ top: `calc(env(safe-area-inset-top, 0px) + 12px)` }}>
+            <button
+              onClick={handleBack}
+              className="w-11 h-11 rounded-full bg-background shadow-lg shadow-foreground/10 flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-5 h-5 text-foreground" />
+            </button>
+          </div>
+
+          {/* Bottom sheet — Set your destination */}
+          <div
+            className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
+            style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
+            </div>
+
+            <div className="px-5 pb-5">
+              {/* Title */}
+              <div className="text-center mb-4">
+                <h2 className="text-lg font-black text-foreground tracking-tight">Set your destination</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">Drag map to move pin</p>
+              </div>
+
+              <div className="h-px bg-border/15 mb-4" />
+
+              {/* Destination input */}
+              <button
+                onClick={() => setViewStep("search")}
+                className="w-full flex items-center gap-3 bg-muted/15 border border-border/20 rounded-2xl px-4 py-3.5 transition-all duration-200 hover:bg-muted/25 hover:border-primary/20 active:scale-[0.98] group"
+              >
+                <div className="w-6 h-6 rounded-md bg-foreground flex items-center justify-center shrink-0">
+                  <div className="w-2.5 h-2.5 rounded-sm bg-background" />
+                </div>
+                <span className="flex-1 text-left text-sm font-medium text-muted-foreground">Where to?</span>
+                <Navigation className="w-4 h-4 text-muted-foreground/50" />
+              </button>
+
+              {/* Search destination button */}
+              <Button
+                onClick={() => setViewStep("search")}
+                className="w-full h-13 mt-3 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 active:scale-[0.98] transition-all duration-200"
+                size="lg"
+              >
+                Search destination
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ═══════ 3. MAP VIEWPORT for non-home steps ═══════ */}
+      {(viewStep === "route-preview"
         || viewStep === "ride-options"
         || viewStep === "confirm-ride"
         || viewStep === "searching"
@@ -1024,7 +1087,7 @@ export default function RideBookingHome() {
         <div
           className="absolute left-0 right-0 z-0"
           style={{
-            top: viewStep === "home" ? HEADER_TABS_HEIGHT : HEADER_HEIGHT,
+            top: HEADER_HEIGHT,
             bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
           }}
         >
@@ -1034,92 +1097,11 @@ export default function RideBookingHome() {
             dropoffCoords={["route-preview", "ride-options", "confirm-ride", "searching", "pickup-confirm", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep) ? destination : null}
             userLocation={userLocation}
             onLocateUser={handleLocateUser}
-            routePolyline={viewStep !== "home" ? (routeData?.polyline ?? null) : null}
+            routePolyline={routeData?.polyline ?? null}
             driverCoords={
               (viewStep === "driver-en-route" || viewStep === "trip-in-progress") ? driverCoords : null
             }
           />
-        </div>
-      )}
-
-      {/* ═══════ 4a. HOME bottom sheet ═══════ */}
-      {viewStep === "home" && (
-        <div
-          className="absolute left-0 right-0 z-30 rounded-t-[32px] bg-background shadow-[0_-12px_40px_hsl(var(--foreground)/0.1)]"
-          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
-        >
-          {/* Drag handle */}
-          <div className="flex justify-center pt-3 pb-1">
-            <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
-          </div>
-
-          <div className="px-5 pt-2 pb-4">
-            <h2 className="text-xl font-black text-foreground tracking-tight">{greeting}, {userName}</h2>
-            
-            {/* Where to? search bar */}
-            <button
-              onClick={() => setViewStep("search")}
-              className="w-full mt-4 flex items-center gap-3 bg-muted/20 border border-border/20 rounded-2xl px-4 py-3.5 transition-all duration-200 hover:bg-muted/30 hover:border-primary/20 active:scale-[0.98] group"
-            >
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-                <MapPin className="w-4.5 h-4.5 text-primary" />
-              </div>
-              <span className="flex-1 text-left text-sm font-semibold text-muted-foreground">Where to?</span>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border/20">
-                <Clock className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-bold text-foreground">Now</span>
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
-              </div>
-            </button>
-
-            {/* Saved places */}
-            {savedPlaces.length > 0 ? (
-              <div className="mt-4 space-y-0">
-                {savedPlaces.map((place, i) => {
-                  const Icon = place.icon;
-                  return (
-                    <button
-                      key={place.id}
-                      onClick={() => handleSavedPlace(place.address)}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-1 py-3.5 text-left transition-all duration-200 hover:bg-muted/10 active:scale-[0.98]",
-                        i < savedPlaces.length - 1 && "border-b border-border/10"
-                      )}
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-muted/30 flex items-center justify-center shrink-0">
-                        <Icon className="w-4.5 h-4.5 text-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-foreground">{place.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{place.address}</p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
-                    </button>
-                  );
-                })}
-              </div>
-            ) : null}
-
-            {/* Get anywhere service grid */}
-            <div className="mt-5 border-t border-border/10 pt-4">
-              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Get anywhere</p>
-              <div className="flex gap-3 overflow-x-auto scrollbar-none pb-1">
-                {homeServices.map((svc) => {
-                  const Icon = svc.icon;
-                  return (
-                    <button
-                      key={svc.id}
-                      onClick={() => toast.info("Coming soon!")}
-                      className="flex flex-col items-center justify-center gap-2 w-[64px] h-[64px] rounded-2xl bg-muted/15 border border-border/15 shrink-0 hover:bg-primary/10 hover:border-primary/20 active:scale-95 transition-all duration-200 group"
-                    >
-                      <Icon className="w-5 h-5 text-foreground group-hover:text-primary transition-colors" />
-                      <span className="text-[10px] font-bold text-foreground">{svc.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
