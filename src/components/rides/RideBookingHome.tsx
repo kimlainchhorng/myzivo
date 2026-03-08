@@ -1541,7 +1541,7 @@ export default function RideBookingHome() {
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div>
                       <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Pickup</p>
-                      <p className="text-sm font-semibold text-foreground truncate leading-tight">{pickup?.address || pickupDisplay}</p>
+                      <p className="text-sm font-semibold text-foreground leading-tight whitespace-normal break-words">{pickup?.address || pickupDisplay}</p>
                     </div>
                     {stops.map((stop, idx) => (
                       <div key={stop.id}>
@@ -1551,7 +1551,7 @@ export default function RideBookingHome() {
                     ))}
                     <div>
                       <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Destination</p>
-                      <p className="text-sm font-semibold text-foreground truncate leading-tight">{destination?.address || destinationDisplay}</p>
+                      <p className="text-sm font-semibold text-foreground leading-tight whitespace-normal break-words">{destination?.address || destinationDisplay}</p>
                     </div>
                   </div>
                 </div>
