@@ -870,121 +870,185 @@ export default function RideBookingHome() {
         </div>
       )}
 
-      {/* ═══════ SEARCH — full-screen overlay below header ═══════ */}
+      {/* ═══════ SEARCH — split view: map top + panel bottom ═══════ */}
       {viewStep === "search" && (
-        <div
-          className="absolute left-0 right-0 bottom-0 z-40 bg-background flex flex-col"
-          style={{ top: HEADER_HEIGHT }}
-        >
-          <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-            <h2 className="text-lg font-black text-foreground">Where to?</h2>
+        <>
+          {/* Map area with draggable pin */}
+          <div
+            className="absolute left-0 right-0 z-0"
+            style={{
+              top: HEADER_HEIGHT,
+              bottom: `calc(50% + ${SAFE_BOTTOM})`,
+            }}
+          >
+            <MapSection
+              compact
+              pickupCoords={pickup}
+              dropoffCoords={destination}
+              userLocation={userLocation}
+              onLocateUser={handleLocateUser}
+              routePolyline={null}
+            >
+              {/* Center pin indicator when no pickup selected */}
+              {!pickup && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                  <div className="flex flex-col items-center">
+                    <MapPin className="w-8 h-8 text-primary drop-shadow-lg" />
+                    <div className="w-2 h-2 rounded-full bg-primary/40 mt-0.5" />
+                    <span className="mt-1 px-2 py-0.5 rounded-full bg-background/90 text-[10px] font-semibold text-foreground shadow-sm">
+                      Move map to set pickup
+                    </span>
+                  </div>
+                </div>
+              )}
+            </MapSection>
           </div>
 
-          <div className="px-4 pt-2">
-            <div className="rounded-2xl bg-muted/15 border border-border/30 p-3">
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col items-center gap-0.5">
-                  <div className="w-3 h-3 rounded-full bg-foreground" />
-                  <div className="w-0.5 h-8 bg-border/50" />
-                  <div className="w-3 h-3 rounded-sm bg-foreground" />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <AddressAutocomplete
-                    placeholder="Pickup location"
-                    value={pickupDisplay}
-                    onSelect={handlePickupSelect}
-                    className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
-                  />
-                  <AddressAutocomplete
-                    placeholder="Where to?"
-                    value={destinationDisplay}
-                    onSelect={handleDestinationSelect}
-                    proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
-                    className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
-                  />
+          {/* Bottom panel */}
+          <div
+            className="absolute left-0 right-0 bottom-0 z-40 bg-background rounded-t-[28px] shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col"
+            style={{
+              top: "45%",
+              paddingBottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
+            }}
+          >
+            <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25 shrink-0" />
+
+            <div className="px-4 pt-3">
+              <h2 className="text-lg font-black text-foreground mb-3">Where to?</h2>
+
+              {/* Address inputs */}
+              <div className="rounded-2xl bg-muted/15 border border-border/30 p-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col items-center gap-0.5">
+                    <div className="w-3 h-3 rounded-full bg-foreground" />
+                    <div className="w-0.5 h-8 bg-border/50" />
+                    <div className="w-3 h-3 rounded-sm bg-foreground" />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <AddressAutocomplete
+                      placeholder="Pickup location"
+                      value={pickupDisplay}
+                      onSelect={handlePickupSelect}
+                      className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
+                    />
+                    <AddressAutocomplete
+                      placeholder="Where to?"
+                      value={destinationDisplay}
+                      onSelect={handleDestinationSelect}
+                      proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
+                      className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div className="flex-1 overflow-y-auto px-4 pt-3 pb-20">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
-            {savedPlaces.length > 0 ? savedPlaces.map((place) => {
-              const Icon = place.icon;
-              return (
+              {/* Action buttons row */}
+              <div className="flex gap-2 mt-3 overflow-x-auto scrollbar-none pb-1">
                 <button
-                  key={place.id}
-                  onClick={() => handleSavedPlace(place.address)}
-                  className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                  onClick={() => toast.info("Add a stop coming soon")}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted/30 border border-border/30 text-xs font-semibold text-foreground whitespace-nowrap hover:bg-muted/50 active:scale-95 transition-all"
                 >
-                  <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
-                    <Icon className="w-4 h-4 text-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground">{place.name}</p>
-                    <p className="text-xs text-muted-foreground">{place.address}</p>
-                  </div>
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Stop
                 </button>
-              );
-            }) : (
-              <button
-                onClick={() => toast.info("Save a location from your profile")}
-                className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
-              >
-                <div className="w-9 h-9 rounded-full bg-muted/20 flex items-center justify-center shrink-0 border border-dashed border-border/40">
-                  <Plus className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-muted-foreground">Add a saved place</p>
-                  <p className="text-xs text-muted-foreground/60">Home, work, gym...</p>
-                </div>
-              </button>
-            )}
+                <button
+                  onClick={() => navigate("/rides/reserve")}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted/30 border border-border/30 text-xs font-semibold text-foreground whitespace-nowrap hover:bg-muted/50 active:scale-95 transition-all"
+                >
+                  <CalendarClock className="w-3.5 h-3.5" />
+                  Schedule
+                </button>
+                <button
+                  onClick={() => toast.info("Pick up other customer coming soon")}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted/30 border border-border/30 text-xs font-semibold text-foreground whitespace-nowrap hover:bg-muted/50 active:scale-95 transition-all"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  Pick up other
+                </button>
+              </div>
+            </div>
 
-            {recentDestinations.length > 0 && (
-              <>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Recent</p>
-                {recentDestinations.map((dest) => (
+            {/* Saved & Recent list */}
+            <div className="flex-1 overflow-y-auto px-4 pt-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
+              {savedPlaces.length > 0 ? savedPlaces.map((place) => {
+                const Icon = place.icon;
+                return (
                   <button
-                    key={dest.id}
-                    onClick={() => {
-                      setDestinationDisplay(dest.address.split(",")[0]);
-                      setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
-                    }}
+                    key={place.id}
+                    onClick={() => handleSavedPlace(place.address)}
                     className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
                   >
                     <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
-                      <History className="w-4 h-4 text-muted-foreground" />
+                      <Icon className="w-4 h-4 text-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
-                      <p className="text-xs text-muted-foreground">{dest.time}</p>
+                      <p className="text-sm font-bold text-foreground">{place.name}</p>
+                      <p className="text-xs text-muted-foreground">{place.address}</p>
                     </div>
                   </button>
-                ))}
-              </>
+                );
+              }) : (
+                <button
+                  onClick={() => toast.info("Save a location from your profile")}
+                  className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                >
+                  <div className="w-9 h-9 rounded-full bg-muted/20 flex items-center justify-center shrink-0 border border-dashed border-border/40">
+                    <Plus className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-muted-foreground">Add a saved place</p>
+                    <p className="text-xs text-muted-foreground/60">Home, work, gym...</p>
+                  </div>
+                </button>
+              )}
+
+              {recentDestinations.length > 0 && (
+                <>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Recent</p>
+                  {recentDestinations.map((dest) => (
+                    <button
+                      key={dest.id}
+                      onClick={() => {
+                        setDestinationDisplay(dest.address.split(",")[0]);
+                        setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
+                      }}
+                      className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
+                        <History className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
+                        <p className="text-xs text-muted-foreground">{dest.time}</p>
+                      </div>
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
+
+            {pickup && destination && (
+              <div className="px-4 pb-3 pt-2 shrink-0">
+                <Button
+                  className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                  onClick={handleConfirmSearch}
+                  disabled={isLoadingRoute}
+                >
+                  {isLoadingRoute ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                      Finding route...
+                    </span>
+                  ) : (
+                    "Choose a ride"
+                  )}
+                </Button>
+              </div>
             )}
           </div>
-
-          {pickup && destination && (
-            <div className="px-4 pb-4 pt-2" style={{ paddingBottom: 'calc(16px + 72px + env(safe-area-inset-bottom, 0px))' }}>
-              <Button
-                className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                onClick={handleConfirmSearch}
-                disabled={isLoadingRoute}
-              >
-                {isLoadingRoute ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                    Finding route...
-                  </span>
-                ) : (
-                  "Choose a ride"
-                )}
-              </Button>
-            </div>
-          )}
-        </div>
+        </>
       )}
 
       {/* ═══════ Zoom controls — route-preview only ═══════ */}
