@@ -461,6 +461,7 @@ export default function RideBookingHome() {
   const [searchSheetY, setSearchSheetY] = useState(0); // 0 = half, negative = expanded
   const [isReversingGeocode, setIsReversingGeocode] = useState(false);
   const reverseGeocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pickupManuallySet = useRef(false); // true when user selects pickup via autocomplete
 
   // New state for enhanced flow
   const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
@@ -620,8 +621,8 @@ export default function RideBookingHome() {
 
   /** When user drags map in search view, reverse geocode center → pickup */
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
-    // Lock pickup once destination is chosen to avoid overwriting pickup/destination labels
-    if (viewStep !== "search" || destination) return;
+    // Skip reverse geocode if user manually set pickup, or destination already chosen
+    if (viewStep !== "search" || destination || pickupManuallySet.current) return;
 
     // Debounce reverse geocode
     if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
@@ -683,6 +684,13 @@ export default function RideBookingHome() {
   }, []);
 
   const handlePickupSelect = useCallback((place: PlaceData) => {
+    pickupManuallySet.current = true;
+    // Cancel any pending reverse geocode
+    if (reverseGeocodeTimerRef.current) {
+      clearTimeout(reverseGeocodeTimerRef.current);
+      reverseGeocodeTimerRef.current = null;
+    }
+    setIsReversingGeocode(false);
     setPickup(place);
     setPickupDisplay(place.address);
   }, []);
@@ -915,6 +923,7 @@ export default function RideBookingHome() {
   /* ─── Reset state ─── */
   const handleReset = () => {
     if (trackingIntervalRef.current) clearInterval(trackingIntervalRef.current);
+    pickupManuallySet.current = false;
     setViewStep("home");
     setPickup(null);
     setDestination(null);
