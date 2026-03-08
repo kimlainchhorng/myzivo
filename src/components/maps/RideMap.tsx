@@ -390,9 +390,9 @@ function spawnAmbientCars(
       position: { lat, lng },
       map,
       icon: {
-        url: createCarSvg(rotation),
-        scaledSize: new google.maps.Size(24, 24),
-        anchor: new google.maps.Point(12, 12),
+        url: "/vehicles/map-car-icon.png",
+        scaledSize: new google.maps.Size(32, 18),
+        anchor: new google.maps.Point(16, 9),
       },
       clickable: false,
       zIndex: 10,
