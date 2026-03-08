@@ -1947,58 +1947,67 @@ export default function RideBookingHome() {
           className="absolute left-0 right-0 z-40 bg-background flex flex-col overflow-y-auto"
           style={{ top: HEADER_HEIGHT, bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
         >
-          <div className="flex items-center gap-3 px-4 pt-4 pb-2 shrink-0">
-            <h2 className="text-lg font-black text-foreground">Confirm your ride</h2>
+          <div className="px-5 pt-5 pb-2 shrink-0">
+            <h2 className="text-xl font-black text-foreground tracking-tight">Confirm your ride</h2>
           </div>
 
-          <div className="px-4 pb-4 space-y-0 flex-1 overflow-y-auto">
-            {/* Route */}
-            <div className="rounded-2xl bg-muted/15 border border-border/20 p-4 mb-3">
-              <div className="flex items-start gap-3">
-                <div className="flex flex-col items-center mt-0.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-primary/20" />
-                  <div className="w-px flex-1 min-h-[24px] border-l-[2px] border-dashed border-muted-foreground/30 my-0.5" />
-                  <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
+          <div className="px-5 pb-4 space-y-4 flex-1 overflow-y-auto">
+            {/* Route card */}
+            <div className="rounded-2xl bg-card border border-border/20 p-4">
+              <div className="flex items-start gap-3.5">
+                <div className="flex flex-col items-center mt-1">
+                  <div className="w-3 h-3 rounded-full bg-primary ring-[3px] ring-primary/15" />
+                  <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/25 my-1" />
+                  <div className="w-3 h-3 rounded-sm bg-foreground ring-[3px] ring-foreground/10" />
                 </div>
-                <div className="flex-1 min-w-0 space-y-2">
-                  <p className="text-sm font-semibold text-foreground truncate">{pickup?.address || pickupDisplay}</p>
-                  <p className="text-sm font-semibold text-foreground truncate">{destination?.address || destinationDisplay}</p>
+                <div className="flex-1 min-w-0 space-y-3">
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Pickup</p>
+                    <p className="text-[14px] font-bold text-foreground leading-snug">{pickup?.address || pickupDisplay}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Dropoff</p>
+                    <p className="text-[14px] font-bold text-foreground leading-snug">{destination?.address || destinationDisplay}</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Vehicle summary */}
-            <div className="rounded-2xl bg-card border border-border/20 p-4 mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-16 h-12 flex items-center justify-center shrink-0">
+            {/* Vehicle summary card */}
+            <div className="rounded-2xl bg-card border border-border/20 p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-[72px] h-[52px] flex items-center justify-center shrink-0 bg-muted/10 rounded-xl">
                   <img src={VEHICLE_IMAGES[selectedVehicle] || VEHICLE_IMAGES["economy"]} alt={currentVehicle.name} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground">{currentVehicle.name} · {currentVehicle.capacity} seats</p>
-                  <p className="text-xs text-muted-foreground">{currentVehicle.etaMin} min away · {currentVehicle.desc}</p>
+                  <p className="text-[15px] font-bold text-foreground">{currentVehicle.name} · {currentVehicle.capacity} seats</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{currentVehicle.etaMin} min away · {currentVehicle.desc}</p>
                 </div>
-                <p className="text-lg font-bold text-foreground">${currentPrice.toFixed(2)}</p>
+                <p className="text-xl font-black text-foreground tabular-nums">${currentPrice.toFixed(2)}</p>
               </div>
             </div>
 
-            {/* Route info */}
+            {/* Route info pills */}
             {routeData && (
-              <div className="rounded-2xl bg-muted/15 border border-border/20 p-3 mb-4 flex items-center justify-center gap-3 text-xs text-muted-foreground">
-                <Timer className="w-3.5 h-3.5" />
-                <span>{routeData.duration_minutes} min</span>
-                <span>·</span>
-                <Route className="w-3.5 h-3.5" />
-                <span>{routeData.distance_miles} mi</span>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-card border border-border/20 px-3 py-2.5">
+                  <Timer className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-bold text-foreground">{routeData.duration_minutes} min</span>
+                </div>
+                <div className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-card border border-border/20 px-3 py-2.5">
+                  <Route className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-bold text-foreground">{routeData.distance_miles} mi</span>
+                </div>
                 {routeData.traffic_level && (
-                  <>
-                    <span>·</span>
-                    <span className="capitalize">{routeData.traffic_level} traffic</span>
-                  </>
+                  <div className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-card border border-border/20 px-3 py-2.5">
+                    <Car className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-bold text-foreground capitalize">{routeData.traffic_level}</span>
+                  </div>
                 )}
               </div>
             )}
 
-            {/* Payment Section — Saved cards + Add card + Apple Pay */}
+            {/* Payment Section */}
             <RidePaymentSection
               price={currentPrice}
               vehicleName={currentVehicle.name}
