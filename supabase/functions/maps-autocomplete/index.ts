@@ -72,11 +72,16 @@ Deno.serve(async (req) => {
       new Map(mergedPredictions.map((p: any) => [p.place_id, p])).values()
     );
 
-    const terminalOrAirlineRank = (text: string) => {
+    const airportContextRank = (text: string) => {
       const value = text.toLowerCase();
       let score = 0;
+
+      if (value.includes("zone")) score += 4;
+      if (value.includes("pickup") || value.includes("drop off") || value.includes("drop-off") || value.includes("arrivals") || value.includes("departures")) score += 3;
       if (value.includes("terminal") || value.includes("concourse") || value.includes("gate")) score += 3;
       if (value.includes("airline") || value.includes("american") || value.includes("delta") || value.includes("united") || value.includes("southwest")) score += 2;
+      if (value.includes("hotel") || value.includes("inn") || value.includes("rental") || value.includes("restaurant")) score -= 2;
+
       return score;
     };
 
