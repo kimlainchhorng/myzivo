@@ -624,6 +624,22 @@ export default function RideBookingHome() {
 
   /** When user drags map in search view, reverse geocode center → pickup */
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
+    // In home view: reverse geocode to show address in the destination field
+    if (viewStep === "home") {
+      if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
+      reverseGeocodeTimerRef.current = setTimeout(async () => {
+        setIsReversingGeocode(true);
+        try {
+          const address = await reverseGeocode(center.lat, center.lng);
+          setDestinationDisplay(address);
+        } catch {
+          setDestinationDisplay(`${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`);
+        } finally {
+          setIsReversingGeocode(false);
+        }
+      }, 600);
+      return;
+    }
     // Skip reverse geocode if user manually set pickup, or destination already chosen
     if (viewStep !== "search" || destination || pickupManuallySet.current) return;
 
@@ -1008,14 +1024,17 @@ export default function RideBookingHome() {
               {/* Center destination pin — ZIVO branded */}
               <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
                 <div className="flex flex-col items-center">
-                  <div className="relative">
-                    <div className="absolute -inset-3 rounded-full bg-primary/15 animate-pulse" style={{ animationDuration: "2s" }} />
-                    <div className="relative w-10 h-10 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-primary-foreground" />
-                    </div>
+                  <div className="relative w-10 h-10 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-primary-foreground" />
                   </div>
-                  <div className="w-1.5 h-4 bg-primary -mt-0.5 rounded-b-full" />
-                  <div className="w-4 h-1.5 rounded-full bg-primary/20 mt-0.5 blur-[1px]" />
+                  <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-primary -mt-[2px]" />
+                  <div className="w-3 h-1 rounded-full bg-foreground/15 mt-0.5 blur-[1px]" />
+                  {isReversingGeocode && (
+                    <span className="mt-1.5 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm border border-border/30">
+                      <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      Locating...
+                    </span>
+                  )}
                 </div>
               </div>
             </MapSection>
@@ -1059,8 +1078,10 @@ export default function RideBookingHome() {
                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
                   <div className="w-2.5 h-2.5 rounded-full bg-primary-foreground" />
                 </div>
-                <span className="flex-1 text-left text-sm font-medium text-muted-foreground">Where to?</span>
-                <Navigation className="w-4 h-4 text-primary/60" />
+                <span className="flex-1 text-left text-sm font-medium truncate" style={{ color: destinationDisplay ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
+                  {destinationDisplay || "Where to Go"}
+                </span>
+                <Navigation className="w-4 h-4 text-primary/60 shrink-0" />
               </button>
 
               {/* Search destination button */}
