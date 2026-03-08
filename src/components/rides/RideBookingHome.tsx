@@ -1137,7 +1137,7 @@ export default function RideBookingHome() {
               <div className="h-1 w-10 rounded-full bg-muted-foreground/40" />
             </div>
 
-            <div className="px-4 pt-2">
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4 pt-2 pb-20" style={{ maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 140px)` }}>
               <h2 className="text-lg font-black text-foreground mb-3">Where to?</h2>
 
               {/* Address inputs with Uber-style connector */}
