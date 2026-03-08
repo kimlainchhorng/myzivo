@@ -376,14 +376,22 @@ function animatePolyline(
   return { bgLine, animatedLine };
 }
 
-// ─── Ambient car icons by category ───
-const AMBIENT_CAR_ICONS = [
-  "/vehicles/economy-car-v2.png",   // Economy / Share / Pet
-  "/vehicles/economy-car-v2.png",   // weighted more (common)
-  "/vehicles/comfort-car-v2.png",   // Comfort
-  "/vehicles/xl-car-v2.png",        // XL / SUV
-  "/vehicles/black-lane-car-v2.png",// BLACK Lane
-];
+// ─── Clean SVG ambient car icon ───
+function createAmbientCarSvg(rotation: number): string {
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+      <g transform="rotate(${rotation} 16 16)">
+        <rect x="10" y="5" width="12" height="22" rx="5" fill="#1a1a1a" opacity="0.85"/>
+        <rect x="11.5" y="7" width="9" height="5" rx="2.5" fill="#333"/>
+        <rect x="11.5" y="19" width="9" height="3.5" rx="1.5" fill="#333"/>
+        <circle cx="11" cy="9" r="1" fill="#fbbf24"/>
+        <circle cx="21" cy="9" r="1" fill="#fbbf24"/>
+        <circle cx="11" cy="23" r="1" fill="#ef4444" opacity="0.7"/>
+        <circle cx="21" cy="23" r="1" fill="#ef4444" opacity="0.7"/>
+      </g>
+    </svg>
+  `)}`;
+}
 
 // ─── Ambient cars with minimum distance from pins ───
 function spawnAmbientCars(
@@ -412,14 +420,14 @@ function spawnAmbientCars(
       )
     );
 
-    const iconUrl = AMBIENT_CAR_ICONS[i % AMBIENT_CAR_ICONS.length];
+    const rotation = Math.floor(Math.random() * 360);
     const marker = new google.maps.Marker({
       position: { lat, lng },
       map,
       icon: {
-        url: iconUrl,
-        scaledSize: new google.maps.Size(30, 18),
-        anchor: new google.maps.Point(15, 9),
+        url: createAmbientCarSvg(rotation),
+        scaledSize: new google.maps.Size(24, 24),
+        anchor: new google.maps.Point(12, 12),
       },
       clickable: false,
       zIndex: 10,
