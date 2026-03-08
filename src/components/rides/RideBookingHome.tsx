@@ -465,6 +465,7 @@ export default function RideBookingHome() {
   const [isReversingGeocode, setIsReversingGeocode] = useState(false);
   const reverseGeocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pickupManuallySet = useRef(false); // true when user selects pickup via autocomplete
+  const mapCenterRef = useRef<{ lat: number; lng: number } | null>(null);
 
   // New state for enhanced flow
   const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
