@@ -44,7 +44,7 @@ const rideOptionsSeed: RideOption[] = [
     eta: "3:24 pm",
     description: "Top-rated drivers, extra legroom",
     price: 45.61,
-    seats: 4,
+    seats: 3,
     image: "/vehicles/comfort-car-v2.png",
   },
   {
