@@ -794,6 +794,14 @@ export default function RideBookingHome() {
     setIsSubmitting(true);
     setPaymentStep("authorizing");
     try {
+      // Build stops metadata
+      const stopsData = stops.filter(s => s.place).map((s, idx) => ({
+        order: idx + 1,
+        address: s.place!.address,
+        lat: s.place!.lat,
+        lng: s.place!.lng,
+      }));
+
       // 1. Create ride request in DB
       const { data: rideData, error: rideError } = await supabase.from("ride_requests").insert({
         user_id: user.id,
@@ -812,6 +820,7 @@ export default function RideBookingHome() {
         customer_phone: user.user_metadata?.phone || "",
         requires_car_seat: currentVehicle.carSeat,
         car_seat_type: currentVehicle.carSeat ? "standard" : null,
+        ...(stopsData.length > 0 ? { notes: `Stops: ${stopsData.map(s => s.address).join(" → ")}` } : {}),
       }).select("id").single();
 
       if (rideError) throw rideError;
