@@ -231,28 +231,40 @@ const AppHome = () => {
       <div className="overflow-y-auto pb-24 scroll-momentum">
         {/* ─── UBER-STYLE HEADER ─── */}
         <div className="bg-background relative">
-          {/* Service Tabs: Rides | Eats */}
-          <div className="flex items-center border-b border-border/50 safe-area-top">
+          {/* Service Tabs — Glassmorphic Chips */}
+          <div className="flex items-center gap-2 px-4 py-3 safe-area-top overflow-x-auto scrollbar-none">
             {homeTabs.map((tab) => {
               const isActive = activeHomeTab === tab.id;
               return (
-                <button
+                <motion.button
                   key={tab.id}
                   onClick={() => setActiveHomeTab(tab.id)}
+                  whileTap={{ scale: 0.95 }}
+                  layout
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-2.5 py-4 text-base font-bold transition-all border-b-[3px] min-h-[56px] touch-manipulation",
+                    "relative flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 touch-manipulation min-h-[44px]",
                     isActive
-                      ? "border-foreground text-foreground"
-                      : "border-transparent text-muted-foreground"
+                      ? "bg-primary/15 text-primary border border-primary/30 shadow-[0_0_12px_hsl(var(--primary)/0.15)] backdrop-blur-xl"
+                      : "bg-muted/40 text-muted-foreground border border-border/40 backdrop-blur-sm hover:bg-muted/60"
                   )}
                 >
-                  {tab.image ? (
-                    <img src={tab.image} alt={tab.label} className="w-6 h-6 object-contain" />
-                  ) : tab.icon ? (
-                    <tab.icon className="w-5 h-5" />
-                  ) : null}
-                  {tab.label}
-                </button>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTabGlow"
+                      className="absolute inset-0 rounded-full bg-primary/10"
+                      transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center gap-2">
+                    {tab.image ? (
+                      <img src={tab.image} alt={tab.label} className="w-6 h-6 object-contain" />
+                    ) : tab.icon ? (
+                      <tab.icon className="w-5 h-5" />
+                    ) : null}
+                    {tab.label}
+                  </span>
+                </motion.button>
               );
             })}
           </div>
