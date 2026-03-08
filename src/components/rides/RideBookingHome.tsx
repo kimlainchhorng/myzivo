@@ -1099,9 +1099,9 @@ export default function RideBookingHome() {
                 <div className="flex items-center gap-3">
                   {/* Pickup/Dropoff indicator dots + dotted line */}
                   <div className="flex flex-col items-center py-2">
-                    <div className="w-3 h-3 rounded-full bg-primary ring-2 ring-primary/20" />
-                    <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/40 my-1" />
-                    <div className="w-3 h-3 rounded-sm bg-foreground" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                    <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/30 my-1" />
+                    <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
                   </div>
                   <div className="flex-1 space-y-2">
                     <AddressAutocomplete
