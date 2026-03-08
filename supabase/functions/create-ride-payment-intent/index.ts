@@ -13,7 +13,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -40,12 +39,12 @@ Deno.serve(async (req) => {
     const userId = claimsData.claims.sub as string;
     const userEmail = claimsData.claims.email as string;
 
-    // Parse body
     const {
       ride_request_id,
       amount_cents,
       ride_type,
       wallet_credit_cents = 0,
+      payment_method_id, // optional: saved card ID for auto-charge
     } = await req.json();
 
     if (!ride_request_id || !amount_cents || amount_cents < 50) {
@@ -57,7 +56,6 @@ Deno.serve(async (req) => {
 
     const netAmount = Math.max(50, amount_cents - (wallet_credit_cents || 0));
 
-    // Init Stripe
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       return new Response(JSON.stringify({ error: "Stripe not configured" }), {
@@ -80,13 +78,11 @@ Deno.serve(async (req) => {
       customerId = customer.id;
     }
 
-    // Create PaymentIntent with manual capture (pre-authorization)
-    const paymentIntent = await stripe.paymentIntents.create({
+    const piParams: any = {
       amount: netAmount,
       currency: "usd",
       customer: customerId,
-      capture_method: "manual", // Pre-authorize, capture later
-      automatic_payment_methods: { enabled: true },
+      capture_method: "manual",
       metadata: {
         zivo_user_id: userId,
         ride_request_id,
@@ -95,19 +91,32 @@ Deno.serve(async (req) => {
         original_amount_cents: String(amount_cents),
       },
       description: `ZIVO Ride - ${ride_type || "economy"}`,
-    });
+    };
+
+    // If saved payment method provided, auto-confirm off-session
+    if (payment_method_id) {
+      piParams.payment_method = payment_method_id;
+      piParams.confirm = true;
+      piParams.off_session = true;
+      // No automatic_payment_methods when confirming with specific method
+    } else {
+      piParams.automatic_payment_methods = { enabled: true };
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create(piParams);
 
     // Update ride_request with payment intent ID
+    const paymentStatus = paymentIntent.status === "requires_capture" ? "authorized" : "pending";
     await supabase
       .from("ride_requests")
       .update({
         payment_intent_id: paymentIntent.id,
-        payment_status: "authorized",
+        payment_status: paymentStatus,
       })
       .eq("id", ride_request_id)
       .eq("user_id", userId);
 
-    console.log(`[ride-payment] Created PI ${paymentIntent.id} for ride ${ride_request_id} ($${(netAmount / 100).toFixed(2)})`);
+    console.log(`[ride-payment] Created PI ${paymentIntent.id} for ride ${ride_request_id} ($${(netAmount / 100).toFixed(2)}) status=${paymentIntent.status}`);
 
     return new Response(JSON.stringify({
       ok: true,
@@ -115,6 +124,8 @@ Deno.serve(async (req) => {
       payment_intent_id: paymentIntent.id,
       customer_id: customerId,
       amount_cents: netAmount,
+      status: paymentIntent.status,
+      auto_confirmed: !!payment_method_id,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
