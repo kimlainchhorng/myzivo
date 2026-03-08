@@ -181,6 +181,9 @@ Deno.serve(async (req) => {
       // Medium: specific airlines at airport
       if ((v.includes("american") || v.includes("delta") || v.includes("united") || v.includes("southwest") || v.includes("jetblue") || v.includes("spirit") || v.includes("frontier") || v.includes("alaska")) && isAirportRelated) score += 4;
 
+      // Rideshare / taxi pickup
+      if ((v.includes("rideshare") || v.includes("taxi stand") || v.includes("uber") || v.includes("lyft")) && isAirportRelated) score += 5;
+
       // Base: airport mention
       if (v.includes("airport")) score += 2;
 
