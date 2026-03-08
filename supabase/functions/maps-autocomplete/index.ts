@@ -31,18 +31,26 @@ Deno.serve(async (req) => {
     }
 
     const normalizedInput = input.trim();
-    const shouldBoostTerminalResults = /\b(airport|airline|terminal|gate|concourse|msy|jfk|lax|ord|atl|dfw)\b/i.test(normalizedInput);
-    const queryInputs = shouldBoostTerminalResults && !/\bterminal\b/i.test(normalizedInput)
-      ? [normalizedInput, `${normalizedInput} terminal`]
+    const airportKeywordPattern = /\b(airport|terminal|gate|concourse|airline|arrivals?|departures?|pickup|drop[\s-]?off|zone|msy|jfk|lax|ord|atl|dfw)\b/i;
+    const shouldBoostAirportContext = airportKeywordPattern.test(normalizedInput);
+
+    const queryInputs = shouldBoostAirportContext
+      ? Array.from(new Set([
+          normalizedInput,
+          /\bterminal\b/i.test(normalizedInput) ? "" : `${normalizedInput} terminal`,
+          /\b(zone|pickup|drop[\s-]?off)\b/i.test(normalizedInput) ? "" : `${normalizedInput} pickup zone`,
+          /\b(arrivals?|departures?)\b/i.test(normalizedInput) ? "" : `${normalizedInput} arrivals`,
+        ].filter((value): value is string => Boolean(value))))
       : [normalizedInput];
 
     const fetchPredictions = async (query: string) => {
       let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
         `?input=${encodeURIComponent(query)}` +
+        `&components=country:us` +
         `&key=${encodeURIComponent(key)}`;
 
       if (proximity?.lat && proximity?.lng) {
-        url += `&location=${proximity.lat},${proximity.lng}&radius=80000`;
+        url += `&location=${proximity.lat},${proximity.lng}&radius=80000&strictbounds=true`;
       }
 
       const res = await fetch(url);
@@ -59,25 +67,52 @@ Deno.serve(async (req) => {
     console.log(`[maps-autocomplete] Fetching suggestions for: "${normalizedInput}"`);
 
     const predictionGroups = await Promise.all(queryInputs.map(fetchPredictions));
-    const mergedPredictions = predictionGroups.flat();
+    let mergedPredictions = predictionGroups.flat();
+
+    if (shouldBoostAirportContext) {
+      const detectedAirportCode = mergedPredictions
+        .map((prediction: any) => {
+          const description = String(prediction?.description ?? "");
+          const match = description.match(/\(([A-Z]{3})\)/);
+          return match?.[1] ?? null;
+        })
+        .find((code): code is string => Boolean(code));
+
+      if (detectedAirportCode) {
+        const airportCodeQueries = [`${detectedAirportCode} terminal`, `${detectedAirportCode} arrivals`, `arrivals ${detectedAirportCode}`, `${detectedAirportCode} departures`, `departures ${detectedAirportCode}`, `${detectedAirportCode} pickup zone`];
+        const airportCodePredictionGroups = await Promise.all(airportCodeQueries.map(fetchPredictions));
+        mergedPredictions = [...mergedPredictions, ...airportCodePredictionGroups.flat()];
+      }
+    }
 
     const uniquePredictions = Array.from(
       new Map(mergedPredictions.map((p: any) => [p.place_id, p])).values()
     );
 
-    const terminalOrAirlineRank = (text: string) => {
+    const requiresAirportSpecificResults = /\b(airport|terminal|gate|concourse|airline|arrivals?|departures?|pickup|drop[\s-]?off|zone|msy|jfk|lax|ord|atl|dfw)\b/i.test(normalizedInput);
+
+    const airportContextRank = (text: string) => {
       const value = text.toLowerCase();
+      const mentionsAirportContext = value.includes("airport") || value.includes("terminal") || value.includes("gate") || value.includes("concourse") || value.includes("arrivals") || value.includes("departures") || value.includes("airline") || value.includes("msy");
+
       let score = 0;
-      if (value.includes("terminal") || value.includes("concourse") || value.includes("gate")) score += 3;
+      if (value.includes("zone") && mentionsAirportContext) score += 6;
+      if (value.includes("pickup") || value.includes("drop off") || value.includes("drop-off")) score += 4;
+      if (value.includes("arrivals") || value.includes("departures")) score += 6;
+      if (value.includes("terminal") || value.includes("concourse") || value.includes("gate")) score += 4;
+      if (value.includes("airport")) score += 2;
       if (value.includes("airline") || value.includes("american") || value.includes("delta") || value.includes("united") || value.includes("southwest")) score += 2;
+      if (value.includes("hotel") || value.includes("inn") || value.includes("rental") || value.includes("restaurant")) score -= 4;
+      if (requiresAirportSpecificResults && !mentionsAirportContext) score -= 6;
+
       return score;
     };
 
-    const suggestions = uniquePredictions
+    const baseSuggestions = uniquePredictions
       .map((p: any) => {
         const description = p.description ?? "";
         const mainText = p.structured_formatting?.main_text ?? description.split(",")[0] ?? "";
-        const score = terminalOrAirlineRank(`${mainText} ${description}`);
+        const score = airportContextRank(`${mainText} ${description}`);
 
         return {
           description,
@@ -86,7 +121,40 @@ Deno.serve(async (req) => {
           score,
         };
       })
-      .sort((a, b) => b.score - a.score)
+      .sort((a, b) => b.score - a.score);
+
+    const hasZoneLikeSuggestion = baseSuggestions.some((item) => {
+      const value = `${item.main_text} ${item.description}`.toLowerCase();
+      const hasZoneKeyword = value.includes("pickup") || value.includes("drop off") || value.includes("drop-off") || value.includes("arrivals") || value.includes("departures") || value.includes("zone");
+      const hasAirportKeyword = value.includes("airport") || value.includes("terminal") || value.includes("gate") || value.includes("concourse") || value.includes("msy");
+      return hasZoneKeyword && hasAirportKeyword;
+    });
+
+    const primaryAirportSuggestion = baseSuggestions.find((item) => {
+      const value = `${item.main_text} ${item.description}`.toLowerCase();
+      return value.includes("airport") || value.includes("terminal") || value.includes("msy");
+    });
+
+    const zoneFallbackSuggestions = shouldBoostAirportContext && !hasZoneLikeSuggestion && primaryAirportSuggestion
+      ? [
+          {
+            description: `${primaryAirportSuggestion.description} — Pickup (Arrivals Zone)`,
+            main_text: "Pickup (Arrivals Zone)",
+            place_id: `${primaryAirportSuggestion.place_id}::pickup`,
+            canonical_place_id: primaryAirportSuggestion.place_id,
+            score: 100,
+          },
+          {
+            description: `${primaryAirportSuggestion.description} — Drop-off (Departures Zone)`,
+            main_text: "Drop-off (Departures Zone)",
+            place_id: `${primaryAirportSuggestion.place_id}::dropoff`,
+            canonical_place_id: primaryAirportSuggestion.place_id,
+            score: 99,
+          },
+        ]
+      : [];
+
+    const suggestions = [...zoneFallbackSuggestions, ...baseSuggestions]
       .slice(0, 10)
       .map(({ score: _score, ...item }) => item);
 
