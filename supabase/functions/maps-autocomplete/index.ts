@@ -30,32 +30,65 @@ Deno.serve(async (req) => {
       });
     }
 
-    let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
-      `?input=${encodeURIComponent(input.trim())}` +
-      `&key=${encodeURIComponent(key)}`;
+    const normalizedInput = input.trim();
+    const shouldBoostTerminalResults = /\b(airport|airline|terminal|gate|concourse|msy|jfk|lax|ord|atl|dfw)\b/i.test(normalizedInput);
+    const queryInputs = shouldBoostTerminalResults && !/\bterminal\b/i.test(normalizedInput)
+      ? [normalizedInput, `${normalizedInput} terminal`]
+      : [normalizedInput];
 
-    if (proximity?.lat && proximity?.lng) {
-      url += `&location=${proximity.lat},${proximity.lng}&radius=80000`;
-    }
+    const fetchPredictions = async (query: string) => {
+      let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
+        `?input=${encodeURIComponent(query)}` +
+        `&key=${encodeURIComponent(key)}`;
 
-    console.log(`[maps-autocomplete] Fetching suggestions for: "${input.trim()}"`);
+      if (proximity?.lat && proximity?.lng) {
+        url += `&location=${proximity.lat},${proximity.lng}&radius=80000`;
+      }
 
-    const res = await fetch(url);
-    const data = await res.json();
+      const res = await fetch(url);
+      const data = await res.json();
 
-    if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
-      console.error("[maps-autocomplete] Google API error:", data.status, data.error_message);
-      return new Response(JSON.stringify({ error: "Autocomplete service error" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+      if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
+        console.error("[maps-autocomplete] Google API error:", data.status, data.error_message, "for query:", query);
+        return [];
+      }
 
-    const suggestions = (data.predictions ?? []).slice(0, 10).map((p: any) => ({
-      description: p.description,
-      place_id: p.place_id,
-      main_text: p.structured_formatting?.main_text ?? p.description.split(",")[0],
-    }));
+      return data.predictions ?? [];
+    };
+
+    console.log(`[maps-autocomplete] Fetching suggestions for: "${normalizedInput}"`);
+
+    const predictionGroups = await Promise.all(queryInputs.map(fetchPredictions));
+    const mergedPredictions = predictionGroups.flat();
+
+    const uniquePredictions = Array.from(
+      new Map(mergedPredictions.map((p: any) => [p.place_id, p])).values()
+    );
+
+    const terminalOrAirlineRank = (text: string) => {
+      const value = text.toLowerCase();
+      let score = 0;
+      if (value.includes("terminal") || value.includes("concourse") || value.includes("gate")) score += 3;
+      if (value.includes("airline") || value.includes("american") || value.includes("delta") || value.includes("united") || value.includes("southwest")) score += 2;
+      return score;
+    };
+
+    const suggestions = uniquePredictions
+      .map((p: any) => {
+        const description = p.description ?? "";
+        const mainText = p.structured_formatting?.main_text ?? description.split(",")[0] ?? "";
+        const score = terminalOrAirlineRank(`${mainText} ${description}`);
+
+        return {
+          description,
+          place_id: p.place_id,
+          main_text: mainText,
+          score,
+        };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
+      .map(({ score: _score, ...item }) => item);
 
     console.log(`[maps-autocomplete] Returning ${suggestions.length} suggestions`);
 
