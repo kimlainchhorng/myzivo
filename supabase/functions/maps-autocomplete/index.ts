@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
       if (v.includes("baggage") || v.includes("claim") || v.includes("ground transport") || v.includes("taxi") || v.includes("rideshare")) score += 5;
 
       // Medium: specific airlines at airport
-      if ((v.includes("american") || v.includes("delta") || v.includes("united") || v.includes("southwest") || v.includes("jetblue") || v.includes("spirit") || v.includes("frontier") || v.includes("alaska") || v.includes("allegiant") || v.includes("hawaiian") || v.includes("sun country")) && isAirportRelated) score += 4;
+      if ((v.includes("american") || v.includes("delta") || v.includes("united") || v.includes("southwest") || v.includes("jetblue") || v.includes("spirit") || v.includes("frontier") || v.includes("alaska") || v.includes("allegiant") || v.includes("hawaiian") || v.includes("sun country") || v.includes("breeze") || v.includes("avelo")) && isAirportRelated) score += 4;
 
       // Rideshare / taxi pickup
       if ((v.includes("rideshare") || v.includes("taxi stand") || v.includes("uber") || v.includes("lyft")) && isAirportRelated) score += 5;
