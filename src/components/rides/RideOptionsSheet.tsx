@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, CreditCard, Sparkles, Users, Zap } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CreditCard, Sparkles, TrendingDown, Users, Zap } from "lucide-react";
 
 type RideCategory = "Popular" | "Premium";
 
@@ -198,10 +198,16 @@ export default function RideOptionsSheet({
                   <span className="text-sm font-semibold text-foreground truncate">
                     {ride.name}
                   </span>
-                  {ride.id === "ev" && (
-                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
-                      <Zap className="w-3 h-3" />
-                      EV
+                  {ride.id === "economy" && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
+                      <TrendingDown className="w-3 h-3" />
+                      LOW
+                    </span>
+                  )}
+                  {ride.id === "share" && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                      <Users className="w-3 h-3" />
+                      SAVE
                     </span>
                   )}
                   {ride.id === "comfort" && (
@@ -210,10 +216,16 @@ export default function RideOptionsSheet({
                       TOP
                     </span>
                   )}
-                  {ride.id === "share" && (
-                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                  {ride.id === "ev" && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
+                      <Zap className="w-3 h-3" />
+                      EV
+                    </span>
+                  )}
+                  {ride.id === "xl" && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-bold">
                       <Users className="w-3 h-3" />
-                      SAVE
+                      6+
                     </span>
                   )}
                   <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
