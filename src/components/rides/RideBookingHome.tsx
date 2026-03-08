@@ -1250,9 +1250,9 @@ export default function RideBookingHome() {
             {/* Route info */}
             <div className="px-5 pt-3 pb-2 shrink-0">
               <div className="flex items-start gap-3 mb-2">
-                <div className="flex flex-col items-center gap-0.5 mt-0.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                  <div className="w-0.5 h-5 bg-border/50" />
+                <div className="flex flex-col items-center mt-0.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-primary/20" />
+                  <div className="w-px flex-1 min-h-[20px] border-l-[2px] border-dashed border-muted-foreground/30 my-0.5" />
                   <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
                 </div>
                 <div className="flex-1 min-w-0 space-y-1.5">
@@ -1326,7 +1326,7 @@ export default function RideBookingHome() {
                 >
                   <p className="text-sm text-muted-foreground mb-4">Browse available rides</p>
                   <Button
-                    className="w-full h-12 rounded-2xl text-base font-bold bg-foreground text-background"
+                    className="w-full h-12 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90"
                     onClick={() => setViewStep("ride-options")}
                   >
                     See ride options
