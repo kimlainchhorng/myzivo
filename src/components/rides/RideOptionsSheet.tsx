@@ -152,12 +152,6 @@ export default function RideOptionsSheet({
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <button
-            onClick={onBack}
-            className="rounded-full p-2 hover:bg-muted transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </button>
           <h2 className="text-xl font-bold text-foreground">Choose a ride</h2>
         </div>
 
