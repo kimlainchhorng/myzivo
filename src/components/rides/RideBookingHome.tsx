@@ -1075,17 +1075,21 @@ export default function RideBookingHome() {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
           >
             {/* Drag handle */}
-            <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25 shrink-0 cursor-grab active:cursor-grabbing" />
+            {/* Drag handle — polished pill */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
+              <div className="h-1 w-10 rounded-full bg-muted-foreground/40" />
+            </div>
 
-            <div className="px-4 pt-3">
+            <div className="px-4 pt-2">
               <h2 className="text-lg font-black text-foreground mb-3">Where to?</h2>
 
-              {/* Address inputs */}
+              {/* Address inputs with Uber-style connector */}
               <div className="rounded-2xl bg-muted/15 border border-border/30 p-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex flex-col items-center gap-0.5">
-                    <div className="w-3 h-3 rounded-full bg-foreground" />
-                    <div className="w-0.5 h-8 bg-border/50" />
+                  {/* Pickup/Dropoff indicator dots + dotted line */}
+                  <div className="flex flex-col items-center py-1">
+                    <div className="w-3 h-3 rounded-full bg-primary border-2 border-primary" />
+                    <div className="w-px h-8 border-l-2 border-dashed border-muted-foreground/30" />
                     <div className="w-3 h-3 rounded-sm bg-foreground" />
                   </div>
                   <div className="flex-1 space-y-2">
