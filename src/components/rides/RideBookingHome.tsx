@@ -82,6 +82,9 @@ const vehicleOptions = [
   { id: "black-lane", category: "premium", name: "ZIVO BLACK Lane", desc: "Executive black sedan service", etaMin: 6, pricePerMile: 3.80, basePrice: 8.00, capacity: 4, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
   { id: "black-xl", category: "premium", name: "ZIVO BLACK XL", desc: "Premium black SUV for groups", etaMin: 7, pricePerMile: 4.20, basePrice: 9.50, capacity: 6, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
   { id: "luxury-xl", category: "premium", name: "ZIVO Luxury XL", desc: "Luxury spacious SUV experience", etaMin: 8, pricePerMile: 4.60, basePrice: 10.50, capacity: 6, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
+  // Accessible
+  { id: "pet", category: "accessible", name: "ZIVO Pet", desc: "Pet-friendly rides", etaMin: 6, pricePerMile: 1.80, basePrice: 4.50, capacity: 3, icon: PawPrint, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "wheelchair", category: "accessible", name: "ZIVO Wheel Chair", desc: "Wheelchair accessible vehicle", etaMin: 8, pricePerMile: 1.60, basePrice: 4.00, capacity: 3, icon: Accessibility, carSeat: false, surgeMultiplier: 1.0 },
 ];
 
 const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
