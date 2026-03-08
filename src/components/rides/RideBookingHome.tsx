@@ -1050,25 +1050,20 @@ export default function RideBookingHome() {
 
           {/* Draggable bottom sheet */}
           <motion.div
-            className="absolute left-0 right-0 bottom-0 z-40 bg-background rounded-t-[28px] shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col touch-none"
+            className="absolute left-0 right-0 z-40 bg-background rounded-t-[28px] shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col touch-none"
             style={{
-              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 80px)`,
-              paddingBottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
+              bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
+              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - ${BOTTOM_NAV_HEIGHT}px - 80px)`,
             }}
             initial={{ y: 0 }}
             animate={{ y: searchSheetY }}
             drag="y"
-            dragConstraints={{ top: -(viewportHeight * 0.3), bottom: viewportHeight * 0.2 }}
+            dragConstraints={{ top: -(viewportHeight * 0.15), bottom: 0 }}
             dragElastic={0.15}
             onDragEnd={(_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-              if (info.offset.y > 80) {
-                // Dragged down significantly — collapse (show less)
-                setSearchSheetY(viewportHeight * 0.15);
-              } else if (info.offset.y < -80) {
-                // Dragged up — expand
-                setSearchSheetY(-(viewportHeight * 0.2));
+              if (info.offset.y < -80) {
+                setSearchSheetY(-(viewportHeight * 0.1));
               } else {
-                // Snap back to default
                 setSearchSheetY(0);
               }
             }}
