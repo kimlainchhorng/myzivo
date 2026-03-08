@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, CreditCard, Sparkles, Users, Zap } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CreditCard, Sparkles, TrendingDown, Users, Zap } from "lucide-react";
 
 type RideCategory = "Popular" | "Premium";
 
