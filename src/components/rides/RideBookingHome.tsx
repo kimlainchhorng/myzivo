@@ -390,7 +390,7 @@ function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
       )}
       <Button
         type="submit"
-        className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
+        className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg gap-2"
         disabled={!stripe || processing || isSubmitting}
       >
         <Shield className="w-5 h-5" />
