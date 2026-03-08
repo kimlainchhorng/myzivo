@@ -1324,40 +1324,46 @@ export default function RideBookingHome() {
               </div>
 
               {/* Action buttons row */}
-              <div className="flex gap-2.5 mt-4 pb-1 flex-wrap">
+              <div className="flex gap-2 mt-5 pb-1 flex-wrap">
                 <button
                   onClick={handleAddStop}
                   disabled={stops.length >= MAX_STOPS}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/15 border border-border/20 text-xs font-bold text-foreground whitespace-nowrap hover:bg-primary/10 hover:border-primary/20 active:scale-95 transition-all duration-200",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/30 text-[13px] font-semibold text-foreground whitespace-nowrap hover:border-primary/40 hover:shadow-sm active:scale-95 transition-all duration-200",
                     stops.length >= MAX_STOPS && "opacity-40 pointer-events-none"
                   )}
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <div className="w-5 h-5 rounded-full bg-muted/30 flex items-center justify-center">
+                    <Plus className="w-3 h-3" />
+                  </div>
                   Add Stop
                 </button>
                 <button
                   onClick={() => { setShowSchedule(!showSchedule); setShowPickupOther(false); }}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold whitespace-nowrap active:scale-95 transition-all duration-200",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-full border text-[13px] font-semibold whitespace-nowrap active:scale-95 transition-all duration-200",
                     showSchedule
-                      ? "bg-primary/15 border-primary/30 text-primary"
-                      : "bg-muted/15 border-border/20 text-foreground hover:bg-primary/10 hover:border-primary/20"
+                      ? "bg-primary/10 border-primary/40 text-primary shadow-sm shadow-primary/10"
+                      : "bg-card border-border/30 text-foreground hover:border-primary/40 hover:shadow-sm"
                   )}
                 >
-                  <CalendarClock className="w-3.5 h-3.5" />
+                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center", showSchedule ? "bg-primary/20" : "bg-muted/30")}>
+                    <CalendarClock className="w-3 h-3" />
+                  </div>
                   {scheduledDate ? `${scheduledDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${scheduleHour % 12 || 12}:${scheduleMinute.toString().padStart(2, "0")} ${scheduleHour >= 12 ? "PM" : "AM"}` : "Schedule"}
                 </button>
                 <button
                   onClick={() => { setShowPickupOther(!showPickupOther); setShowSchedule(false); }}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold whitespace-nowrap active:scale-95 transition-all duration-200",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-full border text-[13px] font-semibold whitespace-nowrap active:scale-95 transition-all duration-200",
                     showPickupOther
-                      ? "bg-primary/15 border-primary/30 text-primary"
-                      : "bg-muted/15 border-border/20 text-foreground hover:bg-primary/10 hover:border-primary/20"
+                      ? "bg-primary/10 border-primary/40 text-primary shadow-sm shadow-primary/10"
+                      : "bg-card border-border/30 text-foreground hover:border-primary/40 hover:shadow-sm"
                   )}
                 >
-                  <Users className="w-3.5 h-3.5" />
+                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center", showPickupOther ? "bg-primary/20" : "bg-muted/30")}>
+                    <Users className="w-3 h-3" />
+                  </div>
                   {otherName ? otherName.split(" ")[0] : "Pick up other"}
                 </button>
               </div>
@@ -1516,64 +1522,80 @@ export default function RideBookingHome() {
               </AnimatePresence>
 
               {/* Saved & Recent list */}
-              <div className="pt-4">
-              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Saved Places</p>
-              {savedPlaces.length > 0 ? savedPlaces.map((place) => {
-                const Icon = place.icon;
-                return (
-                  <button
-                    key={place.id}
-                    onClick={() => handleSavedPlace(place.address)}
-                    className="w-full flex items-center gap-3 px-1 py-3.5 text-left hover:bg-muted/10 transition-all duration-200 active:scale-[0.98] border-b border-border/8"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center shrink-0">
-                      <Icon className="w-4.5 h-4.5 text-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-foreground">{place.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{place.address}</p>
-                    </div>
-                  </button>
-                );
-              }) : (
-                <button
-                  onClick={() => toast.info("Save a location from your profile")}
-                  className="w-full flex items-center gap-3 px-1 py-3.5 text-left hover:bg-muted/10 transition-all duration-200 border-b border-border/8"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 border border-dashed border-primary/20">
-                    <Plus className="w-4 h-4 text-primary/60" />
+              <div className="pt-5 space-y-5">
+                {/* Saved Places */}
+                <div>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <Star className="w-3 h-3 text-primary/60" />
+                    Saved Places
+                  </p>
+                  <div className="space-y-1">
+                    {savedPlaces.length > 0 ? savedPlaces.map((place) => {
+                      const Icon = place.icon;
+                      return (
+                        <button
+                          key={place.id}
+                          onClick={() => handleSavedPlace(place.address)}
+                          className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 active:scale-[0.98] group"
+                        >
+                          <div className="w-11 h-11 rounded-2xl bg-primary/8 border border-primary/15 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                            <Icon className="w-[18px] h-[18px] text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[14px] font-bold text-foreground">{place.name}</p>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{place.address}</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0 group-hover:text-primary/60 transition-colors" />
+                        </button>
+                      );
+                    }) : (
+                      <button
+                        onClick={() => toast.info("Save a location from your profile")}
+                        className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 group"
+                      >
+                        <div className="w-11 h-11 rounded-2xl bg-primary/5 flex items-center justify-center shrink-0 border border-dashed border-primary/20 group-hover:border-primary/40 transition-colors">
+                          <Plus className="w-4 h-4 text-primary/50 group-hover:text-primary transition-colors" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-muted-foreground">Add a saved place</p>
+                          <p className="text-xs text-muted-foreground/50">Home, work, gym...</p>
+                        </div>
+                      </button>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-muted-foreground">Add a saved place</p>
-                    <p className="text-xs text-muted-foreground/60">Home, work, gym...</p>
-                  </div>
-                </button>
-              )}
+                </div>
 
-              {recentDestinations.length > 0 && (
-                <>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2 mt-5">Recent</p>
-                  {recentDestinations.map((dest) => (
-                    <button
-                      key={dest.id}
-                      onClick={() => {
-                        setDestinationDisplay(dest.address.split(",")[0]);
-                        setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
-                      }}
-                      className="w-full flex items-center gap-3 px-1 py-3.5 text-left hover:bg-muted/10 transition-all duration-200 active:scale-[0.98] border-b border-border/8"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center shrink-0">
-                        <History className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
-                        <p className="text-xs text-muted-foreground">{dest.time}</p>
-                      </div>
-                    </button>
-                  ))}
-                </>
-              )}
-            </div>
+                {/* Recent */}
+                {recentDestinations.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                      <Clock className="w-3 h-3 text-muted-foreground/60" />
+                      Recent
+                    </p>
+                    <div className="space-y-1">
+                      {recentDestinations.map((dest) => (
+                        <button
+                          key={dest.id}
+                          onClick={() => {
+                            setDestinationDisplay(dest.address.split(",")[0]);
+                            setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
+                          }}
+                          className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 active:scale-[0.98] group"
+                        >
+                          <div className="w-11 h-11 rounded-2xl bg-muted/15 border border-border/20 flex items-center justify-center shrink-0 group-hover:bg-muted/25 transition-colors">
+                            <History className="w-[18px] h-[18px] text-muted-foreground/70" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[14px] font-medium text-foreground truncate">{dest.address}</p>
+                            <p className="text-xs text-muted-foreground/60 mt-0.5">{dest.time}</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0 group-hover:text-muted-foreground/60 transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {pickup && destination && (
