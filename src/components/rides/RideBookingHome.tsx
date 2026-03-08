@@ -1161,7 +1161,7 @@ export default function RideBookingHome() {
             className="absolute left-0 right-0 z-40 bg-background rounded-t-[28px] shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col"
             style={{
               bottom: 0,
-              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 80px)`,
+              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 180px)`,
             }}
             initial={{ y: 0 }}
             animate={{ y: searchSheetY }}
