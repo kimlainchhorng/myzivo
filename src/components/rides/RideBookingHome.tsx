@@ -132,6 +132,7 @@ function MapSection({
   routePolyline,
   onLocateUser,
   onCenterChanged,
+  showUserLocationDot = true,
   compact = false,
   children,
 }: {
@@ -142,6 +143,7 @@ function MapSection({
   routePolyline?: string | null;
   onLocateUser?: () => void;
   onCenterChanged?: (center: { lat: number; lng: number }) => void;
+  showUserLocationDot?: boolean;
   compact?: boolean;
   children?: React.ReactNode;
 }) {
@@ -166,6 +168,7 @@ function MapSection({
           dropoffCoords={dropoffCoords || null}
           driverCoords={driverCoords || null}
           userLocation={userLocation || null}
+          showUserLocationDot={showUserLocationDot}
           routePolyline={routePolyline || null}
           onMapReady={(map) => { mapRef.current = map; }}
           onCenterChanged={onCenterChanged}
