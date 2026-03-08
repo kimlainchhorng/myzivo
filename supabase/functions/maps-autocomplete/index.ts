@@ -188,10 +188,13 @@ Deno.serve(async (req) => {
       return hasZone && hasAirport;
     });
 
+    // Find the main airport (not an airline desk) for synthetic zones
     const primaryAirport = baseSuggestions.find((item) => {
       const v = `${item.main_text} ${item.description}`.toLowerCase();
-      return v.includes("airport") || v.includes("terminal") || /\([A-Z]{3}\)/.test(item.description);
-    });
+      const isMainAirport = v.includes("international airport") || v.includes("airport (") || (v.includes("airport") && !v.includes("shuttle") && !v.includes("hotel") && !v.includes("inn"));
+      const isAirlineDesk = v.includes("american airlines") || v.includes("delta air") || v.includes("united airlines") || v.includes("southwest airlines") || v.includes("jetblue") || v.includes("spirit airlines") || v.includes("frontier airlines");
+      return isMainAirport && !isAirlineDesk;
+    }) ?? baseSuggestions.find((item) => /\([A-Z]{3}\)/.test(item.description));
 
     const syntheticZones = isAirportSearch && !hasRealZoneSuggestion && primaryAirport
       ? [
