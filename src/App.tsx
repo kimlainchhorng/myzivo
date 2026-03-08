@@ -30,6 +30,8 @@ import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
+const Index = lazy(() => import("./pages/Index"));
+
 // App (mobile-first) pages
 const AppHome = lazy(() => import("./pages/app/AppHome"));
 const AppTravel = lazy(() => import("./pages/app/AppTravel"));
@@ -302,7 +304,7 @@ const App = () => (
           <UTMProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                <Route path="/" element={<PreserveQueryRedirect to="/rides/hub" />} />
+                <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
 
@@ -518,8 +520,6 @@ const App = () => (
                 <Route path="/support/site-issues" element={<SiteIssuesSupport />} />
                 <Route path="/support/tickets" element={<ProtectedRoute><UserSupportTicketsPage /></ProtectedRoute>} />
                 <Route path="/support/tickets/:id" element={<ProtectedRoute><TicketDetailPage /></ProtectedRoute>} />
-                
-
                 {/* Referrals & Feedback */}
                 <Route path="/referrals" element={<ReferralProgram />} />
                 <Route path="/invite" element={<ReferralProgram />} />
