@@ -1195,7 +1195,7 @@ export default function RideBookingHome() {
             {pickup && destination && (
               <div className="px-4 pb-3 pt-2 shrink-0" style={{ paddingBottom: `calc(12px + ${SAFE_BOTTOM})` }}>
                 <Button
-                  className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                  className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
                   onClick={handleConfirmSearch}
                   disabled={isLoadingRoute}
                 >
@@ -1307,7 +1307,7 @@ export default function RideBookingHome() {
                   </div>
                 ) : (
                   <Button
-                    className="w-full h-14 rounded-[22px] text-lg font-semibold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                    className="w-full h-14 rounded-[22px] text-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
                     onClick={() => setViewStep("ride-options")}
                   >
                     Choose a ride
