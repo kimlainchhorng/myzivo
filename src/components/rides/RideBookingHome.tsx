@@ -1112,7 +1112,7 @@ export default function RideBookingHome() {
 
           {/* Draggable bottom sheet */}
           <motion.div
-            className="absolute left-0 right-0 z-40 bg-background rounded-t-[28px] shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col touch-none"
+            className="absolute left-0 right-0 z-40 bg-background rounded-t-[28px] shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col"
             style={{
               bottom: 0,
               maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 80px)`,
@@ -1137,7 +1137,7 @@ export default function RideBookingHome() {
               <div className="h-1 w-10 rounded-full bg-muted-foreground/40" />
             </div>
 
-            <div className="px-4 pt-2">
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4 pt-2 pb-20" style={{ maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 140px)` }}>
               <h2 className="text-lg font-black text-foreground mb-3">Where to?</h2>
 
               {/* Address inputs with Uber-style connector */}
@@ -1246,14 +1246,12 @@ export default function RideBookingHome() {
                     <div className="mt-3 rounded-2xl bg-muted/15 border border-border/30 p-3 space-y-3">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-foreground">Schedule ride</p>
-                        {scheduledDate && (
-                          <button
-                            onClick={() => { setScheduledDate(null); setShowSchedule(false); }}
-                            className="text-[10px] font-semibold text-destructive"
-                          >
-                            Clear
-                          </button>
-                        )}
+                        <button
+                          onClick={() => setShowSchedule(false)}
+                          className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5 text-muted-foreground" />
+                        </button>
                       </div>
                       {/* Date chips — today + next 6 days */}
                       <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
@@ -1340,14 +1338,12 @@ export default function RideBookingHome() {
                     <div className="mt-3 rounded-2xl bg-muted/15 border border-border/30 p-3 space-y-3">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-foreground">Someone else is riding</p>
-                        {otherName && (
-                          <button
-                            onClick={() => { setOtherName(""); setOtherPhone(""); setShowPickupOther(false); }}
-                            className="text-[10px] font-semibold text-destructive"
-                          >
-                            Clear
-                          </button>
-                        )}
+                        <button
+                          onClick={() => setShowPickupOther(false)}
+                          className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5 text-muted-foreground" />
+                        </button>
                       </div>
                       <div className="space-y-2">
                         <div>
@@ -1392,7 +1388,7 @@ export default function RideBookingHome() {
             </div>
 
             {/* Saved & Recent list */}
-            <div className="flex-1 overflow-y-auto px-4 pt-3 pb-20" style={{ maxHeight: viewportHeight * 0.3 }}>
+            <div className="pt-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
               {savedPlaces.length > 0 ? savedPlaces.map((place) => {
                 const Icon = place.icon;
