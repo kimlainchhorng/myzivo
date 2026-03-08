@@ -21,6 +21,7 @@ interface Suggestion {
   description: string;
   place_id: string;
   main_text: string;
+  canonical_place_id?: string;
 }
 
 interface AddressAutocompleteProps {
