@@ -1030,8 +1030,8 @@ export default function RideBookingHome() {
             </button>
           </div>
 
-          {/* Full-screen map */}
-          <div className="absolute inset-0 z-0">
+          {/* Full-screen map below header */}
+          <div className="flex-1 relative z-0">
             <MapSection
               compact
               pickupCoords={null}
