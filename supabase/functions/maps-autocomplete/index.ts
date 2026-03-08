@@ -261,22 +261,20 @@ Deno.serve(async (req) => {
 
     const syntheticZones = isAirportSearch && primaryAirport
       ? [
-          ...(!hasRealZoneSuggestion ? [
-            {
-              description: `${primaryAirport.description} — Pickup (Arrivals Zone)`,
-              main_text: "✈ Pickup — Arrivals Zone",
-              place_id: `${primaryAirport.place_id}::pickup`,
-              canonical_place_id: primaryAirport.place_id,
-              score: 100,
-            },
-            {
-              description: `${primaryAirport.description} — Drop-off (Departures Zone)`,
-              main_text: "✈ Drop-off — Departures Zone",
-              place_id: `${primaryAirport.place_id}::dropoff`,
-              canonical_place_id: primaryAirport.place_id,
-              score: 99,
-            },
-          ] : []),
+          {
+            description: `${primaryAirport.description} — Pickup (Arrivals Zone)`,
+            main_text: "✈ Pickup — Arrivals Zone",
+            place_id: `${primaryAirport.place_id}::pickup`,
+            canonical_place_id: primaryAirport.place_id,
+            score: 100,
+          },
+          {
+            description: `${primaryAirport.description} — Drop-off (Departures Zone)`,
+            main_text: "✈ Drop-off — Departures Zone",
+            place_id: `${primaryAirport.place_id}::dropoff`,
+            canonical_place_id: primaryAirport.place_id,
+            score: 99,
+          },
           {
             description: `${primaryAirport.description} — Terminal`,
             main_text: "✈ Terminal",
@@ -298,6 +296,13 @@ Deno.serve(async (req) => {
             canonical_place_id: primaryAirport.place_id,
             score: 96,
           },
+          {
+            description: `${primaryAirport.description} — Baggage Claim`,
+            main_text: "✈ Baggage Claim",
+            place_id: `${primaryAirport.place_id}::baggage`,
+            canonical_place_id: primaryAirport.place_id,
+            score: 95,
+          },
         ]
       : [];
 
@@ -311,8 +316,14 @@ Deno.serve(async (req) => {
         }))
       : [];
 
-    const suggestions = [...syntheticZones, ...syntheticAirlines, ...baseSuggestions]
-      .slice(0, 20)
+    // Deduplicate synthetic + real by place_id, keep highest score
+    const allSuggestions = [...syntheticZones, ...syntheticAirlines, ...baseSuggestions];
+    const deduped = Array.from(
+      new Map(allSuggestions.map((s) => [s.place_id, s])).values()
+    ).sort((a, b) => b.score - a.score);
+
+    const suggestions = deduped
+      .slice(0, 25)
       .map(({ score: _score, ...item }) => item);
 
     console.log(`[maps-autocomplete] Returning ${suggestions.length} suggestions`);
