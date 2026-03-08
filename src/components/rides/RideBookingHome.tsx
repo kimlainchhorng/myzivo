@@ -771,6 +771,8 @@ export default function RideBookingHome() {
     setTip(null);
     setSurgeMultiplier(1.0);
     setRideCategory("popular");
+    setClientSecret(null);
+    setPaymentStep("idle");
   };
 
   /* ─── Cancel ride ─── */
