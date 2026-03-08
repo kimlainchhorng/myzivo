@@ -984,7 +984,7 @@ export default function RideBookingHome() {
     <div className="relative h-[100dvh] overflow-hidden bg-background">
 
       {/* ═══════ 1. HEADER — visible on non-home steps ═══════ */}
-      {viewStep !== "home" && (
+      {viewStep !== "home" && viewStep !== "trip-complete" && (
         <div className="relative z-20 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
           <button
             onClick={handleBack}
