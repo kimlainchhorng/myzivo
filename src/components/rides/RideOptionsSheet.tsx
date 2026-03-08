@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, CreditCard, Crown, Gem, Shield, Sparkles, TrendingDown, Users, Zap } from "lucide-react";
+import { Accessibility, ArrowLeft, CheckCircle2, CreditCard, Crown, Gem, PawPrint, Shield, Sparkles, TrendingDown, Users, Zap } from "lucide-react";
 
 type RideCategory = "Popular" | "Premium";
 
