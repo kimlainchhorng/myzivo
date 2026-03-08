@@ -61,6 +61,8 @@ interface RideMapProps {
   userLocation?: { lat: number; lng: number } | null;
   className?: string;
   onMapReady?: (map: google.maps.Map) => void;
+  /** Fires with center lat/lng when the map stops moving (idle event) */
+  onCenterChanged?: (center: { lat: number; lng: number }) => void;
 }
 
 // Singleton script loader
@@ -121,7 +123,7 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
   return googleMapsPromise;
 }
 
-export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, className, onMapReady }: RideMapProps) {
+export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, className, onMapReady, onCenterChanged }: RideMapProps) {
   const [isReady, setIsReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failedReason, setFailedReason] = useState<string>("");
@@ -222,6 +224,8 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
     [onMapReady]
   );
 
+  // Forward onCenterChanged to NativeGoogleMap via passthrough
+
   if (failed) {
     return (
       <MapFallback
@@ -250,11 +254,12 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
       userLocation={userLocation}
       className={className}
       onMapReady={handleMapReady}
+      onCenterChanged={onCenterChanged}
     />
   );
 }
 
-function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, className, onMapReady }: RideMapProps) {
+function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, className, onMapReady, onCenterChanged }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -298,6 +303,14 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
 
       mapRef.current = map;
       onMapReady?.(map);
+
+      // Fire onCenterChanged when map stops moving
+      map.addListener("idle", () => {
+        const c = map.getCenter();
+        if (c && onCenterChanged) {
+          onCenterChanged({ lat: c.lat(), lng: c.lng() });
+        }
+      });
 
       setTimeout(() => {
         if (!mapRef.current) return;
