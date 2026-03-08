@@ -247,7 +247,7 @@ function VehicleRow({
           {vehicle.id === "xl" && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-bold">
               <Users className="w-3 h-3" />
-              6+
+              5+
             </span>
           )}
           {vehicle.carSeat && (
