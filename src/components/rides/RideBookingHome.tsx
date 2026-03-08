@@ -1008,14 +1008,17 @@ export default function RideBookingHome() {
               {/* Center destination pin — ZIVO branded */}
               <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
                 <div className="flex flex-col items-center">
-                  <div className="relative">
-                    <div className="absolute -inset-3 rounded-full bg-primary/15 animate-pulse" style={{ animationDuration: "2s" }} />
-                    <div className="relative w-10 h-10 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-primary-foreground" />
-                    </div>
+                  <div className="relative w-10 h-10 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-primary-foreground" />
                   </div>
-                  <div className="w-1.5 h-4 bg-primary -mt-0.5 rounded-b-full" />
-                  <div className="w-4 h-1.5 rounded-full bg-primary/20 mt-0.5 blur-[1px]" />
+                  <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-primary -mt-[2px]" />
+                  <div className="w-3 h-1 rounded-full bg-foreground/15 mt-0.5 blur-[1px]" />
+                  {isReversingGeocode && (
+                    <span className="mt-1.5 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm border border-border/30">
+                      <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      Locating...
+                    </span>
+                  )}
                 </div>
               </div>
             </MapSection>
