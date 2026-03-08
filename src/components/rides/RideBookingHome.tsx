@@ -693,7 +693,7 @@ export default function RideBookingHome() {
   }, [pickup, userLocation, isSameLocation]); // fetchRoute is intentionally omitted to avoid infinite loop
 
   /* ─── Multi-stop management ─── */
-  const MAX_STOPS = 3;
+  const MAX_STOPS = 1;
   const handleAddStop = useCallback(() => {
     if (stops.length >= MAX_STOPS) {
       toast.error(`Maximum ${MAX_STOPS} stops allowed`);
