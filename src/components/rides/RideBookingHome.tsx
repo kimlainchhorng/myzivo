@@ -256,6 +256,18 @@ function VehicleRow({
               VIP
             </span>
           )}
+          {vehicle.id === "black-xl" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-slate-500/10 text-slate-600 dark:text-slate-400 text-[10px] font-bold">
+              <Shield className="w-3 h-3" />
+              PREMIUM
+            </span>
+          )}
+          {vehicle.id === "luxury-xl" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-bold">
+              <Gem className="w-3 h-3" />
+              ELITE
+            </span>
+          )}
           {vehicle.carSeat && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 text-[10px] font-bold">
               <Baby className="w-3 h-3" />
