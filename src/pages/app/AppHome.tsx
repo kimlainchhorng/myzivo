@@ -47,6 +47,7 @@ import TravelItineraryCard from "@/components/home/widgets/TravelItineraryCard";
 import QuickReorderCarousel from "@/components/home/widgets/QuickReorderCarousel";
 import zivoRideIcon from "@/assets/zivo-ride-icon.png";
 import zivoEatsIcon from "@/assets/zivo-eats-icon.png";
+import zivoFlightsIcon from "@/assets/zivo-flights-icon.png";
 
 // ─── Saved Places Icon Map ───
 const savedPlaceIconMap: Record<string, LucideIcon> = {
@@ -60,7 +61,7 @@ const savedPlaceIconMap: Record<string, LucideIcon> = {
 const homeTabs = [
   { id: "rides", label: "Rides", icon: null, image: zivoRideIcon },
   { id: "eats", label: "Eats", icon: null, image: zivoEatsIcon },
-  { id: "flights", label: "Flights", icon: Plane, image: null },
+  { id: "flights", label: "Flights", icon: null, image: zivoFlightsIcon },
   { id: "hotels", label: "Hotels", icon: Hotel, image: null },
 ] as const;
 
