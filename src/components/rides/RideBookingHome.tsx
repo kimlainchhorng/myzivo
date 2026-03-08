@@ -1230,12 +1230,12 @@ export default function RideBookingHome() {
             initial={{ y: 0 }}
             animate={{ y: searchSheetY }}
             drag="y"
-            dragConstraints={{ top: -(viewportHeight * 0.1), bottom: viewportHeight * 0.25 }}
+            dragConstraints={{ top: -(viewportHeight * 0.62), bottom: viewportHeight * 0.25 }}
             dragElastic={0.12}
             onDragEnd={(_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
               if (info.offset.y < -60) {
-                // Drag up → expand
-                setSearchSheetY(-(viewportHeight * 0.08));
+                // Drag up → expand nearly full screen
+                setSearchSheetY(-(viewportHeight * 0.58));
               } else if (info.offset.y > 80) {
                 // Drag down → collapse to peek (handle + title still visible)
                 setSearchSheetY(viewportHeight * 0.22);
