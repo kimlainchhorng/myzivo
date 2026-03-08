@@ -261,22 +261,20 @@ Deno.serve(async (req) => {
 
     const syntheticZones = isAirportSearch && primaryAirport
       ? [
-          ...(!hasRealZoneSuggestion ? [
-            {
-              description: `${primaryAirport.description} — Pickup (Arrivals Zone)`,
-              main_text: "✈ Pickup — Arrivals Zone",
-              place_id: `${primaryAirport.place_id}::pickup`,
-              canonical_place_id: primaryAirport.place_id,
-              score: 100,
-            },
-            {
-              description: `${primaryAirport.description} — Drop-off (Departures Zone)`,
-              main_text: "✈ Drop-off — Departures Zone",
-              place_id: `${primaryAirport.place_id}::dropoff`,
-              canonical_place_id: primaryAirport.place_id,
-              score: 99,
-            },
-          ] : []),
+          {
+            description: `${primaryAirport.description} — Pickup (Arrivals Zone)`,
+            main_text: "✈ Pickup — Arrivals Zone",
+            place_id: `${primaryAirport.place_id}::pickup`,
+            canonical_place_id: primaryAirport.place_id,
+            score: 100,
+          },
+          {
+            description: `${primaryAirport.description} — Drop-off (Departures Zone)`,
+            main_text: "✈ Drop-off — Departures Zone",
+            place_id: `${primaryAirport.place_id}::dropoff`,
+            canonical_place_id: primaryAirport.place_id,
+            score: 99,
+          },
           {
             description: `${primaryAirport.description} — Terminal`,
             main_text: "✈ Terminal",
@@ -297,6 +295,13 @@ Deno.serve(async (req) => {
             place_id: `${primaryAirport.place_id}::ground`,
             canonical_place_id: primaryAirport.place_id,
             score: 96,
+          },
+          {
+            description: `${primaryAirport.description} — Baggage Claim`,
+            main_text: "✈ Baggage Claim",
+            place_id: `${primaryAirport.place_id}::baggage`,
+            canonical_place_id: primaryAirport.place_id,
+            score: 95,
           },
         ]
       : [];
