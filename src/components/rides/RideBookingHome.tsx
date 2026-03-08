@@ -535,6 +535,26 @@ export default function RideBookingHome() {
       .catch(() => toast.error("Could not get your location"));
   }, [getCurrentLocation]);
 
+  /** When user drags map in search view, reverse geocode center → pickup */
+  const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
+    if (viewStep !== "search") return;
+    // Debounce reverse geocode
+    if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
+    reverseGeocodeTimerRef.current = setTimeout(async () => {
+      setIsReversingGeocode(true);
+      try {
+        const address = await reverseGeocode(center.lat, center.lng);
+        setPickup({ address, lat: center.lat, lng: center.lng });
+        setPickupDisplay(address);
+      } catch {
+        setPickup({ address: `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`, lat: center.lat, lng: center.lng });
+        setPickupDisplay(`${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`);
+      } finally {
+        setIsReversingGeocode(false);
+      }
+    }, 600);
+  }, [viewStep]);
+
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
