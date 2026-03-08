@@ -63,7 +63,7 @@ const homeTabs = [
   { id: "rides", label: "Rides", icon: null, image: zivoRideIcon },
   { id: "eats", label: "Eats", icon: null, image: zivoEatsIcon },
   { id: "flights", label: "Flights", icon: null, image: zivoFlightsIcon },
-  { id: "hotels", label: "Hotels", icon: Hotel, image: null },
+  { id: "hotels", label: "Hotels", icon: null, image: zivoHotelsIcon },
 ] as const;
 
 // ─── Suggestions row (service shortcuts) ───
