@@ -12,7 +12,8 @@ import {
   CreditCard, User, CalendarClock, Map,
   Star, Phone, MessageSquare, Shield, Banknote,
   Smartphone, Wallet, X, Baby, Sparkles,
-  Route, Timer, Bell, Package, Plane, Hotel, TrendingDown, Gem
+  Route, Timer, Bell, Package, Plane, Hotel, TrendingDown, Gem,
+  PawPrint, Accessibility
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -81,6 +82,9 @@ const vehicleOptions = [
   { id: "black-lane", category: "premium", name: "ZIVO BLACK Lane", desc: "Executive black sedan service", etaMin: 6, pricePerMile: 3.80, basePrice: 8.00, capacity: 4, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
   { id: "black-xl", category: "premium", name: "ZIVO BLACK XL", desc: "Premium black SUV for groups", etaMin: 7, pricePerMile: 4.20, basePrice: 9.50, capacity: 6, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
   { id: "luxury-xl", category: "premium", name: "ZIVO Luxury XL", desc: "Luxury spacious SUV experience", etaMin: 8, pricePerMile: 4.60, basePrice: 10.50, capacity: 6, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
+  // Accessible
+  { id: "pet", category: "accessible", name: "ZIVO Pet", desc: "Pet-friendly rides", etaMin: 6, pricePerMile: 1.80, basePrice: 4.50, capacity: 3, icon: PawPrint, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "wheelchair", category: "accessible", name: "ZIVO Wheel Chair", desc: "Wheelchair accessible vehicle", etaMin: 8, pricePerMile: 1.60, basePrice: 4.00, capacity: 3, icon: Accessibility, carSeat: false, surgeMultiplier: 1.0 },
 ];
 
 const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
@@ -268,6 +272,18 @@ function VehicleRow({
               ELITE
             </span>
           )}
+          {vehicle.id === "pet" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[10px] font-bold">
+              <PawPrint className="w-3 h-3" />
+              PET
+            </span>
+          )}
+          {vehicle.id === "wheelchair" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
+              <Accessibility className="w-3 h-3" />
+              WAV
+            </span>
+          )}
           {vehicle.carSeat && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 text-[10px] font-bold">
               <Baby className="w-3 h-3" />
@@ -312,6 +328,8 @@ const VEHICLE_IMAGES: Record<string, string> = {
   "black-lane": "/vehicles/black-lane-car-v2.png",
   "black-xl":  "/vehicles/black-xl-car-v2.png",
   "luxury-xl": "/vehicles/luxury-car-v2.png",
+  "pet":       "/vehicles/pet-car-v2.png",
+  "wheelchair": "/vehicles/wheelchair-car-v2.png",
 };
 
 const etaTime = (minutesFromNow: number) =>
@@ -340,7 +358,7 @@ export default function RideBookingHome() {
 
   // New state for enhanced flow
   const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
-  const [rideCategory, setRideCategory] = useState<"popular" | "premium">("popular");
+  const [rideCategory, setRideCategory] = useState<"popular" | "premium" | "accessible">("popular");
   const [rating, setRating] = useState(0);
   const [tip, setTip] = useState<number | null>(null);
 
@@ -1072,7 +1090,7 @@ export default function RideBookingHome() {
 
           {/* Category tabs */}
           <div className="flex gap-2 px-5 pb-3 border-b border-border/10 shrink-0">
-            {(["popular", "premium"] as const).map((cat) => (
+            {(["popular", "premium", "accessible"] as const).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setRideCategory(cat)}
@@ -1160,6 +1178,18 @@ export default function RideBookingHome() {
                       <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-bold">
                         <Gem className="w-3 h-3" />
                         ELITE
+                      </span>
+                    )}
+                    {v.id === "pet" && (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[10px] font-bold">
+                        <PawPrint className="w-3 h-3" />
+                        PET
+                      </span>
+                    )}
+                    {v.id === "wheelchair" && (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
+                        <Accessibility className="w-3 h-3" />
+                        WAV
                       </span>
                     )}
                     <div className="flex items-center gap-0.5">

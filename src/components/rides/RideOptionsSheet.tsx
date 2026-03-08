@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, CreditCard, Crown, Gem, Shield, Sparkles, TrendingDown, Users, Zap } from "lucide-react";
+import { Accessibility, ArrowLeft, CheckCircle2, CreditCard, Crown, Gem, PawPrint, Shield, Sparkles, TrendingDown, Users, Zap } from "lucide-react";
 
-type RideCategory = "Popular" | "Premium";
+type RideCategory = "Popular" | "Premium" | "Accessible";
 
 type RideOption = {
   id: string;
@@ -97,13 +97,33 @@ const rideOptionsSeed: RideOption[] = [
     seats: 6,
     image: "/vehicles/luxury-car-v2.png",
   },
+  {
+    id: "pet",
+    name: "ZIVO Pet",
+    category: "Accessible",
+    eta: "3:30 pm",
+    description: "Pet-friendly rides",
+    price: 30.00,
+    seats: 3,
+    image: "/vehicles/pet-car-v2.png",
+  },
+  {
+    id: "wheelchair",
+    name: "ZIVO Wheel Chair",
+    category: "Accessible",
+    eta: "3:32 pm",
+    description: "Wheelchair accessible vehicle",
+    price: 28.00,
+    seats: 3,
+    image: "/vehicles/wheelchair-car-v2.png",
+  },
 ];
 
 function formatPrice(value: number) {
   return `$${value.toFixed(2)}`;
 }
 
-const categories: RideCategory[] = ["Popular", "Premium"];
+const categories: RideCategory[] = ["Popular", "Premium", "Accessible"];
 
 interface RideOptionsSheetProps {
   onConfirm?: (rideId: string) => void;
@@ -244,6 +264,18 @@ export default function RideOptionsSheet({
                     <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-bold">
                       <Gem className="w-3 h-3" />
                       ELITE
+                    </span>
+                  )}
+                  {ride.id === "pet" && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[10px] font-bold">
+                      <PawPrint className="w-3 h-3" />
+                      PET
+                    </span>
+                  )}
+                  {ride.id === "wheelchair" && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
+                      <Accessibility className="w-3 h-3" />
+                      WAV
                     </span>
                   )}
                   <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
