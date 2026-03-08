@@ -627,12 +627,20 @@ export default function RideBookingHome() {
     // Debounce reverse geocode
     if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
     reverseGeocodeTimerRef.current = setTimeout(async () => {
+      // Re-check guard inside the timeout — pickup may have been set manually during the debounce window
+      if (pickupManuallySet.current) return;
+
       setIsReversingGeocode(true);
       try {
+        // Final guard before writing state
+        if (pickupManuallySet.current) return;
         const address = await reverseGeocode(center.lat, center.lng);
+        // Final guard after async — user may have selected pickup while API was in-flight
+        if (pickupManuallySet.current) return;
         setPickup({ address, lat: center.lat, lng: center.lng });
         setPickupDisplay(address);
       } catch {
+        if (pickupManuallySet.current) return;
         setPickup({ address: `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`, lat: center.lat, lng: center.lng });
         setPickupDisplay(`${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`);
       } finally {
