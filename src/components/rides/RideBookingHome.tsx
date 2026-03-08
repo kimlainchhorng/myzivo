@@ -468,6 +468,20 @@ export default function RideBookingHome() {
   const [rating, setRating] = useState(0);
   const [tip, setTip] = useState<number | null>(null);
 
+  // Schedule state
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+  const [scheduleHour, setScheduleHour] = useState(() => {
+    const h = new Date().getHours();
+    return h < 23 ? h + 1 : 0;
+  });
+  const [scheduleMinute, setScheduleMinute] = useState(0);
+
+  // Pick up other state
+  const [showPickupOther, setShowPickupOther] = useState(false);
+  const [otherName, setOtherName] = useState("");
+  const [otherPhone, setOtherPhone] = useState("");
+
   // Viewport height for dynamic sheet sizing
   const [viewportHeight, setViewportHeight] = useState(800);
   useEffect(() => {
@@ -815,12 +829,16 @@ export default function RideBookingHome() {
         quoted_total: currentPrice,
         distance_miles: routeData?.distance_miles ?? null,
         duration_minutes: routeData?.duration_minutes ?? null,
-        status: "pending_payment",
-        customer_name: user.user_metadata?.full_name || "",
-        customer_phone: user.user_metadata?.phone || "",
+        status: scheduledDate ? "scheduled" : "pending_payment",
+        customer_name: otherName.trim() || user.user_metadata?.full_name || "",
+        customer_phone: otherPhone.trim() || user.user_metadata?.phone || "",
         requires_car_seat: currentVehicle.carSeat,
         car_seat_type: currentVehicle.carSeat ? "standard" : null,
-        ...(stopsData.length > 0 ? { notes: `Stops: ${stopsData.map(s => s.address).join(" → ")}` } : {}),
+        notes: [
+          stopsData.length > 0 ? `Stops: ${stopsData.map(s => s.address).join(" → ")}` : "",
+          scheduledDate ? `Scheduled: ${scheduledDate.toISOString()}` : "",
+          otherName.trim() ? `Rider: ${otherName.trim()}${otherPhone.trim() ? ` (${otherPhone.trim()})` : ""}` : "",
+        ].filter(Boolean).join(" | ") || null,
       }).select("id").single();
 
       if (rideError) throw rideError;
@@ -1190,20 +1208,187 @@ export default function RideBookingHome() {
                   Add Stop
                 </button>
                 <button
-                  onClick={() => navigate("/rides/reserve")}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted/30 border border-border/30 text-xs font-semibold text-foreground whitespace-nowrap hover:bg-muted/50 active:scale-95 transition-all"
+                  onClick={() => { setShowSchedule(!showSchedule); setShowPickupOther(false); }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-semibold whitespace-nowrap active:scale-95 transition-all",
+                    showSchedule
+                      ? "bg-primary/10 border-primary/30 text-primary"
+                      : "bg-muted/30 border-border/30 text-foreground hover:bg-muted/50"
+                  )}
                 >
                   <CalendarClock className="w-3.5 h-3.5" />
-                  Schedule
+                  {scheduledDate ? `${scheduledDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${scheduleHour % 12 || 12}:${scheduleMinute.toString().padStart(2, "0")} ${scheduleHour >= 12 ? "PM" : "AM"}` : "Schedule"}
                 </button>
                 <button
-                  onClick={() => toast.info("Pick up other customer coming soon")}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted/30 border border-border/30 text-xs font-semibold text-foreground whitespace-nowrap hover:bg-muted/50 active:scale-95 transition-all"
+                  onClick={() => { setShowPickupOther(!showPickupOther); setShowSchedule(false); }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-semibold whitespace-nowrap active:scale-95 transition-all",
+                    showPickupOther
+                      ? "bg-primary/10 border-primary/30 text-primary"
+                      : "bg-muted/30 border-border/30 text-foreground hover:bg-muted/50"
+                  )}
                 >
                   <Users className="w-3.5 h-3.5" />
-                  Pick up other
+                  {otherName ? otherName.split(" ")[0] : "Pick up other"}
                 </button>
               </div>
+
+              {/* Schedule inline panel */}
+              <AnimatePresence>
+                {showSchedule && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-3 rounded-2xl bg-muted/15 border border-border/30 p-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-foreground">Schedule ride</p>
+                        {scheduledDate && (
+                          <button
+                            onClick={() => { setScheduledDate(null); setShowSchedule(false); }}
+                            className="text-[10px] font-semibold text-destructive"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      {/* Date chips — today + next 6 days */}
+                      <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
+                        {Array.from({ length: 7 }, (_, i) => {
+                          const d = new Date();
+                          d.setDate(d.getDate() + i);
+                          d.setHours(0, 0, 0, 0);
+                          const isSelected = scheduledDate?.toDateString() === d.toDateString();
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => setScheduledDate(new Date(d))}
+                              className={cn(
+                                "flex flex-col items-center min-w-[52px] px-2 py-2 rounded-xl border text-center transition-all active:scale-95",
+                                isSelected
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-card border-border/30 hover:border-primary/30"
+                              )}
+                            >
+                              <span className="text-[10px] font-semibold">{i === 0 ? "Today" : d.toLocaleDateString("en-US", { weekday: "short" })}</span>
+                              <span className="text-sm font-bold">{d.getDate()}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {/* Time picker */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <label className="text-[10px] text-muted-foreground mb-1 block">Hour</label>
+                          <select
+                            value={scheduleHour}
+                            onChange={(e) => setScheduleHour(Number(e.target.value))}
+                            className="w-full h-10 rounded-xl bg-card border border-border/30 px-2 text-sm font-semibold text-foreground appearance-none"
+                          >
+                            {Array.from({ length: 24 }, (_, i) => (
+                              <option key={i} value={i}>{i % 12 || 12} {i >= 12 ? "PM" : "AM"}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-[10px] text-muted-foreground mb-1 block">Minute</label>
+                          <select
+                            value={scheduleMinute}
+                            onChange={(e) => setScheduleMinute(Number(e.target.value))}
+                            className="w-full h-10 rounded-xl bg-card border border-border/30 px-2 text-sm font-semibold text-foreground appearance-none"
+                          >
+                            {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => (
+                              <option key={m} value={m}>{m.toString().padStart(2, "0")}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <Button
+                        className="w-full h-11 rounded-xl text-sm font-bold"
+                        disabled={!scheduledDate}
+                        onClick={() => {
+                          if (scheduledDate) {
+                            const d = new Date(scheduledDate);
+                            d.setHours(scheduleHour, scheduleMinute);
+                            setScheduledDate(d);
+                            setShowSchedule(false);
+                            toast.success(`Ride scheduled for ${d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} at ${scheduleHour % 12 || 12}:${scheduleMinute.toString().padStart(2, "0")} ${scheduleHour >= 12 ? "PM" : "AM"}`);
+                          }
+                        }}
+                      >
+                        <CalendarClock className="w-4 h-4 mr-1.5" />
+                        Set schedule
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Pick up other inline panel */}
+              <AnimatePresence>
+                {showPickupOther && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-3 rounded-2xl bg-muted/15 border border-border/30 p-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-foreground">Someone else is riding</p>
+                        {otherName && (
+                          <button
+                            onClick={() => { setOtherName(""); setOtherPhone(""); setShowPickupOther(false); }}
+                            className="text-[10px] font-semibold text-destructive"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-[10px] text-muted-foreground mb-1 block">Rider's name</label>
+                          <input
+                            type="text"
+                            value={otherName}
+                            onChange={(e) => setOtherName(e.target.value.slice(0, 100))}
+                            placeholder="Full name"
+                            className="w-full h-11 rounded-xl bg-card border border-border/30 px-3 text-sm font-semibold text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-muted-foreground mb-1 block">Phone number</label>
+                          <input
+                            type="tel"
+                            value={otherPhone}
+                            onChange={(e) => setOtherPhone(e.target.value.replace(/[^0-9+\-() ]/g, "").slice(0, 20))}
+                            placeholder="+1 (555) 123-4567"
+                            className="w-full h-11 rounded-xl bg-card border border-border/30 px-3 text-sm font-semibold text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          />
+                        </div>
+                      </div>
+                      <Button
+                        className="w-full h-11 rounded-xl text-sm font-bold"
+                        disabled={!otherName.trim()}
+                        onClick={() => {
+                          setShowPickupOther(false);
+                          toast.success(`Ride for ${otherName.trim().split(" ")[0]} confirmed`);
+                        }}
+                      >
+                        <Users className="w-4 h-4 mr-1.5" />
+                        Confirm rider
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground text-center">
+                        Driver will contact this person for pickup
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Saved & Recent list */}
