@@ -59,7 +59,7 @@ const savedPlaceIconMap: Record<string, LucideIcon> = {
 // ─── Top service tabs (Uber-style) ───
 const homeTabs = [
   { id: "rides", label: "Rides", icon: null, image: zivoRideIcon },
-  { id: "eats", label: "Eats", icon: UtensilsCrossed, image: null },
+  { id: "eats", label: "Eats", icon: null, image: zivoEatsIcon },
   { id: "flights", label: "Flights", icon: Plane, image: null },
   { id: "hotels", label: "Hotels", icon: Hotel, image: null },
 ] as const;
