@@ -137,8 +137,9 @@ export default function RideHubPage() {
       onBack={() => navigate("/rides")}
       fixedHeight={activeTab === "book"}
       hideHeader={activeTab === "book"}
-      className={activeTab === "book" ? "overflow-hidden" : ""}
-    >
+      hideNav={activeTab === "book"}
+      className={activeTab === "book" ? "overflow-hidden !pb-0" : ""}>
+
       {/* Tab bar — hidden for "book" since RideBookingHome renders its own header + tabs */}
       {activeTab !== "book" && (
         <div className="sticky top-14 z-20 bg-background/95 backdrop-blur-lg border-b border-border/30">
