@@ -1235,18 +1235,8 @@ export default function RideBookingHome() {
           className="absolute left-0 right-0 bottom-0 z-40 bg-background flex flex-col"
           style={{ top: HEADER_HEIGHT }}
         >
-          {/* Header row */}
           <div className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setViewStep("route-preview")}
-                className="w-8 h-8 rounded-full bg-muted/30 flex items-center justify-center"
-                aria-label="Go back"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-              <h2 className="text-lg font-black text-foreground">Choose a ride</h2>
-            </div>
+            <h2 className="text-lg font-black text-foreground">Choose a ride</h2>
             {/* Promo badge */}
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30">
               <div className="w-2 h-2 rounded-full bg-emerald-500" />
