@@ -1306,8 +1306,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <div className="flex flex-col items-center justify-center">
                   <div className="relative">
                     <div className="absolute -inset-4 rounded-full bg-primary/10 animate-ping" style={{ animationDuration: "2s" }} />
-                    <div className="relative w-11 h-11 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-primary-foreground" />
+                      <div className="relative w-11 h-11 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
+                        <span className="text-sm font-black text-primary-foreground leading-none">Z</span>
                     </div>
                     <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rotate-45 border-b-[3px] border-r-[3px] border-background" />
                   </div>
