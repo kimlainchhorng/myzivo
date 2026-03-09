@@ -272,44 +272,59 @@
      NOTE: Use !important so these classes remain effective even when combined
      with Tailwind padding utilities like py-3/pt-4 (which would otherwise override). */
   .safe-area-top {
-    padding-top: env(safe-area-inset-top, 0px) !important;
+    /* Default: use iOS safe-area env() when available */
+    --_safe-top: env(safe-area-inset-top, 0px);
+    padding-top: var(--_safe-top) !important;
+  }
+
+  /* iPhone fallback (when env() is 0 because viewport-fit=cover isn't applied by the container) */
+  @media (max-width: 480px) {
+    @supports (-webkit-touch-callout: none) {
+      .safe-area-top {
+        --_safe-top: max(env(safe-area-inset-top, 0px), 44px);
+      }
+
+      .pt-safe {
+        padding-top: max(env(safe-area-inset-top, 0px), 44px);
+      }
+    }
   }
 
   /* Additive variants when combined with Tailwind padding utilities */
   .safe-area-top.pt-1,
   .safe-area-top.py-1,
   .safe-area-top.p-1 {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 0.25rem) !important;
+    padding-top: calc(var(--_safe-top) + 0.25rem) !important;
   }
 
   .safe-area-top.pt-2,
   .safe-area-top.py-2,
   .safe-area-top.p-2 {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem) !important;
+    padding-top: calc(var(--_safe-top) + 0.5rem) !important;
   }
 
   .safe-area-top.pt-3,
   .safe-area-top.py-3,
   .safe-area-top.p-3 {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem) !important;
+    padding-top: calc(var(--_safe-top) + 0.75rem) !important;
   }
 
   .safe-area-top.pt-4,
   .safe-area-top.py-4,
   .safe-area-top.p-4 {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 1rem) !important;
+    padding-top: calc(var(--_safe-top) + 1rem) !important;
   }
 
   .safe-area-top.pt-5,
   .safe-area-top.py-5,
   .safe-area-top.p-5 {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 1.25rem) !important;
+    padding-top: calc(var(--_safe-top) + 1.25rem) !important;
   }
 
   .safe-area-top.pt-6,
   .safe-area-top.py-6,
   .safe-area-top.p-6 {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 1.5rem) !important;
+    padding-top: calc(var(--_safe-top) + 1.5rem) !important;
   }
 
   .safe-area-bottom {
