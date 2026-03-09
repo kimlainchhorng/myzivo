@@ -154,7 +154,7 @@ export default function RideHubPage() {
     >
       {/* Tab bar — hidden for "book" since RideBookingHome renders its own header + tabs */}
       {activeTab !== "book" && (
-        <div className="sticky top-14 z-20 bg-background/95 backdrop-blur-lg border-b border-border/30">
+        <div className={cn("z-20 bg-background/95 backdrop-blur-lg border-b border-border/30 shrink-0", isFullScreen ? "" : "sticky top-14")}>
           <div className="flex overflow-x-auto gap-1 px-4 py-2 scrollbar-none">
             {tabs.map((tab) => {
               const Icon = tab.icon;
