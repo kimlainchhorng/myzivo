@@ -64,7 +64,7 @@ const serviceCategories: ServiceCategory[] = [
       { label: "Grocery", href: "/rides", image: zivoShoppingIcon, badge: "Promo", badgeVariant: "promo" },
       { label: "Alcohol", href: "/eats", image: zivoAlcoholIcon },
       { label: "Pharmacy", href: "/eats", image: zivoPharmacyIcon },
-      { label: "Shopping", href: "/rides", icon: ShoppingCart },
+      { label: "Shopping", href: "/rides", image: zivoShoppingCartIcon },
     ],
   },
   {
