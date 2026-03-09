@@ -170,6 +170,7 @@ export default function RidePaymentSection({
   clientSecret,
   onPaymentSuccess,
   paymentFailed,
+  onClearError,
 }: RidePaymentSectionProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
