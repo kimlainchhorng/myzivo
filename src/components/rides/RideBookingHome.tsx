@@ -2102,7 +2102,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <h2 className="text-xl font-black text-foreground tracking-tight">Confirm your ride</h2>
           </div>
 
-          <div className="px-5 pb-4 space-y-4 flex-1 overflow-y-auto flex flex-col">
+          <div className="px-5 pb-4 space-y-4 flex-1 overflow-y-auto flex flex-col min-h-0">
             {/* Route card */}
             <div className="rounded-2xl bg-card border border-border/20 p-4">
               <div className="flex items-start gap-3.5">

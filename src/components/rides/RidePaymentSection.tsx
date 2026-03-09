@@ -321,6 +321,7 @@ export default function RidePaymentSection({
   const handleCardSaved = () => {
     setShowAddCard(false);
     setSetupClientSecret(null);
+    onClearError?.();
     loadCards();
   };
 
