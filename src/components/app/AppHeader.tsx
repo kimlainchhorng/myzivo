@@ -38,12 +38,13 @@ const AppHeader = ({
   };
 
   return (
-    <header className={cn(
-      "fixed top-0 left-0 right-0 z-50 safe-area-top transition-all duration-200 tap-highlight-none no-select",
-      transparent 
-        ? "bg-transparent" 
-        : "bg-card/95 backdrop-blur-xl border-b border-border/50"
-    )}>
+    <header
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 safe-area-top transition-all duration-200 tap-highlight-none no-select",
+        transparent ? "bg-transparent" : "bg-card/95 backdrop-blur-xl border-b border-border/50"
+      )}
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+    >
       <div className="flex items-center justify-between h-14 px-4">
         {/* Left */}
         {showBack ? (

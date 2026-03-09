@@ -58,13 +58,19 @@ const AppLayout = ({
       {/* Offline Banner */}
       <OfflineBanner isOffline={!isOnline} />
 
-      <main className={cn(
-        "flex-1",
-        fixedHeight ? "min-h-0 overflow-hidden flex flex-col" : "scroll-momentum",
-        !hideHeader && "pt-14",
-        !hideNav && "pb-nav",
-        className
-      )}>
+      <main
+        className={cn(
+          "flex-1",
+          fixedHeight ? "min-h-0 overflow-hidden flex flex-col" : "scroll-momentum",
+          !hideNav && "pb-nav",
+          className
+        )}
+        style={
+          !hideHeader
+            ? { paddingTop: "calc(56px + env(safe-area-inset-top, 0px))" }
+            : undefined
+        }
+      >
         {children}
       </main>
 
