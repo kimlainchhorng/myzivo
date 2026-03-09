@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.debug(`[maps-route] Fetching route for user: ${user.id}`);
+    console.debug(`[maps-route] Fetching route`);
 
     const res = await fetch(url);
     const data = await res.json();
