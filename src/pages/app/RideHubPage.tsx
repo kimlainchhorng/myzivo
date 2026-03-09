@@ -131,6 +131,7 @@ export default function RideHubPage() {
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") === "reserve" ? "reserve" : "book";
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [bookWithSchedule, setBookWithSchedule] = useState(false);
 
   useEffect(() => {
     const nextTab = searchParams.get("tab") === "reserve" ? "reserve" : "book";

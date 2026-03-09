@@ -407,7 +407,7 @@ function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
 }
 
 /* ─── Main Component ─── */
-export default function RideBookingHome() {
+export default function RideBookingHome({ initialSchedule = false }: { initialSchedule?: boolean } = {}) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { getCurrentLocation } = useCurrentLocation();
