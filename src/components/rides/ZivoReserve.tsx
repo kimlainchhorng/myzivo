@@ -192,83 +192,66 @@ export default function ZivoReserve() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, x: -30 }}
-            className="flex flex-col h-full overflow-y-auto scrollbar-none bg-background"
+            className="flex flex-col h-full overflow-hidden bg-background"
           >
-            {/* Hero image — fully visible */}
-            <div className="relative w-full">
+            {/* Hero image — compact, fully visible */}
+            <div className="relative w-full h-[28%] shrink-0">
               <img
                 src={reserveHero}
                 alt="ZIVO Reserve"
-                className="w-full h-auto object-cover"
+                className="w-full h-full object-cover rounded-b-2xl"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent rounded-b-2xl" />
+              <div className="absolute bottom-2 left-4">
+                <div className="px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 backdrop-blur-sm">
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Premium</span>
+                </div>
+              </div>
             </div>
 
-            {/* Content */}
-            <div className="px-5 -mt-8 relative z-10 pb-5">
-              {/* Title area */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="mb-5"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30">
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Premium</span>
-                  </div>
-                </div>
-                <h1 className="text-2xl font-black text-foreground tracking-tight leading-tight">
+            {/* Content — fills remaining space */}
+            <div className="flex flex-col flex-1 min-h-0 px-5 pt-3 pb-4">
+              {/* Title */}
+              <div className="mb-3">
+                <h1 className="text-xl font-black text-foreground tracking-tight leading-tight">
                   ZIVO Reserve
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1.5">
+                <p className="text-xs text-muted-foreground mt-1">
                   Schedule up to 90 days ahead. Price locked, no surge.
                 </p>
-              </motion.div>
+              </div>
 
-              {/* Benefits list */}
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 }}
-                className="space-y-3 mb-6"
-              >
+              {/* Benefits — compact list fills available space */}
+              <div className="flex-1 min-h-0 flex flex-col gap-1.5 overflow-hidden">
                 {benefits.map((b, i) => {
                   const Icon = b.icon;
                   return (
-                    <motion.div
+                    <div
                       key={i}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 + i * 0.04 }}
-                      className="flex items-center gap-3 rounded-2xl bg-card border border-border/40 px-4 py-3"
+                      className="flex items-center gap-3 rounded-xl bg-card border border-border/40 px-3 py-2 shrink-0"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <Icon className="w-5 h-5 text-primary" strokeWidth={2} />
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4 text-primary" strokeWidth={2} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-foreground leading-tight">{b.title}</p>
-                        <p className="text-xs text-muted-foreground leading-tight mt-0.5">{b.desc}</p>
+                        <p className="text-xs font-bold text-foreground leading-tight">{b.title}</p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">{b.desc}</p>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })}
-              </motion.div>
+              </div>
 
               {/* CTA */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
+              <div className="pt-3 shrink-0">
                 <Button
-                  className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xl shadow-primary/30"
+                  className="w-full h-12 rounded-2xl text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xl shadow-primary/30"
                   onClick={handleReserve}
                 >
                   <Calendar className="w-5 h-5 mr-2" />
                   Reserve a ride
                 </Button>
-              </motion.div>
+              </div>
             </div>
           </motion.div>
         )}
