@@ -141,7 +141,7 @@ export default function RideHubPage() {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [activeTab]);
 
-  const isFullScreen = activeTab === "book";
+  const isFullScreen = activeTab === "book" || activeTab === "reserve";
 
   return (
     <AppLayout
