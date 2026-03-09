@@ -119,7 +119,7 @@ export default function DateScrollWheelPicker({
         />
       </div>
 
-      <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+      
     </motion.div>
   );
 }

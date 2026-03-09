@@ -82,7 +82,7 @@ function ScrollWheelColumn({
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto scrollbar-none snap-y snap-mandatory relative z-10 overscroll-contain"
+        className="h-full overflow-y-auto scrollbar-hide snap-y snap-mandatory relative z-10 overscroll-contain"
         style={{
           paddingTop: padItems * itemHeight,
           paddingBottom: padItems * itemHeight,
@@ -214,8 +214,6 @@ export default function ScrollWheelPicker({
         />
       </div>
 
-      {/* Bottom accent line */}
-      <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
     </motion.div>
   );
 }
