@@ -42,7 +42,7 @@ const serviceCategories: ServiceCategory[] = [
     ],
   },
   {
-    title: "Get anything delivered",
+    title: "Food & more, fast",
     services: [
       { label: "Food", href: "/eats", image: zivoEatsIcon, badge: "Promo", badgeVariant: "promo" },
       { label: "Grocery", href: "/rides", image: zivoShoppingIcon, badge: "Promo", badgeVariant: "promo" },
