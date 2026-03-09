@@ -1,3 +1,4 @@
+// Manage Payment Methods - Stripe real card management
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
@@ -27,8 +28,7 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError || !userData?.user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
