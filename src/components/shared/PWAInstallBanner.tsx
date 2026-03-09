@@ -3,6 +3,7 @@
  * Shows contextually after 30s of browsing, respects dismissals
  */
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Download, Smartphone, Zap, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
