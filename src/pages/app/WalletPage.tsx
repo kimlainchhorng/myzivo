@@ -224,6 +224,7 @@ export default function WalletPage() {
                   <p className="text-xs text-muted-foreground mt-1">Add a card for one-click checkout</p>
                 </CardContent>
               </Card>
+            ) : null}
           </motion.div>
         )}
         {/* History Section */}
