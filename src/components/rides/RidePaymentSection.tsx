@@ -206,18 +206,28 @@ export default function RidePaymentSection({
 
   // Start add card flow
   const handleAddCard = async () => {
+    setAddingCard(true);
     try {
       const { data, error } = await supabase.functions.invoke("manage-payment-methods", {
         body: { action: "create_setup_intent" },
       });
-      if (error || !data?.ok) {
-        toast.error("Failed to start card setup");
+      console.log("[RidePayment] create_setup_intent response:", { data, error });
+      if (error) {
+        const errMsg = typeof error === 'string' ? error : error?.message || "Failed to start card setup";
+        toast.error(errMsg);
+        return;
+      }
+      if (!data?.ok || !data?.client_secret) {
+        toast.error(data?.error || "Failed to start card setup");
         return;
       }
       setSetupClientSecret(data.client_secret);
       setShowAddCard(true);
-    } catch {
-      toast.error("Failed to start card setup");
+    } catch (e: any) {
+      console.error("[RidePayment] handleAddCard error:", e);
+      toast.error(e?.message || "Failed to start card setup");
+    } finally {
+      setAddingCard(false);
     }
   };
 
