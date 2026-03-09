@@ -781,13 +781,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
 
     if (pickupData && place.lat && place.lng) {
-      // Include any existing stops as waypoints
-      const wp = stops
+      // Include any existing stops as waypoints — use ref to avoid stale closure
+      const wp = stopsRef.current
         .filter(s => s.place && s.place.lat && s.place.lng)
         .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
       fetchRoute(pickupData, place, wp);
     }
-  }, [pickup, userLocation, isSameLocation]); // fetchRoute is intentionally omitted to avoid infinite loop
+  }, [pickup, userLocation, isSameLocation]);
 
   /* ─── Multi-stop management ─── */
   const MAX_STOPS = 1;
