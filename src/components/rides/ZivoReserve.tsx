@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format, addDays, setHours, setMinutes } from "date-fns";
 import reserveHero from "@/assets/zivo-reserve-hero.png";
+import ScrollWheelPicker from "./ScrollWheelPicker";
 
 type Screen = "landing" | "datetime" | "route" | "confirmed";
 
@@ -40,70 +41,7 @@ function generateDays(count: number) {
 const hours = Array.from({ length: 12 }, (_, i) => i + 1);
 const minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 
-/* ─── Scroll Wheel Column ─── */
-function ScrollColumn({
-  items,
-  selected,
-  onSelect,
-  renderItem,
-}: {
-  items: any[];
-  selected: number;
-  onSelect: (i: number) => void;
-  renderItem: (item: any, i: number) => string;
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const itemH = 44;
-
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTo({
-        top: selected * itemH,
-        behavior: "smooth",
-      });
-    }
-  }, [selected]);
-
-  const handleScroll = () => {
-    if (!containerRef.current) return;
-    const scrollTop = containerRef.current.scrollTop;
-    const idx = Math.round(scrollTop / itemH);
-    if (idx >= 0 && idx < items.length && idx !== selected) {
-      onSelect(idx);
-    }
-  };
-
-  return (
-    <div className="relative h-[220px] overflow-hidden">
-      {/* Selection highlight */}
-      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[44px] bg-foreground/10 rounded-lg z-0 pointer-events-none" />
-      <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        className="h-full overflow-y-auto scrollbar-none snap-y snap-mandatory relative z-10"
-        style={{ paddingTop: "88px", paddingBottom: "88px" }}
-      >
-        {items.map((item, i) => {
-          const isSelected = i === selected;
-          return (
-            <button
-              key={i}
-              onClick={() => onSelect(i)}
-              className={cn(
-                "w-full h-[44px] flex items-center justify-center snap-center transition-all",
-                isSelected
-                  ? "text-foreground font-black text-lg"
-                  : "text-muted-foreground/50 font-medium text-base"
-              )}
-            >
-              {renderItem(item, i)}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+/* (ScrollColumn removed — using shared ScrollWheelPicker) */
 
 /* ─── Benefits List ─── */
 const benefits = [
@@ -369,48 +307,22 @@ export default function ZivoReserve({ onReserve }: { onReserve?: () => void } = 
               When do you want to leave?
             </h1>
 
-            {/* Scroll wheel time picker */}
-            <div className="flex-1 flex items-center justify-center">
-              <div className="flex gap-0 w-full max-w-sm">
-                {/* Day column */}
-                <div className="flex-[2]">
-                  <ScrollColumn
-                    items={days}
-                    selected={selectedDayIdx}
-                    onSelect={setSelectedDayIdx}
-                    renderItem={(item) => item.label}
-                  />
-                </div>
-
-                {/* Hour column */}
-                <div className="flex-1">
-                  <ScrollColumn
-                    items={hours}
-                    selected={selectedHourIdx}
-                    onSelect={setSelectedHourIdx}
-                    renderItem={(item) => String(item)}
-                  />
-                </div>
-
-                {/* Minute column */}
-                <div className="flex-1">
-                  <ScrollColumn
-                    items={minutes}
-                    selected={selectedMinIdx}
-                    onSelect={setSelectedMinIdx}
-                    renderItem={(item) => String(item).padStart(2, "0")}
-                  />
-                </div>
-
-                {/* AM/PM column */}
-                <div className="flex-1">
-                  <ScrollColumn
-                    items={["AM", "PM"]}
-                    selected={amPm === "AM" ? 0 : 1}
-                    onSelect={(i) => setAmPm(i === 0 ? "AM" : "PM")}
-                    renderItem={(item) => item}
-                  />
-                </div>
+            {/* 2026 Scroll wheel time picker */}
+            <div className="flex-1 flex items-center justify-center px-1">
+              <div className="w-full max-w-sm">
+                <ScrollWheelPicker
+                  days={days}
+                  selectedDayIdx={selectedDayIdx}
+                  onDayChange={setSelectedDayIdx}
+                  hours={hours}
+                  selectedHourIdx={selectedHourIdx}
+                  onHourChange={setSelectedHourIdx}
+                  minutes={minutes}
+                  selectedMinIdx={selectedMinIdx}
+                  onMinChange={setSelectedMinIdx}
+                  amPm={amPm}
+                  onAmPmChange={setAmPm}
+                />
               </div>
             </div>
 
