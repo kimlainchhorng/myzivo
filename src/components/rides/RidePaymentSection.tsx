@@ -192,13 +192,16 @@ export default function RidePaymentSection({
       });
       console.log("[RidePayment] list cards response:", JSON.stringify(resp));
       if (!resp.error && resp.data?.ok) {
-        setSavedCards(resp.data.cards || []);
-        const defaultCard = resp.data.cards?.find((c: SavedCard) => c.is_default);
+        const cards = resp.data.cards || [];
+        setSavedCards(cards);
+        const defaultCard = cards.find((c: SavedCard) => c.is_default);
         if (defaultCard) {
           setSelectedCardId(defaultCard.id);
-        } else if (resp.data.cards?.length > 0) {
-          setSelectedCardId(resp.data.cards[0].id);
+        } else if (cards.length > 0) {
+          setSelectedCardId(cards[0].id);
         }
+        // Clear any previous payment error when cards loaded successfully
+        if (cards.length > 0) onClearError?.();
       } else {
         console.warn("[RidePayment] Failed to load cards:", resp.error);
       }
