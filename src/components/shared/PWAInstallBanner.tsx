@@ -47,7 +47,7 @@ export function PWAInstallBanner() {
       window.removeEventListener("beforeinstallprompt", handler);
       clearTimeout(timer);
     };
-  }, [isMobile]);
+  }, [isMobile, location.pathname]);
 
   const handleInstall = useCallback(async () => {
     if (deferredPrompt) {
