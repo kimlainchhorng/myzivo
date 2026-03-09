@@ -794,7 +794,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [stops.length]);
 
   // Use a ref to always have the latest fetchRoute available
-  const fetchRouteRef = useRef<((from: PlaceData, to: PlaceData, wp?: { lat: number; lng: number }[]) => Promise<void>) | null>(null);
+  const fetchRouteRef = useRef<((from: PlaceData, to: PlaceData, wp?: { lat: number; lng: number }[], opts?: { skipViewChange?: boolean }) => Promise<void>) | null>(null);
 
   const handleStopSelect = useCallback((stopId: string, place: PlaceData) => {
     setStops(prev => prev.map(s => s.id === stopId ? { ...s, place, display: place.address } : s));
