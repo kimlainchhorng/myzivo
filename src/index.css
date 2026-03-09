@@ -1589,24 +1589,26 @@ html {
 
 /* Car running/driving animation */
 @keyframes car-run {
-  0% { transform: translateX(0) translateY(0) rotate(0deg); }
-  8% { transform: translateX(-3px) translateY(-2px) rotate(1deg); }
-  16% { transform: translateX(-8px) translateY(0px) rotate(-1deg); }
-  24% { transform: translateX(-14px) translateY(-2px) rotate(1deg); }
-  32% { transform: translateX(-22px) translateY(0px) rotate(-1deg); }
-  42% { transform: translateX(-35px) translateY(-1px) rotate(0deg); opacity: 0.5; }
-  50% { transform: translateX(-50px) translateY(0px) rotate(0deg); opacity: 0; }
-  51% { transform: translateX(50px) translateY(0px) rotate(0deg); opacity: 0; }
-  60% { transform: translateX(35px) translateY(-2px) rotate(-1deg); opacity: 0.5; }
-  70% { transform: translateX(20px) translateY(0px) rotate(1deg); opacity: 0.8; }
-  78% { transform: translateX(12px) translateY(-2px) rotate(-1deg); }
-  86% { transform: translateX(6px) translateY(0px) rotate(1deg); }
-  93% { transform: translateX(2px) translateY(-1px) rotate(0deg); }
-  100% { transform: translateX(0) translateY(0) rotate(0deg); opacity: 1; }
+  0% { transform: translateX(0) translateY(0) perspective(200px) rotateY(0deg) scale(1); opacity: 1; }
+  5% { transform: translateX(-4px) translateY(-1px) perspective(200px) rotateY(-5deg) scale(1.02); }
+  10% { transform: translateX(-10px) translateY(1px) perspective(200px) rotateY(-10deg) scale(1.04); }
+  18% { transform: translateX(-20px) translateY(-2px) perspective(200px) rotateY(-18deg) scale(1.06); }
+  26% { transform: translateX(-32px) translateY(1px) perspective(200px) rotateY(-25deg) scale(1.03); opacity: 0.7; }
+  35% { transform: translateX(-48px) translateY(-1px) perspective(200px) rotateY(-30deg) scale(0.95); opacity: 0.3; }
+  42% { transform: translateX(-60px) translateY(0) perspective(200px) rotateY(-35deg) scale(0.85); opacity: 0; }
+  50% { transform: translateX(60px) translateY(0) perspective(200px) rotateY(35deg) scale(0.85); opacity: 0; }
+  58% { transform: translateX(48px) translateY(-1px) perspective(200px) rotateY(30deg) scale(0.9); opacity: 0.3; }
+  66% { transform: translateX(32px) translateY(1px) perspective(200px) rotateY(22deg) scale(0.95); opacity: 0.6; }
+  74% { transform: translateX(18px) translateY(-2px) perspective(200px) rotateY(14deg) scale(1.02); opacity: 0.85; }
+  82% { transform: translateX(8px) translateY(1px) perspective(200px) rotateY(7deg) scale(1.05); opacity: 0.95; }
+  90% { transform: translateX(3px) translateY(-1px) perspective(200px) rotateY(3deg) scale(1.02); }
+  95% { transform: translateX(1px) translateY(0) perspective(200px) rotateY(1deg) scale(1.01); }
+  100% { transform: translateX(0) translateY(0) perspective(200px) rotateY(0deg) scale(1); opacity: 1; }
 }
 
 .animate-car-run {
-  animation: car-run 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: car-run 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  transform-style: preserve-3d;
 }
 
 @media (prefers-reduced-motion: reduce) {
