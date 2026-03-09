@@ -643,9 +643,9 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         position: coord,
         map,
         icon: {
-          url: createStopPinSvg(idx),
-          scaledSize: new google.maps.Size(40, 40),
-          anchor: new google.maps.Point(20, 20),
+          url: createStopPinSvg(),
+          scaledSize: new google.maps.Size(44, 44),
+          anchor: new google.maps.Point(22, 22),
         },
         title: `Stop ${idx + 1}`,
         zIndex: 78,
