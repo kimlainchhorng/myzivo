@@ -170,7 +170,7 @@ function MapSection({
         <RideMap
           pickupCoords={pickupCoords || null}
           dropoffCoords={dropoffCoords || null}
-          stopCoords={stops.filter(s => s.place).map(s => ({ lat: s.place!.lat || 0, lng: s.place!.lng || 0 })).filter(c => c.lat !== 0 && c.lng !== 0)}
+          stopCoords={stopCoords}
           driverCoords={driverCoords || null}
           userLocation={userLocation || null}
           showUserLocationDot={showUserLocationDot}
