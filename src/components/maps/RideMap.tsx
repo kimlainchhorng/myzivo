@@ -364,7 +364,7 @@ function animatePolyline(
 
   const animatedLine = new google.maps.Polyline({
     path: [],
-    strokeColor: "#10b981",
+    strokeColor: "#22c55e",
     strokeWeight: 4,
     strokeOpacity: 0.9,
     geodesic: true,
