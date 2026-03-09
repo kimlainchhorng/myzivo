@@ -2072,7 +2072,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               <div className="w-10 h-10 rounded-xl bg-muted/20 border border-border/20 flex items-center justify-center">
                 <CreditCard className="w-[18px] h-[18px] text-muted-foreground" />
               </div>
-              <span className="flex-1 text-[14px] text-foreground font-semibold text-left">Visa •••• 4242</span>
+              <span className="flex-1 text-[14px] text-foreground font-semibold text-left">Payment method</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
             </button>
           </div>
