@@ -171,6 +171,19 @@ const badgeStyles = {
 /* ── Page ── */
 export default function ServicesPage() {
   const navigate = useNavigate();
+  const [runningLabel, setRunningLabel] = useState<string | null>(null);
+
+  const handleServiceClick = (service: ServiceItem) => {
+    if (service.label === "Ride" || service.label === "Rental Cars" || service.label === "Car Rental" || service.label === "Reserve") {
+      setRunningLabel(service.label);
+      setTimeout(() => {
+        setRunningLabel(null);
+        navigate(service.href);
+      }, 600);
+    } else {
+      navigate(service.href);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-28 relative">
