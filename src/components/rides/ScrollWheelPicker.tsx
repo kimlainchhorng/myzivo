@@ -84,6 +84,8 @@ function ScrollWheelColumn({
         onScroll={handleScroll}
         className="h-full overflow-y-auto scrollbar-none snap-y snap-mandatory relative z-10 overscroll-contain"
         style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
           paddingTop: padItems * itemHeight,
           paddingBottom: padItems * itemHeight,
         }}
