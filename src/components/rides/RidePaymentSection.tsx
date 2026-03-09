@@ -208,12 +208,27 @@ export default function RidePaymentSection({
   const handleAddCard = async () => {
     setAddingCard(true);
     try {
-      const { data, error } = await supabase.functions.invoke("manage-payment-methods", {
+      const resp = await supabase.functions.invoke("manage-payment-methods", {
         body: { action: "create_setup_intent" },
       });
-      console.log("[RidePayment] create_setup_intent response:", { data, error });
+      console.log("[RidePayment] create_setup_intent response:", JSON.stringify(resp));
+      
+      // supabase.functions.invoke returns { data, error }
+      // On non-2xx, error is a FunctionsHttpError and data may still contain the body
+      const data = resp.data;
+      const error = resp.error;
+      
       if (error) {
-        const errMsg = typeof error === 'string' ? error : error?.message || "Failed to start card setup";
+        // Try to extract message from the error
+        let errMsg = "Failed to start card setup";
+        if (typeof error === 'object' && error !== null) {
+          // FunctionsHttpError has a context property with the response
+          try {
+            const errorBody = typeof error.message === 'string' ? error.message : String(error);
+            errMsg = errorBody || errMsg;
+          } catch { /* fallback */ }
+        }
+        console.error("[RidePayment] Edge function error:", errMsg);
         toast.error(errMsg);
         return;
       }
