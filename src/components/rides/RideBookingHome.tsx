@@ -1654,15 +1654,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="px-5 pt-3 pb-2 shrink-0">
                 <div className="flex items-start gap-3 mb-2">
                   <div className="flex flex-col items-center mt-0.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-primary/20" />
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center ring-2 ring-primary/20">
+                      <span className="text-[11px] font-black text-primary-foreground leading-none">Z</span>
+                    </div>
                     {stops.map((stop) => (
                       <div key={stop.id} className="flex flex-col items-center">
                         <div className="w-px flex-1 min-h-[14px] border-l-[2px] border-dashed border-muted-foreground/30 my-0.5" />
-                        <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                        <div className="w-5 h-5 rounded-full bg-muted-foreground/60 flex items-center justify-center">
+                          <span className="text-[10px] font-bold text-background leading-none">S</span>
+                        </div>
                       </div>
                     ))}
                     <div className="w-px flex-1 min-h-[20px] border-l-[2px] border-dashed border-muted-foreground/30 my-0.5" />
-                    <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
+                    <div className="w-6 h-6 rounded-sm bg-foreground flex items-center justify-center">
+                      <span className="text-[11px] font-black text-background leading-none">E</span>
+                    </div>
                   </div>
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div>
