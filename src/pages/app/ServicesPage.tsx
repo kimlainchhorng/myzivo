@@ -299,7 +299,7 @@ export default function ServicesPage() {
                           alt={service.label}
                           className={cn(
                             "w-9 h-9 object-contain transition-transform duration-200 group-hover:scale-110",
-                            runningLabel === service.label && "animate-car-run"
+                            runningLabel === service.label && service.animClass
                           )}
                         />
                       ) : service.icon ? (
