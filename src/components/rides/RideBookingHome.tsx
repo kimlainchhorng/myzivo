@@ -802,16 +802,18 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, []);
 
   // Re-fetch route when stops change (only if we already have a route)
-  const stopsWithCoords = stops.filter(s => s.place && s.place.lat && s.place.lng);
-  const stopsKey = stopsWithCoords.map(s => `${s.place!.lat},${s.place!.lng}`).join("|");
-  const prevStopsKeyRef = useRef(stopsKey);
+  const prevStopsKeyRef = useRef("");
   useEffect(() => {
-    if (prevStopsKeyRef.current !== stopsKey && pickup && destination && viewStep === "route-preview") {
-      prevStopsKeyRef.current = stopsKey;
-      const wp = stopsWithCoords.map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+    const currentStopsWithCoords = stops.filter(s => s.place && s.place.lat && s.place.lng);
+    const currentStopsKey = currentStopsWithCoords.map(s => `${s.place!.lat},${s.place!.lng}`).join("|");
+    
+    if (prevStopsKeyRef.current !== currentStopsKey && pickup && destination) {
+      console.log("[RideBookingHome] Stops changed, re-fetching route with waypoints:", currentStopsWithCoords.length, "viewStep:", viewStep);
+      prevStopsKeyRef.current = currentStopsKey;
+      const wp = currentStopsWithCoords.map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
       fetchRoute(pickup, destination, wp);
     }
-  }, [stopsKey, pickup, destination, viewStep]);
+  }, [stops, pickup, destination]);
 
   const handleSavedPlace = (address: string) => {
     setDestinationDisplay(address);
@@ -840,6 +842,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       .filter(s => s.place && s.place.lat && s.place.lng)
       .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
 
+    console.log("[fetchRoute] Sending route request with", waypoints.length, "waypoints:", JSON.stringify(waypoints));
     try {
       const { data, error } = await supabase.functions.invoke("maps-route", {
         body: {
@@ -850,6 +853,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           waypoints: waypoints.length > 0 ? waypoints : undefined,
         },
       });
+      console.log("[fetchRoute] Response polyline length:", data?.polyline?.length, "ok:", data?.ok);
 
       if (error) throw error;
 
