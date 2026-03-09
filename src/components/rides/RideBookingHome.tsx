@@ -527,12 +527,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const BOTTOM_NAV_HEIGHT = 64;
   const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
 
-  const COLLAPSED_SHEET_HEIGHT = 330 + stops.length * 56 + (routeData ? 52 : 0);
-  const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
-
   // Route data
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+
+  const COLLAPSED_SHEET_HEIGHT = 330 + stops.length * 56 + (routeData ? 52 : 0);
+  const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
 
   // Driver tracking
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
