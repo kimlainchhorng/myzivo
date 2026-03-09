@@ -1043,7 +1043,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setRideRequestId(null);
     setRouteData(null);
     setDriverCoords(null);
-    setDriverEta(MOCK_DRIVER.etaMin);
+    setDriverEta(5);
     setRating(0);
     setTip(null);
     setSurgeMultiplier(1.0);
