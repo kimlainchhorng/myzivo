@@ -2095,8 +2095,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       {/* ═══════ CONFIRM RIDE — with real Stripe payment ═══════ */}
       {viewStep === "confirm-ride" && (
         <div
-          className="absolute left-0 right-0 z-40 bg-background flex flex-col overflow-hidden"
-          style={{ top: HEADER_HEIGHT, bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
+          className="absolute left-0 right-0 bottom-0 z-40 bg-background flex flex-col overflow-hidden"
+          style={{ top: HEADER_HEIGHT }}
         >
           <div className="px-5 pt-5 pb-2 shrink-0">
             <h2 className="text-xl font-black text-foreground tracking-tight">Confirm your ride</h2>
