@@ -314,6 +314,22 @@ function createDropoffPinSvg(): string {
   `)}`;
 }
 
+function createStopPinSvg(index: number): string {
+  // Gray circle with stop number — visually distinct from pickup/dropoff
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+      <defs>
+        <filter id="ss" x="-20%" y="-15%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.2"/>
+        </filter>
+      </defs>
+      <circle cx="20" cy="20" r="16" fill="#6b7280" filter="url(#ss)"/>
+      <circle cx="20" cy="20" r="10" fill="#fff"/>
+      <text x="20" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="12" fill="#6b7280">${index + 1}</text>
+    </svg>
+  `)}`;
+}
+
 function createCarSvg(rotation: number): string {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
