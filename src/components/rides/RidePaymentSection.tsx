@@ -170,6 +170,8 @@ export default function RidePaymentSection({
   onPaymentSuccess,
   paymentFailed,
 }: RidePaymentSectionProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [loadingCards, setLoadingCards] = useState(true);
@@ -177,6 +179,47 @@ export default function RidePaymentSection({
   const [setupClientSecret, setSetupClientSecret] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [addingCard, setAddingCard] = useState(false);
+
+  // If user is not signed in, show sign-in prompt instead of payment
+  if (!user) {
+    return (
+      <div className="space-y-3">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Payment</p>
+        <div className="rounded-2xl bg-card border border-border/20 p-6 text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+            <UserPlus className="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <p className="text-base font-bold text-foreground">Sign in to book your ride</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Create a free account or sign in to save cards, track rides, and earn rewards
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 h-12 rounded-xl font-bold gap-2"
+              onClick={() => navigate("/auth")}
+            >
+              <LogIn className="w-4 h-4" />
+              Sign In
+            </Button>
+            <Button
+              className="flex-1 h-12 rounded-xl font-bold gap-2 bg-primary text-primary-foreground"
+              onClick={() => navigate("/auth")}
+            >
+              <UserPlus className="w-4 h-4" />
+              Sign Up Free
+            </Button>
+          </div>
+          <div className="flex items-center gap-2 justify-center text-[10px] text-muted-foreground">
+            <Shield className="w-3 h-3" />
+            <span>Your payment info is secured by Stripe</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Load saved cards
   const loadCards = useCallback(async () => {
