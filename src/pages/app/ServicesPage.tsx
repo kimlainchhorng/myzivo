@@ -184,6 +184,27 @@ export default function ServicesPage() {
               </motion.button>
             )}
 
+            {/* Travel lifestyle banner before "Plan your trip" */}
+            {catIdx === 1 && (
+              <motion.button
+                onClick={() => navigate("/flights")}
+                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="w-full rounded-2xl overflow-hidden border border-border/30 shadow-sm hover:shadow-lg transition-all duration-200 touch-manipulation mt-6"
+              >
+                <div className="relative">
+                  <img src={zivoTravelBanner} alt="Plan your trip with ZIVO" className="w-full h-[140px] object-cover object-center" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 to-transparent flex flex-col justify-center px-5">
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Plan Your Trip</span>
+                    <span className="text-sm font-black text-background leading-tight mt-0.5">Your Next Adventure Awaits</span>
+                    <span className="text-[11px] text-background/80 mt-1">Flights · Hotels · Cars · All in one place</span>
+                  </div>
+                </div>
+              </motion.button>
+            )}
+
           </div>
         ))}
       </div>
