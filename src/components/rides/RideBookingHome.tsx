@@ -1421,36 +1421,28 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                         const display12 = scheduleHour % 12 || 12;
                         const hourIdx = wheelHours.indexOf(display12);
                         const minIdx = wheelMinutes.indexOf(scheduleMinute);
-                        const dummyDays = [{ label: "" }];
                         
                         return (
-                          <div className="flex gap-0 rounded-2xl bg-card/50 backdrop-blur-lg border border-border/30 overflow-hidden px-2 py-2">
-                            {/* Hour */}
-                            <div className="flex-1">
-                              <ScrollWheelPicker
-                                days={dummyDays}
-                                selectedDayIdx={0}
-                                onDayChange={() => {}}
-                                hours={wheelHours}
-                                selectedHourIdx={hourIdx >= 0 ? hourIdx : 0}
-                                onHourChange={(i) => {
-                                  const h12 = wheelHours[i];
-                                  const isPM = scheduleHour >= 12;
-                                  if (isPM) setScheduleHour(h12 === 12 ? 12 : h12 + 12);
-                                  else setScheduleHour(h12 === 12 ? 0 : h12);
-                                }}
-                                minutes={wheelMinutes}
-                                selectedMinIdx={minIdx >= 0 ? minIdx : 0}
-                                onMinChange={(i) => setScheduleMinute(wheelMinutes[i])}
-                                amPm={currentAmPm as "AM" | "PM"}
-                                onAmPmChange={(val) => {
-                                  const h12 = scheduleHour % 12;
-                                  setScheduleHour(val === "PM" ? h12 + 12 : h12);
-                                }}
-                                compact
-                              />
-                            </div>
-                          </div>
+                          <ScrollWheelPicker
+                            hideDays
+                            hours={wheelHours}
+                            selectedHourIdx={hourIdx >= 0 ? hourIdx : 0}
+                            onHourChange={(i) => {
+                              const h12 = wheelHours[i];
+                              const isPM = scheduleHour >= 12;
+                              if (isPM) setScheduleHour(h12 === 12 ? 12 : h12 + 12);
+                              else setScheduleHour(h12 === 12 ? 0 : h12);
+                            }}
+                            minutes={wheelMinutes}
+                            selectedMinIdx={minIdx >= 0 ? minIdx : 0}
+                            onMinChange={(i) => setScheduleMinute(wheelMinutes[i])}
+                            amPm={currentAmPm as "AM" | "PM"}
+                            onAmPmChange={(val) => {
+                              const h12 = scheduleHour % 12;
+                              setScheduleHour(val === "PM" ? h12 + 12 : h12);
+                            }}
+                            compact
+                          />
                         );
                       })()}
                       <Button
