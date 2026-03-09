@@ -138,7 +138,7 @@ interface ScrollWheelPickerProps {
 
 export default function ScrollWheelPicker({
   days,
-  selectedDayIdx,
+  selectedDayIdx = 0,
   onDayChange,
   hours,
   selectedHourIdx,
@@ -149,6 +149,7 @@ export default function ScrollWheelPicker({
   amPm,
   onAmPmChange,
   compact = false,
+  hideDays = false,
 }: ScrollWheelPickerProps) {
   const itemHeight = compact ? 42 : 48;
   
