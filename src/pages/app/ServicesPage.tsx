@@ -1,10 +1,10 @@
 /**
  * ServicesPage - Full directory of all ZIVO services
- * Grid-based layout with category sections, inspired by super-app style
+ * Grid-based layout with category sections, super-app style
  */
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Car, Shield, MapPin, Sparkles, Package, Gift, Crown, Truck, Users, Wine, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Car, Shield, MapPin, Sparkles, Package, Gift, Crown, Users, Wine, ShoppingCart, Pill, Ship, FileCheck, BedDouble } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import zivoRideIcon from "@/assets/zivo-ride-icon.png";
@@ -46,16 +46,22 @@ const serviceCategories: ServiceCategory[] = [
     services: [
       { label: "Food", href: "/eats", image: zivoEatsIcon, badge: "Promo", badgeVariant: "promo" },
       { label: "Grocery", href: "/rides", image: zivoShoppingIcon, badge: "Promo", badgeVariant: "promo" },
+      { label: "Alcohol", href: "/eats", icon: Wine },
+      { label: "Pharmacy", href: "/eats", icon: Pill },
       { label: "Shopping", href: "/rides", icon: ShoppingCart },
     ],
   },
   {
     title: "Plan your trip",
     services: [
+      { label: "Flights", href: "/flights", image: zivoFlightsIcon },
       { label: "Hotels", href: "/hotels", image: zivoHotelsIcon },
+      { label: "Car Rental", href: "/rent-car", image: zivoRentalCarIcon },
       { label: "Insurance", href: "/travel-insurance", icon: Shield },
       { label: "Things to Do", href: "/things-to-do", icon: MapPin },
       { label: "AI Planner", href: "/ai-trip-planner", icon: Sparkles, badge: "New", badgeVariant: "new" },
+      { label: "Visa Help", href: "/support", icon: FileCheck, badge: "New", badgeVariant: "new" },
+      { label: "Cruise", href: "/flights", icon: Ship },
     ],
   },
   {
