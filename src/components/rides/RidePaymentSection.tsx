@@ -412,10 +412,10 @@ export default function RidePaymentSection({
         </div>
       </div>
 
-      {/* Authorize button */}
-      <div className="pt-1">
+      {/* Authorize button — full bleed */}
+      <div className="-mx-5 px-5 pt-3 pb-2 bg-background sticky bottom-0">
         <Button
-          className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg shadow-foreground/10 gap-2 active:scale-[0.97] transition-all duration-200"
+          className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-xl shadow-foreground/15 gap-2 active:scale-[0.97] transition-all duration-200"
           onClick={() => {
             if (selectedCardId) {
               onAuthorizeWithSavedCard(selectedCardId);
@@ -436,7 +436,7 @@ export default function RidePaymentSection({
           )}
         </Button>
         <p className="text-[10px] text-muted-foreground text-center mt-2">
-          Your card will be pre-authorized. Final charge applied after ride completion.
+          Pre-authorized · Final charge after ride
         </p>
       </div>
 
