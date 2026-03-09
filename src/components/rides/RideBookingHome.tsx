@@ -766,9 +766,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
     }
 
-    // Block same-location trips
-    if (isSameLocation(pickupData, place)) {
-      toast.error("Pickup and destination can't be the same");
+    // Block same-location trips unless there are intermediate stops (round trip)
+    const hasStops = stopsRef.current.some(s => s.place && s.place.lat && s.place.lng);
+    if (isSameLocation(pickupData, place) && !hasStops) {
+      toast.error("Pickup and destination can't be the same. Add a stop for round trips.");
       return;
     }
 
