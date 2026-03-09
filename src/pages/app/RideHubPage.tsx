@@ -134,7 +134,7 @@ export default function RideHubPage() {
     <AppLayout
       title="Zivo Ride"
       showBack
-      onBack={() => navigate("/rides")}
+      onBack={() => navigate("/")}
       fixedHeight={activeTab === "book"}
       hideHeader={activeTab === "book"}
       className={activeTab === "book" ? "overflow-hidden !pb-0" : ""}
