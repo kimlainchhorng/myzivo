@@ -87,7 +87,7 @@ export default function ServicesPage() {
             <ArrowLeft className="w-4.5 h-4.5 text-foreground" />
           </button>
         </div>
-        <h1 className="text-[28px] font-black text-foreground mt-2">Services</h1>
+        <h1 className="text-[28px] font-black text-foreground mt-2">Everything ZIVO</h1>
       </div>
 
       {/* Service Categories */}
