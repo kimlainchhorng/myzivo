@@ -180,7 +180,38 @@ export default function RidePaymentSection({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [addingCard, setAddingCard] = useState(false);
 
-  // If user is not signed in, show sign-in prompt instead of payment
+  // Load saved cards
+  const loadCards = useCallback(async () => {
+    if (!user) { setLoadingCards(false); return; }
+    setLoadingCards(true);
+    try {
+      const resp = await supabase.functions.invoke("manage-payment-methods", {
+        body: { action: "list" },
+      });
+      console.log("[RidePayment] list cards response:", JSON.stringify(resp));
+      if (!resp.error && resp.data?.ok) {
+        setSavedCards(resp.data.cards || []);
+        const defaultCard = resp.data.cards?.find((c: SavedCard) => c.is_default);
+        if (defaultCard) {
+          setSelectedCardId(defaultCard.id);
+        } else if (resp.data.cards?.length > 0) {
+          setSelectedCardId(resp.data.cards[0].id);
+        }
+      } else {
+        console.warn("[RidePayment] Failed to load cards:", resp.error);
+      }
+    } catch (e) {
+      console.error("[RidePayment] Failed to load cards:", e);
+    } finally {
+      setLoadingCards(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadCards();
+  }, [loadCards]);
+
+  // If user is not signed in, show sign-in prompt
   if (!user) {
     return (
       <div className="space-y-3">
@@ -220,36 +251,6 @@ export default function RidePaymentSection({
       </div>
     );
   }
-
-  // Load saved cards
-  const loadCards = useCallback(async () => {
-    setLoadingCards(true);
-    try {
-      const resp = await supabase.functions.invoke("manage-payment-methods", {
-        body: { action: "list" },
-      });
-      console.log("[RidePayment] list cards response:", JSON.stringify(resp));
-      if (!resp.error && resp.data?.ok) {
-        setSavedCards(resp.data.cards || []);
-        const defaultCard = resp.data.cards?.find((c: SavedCard) => c.is_default);
-        if (defaultCard) {
-          setSelectedCardId(defaultCard.id);
-        } else if (resp.data.cards?.length > 0) {
-          setSelectedCardId(resp.data.cards[0].id);
-        }
-      } else {
-        console.warn("[RidePayment] Failed to load cards:", resp.error);
-      }
-    } catch (e) {
-      console.error("[RidePayment] Failed to load cards:", e);
-    } finally {
-      setLoadingCards(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadCards();
-  }, [loadCards]);
 
   // Start add card flow
   const handleAddCard = async () => {
