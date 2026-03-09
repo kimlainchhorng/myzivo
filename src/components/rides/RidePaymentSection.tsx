@@ -2,13 +2,15 @@
  * RidePaymentSection — Saved cards, add new card, Apple Pay for ride checkout
  */
 import { useState, useEffect, useCallback } from "react";
-import { CreditCard, Plus, Trash2, Check, Shield, ChevronRight, Smartphone } from "lucide-react";
+import { CreditCard, Plus, Trash2, Check, Shield, ChevronRight, Smartphone, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface SavedCard {
   id: string;
