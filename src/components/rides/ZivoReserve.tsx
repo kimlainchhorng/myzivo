@@ -193,7 +193,7 @@ export default function ZivoReserve() {
             className="flex flex-col h-full overflow-hidden"
           >
             {/* Hero image — compact */}
-            <div className="relative w-full h-[140px] shrink-0 overflow-hidden rounded-b-[1.5rem]">
+            <div className="relative w-full h-[120px] shrink-0 overflow-hidden rounded-b-[1.5rem]">
               <img
                 src={reserveHero}
                 alt="ZIVO Reserve — schedule your ride"
