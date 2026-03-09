@@ -174,6 +174,7 @@ export default function RidePaymentSection({
   const [showAddCard, setShowAddCard] = useState(false);
   const [setupClientSecret, setSetupClientSecret] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [addingCard, setAddingCard] = useState(false);
 
   // Load saved cards
   const loadCards = useCallback(async () => {
@@ -205,18 +206,28 @@ export default function RidePaymentSection({
 
   // Start add card flow
   const handleAddCard = async () => {
+    setAddingCard(true);
     try {
       const { data, error } = await supabase.functions.invoke("manage-payment-methods", {
         body: { action: "create_setup_intent" },
       });
-      if (error || !data?.ok) {
-        toast.error("Failed to start card setup");
+      console.log("[RidePayment] create_setup_intent response:", { data, error });
+      if (error) {
+        const errMsg = typeof error === 'string' ? error : error?.message || "Failed to start card setup";
+        toast.error(errMsg);
+        return;
+      }
+      if (!data?.ok || !data?.client_secret) {
+        toast.error(data?.error || "Failed to start card setup");
         return;
       }
       setSetupClientSecret(data.client_secret);
       setShowAddCard(true);
-    } catch {
-      toast.error("Failed to start card setup");
+    } catch (e: any) {
+      console.error("[RidePayment] handleAddCard error:", e);
+      toast.error(e?.message || "Failed to start card setup");
+    } finally {
+      setAddingCard(false);
     }
   };
 
@@ -357,12 +368,19 @@ export default function RidePaymentSection({
             {/* Add new card */}
             <button
               onClick={handleAddCard}
-              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/10 transition-all text-left"
+              disabled={addingCard}
+              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/10 transition-all text-left disabled:opacity-50"
             >
               <div className="w-10 h-7 rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center shrink-0">
-                <Plus className="w-4 h-4 text-muted-foreground" />
+                {addingCard ? (
+                  <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 text-muted-foreground" />
+                )}
               </div>
-              <span className="text-sm font-semibold text-foreground flex-1">Add new card</span>
+              <span className="text-sm font-semibold text-foreground flex-1">
+                {addingCard ? "Setting up..." : "Add new card"}
+              </span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
           </>
@@ -380,30 +398,32 @@ export default function RidePaymentSection({
       </div>
 
       {/* Authorize button */}
-      <Button
-        className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
-        onClick={() => {
-          if (selectedCardId) {
-            onAuthorizeWithSavedCard(selectedCardId);
-          } else {
-            onAuthorizeWithNewCard();
-          }
-        }}
-        disabled={isSubmitting}
-      >
-        <Shield className="w-5 h-5" />
-        {isSubmitting ? (
-          <span className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
-            Authorizing...
-          </span>
-        ) : (
-          `Authorize $${price.toFixed(2)} · ${vehicleName}`
-        )}
-      </Button>
-      <p className="text-[10px] text-muted-foreground text-center">
-        Your card will be pre-authorized. Final charge applied after ride completion.
-      </p>
+      <div className="pt-1">
+        <Button
+          className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg shadow-foreground/10 gap-2 active:scale-[0.97] transition-all duration-200"
+          onClick={() => {
+            if (selectedCardId) {
+              onAuthorizeWithSavedCard(selectedCardId);
+            } else {
+              onAuthorizeWithNewCard();
+            }
+          }}
+          disabled={isSubmitting}
+        >
+          <Shield className="w-5 h-5" />
+          {isSubmitting ? (
+            <span className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+              Authorizing...
+            </span>
+          ) : (
+            `Authorize $${price.toFixed(2)} · ${vehicleName}`
+          )}
+        </Button>
+        <p className="text-[10px] text-muted-foreground text-center mt-2">
+          Your card will be pre-authorized. Final charge applied after ride completion.
+        </p>
+      </div>
 
       {paymentFailed && (
         <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-center">
