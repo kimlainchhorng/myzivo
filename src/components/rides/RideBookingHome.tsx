@@ -1745,7 +1745,25 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     {stops.map((stop, idx) => (
                       <div key={stop.id}>
                         <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Stop {idx + 1}</p>
-                        <p className="text-xs font-medium text-foreground truncate leading-tight">{stop.place?.address || stop.display || "—"}</p>
+                        {stop.place?.address ? (
+                          <p className="text-xs font-medium text-foreground truncate leading-tight">{stop.place.address}</p>
+                        ) : (
+                          <div className="relative">
+                            <AddressAutocomplete
+                              placeholder={`Enter stop ${idx + 1} address`}
+                              value={stop.display}
+                              onSelect={(place) => handleStopSelect(stop.id, place)}
+                              proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
+                              className="[&_input]:h-8 [&_input]:rounded-lg [&_input]:text-xs [&_input]:font-medium [&_input]:bg-muted/30 [&_input]:border-border/30 [&_input]:px-2"
+                            />
+                            <button
+                              onClick={() => handleRemoveStop(stop.id)}
+                              className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted/50"
+                            >
+                              <X className="w-3 h-3 text-muted-foreground" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                     <div>
