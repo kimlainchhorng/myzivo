@@ -793,20 +793,76 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setStops(prev => [...prev, { id: Date.now().toString(), place: null, display: "" }]);
   }, [stops.length]);
 
-  // Trigger to force route re-fetch when stops change
-  const [stopRouteRefetchTrigger, setStopRouteRefetchTrigger] = useState(0);
+  // Stop management — NOT wrapped in useCallback so they always use latest fetchRoute/pickup/destination
+  const handleStopSelect = (stopId: string, place: PlaceData) => {
+    const updatedStops = stops.map(s => s.id === stopId ? { ...s, place, display: place.address } : s);
+    setStops(updatedStops);
+    
+    // Immediately re-fetch route with the updated stops
+    if (pickup && destination && place.lat && place.lng) {
+      const wp = updatedStops
+        .filter(s => s.place && s.place.lat && s.place.lng)
+        .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+      
+      console.log("[handleStopSelect] Re-fetching with waypoints:", JSON.stringify(wp));
+      
+      // Inline route fetch to avoid stale closure issues
+      setIsLoadingRoute(true);
+      supabase.functions.invoke("maps-route", {
+        body: {
+          origin_lat: pickup.lat,
+          origin_lng: pickup.lng,
+          dest_lat: destination.lat,
+          dest_lng: destination.lng,
+          waypoints: wp.length > 0 ? wp : undefined,
+        },
+      }).then(({ data, error }) => {
+        console.log("[handleStopSelect] Route response:", JSON.stringify({ ok: data?.ok, dist: data?.distance_miles, dur: data?.duration_minutes }));
+        if (!error && data?.ok) {
+          setRouteData({
+            distance_miles: data.distance_miles,
+            duration_minutes: data.duration_minutes,
+            polyline: data.polyline,
+            traffic_level: data.traffic_level,
+          });
+        }
+        setIsLoadingRoute(false);
+      }).catch(() => setIsLoadingRoute(false));
+    }
+  };
 
-  const handleStopSelect = useCallback((stopId: string, place: PlaceData) => {
-    setStops(prev => prev.map(s => s.id === stopId ? { ...s, place, display: place.address } : s));
-    // Trigger a route re-fetch
-    setStopRouteRefetchTrigger(t => t + 1);
-  }, []);
-
-  const handleRemoveStop = useCallback((stopId: string) => {
-    setStops(prev => prev.filter(s => s.id !== stopId));
-    // Trigger a route re-fetch
-    setStopRouteRefetchTrigger(t => t + 1);
-  }, []);
+  const handleRemoveStop = (stopId: string) => {
+    const updatedStops = stops.filter(s => s.id !== stopId);
+    setStops(updatedStops);
+    
+    // Re-fetch route without the removed stop
+    if (pickup && destination) {
+      const wp = updatedStops
+        .filter(s => s.place && s.place.lat && s.place.lng)
+        .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+      
+      setIsLoadingRoute(true);
+      supabase.functions.invoke("maps-route", {
+        body: {
+          origin_lat: pickup.lat,
+          origin_lng: pickup.lng,
+          dest_lat: destination.lat,
+          dest_lng: destination.lng,
+          waypoints: wp.length > 0 ? wp : undefined,
+        },
+      }).then(({ data, error }) => {
+        if (!error && data?.ok) {
+          setRouteData({
+            distance_miles: data.distance_miles,
+            duration_minutes: data.duration_minutes,
+            polyline: data.polyline,
+            traffic_level: data.traffic_level,
+          });
+        }
+        setIsLoadingRoute(false);
+      }).catch(() => setIsLoadingRoute(false));
+    }
+  };
 
   const handleSavedPlace = (address: string) => {
     setDestinationDisplay(address);
@@ -819,10 +875,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     fetchRoute(pickupData, { address, lat: 40.758, lng: -73.9855 });
   };
 
-  /* ─── Fetch route ─── */
-  const fetchRoute = async (from: PlaceData, to: PlaceData, stopWaypoints?: { lat: number; lng: number }[], opts?: { skipViewChange?: boolean }) => {
+  /* ─── Fetch route (for initial route + confirm search) ─── */
+  const fetchRoute = async (from: PlaceData, to: PlaceData, stopWaypoints?: { lat: number; lng: number }[]) => {
     if (!from.lat || !to.lat) return;
-    // Safety net: block same-location routes
     if (isSameLocation(from, to)) {
       toast.error("Pickup and destination can't be the same location");
       return;
@@ -830,12 +885,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setIsLoadingRoute(true);
     setRouteData(null);
 
-    // Use explicit waypoints if provided, otherwise build from current stops state
     const waypoints = stopWaypoints ?? stops
       .filter(s => s.place && s.place.lat && s.place.lng)
       .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
 
-    console.log("[fetchRoute] Sending route request with", waypoints.length, "waypoints:", JSON.stringify(waypoints));
+    console.log("[fetchRoute] waypoints:", waypoints.length, JSON.stringify(waypoints));
     try {
       const { data, error } = await supabase.functions.invoke("maps-route", {
         body: {
@@ -846,10 +900,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           waypoints: waypoints.length > 0 ? waypoints : undefined,
         },
       });
-      console.log("[fetchRoute] Response:", JSON.stringify({ ok: data?.ok, distance: data?.distance_miles, duration: data?.duration_minutes, polylineLen: data?.polyline?.length }));
-
+      console.log("[fetchRoute] Response:", data?.ok, data?.distance_miles, data?.duration_minutes);
       if (error) throw error;
-
       if (data?.ok) {
         setRouteData({
           distance_miles: data.distance_miles,
@@ -867,7 +919,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         });
       }
     } catch (err) {
-      console.error("[RideBooking] Route fetch error:", err);
+      console.error("[fetchRoute] error:", err);
       const distKm = haversineKm(from.lat, from.lng, to.lat, to.lng);
       const distMiles = distKm * 0.621371;
       setRouteData({
@@ -878,24 +930,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     } finally {
       setIsLoadingRoute(false);
     }
-
-    if (!opts?.skipViewChange) {
-      setSheetExpanded(false);
-      setViewStep("route-preview");
-    }
+    setSheetExpanded(false);
+    setViewStep("route-preview");
   };
-
-  // Re-fetch route when stops change (triggered by handleStopSelect/handleRemoveStop)
-  useEffect(() => {
-    if (stopRouteRefetchTrigger === 0) return; // skip initial
-    if (!pickup || !destination) return;
-    const wp = stops
-      .filter(s => s.place && s.place.lat && s.place.lng)
-      .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-    console.log("[stop-refetch] Trigger", stopRouteRefetchTrigger, "waypoints:", wp.length);
-    fetchRoute(pickup, destination, wp, { skipViewChange: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stopRouteRefetchTrigger]);
 
   const handleConfirmSearch = () => {
     if (!pickup || !destination) return;
