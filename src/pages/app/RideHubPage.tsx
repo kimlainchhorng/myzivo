@@ -150,7 +150,8 @@ export default function RideHubPage() {
       onBack={() => navigate("/")}
       fixedHeight={isFullScreen}
       hideHeader={activeTab === "book"}
-      className={isFullScreen ? "overflow-hidden !pb-0" : ""}
+      hideNav={activeTab === "book"}
+      className={activeTab === "book" ? "overflow-hidden !pb-0" : isFullScreen ? "overflow-hidden" : ""}
     >
       {/* Tab bar — hidden for "book" since RideBookingHome renders its own header + tabs */}
       {activeTab !== "book" && (
