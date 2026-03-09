@@ -469,6 +469,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   stopsRef.current = stops;
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
+  const rideRealtime = useRideRealtime(rideRequestId);
+  const activeDriver = rideRealtime.driver || FALLBACK_DRIVER;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [searchSheetY, setSearchSheetY] = useState(-20); // -20 = full, 0 = half, positive = peek
