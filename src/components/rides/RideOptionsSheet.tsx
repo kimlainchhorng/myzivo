@@ -301,24 +301,20 @@ export default function RideOptionsSheet({
         })}
       </div>
 
-      {/* Payment Row */}
-      <div className="border-t border-border px-5 py-3">
-        <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2 hover:bg-muted/40 transition-colors">
-          <CreditCard className="h-5 w-5 text-muted-foreground" />
-          <span className="text-sm text-foreground font-medium">
-            Visa •••• 4242
-          </span>
+      {/* Payment + Confirm — pinned bottom */}
+      <div className="mt-auto border-t border-border bg-background px-5 pb-safe-bottom">
+        <button className="flex w-full items-center gap-3 py-3 hover:bg-muted/40 transition-colors rounded-xl px-1">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+            <CreditCard className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <span className="text-sm text-foreground font-medium">Payment method</span>
           <ArrowLeft className="ml-auto h-4 w-4 rotate-180 text-muted-foreground" />
         </button>
-      </div>
-
-      {/* Confirm Button */}
-      <div className="px-5 pb-5 pt-1">
         <button
           onClick={() => onConfirm?.(selectedRide.id)}
-          className="w-full rounded-2xl bg-foreground py-4 text-center text-base font-bold text-background transition-opacity hover:opacity-90"
+          className="w-full rounded-2xl bg-emerald-500 py-4 text-center text-base font-bold text-white transition-opacity hover:opacity-90 mb-3"
         >
-          Confirm {selectedRide.name.replace("ZIVO ", "")} · {formatPrice(selectedRide.price)}
+          Confirm {selectedRide.name} · {formatPrice(selectedRide.price)}
         </button>
       </div>
     </div>
