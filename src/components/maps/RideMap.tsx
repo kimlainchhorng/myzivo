@@ -403,6 +403,27 @@ const AMBIENT_CAR_ICONS = [
   "/vehicles/black-lane-car-v2.png",// BLACK Lane
 ];
 
+// ─── Scale car icons based on zoom level ───
+function getCarIconSize(zoom: number): { w: number; h: number } {
+  // At zoom 15 → 44x26, zoom 13 → 36x21, zoom 11 → 28x16
+  const w = Math.round(Math.min(52, Math.max(24, (zoom - 8) * 4.5 + 16)));
+  const h = Math.round(w * 0.58);
+  return { w, h };
+}
+
+function updateCarIconSizes(markers: google.maps.Marker[], zoom: number) {
+  const { w, h } = getCarIconSize(zoom);
+  markers.forEach((m) => {
+    const icon = m.getIcon() as google.maps.Icon;
+    if (!icon) return;
+    m.setIcon({
+      ...icon,
+      scaledSize: new google.maps.Size(w, h),
+      anchor: new google.maps.Point(w / 2, h / 2),
+    });
+  });
+}
+
 // ─── Ambient cars with minimum distance from pins ───
 function spawnAmbientCars(
   map: google.maps.Map,
@@ -412,6 +433,8 @@ function spawnAmbientCars(
 ): google.maps.Marker[] {
   const markers: google.maps.Marker[] = [];
   const MIN_DISTANCE = 0.008;
+  const zoom = map.getZoom() || 14;
+  const { w, h } = getCarIconSize(zoom);
 
   for (let i = 0; i < count; i++) {
     let lat: number, lng: number;
@@ -436,14 +459,20 @@ function spawnAmbientCars(
       map,
       icon: {
         url: iconUrl,
-        scaledSize: new google.maps.Size(48, 28),
-        anchor: new google.maps.Point(24, 14),
+        scaledSize: new google.maps.Size(w, h),
+        anchor: new google.maps.Point(w / 2, h / 2),
       },
       clickable: false,
       zIndex: 10,
     });
     markers.push(marker);
   }
+
+  // Listen for zoom changes and resize car icons
+  const zoomListener = map.addListener("zoom_changed", () => {
+    updateCarIconSizes(markers, map.getZoom() || 14);
+  });
+  (markers as any).__zoomListener = zoomListener;
 
   const interval = setInterval(() => {
     markers.forEach((m) => {
