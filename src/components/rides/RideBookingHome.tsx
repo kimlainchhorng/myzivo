@@ -894,15 +894,15 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   };
 
-  const handleSavedPlace = (address: string) => {
+  const handleSavedPlace = (address: string, lat: number, lng: number) => {
     setDestinationDisplay(address);
-    setDestination({ address, lat: 40.758, lng: -73.9855 });
+    setDestination({ address, lat, lng });
     setPickupDisplay("Current Location");
     const pickupData = userLocation
       ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
       : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
     setPickup(pickupData);
-    fetchRoute(pickupData, { address, lat: 40.758, lng: -73.9855 });
+    fetchRoute(pickupData, { address, lat, lng });
   };
 
   /* ─── Fetch route (for initial route + confirm search) ─── */
