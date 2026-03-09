@@ -73,6 +73,7 @@ function getMapStyle(): google.maps.MapTypeStyle[] {
 interface RideMapProps {
   pickupCoords?: { lat: number; lng: number } | null;
   dropoffCoords?: { lat: number; lng: number } | null;
+  stopCoords?: { lat: number; lng: number }[];
   routePolyline?: string | { lat: number; lng: number }[] | null;
   driverCoords?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
