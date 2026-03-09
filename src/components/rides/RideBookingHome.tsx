@@ -451,6 +451,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       id: loc.id,
       name: loc.label,
       address: loc.address,
+      lat: loc.lat,
+      lng: loc.lng,
       icon: ICON_MAP[loc.icon] || MapPin,
     })),
     [savedLocations]
