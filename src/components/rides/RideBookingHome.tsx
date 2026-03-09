@@ -904,7 +904,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   /* ─── Fetch route (for initial route + confirm search) ─── */
   const fetchRoute = async (from: PlaceData, to: PlaceData, stopWaypoints?: { lat: number; lng: number }[]) => {
     if (!from.lat || !to.lat) return;
-    if (isSameLocation(from, to)) {
+    const waypoints = stopWaypoints ?? stopsRef.current
+      .filter(s => s.place && s.place.lat && s.place.lng)
+      .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+    if (isSameLocation(from, to) && waypoints.length === 0) {
       toast.error("Pickup and destination can't be the same location");
       return;
     }
