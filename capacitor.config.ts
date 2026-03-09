@@ -4,6 +4,11 @@ const config: CapacitorConfig = {
   appId: 'com.zivo.app',
   appName: 'myzivo',
   webDir: 'dist',
+  plugins: {
+    StatusBar: {
+      overlaysWebView: false,
+    },
+  },
 };
 
 export default config;
