@@ -149,7 +149,7 @@ export default function ZivoReserve() {
   const [pickup, setPickup] = useState("900 Fourth Ave");
   const [dropoff, setDropoff] = useState("");
 
-  const days = useMemo(() => generateDays(90), []);
+  const days = useMemo(() => generateDays(60), []);
 
   const selectedDay = days[selectedDayIdx];
   const selectedHour = hours[selectedHourIdx];
