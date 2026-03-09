@@ -825,32 +825,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     const updatedStops = stops.filter(s => s.id !== stopId);
     setStops(updatedStops);
     
-    // Re-fetch route without the removed stop
     if (pickup && destination) {
       const wp = updatedStops
         .filter(s => s.place && s.place.lat && s.place.lng)
         .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-      
-      setIsLoadingRoute(true);
-      supabase.functions.invoke("maps-route", {
-        body: {
-          origin_lat: pickup.lat,
-          origin_lng: pickup.lng,
-          dest_lat: destination.lat,
-          dest_lng: destination.lng,
-          waypoints: wp.length > 0 ? wp : undefined,
-        },
-      }).then(({ data, error }) => {
-        if (!error && data?.ok) {
-          setRouteData({
-            distance_miles: data.distance_miles,
-            duration_minutes: data.duration_minutes,
-            polyline: data.polyline,
-            traffic_level: data.traffic_level,
-          });
-        }
-        setIsLoadingRoute(false);
-      }).catch(() => setIsLoadingRoute(false));
+      fetchRoute(pickup, destination, wp);
     }
   };
 
