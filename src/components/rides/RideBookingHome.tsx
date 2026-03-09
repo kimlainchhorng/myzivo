@@ -1683,8 +1683,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                         <button
                           key={dest.id}
                           onClick={() => {
-                            setDestinationDisplay(dest.address.split(",")[0]);
-                            setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
+                            handleSavedPlace(dest.address, dest.lat, dest.lng);
                           }}
                           className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 active:scale-[0.98] group"
                         >
