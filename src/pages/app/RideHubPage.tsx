@@ -192,8 +192,8 @@ export default function RideHubPage() {
             transition={{ duration: 0.2 }}
             className={cn(isFullScreen && "h-full min-h-0 flex flex-col flex-1")}
           >
-            {activeTab === "book" && <RideBookingHome />}
-            {activeTab === "reserve" && <div className="flex-1 min-h-0 overflow-hidden"><ZivoReserve /></div>}
+            {activeTab === "book" && <RideBookingHome initialSchedule={bookWithSchedule} />}
+            {activeTab === "reserve" && <div className="flex-1 min-h-0 overflow-hidden"><ZivoReserve onReserve={() => { setBookWithSchedule(true); setActiveTab("book"); }} /></div>}
             {activeTab === "search" && <div className="p-4"><RideQuickSearch /></div>}
             {activeTab === "history" && <div className="p-4"><RideTripHistory /></div>}
             {activeTab === "calendar" && <div className="p-4"><RideScheduleCalendar /></div>}

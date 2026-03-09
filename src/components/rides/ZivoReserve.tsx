@@ -140,7 +140,7 @@ const benefits = [
 ];
 
 /* ─── Main Component ─── */
-export default function ZivoReserve() {
+export default function ZivoReserve({ onReserve }: { onReserve?: () => void } = {}) {
   const [screen, setScreen] = useState<Screen>("landing");
   const [selectedDayIdx, setSelectedDayIdx] = useState(2);
   const [selectedHourIdx, setSelectedHourIdx] = useState(4);
@@ -159,6 +159,10 @@ export default function ZivoReserve() {
   const formattedDateTime = `${selectedDay?.label} at ${formattedTime}`;
 
   const handleReserve = () => {
+    if (onReserve) {
+      onReserve();
+      return;
+    }
     if (!pickup || !dropoff) {
       setScreen("route");
       return;
