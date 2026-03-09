@@ -801,6 +801,17 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setStops(prev => prev.filter(s => s.id !== stopId));
   }, []);
 
+  // Re-fetch route when stops change (only if we already have a route)
+  const stopsWithCoords = stops.filter(s => s.place && s.place.lat && s.place.lng);
+  const stopsKey = stopsWithCoords.map(s => `${s.place!.lat},${s.place!.lng}`).join("|");
+  const prevStopsKeyRef = useRef(stopsKey);
+  useEffect(() => {
+    if (prevStopsKeyRef.current !== stopsKey && pickup && destination && viewStep === "route-preview") {
+      prevStopsKeyRef.current = stopsKey;
+      fetchRoute(pickup, destination);
+    }
+  }, [stopsKey, pickup, destination, viewStep]);
+
   const handleSavedPlace = (address: string) => {
     setDestinationDisplay(address);
     setDestination({ address, lat: 40.758, lng: -73.9855 });
