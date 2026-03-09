@@ -86,7 +86,7 @@ const homeTabs = [
 
 // ─── Suggestions row (service shortcuts) ───
 const suggestions = [
-  { label: "Ride", icon: null, image: zivoRideIcon, href: "/rides", badge: "5% Off", badgeVariant: "discount" as const },
+  { label: "Ride", icon: null, image: zivoRideIcon, href: "/rides", badge: "10% Off", badgeVariant: "discount" as const },
   { label: "Reserve", icon: null, image: zivoReserveIcon, href: "/scheduled", badge: "Promo", badgeVariant: "promo" as const },
   { label: "Rental Cars", icon: null, image: zivoRentalCarIcon, href: "/rent-car", badge: "Promo", badgeVariant: "promo" as const },
   { label: "Shopping", icon: null, image: zivoShoppingIcon, href: "/rides", badge: null, badgeVariant: null },
