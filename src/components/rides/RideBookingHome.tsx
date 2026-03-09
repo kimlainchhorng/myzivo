@@ -808,7 +808,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   useEffect(() => {
     if (prevStopsKeyRef.current !== stopsKey && pickup && destination && viewStep === "route-preview") {
       prevStopsKeyRef.current = stopsKey;
-      fetchRoute(pickup, destination);
+      const wp = stopsWithCoords.map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+      fetchRoute(pickup, destination, wp);
     }
   }, [stopsKey, pickup, destination, viewStep]);
 
