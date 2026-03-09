@@ -419,12 +419,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const { data: savedLocations = [] } = useSavedLocations(user?.id);
 
   // Recent ride destinations from Supabase
-  const [recentDestinations, setRecentDestinations] = useState<{ id: string; address: string; time: string }[]>([]);
+  const [recentDestinations, setRecentDestinations] = useState<{ id: string; address: string; lat: number; lng: number; time: string }[]>([]);
   useEffect(() => {
     if (!user?.id) return;
     supabase
       .from("ride_requests")
-      .select("id, dropoff_address, created_at")
+      .select("id, dropoff_address, dropoff_lat, dropoff_lng, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(5)
@@ -432,10 +432,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         if (data && data.length > 0) {
           setRecentDestinations(
             data
-              .filter((r: any) => r.dropoff_address)
+              .filter((r: any) => r.dropoff_address && r.dropoff_lat && r.dropoff_lng)
               .map((r: any) => ({
                 id: r.id,
                 address: r.dropoff_address,
+                lat: r.dropoff_lat,
+                lng: r.dropoff_lng,
                 time: new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
               }))
           );
@@ -449,6 +451,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       id: loc.id,
       name: loc.label,
       address: loc.address,
+      lat: loc.lat,
+      lng: loc.lng,
       icon: ICON_MAP[loc.icon] || MapPin,
     })),
     [savedLocations]
@@ -890,15 +894,15 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   };
 
-  const handleSavedPlace = (address: string) => {
+  const handleSavedPlace = (address: string, lat: number, lng: number) => {
     setDestinationDisplay(address);
-    setDestination({ address, lat: 40.758, lng: -73.9855 });
+    setDestination({ address, lat, lng });
     setPickupDisplay("Current Location");
     const pickupData = userLocation
       ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
       : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
     setPickup(pickupData);
-    fetchRoute(pickupData, { address, lat: 40.758, lng: -73.9855 });
+    fetchRoute(pickupData, { address, lat, lng });
   };
 
   /* ─── Fetch route (for initial route + confirm search) ─── */
@@ -1637,7 +1641,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       return (
                         <button
                           key={place.id}
-                          onClick={() => handleSavedPlace(place.address)}
+                          onClick={() => handleSavedPlace(place.address, place.lat, place.lng)}
                           className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 active:scale-[0.98] group"
                         >
                           <div className="w-11 h-11 rounded-2xl bg-primary/8 border border-primary/15 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
@@ -1679,8 +1683,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                         <button
                           key={dest.id}
                           onClick={() => {
-                            setDestinationDisplay(dest.address.split(",")[0]);
-                            setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
+                            handleSavedPlace(dest.address, dest.lat, dest.lng);
                           }}
                           className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 active:scale-[0.98] group"
                         >
@@ -2069,7 +2072,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               <div className="w-10 h-10 rounded-xl bg-muted/20 border border-border/20 flex items-center justify-center">
                 <CreditCard className="w-[18px] h-[18px] text-muted-foreground" />
               </div>
-              <span className="flex-1 text-[14px] text-foreground font-semibold text-left">Visa •••• 4242</span>
+              <span className="flex-1 text-[14px] text-foreground font-semibold text-left">Payment method</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
             </button>
           </div>
@@ -2404,7 +2407,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment</span>
-                <span className="text-foreground">Visa •••• 4242</span>
+                <span className="text-foreground">Card on file</span>
               </div>
             </div>
           </div>
