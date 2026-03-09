@@ -2084,7 +2084,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="shrink-0 px-5 pt-1" style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})` }}>
             <Button
               className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 active:scale-[0.97] transition-all duration-200"
-              onClick={() => setViewStep("confirm-ride")}
+              onClick={() => { setPaymentStep("idle"); setViewStep("confirm-ride"); }}}
             >
               Confirm {currentVehicle.name} · ${currentPrice.toFixed(2)}
             </Button>
