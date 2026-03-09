@@ -793,39 +793,20 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setStops(prev => [...prev, { id: Date.now().toString(), place: null, display: "" }]);
   }, [stops.length]);
 
-  // Use a ref to always have the latest fetchRoute available
-  const fetchRouteRef = useRef<((from: PlaceData, to: PlaceData, wp?: { lat: number; lng: number }[], opts?: { skipViewChange?: boolean }) => Promise<void>) | null>(null);
+  // Trigger to force route re-fetch when stops change
+  const [stopRouteRefetchTrigger, setStopRouteRefetchTrigger] = useState(0);
 
   const handleStopSelect = useCallback((stopId: string, place: PlaceData) => {
     setStops(prev => prev.map(s => s.id === stopId ? { ...s, place, display: place.address } : s));
+    // Trigger a route re-fetch
+    setStopRouteRefetchTrigger(t => t + 1);
   }, []);
 
   const handleRemoveStop = useCallback((stopId: string) => {
     setStops(prev => prev.filter(s => s.id !== stopId));
+    // Trigger a route re-fetch
+    setStopRouteRefetchTrigger(t => t + 1);
   }, []);
-
-  // Re-fetch route whenever stops change
-  const prevStopsKeyRef = useRef("__initial__");
-  useEffect(() => {
-    const stopsWithCoords = stops.filter(s => s.place && s.place.lat && s.place.lng);
-    const currentKey = stopsWithCoords.map(s => `${s.place!.lat},${s.place!.lng}`).join("|");
-    
-    if (prevStopsKeyRef.current === "__initial__") {
-      // First render — just record the key, don't fetch
-      prevStopsKeyRef.current = currentKey;
-      return;
-    }
-    
-    if (prevStopsKeyRef.current !== currentKey && pickup && destination) {
-      prevStopsKeyRef.current = currentKey;
-      const wp = stopsWithCoords.map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-      console.log("[stops-effect] Re-fetching route with", wp.length, "waypoints");
-      // Use the ref to call the latest fetchRoute
-      if (fetchRouteRef.current) {
-        fetchRouteRef.current(pickup, destination, wp, { skipViewChange: true });
-      }
-    }
-  }, [stops, pickup, destination]);
 
   const handleSavedPlace = (address: string) => {
     setDestinationDisplay(address);
