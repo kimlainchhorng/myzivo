@@ -30,6 +30,7 @@ interface RidePaymentSectionProps {
   clientSecret: string | null;
   onPaymentSuccess: () => void;
   paymentFailed: boolean;
+  onClearError?: () => void;
 }
 
 const BRAND_ICONS: Record<string, string> = {
