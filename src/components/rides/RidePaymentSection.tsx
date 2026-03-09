@@ -180,21 +180,23 @@ export default function RidePaymentSection({
   const loadCards = useCallback(async () => {
     setLoadingCards(true);
     try {
-      const { data, error } = await supabase.functions.invoke("manage-payment-methods", {
+      const resp = await supabase.functions.invoke("manage-payment-methods", {
         body: { action: "list" },
       });
-      if (!error && data?.ok) {
-        setSavedCards(data.cards || []);
-        // Auto-select default or first card
-        const defaultCard = data.cards?.find((c: SavedCard) => c.is_default);
+      console.log("[RidePayment] list cards response:", JSON.stringify(resp));
+      if (!resp.error && resp.data?.ok) {
+        setSavedCards(resp.data.cards || []);
+        const defaultCard = resp.data.cards?.find((c: SavedCard) => c.is_default);
         if (defaultCard) {
           setSelectedCardId(defaultCard.id);
-        } else if (data.cards?.length > 0) {
-          setSelectedCardId(data.cards[0].id);
+        } else if (resp.data.cards?.length > 0) {
+          setSelectedCardId(resp.data.cards[0].id);
         }
+      } else {
+        console.warn("[RidePayment] Failed to load cards:", resp.error);
       }
-    } catch {
-      console.error("Failed to load cards");
+    } catch (e) {
+      console.error("[RidePayment] Failed to load cards:", e);
     } finally {
       setLoadingCards(false);
     }
@@ -208,12 +210,27 @@ export default function RidePaymentSection({
   const handleAddCard = async () => {
     setAddingCard(true);
     try {
-      const { data, error } = await supabase.functions.invoke("manage-payment-methods", {
+      const resp = await supabase.functions.invoke("manage-payment-methods", {
         body: { action: "create_setup_intent" },
       });
-      console.log("[RidePayment] create_setup_intent response:", { data, error });
+      console.log("[RidePayment] create_setup_intent response:", JSON.stringify(resp));
+      
+      // supabase.functions.invoke returns { data, error }
+      // On non-2xx, error is a FunctionsHttpError and data may still contain the body
+      const data = resp.data;
+      const error = resp.error;
+      
       if (error) {
-        const errMsg = typeof error === 'string' ? error : error?.message || "Failed to start card setup";
+        // Try to extract message from the error
+        let errMsg = "Failed to start card setup";
+        if (typeof error === 'object' && error !== null) {
+          // FunctionsHttpError has a context property with the response
+          try {
+            const errorBody = typeof error.message === 'string' ? error.message : String(error);
+            errMsg = errorBody || errMsg;
+          } catch { /* fallback */ }
+        }
+        console.error("[RidePayment] Edge function error:", errMsg);
         toast.error(errMsg);
         return;
       }
@@ -397,10 +414,10 @@ export default function RidePaymentSection({
         </div>
       </div>
 
-      {/* Authorize button */}
-      <div className="pt-1">
+      {/* Authorize button — full bleed */}
+      <div className="-mx-5 px-5 pt-3 pb-2 bg-background sticky bottom-0">
         <Button
-          className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg shadow-foreground/10 gap-2 active:scale-[0.97] transition-all duration-200"
+          className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-xl shadow-foreground/15 gap-2 active:scale-[0.97] transition-all duration-200"
           onClick={() => {
             if (selectedCardId) {
               onAuthorizeWithSavedCard(selectedCardId);
@@ -421,7 +438,7 @@ export default function RidePaymentSection({
           )}
         </Button>
         <p className="text-[10px] text-muted-foreground text-center mt-2">
-          Your card will be pre-authorized. Final charge applied after ride completion.
+          Pre-authorized · Final charge after ride
         </p>
       </div>
 
