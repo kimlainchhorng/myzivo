@@ -100,14 +100,15 @@ function StripeCardItem({ card, onSetDefault, onDelete }: {
 }
 export default function WalletPage() {
   const [activeSection, setActiveSection] = useState<"cards" | "history" | "credits">("cards");
+  const [showAddCard, setShowAddCard] = useState(false);
   
-  const { data: paymentMethods, isLoading: loadingMethods } = usePaymentMethods();
+  const { data: paymentMethods, isLoading: loadingMethods } = useStripePaymentMethods();
   const { data: transactions, isLoading: loadingTx } = useWalletTransactions();
   const { data: credits } = useWalletCredits();
   const { data: summary } = useWalletSummary();
   
-  const setDefault = useSetDefaultPaymentMethod();
-  const deleteMethod = useDeletePaymentMethod();
+  const setDefault = useSetDefaultStripeCard();
+  const deleteMethod = useDeleteStripeCard();
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -184,11 +185,17 @@ export default function WalletPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-sm">Payment Methods</h3>
-              <Button size="sm" className="rounded-xl font-bold gap-1 shadow-sm">
-                <Plus className="w-3.5 h-3.5" />
-                Add Card
-              </Button>
+              {!showAddCard && (
+                <Button size="sm" className="rounded-xl font-bold gap-1 shadow-sm" onClick={() => setShowAddCard(true)}>
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Card
+                </Button>
+              )}
             </div>
+
+            {showAddCard && (
+              <AddCardForm onClose={() => setShowAddCard(false)} />
+            )}
 
             {loadingMethods ? (
               <div className="space-y-2">
@@ -198,16 +205,16 @@ export default function WalletPage() {
               </div>
             ) : paymentMethods && paymentMethods.length > 0 ? (
               <div className="space-y-2">
-                {paymentMethods.map((method) => (
-                  <PaymentMethodCard
-                    key={method.id}
-                    method={method}
-                    onSetDefault={() => setDefault.mutate(method.id)}
-                    onDelete={() => deleteMethod.mutate(method.id)}
+                {paymentMethods.map((card) => (
+                  <StripeCardItem
+                    key={card.id}
+                    card={card}
+                    onSetDefault={() => setDefault.mutate(card.id)}
+                    onDelete={() => deleteMethod.mutate(card.id)}
                   />
                 ))}
               </div>
-            ) : (
+            ) : !showAddCard ? (
               <Card className="border-border/30">
                 <CardContent className="p-8 text-center">
                   <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
@@ -217,10 +224,7 @@ export default function WalletPage() {
                   <p className="text-xs text-muted-foreground mt-1">Add a card for one-click checkout</p>
                 </CardContent>
               </Card>
-            )}
-          </motion.div>
-        )}
-
+            ) : null}
         {/* History Section */}
         {activeSection === "history" && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
