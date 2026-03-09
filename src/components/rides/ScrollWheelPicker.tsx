@@ -165,16 +165,18 @@ export default function ScrollWheelPicker({
 
       <div className={cn("flex", compact ? "gap-0 px-1 py-2" : "gap-0 px-2 py-3")}>
         {/* Day column */}
-        <ScrollWheelColumn
-          items={days.map((d) => d.label)}
-          selectedIndex={selectedDayIdx}
-          onSelect={onDayChange}
-          width="flex-[2.2]"
-          itemHeight={itemHeight}
-        />
-
-        {/* Separator */}
-        <div className="w-px bg-border/20 my-4 shrink-0" />
+        {!hideDays && days && onDayChange && (
+          <>
+            <ScrollWheelColumn
+              items={days.map((d) => d.label)}
+              selectedIndex={selectedDayIdx}
+              onSelect={onDayChange}
+              width="flex-[2.2]"
+              itemHeight={itemHeight}
+            />
+            <div className="w-px bg-border/20 my-4 shrink-0" />
+          </>
+        )}
 
         {/* Hour column */}
         <ScrollWheelColumn
