@@ -21,6 +21,7 @@ import zivoDeliveryBanner from "@/assets/zivo-delivery-banner.png";
 import zivoPackageIcon from "@/assets/service-package.png";
 import zivoReserveBanner from "@/assets/zivo-reserve-banner.png";
 import zivoTravelBanner from "@/assets/zivo-travel-banner.png";
+import zivoGroupRideIcon from "@/assets/service-group-ride.png";
 
 /* ── Types ── */
 interface ServiceItem {
@@ -49,7 +50,7 @@ const serviceCategories: ServiceCategory[] = [
       { label: "Travel", href: "/flights", image: zivoFlightsIcon, badge: "Promo", badgeVariant: "promo" },
       { label: "Reserve", href: "/rides?tab=reserve", image: zivoReserveIcon, badge: "Promo", badgeVariant: "promo" },
       { label: "Rental Cars", href: "/rent-car", image: zivoRentalCarIcon },
-      { label: "Group Ride", href: "/rides", icon: Users },
+      { label: "Group Ride", href: "/rides", image: zivoGroupRideIcon },
     ],
   },
   {
