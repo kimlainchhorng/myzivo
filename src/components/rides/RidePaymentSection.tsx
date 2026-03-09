@@ -180,21 +180,23 @@ export default function RidePaymentSection({
   const loadCards = useCallback(async () => {
     setLoadingCards(true);
     try {
-      const { data, error } = await supabase.functions.invoke("manage-payment-methods", {
+      const resp = await supabase.functions.invoke("manage-payment-methods", {
         body: { action: "list" },
       });
-      if (!error && data?.ok) {
-        setSavedCards(data.cards || []);
-        // Auto-select default or first card
-        const defaultCard = data.cards?.find((c: SavedCard) => c.is_default);
+      console.log("[RidePayment] list cards response:", JSON.stringify(resp));
+      if (!resp.error && resp.data?.ok) {
+        setSavedCards(resp.data.cards || []);
+        const defaultCard = resp.data.cards?.find((c: SavedCard) => c.is_default);
         if (defaultCard) {
           setSelectedCardId(defaultCard.id);
-        } else if (data.cards?.length > 0) {
-          setSelectedCardId(data.cards[0].id);
+        } else if (resp.data.cards?.length > 0) {
+          setSelectedCardId(resp.data.cards[0].id);
         }
+      } else {
+        console.warn("[RidePayment] Failed to load cards:", resp.error);
       }
-    } catch {
-      console.error("Failed to load cards");
+    } catch (e) {
+      console.error("[RidePayment] Failed to load cards:", e);
     } finally {
       setLoadingCards(false);
     }
