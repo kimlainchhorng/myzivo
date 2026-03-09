@@ -477,7 +477,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Schedule state
   const [showSchedule, setShowSchedule] = useState(initialSchedule);
-  const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+  const [scheduledDate, setScheduledDate] = useState<Date | null>(new Date());
   const [scheduleHour, setScheduleHour] = useState(() => {
     const h = new Date().getHours();
     return h < 23 ? h + 1 : 0;
