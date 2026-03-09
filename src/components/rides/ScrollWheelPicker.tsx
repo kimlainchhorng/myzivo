@@ -24,7 +24,7 @@ function ScrollWheelColumn({
   const containerRef = useRef<HTMLDivElement>(null);
   const isUserScrolling = useRef(false);
   const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const visibleCount = 5;
+  const visibleCount = 3;
   const containerHeight = itemHeight * visibleCount;
   const padItems = Math.floor(visibleCount / 2);
 
@@ -106,7 +106,7 @@ function ScrollWheelColumn({
               )}
               style={{
                 height: itemHeight,
-                fontSize: isSelected ? "20px" : distance === 1 ? "16px" : "14px",
+                fontSize: isSelected ? "17px" : distance === 1 ? "13px" : "11px",
                 transform: isSelected ? "scale(1.05)" : `scale(${1 - distance * 0.05})`,
               }}
             >
@@ -151,7 +151,7 @@ export default function ScrollWheelPicker({
   compact = false,
   hideDays = false,
 }: ScrollWheelPickerProps) {
-  const itemHeight = compact ? 42 : 48;
+  const itemHeight = compact ? 36 : 40;
   
   return (
     <motion.div

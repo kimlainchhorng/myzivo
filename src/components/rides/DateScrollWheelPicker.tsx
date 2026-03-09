@@ -27,7 +27,7 @@ export default function DateScrollWheelPicker({
   maxDate,
   compact = false,
 }: DateScrollWheelPickerProps) {
-  const itemHeight = compact ? 42 : 48;
+  const itemHeight = compact ? 36 : 40;
 
   const today = useMemo(() => {
     const d = new Date();
