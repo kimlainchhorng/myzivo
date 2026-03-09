@@ -793,47 +793,37 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setStops(prev => [...prev, { id: Date.now().toString(), place: null, display: "" }]);
   }, [stops.length]);
 
+  // Use a ref to always have the latest fetchRoute available
+  const fetchRouteRef = useRef<((from: PlaceData, to: PlaceData, wp?: { lat: number; lng: number }[], opts?: { skipViewChange?: boolean }) => Promise<void>) | null>(null);
+
   const handleStopSelect = useCallback((stopId: string, place: PlaceData) => {
-    setStops(prev => {
-      const updated = prev.map(s => s.id === stopId ? { ...s, place, display: place.address } : s);
-      // Immediately re-fetch route with the new stop
-      if (pickup && destination) {
-        const wp = updated
-          .filter(s => s.place && s.place.lat && s.place.lng)
-          .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-        console.log("[handleStopSelect] Triggering route re-fetch with", wp.length, "waypoints");
-        fetchRoute(pickup, destination, wp);
-      }
-      return updated;
-    });
-  }, [pickup, destination]);
+    setStops(prev => prev.map(s => s.id === stopId ? { ...s, place, display: place.address } : s));
+  }, []);
 
   const handleRemoveStop = useCallback((stopId: string) => {
-    setStops(prev => {
-      const updated = prev.filter(s => s.id !== stopId);
-      // Re-fetch route without the removed stop
-      if (pickup && destination) {
-        const wp = updated
-          .filter(s => s.place && s.place.lat && s.place.lng)
-          .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-        console.log("[handleRemoveStop] Triggering route re-fetch with", wp.length, "waypoints");
-        fetchRoute(pickup, destination, wp);
-      }
-      return updated;
-    });
-  }, [pickup, destination]);
+    setStops(prev => prev.filter(s => s.id !== stopId));
+  }, []);
 
-  // Re-fetch route when stops change (only if we already have a route)
-  const prevStopsKeyRef = useRef("");
+  // Re-fetch route whenever stops change
+  const prevStopsKeyRef = useRef("__initial__");
   useEffect(() => {
-    const currentStopsWithCoords = stops.filter(s => s.place && s.place.lat && s.place.lng);
-    const currentStopsKey = currentStopsWithCoords.map(s => `${s.place!.lat},${s.place!.lng}`).join("|");
+    const stopsWithCoords = stops.filter(s => s.place && s.place.lat && s.place.lng);
+    const currentKey = stopsWithCoords.map(s => `${s.place!.lat},${s.place!.lng}`).join("|");
     
-    if (prevStopsKeyRef.current !== currentStopsKey && pickup && destination) {
-      console.log("[RideBookingHome] Stops changed, re-fetching route with waypoints:", currentStopsWithCoords.length, "viewStep:", viewStep);
-      prevStopsKeyRef.current = currentStopsKey;
-      const wp = currentStopsWithCoords.map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-      fetchRoute(pickup, destination, wp);
+    if (prevStopsKeyRef.current === "__initial__") {
+      // First render — just record the key, don't fetch
+      prevStopsKeyRef.current = currentKey;
+      return;
+    }
+    
+    if (prevStopsKeyRef.current !== currentKey && pickup && destination) {
+      prevStopsKeyRef.current = currentKey;
+      const wp = stopsWithCoords.map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+      console.log("[stops-effect] Re-fetching route with", wp.length, "waypoints");
+      // Use the ref to call the latest fetchRoute
+      if (fetchRouteRef.current) {
+        fetchRouteRef.current(pickup, destination, wp, { skipViewChange: true });
+      }
     }
   }, [stops, pickup, destination]);
 
@@ -849,7 +839,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   };
 
   /* ─── Fetch route ─── */
-  const fetchRoute = async (from: PlaceData, to: PlaceData, stopWaypoints?: { lat: number; lng: number }[]) => {
+  const fetchRoute = async (from: PlaceData, to: PlaceData, stopWaypoints?: { lat: number; lng: number }[], opts?: { skipViewChange?: boolean }) => {
     if (!from.lat || !to.lat) return;
     // Safety net: block same-location routes
     if (isSameLocation(from, to)) {
@@ -875,7 +865,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           waypoints: waypoints.length > 0 ? waypoints : undefined,
         },
       });
-      console.log("[fetchRoute] Response polyline length:", data?.polyline?.length, "ok:", data?.ok);
+      console.log("[fetchRoute] Response:", JSON.stringify({ ok: data?.ok, distance: data?.distance_miles, duration: data?.duration_minutes, polylineLen: data?.polyline?.length }));
 
       if (error) throw error;
 
@@ -908,9 +898,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setIsLoadingRoute(false);
     }
 
-    setSheetExpanded(false);
-    setViewStep("route-preview");
+    if (!opts?.skipViewChange) {
+      setSheetExpanded(false);
+      setViewStep("route-preview");
+    }
   };
+
+  // Keep the ref always pointing to the latest fetchRoute
+  fetchRouteRef.current = fetchRoute;
 
   const handleConfirmSearch = () => {
     if (!pickup || !destination) return;
