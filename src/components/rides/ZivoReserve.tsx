@@ -307,48 +307,22 @@ export default function ZivoReserve({ onReserve }: { onReserve?: () => void } = 
               When do you want to leave?
             </h1>
 
-            {/* Scroll wheel time picker */}
-            <div className="flex-1 flex items-center justify-center">
-              <div className="flex gap-0 w-full max-w-sm">
-                {/* Day column */}
-                <div className="flex-[2]">
-                  <ScrollColumn
-                    items={days}
-                    selected={selectedDayIdx}
-                    onSelect={setSelectedDayIdx}
-                    renderItem={(item) => item.label}
-                  />
-                </div>
-
-                {/* Hour column */}
-                <div className="flex-1">
-                  <ScrollColumn
-                    items={hours}
-                    selected={selectedHourIdx}
-                    onSelect={setSelectedHourIdx}
-                    renderItem={(item) => String(item)}
-                  />
-                </div>
-
-                {/* Minute column */}
-                <div className="flex-1">
-                  <ScrollColumn
-                    items={minutes}
-                    selected={selectedMinIdx}
-                    onSelect={setSelectedMinIdx}
-                    renderItem={(item) => String(item).padStart(2, "0")}
-                  />
-                </div>
-
-                {/* AM/PM column */}
-                <div className="flex-1">
-                  <ScrollColumn
-                    items={["AM", "PM"]}
-                    selected={amPm === "AM" ? 0 : 1}
-                    onSelect={(i) => setAmPm(i === 0 ? "AM" : "PM")}
-                    renderItem={(item) => item}
-                  />
-                </div>
+            {/* 2026 Scroll wheel time picker */}
+            <div className="flex-1 flex items-center justify-center px-1">
+              <div className="w-full max-w-sm">
+                <ScrollWheelPicker
+                  days={days}
+                  selectedDayIdx={selectedDayIdx}
+                  onDayChange={setSelectedDayIdx}
+                  hours={hours}
+                  selectedHourIdx={selectedHourIdx}
+                  onHourChange={setSelectedHourIdx}
+                  minutes={minutes}
+                  selectedMinIdx={selectedMinIdx}
+                  onMinChange={setSelectedMinIdx}
+                  amPm={amPm}
+                  onAmPmChange={setAmPm}
+                />
               </div>
             </div>
 
