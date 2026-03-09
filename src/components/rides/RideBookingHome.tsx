@@ -794,12 +794,30 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [stops.length]);
 
   const handleStopSelect = useCallback((stopId: string, place: PlaceData) => {
-    setStops(prev => prev.map(s => s.id === stopId ? { ...s, place, display: place.address } : s));
-  }, []);
+    setStops(prev => {
+      const updated = prev.map(s => s.id === stopId ? { ...s, place, display: place.address } : s);
+      // Re-fetch route with new stop after state updates
+      setTimeout(() => {
+        if (pickup && destination) {
+          fetchRoute(pickup, destination);
+        }
+      }, 100);
+      return updated;
+    });
+  }, [pickup, destination]);
 
   const handleRemoveStop = useCallback((stopId: string) => {
-    setStops(prev => prev.filter(s => s.id !== stopId));
-  }, []);
+    setStops(prev => {
+      const updated = prev.filter(s => s.id !== stopId);
+      // Re-fetch route without removed stop
+      setTimeout(() => {
+        if (pickup && destination) {
+          fetchRoute(pickup, destination);
+        }
+      }, 100);
+      return updated;
+    });
+  }, [pickup, destination]);
 
   const handleSavedPlace = (address: string) => {
     setDestinationDisplay(address);
