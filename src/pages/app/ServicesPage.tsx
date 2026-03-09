@@ -35,6 +35,7 @@ interface ServiceItem {
   image?: string;
   badge?: string;
   badgeVariant?: "discount" | "promo" | "new";
+  animClass?: string;
 }
 
 interface ServiceCategory {
@@ -49,32 +50,32 @@ const serviceCategories: ServiceCategory[] = [
     title: "Your ride, your way",
     subtitle: "Get moving in minutes",
     services: [
-      { label: "Ride", href: "/rides", image: zivoRideIcon, badge: "10% Off", badgeVariant: "discount" },
-      { label: "Package", href: "/delivery", image: zivoPackageIcon },
-      { label: "Travel", href: "/flights", image: zivoFlightsIcon, badge: "Promo", badgeVariant: "promo" },
-      { label: "Reserve", href: "/rides?tab=reserve", image: zivoReserveIcon, badge: "Promo", badgeVariant: "promo" },
-      { label: "Rental Cars", href: "/rent-car", image: zivoRentalCarIcon },
-      { label: "Group Ride", href: "/rides", image: zivoGroupRideIcon },
+      { label: "Ride", href: "/rides", image: zivoRideIcon, badge: "10% Off", badgeVariant: "discount", animClass: "animate-car-run" },
+      { label: "Package", href: "/delivery", image: zivoPackageIcon, animClass: "animate-pkg-bounce" },
+      { label: "Travel", href: "/flights", image: zivoFlightsIcon, badge: "Promo", badgeVariant: "promo", animClass: "animate-plane-fly" },
+      { label: "Reserve", href: "/rides?tab=reserve", image: zivoReserveIcon, badge: "Promo", badgeVariant: "promo", animClass: "animate-car-run" },
+      { label: "Rental Cars", href: "/rent-car", image: zivoRentalCarIcon, animClass: "animate-car-run" },
+      { label: "Group Ride", href: "/rides", image: zivoGroupRideIcon, animClass: "animate-car-run" },
     ],
   },
   {
     title: "Food & more, fast",
     subtitle: "Delivered to your door",
     services: [
-      { label: "Food", href: "/eats", image: zivoEatsIcon, badge: "Promo", badgeVariant: "promo" },
-      { label: "Grocery", href: "/rides", image: zivoShoppingIcon, badge: "Promo", badgeVariant: "promo" },
-      { label: "Alcohol", href: "/eats", image: zivoAlcoholIcon },
-      { label: "Pharmacy", href: "/eats", image: zivoPharmacyIcon },
-      { label: "Shopping", href: "/rides", image: zivoShoppingCartIcon },
+      { label: "Food", href: "/eats", image: zivoEatsIcon, badge: "Promo", badgeVariant: "promo", animClass: "animate-food-wiggle" },
+      { label: "Grocery", href: "/rides", image: zivoShoppingIcon, badge: "Promo", badgeVariant: "promo", animClass: "animate-food-wiggle" },
+      { label: "Alcohol", href: "/eats", image: zivoAlcoholIcon, animClass: "animate-food-wiggle" },
+      { label: "Pharmacy", href: "/eats", image: zivoPharmacyIcon, animClass: "animate-pkg-bounce" },
+      { label: "Shopping", href: "/rides", image: zivoShoppingCartIcon, animClass: "animate-food-wiggle" },
     ],
   },
   {
     title: "Plan your trip",
     subtitle: "Explore the world with ZIVO",
     services: [
-      { label: "Flights", href: "/flights", image: zivoFlightsIcon },
-      { label: "Hotels", href: "/hotels", image: zivoHotelsIcon },
-      { label: "Car Rental", href: "/rent-car", image: zivoRentalCarIcon },
+      { label: "Flights", href: "/flights", image: zivoFlightsIcon, animClass: "animate-plane-fly" },
+      { label: "Hotels", href: "/hotels", image: zivoHotelsIcon, animClass: "animate-pkg-bounce" },
+      { label: "Car Rental", href: "/rent-car", image: zivoRentalCarIcon, animClass: "animate-car-run" },
       { label: "Insurance", href: "/travel-insurance", icon: Shield },
       { label: "Things to Do", href: "/things-to-do", icon: MapPin },
       { label: "AI Planner", href: "/ai-trip-planner", icon: Sparkles, badge: "New", badgeVariant: "new" },
@@ -174,7 +175,7 @@ export default function ServicesPage() {
   const [runningLabel, setRunningLabel] = useState<string | null>(null);
 
   const handleServiceClick = (service: ServiceItem) => {
-    if (service.label === "Ride" || service.label === "Rental Cars" || service.label === "Car Rental" || service.label === "Reserve") {
+    if (service.animClass) {
       setRunningLabel(service.label);
       setTimeout(() => {
         setRunningLabel(null);
@@ -298,7 +299,7 @@ export default function ServicesPage() {
                           alt={service.label}
                           className={cn(
                             "w-9 h-9 object-contain transition-transform duration-200 group-hover:scale-110",
-                            runningLabel === service.label && "animate-car-run"
+                            runningLabel === service.label && service.animClass
                           )}
                         />
                       ) : service.icon ? (

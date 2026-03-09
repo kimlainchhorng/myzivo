@@ -1587,34 +1587,79 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Car running/driving animation */
+/* ═══ Service Icon Tap Animations ═══ */
+
+/* 🚗 Car: 3D driving wiggle */
 @keyframes car-run {
   0% { transform: translateX(0) translateY(0) rotateY(0deg) scale(1); }
-  8% { transform: translateX(-3px) translateY(-2px) rotateY(-8deg) scale(1.05); }
-  16% { transform: translateX(-6px) translateY(1px) rotateY(-15deg) scale(1.08); }
-  24% { transform: translateX(-3px) translateY(-2px) rotateY(-10deg) scale(1.1); }
-  32% { transform: translateX(0px) translateY(1px) rotateY(-5deg) scale(1.08); }
-  40% { transform: translateX(4px) translateY(-2px) rotateY(5deg) scale(1.06); }
-  48% { transform: translateX(8px) translateY(1px) rotateY(12deg) scale(1.08); }
-  56% { transform: translateX(5px) translateY(-2px) rotateY(8deg) scale(1.1); }
-  64% { transform: translateX(2px) translateY(1px) rotateY(4deg) scale(1.06); }
-  72% { transform: translateX(-2px) translateY(-1px) rotateY(-4deg) scale(1.04); }
-  80% { transform: translateX(-4px) translateY(1px) rotateY(-8deg) scale(1.06); }
-  88% { transform: translateX(-2px) translateY(-1px) rotateY(-3deg) scale(1.03); }
-  94% { transform: translateX(1px) translateY(0) rotateY(1deg) scale(1.01); }
+  10% { transform: translateX(-4px) translateY(-2px) rotateY(-12deg) scale(1.06); }
+  20% { transform: translateX(-2px) translateY(1px) rotateY(-6deg) scale(1.1); }
+  35% { transform: translateX(3px) translateY(-2px) rotateY(8deg) scale(1.08); }
+  50% { transform: translateX(6px) translateY(1px) rotateY(14deg) scale(1.1); }
+  65% { transform: translateX(3px) translateY(-1px) rotateY(6deg) scale(1.06); }
+  80% { transform: translateX(-2px) translateY(1px) rotateY(-4deg) scale(1.03); }
   100% { transform: translateX(0) translateY(0) rotateY(0deg) scale(1); }
 }
-
 .animate-car-run {
   animation: car-run 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   transform-style: preserve-3d;
 }
 
+/* ✈️ Plane: fly up-right with tilt and swoop back */
+@keyframes plane-fly {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  10% { transform: translate(3px, -4px) rotate(-12deg) scale(1.05); }
+  25% { transform: translate(10px, -14px) rotate(-20deg) scale(1.12); }
+  40% { transform: translate(18px, -22px) rotate(-25deg) scale(1.08); opacity: 0.6; }
+  50% { transform: translate(24px, -28px) rotate(-28deg) scale(0.95); opacity: 0; }
+  51% { transform: translate(-20px, 16px) rotate(10deg) scale(0.8); opacity: 0; }
+  65% { transform: translate(-12px, 8px) rotate(5deg) scale(0.95); opacity: 0.6; }
+  80% { transform: translate(-4px, 2px) rotate(-3deg) scale(1.05); opacity: 0.9; }
+  90% { transform: translate(-1px, 0px) rotate(-1deg) scale(1.02); }
+  100% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+}
+.animate-plane-fly {
+  animation: plane-fly 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* 📦 Package: drop bounce */
+@keyframes pkg-bounce {
+  0% { transform: translateY(0) scale(1); }
+  12% { transform: translateY(-16px) scale(1.05); }
+  28% { transform: translateY(0) scale(0.92, 1.08); }
+  40% { transform: translateY(-8px) scale(1.04); }
+  54% { transform: translateY(0) scale(0.95, 1.05); }
+  66% { transform: translateY(-3px) scale(1.02); }
+  80% { transform: translateY(0) scale(0.98, 1.02); }
+  100% { transform: translateY(0) scale(1); }
+}
+.animate-pkg-bounce {
+  animation: pkg-bounce 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* 🍔 Food/Shopping: excited wiggle */
+@keyframes food-wiggle {
+  0% { transform: rotate(0deg) scale(1); }
+  10% { transform: rotate(-12deg) scale(1.08); }
+  20% { transform: rotate(10deg) scale(1.1); }
+  30% { transform: rotate(-10deg) scale(1.12); }
+  42% { transform: rotate(8deg) scale(1.1); }
+  54% { transform: rotate(-6deg) scale(1.08); }
+  66% { transform: rotate(4deg) scale(1.05); }
+  78% { transform: rotate(-2deg) scale(1.02); }
+  90% { transform: rotate(1deg) scale(1.01); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+.animate-food-wiggle {
+  animation: food-wiggle 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  .animate-car-run {
+  html { scroll-behavior: auto; }
+  .animate-car-run,
+  .animate-plane-fly,
+  .animate-pkg-bounce,
+  .animate-food-wiggle {
     animation: none;
   }
 }
