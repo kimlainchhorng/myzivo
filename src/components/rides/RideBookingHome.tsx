@@ -2168,6 +2168,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               clientSecret={clientSecret}
               onPaymentSuccess={handlePaymentSuccess}
               paymentFailed={paymentStep === "failed"}
+              onClearError={() => setPaymentStep("idle")}
             />
           </div>
         </div>
