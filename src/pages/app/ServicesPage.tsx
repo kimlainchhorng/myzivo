@@ -259,7 +259,7 @@ export default function ServicesPage() {
                 {category.services.map((service, idx) => (
                   <motion.button
                     key={service.label}
-                    onClick={() => navigate(service.href)}
+                    onClick={() => handleServiceClick(service)}
                     whileTap={{ scale: 0.92 }}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
