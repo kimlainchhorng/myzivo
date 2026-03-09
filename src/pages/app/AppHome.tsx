@@ -250,7 +250,10 @@ const AppHome = () => {
         {/* ─── HEADER ─── */}
         <div className="bg-background relative">
           {/* Service Tabs — Pill Chips */}
-          <div className="flex items-center gap-2 px-4 safe-area-top pt-2 pb-2 overflow-hidden">
+          <div
+            className="flex items-center gap-2 px-4 pb-2 overflow-hidden"
+            style={{ paddingTop: "calc(max(env(safe-area-inset-top, 0px), 44px) + 0.5rem)" }}
+          >
             {homeTabs.map((tab) => {
               const isActive = activeHomeTab === tab.id;
               return (
