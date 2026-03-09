@@ -889,7 +889,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       toast.error("Please choose a different destination");
       return;
     }
-    fetchRoute(pickup, destination);
+    const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+    fetchRoute(pickup, destination, wp);
   };
 
   /* ─── Request Ride — Create PaymentIntent + Confirm ─── */
