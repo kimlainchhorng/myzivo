@@ -2070,7 +2070,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="shrink-0 border-t border-border/15">
             <button
               className="w-full flex items-center gap-3.5 px-5 py-3.5 hover:bg-muted/8 transition-colors active:scale-[0.98]"
-              onClick={() => setViewStep("confirm-ride")}
+              onClick={() => { setPaymentStep("idle"); setViewStep("confirm-ride"); }}
             >
               <div className="w-10 h-10 rounded-xl bg-muted/20 border border-border/20 flex items-center justify-center">
                 <CreditCard className="w-[18px] h-[18px] text-muted-foreground" />
@@ -2084,7 +2084,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="shrink-0 px-5 pt-1" style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})` }}>
             <Button
               className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 active:scale-[0.97] transition-all duration-200"
-              onClick={() => setViewStep("confirm-ride")}
+              onClick={() => { setPaymentStep("idle"); setViewStep("confirm-ride"); }}
             >
               Confirm {currentVehicle.name} · ${currentPrice.toFixed(2)}
             </Button>
