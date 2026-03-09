@@ -9,6 +9,7 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
+  console.log("[manage-payment-methods] Request received:", req.method);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
