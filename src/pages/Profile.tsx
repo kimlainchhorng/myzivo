@@ -136,7 +136,7 @@ const Profile = () => {
     { icon: Globe, label: "Language & Currency", href: "/account/preferences", description: "Display preferences" },
     { icon: Gift, label: "Gift Cards", href: "/account/gift-cards", description: "Buy, send, or redeem" },
     { icon: User, label: "Saved Travelers", href: "#travelers", description: "Manage traveler profiles" },
-    { icon: CreditCard, label: "Payment Methods", href: "/dashboard", description: "Manage cards & wallets" },
+    { icon: CreditCard, label: "Payment Methods", href: "/wallet", description: "Manage cards & wallets" },
     { icon: Bell, label: "Notifications", href: "/dashboard", description: "Preferences & alerts" },
     { icon: Lock, label: "Security", href: "/dashboard", description: "Password & 2FA" },
     { icon: Settings, label: "Settings", href: "/dashboard", description: "App preferences" },
