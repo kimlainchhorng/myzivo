@@ -1587,8 +1587,28 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Car running/driving animation */
+@keyframes car-run {
+  0% { transform: translateX(0) rotate(0deg); }
+  15% { transform: translateX(4px) rotate(-2deg); }
+  30% { transform: translateX(10px) rotate(-3deg); }
+  50% { transform: translateX(18px) rotate(-2deg); opacity: 0.8; }
+  70% { transform: translateX(30px) rotate(-1deg); opacity: 0.4; }
+  85% { transform: translateX(40px) rotate(0deg); opacity: 0; }
+  86% { transform: translateX(-30px) rotate(0deg); opacity: 0; }
+  95% { transform: translateX(-8px) rotate(1deg); opacity: 0.8; }
+  100% { transform: translateX(0) rotate(0deg); opacity: 1; }
+}
+
+.animate-car-run {
+  animation: car-run 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  .animate-car-run {
+    animation: none;
   }
 }
