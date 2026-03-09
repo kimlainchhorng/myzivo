@@ -885,8 +885,17 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   };
 
-  // Keep the ref always pointing to the latest fetchRoute
-  fetchRouteRef.current = fetchRoute;
+  // Re-fetch route when stops change (triggered by handleStopSelect/handleRemoveStop)
+  useEffect(() => {
+    if (stopRouteRefetchTrigger === 0) return; // skip initial
+    if (!pickup || !destination) return;
+    const wp = stops
+      .filter(s => s.place && s.place.lat && s.place.lng)
+      .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+    console.log("[stop-refetch] Trigger", stopRouteRefetchTrigger, "waypoints:", wp.length);
+    fetchRoute(pickup, destination, wp, { skipViewChange: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stopRouteRefetchTrigger]);
 
   const handleConfirmSearch = () => {
     if (!pickup || !destination) return;
