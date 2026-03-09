@@ -202,9 +202,9 @@ export default function ZivoReserve() {
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
             </div>
 
-            {/* Content — fills remaining space, no scroll */}
-            <div className="flex-1 min-h-0 px-6 pt-6 pb-5 flex flex-col justify-between">
-              <div>
+            {/* Content — fills remaining space */}
+            <div className="flex-1 min-h-0 px-6 pt-6 pb-5 flex flex-col">
+              <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none">
                 <motion.h1
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
