@@ -27,15 +27,18 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  usePaymentMethods,
   useWalletTransactions,
   useWalletCredits,
   useWalletSummary,
-  useSetDefaultPaymentMethod,
-  useDeletePaymentMethod,
   getServiceMeta,
-  type PaymentMethod,
 } from "@/hooks/useZivoWallet";
+import {
+  useStripePaymentMethods,
+  useSetDefaultStripeCard,
+  useDeleteStripeCard,
+  type StripeCard,
+} from "@/hooks/useStripePaymentMethods";
+import AddCardForm from "@/components/wallet/AddCardForm";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { format } from "date-fns";
 
