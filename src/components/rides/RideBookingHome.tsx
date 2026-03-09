@@ -824,7 +824,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   };
 
   /* ─── Fetch route ─── */
-  const fetchRoute = async (from: PlaceData, to: PlaceData) => {
+  const fetchRoute = async (from: PlaceData, to: PlaceData, stopWaypoints?: { lat: number; lng: number }[]) => {
     if (!from.lat || !to.lat) return;
     // Safety net: block same-location routes
     if (isSameLocation(from, to)) {
@@ -834,10 +834,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setIsLoadingRoute(true);
     setRouteData(null);
 
-    // Build waypoints from stops
-    const waypoints = stops
-      .filter(s => s.place && s.place.lat && s.place.lng)
-      .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+    const waypoints = stopWaypoints || [];
 
     try {
       const { data, error } = await supabase.functions.invoke("maps-route", {
