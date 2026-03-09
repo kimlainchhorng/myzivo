@@ -1,18 +1,23 @@
 /**
- * ZIVO Mobile Bottom Navigation — iOS 2026 Style
- * Large icons, clean labels, subtle active glow
+ * ZIVO Mobile Bottom Navigation — 3D Premium Style
+ * Custom 3D rendered icons, clean labels, subtle active glow
  */
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Search, Briefcase, Bell, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
 import { useHaptics } from "@/hooks/useHaptics";
 
+import navHome from "@/assets/nav-home.png";
+import navSearch from "@/assets/nav-search.png";
+import navTrips from "@/assets/nav-trips.png";
+import navAlerts from "@/assets/nav-alerts.png";
+import navAccount from "@/assets/nav-account.png";
+
 interface NavTab {
   id: string;
   label: string;
-  icon: typeof Home;
+  image: string;
   path: string;
   badge?: number;
 }
@@ -24,11 +29,11 @@ const ZivoMobileNav = () => {
   const { impact } = useHaptics();
 
   const tabs: NavTab[] = [
-    { id: "home", label: "Home", icon: Home, path: "/" },
-    { id: "search", label: "Search", icon: Search, path: "/flights" },
-    { id: "trips", label: "Trips", icon: Briefcase, path: "/my-trips" },
-    { id: "alerts", label: "Alerts", icon: Bell, path: "/notifications", badge: activeAlertsCount },
-    { id: "account", label: "Account", icon: User, path: "/profile" },
+    { id: "home", label: "Home", image: navHome, path: "/" },
+    { id: "search", label: "Search", image: navSearch, path: "/flights" },
+    { id: "trips", label: "Trips", image: navTrips, path: "/my-trips" },
+    { id: "alerts", label: "Alerts", image: navAlerts, path: "/notifications", badge: activeAlertsCount },
+    { id: "account", label: "Account", image: navAccount, path: "/profile" },
   ];
 
   const getActiveTab = () => {
@@ -52,7 +57,7 @@ const ZivoMobileNav = () => {
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      {/* iOS-style frosted glass background with subtle green tint on active */}
+      {/* Frosted glass background */}
       <div className="absolute inset-0 bg-card/90 backdrop-blur-2xl border-t border-border/30" />
       
       {/* Subtle gradient glow behind active tab */}
@@ -80,20 +85,22 @@ const ZivoMobileNav = () => {
                 }
               }}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 gap-1.5 transition-colors duration-200 touch-manipulation active:scale-90 relative min-w-[48px] min-h-[48px]",
+                "flex flex-col items-center justify-center flex-1 gap-1 transition-all duration-200 touch-manipulation active:scale-90 relative min-w-[48px] min-h-[48px]",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
               aria-label={tab.label}
               aria-current={isActive ? "page" : undefined}
             >
               <div className="relative flex items-center justify-center">
-                <tab.icon
+                <motion.img
+                  src={tab.image}
+                  alt={tab.label}
                   className={cn(
-                    "w-7 h-7 transition-all duration-200",
-                    isActive ? "text-primary" : "text-muted-foreground"
+                    "w-8 h-8 object-contain transition-all duration-200",
+                    isActive ? "scale-110 drop-shadow-lg" : "opacity-60 grayscale-[30%]"
                   )}
-                  strokeWidth={isActive ? 2.4 : 1.5}
-                  fill={isActive && tab.id === "home" ? "currentColor" : "none"}
+                  animate={isActive ? { y: -2 } : { y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 />
                 
                 {/* Badge */}
