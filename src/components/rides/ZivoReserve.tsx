@@ -183,7 +183,7 @@ export default function ZivoReserve() {
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-background">
+    <div className="flex flex-col bg-background">
       <AnimatePresence mode="wait">
         {/* ─── LANDING SCREEN ─── */}
         {screen === "landing" && (
@@ -192,28 +192,43 @@ export default function ZivoReserve() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, x: -30 }}
-            className="flex flex-col h-full overflow-hidden bg-background"
+            className="flex flex-col bg-background"
           >
-            {/* Content — no hero, just benefits filling the screen */}
-            <div className="flex flex-col flex-1 min-h-0 px-5 pt-3 pb-3">
+            {/* Hero image */}
+            <div className="relative w-full aspect-[16/9] shrink-0">
+              <img
+                src={reserveHero}
+                alt="ZIVO Reserve"
+                className="w-full h-full object-cover rounded-b-2xl"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent rounded-b-2xl" />
+              <div className="absolute bottom-3 left-4">
+                <div className="px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 backdrop-blur-sm">
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Premium</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex flex-col px-5 pt-4 pb-6">
               {/* Title */}
-              <div className="mb-3 shrink-0">
+              <div className="mb-4">
                 <h1 className="text-xl font-black text-foreground tracking-tight leading-tight">
                   ZIVO Reserve
                 </h1>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-xs text-muted-foreground mt-1">
                   Schedule up to 90 days ahead. Price locked, no surge.
                 </p>
               </div>
 
-              {/* Benefits — distribute evenly */}
-              <div className="flex-1 min-h-0 flex flex-col gap-2 justify-between">
+              {/* Benefits — full size rows */}
+              <div className="flex flex-col gap-2 mb-6">
                 {benefits.map((b, i) => {
                   const Icon = b.icon;
                   return (
                     <div
                       key={i}
-                      className="flex items-center gap-3 rounded-xl bg-card border border-border/40 px-4 py-2.5 shrink-0"
+                      className="flex items-center gap-3 rounded-xl bg-card border border-border/40 px-4 py-3"
                     >
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                         <Icon className="w-5 h-5 text-primary" strokeWidth={2} />
@@ -228,15 +243,13 @@ export default function ZivoReserve() {
               </div>
 
               {/* CTA */}
-              <div className="pt-3 shrink-0">
-                <Button
-                  className="w-full h-12 rounded-2xl text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xl shadow-primary/30"
-                  onClick={handleReserve}
-                >
-                  <Calendar className="w-5 h-5 mr-2" />
-                  Reserve a ride
-                </Button>
-              </div>
+              <Button
+                className="w-full h-12 rounded-2xl text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xl shadow-primary/30"
+                onClick={handleReserve}
+              >
+                <Calendar className="w-5 h-5 mr-2" />
+                Reserve a ride
+              </Button>
             </div>
           </motion.div>
         )}
