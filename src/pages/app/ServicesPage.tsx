@@ -286,7 +286,7 @@ export default function ServicesPage() {
                     {/* Icon container */}
                     <div
                       className={cn(
-                        "w-[68px] h-[68px] rounded-2xl flex items-center justify-center transition-all duration-200",
+                        "w-[68px] h-[68px] rounded-2xl flex items-center justify-center transition-all duration-200 overflow-visible",
                         "bg-card border border-border/40 shadow-sm",
                         "group-hover:shadow-md group-hover:border-primary/20 group-hover:-translate-y-0.5",
                         "group-active:bg-muted/60 group-active:shadow-none group-active:translate-y-0"
