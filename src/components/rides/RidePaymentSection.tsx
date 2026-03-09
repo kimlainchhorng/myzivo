@@ -398,30 +398,32 @@ export default function RidePaymentSection({
       </div>
 
       {/* Authorize button */}
-      <Button
-        className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
-        onClick={() => {
-          if (selectedCardId) {
-            onAuthorizeWithSavedCard(selectedCardId);
-          } else {
-            onAuthorizeWithNewCard();
-          }
-        }}
-        disabled={isSubmitting}
-      >
-        <Shield className="w-5 h-5" />
-        {isSubmitting ? (
-          <span className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
-            Authorizing...
-          </span>
-        ) : (
-          `Authorize $${price.toFixed(2)} · ${vehicleName}`
-        )}
-      </Button>
-      <p className="text-[10px] text-muted-foreground text-center">
-        Your card will be pre-authorized. Final charge applied after ride completion.
-      </p>
+      <div className="pt-1">
+        <Button
+          className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg shadow-foreground/10 gap-2 active:scale-[0.97] transition-all duration-200"
+          onClick={() => {
+            if (selectedCardId) {
+              onAuthorizeWithSavedCard(selectedCardId);
+            } else {
+              onAuthorizeWithNewCard();
+            }
+          }}
+          disabled={isSubmitting}
+        >
+          <Shield className="w-5 h-5" />
+          {isSubmitting ? (
+            <span className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+              Authorizing...
+            </span>
+          ) : (
+            `Authorize $${price.toFixed(2)} · ${vehicleName}`
+          )}
+        </Button>
+        <p className="text-[10px] text-muted-foreground text-center mt-2">
+          Your card will be pre-authorized. Final charge applied after ride completion.
+        </p>
+      </div>
 
       {paymentFailed && (
         <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-center">
