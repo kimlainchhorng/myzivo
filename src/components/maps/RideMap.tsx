@@ -522,6 +522,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   const clearAmbientCars = useCallback(() => {
     const cars = ambientCarsRef.current;
     if ((cars as any).__driftInterval) clearInterval((cars as any).__driftInterval);
+    if ((cars as any).__zoomListener) google.maps.event.removeListener((cars as any).__zoomListener);
     cars.forEach((m) => m.setMap(null));
     ambientCarsRef.current = [];
   }, []);
