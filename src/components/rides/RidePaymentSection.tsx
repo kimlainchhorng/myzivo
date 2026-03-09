@@ -174,6 +174,7 @@ export default function RidePaymentSection({
   const [showAddCard, setShowAddCard] = useState(false);
   const [setupClientSecret, setSetupClientSecret] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [addingCard, setAddingCard] = useState(false);
 
   // Load saved cards
   const loadCards = useCallback(async () => {
