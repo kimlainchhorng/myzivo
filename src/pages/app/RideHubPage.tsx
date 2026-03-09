@@ -178,7 +178,7 @@ export default function RideHubPage() {
       )}
 
       {/* Tab content */}
-      <div className={cn(activeTab === "book" ? "" : "pb-6")}>
+      <div className={cn(activeTab === "book" ? "h-full min-h-0" : "pb-6")}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -186,7 +186,7 @@ export default function RideHubPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className={activeTab === "book" ? "" : ""}
+            className={cn(activeTab === "book" && "h-full min-h-0")}
           >
             {activeTab === "book" && <RideBookingHome />}
             {activeTab === "reserve" && <div className=""><ZivoReserve /></div>}
