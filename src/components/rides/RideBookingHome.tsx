@@ -794,30 +794,23 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [stops.length]);
 
   const handleStopSelect = useCallback((stopId: string, place: PlaceData) => {
-    setStops(prev => {
-      const updated = prev.map(s => s.id === stopId ? { ...s, place, display: place.address } : s);
-      // Re-fetch route with new stop after state updates
-      setTimeout(() => {
-        if (pickup && destination) {
-          fetchRoute(pickup, destination);
-        }
-      }, 100);
-      return updated;
-    });
-  }, [pickup, destination]);
+    setStops(prev => prev.map(s => s.id === stopId ? { ...s, place, display: place.address } : s));
+  }, []);
 
   const handleRemoveStop = useCallback((stopId: string) => {
-    setStops(prev => {
-      const updated = prev.filter(s => s.id !== stopId);
-      // Re-fetch route without removed stop
-      setTimeout(() => {
-        if (pickup && destination) {
-          fetchRoute(pickup, destination);
-        }
-      }, 100);
-      return updated;
-    });
-  }, [pickup, destination]);
+    setStops(prev => prev.filter(s => s.id !== stopId));
+  }, []);
+
+  // Re-fetch route when stops change (only if we already have a route)
+  const stopsWithCoords = stops.filter(s => s.place && s.place.lat && s.place.lng);
+  const stopsKey = stopsWithCoords.map(s => `${s.place!.lat},${s.place!.lng}`).join("|");
+  const prevStopsKeyRef = useRef(stopsKey);
+  useEffect(() => {
+    if (prevStopsKeyRef.current !== stopsKey && pickup && destination && viewStep === "route-preview") {
+      prevStopsKeyRef.current = stopsKey;
+      fetchRoute(pickup, destination);
+    }
+  }, [stopsKey, pickup, destination, viewStep]);
 
   const handleSavedPlace = (address: string) => {
     setDestinationDisplay(address);
