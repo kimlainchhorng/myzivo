@@ -175,7 +175,7 @@ export default function ServicesPage() {
   const [runningLabel, setRunningLabel] = useState<string | null>(null);
 
   const handleServiceClick = (service: ServiceItem) => {
-    if (service.label === "Ride" || service.label === "Rental Cars" || service.label === "Car Rental" || service.label === "Reserve") {
+    if (service.animClass) {
       setRunningLabel(service.label);
       setTimeout(() => {
         setRunningLabel(null);
