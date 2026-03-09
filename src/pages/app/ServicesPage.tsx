@@ -18,6 +18,7 @@ import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
 import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
 import zivoShoppingIcon from "@/assets/zivo-shopping.png";
 import zivoDeliveryBanner from "@/assets/zivo-delivery-banner.png";
+import zivoPackageIcon from "@/assets/service-package.png";
 import zivoReserveBanner from "@/assets/zivo-reserve-banner.png";
 import zivoTravelBanner from "@/assets/zivo-travel-banner.png";
 
