@@ -1172,7 +1172,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
                   <div className="flex flex-col items-center">
                     <div className="relative w-10 h-10 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-primary-foreground" />
+                      <span className="text-sm font-black text-primary-foreground leading-none">Z</span>
                     </div>
                     <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-primary -mt-[2px]" />
                     <div className="w-3 h-1 rounded-full bg-foreground/15 mt-0.5 blur-[1px]" />
@@ -1209,7 +1209,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 className="w-full flex items-center gap-3 bg-muted/15 border border-border/20 rounded-2xl px-4 py-3 transition-all duration-200 hover:bg-muted/25 hover:border-primary/20 active:scale-[0.98] group"
               >
                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
-                  <div className="w-2.5 h-2.5 rounded-full bg-primary-foreground" />
+                  <span className="text-[10px] font-black text-primary-foreground leading-none">Z</span>
                 </div>
                 <span className="flex-1 text-left text-sm font-medium truncate" style={{ color: destinationDisplay ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
                   {destinationDisplay || "Book a Ride"}
@@ -1306,8 +1306,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <div className="flex flex-col items-center justify-center">
                   <div className="relative">
                     <div className="absolute -inset-4 rounded-full bg-primary/10 animate-ping" style={{ animationDuration: "2s" }} />
-                    <div className="relative w-11 h-11 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-primary-foreground" />
+                      <div className="relative w-11 h-11 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
+                        <span className="text-sm font-black text-primary-foreground leading-none">Z</span>
                     </div>
                     <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rotate-45 border-b-[3px] border-r-[3px] border-background" />
                   </div>
@@ -1379,21 +1379,27 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <div className="flex items-center gap-3">
                   {/* Pickup/Stops/Dropoff indicator dots + dotted lines */}
                   <div className="flex flex-col items-center py-2">
-                    {/* Pickup dot with glow */}
+                    {/* Pickup Z marker */}
                     <div className="relative">
                       <div className="absolute -inset-1 rounded-full bg-primary/20 animate-pulse" />
-                      <div className="relative w-3 h-3 rounded-full bg-primary border-2 border-background" />
+                      <div className="relative w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <span className="text-[9px] font-black text-primary-foreground leading-none">Z</span>
+                      </div>
                     </div>
-                    {/* Lines + dots for each stop */}
+                    {/* Lines + S markers for each stop */}
                     {stops.map((stop) => (
                       <div key={stop.id} className="flex flex-col items-center">
                         <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/25 my-1" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/40" />
+                        <div className="w-5 h-5 rounded-full bg-muted-foreground/60 flex items-center justify-center">
+                          <span className="text-[9px] font-black text-background leading-none">S</span>
+                        </div>
                       </div>
                     ))}
-                    {/* Line to destination */}
+                    {/* Line to destination E marker */}
                     <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/25 my-1" />
-                    <div className="w-3 h-3 rounded-sm bg-primary" />
+                    <div className="w-5 h-5 rounded-sm bg-foreground flex items-center justify-center">
+                      <span className="text-[9px] font-black text-background leading-none">E</span>
+                    </div>
                   </div>
                   <div className="flex-1 space-y-2">
                     <AddressAutocomplete
