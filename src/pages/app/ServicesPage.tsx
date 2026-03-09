@@ -35,6 +35,7 @@ interface ServiceItem {
   image?: string;
   badge?: string;
   badgeVariant?: "discount" | "promo" | "new";
+  animClass?: string;
 }
 
 interface ServiceCategory {
