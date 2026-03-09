@@ -137,6 +137,10 @@ export default function RideHubPage() {
     setActiveTab(nextTab);
   }, [searchParams]);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [activeTab]);
+
   return (
     <AppLayout
       title="Zivo Ride"

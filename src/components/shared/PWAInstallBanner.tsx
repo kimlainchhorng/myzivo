@@ -3,6 +3,7 @@
  * Shows contextually after 30s of browsing, respects dismissals
  */
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Download, Smartphone, Zap, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function PWAInstallBanner() {
+  const location = useLocation();
   const isMobile = useIsMobile();
   const [show, setShow] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -26,6 +28,8 @@ export function PWAInstallBanner() {
     if (window.matchMedia("(display-mode: standalone)").matches) return;
     // Don't show on desktop
     if (!isMobile) return;
+    // Don't interrupt full-screen ride booking flows
+    if (location.pathname.startsWith("/rides")) return;
     // Don't show if dismissed recently (7 days)
     const dismissed = localStorage.getItem("pwa_banner_dismissed");
     if (dismissed && Date.now() - Number(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
@@ -43,7 +47,7 @@ export function PWAInstallBanner() {
       window.removeEventListener("beforeinstallprompt", handler);
       clearTimeout(timer);
     };
-  }, [isMobile]);
+  }, [isMobile, location.pathname]);
 
   const handleInstall = useCallback(async () => {
     if (deferredPrompt) {
