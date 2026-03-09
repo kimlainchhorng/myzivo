@@ -18,6 +18,7 @@ import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
 import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
 import zivoShoppingIcon from "@/assets/zivo-shopping.png";
 import zivoDeliveryBanner from "@/assets/zivo-delivery-banner.png";
+import zivoPackageIcon from "@/assets/service-package.png";
 import zivoReserveBanner from "@/assets/zivo-reserve-banner.png";
 import zivoTravelBanner from "@/assets/zivo-travel-banner.png";
 
@@ -44,7 +45,7 @@ const serviceCategories: ServiceCategory[] = [
     subtitle: "Get moving in minutes",
     services: [
       { label: "Ride", href: "/rides", image: zivoRideIcon, badge: "10% Off", badgeVariant: "discount" },
-      { label: "Package", href: "/delivery", icon: Package },
+      { label: "Package", href: "/delivery", image: zivoPackageIcon },
       { label: "Travel", href: "/flights", image: zivoFlightsIcon, badge: "Promo", badgeVariant: "promo" },
       { label: "Reserve", href: "/rides?tab=reserve", image: zivoReserveIcon, badge: "Promo", badgeVariant: "promo" },
       { label: "Rental Cars", href: "/rent-car", image: zivoRentalCarIcon },
