@@ -1,8 +1,8 @@
 /**
  * RideHubPage - Central hub for all ride features
  */
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp, Dog, Music, Gift, TrendingUp, Trophy, Building2, Heart, Brain, ShieldCheck, Plane, UserPlus, Gem, Gavel, Camera } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
@@ -128,7 +128,14 @@ const tabs = [
 
 export default function RideHubPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("book");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") === "reserve" ? "reserve" : "book";
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const nextTab = searchParams.get("tab") === "reserve" ? "reserve" : "book";
+    setActiveTab(nextTab);
+  }, [searchParams]);
 
   return (
     <AppLayout
