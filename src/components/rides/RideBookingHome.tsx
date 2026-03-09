@@ -527,7 +527,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const BOTTOM_NAV_HEIGHT = 64;
   const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
 
-  const COLLAPSED_SHEET_HEIGHT = 310 + stops.length * 30;
+  const COLLAPSED_SHEET_HEIGHT = 330 + stops.length * 56 + (routeData ? 52 : 0);
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
 
   // Route data
@@ -1741,7 +1741,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     ))}
                     <div className="w-px flex-1 min-h-[20px] border-l-[2px] border-dashed border-muted-foreground/30 my-0.5" />
                     <div className="w-6 h-6 rounded-sm bg-foreground flex items-center justify-center">
-                      <span className="text-[11px] font-black text-background leading-none">E</span>
+                      <span className="text-[11px] font-black text-background leading-none">D</span>
                     </div>
                   </div>
                   <div className="flex-1 min-w-0 space-y-1.5">
