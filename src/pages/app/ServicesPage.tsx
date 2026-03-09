@@ -92,8 +92,29 @@ export default function ServicesPage() {
         <h1 className="text-[28px] font-black text-foreground mt-2">Everything ZIVO</h1>
       </div>
 
+      {/* Premium Reserve banner at top */}
+      <div className="px-5 pt-2">
+        <motion.button
+          onClick={() => navigate("/rides?tab=reserve")}
+          whileTap={{ scale: 0.98 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="w-full rounded-2xl overflow-hidden border border-border/30 shadow-sm hover:shadow-lg transition-all duration-200 touch-manipulation"
+        >
+          <div className="relative">
+            <img src={zivoReserveBanner} alt="ZIVO Reserve - Premium Airport Rides" className="w-full h-[140px] object-cover object-top" />
+            <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 to-transparent flex flex-col justify-center px-5">
+              <span className="text-[10px] font-bold text-primary uppercase tracking-wider">ZIVO Reserve</span>
+              <span className="text-sm font-black text-background leading-tight mt-0.5">Premium Airport Rides</span>
+              <span className="text-[11px] text-background/80 mt-1">VIP pickup · Meet & greet · Luxury fleet</span>
+            </div>
+          </div>
+        </motion.button>
+      </div>
+
       {/* Service Categories */}
-      <div className="px-5 space-y-8 pt-2">
+      <div className="px-5 space-y-8 pt-6">
         {serviceCategories.map((category, catIdx) => (
           <div key={category.title}>
             <motion.div
