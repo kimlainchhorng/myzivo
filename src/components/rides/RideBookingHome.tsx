@@ -450,7 +450,7 @@ export default function RideBookingHome() {
   );
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  const [viewStep, setViewStep] = useState<ViewStep>("search");
+  const [viewStep, setViewStep] = useState<ViewStep>("home");
   const [activeTab, setActiveTab] = useState<RideTab>("book");
    const [pickup, setPickup] = useState<PlaceData | null>(null);
   const [destination, setDestination] = useState<PlaceData | null>(null);
