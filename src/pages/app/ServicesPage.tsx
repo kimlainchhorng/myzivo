@@ -31,7 +31,7 @@ interface ServiceCategory {
 
 const serviceCategories: ServiceCategory[] = [
   {
-    title: "Go anywhere",
+    title: "Your ride, your way",
     services: [
       { label: "Ride", href: "/rides", image: zivoRideIcon, badge: "10% Off", badgeVariant: "discount" },
       { label: "Package", href: "/delivery", icon: Package },
