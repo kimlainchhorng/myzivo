@@ -1167,6 +1167,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             compact
             pickupCoords={pickup}
             dropoffCoords={["route-preview", "ride-options", "confirm-ride", "searching", "pickup-confirm", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep) ? destination : null}
+            stopCoords={stops.filter(s => s.place).map(s => ({ lat: s.place!.lat || 0, lng: s.place!.lng || 0 })).filter(c => c.lat !== 0 && c.lng !== 0)}
             userLocation={userLocation}
             onLocateUser={handleLocateUser}
             routePolyline={routeData?.polyline ?? null}
