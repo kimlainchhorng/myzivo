@@ -842,6 +842,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       .filter(s => s.place && s.place.lat && s.place.lng)
       .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
 
+    console.log("[fetchRoute] Sending route request with", waypoints.length, "waypoints:", JSON.stringify(waypoints));
     try {
       const { data, error } = await supabase.functions.invoke("maps-route", {
         body: {
@@ -852,6 +853,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           waypoints: waypoints.length > 0 ? waypoints : undefined,
         },
       });
+      console.log("[fetchRoute] Response polyline length:", data?.polyline?.length, "ok:", data?.ok);
 
       if (error) throw error;
 
