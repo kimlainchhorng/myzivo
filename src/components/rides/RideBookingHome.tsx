@@ -2407,7 +2407,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment</span>
-                <span className="text-foreground">Visa •••• 4242</span>
+                <span className="text-foreground">Card on file</span>
               </div>
             </div>
           </div>
