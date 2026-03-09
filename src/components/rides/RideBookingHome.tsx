@@ -974,8 +974,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   const handleConfirmSearch = () => {
     if (!pickup || !destination) return;
-    if (isSameLocation(pickup, destination)) {
-      toast.error("Please choose a different destination");
+    const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+    if (isSameLocation(pickup, destination) && wp.length === 0) {
+      toast.error("Add a stop to create a round trip, or choose a different destination");
       return;
     }
     const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
