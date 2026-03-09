@@ -20,6 +20,7 @@ import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
 import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
 import { SkipToContent } from "./components/shared/SkipToContent";
+import { GlobalViewportMeta } from "@/components/shared/GlobalViewportMeta";
 import { Loader2 } from "lucide-react";
 import { categorizeError } from "@/lib/supabaseErrors";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
