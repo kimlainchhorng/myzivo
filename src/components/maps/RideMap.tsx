@@ -717,8 +717,16 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
 
     if (pickupCoords && dropoffCoords) {
       const directionsService = new google.maps.DirectionsService();
+      const waypointsForDirections = (stopCoords || [])
+        .filter(s => s.lat && s.lng)
+        .map(s => ({ location: new google.maps.LatLng(s.lat, s.lng), stopover: true }));
       directionsService.route(
-        { origin: pickupCoords, destination: dropoffCoords, travelMode: google.maps.TravelMode.DRIVING },
+        { 
+          origin: pickupCoords, 
+          destination: dropoffCoords, 
+          waypoints: waypointsForDirections.length > 0 ? waypointsForDirections : undefined,
+          travelMode: google.maps.TravelMode.DRIVING 
+        },
         (result, status) => {
           if (status === google.maps.DirectionsStatus.OK && result) {
             const path = result.routes[0]?.overview_path;
