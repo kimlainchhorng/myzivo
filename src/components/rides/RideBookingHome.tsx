@@ -839,7 +839,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   };
 
   /* ─── Fetch route ─── */
-  const fetchRoute = async (from: PlaceData, to: PlaceData, stopWaypoints?: { lat: number; lng: number }[]) => {
+  const fetchRoute = async (from: PlaceData, to: PlaceData, stopWaypoints?: { lat: number; lng: number }[], opts?: { skipViewChange?: boolean }) => {
     if (!from.lat || !to.lat) return;
     // Safety net: block same-location routes
     if (isSameLocation(from, to)) {
@@ -865,7 +865,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           waypoints: waypoints.length > 0 ? waypoints : undefined,
         },
       });
-      console.log("[fetchRoute] Response polyline length:", data?.polyline?.length, "ok:", data?.ok);
+      console.log("[fetchRoute] Response:", JSON.stringify({ ok: data?.ok, distance: data?.distance_miles, duration: data?.duration_minutes, polylineLen: data?.polyline?.length }));
 
       if (error) throw error;
 
@@ -898,9 +898,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setIsLoadingRoute(false);
     }
 
-    setSheetExpanded(false);
-    setViewStep("route-preview");
+    if (!opts?.skipViewChange) {
+      setSheetExpanded(false);
+      setViewStep("route-preview");
+    }
   };
+
+  // Keep the ref always pointing to the latest fetchRoute
+  fetchRouteRef.current = fetchRoute;
 
   const handleConfirmSearch = () => {
     if (!pickup || !destination) return;
