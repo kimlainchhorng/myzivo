@@ -785,7 +785,51 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       const wp = stopsRef.current
         .filter(s => s.place && s.place.lat && s.place.lng)
         .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-      fetchRoute(pickupData, place, wp);
+      console.log("[handleDestinationSelect] stopsRef.current:", stopsRef.current.length, "waypoints:", wp.length, JSON.stringify(wp));
+      
+      // Call route fetch directly to avoid stale fetchRoute closure
+      setIsLoadingRoute(true);
+      setRouteData(null);
+      
+      supabase.functions.invoke("maps-route", {
+        body: {
+          origin_lat: pickupData.lat,
+          origin_lng: pickupData.lng,
+          dest_lat: place.lat,
+          dest_lng: place.lng,
+          waypoints: wp.length > 0 ? wp : undefined,
+        },
+      }).then(({ data, error }) => {
+        console.log("[handleDestinationSelect] Route response:", data?.ok, data?.distance_miles, data?.duration_minutes);
+        if (!error && data?.ok) {
+          setRouteData({
+            distance_miles: data.distance_miles,
+            duration_minutes: data.duration_minutes,
+            polyline: data.polyline,
+            traffic_level: data.traffic_level,
+          });
+        } else {
+          // Fallback: haversine
+          const R = 6371;
+          const dLat = (place.lat - pickupData.lat) * Math.PI / 180;
+          const dLng = (place.lng - pickupData.lng) * Math.PI / 180;
+          const a = Math.sin(dLat/2)**2 + Math.cos(pickupData.lat*Math.PI/180)*Math.cos(place.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+          const distKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          const distMiles = distKm * 0.621371;
+          setRouteData({
+            distance_miles: Math.round(distMiles * 10) / 10,
+            duration_minutes: Math.max(5, Math.round(distMiles * 3)),
+            polyline: null,
+          });
+        }
+        setIsLoadingRoute(false);
+        setSheetExpanded(false);
+        setViewStep("route-preview");
+      }).catch((err) => {
+        console.error("[handleDestinationSelect] Route error:", err);
+        setIsLoadingRoute(false);
+        setViewStep("route-preview");
+      });
     }
   }, [pickup, userLocation, isSameLocation]);
 
