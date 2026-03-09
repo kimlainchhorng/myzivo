@@ -976,7 +976,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       toast.error("Add a stop to create a round trip, or choose a different destination");
       return;
     }
-    const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
     fetchRoute(pickup, destination, wp);
   };
 
