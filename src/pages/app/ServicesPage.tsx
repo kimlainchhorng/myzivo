@@ -24,6 +24,7 @@ import zivoTravelBanner from "@/assets/zivo-travel-banner.png";
 import zivoGroupRideIcon from "@/assets/service-group-ride.png";
 import zivoAlcoholIcon from "@/assets/service-alcohol.png";
 import zivoPharmacyIcon from "@/assets/service-pharmacy.png";
+import zivoShoppingCartIcon from "@/assets/service-shopping.png";
 
 /* ── Types ── */
 interface ServiceItem {
