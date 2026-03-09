@@ -14,6 +14,7 @@ import zivoHotelsIcon from "@/assets/zivo-hotels-icon.png";
 import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
 import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
 import zivoShoppingIcon from "@/assets/zivo-shopping.png";
+import zivoDeliveryBanner from "@/assets/zivo-delivery-banner.png";
 
 interface ServiceItem {
   label: string;
@@ -93,57 +94,73 @@ export default function ServicesPage() {
       {/* Service Categories */}
       <div className="px-5 space-y-8 pt-2">
         {serviceCategories.map((category, catIdx) => (
-          <motion.div
-            key={category.title}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: catIdx * 0.07 }}
-          >
-            <h2 className="text-lg font-bold text-foreground mb-4">
-              {category.title}
-            </h2>
-            <div className="grid grid-cols-3 gap-3">
-              {category.services.map((service, idx) => (
-                <motion.button
-                  key={service.label}
-                  onClick={() => navigate(service.href)}
-                  whileTap={{ scale: 0.94 }}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: catIdx * 0.07 + idx * 0.03 }}
-                  className="flex flex-col items-center gap-2 touch-manipulation relative group"
-                >
-                  {/* Badge */}
-                  {service.badge && (
-                    <div className={cn(
-                      "absolute -top-1.5 left-1/2 -translate-x-1/2 z-10 text-[8px] font-bold px-2.5 py-[2px] rounded-full whitespace-nowrap shadow-sm",
-                      service.badgeVariant === "discount"
-                        ? "bg-primary text-primary-foreground"
-                        : service.badgeVariant === "new"
-                        ? "bg-foreground text-background"
-                        : "bg-primary text-primary-foreground"
-                    )}>
-                      {service.badge}
+          <div key={category.title}>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: catIdx * 0.07 }}
+            >
+              <h2 className="text-lg font-bold text-foreground mb-4">
+                {category.title}
+              </h2>
+              <div className="grid grid-cols-3 gap-3">
+                {category.services.map((service, idx) => (
+                  <motion.button
+                    key={service.label}
+                    onClick={() => navigate(service.href)}
+                    whileTap={{ scale: 0.94 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: catIdx * 0.07 + idx * 0.03 }}
+                    className="flex flex-col items-center gap-2 touch-manipulation relative group"
+                  >
+                    {service.badge && (
+                      <div className={cn(
+                        "absolute -top-1.5 left-1/2 -translate-x-1/2 z-10 text-[8px] font-bold px-2.5 py-[2px] rounded-full whitespace-nowrap shadow-sm",
+                        service.badgeVariant === "discount"
+                          ? "bg-primary text-primary-foreground"
+                          : service.badgeVariant === "new"
+                          ? "bg-foreground text-background"
+                          : "bg-primary text-primary-foreground"
+                      )}>
+                        {service.badge}
+                      </div>
+                    )}
+                    <div className="w-[72px] h-[72px] rounded-2xl bg-muted/30 border border-border/30 flex items-center justify-center group-active:bg-muted/50 group-hover:border-primary/20 group-hover:shadow-md transition-all duration-200">
+                      {service.image ? (
+                        <img src={service.image} alt={service.label} className="w-9 h-9 object-contain" />
+                      ) : service.icon ? (
+                        <service.icon className="w-6 h-6 text-muted-foreground" />
+                      ) : null}
                     </div>
-                  )}
+                    <span className="text-xs font-semibold text-foreground text-center leading-tight">
+                      {service.label}
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
 
-                  {/* Icon container */}
-                  <div className="w-[72px] h-[72px] rounded-2xl bg-muted/30 border border-border/30 flex items-center justify-center group-active:bg-muted/50 group-hover:border-primary/20 group-hover:shadow-md transition-all duration-200">
-                    {service.image ? (
-                      <img src={service.image} alt={service.label} className="w-9 h-9 object-contain" />
-                    ) : service.icon ? (
-                      <service.icon className="w-6 h-6 text-muted-foreground" />
-                    ) : null}
+            {/* Promo banner after first category */}
+            {catIdx === 0 && (
+              <motion.button
+                onClick={() => navigate("/drive")}
+                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="w-full rounded-2xl overflow-hidden border border-border/30 shadow-sm hover:shadow-lg transition-all duration-200 touch-manipulation mt-6"
+              >
+                <div className="relative">
+                  <img src={zivoDeliveryBanner} alt="Deliver with ZIVO" className="w-full h-[140px] object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 to-transparent flex flex-col justify-center px-5">
+                    <span className="text-sm font-black text-background leading-tight">Deliver with ZIVO</span>
+                    <span className="text-[11px] text-background/80 mt-1">Earn on your schedule</span>
                   </div>
-
-                  {/* Label */}
-                  <span className="text-xs font-semibold text-foreground text-center leading-tight">
-                    {service.label}
-                  </span>
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
+                </div>
+              </motion.button>
+            )}
+          </div>
         ))}
       </div>
 
