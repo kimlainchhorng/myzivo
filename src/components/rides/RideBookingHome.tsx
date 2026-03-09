@@ -823,6 +823,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setIsLoadingRoute(true);
     setRouteData(null);
 
+    // Build waypoints from stops
+    const waypoints = stops
+      .filter(s => s.place && s.place.lat && s.place.lng)
+      .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+
     try {
       const { data, error } = await supabase.functions.invoke("maps-route", {
         body: {
@@ -830,6 +835,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           origin_lng: from.lng,
           dest_lat: to.lat,
           dest_lng: to.lng,
+          waypoints: waypoints.length > 0 ? waypoints : undefined,
         },
       });
 
