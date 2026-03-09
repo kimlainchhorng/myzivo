@@ -1413,33 +1413,46 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                           );
                         })}
                       </div>
-                      {/* Time picker */}
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <label className="text-[10px] text-muted-foreground mb-1 block">Hour</label>
-                          <select
-                            value={scheduleHour}
-                            onChange={(e) => setScheduleHour(Number(e.target.value))}
-                            className="w-full h-10 rounded-xl bg-card border border-border/30 px-2 text-sm font-semibold text-foreground appearance-none"
-                          >
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <option key={i} value={i}>{i % 12 || 12} {i >= 12 ? "PM" : "AM"}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex-1">
-                          <label className="text-[10px] text-muted-foreground mb-1 block">Minute</label>
-                          <select
-                            value={scheduleMinute}
-                            onChange={(e) => setScheduleMinute(Number(e.target.value))}
-                            className="w-full h-10 rounded-xl bg-card border border-border/30 px-2 text-sm font-semibold text-foreground appearance-none"
-                          >
-                            {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => (
-                              <option key={m} value={m}>{m.toString().padStart(2, "0")}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
+                      {/* 2026 Scroll wheel time picker */}
+                      {(() => {
+                        const wheelHours = Array.from({ length: 12 }, (_, i) => i + 1);
+                        const wheelMinutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+                        const currentAmPm = scheduleHour >= 12 ? "PM" : "AM";
+                        const display12 = scheduleHour % 12 || 12;
+                        const hourIdx = wheelHours.indexOf(display12);
+                        const minIdx = wheelMinutes.indexOf(scheduleMinute);
+                        const dummyDays = [{ label: "" }];
+                        
+                        return (
+                          <div className="flex gap-0 rounded-2xl bg-card/50 backdrop-blur-lg border border-border/30 overflow-hidden px-2 py-2">
+                            {/* Hour */}
+                            <div className="flex-1">
+                              <ScrollWheelPicker
+                                days={dummyDays}
+                                selectedDayIdx={0}
+                                onDayChange={() => {}}
+                                hours={wheelHours}
+                                selectedHourIdx={hourIdx >= 0 ? hourIdx : 0}
+                                onHourChange={(i) => {
+                                  const h12 = wheelHours[i];
+                                  const isPM = scheduleHour >= 12;
+                                  if (isPM) setScheduleHour(h12 === 12 ? 12 : h12 + 12);
+                                  else setScheduleHour(h12 === 12 ? 0 : h12);
+                                }}
+                                minutes={wheelMinutes}
+                                selectedMinIdx={minIdx >= 0 ? minIdx : 0}
+                                onMinChange={(i) => setScheduleMinute(wheelMinutes[i])}
+                                amPm={currentAmPm as "AM" | "PM"}
+                                onAmPmChange={(val) => {
+                                  const h12 = scheduleHour % 12;
+                                  setScheduleHour(val === "PM" ? h12 + 12 : h12);
+                                }}
+                                compact
+                              />
+                            </div>
+                          </div>
+                        );
+                      })()}
                       <Button
                         className="w-full h-11 rounded-xl text-sm font-bold"
                         disabled={!scheduledDate}
