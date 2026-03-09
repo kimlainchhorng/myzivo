@@ -87,12 +87,24 @@ const ZivoMobileNav = () => {
               aria-current={isActive ? "page" : undefined}
             >
               <div className="relative flex items-center justify-center">
+                {/* Radial glow orb behind active icon */}
+                {isActive && (
+                  <motion.div
+                    layoutId="nav-glow"
+                    className="absolute w-12 h-12 rounded-full"
+                    style={{
+                      background: 'radial-gradient(circle, hsl(var(--primary) / 0.25) 0%, hsl(var(--primary) / 0.08) 50%, transparent 70%)',
+                      boxShadow: '0 0 20px 4px hsl(var(--primary) / 0.15)',
+                    }}
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
                 <tab.icon
                   className={cn(
-                    "w-7 h-7 transition-all duration-200",
-                    isActive ? "text-primary" : "text-muted-foreground"
+                    "relative z-10 transition-all duration-200",
+                    isActive ? "w-[28px] h-[28px] text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.5)]" : "w-7 h-7 text-muted-foreground"
                   )}
-                  strokeWidth={isActive ? 2.4 : 1.5}
+                  strokeWidth={isActive ? 2.2 : 1.4}
                   fill={isActive && tab.id === "home" ? "currentColor" : "none"}
                 />
                 
