@@ -914,9 +914,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setIsLoadingRoute(true);
     setRouteData(null);
 
-    const waypoints = stopWaypoints ?? stopsRef.current
-      .filter(s => s.place && s.place.lat && s.place.lng)
-      .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
 
     console.log("[fetchRoute] waypoints:", waypoints.length, JSON.stringify(waypoints));
     try {
