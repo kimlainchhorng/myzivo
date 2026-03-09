@@ -180,7 +180,7 @@ export default function RideHubPage() {
       )}
 
       {/* Tab content */}
-      <div className={cn(activeTab === "book" ? "h-full min-h-0" : "pb-6")}>
+      <div className={cn(isFullScreen ? "h-full min-h-0 flex flex-col" : "pb-6")}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -188,10 +188,10 @@ export default function RideHubPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className={cn(activeTab === "book" && "h-full min-h-0")}
+            className={cn(isFullScreen && "h-full min-h-0 flex flex-col flex-1")}
           >
             {activeTab === "book" && <RideBookingHome />}
-            {activeTab === "reserve" && <div className=""><ZivoReserve /></div>}
+            {activeTab === "reserve" && <div className="flex-1 min-h-0"><ZivoReserve /></div>}
             {activeTab === "search" && <div className="p-4"><RideQuickSearch /></div>}
             {activeTab === "history" && <div className="p-4"><RideTripHistory /></div>}
             {activeTab === "calendar" && <div className="p-4"><RideScheduleCalendar /></div>}
