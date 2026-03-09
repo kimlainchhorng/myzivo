@@ -809,13 +809,25 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             traffic_level: data.traffic_level,
           });
         } else {
-          // Fallback: haversine
-          const R = 6371;
-          const dLat = (place.lat - pickupData.lat) * Math.PI / 180;
-          const dLng = (place.lng - pickupData.lng) * Math.PI / 180;
-          const a = Math.sin(dLat/2)**2 + Math.cos(pickupData.lat*Math.PI/180)*Math.cos(place.lat*Math.PI/180)*Math.sin(dLng/2)**2;
-          const distKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-          const distMiles = distKm * 0.621371;
+          // Fallback: haversine including waypoints
+          const haversine = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          };
+          // Build full path: pickup → waypoints → destination
+          const points = [
+            { lat: pickupData.lat, lng: pickupData.lng },
+            ...wp,
+            { lat: place.lat, lng: place.lng },
+          ];
+          let totalKm = 0;
+          for (let i = 0; i < points.length - 1; i++) {
+            totalKm += haversine(points[i].lat, points[i].lng, points[i+1].lat, points[i+1].lng);
+          }
+          const distMiles = totalKm * 0.621371;
           setRouteData({
             distance_miles: Math.round(distMiles * 10) / 10,
             duration_minutes: Math.max(5, Math.round(distMiles * 3)),
