@@ -268,6 +268,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, route
     <NativeGoogleMap
       pickupCoords={pickupCoords}
       dropoffCoords={dropoffCoords}
+      stopCoords={stopCoords}
       routePolyline={routePolyline}
       driverCoords={driverCoords}
       userLocation={userLocation}
