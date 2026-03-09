@@ -194,14 +194,14 @@ export default function ZivoReserve() {
             exit={{ opacity: 0, x: -30 }}
             className="flex flex-col h-full overflow-hidden relative"
           >
-            {/* Full-bleed hero background */}
-            <div className="absolute inset-0">
+            {/* Full-bleed hero background — covers entire screen */}
+            <div className="absolute inset-0 bg-background">
               <img
                 src={reserveHero}
                 alt="ZIVO Reserve"
-                className="w-full h-full object-cover"
+                className="w-full h-[65%] object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background from-35% via-background/70 via-60% to-transparent" />
             </div>
 
             {/* Content overlay */}
