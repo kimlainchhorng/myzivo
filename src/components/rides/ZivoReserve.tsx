@@ -190,10 +190,10 @@ export default function ZivoReserve() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, x: -30 }}
-            className="flex flex-col h-full"
+            className="flex flex-col h-full overflow-hidden"
           >
             {/* Hero image — compact */}
-            <div className="relative w-full h-[200px] shrink-0 overflow-hidden rounded-b-[2rem]">
+            <div className="relative w-full h-[140px] shrink-0 overflow-hidden rounded-b-[1.5rem]">
               <img
                 src={reserveHero}
                 alt="ZIVO Reserve — schedule your ride"
@@ -202,33 +202,33 @@ export default function ZivoReserve() {
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
             </div>
 
-            {/* Content — fills remaining space */}
-            <div className="flex-1 min-h-0 px-6 pt-6 pb-5 flex flex-col">
-              <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none">
+            {/* Content — fills remaining, no scroll */}
+            <div className="flex-1 min-h-0 px-6 pt-4 pb-4 flex flex-col justify-between">
+              <div>
                 <motion.h1
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="text-[1.65rem] font-black text-foreground tracking-tight leading-tight"
+                  className="text-xl font-black text-foreground tracking-tight leading-tight"
                 >
                   ZIVO Reserve
                 </motion.h1>
 
-                <div className="mt-6 space-y-5">
+                <div className="mt-4 space-y-3">
                   {benefits.map((b, i) => {
                     const Icon = b.icon;
                     return (
                       <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 12 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 + i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        className="flex items-start gap-4"
+                        transition={{ delay: 0.15 + i * 0.06, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        className="flex items-center gap-3"
                       >
-                        <div className="w-10 h-10 rounded-full border border-border/60 flex items-center justify-center shrink-0">
-                          <Icon className="w-[18px] h-[18px] text-foreground/80" strokeWidth={1.5} />
+                        <div className="w-8 h-8 rounded-full border border-border/60 flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4 text-foreground/80" strokeWidth={1.5} />
                         </div>
-                        <p className="text-[15px] font-medium text-foreground leading-snug pt-2">
+                        <p className="text-[13px] font-medium text-foreground leading-snug">
                           {b.title}
                         </p>
                       </motion.div>
