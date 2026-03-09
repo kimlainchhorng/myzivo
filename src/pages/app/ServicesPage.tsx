@@ -145,6 +145,25 @@ export default function ServicesPage() {
               ))}
             </div>
           </motion.div>
+          {/* Promo banner after first category */}
+          {catIdx === 0 && (
+            <motion.button
+              onClick={() => navigate("/drive")}
+              whileTap={{ scale: 0.98 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="w-full rounded-2xl overflow-hidden border border-border/30 shadow-sm hover:shadow-lg transition-all duration-200 touch-manipulation mt-6"
+            >
+              <div className="relative">
+                <img src={zivoDeliveryBanner} alt="Deliver with ZIVO" className="w-full h-[140px] object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 to-transparent flex flex-col justify-center px-5">
+                  <span className="text-sm font-black text-background leading-tight">Deliver with ZIVO</span>
+                  <span className="text-[11px] text-background/80 mt-1">Earn on your schedule</span>
+                </div>
+              </div>
+            </motion.button>
+          )}
         ))}
       </div>
 
