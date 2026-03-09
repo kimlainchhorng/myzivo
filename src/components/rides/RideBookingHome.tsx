@@ -522,7 +522,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const BOTTOM_NAV_HEIGHT = 64;
   const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
 
-  const COLLAPSED_SHEET_HEIGHT = 230 + stops.length * 30;
+  const COLLAPSED_SHEET_HEIGHT = 310 + stops.length * 30;
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
 
   // Route data
