@@ -217,7 +217,7 @@ export default function ZivoReserve() {
                   ZIVO Reserve
                 </h1>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Schedule up to 90 days ahead. Price locked, no surge.
+                  Schedule up to 60 days ahead. Price locked, no surge.
                 </p>
               </div>
 
