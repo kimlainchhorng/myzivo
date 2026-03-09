@@ -251,6 +251,7 @@ const AppHome = () => {
         <div className="bg-background relative">
           {/* Service Tabs — Pill Chips */}
           <div className="flex items-center gap-2 px-4 pt-safe pb-2 overflow-hidden">
+            {homeTabs.map((tab) => {
               const isActive = activeHomeTab === tab.id;
               return (
                 <motion.button
