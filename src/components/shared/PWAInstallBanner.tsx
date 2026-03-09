@@ -28,6 +28,8 @@ export function PWAInstallBanner() {
     if (window.matchMedia("(display-mode: standalone)").matches) return;
     // Don't show on desktop
     if (!isMobile) return;
+    // Don't interrupt full-screen ride booking flows
+    if (location.pathname.startsWith("/rides")) return;
     // Don't show if dismissed recently (7 days)
     const dismissed = localStorage.getItem("pwa_banner_dismissed");
     if (dismissed && Date.now() - Number(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
