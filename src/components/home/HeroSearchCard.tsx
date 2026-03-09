@@ -24,15 +24,18 @@ export default function HeroSearchCard() {
   const navigate = useNavigate();
 
   const handleSearch = () => {
+    if (activeTab === "flights") {
+      toast("Coming Soon!", { description: "ZIVO Flights is launching soon. Stay tuned!", duration: 3000 });
+      return;
+    }
     const routes: Record<string, string> = {
-      flights: "/flights",
       hotels: "/hotels",
       cars: "/rent-car",
       rides: "/rides",
       eats: "/eats",
     };
     toast.success(`Searching ${activeTab}...`, { duration: 1500 });
-    navigate(routes[activeTab] || "/flights");
+    navigate(routes[activeTab] || "/");
   };
 
   return (
