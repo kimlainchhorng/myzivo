@@ -37,6 +37,7 @@ const Index = lazy(() => import("./pages/Index"));
 const AppHome = lazy(() => import("./pages/app/AppHome"));
 const AppTravel = lazy(() => import("./pages/app/AppTravel"));
 const AppMore = lazy(() => import("./pages/app/AppMore"));
+const ServicesPage = lazy(() => import("./pages/app/ServicesPage"));
 const UnifiedDashboard = lazy(() => import("./pages/app/UnifiedDashboard"));
 const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
 const WalletPage = lazy(() => import("./pages/app/WalletPage"));
