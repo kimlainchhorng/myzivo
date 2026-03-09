@@ -1,3 +1,4 @@
+// Manage Payment Methods - Stripe real card management
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
