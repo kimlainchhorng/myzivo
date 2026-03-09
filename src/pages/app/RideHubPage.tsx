@@ -146,9 +146,9 @@ export default function RideHubPage() {
       title="Zivo Ride"
       showBack
       onBack={() => navigate("/")}
-      fixedHeight={activeTab === "book"}
+      fixedHeight={activeTab === "book" || activeTab === "reserve"}
       hideHeader={activeTab === "book"}
-      className={activeTab === "book" ? "overflow-hidden !pb-0" : ""}
+      className={activeTab === "book" ? "overflow-hidden !pb-0" : activeTab === "reserve" ? "overflow-hidden !pb-0" : ""}
     >
       {/* Tab bar — hidden for "book" since RideBookingHome renders its own header + tabs */}
       {activeTab !== "book" && (
@@ -178,7 +178,9 @@ export default function RideHubPage() {
       )}
 
       {/* Tab content */}
-      <div className={cn(activeTab === "book" ? "h-full min-h-0" : "pb-6")}>
+      <div className={cn(
+        activeTab === "book" || activeTab === "reserve" ? "h-full min-h-0 flex-1" : "pb-6"
+      )}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -186,10 +188,10 @@ export default function RideHubPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className={cn(activeTab === "book" && "h-full min-h-0")}
+            className={cn((activeTab === "book" || activeTab === "reserve") && "h-full min-h-0")}
           >
             {activeTab === "book" && <RideBookingHome />}
-            {activeTab === "reserve" && <div className=""><ZivoReserve /></div>}
+            {activeTab === "reserve" && <ZivoReserve />}
             {activeTab === "search" && <div className="p-4"><RideQuickSearch /></div>}
             {activeTab === "history" && <div className="p-4"><RideTripHistory /></div>}
             {activeTab === "calendar" && <div className="p-4"><RideScheduleCalendar /></div>}
