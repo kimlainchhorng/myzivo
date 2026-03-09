@@ -3,6 +3,7 @@
  * Premium super-app style with glassmorphism, layered banners, staggered animations
  */
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Car, Shield, MapPin, Sparkles, Package, Gift, Crown,
@@ -170,6 +171,19 @@ const badgeStyles = {
 /* ── Page ── */
 export default function ServicesPage() {
   const navigate = useNavigate();
+  const [runningLabel, setRunningLabel] = useState<string | null>(null);
+
+  const handleServiceClick = (service: ServiceItem) => {
+    if (service.label === "Ride" || service.label === "Rental Cars" || service.label === "Car Rental" || service.label === "Reserve") {
+      setRunningLabel(service.label);
+      setTimeout(() => {
+        setRunningLabel(null);
+        navigate(service.href);
+      }, 600);
+    } else {
+      navigate(service.href);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-28 relative">
@@ -245,7 +259,7 @@ export default function ServicesPage() {
                 {category.services.map((service, idx) => (
                   <motion.button
                     key={service.label}
-                    onClick={() => navigate(service.href)}
+                    onClick={() => handleServiceClick(service)}
                     whileTap={{ scale: 0.92 }}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -282,7 +296,10 @@ export default function ServicesPage() {
                         <img
                           src={service.image}
                           alt={service.label}
-                          className="w-9 h-9 object-contain transition-transform duration-200 group-hover:scale-110"
+                          className={cn(
+                            "w-9 h-9 object-contain transition-transform duration-200 group-hover:scale-110",
+                            runningLabel === service.label && "animate-car-run"
+                          )}
                         />
                       ) : service.icon ? (
                         <service.icon className="w-6 h-6 text-muted-foreground transition-colors duration-200 group-hover:text-primary" />
