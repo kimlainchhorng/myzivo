@@ -835,7 +835,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setIsLoadingRoute(true);
     setRouteData(null);
 
-    const waypoints = stopWaypoints || [];
+    // Use explicit waypoints if provided, otherwise build from current stops state
+    const waypoints = stopWaypoints ?? stops
+      .filter(s => s.place && s.place.lat && s.place.lng)
+      .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
 
     try {
       const { data, error } = await supabase.functions.invoke("maps-route", {
