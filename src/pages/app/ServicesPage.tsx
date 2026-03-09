@@ -296,7 +296,10 @@ export default function ServicesPage() {
                         <img
                           src={service.image}
                           alt={service.label}
-                          className="w-9 h-9 object-contain transition-transform duration-200 group-hover:scale-110"
+                          className={cn(
+                            "w-9 h-9 object-contain transition-transform duration-200 group-hover:scale-110",
+                            runningLabel === service.label && "animate-car-run"
+                          )}
                         />
                       ) : service.icon ? (
                         <service.icon className="w-6 h-6 text-muted-foreground transition-colors duration-200 group-hover:text-primary" />
