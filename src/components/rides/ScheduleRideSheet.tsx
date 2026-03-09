@@ -50,7 +50,7 @@ export default function ScheduleRideSheet({
   onSchedule,
   onClose,
 }: ScheduleRideSheetProps) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [recurring, setRecurring] = useState("none");
   const [customDays, setCustomDays] = useState<string[]>([]);
