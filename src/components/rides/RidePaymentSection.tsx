@@ -462,30 +462,66 @@ export default function RidePaymentSection({
 
       {/* Authorize button — full bleed */}
       <div className="-mx-5 px-5 pt-3 pb-2 bg-background sticky bottom-0">
-        <Button
-          className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-xl shadow-foreground/15 gap-2 active:scale-[0.97] transition-all duration-200"
-          onClick={() => {
-            if (selectedCardId) {
-              onAuthorizeWithSavedCard(selectedCardId);
-            } else {
-              onAuthorizeWithNewCard();
-            }
-          }}
-          disabled={isSubmitting}
-        >
-          <Shield className="w-5 h-5" />
-          {isSubmitting ? (
-            <span className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
-              Authorizing...
-            </span>
-          ) : (
-            `Authorize $${price.toFixed(2)} · ${vehicleName}`
-          )}
-        </Button>
-        <p className="text-[10px] text-muted-foreground text-center mt-2">
-          Pre-authorized · Final charge after ride
-        </p>
+        {!loadingCards && savedCards.length === 0 && !selectedCardId ? (
+          <>
+            {/* No card saved — prompt to add one */}
+            <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 mb-3 text-center space-y-2">
+              <CreditCard className="w-8 h-8 text-primary mx-auto" />
+              <p className="text-sm font-bold text-foreground">Add a card to continue</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                A payment method is required to book your ride. Your card will only be pre-authorized — the final charge is applied after your trip.
+              </p>
+              <Button
+                onClick={handleAddCard}
+                disabled={addingCard}
+                className="w-full h-12 rounded-xl font-bold gap-2 bg-primary text-primary-foreground hover:bg-primary/90 mt-1"
+              >
+                {addingCard ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                    Setting up...
+                  </span>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    Add Payment Card
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 justify-center text-[10px] text-muted-foreground">
+              <Shield className="w-3 h-3" />
+              <span>256-bit encryption · Secured by Stripe</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <Button
+              className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-xl shadow-foreground/15 gap-2 active:scale-[0.97] transition-all duration-200"
+              onClick={() => {
+                if (selectedCardId) {
+                  onAuthorizeWithSavedCard(selectedCardId);
+                } else {
+                  onAuthorizeWithNewCard();
+                }
+              }}
+              disabled={isSubmitting}
+            >
+              <Shield className="w-5 h-5" />
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                  Authorizing...
+                </span>
+              ) : (
+                `Authorize $${price.toFixed(2)} · ${vehicleName}`
+              )}
+            </Button>
+            <p className="text-[10px] text-muted-foreground text-center mt-2">
+              Pre-authorized · Final charge after ride
+            </p>
+          </>
+        )}
       </div>
 
       {paymentFailed && (
