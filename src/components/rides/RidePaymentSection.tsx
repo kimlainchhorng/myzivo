@@ -376,14 +376,14 @@ export default function RidePaymentSection({
     <div className="space-y-3">
       <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Payment</p>
 
-      {/* Saved cards */}
-      <div className="rounded-2xl bg-card border border-border/20 overflow-hidden">
-        {loadingCards ? (
-          <div className="p-4 flex items-center justify-center">
-            <div className="w-5 h-5 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-          <>
+      {/* Saved cards — only show card list when cards exist */}
+      {loadingCards ? (
+        <div className="rounded-2xl bg-card border border-border/20 p-4 flex items-center justify-center">
+          <div className="w-5 h-5 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : savedCards.length > 0 ? (
+        <>
+          <div className="rounded-2xl bg-card border border-border/20 overflow-hidden">
             {savedCards.map((card) => (
               <button
                 key={card.id}
@@ -395,7 +395,6 @@ export default function RidePaymentSection({
                     : "hover:bg-muted/10"
                 )}
               >
-                {/* Card brand icon */}
                 <div className="w-10 h-7 rounded-md bg-muted/30 border border-border/20 flex items-center justify-center shrink-0">
                   <span className="text-xs font-bold text-foreground uppercase">{card.brand.slice(0, 4)}</span>
                 </div>
@@ -428,7 +427,7 @@ export default function RidePaymentSection({
               </button>
             ))}
 
-            {/* Add new card */}
+            {/* Add another card */}
             <button
               onClick={handleAddCard}
               disabled={addingCard}
@@ -446,19 +445,19 @@ export default function RidePaymentSection({
               </span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
-          </>
-        )}
-      </div>
+          </div>
 
-      {/* Apple Pay / Google Pay note */}
-      <div className="rounded-2xl bg-card border border-border/20 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <Smartphone className="w-4 h-4 text-muted-foreground shrink-0" />
-          <span className="text-xs text-muted-foreground flex-1">
-            Apple Pay & Google Pay available at checkout if no saved card selected
-          </span>
-        </div>
-      </div>
+          {/* Apple Pay / Google Pay note */}
+          <div className="rounded-2xl bg-card border border-border/20 px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Smartphone className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="text-xs text-muted-foreground flex-1">
+                Apple Pay & Google Pay available at checkout if no saved card selected
+              </span>
+            </div>
+          </div>
+        </>
+      ) : null}
 
       {/* Authorize button — full bleed */}
       <div className="-mx-5 px-5 pt-3 pb-2 bg-background sticky bottom-0">
