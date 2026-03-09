@@ -299,6 +299,18 @@ const Profile = () => {
                         </>
                       )}
                     </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl touch-manipulation active:scale-[0.98]"
+                      onClick={async () => {
+                        await signOut();
+                        navigate("/");
+                      }}
+                    >
+                      Sign out
+                    </Button>
                   </form>
                 </Form>
               </CardContent>
