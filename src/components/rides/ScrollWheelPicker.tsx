@@ -121,9 +121,9 @@ function ScrollWheelColumn({
 
 /* ─── Full Date+Time Wheel Picker ─── */
 interface ScrollWheelPickerProps {
-  days: { label: string }[];
-  selectedDayIdx: number;
-  onDayChange: (idx: number) => void;
+  days?: { label: string }[];
+  selectedDayIdx?: number;
+  onDayChange?: (idx: number) => void;
   hours: number[];
   selectedHourIdx: number;
   onHourChange: (idx: number) => void;
@@ -133,6 +133,7 @@ interface ScrollWheelPickerProps {
   amPm: "AM" | "PM";
   onAmPmChange: (val: "AM" | "PM") => void;
   compact?: boolean;
+  hideDays?: boolean;
 }
 
 export default function ScrollWheelPicker({
