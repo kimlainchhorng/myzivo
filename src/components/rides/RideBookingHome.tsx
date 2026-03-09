@@ -766,9 +766,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
     }
 
-    // Block same-location trips
-    if (isSameLocation(pickupData, place)) {
-      toast.error("Pickup and destination can't be the same");
+    // Block same-location trips unless there are intermediate stops (round trip)
+    const hasStops = stopsRef.current.some(s => s.place && s.place.lat && s.place.lng);
+    if (isSameLocation(pickupData, place) && !hasStops) {
+      toast.error("Pickup and destination can't be the same. Add a stop for round trips.");
       return;
     }
 
@@ -903,16 +904,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   /* ─── Fetch route (for initial route + confirm search) ─── */
   const fetchRoute = async (from: PlaceData, to: PlaceData, stopWaypoints?: { lat: number; lng: number }[]) => {
     if (!from.lat || !to.lat) return;
-    if (isSameLocation(from, to)) {
+    const waypoints = stopWaypoints ?? stopsRef.current
+      .filter(s => s.place && s.place.lat && s.place.lng)
+      .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+    if (isSameLocation(from, to) && waypoints.length === 0) {
       toast.error("Pickup and destination can't be the same location");
       return;
     }
     setIsLoadingRoute(true);
     setRouteData(null);
 
-    const waypoints = stopWaypoints ?? stopsRef.current
-      .filter(s => s.place && s.place.lat && s.place.lng)
-      .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
 
     console.log("[fetchRoute] waypoints:", waypoints.length, JSON.stringify(waypoints));
     try {
@@ -970,11 +971,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   const handleConfirmSearch = () => {
     if (!pickup || !destination) return;
-    if (isSameLocation(pickup, destination)) {
-      toast.error("Please choose a different destination");
+    const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+    if (isSameLocation(pickup, destination) && wp.length === 0) {
+      toast.error("Add a stop to create a round trip, or choose a different destination");
       return;
     }
-    const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
     fetchRoute(pickup, destination, wp);
   };
 
