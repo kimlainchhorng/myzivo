@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import RideMap from "@/components/maps/RideMap";
+import ScrollWheelPicker from "./ScrollWheelPicker";
 import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
