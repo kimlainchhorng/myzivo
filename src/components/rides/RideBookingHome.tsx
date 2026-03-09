@@ -799,41 +799,25 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setStops(prev => [...prev, { id: Date.now().toString(), place: null, display: "" }]);
   }, [stops.length]);
 
-  // Stop management — NOT wrapped in useCallback so they always use latest fetchRoute/pickup/destination
+  // Stop management — NOT wrapped in useCallback so they always use latest state
   const handleStopSelect = (stopId: string, place: PlaceData) => {
     const updatedStops = stops.map(s => s.id === stopId ? { ...s, place, display: place.address } : s);
     setStops(updatedStops);
     
     // Immediately re-fetch route with the updated stops
-    if (pickup && destination && place.lat && place.lng) {
+    const currentPickup = pickup;
+    const currentDest = destination;
+    console.log("[handleStopSelect] pickup:", currentPickup?.address, "dest:", currentDest?.address, "place:", place.address);
+    
+    if (currentPickup && currentDest && place.lat && place.lng) {
       const wp = updatedStops
         .filter(s => s.place && s.place.lat && s.place.lng)
         .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
       
-      console.log("[handleStopSelect] Re-fetching with waypoints:", JSON.stringify(wp));
-      
-      // Inline route fetch to avoid stale closure issues
-      setIsLoadingRoute(true);
-      supabase.functions.invoke("maps-route", {
-        body: {
-          origin_lat: pickup.lat,
-          origin_lng: pickup.lng,
-          dest_lat: destination.lat,
-          dest_lng: destination.lng,
-          waypoints: wp.length > 0 ? wp : undefined,
-        },
-      }).then(({ data, error }) => {
-        console.log("[handleStopSelect] Route response:", JSON.stringify({ ok: data?.ok, dist: data?.distance_miles, dur: data?.duration_minutes }));
-        if (!error && data?.ok) {
-          setRouteData({
-            distance_miles: data.distance_miles,
-            duration_minutes: data.duration_minutes,
-            polyline: data.polyline,
-            traffic_level: data.traffic_level,
-          });
-        }
-        setIsLoadingRoute(false);
-      }).catch(() => setIsLoadingRoute(false));
+      console.log("[handleStopSelect] Re-fetching with", wp.length, "waypoints");
+      fetchRoute(currentPickup, currentDest, wp);
+    } else {
+      console.warn("[handleStopSelect] Missing pickup or destination, skipping route fetch");
     }
   };
 
@@ -841,32 +825,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     const updatedStops = stops.filter(s => s.id !== stopId);
     setStops(updatedStops);
     
-    // Re-fetch route without the removed stop
     if (pickup && destination) {
       const wp = updatedStops
         .filter(s => s.place && s.place.lat && s.place.lng)
         .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-      
-      setIsLoadingRoute(true);
-      supabase.functions.invoke("maps-route", {
-        body: {
-          origin_lat: pickup.lat,
-          origin_lng: pickup.lng,
-          dest_lat: destination.lat,
-          dest_lng: destination.lng,
-          waypoints: wp.length > 0 ? wp : undefined,
-        },
-      }).then(({ data, error }) => {
-        if (!error && data?.ok) {
-          setRouteData({
-            distance_miles: data.distance_miles,
-            duration_minutes: data.duration_minutes,
-            polyline: data.polyline,
-            traffic_level: data.traffic_level,
-          });
-        }
-        setIsLoadingRoute(false);
-      }).catch(() => setIsLoadingRoute(false));
+      fetchRoute(pickup, destination, wp);
     }
   };
 
