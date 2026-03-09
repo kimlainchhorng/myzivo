@@ -760,7 +760,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         }
       );
     }
-  }, [decodedRoute, pickupCoords, dropoffCoords, clearRoute, mapReady]);
+  }, [decodedRoute, pickupCoords, dropoffCoords, stopCoords, clearRoute, mapReady]);
 
   // ─── Driver marker (car icon) ───
   useEffect(() => {
