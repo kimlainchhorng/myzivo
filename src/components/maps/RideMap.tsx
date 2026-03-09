@@ -300,7 +300,7 @@ function createPickupPinSvg(): string {
 }
 
 function createDropoffPinSvg(): string {
-  // Black rounded square with "Z" — distinct from circular green pickup
+  // Black rounded square with "D" — destination marker, distinct from green circular pickup
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
       <defs>
@@ -310,7 +310,7 @@ function createDropoffPinSvg(): string {
       </defs>
       <rect x="4" y="4" width="36" height="36" rx="10" fill="#111827" filter="url(#sd)"/>
       <rect x="10" y="10" width="24" height="24" rx="6" fill="#fff"/>
-      <text x="22" y="27" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="15" fill="#111827">E</text>
+      <text x="22" y="27" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="15" fill="#111827">D</text>
     </svg>
   `)}`;
 }
