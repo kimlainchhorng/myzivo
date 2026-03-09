@@ -522,7 +522,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const BOTTOM_NAV_HEIGHT = 64;
   const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
 
-  const COLLAPSED_SHEET_HEIGHT = 230 + stops.length * 30;
+  const COLLAPSED_SHEET_HEIGHT = 310 + stops.length * 30;
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
 
   // Route data
@@ -1705,6 +1705,25 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   )}
                 </div>
               )}
+
+              {/* Add Stop button */}
+              <div className="px-5 pt-1 pb-1 shrink-0">
+                <button
+                  onClick={handleAddStop}
+                  disabled={stops.length >= MAX_STOPS}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
+                    stops.length >= MAX_STOPS
+                      ? "text-muted-foreground/40 cursor-not-allowed"
+                      : "text-primary hover:bg-primary/10 active:scale-[0.98]"
+                  )}
+                >
+                  <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Plus className="w-3 h-3" />
+                  </div>
+                  Add Stop
+                </button>
+              </div>
             </div>
 
             {/* Choose a ride button — collapsed */}
