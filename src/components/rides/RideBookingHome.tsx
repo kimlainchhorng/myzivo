@@ -1590,7 +1590,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             {pickup && destination && (
               <div className="px-4 pt-2 shrink-0 bg-background border-t border-border/10" style={{ paddingBottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM} + 12px)` }}>
                 <Button
-                  className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
+                  className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
                   onClick={handleConfirmSearch}
                   disabled={isLoadingRoute}
                 >
