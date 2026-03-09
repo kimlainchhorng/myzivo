@@ -214,8 +214,6 @@ export default function ScrollWheelPicker({
         />
       </div>
 
-
-    </motion.div>
     </motion.div>
   );
 }
