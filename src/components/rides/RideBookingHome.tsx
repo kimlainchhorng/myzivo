@@ -539,10 +539,45 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const COLLAPSED_SHEET_HEIGHT = 330 + stops.length * 56 + (routeData ? 52 : 0);
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
 
-  // Driver tracking
+  // Driver tracking — uses realtime data from useRideRealtime
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [driverEta, setDriverEta] = useState(MOCK_DRIVER.etaMin);
+  const [driverEta, setDriverEta] = useState(activeDriver.etaMin);
   const trackingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Sync driver coords from realtime hook
+  useEffect(() => {
+    if (rideRealtime.driverCoords) {
+      setDriverCoords(rideRealtime.driverCoords);
+    }
+  }, [rideRealtime.driverCoords]);
+
+  // React to realtime status changes from the database
+  useEffect(() => {
+    if (!rideRealtime.status || !rideRequestId) return;
+
+    const statusToView: Record<string, ViewStep> = {
+      searching: "searching",
+      driver_assigned: "driver-assigned",
+      driver_en_route: "driver-en-route",
+      trip_in_progress: "trip-in-progress",
+      completed: "trip-complete",
+      cancelled: "home",
+    };
+
+    const targetView = statusToView[rideRealtime.status];
+    if (targetView && targetView !== viewStep) {
+      setViewStep(targetView);
+      if (rideRealtime.status === "driver_assigned") {
+        toast.success("Driver found! On their way.");
+      } else if (rideRealtime.status === "driver_en_route") {
+        toast.info("Your driver is en route!");
+      } else if (rideRealtime.status === "trip_in_progress") {
+        toast.info("Trip started! Heading to destination.");
+      } else if (rideRealtime.status === "completed") {
+        toast.success("You've arrived! Trip complete.");
+      }
+    }
+  }, [rideRealtime.status, rideRequestId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch user location on mount
   useEffect(() => {
@@ -551,100 +586,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-advance: searching → driver-assigned after 4s
+  // Fallback: if no realtime update after 30s in "searching", show waiting message
   useEffect(() => {
     if (viewStep !== "searching") return;
-    const t = setTimeout(async () => {
-      setViewStep("driver-assigned");
-      if (rideRequestId) {
-        await supabase.from("ride_requests").update({ status: "driver_assigned" }).eq("id", rideRequestId);
-      }
-    }, 4000);
-    return () => clearTimeout(t);
-  }, [viewStep, rideRequestId]);
-
-  // Auto-advance: driver-assigned → driver-en-route after 5s
-  useEffect(() => {
-    if (viewStep !== "driver-assigned") return;
-    setDriverEta(MOCK_DRIVER.etaMin);
     const t = setTimeout(() => {
-      setViewStep("driver-en-route");
-    }, 5000);
+      if (viewStep === "searching") {
+        toast.info("Still looking for a driver nearby…");
+      }
+    }, 30000);
     return () => clearTimeout(t);
   }, [viewStep]);
-
-  // Driver en-route animation: move toward pickup
-  useEffect(() => {
-    if (viewStep !== "driver-en-route") return;
-    if (!pickup) return;
-
-    const startLat = pickup.lat + 0.01;
-    const startLng = pickup.lng - 0.008;
-    setDriverCoords({ lat: startLat, lng: startLng });
-
-    let step = 0;
-    const interval = setInterval(() => {
-      step++;
-      const progress = Math.min(step / 20, 1);
-      setDriverCoords({
-        lat: startLat + (pickup.lat - startLat) * progress,
-        lng: startLng + (pickup.lng - startLng) * progress,
-      });
-      setDriverEta(Math.max(0, MOCK_DRIVER.etaMin - Math.floor(progress * MOCK_DRIVER.etaMin)));
-
-      if (progress >= 1) {
-        clearInterval(interval);
-        setViewStep("trip-in-progress");
-      }
-    }, 1500);
-
-    trackingIntervalRef.current = interval;
-    return () => clearInterval(interval);
-  }, [viewStep, pickup]);
-
-  // Auto-advance: trip-in-progress → trip-complete after 8s
-  useEffect(() => {
-    if (viewStep !== "trip-in-progress") return;
-
-    // Move driver toward destination
-    if (pickup && destination) {
-      const startLat = pickup.lat;
-      const startLng = pickup.lng;
-      let step = 0;
-
-      const interval = setInterval(() => {
-        step++;
-        const progress = Math.min(step / 20, 1);
-        setDriverCoords({
-          lat: startLat + (destination.lat - startLat) * progress,
-          lng: startLng + (destination.lng - startLng) * progress,
-        });
-      }, 400);
-
-      trackingIntervalRef.current = interval;
-
-      const t = setTimeout(async () => {
-        clearInterval(interval);
-        setViewStep("trip-complete");
-        if (rideRequestId) {
-          await supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
-        }
-      }, 8000);
-
-      return () => {
-        clearInterval(interval);
-        clearTimeout(t);
-      };
-    }
-
-    const t = setTimeout(async () => {
-      setViewStep("trip-complete");
-      if (rideRequestId) {
-        await supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
-      }
-    }, 8000);
-    return () => clearTimeout(t);
-  }, [viewStep, pickup, destination, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
     getCurrentLocation()
