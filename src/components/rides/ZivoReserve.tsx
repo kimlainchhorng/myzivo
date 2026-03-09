@@ -164,7 +164,7 @@ export default function ZivoReserve() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-8rem)] flex flex-col bg-background">
+    <div className="h-full flex flex-col bg-background">
       <AnimatePresence mode="wait">
         {/* ─── LANDING SCREEN ─── */}
         {screen === "landing" && (
@@ -173,10 +173,10 @@ export default function ZivoReserve() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, x: -30 }}
-            className="flex flex-col flex-1"
+            className="flex flex-col h-full"
           >
-            {/* Hero image — cinematic banner */}
-            <div className="relative w-full h-[220px] overflow-hidden rounded-b-[2rem]">
+            {/* Hero image — compact */}
+            <div className="relative w-full h-[200px] shrink-0 overflow-hidden rounded-b-[2rem]">
               <img
                 src={reserveHero}
                 alt="ZIVO Reserve — schedule your ride"
@@ -185,48 +185,50 @@ export default function ZivoReserve() {
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
             </div>
 
-            {/* Content */}
-            <div className="flex-1 px-6 pt-8 pb-6 flex flex-col">
-              <motion.h1
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-[1.65rem] font-black text-foreground tracking-tight leading-tight"
-              >
-                ZIVO Reserve
-              </motion.h1>
+            {/* Content — fills remaining space, no scroll */}
+            <div className="flex-1 min-h-0 px-6 pt-6 pb-5 flex flex-col justify-between">
+              <div>
+                <motion.h1
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-[1.65rem] font-black text-foreground tracking-tight leading-tight"
+                >
+                  ZIVO Reserve
+                </motion.h1>
 
-              <div className="mt-8 space-y-6 flex-1">
-                {benefits.map((b, i) => {
-                  const Icon = b.icon;
-                  return (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 + i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-                      className="flex items-start gap-4"
-                    >
-                      <div className="w-10 h-10 rounded-full border border-border/60 flex items-center justify-center shrink-0">
-                        <Icon className="w-[18px] h-[18px] text-foreground/80" strokeWidth={1.5} />
-                      </div>
-                      <p className="text-[15px] font-medium text-foreground leading-snug pt-2">
-                        {b.title}
-                      </p>
-                    </motion.div>
-                  );
-                })}
+                <div className="mt-6 space-y-5">
+                  {benefits.map((b, i) => {
+                    const Icon = b.icon;
+                    return (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 + i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        className="flex items-start gap-4"
+                      >
+                        <div className="w-10 h-10 rounded-full border border-border/60 flex items-center justify-center shrink-0">
+                          <Icon className="w-[18px] h-[18px] text-foreground/80" strokeWidth={1.5} />
+                        </div>
+                        <p className="text-[15px] font-medium text-foreground leading-snug pt-2">
+                          {b.title}
+                        </p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* CTA */}
+              {/* CTA — pinned to bottom */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.55 }}
-                className="pt-6"
+                className="pt-4"
               >
                 <Button
-                  className="w-full h-14 rounded-2xl text-base font-bold shadow-lg bg-foreground text-background hover:bg-foreground/90 active:scale-95 transition-transform"
+                  className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-transform shadow-lg shadow-primary/30"
                   onClick={handleReserve}
                 >
                   Reserve a ride
