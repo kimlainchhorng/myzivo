@@ -12882,6 +12882,10 @@ export type Database = {
           onboarding_status: string
           payouts_enabled: boolean
           stripe_account_id: string
+          stripe_cardholder_id: string | null
+          stripe_connect_account_id: string | null
+          stripe_financial_account_id: string | null
+          stripe_issuing_card_id: string | null
           updated_at: string
         }
         Insert: {
@@ -12892,6 +12896,10 @@ export type Database = {
           onboarding_status?: string
           payouts_enabled?: boolean
           stripe_account_id: string
+          stripe_cardholder_id?: string | null
+          stripe_connect_account_id?: string | null
+          stripe_financial_account_id?: string | null
+          stripe_issuing_card_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -12902,6 +12910,10 @@ export type Database = {
           onboarding_status?: string
           payouts_enabled?: boolean
           stripe_account_id?: string
+          stripe_cardholder_id?: string | null
+          stripe_connect_account_id?: string | null
+          stripe_financial_account_id?: string | null
+          stripe_issuing_card_id?: string | null
           updated_at?: string
         }
         Relationships: []
