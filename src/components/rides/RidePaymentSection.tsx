@@ -368,12 +368,19 @@ export default function RidePaymentSection({
             {/* Add new card */}
             <button
               onClick={handleAddCard}
-              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/10 transition-all text-left"
+              disabled={addingCard}
+              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/10 transition-all text-left disabled:opacity-50"
             >
               <div className="w-10 h-7 rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center shrink-0">
-                <Plus className="w-4 h-4 text-muted-foreground" />
+                {addingCard ? (
+                  <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 text-muted-foreground" />
+                )}
               </div>
-              <span className="text-sm font-semibold text-foreground flex-1">Add new card</span>
+              <span className="text-sm font-semibold text-foreground flex-1">
+                {addingCard ? "Setting up..." : "Add new card"}
+              </span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
           </>
