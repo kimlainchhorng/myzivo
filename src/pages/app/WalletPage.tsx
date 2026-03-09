@@ -42,13 +42,13 @@ import AddCardForm from "@/components/wallet/AddCardForm";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { format } from "date-fns";
 
-function PaymentMethodCard({ method, onSetDefault, onDelete }: {
-  method: PaymentMethod;
+function StripeCardItem({ card, onSetDefault, onDelete }: {
+  card: StripeCard;
   onSetDefault: () => void;
   onDelete: () => void;
 }) {
   return (
-    <Card className={`border-border/40 transition-all duration-200 ${method.is_default ? "border-primary/30 shadow-sm shadow-primary/5" : "hover:border-primary/15"}`}>
+    <Card className={`border-border/40 transition-all duration-200 ${card.is_default ? "border-primary/30 shadow-sm shadow-primary/5" : "hover:border-primary/15"}`}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -57,18 +57,18 @@ function PaymentMethodCard({ method, onSetDefault, onDelete }: {
             </div>
             <div>
               <p className="font-bold text-sm flex items-center gap-2">
-                {method.brand?.toUpperCase() || "Card"} •••• {method.last_four}
-                {method.is_default && (
+                {card.brand?.toUpperCase() || "Card"} •••• {card.last4}
+                {card.is_default && (
                   <Badge variant="outline" className="text-[8px] font-bold border-primary/20 text-primary bg-primary/5">Default</Badge>
                 )}
               </p>
               <p className="text-xs text-muted-foreground">
-                Expires {method.exp_month}/{method.exp_year}
+                Expires {card.exp_month}/{card.exp_year}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-1">
-            {!method.is_default && (
+            {!card.is_default && (
               <Button variant="ghost" size="icon" onClick={onSetDefault} className="rounded-xl">
                 <Star className="w-4 h-4" />
               </Button>
@@ -83,7 +83,7 @@ function PaymentMethodCard({ method, onSetDefault, onDelete }: {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Remove payment method?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will remove the card ending in {method.last_four} from your wallet.
+                    This will remove the card ending in {card.last4} from your wallet.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -98,7 +98,6 @@ function PaymentMethodCard({ method, onSetDefault, onDelete }: {
     </Card>
   );
 }
-
 export default function WalletPage() {
   const [activeSection, setActiveSection] = useState<"cards" | "history" | "credits">("cards");
   
