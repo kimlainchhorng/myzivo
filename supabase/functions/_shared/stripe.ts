@@ -1,1 +1,1 @@
-export { default } from "npm:stripe@18.5.0";
+export { default } from "https://esm.sh/stripe@18.5.0";
