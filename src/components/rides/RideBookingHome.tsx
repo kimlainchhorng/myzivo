@@ -802,16 +802,18 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, []);
 
   // Re-fetch route when stops change (only if we already have a route)
-  const stopsWithCoords = stops.filter(s => s.place && s.place.lat && s.place.lng);
-  const stopsKey = stopsWithCoords.map(s => `${s.place!.lat},${s.place!.lng}`).join("|");
-  const prevStopsKeyRef = useRef(stopsKey);
+  const prevStopsKeyRef = useRef("");
   useEffect(() => {
-    if (prevStopsKeyRef.current !== stopsKey && pickup && destination && viewStep === "route-preview") {
-      prevStopsKeyRef.current = stopsKey;
-      const wp = stopsWithCoords.map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+    const currentStopsWithCoords = stops.filter(s => s.place && s.place.lat && s.place.lng);
+    const currentStopsKey = currentStopsWithCoords.map(s => `${s.place!.lat},${s.place!.lng}`).join("|");
+    
+    if (prevStopsKeyRef.current !== currentStopsKey && pickup && destination) {
+      console.log("[RideBookingHome] Stops changed, re-fetching route with waypoints:", currentStopsWithCoords.length, "viewStep:", viewStep);
+      prevStopsKeyRef.current = currentStopsKey;
+      const wp = currentStopsWithCoords.map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
       fetchRoute(pickup, destination, wp);
     }
-  }, [stopsKey, pickup, destination, viewStep]);
+  }, [stops, pickup, destination]);
 
   const handleSavedPlace = (address: string) => {
     setDestinationDisplay(address);
