@@ -24,6 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import RideMap from "@/components/maps/RideMap";
 import ScrollWheelPicker from "./ScrollWheelPicker";
+import DateScrollWheelPicker from "./DateScrollWheelPicker";
 import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
@@ -476,7 +477,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Schedule state
   const [showSchedule, setShowSchedule] = useState(initialSchedule);
-  const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+  const [scheduledDate, setScheduledDate] = useState<Date | null>(new Date());
   const [scheduleHour, setScheduleHour] = useState(() => {
     const h = new Date().getHours();
     return h < 23 ? h + 1 : 0;
@@ -1389,30 +1390,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                           <X className="w-3.5 h-3.5 text-muted-foreground" />
                         </button>
                       </div>
-                      {/* Date chips — today + next 6 days */}
-                      <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
-                        {Array.from({ length: 7 }, (_, i) => {
-                          const d = new Date();
-                          d.setDate(d.getDate() + i);
-                          d.setHours(0, 0, 0, 0);
-                          const isSelected = scheduledDate?.toDateString() === d.toDateString();
-                          return (
-                            <button
-                              key={i}
-                              onClick={() => setScheduledDate(new Date(d))}
-                              className={cn(
-                                "flex flex-col items-center min-w-[52px] px-2 py-2 rounded-xl border text-center transition-all active:scale-95",
-                                isSelected
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : "bg-card border-border/30 hover:border-primary/30"
-                              )}
-                            >
-                              <span className="text-[10px] font-semibold">{i === 0 ? "Today" : d.toLocaleDateString("en-US", { weekday: "short" })}</span>
-                              <span className="text-sm font-bold">{d.getDate()}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                      {/* 2026 Scroll wheel date picker */}
+                      <DateScrollWheelPicker
+                        selectedDate={scheduledDate ?? new Date()}
+                        onDateChange={(d) => setScheduledDate(d)}
+                        compact
+                      />
                       {/* 2026 Scroll wheel time picker */}
                       {(() => {
                         const wheelHours = Array.from({ length: 12 }, (_, i) => i + 1);
