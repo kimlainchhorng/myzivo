@@ -108,32 +108,34 @@ function ScrollColumn({
 /* ─── Benefits List ─── */
 const benefits = [
   {
-    icon: Calendar,
-    title: "Choose your exact pickup time up to 90 days in advance",
-  },
-  {
-    icon: Clock,
-    title: "Extra wait time included to meet your ride",
-  },
-  {
-    icon: Shield,
-    title: "Cancel at no charge up to 60 minutes in advance",
-  },
-  {
     icon: DollarSign,
-    title: "Price locked in at time of reservation — no surge",
+    title: "Price locked",
+    desc: "No surge pricing ever",
   },
   {
     icon: Plane,
-    title: "Flight tracking adjusts pickup to your arrival time",
+    title: "Flight tracking",
+    desc: "Adjusts to your arrival",
   },
   {
     icon: UserCheck,
-    title: "Meet & greet — driver meets you with a name sign",
+    title: "Meet & greet",
+    desc: "Driver meets you by name",
+  },
+  {
+    icon: Shield,
+    title: "Free cancellation",
+    desc: "Up to 60 min before",
+  },
+  {
+    icon: Clock,
+    title: "Extra wait time",
+    desc: "Never miss your ride",
   },
   {
     icon: Zap,
-    title: "Priority matching with top-rated drivers",
+    title: "Top-rated drivers",
+    desc: "Priority matching",
   },
 ];
 
@@ -190,66 +192,80 @@ export default function ZivoReserve() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, x: -30 }}
-            className="flex flex-col h-full overflow-hidden"
+            className="flex flex-col h-full overflow-hidden relative"
           >
-            {/* Hero image — aspect-ratio preserved */}
-            <div className="relative w-full shrink-0 overflow-hidden">
-              <div className="relative w-full" style={{ aspectRatio: '16/7' }}>
-                <img
-                  src={reserveHero}
-                  alt="ZIVO Reserve — schedule your ride"
-                  className="w-full h-full object-cover object-[center_40%]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-              </div>
+            {/* Full-bleed hero background */}
+            <div className="absolute inset-0">
+              <img
+                src={reserveHero}
+                alt="ZIVO Reserve"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20" />
             </div>
 
-            {/* Content — fills remaining, no scroll */}
-            <div className="flex-1 min-h-0 px-5 pt-2 pb-3 flex flex-col justify-between">
-              <div>
-                <motion.h1
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="text-lg font-black text-foreground tracking-tight leading-tight"
-                >
-                  ZIVO Reserve
-                </motion.h1>
-
-                <div className="mt-2.5 space-y-1.5">
-                  {benefits.map((b, i) => {
-                    const Icon = b.icon;
-                    return (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.12 + i * 0.04, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        className="flex items-center gap-2.5"
-                      >
-                        <div className="w-7 h-7 rounded-full border border-border/50 flex items-center justify-center shrink-0">
-                          <Icon className="w-3.5 h-3.5 text-foreground/70" strokeWidth={1.5} />
-                        </div>
-                        <p className="text-[12px] font-medium text-foreground/90 leading-tight">
-                          {b.title}
-                        </p>
-                      </motion.div>
-                    );
-                  })}
+            {/* Content overlay */}
+            <div className="relative z-10 flex flex-col h-full justify-end px-5 pb-5">
+              {/* Title area */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="mb-4"
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30">
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Premium</span>
+                  </div>
                 </div>
-              </div>
+                <h1 className="text-2xl font-black text-foreground tracking-tight leading-tight">
+                  Reserve your ride
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Schedule up to 90 days ahead. Price locked, no surge.
+                </p>
+              </motion.div>
+
+              {/* Benefits grid — 2 columns */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="grid grid-cols-2 gap-2.5 mb-5"
+              >
+                {benefits.map((b, i) => {
+                  const Icon = b.icon;
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 + i * 0.04 }}
+                      className="flex items-start gap-2.5 rounded-xl bg-card/60 backdrop-blur-md border border-border/30 px-3 py-2.5"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4 text-primary" strokeWidth={2} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-foreground leading-tight">{b.title}</p>
+                        <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{b.desc}</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
 
               {/* CTA */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45 }}
-                className="pt-2"
+                transition={{ delay: 0.5 }}
               >
                 <Button
-                  className="w-full h-12 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-transform shadow-lg shadow-primary/30"
+                  className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xl shadow-primary/30"
                   onClick={handleReserve}
                 >
+                  <Calendar className="w-5 h-5 mr-2" />
                   Reserve a ride
                 </Button>
               </motion.div>
