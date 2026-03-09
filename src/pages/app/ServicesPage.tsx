@@ -3,6 +3,7 @@
  * Premium super-app style with glassmorphism, layered banners, staggered animations
  */
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Car, Shield, MapPin, Sparkles, Package, Gift, Crown,
