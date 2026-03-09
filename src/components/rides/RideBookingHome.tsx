@@ -129,6 +129,7 @@ const MOCK_DRIVER = {
 function MapSection({
   pickupCoords,
   dropoffCoords,
+  stopCoords = [],
   driverCoords,
   userLocation,
   routePolyline,
@@ -140,6 +141,7 @@ function MapSection({
 }: {
   pickupCoords?: { lat: number; lng: number } | null;
   dropoffCoords?: { lat: number; lng: number } | null;
+  stopCoords?: { lat: number; lng: number }[];
   driverCoords?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: string | null;
