@@ -419,12 +419,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const { data: savedLocations = [] } = useSavedLocations(user?.id);
 
   // Recent ride destinations from Supabase
-  const [recentDestinations, setRecentDestinations] = useState<{ id: string; address: string; time: string }[]>([]);
+  const [recentDestinations, setRecentDestinations] = useState<{ id: string; address: string; lat: number; lng: number; time: string }[]>([]);
   useEffect(() => {
     if (!user?.id) return;
     supabase
       .from("ride_requests")
-      .select("id, dropoff_address, created_at")
+      .select("id, dropoff_address, dropoff_lat, dropoff_lng, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(5)
@@ -432,10 +432,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         if (data && data.length > 0) {
           setRecentDestinations(
             data
-              .filter((r: any) => r.dropoff_address)
+              .filter((r: any) => r.dropoff_address && r.dropoff_lat && r.dropoff_lng)
               .map((r: any) => ({
                 id: r.id,
                 address: r.dropoff_address,
+                lat: r.dropoff_lat,
+                lng: r.dropoff_lng,
                 time: new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
               }))
           );
