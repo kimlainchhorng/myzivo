@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format, addDays, setHours, setMinutes } from "date-fns";
-import reserveHero from "@/assets/zivo-reserve-hero.jpg";
+import reserveHero from "@/assets/zivo-reserve-hero.png";
 
 type Screen = "landing" | "datetime" | "route" | "confirmed";
 
