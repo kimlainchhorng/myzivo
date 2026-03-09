@@ -175,43 +175,42 @@ export default function ZivoReserve() {
             exit={{ opacity: 0, x: -30 }}
             className="flex flex-col flex-1"
           >
-            {/* Hero image */}
-            <div className="relative w-full h-[240px] overflow-hidden rounded-b-3xl">
+            {/* Hero image — cinematic banner */}
+            <div className="relative w-full h-[220px] overflow-hidden rounded-b-[2rem]">
               <img
                 src={reserveHero}
                 alt="ZIVO Reserve — schedule your ride"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-center"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-              <button
-                onClick={handleBack}
-                className="absolute top-4 left-4 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm border border-border/30 shadow-md flex items-center justify-center"
-              >
-                <ArrowLeft className="w-5 h-5 text-foreground" />
-              </button>
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
             </div>
 
             {/* Content */}
-            <div className="flex-1 px-5 pt-6 pb-4 flex flex-col">
-              <h1 className="text-2xl font-black text-foreground tracking-tight">
+            <div className="flex-1 px-6 pt-8 pb-6 flex flex-col">
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-[1.65rem] font-black text-foreground tracking-tight leading-tight"
+              >
                 ZIVO Reserve
-              </h1>
+              </motion.h1>
 
-              <div className="mt-6 space-y-5 flex-1">
+              <div className="mt-8 space-y-6 flex-1">
                 {benefits.map((b, i) => {
                   const Icon = b.icon;
                   return (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, x: -15 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.15 + i * 0.1 }}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 + i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
                       className="flex items-start gap-4"
                     >
-                      <div className="w-9 h-9 rounded-xl bg-muted/40 flex items-center justify-center shrink-0 mt-0.5">
-                        <Icon className="w-4.5 h-4.5 text-foreground" />
+                      <div className="w-10 h-10 rounded-full border border-border/60 flex items-center justify-center shrink-0">
+                        <Icon className="w-[18px] h-[18px] text-foreground/80" strokeWidth={1.5} />
                       </div>
-                      <p className="text-sm font-medium text-foreground leading-snug pt-1.5">
+                      <p className="text-[15px] font-medium text-foreground leading-snug pt-2">
                         {b.title}
                       </p>
                     </motion.div>
@@ -223,11 +222,11 @@ export default function ZivoReserve() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="pt-4"
+                transition={{ delay: 0.55 }}
+                className="pt-6"
               >
                 <Button
-                  className="w-full h-14 rounded-2xl text-base font-bold shadow-lg bg-foreground text-background hover:bg-foreground/90"
+                  className="w-full h-14 rounded-2xl text-base font-bold shadow-lg bg-foreground text-background hover:bg-foreground/90 active:scale-95 transition-transform"
                   onClick={handleReserve}
                 >
                   Reserve a ride
