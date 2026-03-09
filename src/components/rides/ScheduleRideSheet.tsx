@@ -103,26 +103,14 @@ export default function ScheduleRideSheet({
         </div>
       </div>
 
-      {/* Date picker */}
+      {/* Date picker — 2026 scroll wheel */}
       <div className="px-4 py-3">
         <span className="text-xs font-bold text-foreground mb-2 block">Select Date</span>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className={cn("w-full justify-start text-left h-11 text-sm", !selectedDate && "text-muted-foreground")}>
-              <Calendar className="w-4 h-4 mr-2" />
-              {selectedDate ? format(selectedDate, "EEEE, MMM d, yyyy") : "Pick a date"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <CalendarPicker
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              disabled={(date) => date < new Date()}
-              className={cn("p-3 pointer-events-auto")}
-            />
-          </PopoverContent>
-        </Popover>
+        <DateScrollWheelPicker
+          selectedDate={selectedDate ?? new Date()}
+          onDateChange={(d) => setSelectedDate(d)}
+          compact
+        />
       </div>
 
       {/* Time picker */}
