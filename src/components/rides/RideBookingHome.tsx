@@ -864,6 +864,76 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   };
 
+  const handleSavedPlace = (address: string) => {
+    setDestinationDisplay(address);
+    setDestination({ address, lat: 40.758, lng: -73.9855 });
+    setPickupDisplay("Current Location");
+    const pickupData = userLocation
+      ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
+      : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
+    setPickup(pickupData);
+    fetchRoute(pickupData, { address, lat: 40.758, lng: -73.9855 });
+  };
+
+  /* ─── Fetch route (for initial route + confirm search) ─── */
+  const fetchRoute = async (from: PlaceData, to: PlaceData, stopWaypoints?: { lat: number; lng: number }[]) => {
+    if (!from.lat || !to.lat) return;
+    if (isSameLocation(from, to)) {
+      toast.error("Pickup and destination can't be the same location");
+      return;
+    }
+    setIsLoadingRoute(true);
+    setRouteData(null);
+
+    const waypoints = stopWaypoints ?? stops
+      .filter(s => s.place && s.place.lat && s.place.lng)
+      .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+
+    console.log("[fetchRoute] waypoints:", waypoints.length, JSON.stringify(waypoints));
+    try {
+      const { data, error } = await supabase.functions.invoke("maps-route", {
+        body: {
+          origin_lat: from.lat,
+          origin_lng: from.lng,
+          dest_lat: to.lat,
+          dest_lng: to.lng,
+          waypoints: waypoints.length > 0 ? waypoints : undefined,
+        },
+      });
+      console.log("[fetchRoute] Response:", data?.ok, data?.distance_miles, data?.duration_minutes);
+      if (error) throw error;
+      if (data?.ok) {
+        setRouteData({
+          distance_miles: data.distance_miles,
+          duration_minutes: data.duration_minutes,
+          polyline: data.polyline,
+          traffic_level: data.traffic_level,
+        });
+      } else {
+        const distKm = haversineKm(from.lat, from.lng, to.lat, to.lng);
+        const distMiles = distKm * 0.621371;
+        setRouteData({
+          distance_miles: Math.round(distMiles * 10) / 10,
+          duration_minutes: Math.max(5, Math.round(distMiles * 3)),
+          polyline: null,
+        });
+      }
+    } catch (err) {
+      console.error("[fetchRoute] error:", err);
+      const distKm = haversineKm(from.lat, from.lng, to.lat, to.lng);
+      const distMiles = distKm * 0.621371;
+      setRouteData({
+        distance_miles: Math.round(distMiles * 10) / 10,
+        duration_minutes: Math.max(5, Math.round(distMiles * 3)),
+        polyline: null,
+      });
+    } finally {
+      setIsLoadingRoute(false);
+    }
+    setSheetExpanded(false);
+    setViewStep("route-preview");
+  };
+
   const handleConfirmSearch = () => {
     if (!pickup || !destination) return;
     if (isSameLocation(pickup, destination)) {
