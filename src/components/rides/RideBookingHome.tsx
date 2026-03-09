@@ -407,7 +407,7 @@ function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
 }
 
 /* ─── Main Component ─── */
-export default function RideBookingHome() {
+export default function RideBookingHome({ initialSchedule = false }: { initialSchedule?: boolean } = {}) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { getCurrentLocation } = useCurrentLocation();
@@ -474,7 +474,7 @@ export default function RideBookingHome() {
   const [tip, setTip] = useState<number | null>(null);
 
   // Schedule state
-  const [showSchedule, setShowSchedule] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(initialSchedule);
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
   const [scheduleHour, setScheduleHour] = useState(() => {
     const h = new Date().getHours();
