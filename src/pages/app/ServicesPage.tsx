@@ -22,6 +22,7 @@ import zivoPackageIcon from "@/assets/service-package.png";
 import zivoReserveBanner from "@/assets/zivo-reserve-banner.png";
 import zivoTravelBanner from "@/assets/zivo-travel-banner.png";
 import zivoGroupRideIcon from "@/assets/service-group-ride.png";
+import zivoAlcoholIcon from "@/assets/service-alcohol.png";
 
 /* ── Types ── */
 interface ServiceItem {
