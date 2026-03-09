@@ -129,6 +129,7 @@ const MOCK_DRIVER = {
 function MapSection({
   pickupCoords,
   dropoffCoords,
+  stopCoords = [],
   driverCoords,
   userLocation,
   routePolyline,
@@ -140,6 +141,7 @@ function MapSection({
 }: {
   pickupCoords?: { lat: number; lng: number } | null;
   dropoffCoords?: { lat: number; lng: number } | null;
+  stopCoords?: { lat: number; lng: number }[];
   driverCoords?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: string | null;
@@ -168,6 +170,7 @@ function MapSection({
         <RideMap
           pickupCoords={pickupCoords || null}
           dropoffCoords={dropoffCoords || null}
+          stopCoords={stopCoords}
           driverCoords={driverCoords || null}
           userLocation={userLocation || null}
           showUserLocationDot={showUserLocationDot}
@@ -1164,6 +1167,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             compact
             pickupCoords={pickup}
             dropoffCoords={["route-preview", "ride-options", "confirm-ride", "searching", "pickup-confirm", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep) ? destination : null}
+            stopCoords={stops.filter(s => s.place).map(s => ({ lat: s.place!.lat || 0, lng: s.place!.lng || 0 })).filter(c => c.lat !== 0 && c.lng !== 0)}
             userLocation={userLocation}
             onLocateUser={handleLocateUser}
             routePolyline={routeData?.polyline ?? null}

@@ -73,6 +73,7 @@ function getMapStyle(): google.maps.MapTypeStyle[] {
 interface RideMapProps {
   pickupCoords?: { lat: number; lng: number } | null;
   dropoffCoords?: { lat: number; lng: number } | null;
+  stopCoords?: { lat: number; lng: number }[];
   routePolyline?: string | { lat: number; lng: number }[] | null;
   driverCoords?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
@@ -313,6 +314,22 @@ function createDropoffPinSvg(): string {
   `)}`;
 }
 
+function createStopPinSvg(index: number): string {
+  // Gray circle with stop number — visually distinct from pickup/dropoff
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+      <defs>
+        <filter id="ss" x="-20%" y="-15%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.2"/>
+        </filter>
+      </defs>
+      <circle cx="20" cy="20" r="16" fill="#6b7280" filter="url(#ss)"/>
+      <circle cx="20" cy="20" r="10" fill="#fff"/>
+      <text x="20" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="12" fill="#6b7280">${index + 1}</text>
+    </svg>
+  `)}`;
+}
+
 function createCarSvg(rotation: number): string {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
@@ -442,7 +459,7 @@ function spawnAmbientCars(
   return markers;
 }
 
-function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
+function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, driverCoords, userLocation, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -620,11 +637,28 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       (markersRef as any).__dropoffMarker = dropoffMarker;
     }
 
+    // Stop markers
+    stopCoords.forEach((coord, idx) => {
+      const stopMarker = new google.maps.Marker({
+        position: coord,
+        map,
+        icon: {
+          url: createStopPinSvg(idx),
+          scaledSize: new google.maps.Size(40, 40),
+          anchor: new google.maps.Point(20, 20),
+        },
+        title: `Stop ${idx + 1}`,
+        zIndex: 78,
+      });
+      markersRef.current.push(stopMarker);
+    });
+
     // Fit bounds with generous padding — delay to allow layout to settle
     if (pickupCoords && dropoffCoords) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(pickupCoords);
       bounds.extend(dropoffCoords);
+      stopCoords.forEach((c) => bounds.extend(c));
       if (driverCoords) bounds.extend(driverCoords);
       // Immediate fit
       map.fitBounds(bounds, { top: 80, bottom: 280, left: 60, right: 60 });
@@ -657,7 +691,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     return () => {
       if ((pulseCircleRef as any).__interval) clearInterval((pulseCircleRef as any).__interval);
     };
-  }, [pickupCoords, dropoffCoords, driverCoords, clearAmbientCars, mapReady]);
+  }, [pickupCoords, dropoffCoords, stopCoords, driverCoords, clearAmbientCars, mapReady]);
 
   // ─── Animated route rendering ───
   useEffect(() => {
