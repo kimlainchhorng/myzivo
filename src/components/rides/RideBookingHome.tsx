@@ -822,7 +822,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       console.log("[stops-effect] Re-fetching route with", wp.length, "waypoints");
       // Use the ref to call the latest fetchRoute
       if (fetchRouteRef.current) {
-        fetchRouteRef.current(pickup, destination, wp);
+        fetchRouteRef.current(pickup, destination, wp, { skipViewChange: true });
       }
     }
   }, [stops, pickup, destination]);
