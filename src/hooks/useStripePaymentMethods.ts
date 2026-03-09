@@ -24,7 +24,8 @@ export function useStripePaymentMethods() {
       const { data, error } = await supabase.functions.invoke("manage-payment-methods", {
         body: { action: "list" },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(typeof error === 'string' ? error : error?.message || "Failed to fetch cards");
+      if (data?.error) throw new Error(data.error);
       if (!data?.ok) throw new Error("Failed to fetch cards");
       return (data.cards || []) as StripeCard[];
     },
