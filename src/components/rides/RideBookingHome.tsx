@@ -935,8 +935,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           traffic_level: data.traffic_level,
         });
       } else {
-        const distKm = haversineKm(from.lat, from.lng, to.lat, to.lng);
-        const distMiles = distKm * 0.621371;
+        // Fallback: haversine including waypoints
+        const points = [{ lat: from.lat, lng: from.lng }, ...waypoints, { lat: to.lat, lng: to.lng }];
+        let totalKm = 0;
+        for (let i = 0; i < points.length - 1; i++) {
+          totalKm += haversineKm(points[i].lat, points[i].lng, points[i+1].lat, points[i+1].lng);
+        }
+        const distMiles = totalKm * 0.621371;
         setRouteData({
           distance_miles: Math.round(distMiles * 10) / 10,
           duration_minutes: Math.max(5, Math.round(distMiles * 3)),
@@ -945,8 +950,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       }
     } catch (err) {
       console.error("[fetchRoute] error:", err);
-      const distKm = haversineKm(from.lat, from.lng, to.lat, to.lng);
-      const distMiles = distKm * 0.621371;
+      const points = [{ lat: from.lat, lng: from.lng }, ...waypoints, { lat: to.lat, lng: to.lng }];
+      let totalKm = 0;
+      for (let i = 0; i < points.length - 1; i++) {
+        totalKm += haversineKm(points[i].lat, points[i].lng, points[i+1].lat, points[i+1].lng);
+      }
+      const distMiles = totalKm * 0.621371;
       setRouteData({
         distance_miles: Math.round(distMiles * 10) / 10,
         duration_minutes: Math.max(5, Math.round(distMiles * 3)),
