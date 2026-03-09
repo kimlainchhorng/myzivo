@@ -20,6 +20,7 @@ import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
 import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
 import { SkipToContent } from "./components/shared/SkipToContent";
+import { GlobalViewportMeta } from "@/components/shared/GlobalViewportMeta";
 import { Loader2 } from "lucide-react";
 import { categorizeError } from "@/lib/supabaseErrors";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
@@ -289,24 +290,25 @@ function BrandThemeApplicator() {
 
 const App = () => (
   <ErrorBoundary>
-  <HelmetProvider>
-  <ThemeProvider attribute="class" defaultTheme="system" storageKey="hizovo-theme">
-  <QueryClientProvider client={queryClient}>
-  <BrandProvider>
-    <TooltipProvider>
-      <SkipToContent />
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <CustomerCityProvider>
-          <CurrencyProvider>
-          <UTMProvider>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
+    <HelmetProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" storageKey="hizovo-theme">
+        <QueryClientProvider client={queryClient}>
+          <BrandProvider>
+            <TooltipProvider>
+              <GlobalViewportMeta />
+              <SkipToContent />
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <AuthProvider>
+                  <CustomerCityProvider>
+                    <CurrencyProvider>
+                      <UTMProvider>
+                        <Suspense fallback={<PageLoader />}>
+                          <Routes>
+                            <Route path="/" element={<Index />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/signup" element={<Signup />} />
 
                 {/* App Dashboard */}
                 <Route path="/app" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
