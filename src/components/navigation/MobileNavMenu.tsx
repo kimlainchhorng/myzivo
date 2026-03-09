@@ -133,7 +133,7 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" role="button" tabIndex={0} aria-label="Close menu" onClick={onClose} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClose(); }} />
       
       {/* Menu Panel */}
-      <div className="absolute right-0 top-0 h-full w-full sm:max-w-md bg-card border-l border-border shadow-2xl animate-slide-in-right safe-area-inset">
+      <div className="absolute right-0 top-0 h-full w-full sm:max-w-md bg-card border-l border-border shadow-2xl animate-slide-in-right safe-area-inset flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
@@ -145,13 +145,13 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
         </div>
 
         {/* Scrollable Content */}
-        <ScrollArea className="h-[calc(100vh-140px)]">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="p-4">
             {/* Main Services */}
             {megaMenuData.map((data) => (
               <MobileNavSection key={data.id} data={data} onNavigate={handleNavigate} />
             ))}
-            
+
             {/* More Services */}
             <MobileNavSection data={moreServicesData} onNavigate={handleNavigate} />
 
@@ -187,7 +187,10 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
             {/* Become a Driver Section */}
             <div className="mt-4 pt-4 border-t border-border">
               <button
-                onClick={() => { navigate("/drive"); onClose(); }}
+                onClick={() => {
+                  navigate("/drive");
+                  onClose();
+                }}
                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-rides/10 to-teal-500/10 border border-rides/20 hover:bg-rides/20 transition-colors"
               >
                 <div className="w-10 h-10 rounded-xl gradient-rides flex items-center justify-center">
@@ -214,10 +217,20 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
           </div>
         </ScrollArea>
 
-        {/* Footer Actions */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-card border-t border-border">
+        {/* Footer Actions (always visible) */}
+        <div
+          className="p-4 bg-card border-t border-border"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+        >
           {user ? (
-            <Button variant="outline" className="w-full" onClick={() => { signOut(); onClose(); }}>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                signOut();
+                onClose();
+              }}
+            >
               Sign out
             </Button>
           ) : (
