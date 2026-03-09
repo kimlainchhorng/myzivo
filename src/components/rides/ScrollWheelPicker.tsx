@@ -214,8 +214,8 @@ export default function ScrollWheelPicker({
         />
       </div>
 
-      {/* Bottom accent line */}
-      <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+    </motion.div>
     </motion.div>
   );
 }
