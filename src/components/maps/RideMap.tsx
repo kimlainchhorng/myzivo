@@ -745,7 +745,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
             } else {
               const renderer = new google.maps.DirectionsRenderer({
                 map, directions: result, suppressMarkers: true,
-                polylineOptions: { strokeColor: "#10b981", strokeWeight: 5, strokeOpacity: 0.85 },
+                polylineOptions: { strokeColor: "#22c55e", strokeWeight: 5, strokeOpacity: 0.85 },
               });
               directionsRendererRef.current = renderer;
             }
