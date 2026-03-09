@@ -119,6 +119,22 @@ const benefits = [
     icon: Shield,
     title: "Cancel at no charge up to 60 minutes in advance",
   },
+  {
+    icon: DollarSign,
+    title: "Price locked in at time of reservation — no surge",
+  },
+  {
+    icon: Plane,
+    title: "Flight tracking adjusts pickup to your arrival time",
+  },
+  {
+    icon: UserCheck,
+    title: "Meet & greet — driver meets you with a name sign",
+  },
+  {
+    icon: Zap,
+    title: "Priority matching with top-rated drivers",
+  },
 ];
 
 /* ─── Main Component ─── */
