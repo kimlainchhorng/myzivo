@@ -31,6 +31,7 @@ import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { reverseGeocode } from "@/services/mapsApi";
 import RidePaymentSection from "@/components/rides/RidePaymentSection";
+import { useRideRealtime, type DriverInfo } from "@/hooks/useRideRealtime";
 
 /* ─── Types ─── */
 interface PlaceData {
