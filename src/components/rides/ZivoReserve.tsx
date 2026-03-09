@@ -9,7 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Clock, Calendar, Car, Shield, MapPin,
   ChevronRight, ArrowRight, CheckCircle, Home,
-  Navigation, X, FileText, Plus
+  Navigation, X, FileText, Plus, DollarSign, Plane,
+  UserCheck, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
