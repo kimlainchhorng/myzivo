@@ -106,7 +106,7 @@ function ScrollWheelColumn({
               )}
               style={{
                 height: itemHeight,
-                fontSize: isSelected ? "20px" : distance === 1 ? "16px" : "14px",
+                fontSize: isSelected ? "17px" : distance === 1 ? "13px" : "11px",
                 transform: isSelected ? "scale(1.05)" : `scale(${1 - distance * 0.05})`,
               }}
             >
