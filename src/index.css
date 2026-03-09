@@ -283,10 +283,6 @@
       .safe-area-top {
         --_safe-top: max(env(safe-area-inset-top, 0px), 44px);
       }
-
-      .pt-safe {
-        padding-top: max(env(safe-area-inset-top, 0px), 44px);
-      }
     }
   }
 
