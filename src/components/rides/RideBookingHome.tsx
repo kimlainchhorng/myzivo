@@ -794,12 +794,34 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [stops.length]);
 
   const handleStopSelect = useCallback((stopId: string, place: PlaceData) => {
-    setStops(prev => prev.map(s => s.id === stopId ? { ...s, place, display: place.address } : s));
-  }, []);
+    setStops(prev => {
+      const updated = prev.map(s => s.id === stopId ? { ...s, place, display: place.address } : s);
+      // Immediately re-fetch route with the new stop
+      if (pickup && destination) {
+        const wp = updated
+          .filter(s => s.place && s.place.lat && s.place.lng)
+          .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+        console.log("[handleStopSelect] Triggering route re-fetch with", wp.length, "waypoints");
+        fetchRoute(pickup, destination, wp);
+      }
+      return updated;
+    });
+  }, [pickup, destination]);
 
   const handleRemoveStop = useCallback((stopId: string) => {
-    setStops(prev => prev.filter(s => s.id !== stopId));
-  }, []);
+    setStops(prev => {
+      const updated = prev.filter(s => s.id !== stopId);
+      // Re-fetch route without the removed stop
+      if (pickup && destination) {
+        const wp = updated
+          .filter(s => s.place && s.place.lat && s.place.lng)
+          .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+        console.log("[handleRemoveStop] Triggering route re-fetch with", wp.length, "waypoints");
+        fetchRoute(pickup, destination, wp);
+      }
+      return updated;
+    });
+  }, [pickup, destination]);
 
   // Re-fetch route when stops change (only if we already have a route)
   const prevStopsKeyRef = useRef("");
