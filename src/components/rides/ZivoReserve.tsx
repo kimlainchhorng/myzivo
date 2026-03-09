@@ -41,70 +41,7 @@ function generateDays(count: number) {
 const hours = Array.from({ length: 12 }, (_, i) => i + 1);
 const minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 
-/* ─── Scroll Wheel Column ─── */
-function ScrollColumn({
-  items,
-  selected,
-  onSelect,
-  renderItem,
-}: {
-  items: any[];
-  selected: number;
-  onSelect: (i: number) => void;
-  renderItem: (item: any, i: number) => string;
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const itemH = 44;
-
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTo({
-        top: selected * itemH,
-        behavior: "smooth",
-      });
-    }
-  }, [selected]);
-
-  const handleScroll = () => {
-    if (!containerRef.current) return;
-    const scrollTop = containerRef.current.scrollTop;
-    const idx = Math.round(scrollTop / itemH);
-    if (idx >= 0 && idx < items.length && idx !== selected) {
-      onSelect(idx);
-    }
-  };
-
-  return (
-    <div className="relative h-[220px] overflow-hidden">
-      {/* Selection highlight */}
-      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[44px] bg-foreground/10 rounded-lg z-0 pointer-events-none" />
-      <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        className="h-full overflow-y-auto scrollbar-none snap-y snap-mandatory relative z-10"
-        style={{ paddingTop: "88px", paddingBottom: "88px" }}
-      >
-        {items.map((item, i) => {
-          const isSelected = i === selected;
-          return (
-            <button
-              key={i}
-              onClick={() => onSelect(i)}
-              className={cn(
-                "w-full h-[44px] flex items-center justify-center snap-center transition-all",
-                isSelected
-                  ? "text-foreground font-black text-lg"
-                  : "text-muted-foreground/50 font-medium text-base"
-              )}
-            >
-              {renderItem(item, i)}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+/* (ScrollColumn removed — using shared ScrollWheelPicker) */
 
 /* ─── Benefits List ─── */
 const benefits = [
