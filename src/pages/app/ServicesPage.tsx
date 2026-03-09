@@ -179,7 +179,7 @@ export default function ServicesPage() {
       setTimeout(() => {
         setRunningLabel(null);
         navigate(service.href);
-      }, 600);
+      }, 850);
     } else {
       navigate(service.href);
     }
