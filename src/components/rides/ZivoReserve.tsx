@@ -192,18 +192,20 @@ export default function ZivoReserve() {
             exit={{ opacity: 0, x: -30 }}
             className="flex flex-col h-full overflow-hidden"
           >
-            {/* Hero image — compact */}
-            <div className="relative w-full h-[120px] shrink-0 overflow-hidden rounded-b-[1.5rem]">
-              <img
-                src={reserveHero}
-                alt="ZIVO Reserve — schedule your ride"
-                className="w-full h-full object-cover object-center"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+            {/* Hero image — aspect-ratio preserved */}
+            <div className="relative w-full shrink-0 overflow-hidden">
+              <div className="relative w-full" style={{ aspectRatio: '16/7' }}>
+                <img
+                  src={reserveHero}
+                  alt="ZIVO Reserve — schedule your ride"
+                  className="w-full h-full object-cover object-[center_40%]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+              </div>
             </div>
 
             {/* Content — fills remaining, no scroll */}
-            <div className="flex-1 min-h-0 px-5 pt-3 pb-3 flex flex-col justify-between">
+            <div className="flex-1 min-h-0 px-5 pt-2 pb-3 flex flex-col justify-between">
               <div>
                 <motion.h1
                   initial={{ opacity: 0, y: 10 }}
@@ -214,21 +216,21 @@ export default function ZivoReserve() {
                   ZIVO Reserve
                 </motion.h1>
 
-                <div className="mt-3 space-y-2">
+                <div className="mt-2.5 space-y-1.5">
                   {benefits.map((b, i) => {
                     const Icon = b.icon;
                     return (
                       <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 8 }}
+                        initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 + i * 0.05, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        transition={{ delay: 0.12 + i * 0.04, ease: [0.25, 0.46, 0.45, 0.94] }}
                         className="flex items-center gap-2.5"
                       >
-                        <div className="w-7 h-7 rounded-full border border-border/60 flex items-center justify-center shrink-0">
-                          <Icon className="w-3.5 h-3.5 text-foreground/80" strokeWidth={1.5} />
+                        <div className="w-7 h-7 rounded-full border border-border/50 flex items-center justify-center shrink-0">
+                          <Icon className="w-3.5 h-3.5 text-foreground/70" strokeWidth={1.5} />
                         </div>
-                        <p className="text-xs font-medium text-foreground leading-snug">
+                        <p className="text-[12px] font-medium text-foreground/90 leading-tight">
                           {b.title}
                         </p>
                       </motion.div>
@@ -237,12 +239,12 @@ export default function ZivoReserve() {
                 </div>
               </div>
 
-              {/* CTA — pinned to bottom */}
+              {/* CTA */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="pt-3"
+                transition={{ delay: 0.45 }}
+                className="pt-2"
               >
                 <Button
                   className="w-full h-12 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-transform shadow-lg shadow-primary/30"
