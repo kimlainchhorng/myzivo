@@ -318,6 +318,7 @@ const App = () => (
                 <Route path="/support" element={<ProtectedRoute><SupportCenterPage /></ProtectedRoute>} />
                 <Route path="/travel" element={<ProtectedRoute><AppTravel /></ProtectedRoute>} />
                 <Route path="/more" element={<ProtectedRoute><AppMore /></ProtectedRoute>} />
+                <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
 
                 {/* Legacy redirects */}
                 <Route path="/book-flight" element={<PreserveQueryRedirect to="/flights" />} />
