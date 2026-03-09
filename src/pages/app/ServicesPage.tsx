@@ -15,6 +15,7 @@ import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
 import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
 import zivoShoppingIcon from "@/assets/zivo-shopping.png";
 import zivoDeliveryBanner from "@/assets/zivo-delivery-banner.png";
+import zivoReserveBanner from "@/assets/zivo-reserve-banner.png";
 
 interface ServiceItem {
   label: string;
