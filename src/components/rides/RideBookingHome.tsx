@@ -462,6 +462,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [pickupDisplay, setPickupDisplay] = useState("");
   const [destinationDisplay, setDestinationDisplay] = useState("");
   const [stops, setStops] = useState<{ id: string; place: PlaceData | null; display: string }[]>([]);
+  const stopsRef = useRef(stops);
+  stopsRef.current = stops;
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -779,13 +781,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
 
     if (pickupData && place.lat && place.lng) {
-      // Include any existing stops as waypoints
-      const wp = stops
+      // Include any existing stops as waypoints — use ref to avoid stale closure
+      const wp = stopsRef.current
         .filter(s => s.place && s.place.lat && s.place.lng)
         .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
       fetchRoute(pickupData, place, wp);
     }
-  }, [pickup, userLocation, isSameLocation]); // fetchRoute is intentionally omitted to avoid infinite loop
+  }, [pickup, userLocation, isSameLocation]);
 
   /* ─── Multi-stop management ─── */
   const MAX_STOPS = 1;
@@ -889,7 +891,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setIsLoadingRoute(true);
     setRouteData(null);
 
-    const waypoints = stopWaypoints ?? stops
+    const waypoints = stopWaypoints ?? stopsRef.current
       .filter(s => s.place && s.place.lat && s.place.lng)
       .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
 
