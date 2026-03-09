@@ -355,7 +355,7 @@ function animatePolyline(
 ) {
   const bgLine = new google.maps.Polyline({
     path,
-    strokeColor: "#10b981",
+    strokeColor: "#22c55e",
     strokeWeight: 4,
     strokeOpacity: 0.15,
     geodesic: true,
