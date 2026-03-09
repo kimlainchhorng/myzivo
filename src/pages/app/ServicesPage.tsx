@@ -23,6 +23,7 @@ import zivoReserveBanner from "@/assets/zivo-reserve-banner.png";
 import zivoTravelBanner from "@/assets/zivo-travel-banner.png";
 import zivoGroupRideIcon from "@/assets/service-group-ride.png";
 import zivoAlcoholIcon from "@/assets/service-alcohol.png";
+import zivoPharmacyIcon from "@/assets/service-pharmacy.png";
 
 /* ── Types ── */
 interface ServiceItem {
@@ -61,7 +62,7 @@ const serviceCategories: ServiceCategory[] = [
       { label: "Food", href: "/eats", image: zivoEatsIcon, badge: "Promo", badgeVariant: "promo" },
       { label: "Grocery", href: "/rides", image: zivoShoppingIcon, badge: "Promo", badgeVariant: "promo" },
       { label: "Alcohol", href: "/eats", image: zivoAlcoholIcon },
-      { label: "Pharmacy", href: "/eats", icon: Pill },
+      { label: "Pharmacy", href: "/eats", image: zivoPharmacyIcon },
       { label: "Shopping", href: "/rides", icon: ShoppingCart },
     ],
   },
