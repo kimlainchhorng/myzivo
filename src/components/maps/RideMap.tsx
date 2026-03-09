@@ -291,10 +291,10 @@ function createPickupPinSvg(): string {
           <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.25"/>
         </filter>
       </defs>
-      <circle cx="24" cy="24" r="22" fill="#10b981" opacity="0.12"/>
-      <circle cx="24" cy="24" r="17" fill="#10b981" filter="url(#sp)"/>
+      <circle cx="24" cy="24" r="22" fill="#22c55e" opacity="0.12"/>
+      <circle cx="24" cy="24" r="17" fill="#22c55e" filter="url(#sp)"/>
       <circle cx="24" cy="24" r="11" fill="#fff"/>
-      <text x="24" y="28.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#10b981">Z</text>
+      <text x="24" y="28.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#22c55e">Z</text>
     </svg>
   `)}`;
 }
