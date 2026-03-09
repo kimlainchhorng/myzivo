@@ -808,7 +808,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   useEffect(() => {
     if (prevStopsKeyRef.current !== stopsKey && pickup && destination && viewStep === "route-preview") {
       prevStopsKeyRef.current = stopsKey;
-      fetchRoute(pickup, destination);
+      const wp = stopsWithCoords.map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+      fetchRoute(pickup, destination, wp);
     }
   }, [stopsKey, pickup, destination, viewStep]);
 
@@ -824,7 +825,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   };
 
   /* ─── Fetch route ─── */
-  const fetchRoute = async (from: PlaceData, to: PlaceData) => {
+  const fetchRoute = async (from: PlaceData, to: PlaceData, stopWaypoints?: { lat: number; lng: number }[]) => {
     if (!from.lat || !to.lat) return;
     // Safety net: block same-location routes
     if (isSameLocation(from, to)) {
@@ -834,10 +835,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setIsLoadingRoute(true);
     setRouteData(null);
 
-    // Build waypoints from stops
-    const waypoints = stops
-      .filter(s => s.place && s.place.lat && s.place.lng)
-      .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+    const waypoints = stopWaypoints || [];
 
     try {
       const { data, error } = await supabase.functions.invoke("maps-route", {
@@ -891,7 +889,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       toast.error("Please choose a different destination");
       return;
     }
-    fetchRoute(pickup, destination);
+    const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+    fetchRoute(pickup, destination, wp);
   };
 
   /* ─── Request Ride — Create PaymentIntent + Confirm ─── */
