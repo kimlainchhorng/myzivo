@@ -151,7 +151,7 @@ export default function ScrollWheelPicker({
   compact = false,
   hideDays = false,
 }: ScrollWheelPickerProps) {
-  const itemHeight = compact ? 42 : 48;
+  const itemHeight = compact ? 36 : 40;
   
   return (
     <motion.div
