@@ -662,7 +662,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       stopCoords.forEach((c) => bounds.extend(c));
       if (driverCoords) bounds.extend(driverCoords);
       // Immediate fit
-      map.fitBounds(bounds, { top: 80, bottom: 340, left: 60, right: 60 });
+      map.fitBounds(bounds, { top: 80, bottom: 340, left: 80, right: 80 });
       // Cap max zoom for close points
       const listener = google.maps.event.addListenerOnce(map, "idle", () => {
         if ((map.getZoom() || 20) > 15) map.setZoom(15);
