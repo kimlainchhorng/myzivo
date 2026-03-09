@@ -31,6 +31,7 @@ import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { reverseGeocode } from "@/services/mapsApi";
 import RidePaymentSection from "@/components/rides/RidePaymentSection";
+import { useRideRealtime, type DriverInfo } from "@/hooks/useRideRealtime";
 
 /* ─── Types ─── */
 interface PlaceData {
@@ -112,17 +113,19 @@ function calcPrice(vehicle: typeof vehicleOptions[0], distanceMiles: number, dur
   return Math.round(raw * 100) / 100;
 }
 
-/* ─── Mock driver ─── */
-const MOCK_DRIVER = {
-  name: "Marcus T.",
-  fullName: "Marcus Thompson",
-  initials: "MT",
-  rating: 4.92,
-  trips: 2847,
-  vehicle: "Silver Toyota Camry",
-  plate: "ABC 1234",
-  phone: "+1 (555) 123-4567",
+/* ─── Fallback driver (shown while loading real driver data) ─── */
+const FALLBACK_DRIVER: DriverInfo = {
+  name: "Driver",
+  fullName: "Your Driver",
+  initials: "D",
+  rating: 5.0,
+  trips: 0,
+  vehicle: "Locating vehicle…",
+  plate: "---",
+  phone: "",
   etaMin: 5,
+  lat: null,
+  lng: null,
 };
 
 /* ─── Map Section Wrapper ─── */
@@ -466,6 +469,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   stopsRef.current = stops;
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
+  const rideRealtime = useRideRealtime(rideRequestId);
+  const activeDriver = rideRealtime.driver || FALLBACK_DRIVER;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [searchSheetY, setSearchSheetY] = useState(-20); // -20 = full, 0 = half, positive = peek
@@ -534,10 +539,45 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const COLLAPSED_SHEET_HEIGHT = 330 + stops.length * 56 + (routeData ? 52 : 0);
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
 
-  // Driver tracking
+  // Driver tracking — uses realtime data from useRideRealtime
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [driverEta, setDriverEta] = useState(MOCK_DRIVER.etaMin);
+  const [driverEta, setDriverEta] = useState(activeDriver.etaMin);
   const trackingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Sync driver coords from realtime hook
+  useEffect(() => {
+    if (rideRealtime.driverCoords) {
+      setDriverCoords(rideRealtime.driverCoords);
+    }
+  }, [rideRealtime.driverCoords]);
+
+  // React to realtime status changes from the database
+  useEffect(() => {
+    if (!rideRealtime.status || !rideRequestId) return;
+
+    const statusToView: Record<string, ViewStep> = {
+      searching: "searching",
+      driver_assigned: "driver-assigned",
+      driver_en_route: "driver-en-route",
+      trip_in_progress: "trip-in-progress",
+      completed: "trip-complete",
+      cancelled: "home",
+    };
+
+    const targetView = statusToView[rideRealtime.status];
+    if (targetView && targetView !== viewStep) {
+      setViewStep(targetView);
+      if (rideRealtime.status === "driver_assigned") {
+        toast.success("Driver found! On their way.");
+      } else if (rideRealtime.status === "driver_en_route") {
+        toast.info("Your driver is en route!");
+      } else if (rideRealtime.status === "trip_in_progress") {
+        toast.info("Trip started! Heading to destination.");
+      } else if (rideRealtime.status === "completed") {
+        toast.success("You've arrived! Trip complete.");
+      }
+    }
+  }, [rideRealtime.status, rideRequestId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch user location on mount
   useEffect(() => {
@@ -546,100 +586,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-advance: searching → driver-assigned after 4s
+  // Fallback: if no realtime update after 30s in "searching", show waiting message
   useEffect(() => {
     if (viewStep !== "searching") return;
-    const t = setTimeout(async () => {
-      setViewStep("driver-assigned");
-      if (rideRequestId) {
-        await supabase.from("ride_requests").update({ status: "driver_assigned" }).eq("id", rideRequestId);
-      }
-    }, 4000);
-    return () => clearTimeout(t);
-  }, [viewStep, rideRequestId]);
-
-  // Auto-advance: driver-assigned → driver-en-route after 5s
-  useEffect(() => {
-    if (viewStep !== "driver-assigned") return;
-    setDriverEta(MOCK_DRIVER.etaMin);
     const t = setTimeout(() => {
-      setViewStep("driver-en-route");
-    }, 5000);
+      if (viewStep === "searching") {
+        toast.info("Still looking for a driver nearby…");
+      }
+    }, 30000);
     return () => clearTimeout(t);
   }, [viewStep]);
-
-  // Driver en-route animation: move toward pickup
-  useEffect(() => {
-    if (viewStep !== "driver-en-route") return;
-    if (!pickup) return;
-
-    const startLat = pickup.lat + 0.01;
-    const startLng = pickup.lng - 0.008;
-    setDriverCoords({ lat: startLat, lng: startLng });
-
-    let step = 0;
-    const interval = setInterval(() => {
-      step++;
-      const progress = Math.min(step / 20, 1);
-      setDriverCoords({
-        lat: startLat + (pickup.lat - startLat) * progress,
-        lng: startLng + (pickup.lng - startLng) * progress,
-      });
-      setDriverEta(Math.max(0, MOCK_DRIVER.etaMin - Math.floor(progress * MOCK_DRIVER.etaMin)));
-
-      if (progress >= 1) {
-        clearInterval(interval);
-        setViewStep("trip-in-progress");
-      }
-    }, 1500);
-
-    trackingIntervalRef.current = interval;
-    return () => clearInterval(interval);
-  }, [viewStep, pickup]);
-
-  // Auto-advance: trip-in-progress → trip-complete after 8s
-  useEffect(() => {
-    if (viewStep !== "trip-in-progress") return;
-
-    // Move driver toward destination
-    if (pickup && destination) {
-      const startLat = pickup.lat;
-      const startLng = pickup.lng;
-      let step = 0;
-
-      const interval = setInterval(() => {
-        step++;
-        const progress = Math.min(step / 20, 1);
-        setDriverCoords({
-          lat: startLat + (destination.lat - startLat) * progress,
-          lng: startLng + (destination.lng - startLng) * progress,
-        });
-      }, 400);
-
-      trackingIntervalRef.current = interval;
-
-      const t = setTimeout(async () => {
-        clearInterval(interval);
-        setViewStep("trip-complete");
-        if (rideRequestId) {
-          await supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
-        }
-      }, 8000);
-
-      return () => {
-        clearInterval(interval);
-        clearTimeout(t);
-      };
-    }
-
-    const t = setTimeout(async () => {
-      setViewStep("trip-complete");
-      if (rideRequestId) {
-        await supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
-      }
-    }, 8000);
-    return () => clearTimeout(t);
-  }, [viewStep, pickup, destination, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
     getCurrentLocation()
@@ -1087,7 +1043,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setRideRequestId(null);
     setRouteData(null);
     setDriverCoords(null);
-    setDriverEta(MOCK_DRIVER.etaMin);
+    setDriverEta(5);
     setRating(0);
     setTip(null);
     setSurgeMultiplier(1.0);
@@ -2217,21 +2173,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
           <h3 className="text-base font-bold text-foreground text-center mb-0.5">Meet your driver at pickup</h3>
-          <p className="text-xs text-muted-foreground text-center mb-3">Driver arriving in {MOCK_DRIVER.etaMin} minutes.</p>
+          <p className="text-xs text-muted-foreground text-center mb-3">Driver arriving in {activeDriver.etaMin} minutes.</p>
 
           <div className="border-t border-border/15 pt-3">
             <div className="flex items-center gap-3 mb-3">
               <Avatar className="w-14 h-14 shrink-0">
-                <AvatarFallback className="bg-foreground text-background font-bold text-lg">{MOCK_DRIVER.initials}</AvatarFallback>
+                <AvatarFallback className="bg-foreground text-background font-bold text-lg">{activeDriver.initials}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-foreground">{MOCK_DRIVER.name}</p>
+                <p className="font-bold text-foreground">{activeDriver.name}</p>
                 <div className="flex items-center gap-1">
                   <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                  <span className="text-sm text-muted-foreground">{MOCK_DRIVER.rating} · {MOCK_DRIVER.trips.toLocaleString()} trips</span>
+                  <span className="text-sm text-muted-foreground">{activeDriver.rating} · {activeDriver.trips.toLocaleString()} trips</span>
                 </div>
-                <p className="text-xs text-muted-foreground">{MOCK_DRIVER.vehicle}</p>
-                <p className="text-xs font-mono font-bold text-foreground">{MOCK_DRIVER.plate}</p>
+                <p className="text-xs text-muted-foreground">{activeDriver.vehicle}</p>
+                <p className="text-xs font-mono font-bold text-foreground">{activeDriver.plate}</p>
               </div>
             </div>
           </div>
@@ -2279,11 +2235,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
           <div className="flex items-center gap-2 mb-3 text-sm">
             <Car className="w-4 h-4 text-muted-foreground shrink-0" />
-            <span className="font-semibold text-foreground">{MOCK_DRIVER.name}</span>
+            <span className="font-semibold text-foreground">{activeDriver.name}</span>
             <span className="text-muted-foreground">|</span>
-            <span className="text-muted-foreground">{MOCK_DRIVER.vehicle}</span>
+            <span className="text-muted-foreground">{activeDriver.vehicle}</span>
             <span className="text-muted-foreground">|</span>
-            <span className="font-mono font-bold text-foreground">{MOCK_DRIVER.plate}</span>
+            <span className="font-mono font-bold text-foreground">{activeDriver.plate}</span>
           </div>
 
           <div className="flex gap-2">
@@ -2322,11 +2278,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
           <div className="flex items-center gap-2 mb-3 text-sm">
             <Car className="w-4 h-4 text-muted-foreground shrink-0" />
-            <span className="font-semibold text-foreground">{MOCK_DRIVER.name}</span>
+            <span className="font-semibold text-foreground">{activeDriver.name}</span>
             <span className="text-muted-foreground">|</span>
-            <span className="text-muted-foreground truncate">{MOCK_DRIVER.vehicle}</span>
+            <span className="text-muted-foreground truncate">{activeDriver.vehicle}</span>
             <span className="text-muted-foreground">|</span>
-            <span className="font-mono font-bold text-foreground shrink-0">{MOCK_DRIVER.plate}</span>
+            <span className="font-mono font-bold text-foreground shrink-0">{activeDriver.plate}</span>
           </div>
 
           <div className="flex gap-2">
@@ -2411,7 +2367,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
           {/* Rate driver */}
           <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
-            <h4 className="text-sm font-bold text-foreground mb-3">Rate {MOCK_DRIVER.name}</h4>
+            <h4 className="text-sm font-bold text-foreground mb-3">Rate {activeDriver.name}</h4>
             <div className="flex justify-center gap-2 mb-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button key={star} onClick={() => setRating(star)} className="touch-manipulation">
