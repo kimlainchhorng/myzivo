@@ -7,11 +7,10 @@ import { Calendar, Clock, Repeat, ChevronRight, Check, Bell, MapPin, X, Plus, Tr
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Calendar as CalendarPicker } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import DateScrollWheelPicker from "./DateScrollWheelPicker";
 
 interface ScheduledRide {
   id: string;
