@@ -203,18 +203,18 @@ export default function ZivoReserve() {
             </div>
 
             {/* Content — fills remaining, no scroll */}
-            <div className="flex-1 min-h-0 px-6 pt-4 pb-4 flex flex-col justify-between">
+            <div className="flex-1 min-h-0 px-5 pt-3 pb-3 flex flex-col justify-between">
               <div>
                 <motion.h1
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="text-xl font-black text-foreground tracking-tight leading-tight"
+                  className="text-lg font-black text-foreground tracking-tight leading-tight"
                 >
                   ZIVO Reserve
                 </motion.h1>
 
-                <div className="mt-4 space-y-3">
+                <div className="mt-3 space-y-2">
                   {benefits.map((b, i) => {
                     const Icon = b.icon;
                     return (
@@ -222,13 +222,13 @@ export default function ZivoReserve() {
                         key={i}
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 + i * 0.06, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        className="flex items-center gap-3"
+                        transition={{ delay: 0.15 + i * 0.05, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        className="flex items-center gap-2.5"
                       >
-                        <div className="w-8 h-8 rounded-full border border-border/60 flex items-center justify-center shrink-0">
-                          <Icon className="w-4 h-4 text-foreground/80" strokeWidth={1.5} />
+                        <div className="w-7 h-7 rounded-full border border-border/60 flex items-center justify-center shrink-0">
+                          <Icon className="w-3.5 h-3.5 text-foreground/80" strokeWidth={1.5} />
                         </div>
-                        <p className="text-[13px] font-medium text-foreground leading-snug">
+                        <p className="text-xs font-medium text-foreground leading-snug">
                           {b.title}
                         </p>
                       </motion.div>
@@ -241,11 +241,11 @@ export default function ZivoReserve() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.55 }}
-                className="pt-4"
+                transition={{ delay: 0.5 }}
+                className="pt-3"
               >
                 <Button
-                  className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-transform shadow-lg shadow-primary/30"
+                  className="w-full h-12 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-transform shadow-lg shadow-primary/30"
                   onClick={handleReserve}
                 >
                   Reserve a ride
