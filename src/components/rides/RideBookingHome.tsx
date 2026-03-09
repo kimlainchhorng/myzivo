@@ -1641,7 +1641,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       return (
                         <button
                           key={place.id}
-                          onClick={() => handleSavedPlace(place.address)}
+                          onClick={() => handleSavedPlace(place.address, place.lat, place.lng)}
                           className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 active:scale-[0.98] group"
                         >
                           <div className="w-11 h-11 rounded-2xl bg-primary/8 border border-primary/15 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
