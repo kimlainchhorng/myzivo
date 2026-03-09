@@ -291,10 +291,10 @@ function createPickupPinSvg(): string {
           <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.25"/>
         </filter>
       </defs>
-      <circle cx="24" cy="24" r="22" fill="#10b981" opacity="0.12"/>
-      <circle cx="24" cy="24" r="17" fill="#10b981" filter="url(#sp)"/>
+      <circle cx="24" cy="24" r="22" fill="#22c55e" opacity="0.12"/>
+      <circle cx="24" cy="24" r="17" fill="#22c55e" filter="url(#sp)"/>
       <circle cx="24" cy="24" r="11" fill="#fff"/>
-      <text x="24" y="28.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#10b981">Z</text>
+      <text x="24" y="28.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#22c55e">Z</text>
     </svg>
   `)}`;
 }
@@ -355,7 +355,7 @@ function animatePolyline(
 ) {
   const bgLine = new google.maps.Polyline({
     path,
-    strokeColor: "#10b981",
+    strokeColor: "#22c55e",
     strokeWeight: 4,
     strokeOpacity: 0.15,
     geodesic: true,
@@ -364,7 +364,7 @@ function animatePolyline(
 
   const animatedLine = new google.maps.Polyline({
     path: [],
-    strokeColor: "#10b981",
+    strokeColor: "#22c55e",
     strokeWeight: 4,
     strokeOpacity: 0.9,
     geodesic: true,
@@ -577,9 +577,9 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         center: pickupCoords,
         radius: 120,
         map,
-        fillColor: "#10b981",
+        fillColor: "#22c55e",
         fillOpacity: 0.08,
-        strokeColor: "#10b981",
+        strokeColor: "#22c55e",
         strokeOpacity: 0.25,
         strokeWeight: 1.5,
         clickable: false,
@@ -745,14 +745,14 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
             } else {
               const renderer = new google.maps.DirectionsRenderer({
                 map, directions: result, suppressMarkers: true,
-                polylineOptions: { strokeColor: "#10b981", strokeWeight: 5, strokeOpacity: 0.85 },
+                polylineOptions: { strokeColor: "#22c55e", strokeWeight: 5, strokeOpacity: 0.85 },
               });
               directionsRendererRef.current = renderer;
             }
           } else {
             polylineRef.current = new google.maps.Polyline({
               path: [pickupCoords, dropoffCoords],
-              strokeColor: "#10b981", strokeWeight: 3, strokeOpacity: 0.6, geodesic: true,
+              strokeColor: "#22c55e", strokeWeight: 3, strokeOpacity: 0.6, geodesic: true,
               icons: [{ icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 }, offset: "0", repeat: "15px" }],
               map,
             });
