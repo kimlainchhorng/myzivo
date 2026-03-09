@@ -9,7 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Clock, Calendar, Car, Shield, MapPin,
   ChevronRight, ArrowRight, CheckCircle, Home,
-  Navigation, X, FileText, Plus
+  Navigation, X, FileText, Plus, DollarSign, Plane,
+  UserCheck, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,6 +119,22 @@ const benefits = [
     icon: Shield,
     title: "Cancel at no charge up to 60 minutes in advance",
   },
+  {
+    icon: DollarSign,
+    title: "Price locked in at time of reservation — no surge",
+  },
+  {
+    icon: Plane,
+    title: "Flight tracking adjusts pickup to your arrival time",
+  },
+  {
+    icon: UserCheck,
+    title: "Meet & greet — driver meets you with a name sign",
+  },
+  {
+    icon: Zap,
+    title: "Priority matching with top-rated drivers",
+  },
 ];
 
 /* ─── Main Component ─── */
@@ -185,9 +202,9 @@ export default function ZivoReserve() {
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
             </div>
 
-            {/* Content — fills remaining space, no scroll */}
-            <div className="flex-1 min-h-0 px-6 pt-6 pb-5 flex flex-col justify-between">
-              <div>
+            {/* Content — fills remaining space */}
+            <div className="flex-1 min-h-0 px-6 pt-6 pb-5 flex flex-col">
+              <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none">
                 <motion.h1
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
