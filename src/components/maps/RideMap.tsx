@@ -637,11 +637,28 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       (markersRef as any).__dropoffMarker = dropoffMarker;
     }
 
+    // Stop markers
+    stopCoords.forEach((coord, idx) => {
+      const stopMarker = new google.maps.Marker({
+        position: coord,
+        map,
+        icon: {
+          url: createStopPinSvg(idx),
+          scaledSize: new google.maps.Size(40, 40),
+          anchor: new google.maps.Point(20, 20),
+        },
+        title: `Stop ${idx + 1}`,
+        zIndex: 78,
+      });
+      markersRef.current.push(stopMarker);
+    });
+
     // Fit bounds with generous padding — delay to allow layout to settle
     if (pickupCoords && dropoffCoords) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(pickupCoords);
       bounds.extend(dropoffCoords);
+      stopCoords.forEach((c) => bounds.extend(c));
       if (driverCoords) bounds.extend(driverCoords);
       // Immediate fit
       map.fitBounds(bounds, { top: 80, bottom: 280, left: 60, right: 60 });
