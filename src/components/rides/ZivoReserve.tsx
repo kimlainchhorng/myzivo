@@ -195,43 +195,46 @@ export default function ZivoReserve() {
             className="flex flex-col h-full overflow-hidden relative"
           >
             {/* Full-bleed hero background — covers entire screen */}
-            <div className="absolute inset-0 bg-background">
+            <div className="absolute inset-0">
               <img
                 src={reserveHero}
                 alt="ZIVO Reserve"
-                className="w-full h-[65%] object-cover"
+                className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background from-35% via-background/70 via-60% to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background from-30% via-background/60 via-55% to-background/10" />
             </div>
 
-            {/* Content overlay */}
-            <div className="relative z-10 flex flex-col h-full justify-end px-5 pb-5">
+            {/* Content overlay — fills full height */}
+            <div className="relative z-10 flex flex-col h-full px-5 pt-6 pb-5">
+              {/* Top spacer — pushes content down, lets hero show */}
+              <div className="flex-1 min-h-0" />
+
               {/* Title area */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="mb-4"
+                className="mb-5"
               >
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 backdrop-blur-sm">
                     <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Premium</span>
                   </div>
                 </div>
                 <h1 className="text-2xl font-black text-foreground tracking-tight leading-tight">
                   Reserve your ride
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-1.5">
                   Schedule up to 90 days ahead. Price locked, no surge.
                 </p>
               </motion.div>
 
-              {/* Benefits grid — 2 columns */}
+              {/* Benefits grid — 2 columns, fills space */}
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="grid grid-cols-2 gap-2.5 mb-5"
+                className="grid grid-cols-2 gap-3 mb-6"
               >
                 {benefits.map((b, i) => {
                   const Icon = b.icon;
@@ -241,14 +244,14 @@ export default function ZivoReserve() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 + i * 0.04 }}
-                      className="flex items-start gap-2.5 rounded-xl bg-card/60 backdrop-blur-md border border-border/30 px-3 py-2.5"
+                      className="flex items-start gap-2.5 rounded-2xl bg-card/70 backdrop-blur-lg border border-border/30 px-3.5 py-3"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <Icon className="w-4 h-4 text-primary" strokeWidth={2} />
+                      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <Icon className="w-4.5 h-4.5 text-primary" strokeWidth={2} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-foreground leading-tight">{b.title}</p>
-                        <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{b.desc}</p>
+                        <p className="text-sm font-bold text-foreground leading-tight">{b.title}</p>
+                        <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{b.desc}</p>
                       </div>
                     </motion.div>
                   );
