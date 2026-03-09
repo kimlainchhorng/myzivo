@@ -24,7 +24,7 @@ function ScrollWheelColumn({
   const containerRef = useRef<HTMLDivElement>(null);
   const isUserScrolling = useRef(false);
   const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const visibleCount = 5;
+  const visibleCount = 3;
   const containerHeight = itemHeight * visibleCount;
   const padItems = Math.floor(visibleCount / 2);
 
