@@ -30,6 +30,7 @@ interface RidePaymentSectionProps {
   clientSecret: string | null;
   onPaymentSuccess: () => void;
   paymentFailed: boolean;
+  onClearError?: () => void;
 }
 
 const BRAND_ICONS: Record<string, string> = {
@@ -169,6 +170,7 @@ export default function RidePaymentSection({
   clientSecret,
   onPaymentSuccess,
   paymentFailed,
+  onClearError,
 }: RidePaymentSectionProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -319,6 +321,7 @@ export default function RidePaymentSection({
   const handleCardSaved = () => {
     setShowAddCard(false);
     setSetupClientSecret(null);
+    onClearError?.();
     loadCards();
   };
 
