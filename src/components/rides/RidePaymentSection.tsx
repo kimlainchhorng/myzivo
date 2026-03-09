@@ -186,6 +186,7 @@ export default function RidePaymentSection({
   const loadCards = useCallback(async () => {
     if (!user) { setLoadingCards(false); return; }
     setLoadingCards(true);
+    onClearError?.();
     try {
       const resp = await supabase.functions.invoke("manage-payment-methods", {
         body: { action: "list" },
@@ -200,8 +201,6 @@ export default function RidePaymentSection({
         } else if (cards.length > 0) {
           setSelectedCardId(cards[0].id);
         }
-        // Clear any previous payment error when cards loaded successfully
-        if (cards.length > 0) onClearError?.();
       } else {
         console.warn("[RidePayment] Failed to load cards:", resp.error);
       }
@@ -210,7 +209,7 @@ export default function RidePaymentSection({
     } finally {
       setLoadingCards(false);
     }
-  }, [user]);
+  }, [user, onClearError]);
 
   useEffect(() => {
     loadCards();
