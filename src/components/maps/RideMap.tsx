@@ -314,18 +314,18 @@ function createDropoffPinSvg(): string {
   `)}`;
 }
 
-function createStopPinSvg(index: number): string {
-  // Gray circle with stop number — visually distinct from pickup/dropoff
+function createStopPinSvg(): string {
+  // ZIVO-branded stop marker — green diamond shape with "S"
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+    <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
       <defs>
-        <filter id="ss" x="-20%" y="-15%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.2"/>
+        <filter id="stp" x="-20%" y="-15%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.25"/>
         </filter>
       </defs>
-      <circle cx="20" cy="20" r="16" fill="#6b7280" filter="url(#ss)"/>
-      <circle cx="20" cy="20" r="10" fill="#fff"/>
-      <text x="20" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="12" fill="#6b7280">${index + 1}</text>
+      <circle cx="22" cy="22" r="18" fill="#6b7280" filter="url(#stp)"/>
+      <circle cx="22" cy="22" r="12" fill="#fff"/>
+      <text x="22" y="27" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="15" fill="#6b7280">S</text>
     </svg>
   `)}`;
 }
