@@ -1000,7 +1000,7 @@ export default function RideBookingHome() {
   const filteredVehiclesByCategory = vehicleOptions.filter((v) => v.category === rideCategory);
 
   return (
-    <div className="relative h-[100dvh] overflow-hidden bg-background flex flex-col">
+    <div className="relative h-full safe-area-top overflow-hidden bg-background flex flex-col">
 
       {/* ═══════ 1. HEADER — visible on non-home steps ═══════ */}
       {viewStep !== "home" && viewStep !== "trip-complete" && (
