@@ -719,9 +719,27 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     if (!promoInput.trim()) return;
     setPromoValidating(true);
     setPromoError(null);
+    const code = promoInput.trim().toUpperCase();
+
+    // Hard-coded FREE promo: 100% off, restricted to specific email
+    if (code === "FREE") {
+      const userEmail = user?.email?.toLowerCase() || "";
+      if (userEmail === "chhorngkimlain1@gmail.com") {
+        setAppliedPromo({ code: "FREE", description: "100% discount — Free ride!" });
+        setPromoDiscount(currentPrice);
+        toast.success("FREE promo applied — enjoy your free ride!");
+        setPromoValidating(false);
+        return;
+      } else {
+        setPromoError("This promo code is not available for your account");
+        setPromoValidating(false);
+        return;
+      }
+    }
+
     try {
       const { data, error } = await supabase.rpc("validate_coupon" as any, {
-        p_code: promoInput.trim(),
+        p_code: code,
         p_user_id: user?.id || "",
         p_order_total_cents: Math.round(currentPrice * 100),
       });
@@ -730,16 +748,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       } else {
         const d = data as any;
         const discountAmt = (d.discount_amount_cents || 0) / 100;
-        setAppliedPromo({ code: promoInput.trim(), description: d.description || `${promoInput.trim()} applied` });
+        setAppliedPromo({ code, description: d.description || `${code} applied` });
         setPromoDiscount(Math.min(discountAmt, currentPrice));
-        toast.success(`Promo ${promoInput.trim()} applied!`);
+        toast.success(`Promo ${code} applied!`);
       }
     } catch {
       setPromoError("Unable to validate promo code");
     } finally {
       setPromoValidating(false);
     }
-  }, [promoInput, currentPrice, user?.id]);
+  }, [promoInput, currentPrice, user?.id, user?.email]);
 
   const handleTabChange = (tab: RideTab) => {
     setActiveTab(tab);
@@ -2128,14 +2146,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       {/* ═══════ CONFIRM RIDE — with real Stripe payment ═══════ */}
       {viewStep === "confirm-ride" && (
         <div
-          className="absolute left-0 right-0 bottom-0 z-40 bg-background flex flex-col overflow-hidden"
-          style={{ top: HEADER_HEIGHT }}
+          className="absolute inset-0 z-40 bg-background flex flex-col overflow-hidden"
         >
           <div className="px-5 pt-5 pb-2 shrink-0">
             <h2 className="text-xl font-black text-foreground tracking-tight">Confirm your ride</h2>
           </div>
 
-          <div className="px-5 pb-4 space-y-4 flex-1 overflow-y-auto flex flex-col min-h-0">
+          <div className="px-5 pb-4 space-y-3 flex-1 overflow-y-auto flex flex-col min-h-0">
             {/* Route card */}
             <div className="rounded-2xl bg-card border border-border/20 p-4">
               <div className="flex items-start gap-3.5">
