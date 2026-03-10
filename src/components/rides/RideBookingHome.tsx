@@ -1849,8 +1849,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                               onClick={() => handleSavedPlace(place.address, place.lat, place.lng)}
                               className="flex flex-col items-center min-w-[100px] w-[100px] rounded-2xl bg-card border border-border/15 py-3 px-2 hover:border-primary/30 hover:shadow-lg transition-all duration-200 active:scale-95 shrink-0 snap-start group"
                             >
-                              <div className="w-11 h-11 rounded-xl bg-background flex items-center justify-center mb-2 overflow-hidden border border-border/10 group-hover:border-primary/20 group-hover:shadow-sm transition-all duration-200">
-                                <img src={place.iconUrl} alt={place.name} className="w-8 h-8 object-contain rounded-lg" loading="lazy" />
+                              <div className="w-11 h-11 rounded-xl bg-muted/50 flex items-center justify-center mb-2 overflow-hidden border border-border/10 group-hover:border-primary/20 group-hover:shadow-sm transition-all duration-200">
+                                {place.iconUrl ? (
+                                  <img src={place.iconUrl} alt={place.name} className="w-full h-full object-cover" loading="lazy" />
+                                ) : (
+                                  <CatIcon className="w-5 h-5 text-primary/50" />
+                                )}
                               </div>
                               <p className="text-[11px] font-bold text-foreground text-center leading-tight truncate w-full">{place.name}</p>
                               <p className="text-[8px] text-muted-foreground/50 text-center leading-snug mt-0.5 truncate w-full">{place.address}</p>
