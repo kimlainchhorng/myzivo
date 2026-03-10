@@ -30,8 +30,8 @@ export function AIConciergeTrigger() {
   const { data: upcomingTrips } = useMyTrips("upcoming");
   const hasUpcomingTrips = upcomingTrips && upcomingTrips.length > 0;
 
-  // Simulated alert count (flight delay alert)
-  const alertCount = hasUpcomingTrips ? 1 : 0;
+  // TODO: Load real alert count from notifications table
+  const alertCount = 0;
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
