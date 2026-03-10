@@ -112,11 +112,11 @@ const homeServices = [
 ];
 
 /* ─── Price calculator ─── */
-const PRICE_PER_MINUTE = 0.25; // time component of fare
-
-function calcPrice(vehicle: typeof vehicleOptions[0], distanceMiles: number, durationMinutes = 0, surge = 1.0): number {
-  const raw = (vehicle.basePrice + vehicle.pricePerMile * distanceMiles + PRICE_PER_MINUTE * durationMinutes) * surge * vehicle.surgeMultiplier;
-  return Math.round(raw * 100) / 100;
+function calcPrice(vehicle: typeof DEFAULT_VEHICLE_OPTIONS[0], distanceMiles: number, durationMinutes = 0, surge = 1.0): number {
+  const raw = (vehicle.basePrice + vehicle.pricePerMile * distanceMiles + vehicle.perMinute * durationMinutes) * surge * vehicle.surgeMultiplier;
+  const withFee = raw + vehicle.bookingFee;
+  const total = Math.max(withFee, vehicle.minimumFare);
+  return Math.round(total * 100) / 100;
 }
 
 /* ─── Driver info interface ─── */
