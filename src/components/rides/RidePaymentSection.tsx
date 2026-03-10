@@ -244,14 +244,14 @@ export default function RidePaymentSection({
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-lg font-bold gap-1.5 text-sm"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/login")}
             >
               <LogIn className="w-3.5 h-3.5" />
               Sign In
             </Button>
             <Button
               className="flex-1 h-10 rounded-lg font-bold gap-1.5 text-sm bg-primary text-primary-foreground"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/signup")}
             >
               <UserPlus className="w-3.5 h-3.5" />
               Sign Up Free
