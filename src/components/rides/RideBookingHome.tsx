@@ -2368,8 +2368,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       {/* ═══════ TRIP COMPLETE — full-screen overlay ═══════ */}
       {(viewStep === "trip-complete" || viewStep === "complete") && (
         <div
-          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] overflow-y-auto px-5 pt-5 pb-4"
-          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, maxHeight: '80vh' }}
+          className="absolute inset-0 z-30 bg-background overflow-y-auto flex flex-col px-5 pt-6 pb-6"
         >
           <div className="text-center mb-6">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
