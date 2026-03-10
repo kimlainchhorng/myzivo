@@ -2660,7 +2660,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
           {/* Rate driver */}
           <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
-            <h4 className="text-sm font-bold text-foreground mb-3">Rate {MOCK_DRIVER.name}</h4>
+            <h4 className="text-sm font-bold text-foreground mb-3">Rate {assignedDriver.name}</h4>
             <div className="flex justify-center gap-2 mb-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button key={star} onClick={() => setRating(star)} className="touch-manipulation">
