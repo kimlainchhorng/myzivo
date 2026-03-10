@@ -34,8 +34,9 @@ interface ServiceItem {
   icon?: React.ComponentType<{ className?: string }>;
   image?: string;
   badge?: string;
-  badgeVariant?: "discount" | "promo" | "new";
+  badgeVariant?: "discount" | "promo" | "new" | "coming_soon";
   animClass?: string;
+  comingSoon?: boolean;
 }
 
 interface ServiceCategory {
