@@ -64,13 +64,11 @@ export default function RideDriverComm() {
       <Card className="border-primary/20">
         <CardContent className="pt-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm">MR</div>
+            <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm">D</div>
             <div>
-              <p className="text-sm font-bold text-foreground">Marcus R.</p>
+              <p className="text-sm font-bold text-foreground">Your Driver</p>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" /> ETA 4 min
-                <span>•</span>
-                <MapPin className="w-3 h-3" /> 0.3 mi away
+                <Clock className="w-3 h-3" /> En route
               </div>
             </div>
           </div>
