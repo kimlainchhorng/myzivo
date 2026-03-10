@@ -2379,7 +2379,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 active:scale-[0.97] transition-all duration-200"
               onClick={() => { setPaymentStep("idle"); setViewStep("confirm-ride"); }}
             >
-              Confirm {currentVehicle.name} · ${currentPrice.toFixed(2)}
+              Confirm {currentVehicle.name} · ${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}
             </Button>
           </div>
         </div>
