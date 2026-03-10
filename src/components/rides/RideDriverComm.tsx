@@ -18,11 +18,7 @@ const quickReplies = [
   "Running late, 5 more minutes",
 ];
 
-const messages = [
-  { id: "1", sender: "driver", text: "Hi, I'm on my way. Will be there in 4 minutes.", time: "2:31 PM", read: true },
-  { id: "2", sender: "user", text: "Great, I'll be at the main entrance.", time: "2:32 PM", read: true },
-  { id: "3", sender: "driver", text: "Perfect, I see the building. Blue Toyota Camry.", time: "2:34 PM", read: true },
-];
+const messages: { id: string; sender: string; text: string; time: string; read: boolean }[] = [];
 
 const languages = [
   { code: "en", name: "English" },
@@ -68,13 +64,11 @@ export default function RideDriverComm() {
       <Card className="border-primary/20">
         <CardContent className="pt-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm">MR</div>
+            <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm">D</div>
             <div>
-              <p className="text-sm font-bold text-foreground">Marcus R.</p>
+              <p className="text-sm font-bold text-foreground">Your Driver</p>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" /> ETA 4 min
-                <span>•</span>
-                <MapPin className="w-3 h-3" /> 0.3 mi away
+                <Clock className="w-3 h-3" /> En route
               </div>
             </div>
           </div>

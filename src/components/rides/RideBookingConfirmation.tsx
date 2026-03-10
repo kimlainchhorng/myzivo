@@ -29,11 +29,11 @@ interface ConfirmationProps {
 type BookingStep = "confirming" | "success" | "assigning" | "assigned" | "error";
 
 export default function RideBookingConfirmation({
-  pickup = "123 Main Street",
-  dropoff = "Airport Terminal B",
+  pickup = "",
+  dropoff = "",
   vehicleType = "Standard",
-  price = "$16.29",
-  eta = "3-5 min",
+  price = "",
+  eta = "",
   onTrackRide,
   onAddToCalendar,
   onCancel,
@@ -151,29 +151,26 @@ export default function RideBookingConfirmation({
             <div className="rounded-2xl bg-card border border-primary/20 p-4 shadow-lg shadow-primary/5">
               <div className="flex items-center gap-3 mb-3">
                 <Avatar className="w-14 h-14 border-2 border-primary/20">
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">MT</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-bold text-foreground">Marcus T.</span>
-                    <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[9px] font-bold">Matched</Badge>
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                    <span className="text-xs font-bold text-foreground">4.92</span>
-                    <span className="text-xs text-muted-foreground">· 2,847 trips</span>
-                  </div>
+                <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">D</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-foreground">Driver Assigned</span>
+                  <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[9px] font-bold">Matched</Badge>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Arriving in</p>
-                  <p className="text-lg font-black text-primary">{eta}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-xs text-muted-foreground">Your driver is on the way</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/30">
-                <Car className="w-4 h-4 text-muted-foreground" />
-                <span className="text-xs font-medium text-foreground">Silver Toyota Camry</span>
-                <Badge variant="outline" className="text-[9px] font-bold h-5 ml-auto">ABC 1234</Badge>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Arriving in</p>
+                <p className="text-lg font-black text-primary">{eta}</p>
               </div>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/30">
+              <Car className="w-4 h-4 text-muted-foreground" />
+              <span className="text-xs font-medium text-foreground">Vehicle details loading...</span>
+            </div>
             </div>
           </motion.div>
         )}
