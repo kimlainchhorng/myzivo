@@ -612,12 +612,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       map.setZoom(15);
     }
 
-    // Spawn ambient cars away from pins
-    const avoidPoints = [pickupCoords, dropoffCoords].filter(Boolean) as { lat: number; lng: number }[];
-    if (pickupCoords && map) {
-      clearAmbientCars();
-      ambientCarsRef.current = spawnAmbientCars(map, pickupCoords, 4, avoidPoints);
-    }
+    // Real drivers rendered by nearbyDrivers effect
 
     return () => {
       if ((pulseCircleRef as any).__interval) clearInterval((pulseCircleRef as any).__interval);
