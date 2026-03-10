@@ -29,11 +29,11 @@ interface ConfirmationProps {
 type BookingStep = "confirming" | "success" | "assigning" | "assigned" | "error";
 
 export default function RideBookingConfirmation({
-  pickup = "123 Main Street",
-  dropoff = "Airport Terminal B",
+  pickup = "",
+  dropoff = "",
   vehicleType = "Standard",
-  price = "$16.29",
-  eta = "3-5 min",
+  price = "",
+  eta = "",
   onTrackRide,
   onAddToCalendar,
   onCancel,
