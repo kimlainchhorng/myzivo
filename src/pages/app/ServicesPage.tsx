@@ -53,7 +53,7 @@ const serviceCategories: ServiceCategory[] = [
     subtitle: "Get moving in minutes",
     services: [
       { label: "Ride", href: "/rides", image: zivoRideIcon, badge: "10% Off", badgeVariant: "discount", animClass: "animate-car-run" },
-      { label: "Package", href: "/delivery", image: zivoPackageIcon, animClass: "animate-pkg-bounce" },
+      { label: "Package", href: "/delivery", image: zivoPackageIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
       { label: "Travel", href: "/flights", image: zivoFlightsIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-plane-fly" },
       { label: "Reserve", href: "/rides?tab=reserve", image: zivoReserveIcon, badge: "Promo", badgeVariant: "promo", animClass: "animate-car-run" },
       { label: "Rental Cars", href: "/rent-car", image: zivoRentalCarIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-car-run" },
