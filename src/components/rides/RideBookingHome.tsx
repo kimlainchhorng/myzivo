@@ -2390,48 +2390,46 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         <div
           className="absolute inset-0 z-40 bg-background flex flex-col overflow-hidden"
         >
-          <div className="px-5 pt-4 pb-1 shrink-0">
-            <h2 className="text-xl font-black text-foreground tracking-tight">Confirm your ride</h2>
+          <div className="px-4 pt-3 pb-0.5 shrink-0">
+            <h2 className="text-lg font-black text-foreground tracking-tight">Confirm your ride</h2>
           </div>
 
-          {/* Scrollable content */}
-          <div className="px-5 space-y-2 flex-1 overflow-y-auto min-h-0 pb-2">
+          <div className="px-4 flex-1 flex flex-col gap-1.5 overflow-hidden min-h-0">
             {/* Route card */}
-            <div className="rounded-xl bg-card border border-border/20 px-3.5 py-3">
-              <div className="flex items-start gap-3">
+            <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
+              <div className="flex items-start gap-2.5">
                 <div className="flex flex-col items-center mt-0.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-primary/15" />
-                  <div className="w-px flex-1 min-h-[22px] border-l-[2px] border-dashed border-muted-foreground/25 my-0.5" />
-                  <div className="w-2.5 h-2.5 rounded-sm bg-foreground ring-2 ring-foreground/10" />
+                  <div className="w-2 h-2 rounded-full bg-primary ring-2 ring-primary/15" />
+                  <div className="w-px flex-1 min-h-[18px] border-l-[1.5px] border-dashed border-muted-foreground/25 my-0.5" />
+                  <div className="w-2 h-2 rounded-sm bg-foreground ring-2 ring-foreground/10" />
                 </div>
-                <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex-1 min-w-0 space-y-1.5">
                   <div>
-                    <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Pickup</p>
-                    <p className="text-[13px] font-bold text-foreground leading-snug line-clamp-1">{pickup?.address || pickupDisplay}</p>
+                    <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Pickup</p>
+                    <p className="text-[12px] font-bold text-foreground leading-tight line-clamp-1">{pickup?.address || pickupDisplay}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Dropoff</p>
-                    <p className="text-[13px] font-bold text-foreground leading-snug line-clamp-2">{destination?.address || destinationDisplay}</p>
+                    <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Dropoff</p>
+                    <p className="text-[12px] font-bold text-foreground leading-tight line-clamp-1">{destination?.address || destinationDisplay}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Vehicle summary + Fare breakdown card */}
-            <div className="rounded-xl bg-card border border-border/20 px-3.5 py-3">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-[60px] h-[44px] flex items-center justify-center shrink-0 bg-muted/10 rounded-lg">
+            {/* Vehicle + Fare breakdown */}
+            <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <div className="w-[50px] h-[36px] flex items-center justify-center shrink-0 bg-muted/10 rounded-md">
                   <img src={VEHICLE_IMAGES[selectedVehicle] || VEHICLE_IMAGES["economy"]} alt={currentVehicle.name} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-bold text-foreground">{currentVehicle.name} · {currentVehicle.capacity} seats</p>
-                  <p className="text-[11px] text-muted-foreground">{currentVehicle.etaMin} min away · {currentVehicle.desc}</p>
+                  <p className="text-[13px] font-bold text-foreground leading-tight">{currentVehicle.name} · {currentVehicle.capacity} seats</p>
+                  <p className="text-[10px] text-muted-foreground">{currentVehicle.etaMin} min away · {currentVehicle.desc}</p>
                 </div>
               </div>
 
-              {/* Fare Breakdown */}
               {routeData && (
-                <div className="border-t border-border/15 pt-2 space-y-1 text-[13px]">
+                <div className="border-t border-border/15 pt-1.5 space-y-0.5 text-[12px]">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Base fare</span>
                     <span className="text-foreground">${currentVehicle.basePrice.toFixed(2)}</span>
@@ -2454,99 +2452,97 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       <span className="font-medium">-${promoDiscount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between border-t border-border/15 pt-1.5 mt-0.5">
-                    <span className="font-bold text-foreground">Total</span>
-                    <span className="font-bold text-foreground text-base">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
+                  <div className="flex justify-between border-t border-border/15 pt-1 mt-0.5">
+                    <span className="font-bold text-foreground text-[13px]">Total</span>
+                    <span className="font-bold text-foreground text-[15px]">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
                   </div>
                   {currentPrice <= currentVehicle.minimumFare && (
-                    <p className="text-[10px] text-muted-foreground/60 text-right">Minimum fare applied</p>
+                    <p className="text-[9px] text-muted-foreground/60 text-right">Minimum fare applied</p>
                   )}
                 </div>
               )}
               {!routeData && (
-                <p className="text-xl font-black text-foreground text-right">${currentPrice.toFixed(2)}</p>
+                <p className="text-lg font-black text-foreground text-right">${currentPrice.toFixed(2)}</p>
               )}
             </div>
 
             {/* Route info pills */}
             {routeData && (
-              <div className="flex items-center gap-1.5">
-                <div className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-card border border-border/20 px-2 py-2">
-                  <Timer className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-[13px] font-bold text-foreground">{routeData.duration_minutes} min</span>
+              <div className="flex items-center gap-1 shrink-0">
+                <div className="flex-1 flex items-center justify-center gap-1 rounded-md bg-card border border-border/20 px-1.5 py-1.5">
+                  <Timer className="w-3 h-3 text-primary" />
+                  <span className="text-[12px] font-bold text-foreground">{routeData.duration_minutes} min</span>
                 </div>
-                <div className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-card border border-border/20 px-2 py-2">
-                  <Route className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-[13px] font-bold text-foreground">{routeData.distance_miles} mi</span>
+                <div className="flex-1 flex items-center justify-center gap-1 rounded-md bg-card border border-border/20 px-1.5 py-1.5">
+                  <Route className="w-3 h-3 text-primary" />
+                  <span className="text-[12px] font-bold text-foreground">{routeData.distance_miles} mi</span>
                 </div>
                 {routeData.traffic_level && (
-                  <div className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-card border border-border/20 px-2 py-2">
-                    <Car className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-[13px] font-bold text-foreground capitalize">{routeData.traffic_level}</span>
+                  <div className="flex-1 flex items-center justify-center gap-1 rounded-md bg-card border border-border/20 px-1.5 py-1.5">
+                    <Car className="w-3 h-3 text-primary" />
+                    <span className="text-[12px] font-bold text-foreground capitalize">{routeData.traffic_level}</span>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Promo Code Section */}
-            <div className="rounded-xl bg-card border border-border/20 px-3.5 py-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Tag className="w-3.5 h-3.5 text-primary" />
-                <span className="text-[13px] font-bold text-foreground">Promo Code</span>
-              </div>
-              <div className="flex gap-2">
+            {/* Promo Code — inline row */}
+            <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
+              <div className="flex items-center gap-2">
+                <Tag className="w-3 h-3 text-primary shrink-0" />
+                <span className="text-[12px] font-bold text-foreground shrink-0">Promo</span>
                 <Input
-                  placeholder="ENTER PROMO CODE"
+                  placeholder="ENTER CODE"
                   value={promoInput}
                   onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
-                  className="flex-1 h-9 font-mono text-xs uppercase tracking-wider"
+                  className="flex-1 h-8 font-mono text-[11px] uppercase tracking-wider"
                   disabled={!!appliedPromo}
                 />
                 {appliedPromo ? (
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 px-3 text-destructive border-destructive/30 hover:bg-destructive/5"
+                    className="h-8 w-8 p-0 text-destructive border-destructive/30 hover:bg-destructive/5"
                     onClick={() => { setAppliedPromo(null); setPromoInput(""); setPromoDiscount(0); }}
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-3 h-3" />
                   </Button>
                 ) : (
                   <Button
                     size="sm"
-                    className="h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-semibold text-sm"
+                    className="h-8 px-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md font-semibold text-[12px]"
                     disabled={!promoInput.trim() || promoValidating}
                     onClick={handleApplyPromo}
                   >
-                    {promoValidating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Apply"}
+                    {promoValidating ? <Loader2 className="w-3 h-3 animate-spin" /> : "Apply"}
                   </Button>
                 )}
               </div>
               {appliedPromo && (
-                <div className="flex items-center gap-1.5 mt-2 px-0.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
-                  <span className="text-[11px] font-semibold text-primary">{appliedPromo.description} — saves ${promoDiscount.toFixed(2)}</span>
+                <div className="flex items-center gap-1 mt-1.5 px-0.5">
+                  <CheckCircle2 className="w-3 h-3 text-primary shrink-0" />
+                  <span className="text-[10px] font-semibold text-primary">{appliedPromo.description} — saves ${promoDiscount.toFixed(2)}</span>
                 </div>
               )}
               {promoError && (
-                <p className="text-[11px] text-destructive mt-1.5 px-0.5">{promoError}</p>
+                <p className="text-[10px] text-destructive mt-1 px-0.5">{promoError}</p>
               )}
             </div>
-          </div>
 
-          {/* Payment Section — pinned at bottom */}
-          <div className="shrink-0 px-5 pb-3 pt-1 border-t border-border/10 bg-background">
-            <RidePaymentSection
-              price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
-              vehicleName={currentVehicle.name}
-              isSubmitting={isSubmitting}
-              onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
-              onAuthorizeWithNewCard={() => handleRequestRide()}
-              clientSecret={clientSecret}
-              onPaymentSuccess={handlePaymentSuccess}
-              paymentFailed={paymentStep === "failed"}
-              onClearError={() => setPaymentStep("idle")}
-            />
+            {/* Payment Section — fills remaining space */}
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <RidePaymentSection
+                price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
+                vehicleName={currentVehicle.name}
+                isSubmitting={isSubmitting}
+                onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
+                onAuthorizeWithNewCard={() => handleRequestRide()}
+                clientSecret={clientSecret}
+                onPaymentSuccess={handlePaymentSuccess}
+                paymentFailed={paymentStep === "failed"}
+                onClearError={() => setPaymentStep("idle")}
+              />
+            </div>
           </div>
         </div>
       )}
