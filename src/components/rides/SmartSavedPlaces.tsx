@@ -27,12 +27,8 @@ const iconMap = {
   custom: { icon: MapPin, color: "text-violet-500", bg: "bg-violet-500/10" },
 };
 
-const mockPlaces: SavedPlace[] = [
-  { id: "1", name: "Home", address: "123 Main Street, Apt 4B", icon: "home", visits: 156, lastVisit: "Today" },
-  { id: "2", name: "Office", address: "400 Tech Boulevard, 12th Floor", icon: "work", visits: 98, lastVisit: "Yesterday" },
-  { id: "3", name: "Gym", address: "250 Fitness Ave", icon: "gym", visits: 34, lastVisit: "2 days ago" },
-  { id: "4", name: "Airport (JFK)", address: "JFK International Airport", icon: "favorite", visits: 12, lastVisit: "Last week" },
-];
+// TODO: Load saved places from Supabase saved_locations table
+const initialPlaces: SavedPlace[] = [];
 
 // Smart suggestions based on time of day
 function getSmartSuggestions(places: SavedPlace[]): SavedPlace[] {
