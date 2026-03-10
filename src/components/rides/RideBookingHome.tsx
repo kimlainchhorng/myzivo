@@ -36,6 +36,7 @@ import CancelRideModal from "@/components/rides/CancelRideModal";
 import { Input } from "@/components/ui/input";
 import { Tag, Percent, CheckCircle2, Loader2 } from "lucide-react";
 import PlaceLogo from "@/components/rides/PlaceLogo";
+import { useCityPricing } from "@/hooks/useCityPricing";
 
 /* ─── Types ─── */
 interface PlaceData {
@@ -79,20 +80,21 @@ const ICON_MAP: Record<string, React.ElementType> = {
   pin: MapPin,
 };
 
-const vehicleOptions = [
+// Default vehicle options (used as fallback when DB pricing not loaded)
+const DEFAULT_VEHICLE_OPTIONS = [
   // Popular
-  { id: "economy", category: "popular", name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, pricePerMile: 1.50, basePrice: 3.50, capacity: 3, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
-  { id: "share", category: "popular", name: "ZIVO Share", desc: "Share a ride, save money", etaMin: 6, pricePerMile: 0.90, basePrice: 2.00, capacity: 2, icon: Users, carSeat: false, surgeMultiplier: 0.7 },
-  { id: "comfort", category: "popular", name: "ZIVO Comfort", desc: "Top-rated drivers, extra legroom", etaMin: 5, pricePerMile: 2.20, basePrice: 5.00, capacity: 3, icon: Sparkles, carSeat: false, surgeMultiplier: 1.0 },
-  { id: "ev", category: "popular", name: "ZIVO EV", desc: "Electric, zero-emission rides", etaMin: 5, pricePerMile: 1.70, basePrice: 4.00, capacity: 3, icon: Zap, carSeat: false, surgeMultiplier: 1.0 },
-  { id: "xl", category: "popular", name: "ZIVO XL", desc: "Extra space for groups", etaMin: 5, pricePerMile: 2.00, basePrice: 5.50, capacity: 5, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "economy", category: "popular", name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, pricePerMile: 1.50, basePrice: 3.50, perMinute: 0.35, bookingFee: 2.50, minimumFare: 7.00, capacity: 3, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "share", category: "popular", name: "ZIVO Share", desc: "Share a ride, save money", etaMin: 6, pricePerMile: 1.00, basePrice: 2.00, perMinute: 0.20, bookingFee: 1.50, minimumFare: 4.00, capacity: 2, icon: Users, carSeat: false, surgeMultiplier: 0.7 },
+  { id: "comfort", category: "popular", name: "ZIVO Comfort", desc: "Top-rated drivers, extra legroom", etaMin: 5, pricePerMile: 2.50, basePrice: 5.00, perMinute: 0.50, bookingFee: 3.00, minimumFare: 10.00, capacity: 3, icon: Sparkles, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "ev", category: "popular", name: "ZIVO EV", desc: "Electric, zero-emission rides", etaMin: 5, pricePerMile: 2.00, basePrice: 4.00, perMinute: 0.40, bookingFee: 2.50, minimumFare: 8.00, capacity: 3, icon: Zap, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "xl", category: "popular", name: "ZIVO XL", desc: "Extra space for groups", etaMin: 5, pricePerMile: 2.75, basePrice: 5.50, perMinute: 0.55, bookingFee: 3.00, minimumFare: 11.00, capacity: 5, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
   // Premium
-  { id: "black-lane", category: "premium", name: "ZIVO BLACK Lane", desc: "Executive black sedan service", etaMin: 6, pricePerMile: 3.80, basePrice: 8.00, capacity: 4, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
-  { id: "black-xl", category: "premium", name: "ZIVO BLACK XL", desc: "Premium black SUV for groups", etaMin: 7, pricePerMile: 4.20, basePrice: 9.50, capacity: 6, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
-  { id: "luxury-xl", category: "premium", name: "ZIVO Luxury XL", desc: "Luxury spacious SUV experience", etaMin: 8, pricePerMile: 4.60, basePrice: 10.50, capacity: 6, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "black-lane", category: "premium", name: "ZIVO BLACK Lane", desc: "Executive black sedan service", etaMin: 6, pricePerMile: 4.50, basePrice: 9.00, perMinute: 0.90, bookingFee: 3.50, minimumFare: 18.00, capacity: 4, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "black-xl", category: "premium", name: "ZIVO BLACK XL", desc: "Premium black SUV for groups", etaMin: 7, pricePerMile: 5.50, basePrice: 11.00, perMinute: 1.10, bookingFee: 4.00, minimumFare: 22.00, capacity: 6, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "luxury-xl", category: "premium", name: "ZIVO Luxury XL", desc: "Luxury spacious SUV experience", etaMin: 8, pricePerMile: 5.50, basePrice: 10.50, perMinute: 1.10, bookingFee: 4.50, minimumFare: 25.00, capacity: 6, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
   // Accessible
-  { id: "pet", category: "accessible", name: "ZIVO Pet", desc: "Pet-friendly rides", etaMin: 6, pricePerMile: 1.80, basePrice: 4.50, capacity: 3, icon: PawPrint, carSeat: false, surgeMultiplier: 1.0 },
-  { id: "wheelchair", category: "accessible", name: "ZIVO Wheel Chair", desc: "Wheelchair accessible vehicle", etaMin: 8, pricePerMile: 1.60, basePrice: 4.00, capacity: 3, icon: Accessibility, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "pet", category: "accessible", name: "ZIVO Pet", desc: "Pet-friendly rides", etaMin: 6, pricePerMile: 2.25, basePrice: 4.50, perMinute: 0.45, bookingFee: 3.00, minimumFare: 9.00, capacity: 3, icon: PawPrint, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "wheelchair", category: "accessible", name: "ZIVO Wheel Chair", desc: "Wheelchair accessible vehicle", etaMin: 8, pricePerMile: 1.80, basePrice: 4.00, perMinute: 0.35, bookingFee: 2.50, minimumFare: 8.00, capacity: 3, icon: Accessibility, carSeat: false, surgeMultiplier: 1.0 },
 ];
 
 const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
@@ -110,11 +112,11 @@ const homeServices = [
 ];
 
 /* ─── Price calculator ─── */
-const PRICE_PER_MINUTE = 0.25; // time component of fare
-
-function calcPrice(vehicle: typeof vehicleOptions[0], distanceMiles: number, durationMinutes = 0, surge = 1.0): number {
-  const raw = (vehicle.basePrice + vehicle.pricePerMile * distanceMiles + PRICE_PER_MINUTE * durationMinutes) * surge * vehicle.surgeMultiplier;
-  return Math.round(raw * 100) / 100;
+function calcPrice(vehicle: typeof DEFAULT_VEHICLE_OPTIONS[0], distanceMiles: number, durationMinutes = 0, surge = 1.0): number {
+  const raw = (vehicle.basePrice + vehicle.pricePerMile * distanceMiles + vehicle.perMinute * durationMinutes) * surge * vehicle.surgeMultiplier;
+  const withFee = raw + vehicle.bookingFee;
+  const total = Math.max(withFee, vehicle.minimumFare);
+  return Math.round(total * 100) / 100;
 }
 
 /* ─── Driver info interface ─── */
@@ -225,7 +227,7 @@ function VehicleRow({
   originalPrice,
   surgeActive,
 }: {
-  vehicle: (typeof vehicleOptions)[0];
+  vehicle: (typeof DEFAULT_VEHICLE_OPTIONS)[0];
   selected: boolean;
   onSelect: () => void;
   price: number;
@@ -483,6 +485,32 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   );
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(userLocation?.lat ?? null, userLocation?.lng ?? null);
+
+  // Extract city from pickup address for pricing lookup
+  const pickupCity = useMemo(() => {
+    // No pickup yet — will use "default" pricing
+    return undefined;
+  }, []);
+
+  // Fetch admin-configured pricing from city_pricing table
+  const { data: cityPricingMap } = useCityPricing(pickupCity);
+
+  // Merge DB pricing into vehicle options (admin rates override defaults)
+  const vehicleOptions = useMemo(() => {
+    if (!cityPricingMap || Object.keys(cityPricingMap).length === 0) return DEFAULT_VEHICLE_OPTIONS;
+    return DEFAULT_VEHICLE_OPTIONS.map((v) => {
+      const dbPricing = cityPricingMap[v.id];
+      if (!dbPricing) return v;
+      return {
+        ...v,
+        basePrice: dbPricing.base_fare ?? v.basePrice,
+        pricePerMile: dbPricing.per_mile ?? v.pricePerMile,
+        perMinute: dbPricing.per_minute ?? v.perMinute,
+        bookingFee: dbPricing.booking_fee ?? v.bookingFee,
+        minimumFare: dbPricing.minimum_fare ?? v.minimumFare,
+      };
+    });
+  }, [cityPricingMap]);
 
   const [viewStep, setViewStep] = useState<ViewStep>("search");
   const [activeTab, setActiveTab] = useState<RideTab>("book");
