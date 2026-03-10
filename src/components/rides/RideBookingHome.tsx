@@ -562,6 +562,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     if (viewStep !== "searching") return;
     const t = setTimeout(async () => {
       setViewStep("driver-assigned");
+      toast("Driver Found! 🚗", { description: `${MOCK_DRIVER.name} is on the way. Arriving in ~${MOCK_DRIVER.etaMin} minutes.` });
       if (rideRequestId) {
         await supabase.from("ride_requests").update({ status: "driver_assigned" }).eq("id", rideRequestId);
       }
