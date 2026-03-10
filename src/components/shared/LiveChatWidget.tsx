@@ -4,7 +4,7 @@ import { MessageCircle, X, Send, Bot, User, Headphones, Loader2, Sparkles, Arrow
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 
 type ChatMessage = {
   id: number;
