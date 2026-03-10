@@ -29,8 +29,6 @@ import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useNearbyPlaces } from "@/hooks/useNearbyPlaces";
-import costcoLogo from "@/assets/nearby/costco.png";
-import krogerLogo from "@/assets/nearby/kroger.png";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { reverseGeocode } from "@/services/mapsApi";
 import RidePaymentSection from "@/components/rides/RidePaymentSection";
