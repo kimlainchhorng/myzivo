@@ -604,10 +604,29 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const COLLAPSED_SHEET_HEIGHT = 290 + stops.length * 56 + (routeData ? 48 : 0);
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
 
-  // Driver tracking
+  // Driver tracking - real-time from Supabase
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [driverEta, setDriverEta] = useState(0);
   const trackingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Subscribe to real-time driver location
+  const { location: liveDriverLocation } = useDriverLocation(
+    (viewStep === "driver-assigned" || viewStep === "driver-en-route" || viewStep === "trip-in-progress") ? assignedDriver.id || null : null
+  );
+
+  // Sync live driver location to driverCoords
+  useEffect(() => {
+    if (liveDriverLocation) {
+      setDriverCoords({ lat: liveDriverLocation.lat, lng: liveDriverLocation.lng });
+      // Calculate live ETA based on distance
+      const target = viewStep === "trip-in-progress" ? destination : pickup;
+      if (target) {
+        const dist = haversineKm(liveDriverLocation.lat, liveDriverLocation.lng, target.lat, target.lng);
+        const speedKmh = liveDriverLocation.speed && liveDriverLocation.speed > 0 ? liveDriverLocation.speed * 3.6 : 30;
+        setDriverEta(Math.max(1, Math.round((dist / speedKmh) * 60)));
+      }
+    }
+  }, [liveDriverLocation, viewStep, pickup, destination]);
 
   // Fetch user location on mount
   useEffect(() => {
