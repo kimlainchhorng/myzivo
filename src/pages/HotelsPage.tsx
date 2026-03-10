@@ -146,20 +146,11 @@ export default function HotelsPage() {
     { id: "bnb", label: "B&Bs", icon: "🏠", count: 456 },
   ];
 
-  // Last-minute deals mock
-  const lastMinuteDeals = [
-    { name: "The Grand Plaza", city: "New York", originalPrice: 289, dealPrice: 189, discount: 35, stars: 5, rating: 9.2 },
-    { name: "Seaside Resort & Spa", city: "Miami", originalPrice: 199, dealPrice: 129, discount: 35, stars: 4, rating: 8.8 },
-    { name: "Urban Loft Hotel", city: "Chicago", originalPrice: 159, dealPrice: 99, discount: 38, stars: 3, rating: 8.5 },
-  ];
+  // TODO: Load last-minute deals from Supabase or partner API
+  const lastMinuteDeals: { name: string; city: string; originalPrice: number; dealPrice: number; discount: number; stars: number; rating: number }[] = [];
 
-  // Guest review highlights mock
-  const reviewHighlights = [
-    { category: "Cleanliness", score: 9.4, icon: "🧹" },
-    { category: "Location", score: 9.1, icon: "📍" },
-    { category: "Value", score: 8.7, icon: "💰" },
-    { category: "Service", score: 9.3, icon: "🛎️" },
-  ];
+  // TODO: Load review highlights from Supabase
+  const reviewHighlights: { category: string; score: number; icon: string }[] = [];
 
   // === NEW Wave 2: More Booking/Airbnb features ===
   const [showNeighborhood, setShowNeighborhood] = useState(false);

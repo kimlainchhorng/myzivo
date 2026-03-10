@@ -44,7 +44,7 @@ interface SmartSavedPlacesProps {
 }
 
 export default function SmartSavedPlaces({ onSelect }: SmartSavedPlacesProps) {
-  const [places, setPlaces] = useState(mockPlaces);
+  const [places, setPlaces] = useState(initialPlaces);
   const [showAll, setShowAll] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState("");
