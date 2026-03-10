@@ -2008,24 +2008,30 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
             </div>
 
-            {pickup && destination && (
-              <div className="px-4 pt-2 shrink-0 bg-background border-t border-border/10" style={{ paddingBottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM} + 12px)` }}>
-                <Button
-                  className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
-                  onClick={handleConfirmSearch}
-                  disabled={isLoadingRoute}
-                >
-                  {isLoadingRoute ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                      Finding route...
-                    </span>
-                  ) : (
-                    "Choose a ride"
-                  )}
-                </Button>
-              </div>
-            )}
+            <div className="px-4 pt-2 shrink-0 bg-background border-t border-border/10" style={{ paddingBottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM} + 12px)` }}>
+              <Button
+                className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
+                onClick={() => {
+                  if (pickup && destination) {
+                    handleConfirmSearch();
+                  } else {
+                    setViewStep("search");
+                  }
+                }}
+                disabled={isLoadingRoute || isReversingGeocode}
+              >
+                {isLoadingRoute ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                    Finding route...
+                  </span>
+                ) : destination ? (
+                  "Choose a ride"
+                ) : (
+                  "Search destination"
+                )}
+              </Button>
+            </div>
           </motion.div>
 
         </>
