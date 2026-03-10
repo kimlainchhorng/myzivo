@@ -581,29 +581,109 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-advance: searching → driver-assigned after 4s
+  // Auto-advance: searching → driver-assigned — fetch real driver from Supabase
   useEffect(() => {
     if (viewStep !== "searching") return;
-    const t = setTimeout(async () => {
-      setViewStep("driver-assigned");
-      toast("Driver Found! 🚗", { description: `${MOCK_DRIVER.name} is on the way. Arriving in ~${MOCK_DRIVER.etaMin} minutes.` });
-      if (rideRequestId) {
-        await supabase.from("ride_requests").update({ status: "driver_assigned" }).eq("id", rideRequestId);
+    let cancelled = false;
+
+    const findDriver = async () => {
+      // Wait a moment for matching
+      await new Promise(r => setTimeout(r, 3000));
+      if (cancelled) return;
+
+      let driverData: AssignedDriver | null = null;
+
+      // Try to find a nearby online driver
+      if (pickup) {
+        const { data: nearby } = await supabase.rpc("get_nearby_drivers", {
+          p_lat: pickup.lat,
+          p_lng: pickup.lng,
+          p_radius_m: 15000,
+          p_limit: 1,
+        });
+
+        if (nearby && nearby.length > 0) {
+          const nearbyDriver = nearby[0];
+          // Fetch full driver details
+          const { data: driverRow } = await supabase
+            .from("drivers")
+            .select("id, full_name, rating, total_trips, vehicle_model, vehicle_color, vehicle_plate, phone, current_lat, current_lng")
+            .eq("id", nearbyDriver.driver_id)
+            .single();
+
+          if (driverRow) {
+            const firstName = driverRow.full_name?.split(" ")[0] || "Driver";
+            const lastInitial = driverRow.full_name?.split(" ")[1]?.[0] || "";
+            const initials = `${firstName[0]}${lastInitial}`.toUpperCase();
+            const vehicleDesc = [driverRow.vehicle_color, driverRow.vehicle_model].filter(Boolean).join(" ");
+
+            // Calculate real ETA using route function
+            let eta = 5;
+            if (nearbyDriver.lat && nearbyDriver.lng && pickup) {
+              const distKm = haversineKm(nearbyDriver.lat, nearbyDriver.lng, pickup.lat, pickup.lng);
+              eta = Math.max(1, Math.round(distKm / 0.5)); // ~30km/h average in city
+            }
+
+            driverData = {
+              id: driverRow.id,
+              name: `${firstName} ${lastInitial}.`,
+              initials,
+              rating: driverRow.rating ?? 0,
+              trips: driverRow.total_trips ?? 0,
+              vehicle: vehicleDesc || "Vehicle",
+              plate: driverRow.vehicle_plate || "",
+              phone: driverRow.phone || "",
+              etaMin: eta,
+              lat: nearbyDriver.lat,
+              lng: nearbyDriver.lng,
+            };
+
+            // Assign driver to ride request
+            if (rideRequestId) {
+              await supabase.from("ride_requests").update({
+                status: "driver_assigned",
+                assigned_driver_id: driverRow.id,
+              }).eq("id", rideRequestId);
+            }
+          }
+        }
       }
-    }, 4000);
-    return () => clearTimeout(t);
-  }, [viewStep, rideRequestId]);
+
+      if (cancelled) return;
+
+      // If no real driver found, show "no drivers available" and stay searching briefly
+      if (!driverData) {
+        toast.error("No drivers available nearby. Expanding search...");
+        // Retry once after brief delay
+        await new Promise(r => setTimeout(r, 3000));
+        if (cancelled) return;
+        toast.error("No drivers found. Please try again later.");
+        return;
+      }
+
+      setAssignedDriver(driverData);
+      setDriverEta(driverData.etaMin);
+      if (driverData.lat && driverData.lng) {
+        setDriverCoords({ lat: driverData.lat, lng: driverData.lng });
+      }
+      setViewStep("driver-assigned");
+      toast("Driver Found! 🚗", { description: `${driverData.name} is on the way. Arriving in ~${driverData.etaMin} min.` });
+    };
+
+    findDriver();
+    return () => { cancelled = true; };
+  }, [viewStep, rideRequestId, pickup]);
 
   // Auto-advance: driver-assigned → driver-en-route after 5s
   useEffect(() => {
     if (viewStep !== "driver-assigned") return;
-    setDriverEta(MOCK_DRIVER.etaMin);
+    setDriverEta(assignedDriver.etaMin);
     const t = setTimeout(() => {
       setViewStep("driver-en-route");
       toast("Driver En Route 🚗", { description: "Your driver is heading to your pickup location." });
     }, 5000);
     return () => clearTimeout(t);
-  }, [viewStep]);
+  }, [viewStep, assignedDriver.etaMin]);
 
   // Driver en-route animation: move toward pickup
   useEffect(() => {
