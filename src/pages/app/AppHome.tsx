@@ -315,7 +315,7 @@ const AppHome = () => {
                 <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>
             </div>
-            <div className="flex gap-5 overflow-x-auto overflow-y-visible scrollbar-hide pt-3 pb-2 pl-5 pr-5">
+            <div className="grid grid-cols-4 gap-3 px-5 pt-3 pb-2">
               {suggestions.map((s, idx) => (
                 <motion.button
                   key={s.label}
@@ -324,7 +324,7 @@ const AppHome = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.06 }}
-                  className="shrink-0 flex flex-col items-center gap-2 w-[72px] touch-manipulation relative group"
+                  className="flex flex-col items-center gap-2 touch-manipulation relative group"
                 >
                   {/* Badge */}
                   {s.badge && (
