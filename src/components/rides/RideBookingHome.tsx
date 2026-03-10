@@ -486,7 +486,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(userLocation?.lat ?? null, userLocation?.lng ?? null);
 
-  // City pricing extraction moved below pickup state declaration
+  const [viewStep, setViewStep] = useState<ViewStep>("search");
+  const [activeTab, setActiveTab] = useState<RideTab>("book");
+   const [pickup, setPickup] = useState<PlaceData | null>(null);
+  const [destination, setDestination] = useState<PlaceData | null>(null);
+  const [pickupDisplay, setPickupDisplay] = useState("");
+  const [destinationDisplay, setDestinationDisplay] = useState("");
+
+  // Extract city from pickup address for pricing lookup
+  const pickupCity = useMemo(() => {
+    if (!pickup?.address) return undefined;
+    const addr = pickup.address.toLowerCase();
+    if (addr.includes("new orleans")) return "New Orleans";
+    if (addr.includes("baton rouge")) return "Baton Rouge";
+    return undefined; // falls back to "default" pricing
+  }, [pickup?.address]);
 
   // Fetch admin-configured pricing from city_pricing table
   const { data: cityPricingMap } = useCityPricing(pickupCity);
@@ -507,13 +521,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       };
     });
   }, [cityPricingMap]);
-
-  const [viewStep, setViewStep] = useState<ViewStep>("search");
-  const [activeTab, setActiveTab] = useState<RideTab>("book");
-   const [pickup, setPickup] = useState<PlaceData | null>(null);
-  const [destination, setDestination] = useState<PlaceData | null>(null);
-  const [pickupDisplay, setPickupDisplay] = useState("");
-  const [destinationDisplay, setDestinationDisplay] = useState("");
   const [stops, setStops] = useState<{ id: string; place: PlaceData | null; display: string }[]>([]);
   const stopsRef = useRef(stops);
   stopsRef.current = stops;
