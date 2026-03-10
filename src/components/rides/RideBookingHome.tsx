@@ -115,17 +115,33 @@ function calcPrice(vehicle: typeof vehicleOptions[0], distanceMiles: number, dur
   return Math.round(raw * 100) / 100;
 }
 
-/* ─── Mock driver ─── */
-const MOCK_DRIVER = {
-  name: "Marcus T.",
-  fullName: "Marcus Thompson",
-  initials: "MT",
-  rating: 4.92,
-  trips: 2847,
-  vehicle: "Silver Toyota Camry",
-  plate: "ABC 1234",
-  phone: "+1 (555) 123-4567",
-  etaMin: 5,
+/* ─── Driver info interface ─── */
+interface AssignedDriver {
+  id: string;
+  name: string;
+  initials: string;
+  rating: number;
+  trips: number;
+  vehicle: string;
+  plate: string;
+  phone: string;
+  etaMin: number;
+  lat: number | null;
+  lng: number | null;
+}
+
+const EMPTY_DRIVER: AssignedDriver = {
+  id: "",
+  name: "Finding driver...",
+  initials: "...",
+  rating: 0,
+  trips: 0,
+  vehicle: "",
+  plate: "",
+  phone: "",
+  etaMin: 0,
+  lat: null,
+  lng: null,
 };
 
 /* ─── Map Section Wrapper ─── */
