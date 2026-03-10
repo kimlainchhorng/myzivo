@@ -714,7 +714,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       // Driver assigned — hide nearby driver markers
     } else {
       if (driverMarkerRef.current) { driverMarkerRef.current.setMap(null); driverMarkerRef.current = null; }
-      ambientCarsRef.current.forEach((m) => m.setVisible(true));
+      // No driver — nearby drivers shown by their own effect
     }
   }, [driverCoords]);
 
