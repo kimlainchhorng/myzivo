@@ -215,6 +215,16 @@ export default function RidePaymentSection({
     loadCards();
   }, [loadCards]);
 
+  // If auth is still loading, show a spinner
+  if (authLoading) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center gap-2">
+        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-muted-foreground">Loading payment…</p>
+      </div>
+    );
+  }
+
   // If user is not signed in, show sign-in prompt
   if (!user) {
     return (
