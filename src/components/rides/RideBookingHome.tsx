@@ -600,7 +600,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
 
-  const COLLAPSED_SHEET_HEIGHT = 330 + stops.length * 56 + (routeData ? 52 : 0);
+  const COLLAPSED_SHEET_HEIGHT = 290 + stops.length * 56 + (routeData ? 48 : 0);
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
 
   // Driver tracking
@@ -2159,7 +2159,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
             {/* Choose a ride button — collapsed */}
             {!sheetExpanded && (
-              <div className="px-4 pt-2 shrink-0" style={{ paddingBottom: `calc(8px + ${SAFE_BOTTOM})` }}>
+              <div className="px-4 pt-2 pb-2 shrink-0">
                 {isLoadingRoute ? (
                   <div className="flex items-center justify-center py-3">
                     <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
