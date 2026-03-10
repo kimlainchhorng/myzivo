@@ -1452,7 +1452,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   }
                 }}
                 disabled={isReversingGeocode}
-                className="w-full h-14 mt-3 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
+                className="w-full h-14 mt-8 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
                 size="lg"
               >
                 {isReversingGeocode ? "Locating..." : destinationDisplay ? "Choose a ride" : "Search destination"}
