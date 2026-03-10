@@ -488,9 +488,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Extract city from pickup address for pricing lookup
   const pickupCity = useMemo(() => {
-    // No pickup yet — will use "default" pricing
-    return undefined;
-  }, []);
+    if (!pickup?.address) return undefined;
+    const addr = pickup.address.toLowerCase();
+    if (addr.includes("new orleans")) return "New Orleans";
+    if (addr.includes("baton rouge")) return "Baton Rouge";
+    return undefined; // falls back to "default" pricing
+  }, [pickup?.address]);
 
   // Fetch admin-configured pricing from city_pricing table
   const { data: cityPricingMap } = useCityPricing(pickupCity);
