@@ -79,6 +79,8 @@ interface RideMapProps {
   /** Target for driver navigation line (pickup during en-route, dropoff during trip) */
   driverNavigationTarget?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
+  /** Real nearby driver positions to show on the map (replaces ambient cars when provided) */
+  nearbyDrivers?: { lat: number; lng: number }[];
   showUserLocationDot?: boolean;
   className?: string;
   onMapReady?: (map: google.maps.Map) => void;
@@ -463,7 +465,7 @@ function spawnAmbientCars(
   return markers;
 }
 
-function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, driverCoords, driverNavigationTarget, userLocation, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
+function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers = [], showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -474,6 +476,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const ambientCarsRef = useRef<google.maps.Marker[]>([]);
+  const realDriverMarkersRef = useRef<google.maps.Marker[]>([]);
   const driverNavLineRef = useRef<google.maps.Polyline | null>(null);
   const onCenterChangedRef = useRef<RideMapProps["onCenterChanged"]>(onCenterChanged);
   const [mapReady, setMapReady] = useState(false);
@@ -788,6 +791,41 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     }
   }, [driverCoords]);
 
+  // ─── Real nearby drivers (replaces ambient cars when provided) ───
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    // Clear old real driver markers
+    realDriverMarkersRef.current.forEach(m => m.setMap(null));
+    realDriverMarkersRef.current = [];
+
+    if (nearbyDrivers.length > 0) {
+      // Hide ambient cars when showing real drivers
+      ambientCarsRef.current.forEach(m => m.setVisible(false));
+
+      nearbyDrivers.forEach((d) => {
+        const marker = new google.maps.Marker({
+          position: { lat: d.lat, lng: d.lng },
+          map,
+          icon: {
+            url: "/vehicles/economy-car-v2.png",
+            scaledSize: new google.maps.Size(40, 22),
+            anchor: new google.maps.Point(20, 11),
+          },
+          title: "Nearby Driver",
+          zIndex: 5,
+        });
+        realDriverMarkersRef.current.push(marker);
+      });
+    } else {
+      // Show ambient cars again if no real drivers
+      if (!driverCoords) {
+        ambientCarsRef.current.forEach(m => m.setVisible(true));
+      }
+    }
+  }, [nearbyDrivers, mapReady, driverCoords]);
+
   // ─── Driver navigation line (dashed line from driver to target) ───
   useEffect(() => {
     const map = mapRef.current;
@@ -845,7 +883,11 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   }, [showUserLocationDot, userLocation, pickupCoords]);
 
   // Cleanup on unmount
-  useEffect(() => () => { clearAmbientCars(); }, [clearAmbientCars]);
+  useEffect(() => () => {
+    clearAmbientCars();
+    realDriverMarkersRef.current.forEach(m => m.setMap(null));
+    realDriverMarkersRef.current = [];
+  }, [clearAmbientCars]);
 
   return <div ref={mapContainerRef} className={`w-full h-full min-h-[200px] rounded-xl overflow-hidden ${className || ""}`} />;
 }

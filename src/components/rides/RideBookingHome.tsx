@@ -158,6 +158,7 @@ function MapSection({
   driverNavigationTarget,
   userLocation,
   routePolyline,
+  nearbyDrivers,
   onLocateUser,
   onCenterChanged,
   showUserLocationDot = true,
@@ -171,6 +172,7 @@ function MapSection({
   driverNavigationTarget?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: string | null;
+  nearbyDrivers?: { lat: number; lng: number }[];
   onLocateUser?: () => void;
   onCenterChanged?: (center: { lat: number; lng: number }) => void;
   showUserLocationDot?: boolean;
@@ -200,6 +202,7 @@ function MapSection({
           driverCoords={driverCoords || null}
           driverNavigationTarget={driverNavigationTarget || null}
           userLocation={userLocation || null}
+          nearbyDrivers={nearbyDrivers}
           showUserLocationDot={showUserLocationDot}
           routePolyline={routePolyline || null}
           onMapReady={(map) => { mapRef.current = map; }}
@@ -609,6 +612,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [driverEta, setDriverEta] = useState(0);
   const trackingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [realNearbyDrivers, setRealNearbyDrivers] = useState<{ lat: number; lng: number }[]>([]);
 
   // Subscribe to real-time driver location
   const { location: liveDriverLocation } = useDriverLocation(
@@ -635,6 +639,32 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
       .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch real nearby drivers and poll every 10s
+  useEffect(() => {
+    const center = pickup || userLocation;
+    if (!center) return;
+
+    const fetchNearby = async () => {
+      const { data, error } = await supabase.rpc("get_nearby_drivers", {
+        p_lat: center.lat,
+        p_lng: center.lng,
+        p_radius_m: 15000,
+        p_limit: 20,
+      });
+      if (error) {
+        console.error("Nearby drivers fetch error:", error);
+        return;
+      }
+      if (data) {
+        setRealNearbyDrivers(data.map((d: any) => ({ lat: d.lat, lng: d.lng })));
+      }
+    };
+
+    fetchNearby();
+    const interval = setInterval(fetchNearby, 10000);
+    return () => clearInterval(interval);
+  }, [pickup?.lat, pickup?.lng, userLocation?.lat, userLocation?.lng]);
 
   // Auto-advance: searching → driver-assigned — fetch real driver from Supabase
   useEffect(() => {
@@ -1098,7 +1128,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setIsLoadingRoute(true);
     setRouteData(null);
 
-
     console.log("[fetchRoute] waypoints:", waypoints.length, JSON.stringify(waypoints));
     try {
       const { data, error } = await supabase.functions.invoke("maps-route", {
@@ -1380,6 +1409,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 pickupCoords={null}
                 dropoffCoords={null}
                 userLocation={userLocation}
+                nearbyDrivers={realNearbyDrivers}
                 showUserLocationDot
                 onLocateUser={handleLocateUser}
                 routePolyline={null}
@@ -1493,6 +1523,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             userLocation={userLocation}
             onLocateUser={handleLocateUser}
             routePolyline={routeData?.polyline ?? null}
+            nearbyDrivers={realNearbyDrivers}
             driverCoords={
               (viewStep === "driver-en-route" || viewStep === "trip-in-progress") ? driverCoords : null
             }
@@ -1520,6 +1551,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               pickupCoords={null}
               dropoffCoords={destination}
               userLocation={userLocation}
+              nearbyDrivers={realNearbyDrivers}
               showUserLocationDot={false}
               onLocateUser={handleLocateUser}
               routePolyline={null}
