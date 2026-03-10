@@ -1,25 +1,12 @@
 /**
- * PlaceLogo – tries brand logo (Clearbit), then Google Places photo, then category icon.
- * Clearbit Logo API is free and requires no API key.
+ * PlaceLogo – tries brand logo APIs, then Google Places photo, then category icon.
+ * Uses free logo APIs (no API key needed).
  */
 import { useState, useCallback, memo } from "react";
 import { UtensilsCrossed, ShoppingCart, Fuel, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Normalize business name → probable domain
-function guessDomain(name: string): string | null {
-  const cleaned = name
-    .toLowerCase()
-    .replace(/[''\u2019]/g, "")        // McDonald's → McDonalds
-    .replace(/[^a-z0-9\s-]/g, "")      // strip special chars
-    .replace(/\s+/g, "")               // join words
-    .trim();
-
-  if (!cleaned || cleaned.length < 2) return null;
-  return `${cleaned}.com`;
-}
-
-// Well-known brand overrides for accurate domain mapping
+// Well-known brand → domain mapping
 const BRAND_DOMAINS: Record<string, string> = {
   "mcdonald's": "mcdonalds.com",
   "mcdonalds": "mcdonalds.com",
@@ -44,7 +31,6 @@ const BRAND_DOMAINS: Record<string, string> = {
   "sonic": "sonicdrivein.com",
   "whataburger": "whataburger.com",
   "arby's": "arbys.com",
-  "arbys": "arbys.com",
   "dairy queen": "dairyqueen.com",
   "five guys": "fiveguys.com",
   "in-n-out": "in-n-out.com",
@@ -74,38 +60,47 @@ const BRAND_DOMAINS: Record<string, string> = {
   "family dollar": "familydollar.com",
   "home depot": "homedepot.com",
   "lowe's": "lowes.com",
-  "lowes": "lowes.com",
   "autozone": "autozone.com",
   "o'reilly": "oreillyauto.com",
   "advance auto parts": "advanceautoparts.com",
   "shell": "shell.com",
   "chevron": "chevron.com",
   "exxon": "exxon.com",
-  "exxonmobil": "exxonmobil.com",
   "bp": "bp.com",
   "valero": "valero.com",
-  "marathon": "marathonpetroleum.com",
   "circle k": "circlek.com",
   "speedway": "speedway.com",
   "racetrac": "racetrac.com",
   "wawa": "wawa.com",
   "sheetz": "sheetz.com",
   "quiktrip": "quiktrip.com",
-  "qt": "quiktrip.com",
   "murphy usa": "murphyusa.com",
   "sam's club": "samsclub.com",
   "buc-ee's": "buc-ees.com",
+  "scenic seafood": "",
+  "snowcone island": "",
+  "empire wings": "",
 };
 
 function getBrandDomain(name: string): string | null {
   const lower = name.toLowerCase().trim();
-  // Try exact match first
-  if (BRAND_DOMAINS[lower]) return BRAND_DOMAINS[lower];
-  // Try partial match (e.g. "McDonald's Restaurant" contains "mcdonald's")
-  for (const [key, domain] of Object.entries(BRAND_DOMAINS)) {
-    if (lower.includes(key) || key.includes(lower)) return domain;
+  if (lower in BRAND_DOMAINS) {
+    return BRAND_DOMAINS[lower] || null;
   }
-  return guessDomain(name);
+  for (const [key, domain] of Object.entries(BRAND_DOMAINS)) {
+    if (domain && (lower.includes(key) || key.includes(lower))) return domain;
+  }
+  return null;
+}
+
+// Build logo URL chain for a brand domain
+function getLogoUrls(domain: string): string[] {
+  return [
+    // DeBounce free logo API (high quality, no key needed)
+    `https://logo.debounce.com/${domain}`,
+    // Google favicon (always works, lower quality but reliable)
+    `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+  ];
 }
 
 const CAT_ICONS: Record<string, LucideIcon> = {
@@ -122,58 +117,47 @@ interface PlaceLogoProps {
 }
 
 function PlaceLogoInner({ name, googlePhotoUrl, categoryType, className }: PlaceLogoProps) {
-  // State: 0 = trying clearbit, 1 = trying google photo, 2 = icon fallback
-  const [stage, setStage] = useState(0);
-
   const domain = getBrandDomain(name);
-  const clearbitUrl = domain ? `https://logo.clearbit.com/${domain}` : null;
+  const logoUrls = domain ? getLogoUrls(domain) : [];
+  
+  // Build full fallback chain: [logo APIs..., google photo]
+  const allSources = [...logoUrls, ...(googlePhotoUrl ? [googlePhotoUrl] : [])];
+  
+  const [srcIndex, setSrcIndex] = useState(0);
+  const [showIcon, setShowIcon] = useState(allSources.length === 0);
 
-  const handleClearbitError = useCallback(() => {
-    setStage(googlePhotoUrl ? 1 : 2);
-  }, [googlePhotoUrl]);
-
-  const handleGoogleError = useCallback(() => {
-    setStage(2);
-  }, []);
+  const handleError = useCallback(() => {
+    setSrcIndex((prev) => {
+      const next = prev + 1;
+      if (next >= allSources.length) {
+        setShowIcon(true);
+        return prev;
+      }
+      return next;
+    });
+  }, [allSources.length]);
 
   const FallbackIcon = CAT_ICONS[categoryType] || UtensilsCrossed;
+  const currentSrc = allSources[srcIndex];
+  const isLogoSource = srcIndex < logoUrls.length;
 
   return (
     <div className={cn(
       "w-11 h-11 rounded-xl bg-muted/50 flex items-center justify-center overflow-hidden border border-border/10",
       className
     )}>
-      {stage === 0 && clearbitUrl ? (
-        <img
-          src={clearbitUrl}
-          alt={name}
-          className="w-7 h-7 object-contain"
-          loading="lazy"
-          onError={handleClearbitError}
-        />
-      ) : stage === 0 && !clearbitUrl ? (
-        // No clearbit domain guess, skip to google photo
-        googlePhotoUrl ? (
-          <img
-            src={googlePhotoUrl}
-            alt={name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-            onError={handleGoogleError}
-          />
-        ) : (
-          <FallbackIcon className="w-5 h-5 text-primary/50" />
-        )
-      ) : stage === 1 ? (
-        <img
-          src={googlePhotoUrl}
-          alt={name}
-          className="w-full h-full object-cover"
-          loading="lazy"
-          onError={handleGoogleError}
-        />
-      ) : (
+      {showIcon ? (
         <FallbackIcon className="w-5 h-5 text-primary/50" />
+      ) : (
+        <img
+          src={currentSrc}
+          alt={name}
+          className={cn(
+            isLogoSource ? "w-7 h-7 object-contain" : "w-full h-full object-cover"
+          )}
+          loading="lazy"
+          onError={handleError}
+        />
       )}
     </div>
   );
