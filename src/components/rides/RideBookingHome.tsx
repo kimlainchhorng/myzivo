@@ -202,6 +202,7 @@ function MapSection({
           driverCoords={driverCoords || null}
           driverNavigationTarget={driverNavigationTarget || null}
           userLocation={userLocation || null}
+          nearbyDrivers={nearbyDrivers}
           showUserLocationDot={showUserLocationDot}
           routePolyline={routePolyline || null}
           onMapReady={(map) => { mapRef.current = map; }}
