@@ -2459,21 +2459,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
           <h3 className="text-base font-bold text-foreground text-center mb-0.5">Meet your driver at pickup</h3>
-          <p className="text-xs text-muted-foreground text-center mb-3">Driver arriving in {MOCK_DRIVER.etaMin} minutes.</p>
+          <p className="text-xs text-muted-foreground text-center mb-3">Driver arriving in {assignedDriver.etaMin} minutes.</p>
 
           <div className="border-t border-border/15 pt-3">
             <div className="flex items-center gap-3 mb-3">
               <Avatar className="w-14 h-14 shrink-0">
-                <AvatarFallback className="bg-foreground text-background font-bold text-lg">{MOCK_DRIVER.initials}</AvatarFallback>
+                <AvatarFallback className="bg-foreground text-background font-bold text-lg">{assignedDriver.initials}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-foreground">{MOCK_DRIVER.name}</p>
+                <p className="font-bold text-foreground">{assignedDriver.name}</p>
                 <div className="flex items-center gap-1">
                   <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                  <span className="text-sm text-muted-foreground">{MOCK_DRIVER.rating} · {MOCK_DRIVER.trips.toLocaleString()} trips</span>
+                  <span className="text-sm text-muted-foreground">{assignedDriver.rating} · {assignedDriver.trips.toLocaleString()} trips</span>
                 </div>
-                <p className="text-xs text-muted-foreground">{MOCK_DRIVER.vehicle}</p>
-                <p className="text-xs font-mono font-bold text-foreground">{MOCK_DRIVER.plate}</p>
+                <p className="text-xs text-muted-foreground">{assignedDriver.vehicle}</p>
+                <p className="text-xs font-mono font-bold text-foreground">{assignedDriver.plate}</p>
               </div>
             </div>
           </div>
