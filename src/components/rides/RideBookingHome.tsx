@@ -1551,6 +1551,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               pickupCoords={null}
               dropoffCoords={destination}
               userLocation={userLocation}
+              nearbyDrivers={realNearbyDrivers}
               showUserLocationDot={false}
               onLocateUser={handleLocateUser}
               routePolyline={null}
