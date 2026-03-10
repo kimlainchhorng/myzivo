@@ -728,9 +728,6 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     realDriverMarkersRef.current = [];
 
     if (nearbyDrivers.length > 0) {
-      // Hide ambient cars when showing real drivers
-      ambientCarsRef.current.forEach(m => m.setVisible(false));
-
       nearbyDrivers.forEach((d) => {
         const marker = new google.maps.Marker({
           position: { lat: d.lat, lng: d.lng },
