@@ -1307,6 +1307,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setRideCategory("popular");
     setClientSecret(null);
     setPaymentStep("idle");
+    setAppliedPromo(null);
+    setPromoInput("");
+    setPromoDiscount(0);
+    setPromoError(null);
   };
 
   /* ─── Cancel ride ─── */
