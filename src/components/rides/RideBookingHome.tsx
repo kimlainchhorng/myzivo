@@ -2203,11 +2203,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         >
           <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
             <h2 className="text-xl font-black text-foreground tracking-tight">Choose a ride</h2>
-            {/* Promo badge */}
-            <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs font-bold text-primary">15% promo applied</span>
-            </div>
+            {/* Promo badge — only when promo is actually applied */}
+            {appliedPromo && (
+              <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span className="text-xs font-bold text-primary">{appliedPromo.description}</span>
+              </div>
+            )}
           </div>
 
           {/* Category tabs */}
