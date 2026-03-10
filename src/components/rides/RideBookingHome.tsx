@@ -1101,6 +1101,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         throw new Error(piData?.error || "Failed to create payment");
       }
 
+      // If free ride (100% promo), skip Stripe entirely
+      if (piData.free_ride) {
+        setPaymentStep("idle");
+        setClientSecret(null);
+        await supabase.from("ride_requests").update({ status: "searching" }).eq("id", rideData.id);
+        setViewStep("searching");
+        toast.success("Free ride! Finding your driver...");
+        return;
+      }
+
       // If auto-confirmed with saved card, skip to searching
       if (piData.auto_confirmed && piData.status === "requires_capture") {
         setPaymentStep("idle");
