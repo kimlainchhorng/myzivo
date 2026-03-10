@@ -510,6 +510,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [rideCategory, setRideCategory] = useState<"popular" | "premium" | "accessible">("popular");
   const [rating, setRating] = useState(0);
   const [tip, setTip] = useState<number | null>(null);
+  const [assignedDriver, setAssignedDriver] = useState<AssignedDriver>(EMPTY_DRIVER);
 
   // Schedule state
   const [showSchedule, setShowSchedule] = useState(initialSchedule);
