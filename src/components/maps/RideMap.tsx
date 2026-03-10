@@ -76,6 +76,8 @@ interface RideMapProps {
   stopCoords?: { lat: number; lng: number }[];
   routePolyline?: string | { lat: number; lng: number }[] | null;
   driverCoords?: { lat: number; lng: number } | null;
+  /** Target for driver navigation line (pickup during en-route, dropoff during trip) */
+  driverNavigationTarget?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   showUserLocationDot?: boolean;
   className?: string;
