@@ -1085,7 +1085,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       // 2. Create Stripe PaymentIntent (pre-authorization)
       const finalPrice = appliedPromo ? Math.max(currentPrice - promoDiscount, 0) : currentPrice;
-      const amountCents = Math.max(50, Math.round(finalPrice * 100));
+      const amountCents = Math.round(finalPrice * 100);
       const { data: piData, error: piError } = await supabase.functions.invoke("create-ride-payment-intent", {
         body: {
           ride_request_id: rideData.id,
