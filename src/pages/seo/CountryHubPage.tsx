@@ -66,14 +66,15 @@ export default function CountryHubPage() {
                 Prices shown in {country.currency}. Book with confidence.
               </p>
               
-              {/* Search Widget */}
-              <div className="max-w-4xl">
-                <FlightSearchFormPro />
-              </div>
-              
-              {/* Trust Badge */}
-              <div className="mt-6">
-                <p className="text-xs text-muted-foreground">Prices shown in local currency where available.</p>
+              {/* Coming Soon Notice */}
+              <div className="max-w-md">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 mb-4">
+                  <Clock className="w-4 h-4 text-amber-500" />
+                  <span className="text-sm font-medium text-amber-500">Coming Soon</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Travel search for {country.name} is launching soon. Stay tuned for flights, hotels, and car rental comparisons.
+                </p>
               </div>
             </div>
           </section>
