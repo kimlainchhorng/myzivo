@@ -35,7 +35,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-support-c
 
 const LiveChatWidget = () => {
   const location = useLocation();
-  const isRidesPage = location.pathname.startsWith("/rides");
+  const isRidesPage = location.pathname.startsWith("/rides") || location.pathname.startsWith("/airport-transfers");
   const [isOpen, setIsOpen] = useState(false);
   const [chatMode, setChatMode] = useState<ChatMode>("ai");
   const [messages, setMessages] = useState<ChatMessage[]>([
