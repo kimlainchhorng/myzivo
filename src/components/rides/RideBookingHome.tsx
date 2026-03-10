@@ -576,6 +576,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setDriverEta(MOCK_DRIVER.etaMin);
     const t = setTimeout(() => {
       setViewStep("driver-en-route");
+      toast("Driver En Route 🚗", { description: "Your driver is heading to your pickup location." });
     }, 5000);
     return () => clearTimeout(t);
   }, [viewStep]);
