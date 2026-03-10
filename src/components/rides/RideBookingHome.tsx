@@ -612,6 +612,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [driverEta, setDriverEta] = useState(0);
   const trackingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [realNearbyDrivers, setRealNearbyDrivers] = useState<{ lat: number; lng: number }[]>([]);
 
   // Subscribe to real-time driver location
   const { location: liveDriverLocation } = useDriverLocation(
