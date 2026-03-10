@@ -218,10 +218,10 @@ export default function RidePaymentSection({
   // If user is not signed in, show sign-in prompt
   if (!user) {
     return (
-      <div className="space-y-2">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Payment</p>
-        <div className="rounded-xl bg-card border border-border/20 px-4 py-3 text-center space-y-2.5">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
+      <div className="flex flex-col h-full gap-1.5">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Payment</p>
+        <div className="rounded-xl bg-card border border-border/20 px-4 py-4 text-center flex flex-col items-center justify-center flex-1 gap-2.5">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <UserPlus className="w-5 h-5 text-primary" />
           </div>
           <div>
@@ -230,7 +230,7 @@ export default function RidePaymentSection({
               Create a free account or sign in to save cards, track rides, and earn rewards
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full">
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-lg font-bold gap-1.5 text-sm"
