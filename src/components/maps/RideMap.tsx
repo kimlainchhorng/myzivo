@@ -277,6 +277,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, route
       driverCoords={driverCoords}
       driverNavigationTarget={driverNavigationTarget}
       userLocation={userLocation}
+      nearbyDrivers={nearbyDrivers}
       showUserLocationDot={showUserLocationDot}
       className={className}
       onMapReady={handleMapReady}
