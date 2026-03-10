@@ -1827,92 +1827,53 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 )}
               </AnimatePresence>
 
-              {/* ── Nearby Places by Category ── */}
-              {(() => {
-                const nearbyCategories = [
-                  {
-                    label: "Restaurants",
-                    icon: UtensilsCrossed,
-                    places: [
-                      { logo: mcdonaldsLogo, name: "McDonald's", address: "920 S Range Ave", mi: "0.5", time: "2", price: "$3.75", lat: 30.4742, lng: -90.9563 },
-                      { logo: chickfilaLogo, name: "Chick-fil-A", address: "2710 S Range Ave", mi: "1.3", time: "5", price: "$5.75", lat: 30.4610, lng: -90.9575 },
-                      { logo: popeyesLogo, name: "Popeyes", address: "1605 S Range Ave", mi: "0.7", time: "3", price: "$4.00", lat: 30.4768, lng: -90.9555 },
-                      { logo: starbucksLogo, name: "Starbucks", address: "2145 S Range Ave", mi: "1.1", time: "4", price: "$5.25", lat: 30.4720, lng: -90.9545 },
-                      { logo: subwayLogo, name: "Subway", address: "1420 Florida Blvd", mi: "0.9", time: "3", price: "$4.50", lat: 30.4725, lng: -90.9498 },
-                      { logo: burgerkingLogo, name: "Burger King", address: "830 S Range Ave", mi: "0.4", time: "2", price: "$3.50", lat: 30.4748, lng: -90.9560 },
-                      { logo: wendysLogo, name: "Wendy's", address: "1550 S Range Ave", mi: "0.8", time: "3", price: "$4.25", lat: 30.4762, lng: -90.9548 },
-                      { logo: tacobellLogo, name: "Taco Bell", address: "1680 Florida Blvd", mi: "1.0", time: "4", price: "$5.00", lat: 30.4705, lng: -90.9480 },
-                    ],
-                  },
-                  {
-                    label: "Shops & Grocery",
-                    icon: ShoppingCart,
-                    places: [
-                      { logo: walmartLogo, name: "Walmart", address: "2050 Florida Blvd", mi: "1.2", time: "4", price: "$5.50", lat: 30.4713, lng: -90.9468 },
-                      { logo: targetLogo, name: "Target", address: "7401 Florida Blvd", mi: "3.2", time: "10", price: "$9.50", lat: 30.4538, lng: -90.9982 },
-                      { logo: dollarGeneralLogo, name: "Dollar General", address: "1310 Florida Blvd", mi: "1.0", time: "4", price: "$5.00", lat: 30.4695, lng: -90.9510 },
-                      { logo: winnDixieLogo, name: "Winn-Dixie", address: "2585 S Range Ave", mi: "1.5", time: "5", price: "$6.25", lat: 30.4628, lng: -90.9571 },
-                      { logo: costcoLogo, name: "Costco", address: "10000 Crossing Way, BR", mi: "4.5", time: "12", price: "$12.00", lat: 30.4420, lng: -91.0120 },
-                      { logo: krogerLogo, name: "Kroger", address: "3150 Florida Blvd", mi: "2.0", time: "7", price: "$7.50", lat: 30.4660, lng: -90.9380 },
-                      { logo: homedepotLogo, name: "Home Depot", address: "2550 Florida Blvd", mi: "1.8", time: "6", price: "$7.00", lat: 30.4680, lng: -90.9430 },
-                      { logo: walgreensLogo, name: "Walgreens", address: "1802 S Range Ave", mi: "0.9", time: "3", price: "$4.50", lat: 30.4755, lng: -90.9558 },
-                      { logo: cvsLogo, name: "CVS", address: "1950 Florida Blvd", mi: "1.0", time: "4", price: "$5.00", lat: 30.4710, lng: -90.9472 },
-                    ],
-                  },
-                  {
-                    label: "Gas Stations",
-                    icon: Fuel,
-                    places: [
-                      { logo: shellLogo, name: "Shell", address: "1425 Range Ave", mi: "0.8", time: "3", price: "$4.25", lat: 30.4785, lng: -90.9552 },
-                      { logo: exxonLogo, name: "Exxon", address: "1100 Florida Blvd", mi: "0.6", time: "2", price: "$3.75", lat: 30.4738, lng: -90.9505 },
-                      { logo: chevronLogo, name: "Chevron", address: "2200 S Range Ave", mi: "1.0", time: "4", price: "$5.00", lat: 30.4715, lng: -90.9550 },
-                      { logo: circlekLogo, name: "Circle K", address: "800 Hatchell Ln", mi: "0.6", time: "2", price: "$3.50", lat: 30.4760, lng: -90.9490 },
-                      { logo: sevenelevenLogo, name: "7-Eleven", address: "1200 Hatchell Ln", mi: "0.5", time: "2", price: "$3.75", lat: 30.4770, lng: -90.9485 },
-                    ],
-                  },
-                ];
-
-                return (
-                  <div className="pt-5 -mx-5 space-y-5">
-                    {nearbyCategories.map((cat) => {
-                      const CatIcon = cat.icon;
-                      return (
-                        <div key={cat.label}>
-                          <div className="flex items-center justify-between mb-2.5 px-5">
-                            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                              <CatIcon className="w-3.5 h-3.5 text-primary/60" />
-                              {cat.label}
-                            </p>
-                            <span className="text-[10px] text-muted-foreground/40">{cat.places.length} nearby</span>
-                          </div>
-                          <div
-                            className="flex gap-2.5 overflow-x-auto overflow-y-hidden px-5 pb-2 snap-x snap-mandatory touch-pan-x"
-                            style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
-                          >
-                            {cat.places.map((place, idx) => (
-                              <button
-                                key={idx}
-                                onClick={() => handleSavedPlace(place.address, place.lat, place.lng)}
-                                className="flex flex-col items-center min-w-[100px] w-[100px] rounded-2xl bg-card border border-border/15 py-3 px-2 hover:border-primary/30 hover:shadow-lg transition-all duration-200 active:scale-95 shrink-0 snap-start group"
-                              >
-                                <div className="w-11 h-11 rounded-xl bg-background flex items-center justify-center mb-2 overflow-hidden border border-border/10 group-hover:border-primary/20 group-hover:shadow-sm transition-all duration-200">
-                                  <img src={place.logo} alt={place.name} className="w-8 h-8 object-contain rounded-lg" loading="lazy" />
-                                </div>
-                                <p className="text-[11px] font-bold text-foreground text-center leading-tight truncate w-full">{place.name}</p>
-                                <p className="text-[8px] text-muted-foreground/50 text-center leading-snug mt-0.5 truncate w-full">{place.address}</p>
-                                <p className="text-[9px] text-muted-foreground mt-1.5">{place.mi} mi · {place.time} min</p>
-                                <p className="text-[13px] font-extrabold text-primary mt-1">{place.price}</p>
-                                <p className="text-[8px] text-muted-foreground/40">est.</p>
-                              </button>
-                            ))}
-                            <div className="min-w-[1px] shrink-0" />
-                          </div>
+              {/* ── Nearby Places by Category (Live from Google Places API) ── */}
+              {nearbyCategories.length > 0 && (
+                <div className="pt-5 -mx-5 space-y-5">
+                  {nearbyCategories.map((cat) => {
+                    const CatIcon = cat.type === "restaurant" ? UtensilsCrossed : cat.type === "shop" ? ShoppingCart : Fuel;
+                    return (
+                      <div key={cat.label}>
+                        <div className="flex items-center justify-between mb-2.5 px-5">
+                          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                            <CatIcon className="w-3.5 h-3.5 text-primary/60" />
+                            {cat.label}
+                          </p>
+                          <span className="text-[10px] text-muted-foreground/40">{cat.places.length} nearby</span>
                         </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
+                        <div
+                          className="flex gap-2.5 overflow-x-auto overflow-y-hidden px-5 pb-2 snap-x snap-mandatory touch-pan-x"
+                          style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+                        >
+                          {cat.places.map((place, idx) => (
+                            <button
+                              key={place.placeId || idx}
+                              onClick={() => handleSavedPlace(place.address, place.lat, place.lng)}
+                              className="flex flex-col items-center min-w-[100px] w-[100px] rounded-2xl bg-card border border-border/15 py-3 px-2 hover:border-primary/30 hover:shadow-lg transition-all duration-200 active:scale-95 shrink-0 snap-start group"
+                            >
+                              <div className="w-11 h-11 rounded-xl bg-background flex items-center justify-center mb-2 overflow-hidden border border-border/10 group-hover:border-primary/20 group-hover:shadow-sm transition-all duration-200">
+                                <img src={place.iconUrl} alt={place.name} className="w-8 h-8 object-contain rounded-lg" loading="lazy" />
+                              </div>
+                              <p className="text-[11px] font-bold text-foreground text-center leading-tight truncate w-full">{place.name}</p>
+                              <p className="text-[8px] text-muted-foreground/50 text-center leading-snug mt-0.5 truncate w-full">{place.address}</p>
+                              <p className="text-[9px] text-muted-foreground mt-1.5">{place.distanceMi} mi · {place.timeMin} min</p>
+                              <p className="text-[13px] font-extrabold text-primary mt-1">{place.priceEst}</p>
+                              <p className="text-[8px] text-muted-foreground/40">est.</p>
+                            </button>
+                          ))}
+                          <div className="min-w-[1px] shrink-0" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {nearbyLoading && (
+                <div className="pt-5 flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs text-muted-foreground">Finding nearby places...</span>
+                </div>
+              )}
 
               {/* Saved & Recent list */}
               <div className="pt-5 space-y-5">
