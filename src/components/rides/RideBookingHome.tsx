@@ -2447,6 +2447,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               <Phone className="w-4 h-4" />
               Call
             </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-10 rounded-xl gap-1.5 text-sm text-destructive border-destructive/30 hover:bg-destructive/5"
+              onClick={handleCancelRide}
+            >
+              <X className="w-4 h-4" />
+              Cancel
+            </Button>
           </div>
         </div>
       )}
