@@ -1433,7 +1433,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <Navigation className="w-4 h-4 text-primary/60 shrink-0" />
               </button>
 
-              {/* Choose Ride button */}
+            </div>
+
+            {/* Sticky Choose Ride button at bottom */}
+            <div className="shrink-0 px-5 pt-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}>
               <Button
                 onClick={() => {
                   const center = mapCenterRef.current;
@@ -1452,7 +1455,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   }
                 }}
                 disabled={isReversingGeocode}
-                className="w-full h-14 mt-32 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
+                className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
                 size="lg"
               >
                 {isReversingGeocode ? "Locating..." : destinationDisplay ? "Choose a ride" : "Search destination"}
