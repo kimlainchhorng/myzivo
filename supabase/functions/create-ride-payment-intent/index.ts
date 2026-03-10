@@ -43,11 +43,47 @@ Deno.serve(async (req) => {
       amount_cents,
       ride_type,
       wallet_credit_cents = 0,
-      payment_method_id, // optional: saved card ID for auto-charge
+      payment_method_id,
+      promo_code,
+      discount_cents = 0,
     } = await req.json();
 
-    if (!ride_request_id || !amount_cents || amount_cents < 50) {
-      return new Response(JSON.stringify({ error: "Invalid request: ride_request_id and amount_cents (>=50) required" }), {
+    if (!ride_request_id || amount_cents === undefined) {
+      return new Response(JSON.stringify({ error: "Invalid request: ride_request_id and amount_cents required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // If promo gives 100% discount, skip Stripe entirely
+    if (amount_cents <= 0 || (discount_cents > 0 && amount_cents <= 0)) {
+      await supabase
+        .from("ride_requests")
+        .update({
+          payment_status: "authorized",
+          promo_code: promo_code || null,
+          discount_cents: discount_cents || 0,
+        })
+        .eq("id", ride_request_id)
+        .eq("user_id", userId);
+
+      console.log(`[ride-payment] FREE ride ${ride_request_id} — promo ${promo_code}, no Stripe charge`);
+      return new Response(JSON.stringify({
+        ok: true,
+        client_secret: null,
+        payment_intent_id: null,
+        customer_id: null,
+        amount_cents: 0,
+        status: "requires_capture",
+        auto_confirmed: true,
+        free_ride: true,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (amount_cents < 50) {
+      return new Response(JSON.stringify({ error: "Amount too low (min 50 cents)" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -87,9 +123,11 @@ Deno.serve(async (req) => {
         ride_request_id,
         ride_type: ride_type || "economy",
         wallet_credit_cents: String(wallet_credit_cents),
-        original_amount_cents: String(amount_cents),
+        original_amount_cents: String(amount_cents + (discount_cents || 0)),
+        promo_code: promo_code || "",
+        discount_cents: String(discount_cents || 0),
       },
-      description: `ZIVO Ride - ${ride_type || "economy"}`,
+      description: `ZIVO Ride - ${ride_type || "economy"}${promo_code ? ` (promo: ${promo_code})` : ""}`,
     };
 
     // If saved payment method provided, auto-confirm off-session

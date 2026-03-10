@@ -1084,18 +1084,31 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setRideRequestId(rideData.id);
 
       // 2. Create Stripe PaymentIntent (pre-authorization)
-      const amountCents = Math.round(currentPrice * 100);
+      const finalPrice = appliedPromo ? Math.max(currentPrice - promoDiscount, 0) : currentPrice;
+      const amountCents = Math.max(50, Math.round(finalPrice * 100));
       const { data: piData, error: piError } = await supabase.functions.invoke("create-ride-payment-intent", {
         body: {
           ride_request_id: rideData.id,
           amount_cents: amountCents,
           ride_type: selectedVehicle,
           payment_method_id: paymentMethodId || undefined,
+          promo_code: appliedPromo?.code || undefined,
+          discount_cents: appliedPromo ? Math.round(promoDiscount * 100) : 0,
         },
       });
 
       if (piError || !piData?.ok) {
         throw new Error(piData?.error || "Failed to create payment");
+      }
+
+      // If free ride (100% promo), skip Stripe entirely
+      if (piData.free_ride) {
+        setPaymentStep("idle");
+        setClientSecret(null);
+        await supabase.from("ride_requests").update({ status: "searching" }).eq("id", rideData.id);
+        setViewStep("searching");
+        toast.success("Free ride! Finding your driver...");
+        return;
       }
 
       // If auto-confirmed with saved card, skip to searching
