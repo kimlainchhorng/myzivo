@@ -36,6 +36,7 @@ import CancelRideModal from "@/components/rides/CancelRideModal";
 import { Input } from "@/components/ui/input";
 import { Tag, Percent, CheckCircle2, Loader2 } from "lucide-react";
 import PlaceLogo from "@/components/rides/PlaceLogo";
+import { useCityPricing } from "@/hooks/useCityPricing";
 
 /* ─── Types ─── */
 interface PlaceData {
