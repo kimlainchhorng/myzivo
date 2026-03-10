@@ -31,6 +31,7 @@ import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { reverseGeocode } from "@/services/mapsApi";
 import RidePaymentSection from "@/components/rides/RidePaymentSection";
+import CancelRideModal from "@/components/rides/CancelRideModal";
 import { Input } from "@/components/ui/input";
 import { Tag, Percent, CheckCircle2, Loader2 } from "lucide-react";
 
