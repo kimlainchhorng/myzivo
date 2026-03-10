@@ -702,7 +702,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         lat: startLat + (pickup.lat - startLat) * progress,
         lng: startLng + (pickup.lng - startLng) * progress,
       });
-      setDriverEta(Math.max(0, MOCK_DRIVER.etaMin - Math.floor(progress * MOCK_DRIVER.etaMin)));
+      setDriverEta(Math.max(0, assignedDriver.etaMin - Math.floor(progress * assignedDriver.etaMin)));
 
       if (progress >= 1) {
         clearInterval(interval);
