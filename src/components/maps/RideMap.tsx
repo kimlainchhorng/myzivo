@@ -743,10 +743,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         realDriverMarkersRef.current.push(marker);
       });
     } else {
-      // Show ambient cars again if no real drivers
-      if (!driverCoords) {
-        ambientCarsRef.current.forEach(m => m.setVisible(true));
-      }
+      // No real drivers nearby — map stays clean
     }
   }, [nearbyDrivers, mapReady, driverCoords]);
 
