@@ -9,8 +9,8 @@ import { StatusBar, Style } from "@capacitor/status-bar";
 setupGlobalErrorHandlers();
 
 if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios") {
-	// Ensure native iOS status bar does not overlap web content.
-	void StatusBar.setOverlaysWebView({ overlay: false });
+	// Allow web view to extend behind the status bar so env(safe-area-inset-top) works correctly
+	void StatusBar.setOverlaysWebView({ overlay: true });
 	void StatusBar.setStyle({ style: Style.Dark });
 }
 
