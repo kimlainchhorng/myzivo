@@ -146,7 +146,7 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
   return googleMapsPromise;
 }
 
-export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, routePolyline, driverCoords, driverNavigationTarget, userLocation, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
+export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
   const [isReady, setIsReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failedReason, setFailedReason] = useState<string>("");
@@ -277,6 +277,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, route
       driverCoords={driverCoords}
       driverNavigationTarget={driverNavigationTarget}
       userLocation={userLocation}
+      nearbyDrivers={nearbyDrivers}
       showUserLocationDot={showUserLocationDot}
       className={className}
       onMapReady={handleMapReady}
