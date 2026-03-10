@@ -48,6 +48,7 @@ const LiveChatWidget = () => {
   const [escalationMessage, setEscalationMessage] = useState("");
   const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
   const [pulseVisible, setPulseVisible] = useState(true);
+  const [isDismissed, setIsDismissed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
