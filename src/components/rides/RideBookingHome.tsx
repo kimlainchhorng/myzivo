@@ -486,11 +486,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(userLocation?.lat ?? null, userLocation?.lng ?? null);
 
+  const [viewStep, setViewStep] = useState<ViewStep>("search");
+  const [activeTab, setActiveTab] = useState<RideTab>("book");
+   const [pickup, setPickup] = useState<PlaceData | null>(null);
+  const [destination, setDestination] = useState<PlaceData | null>(null);
+  const [pickupDisplay, setPickupDisplay] = useState("");
+  const [destinationDisplay, setDestinationDisplay] = useState("");
+
   // Extract city from pickup address for pricing lookup
   const pickupCity = useMemo(() => {
-    // No pickup yet — will use "default" pricing
-    return undefined;
-  }, []);
+    if (!pickup?.address) return undefined;
+    const addr = pickup.address.toLowerCase();
+    if (addr.includes("new orleans")) return "New Orleans";
+    if (addr.includes("baton rouge")) return "Baton Rouge";
+    return undefined; // falls back to "default" pricing
+  }, [pickup?.address]);
 
   // Fetch admin-configured pricing from city_pricing table
   const { data: cityPricingMap } = useCityPricing(pickupCity);
@@ -511,13 +521,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       };
     });
   }, [cityPricingMap]);
-
-  const [viewStep, setViewStep] = useState<ViewStep>("search");
-  const [activeTab, setActiveTab] = useState<RideTab>("book");
-   const [pickup, setPickup] = useState<PlaceData | null>(null);
-  const [destination, setDestination] = useState<PlaceData | null>(null);
-  const [pickupDisplay, setPickupDisplay] = useState("");
-  const [destinationDisplay, setDestinationDisplay] = useState("");
   const [stops, setStops] = useState<{ id: string; place: PlaceData | null; display: string }[]>([]);
   const stopsRef = useRef(stops);
   stopsRef.current = stops;
@@ -1304,6 +1307,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setRideCategory("popular");
     setClientSecret(null);
     setPaymentStep("idle");
+    setAppliedPromo(null);
+    setPromoInput("");
+    setPromoDiscount(0);
+    setPromoError(null);
   };
 
   /* ─── Cancel ride ─── */
@@ -2200,11 +2207,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         >
           <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
             <h2 className="text-xl font-black text-foreground tracking-tight">Choose a ride</h2>
-            {/* Promo badge */}
-            <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs font-bold text-primary">15% promo applied</span>
-            </div>
+            {/* Promo badge — only when promo is actually applied */}
+            {appliedPromo && (
+              <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span className="text-xs font-bold text-primary">{appliedPromo.description}</span>
+              </div>
+            )}
           </div>
 
           {/* Category tabs */}
@@ -2370,7 +2379,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 active:scale-[0.97] transition-all duration-200"
               onClick={() => { setPaymentStep("idle"); setViewStep("confirm-ride"); }}
             >
-              Confirm {currentVehicle.name} · ${currentPrice.toFixed(2)}
+              Confirm {currentVehicle.name} · ${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}
             </Button>
           </div>
         </div>
@@ -2407,9 +2416,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
             </div>
 
-            {/* Vehicle summary card */}
+            {/* Vehicle summary + Fare breakdown card */}
             <div className="rounded-2xl bg-card border border-border/20 p-4">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 mb-3">
                 <div className="w-[72px] h-[52px] flex items-center justify-center shrink-0 bg-muted/10 rounded-xl">
                   <img src={VEHICLE_IMAGES[selectedVehicle] || VEHICLE_IMAGES["economy"]} alt={currentVehicle.name} className="w-full h-full object-contain" />
                 </div>
@@ -2417,8 +2426,45 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <p className="text-[15px] font-bold text-foreground">{currentVehicle.name} · {currentVehicle.capacity} seats</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{currentVehicle.etaMin} min away · {currentVehicle.desc}</p>
                 </div>
-                <p className="text-xl font-black text-foreground tabular-nums">${currentPrice.toFixed(2)}</p>
               </div>
+
+              {/* Fare Breakdown */}
+              {routeData && (
+                <div className="border-t border-border/15 pt-3 space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Base fare</span>
+                    <span className="text-foreground">${currentVehicle.basePrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Distance ({routeData.distance_miles} mi × ${currentVehicle.pricePerMile.toFixed(2)})</span>
+                    <span className="text-foreground">${(routeData.distance_miles * currentVehicle.pricePerMile).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Time ({routeData.duration_minutes} min × ${currentVehicle.perMinute.toFixed(2)})</span>
+                    <span className="text-foreground">${(routeData.duration_minutes * currentVehicle.perMinute).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Booking fee</span>
+                    <span className="text-foreground">${currentVehicle.bookingFee.toFixed(2)}</span>
+                  </div>
+                  {appliedPromo && promoDiscount > 0 && (
+                    <div className="flex justify-between text-primary">
+                      <span className="font-medium">Promo ({appliedPromo.code})</span>
+                      <span className="font-medium">-${promoDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-border/15 pt-2 mt-1">
+                    <span className="font-bold text-foreground">Total</span>
+                    <span className="font-bold text-foreground text-lg">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
+                  </div>
+                  {currentPrice <= currentVehicle.minimumFare && (
+                    <p className="text-[10px] text-muted-foreground/60 text-right">Minimum fare applied</p>
+                  )}
+                </div>
+              )}
+              {!routeData && (
+                <p className="text-xl font-black text-foreground text-right">${currentPrice.toFixed(2)}</p>
+              )}
             </div>
 
             {/* Route info pills */}
@@ -2740,9 +2786,41 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </div>
                 </>
               )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Vehicle</span>
+                <span className="text-foreground">{currentVehicle.name}</span>
+              </div>
+              {routeData && (
+                <>
+                  <div className="border-t border-border/15 pt-2 mt-1 space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Base fare</span>
+                      <span className="text-foreground">${currentVehicle.basePrice.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Distance</span>
+                      <span className="text-foreground">${(routeData.distance_miles * currentVehicle.pricePerMile).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Time</span>
+                      <span className="text-foreground">${(routeData.duration_minutes * currentVehicle.perMinute).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Booking fee</span>
+                      <span className="text-foreground">${currentVehicle.bookingFee.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+              {appliedPromo && promoDiscount > 0 && (
+                <div className="flex justify-between text-primary">
+                  <span className="font-medium">Discount ({appliedPromo.code})</span>
+                  <span className="font-medium">-${promoDiscount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t border-border/20 pt-2">
-                <span className="font-bold text-foreground">Amount</span>
-                <span className="font-bold text-foreground">${currentPrice.toFixed(2)}</span>
+                <span className="font-bold text-foreground">Amount charged</span>
+                <span className="font-bold text-foreground">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment</span>
