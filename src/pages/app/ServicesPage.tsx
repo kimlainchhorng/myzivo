@@ -177,6 +177,9 @@ export default function ServicesPage() {
   const [runningLabel, setRunningLabel] = useState<string | null>(null);
 
   const handleServiceClick = (service: ServiceItem) => {
+    if (service.comingSoon) {
+      return; // Don't navigate for coming soon services
+    }
     if (service.animClass) {
       setRunningLabel(service.label);
       setTimeout(() => {
