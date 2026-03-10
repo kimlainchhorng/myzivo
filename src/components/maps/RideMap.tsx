@@ -79,6 +79,8 @@ interface RideMapProps {
   /** Target for driver navigation line (pickup during en-route, dropoff during trip) */
   driverNavigationTarget?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
+  /** Real nearby driver positions to show on the map (replaces ambient cars when provided) */
+  nearbyDrivers?: { lat: number; lng: number }[];
   showUserLocationDot?: boolean;
   className?: string;
   onMapReady?: (map: google.maps.Map) => void;
