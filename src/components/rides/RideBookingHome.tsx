@@ -739,82 +739,37 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     return () => clearTimeout(t);
   }, [viewStep, assignedDriver.etaMin]);
 
-  // Driver en-route animation: move toward pickup using real driver coords
+  // Driver en-route: monitor real location, detect arrival at pickup
   useEffect(() => {
     if (viewStep !== "driver-en-route") return;
-    if (!pickup) return;
+    if (!pickup || !liveDriverLocation) return;
 
-    // Use real driver coordinates if available, otherwise estimate
-    const startLat = assignedDriver.lat ?? (pickup.lat + 0.01);
-    const startLng = assignedDriver.lng ?? (pickup.lng - 0.008);
-    setDriverCoords({ lat: startLat, lng: startLng });
-
-    const totalSteps = Math.max(10, assignedDriver.etaMin * 4); // ~4 updates per minute
-    let step = 0;
-    const interval = setInterval(() => {
-      step++;
-      const progress = Math.min(step / totalSteps, 1);
-      setDriverCoords({
-        lat: startLat + (pickup.lat - startLat) * progress,
-        lng: startLng + (pickup.lng - startLng) * progress,
-      });
-      setDriverEta(Math.max(0, assignedDriver.etaMin - Math.floor(progress * assignedDriver.etaMin)));
-
-      if (progress >= 1) {
-        clearInterval(interval);
-        toast("Driver Arrived! 📍", { description: "Your driver has arrived at the pickup point." });
-        setViewStep("trip-in-progress");
+    const dist = haversineKm(liveDriverLocation.lat, liveDriverLocation.lng, pickup.lat, pickup.lng);
+    // Driver arrived at pickup (within 100m)
+    if (dist < 0.1) {
+      toast("Driver Arrived! 📍", { description: "Your driver has arrived at the pickup point." });
+      setViewStep("trip-in-progress");
+      if (rideRequestId) {
+        supabase.from("ride_requests").update({ status: "in_progress" }).eq("id", rideRequestId);
       }
-    }, 1500);
+    }
+  }, [viewStep, pickup, liveDriverLocation, rideRequestId]);
 
-    trackingIntervalRef.current = interval;
-    return () => clearInterval(interval);
-  }, [viewStep, pickup, assignedDriver]);
-
-  // Auto-advance: trip-in-progress → trip-complete after 8s
+  // Trip in-progress: monitor real location, detect arrival at destination
   useEffect(() => {
     if (viewStep !== "trip-in-progress") return;
+    if (!destination || !liveDriverLocation) return;
 
-    // Move driver toward destination
-    if (pickup && destination) {
-      const startLat = pickup.lat;
-      const startLng = pickup.lng;
-      let step = 0;
-
-      const interval = setInterval(() => {
-        step++;
-        const progress = Math.min(step / 20, 1);
-        setDriverCoords({
-          lat: startLat + (destination.lat - startLat) * progress,
-          lng: startLng + (destination.lng - startLng) * progress,
-        });
-      }, 400);
-
-      trackingIntervalRef.current = interval;
-
-      const t = setTimeout(async () => {
-        clearInterval(interval);
-        toast.success("Trip Complete! 🎉", { description: "You've arrived at your destination. Rate your ride!" });
-        setViewStep("trip-complete");
-        if (rideRequestId) {
-          await supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
-        }
-      }, 8000);
-
-      return () => {
-        clearInterval(interval);
-        clearTimeout(t);
-      };
-    }
-
-    const t = setTimeout(async () => {
+    const dist = haversineKm(liveDriverLocation.lat, liveDriverLocation.lng, destination.lat, destination.lng);
+    // Driver arrived at destination (within 150m)
+    if (dist < 0.15) {
+      toast.success("Trip Complete! 🎉", { description: "You've arrived at your destination. Rate your ride!" });
       setViewStep("trip-complete");
       if (rideRequestId) {
-        await supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
+        supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
       }
-    }, 8000);
-    return () => clearTimeout(t);
-  }, [viewStep, pickup, destination, rideRequestId]);
+    }
+  }, [viewStep, destination, liveDriverLocation, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
     getCurrentLocation()
