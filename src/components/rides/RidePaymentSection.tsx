@@ -172,7 +172,7 @@ export default function RidePaymentSection({
   paymentFailed,
   onClearError,
 }: RidePaymentSectionProps) {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
