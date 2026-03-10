@@ -133,6 +133,7 @@ function MapSection({
   dropoffCoords,
   stopCoords = [],
   driverCoords,
+  driverNavigationTarget,
   userLocation,
   routePolyline,
   onLocateUser,
@@ -145,6 +146,7 @@ function MapSection({
   dropoffCoords?: { lat: number; lng: number } | null;
   stopCoords?: { lat: number; lng: number }[];
   driverCoords?: { lat: number; lng: number } | null;
+  driverNavigationTarget?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: string | null;
   onLocateUser?: () => void;
