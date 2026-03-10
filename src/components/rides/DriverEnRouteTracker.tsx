@@ -42,20 +42,20 @@ const statusConfig = {
 };
 
 const defaultDriver: DriverInfo = {
-  name: "Marcus T.",
-  rating: 4.92,
-  trips: 2847,
-  plate: "ABC 1234",
-  vehicle: "Toyota Camry",
-  vehicleColor: "Silver",
+  name: "",
+  rating: 0,
+  trips: 0,
+  plate: "",
+  vehicle: "",
+  vehicleColor: "",
 };
 
 export default function DriverEnRouteTracker({
   tripId,
   driver = defaultDriver,
-  etaMinutes = 5,
-  pickupAddress = "123 Main St",
-  dropoffAddress = "456 Oak Ave",
+  etaMinutes = 0,
+  pickupAddress = "",
+  dropoffAddress = "",
   status = "arriving",
   onCancel,
   onContact,
