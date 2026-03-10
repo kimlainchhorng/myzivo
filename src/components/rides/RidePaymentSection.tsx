@@ -172,7 +172,7 @@ export default function RidePaymentSection({
   paymentFailed,
   onClearError,
 }: RidePaymentSectionProps) {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -214,6 +214,16 @@ export default function RidePaymentSection({
   useEffect(() => {
     loadCards();
   }, [loadCards]);
+
+  // If auth is still loading, show a spinner
+  if (authLoading) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center gap-2">
+        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-muted-foreground">Loading payment…</p>
+      </div>
+    );
+  }
 
   // If user is not signed in, show sign-in prompt
   if (!user) {
