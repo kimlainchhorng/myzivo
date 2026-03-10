@@ -486,14 +486,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(userLocation?.lat ?? null, userLocation?.lng ?? null);
 
-  // Extract city from pickup address for pricing lookup
-  const pickupCity = useMemo(() => {
-    if (!pickup?.address) return undefined;
-    const addr = pickup.address.toLowerCase();
-    if (addr.includes("new orleans")) return "New Orleans";
-    if (addr.includes("baton rouge")) return "Baton Rouge";
-    return undefined; // falls back to "default" pricing
-  }, [pickup?.address]);
+  // City pricing extraction moved below pickup state declaration
 
   // Fetch admin-configured pricing from city_pricing table
   const { data: cityPricingMap } = useCityPricing(pickupCity);
