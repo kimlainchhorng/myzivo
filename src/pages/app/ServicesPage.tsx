@@ -179,7 +179,10 @@ export default function ServicesPage() {
 
   const handleServiceClick = (service: ServiceItem) => {
     if (service.comingSoon) {
-      return; // Don't navigate for coming soon services
+      toast(`${service.label} is coming soon!`, {
+        description: "We're working hard to bring this to you. Stay tuned!",
+      });
+      return;
     }
     if (service.animClass) {
       setRunningLabel(service.label);
