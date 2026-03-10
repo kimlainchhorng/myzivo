@@ -788,6 +788,42 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     }
   }, [driverCoords]);
 
+  // ─── Driver navigation line (dashed line from driver to target) ───
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    // Clean up previous line
+    if (driverNavLineRef.current) {
+      driverNavLineRef.current.setMap(null);
+      driverNavLineRef.current = null;
+    }
+
+    if (driverCoords && driverNavigationTarget) {
+      driverNavLineRef.current = new google.maps.Polyline({
+        path: [driverCoords, driverNavigationTarget],
+        strokeColor: "#22c55e",
+        strokeWeight: 3,
+        strokeOpacity: 0,
+        geodesic: true,
+        icons: [{
+          icon: { path: "M 0,-1 0,1", strokeOpacity: 0.6, strokeColor: "#22c55e", scale: 3 },
+          offset: "0",
+          repeat: "12px",
+        }],
+        map,
+        zIndex: 90,
+      });
+    }
+
+    return () => {
+      if (driverNavLineRef.current) {
+        driverNavLineRef.current.setMap(null);
+        driverNavLineRef.current = null;
+      }
+    };
+  }, [driverCoords, driverNavigationTarget, mapReady]);
+
   // ─── User location dot ───
   useEffect(() => {
     const map = mapRef.current;
