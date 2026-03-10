@@ -158,6 +158,7 @@ function MapSection({
   driverNavigationTarget,
   userLocation,
   routePolyline,
+  nearbyDrivers,
   onLocateUser,
   onCenterChanged,
   showUserLocationDot = true,
@@ -171,6 +172,7 @@ function MapSection({
   driverNavigationTarget?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: string | null;
+  nearbyDrivers?: { lat: number; lng: number }[];
   onLocateUser?: () => void;
   onCenterChanged?: (center: { lat: number; lng: number }) => void;
   showUserLocationDot?: boolean;
