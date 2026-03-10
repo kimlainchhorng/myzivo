@@ -227,7 +227,7 @@ function VehicleRow({
   originalPrice,
   surgeActive,
 }: {
-  vehicle: (typeof vehicleOptions)[0];
+  vehicle: (typeof DEFAULT_VEHICLE_OPTIONS)[0];
   selected: boolean;
   onSelect: () => void;
   price: number;
