@@ -519,7 +519,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         center,
         zoom: 14,
         disableDefaultUI: true,
-        zoomControl: false,
+        zoomControl: true,
         styles: getMapStyle(),
         gestureHandling: "greedy",
       });
