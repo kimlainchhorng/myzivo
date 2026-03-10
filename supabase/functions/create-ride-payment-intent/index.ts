@@ -123,9 +123,11 @@ Deno.serve(async (req) => {
         ride_request_id,
         ride_type: ride_type || "economy",
         wallet_credit_cents: String(wallet_credit_cents),
-        original_amount_cents: String(amount_cents),
+        original_amount_cents: String(amount_cents + (discount_cents || 0)),
+        promo_code: promo_code || "",
+        discount_cents: String(discount_cents || 0),
       },
-      description: `ZIVO Ride - ${ride_type || "economy"}`,
+      description: `ZIVO Ride - ${ride_type || "economy"}${promo_code ? ` (promo: ${promo_code})` : ""}`,
     };
 
     // If saved payment method provided, auto-confirm off-session
