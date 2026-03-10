@@ -2052,7 +2052,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         >
           <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25 cursor-grab active:cursor-grabbing shrink-0" />
 
-          <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="flex-1 overflow-hidden flex flex-col justify-between">
             {/* Route info */}
             <div className="px-5 pt-3 pb-2 shrink-0">
                 <div className="flex items-start gap-3 mb-2">
