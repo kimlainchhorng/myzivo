@@ -49,7 +49,6 @@ const MOCK_GIFT_CARDS: GiftCard[] = [];
 
 // TODO: Load promo codes from Supabase promo_codes table
 const VALID_PROMO_CODES: PromoCode[] = [];
-];
 
 export const GiftCardsCredits = ({ 
   className, 
