@@ -46463,41 +46463,23 @@ export type Database = {
           user_role: string
         }[]
       }
-      get_nearby_drivers:
-        | {
-            Args: {
-              p_lat: number
-              p_limit?: number
-              p_lng: number
-              p_radius_m: number
-            }
-            Returns: {
-              driver_id: string
-              driver_state: string
-              is_busy: boolean
-              is_online: boolean
-              last_seen: string
-              lat: number
-              lng: number
-            }[]
-          }
-        | {
-            Args: {
-              p_lat: number
-              p_limit?: number
-              p_lng: number
-              p_radius_m: number
-            }
-            Returns: {
-              driver_id: string
-              driver_state: string
-              is_busy: boolean
-              is_online: boolean
-              last_seen: string
-              lat: number
-              lng: number
-            }[]
-          }
+      get_nearby_drivers: {
+        Args: {
+          p_lat: number
+          p_limit?: number
+          p_lng: number
+          p_radius_m: number
+        }
+        Returns: {
+          driver_id: string
+          driver_state: string
+          is_busy: boolean
+          is_online: boolean
+          last_seen: string
+          lat: number
+          lng: number
+        }[]
+      }
       get_or_create_order_chat: {
         Args: { p_order_id: string }
         Returns: string
