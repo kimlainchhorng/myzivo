@@ -476,9 +476,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         }
       });
 
-      // Spawn ambient cars (will be repositioned when coords arrive)
-      const carCenter = pickupCoords || userLocation || center;
-      ambientCarsRef.current = spawnAmbientCars(map, carCenter, 4, []);
+      // Real drivers are rendered by the nearbyDrivers effect
 
       setTimeout(() => {
         if (!mapRef.current) return;
