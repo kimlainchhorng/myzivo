@@ -685,19 +685,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     return () => clearTimeout(t);
   }, [viewStep, assignedDriver.etaMin]);
 
-  // Driver en-route animation: move toward pickup
+  // Driver en-route animation: move toward pickup using real driver coords
   useEffect(() => {
     if (viewStep !== "driver-en-route") return;
     if (!pickup) return;
 
-    const startLat = pickup.lat + 0.01;
-    const startLng = pickup.lng - 0.008;
+    // Use real driver coordinates if available, otherwise estimate
+    const startLat = assignedDriver.lat ?? (pickup.lat + 0.01);
+    const startLng = assignedDriver.lng ?? (pickup.lng - 0.008);
     setDriverCoords({ lat: startLat, lng: startLng });
 
+    const totalSteps = Math.max(10, assignedDriver.etaMin * 4); // ~4 updates per minute
     let step = 0;
     const interval = setInterval(() => {
       step++;
-      const progress = Math.min(step / 20, 1);
+      const progress = Math.min(step / totalSteps, 1);
       setDriverCoords({
         lat: startLat + (pickup.lat - startLat) * progress,
         lng: startLng + (pickup.lng - startLng) * progress,
@@ -713,7 +715,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
     trackingIntervalRef.current = interval;
     return () => clearInterval(interval);
-  }, [viewStep, pickup]);
+  }, [viewStep, pickup, assignedDriver]);
 
   // Auto-advance: trip-in-progress → trip-complete after 8s
   useEffect(() => {
