@@ -218,36 +218,36 @@ export default function RidePaymentSection({
   // If user is not signed in, show sign-in prompt
   if (!user) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Payment</p>
-        <div className="rounded-2xl bg-card border border-border/20 p-6 text-center space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-            <UserPlus className="w-7 h-7 text-primary" />
+        <div className="rounded-xl bg-card border border-border/20 px-4 py-3 text-center space-y-2.5">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
+            <UserPlus className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-base font-bold text-foreground">Sign in to book your ride</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm font-bold text-foreground">Sign in to book your ride</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
               Create a free account or sign in to save cards, track rides, and earn rewards
             </p>
           </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="flex-1 h-12 rounded-xl font-bold gap-2"
+              className="flex-1 h-10 rounded-lg font-bold gap-1.5 text-sm"
               onClick={() => navigate("/auth")}
             >
-              <LogIn className="w-4 h-4" />
+              <LogIn className="w-3.5 h-3.5" />
               Sign In
             </Button>
             <Button
-              className="flex-1 h-12 rounded-xl font-bold gap-2 bg-primary text-primary-foreground"
+              className="flex-1 h-10 rounded-lg font-bold gap-1.5 text-sm bg-primary text-primary-foreground"
               onClick={() => navigate("/auth")}
             >
-              <UserPlus className="w-4 h-4" />
+              <UserPlus className="w-3.5 h-3.5" />
               Sign Up Free
             </Button>
           </div>
-          <div className="flex items-center gap-2 justify-center text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 justify-center text-[10px] text-muted-foreground">
             <Shield className="w-3 h-3" />
             <span>Your payment info is secured by Stripe</span>
           </div>
