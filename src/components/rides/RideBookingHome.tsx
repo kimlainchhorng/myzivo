@@ -1102,32 +1102,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setIsLoadingRoute(true);
     setRouteData(null);
 
-  // Fetch real nearby drivers and poll every 10s
-  useEffect(() => {
-    const center = pickup || userLocation;
-    if (!center) return;
-
-    const fetchNearby = async () => {
-      const { data, error } = await supabase.rpc("get_nearby_drivers", {
-        p_lat: center.lat,
-        p_lng: center.lng,
-        p_radius_m: 15000,
-        p_limit: 20,
-      });
-      if (error) {
-        console.error("Nearby drivers fetch error:", error);
-        return;
-      }
-      if (data) {
-        setRealNearbyDrivers(data.map((d: any) => ({ lat: d.lat, lng: d.lng })));
-      }
-    };
-
-    fetchNearby();
-    const interval = setInterval(fetchNearby, 10000);
-    return () => clearInterval(interval);
-  }, [pickup?.lat, pickup?.lng, userLocation?.lat, userLocation?.lng]);
-
     console.log("[fetchRoute] waypoints:", waypoints.length, JSON.stringify(waypoints));
     try {
       const { data, error } = await supabase.functions.invoke("maps-route", {
