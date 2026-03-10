@@ -275,7 +275,10 @@ export default function ServicesPage() {
                       stiffness: 400,
                       damping: 25,
                     }}
-                    className="flex flex-col items-center gap-2 touch-manipulation relative group"
+                    className={cn(
+                      "flex flex-col items-center gap-2 touch-manipulation relative group",
+                      service.comingSoon && "opacity-60"
+                    )}
                   >
                     {/* Badge */}
                     {service.badge && (
