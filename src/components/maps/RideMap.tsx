@@ -519,7 +519,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         center,
         zoom: 14,
         disableDefaultUI: true,
-        zoomControl: false,
+        zoomControl: true,
         styles: getMapStyle(),
         gestureHandling: "greedy",
       });
@@ -654,26 +654,17 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       markersRef.current.push(stopMarker);
     });
 
-    // Fit bounds with generous padding — delay to allow layout to settle
+    // Fit bounds with generous padding — only on initial render or route changes (not driver movement)
     if (pickupCoords && dropoffCoords) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(pickupCoords);
       bounds.extend(dropoffCoords);
       stopCoords.forEach((c) => bounds.extend(c));
       if (driverCoords) bounds.extend(driverCoords);
-      // Immediate fit
       map.fitBounds(bounds, { top: 80, bottom: 340, left: 80, right: 80 });
-      // Cap max zoom for close points
-      const listener = google.maps.event.addListenerOnce(map, "idle", () => {
+      google.maps.event.addListenerOnce(map, "idle", () => {
         if ((map.getZoom() || 20) > 15) map.setZoom(15);
       });
-      // Re-fit after layout settles (bottom sheet may resize)
-      setTimeout(() => {
-        map.fitBounds(bounds, { top: 80, bottom: 340, left: 80, right: 80 });
-        google.maps.event.addListenerOnce(map, "idle", () => {
-          if ((map.getZoom() || 20) > 15) map.setZoom(15);
-        });
-      }, 500);
     } else if (pickupCoords) {
       map.panTo(pickupCoords);
       map.setZoom(15);
@@ -692,7 +683,16 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     return () => {
       if ((pulseCircleRef as any).__interval) clearInterval((pulseCircleRef as any).__interval);
     };
-  }, [pickupCoords, dropoffCoords, stopCoords, driverCoords, clearAmbientCars, mapReady]);
+  }, [pickupCoords, dropoffCoords, stopCoords, clearAmbientCars, mapReady]);
+
+  // Update driver marker position without resetting zoom/bounds
+  useEffect(() => {
+    if (!mapReady || !driverCoords) return;
+    const existingDriver = markersRef.current.find(m => m.getTitle() === "Driver");
+    if (existingDriver) {
+      existingDriver.setPosition(driverCoords);
+    }
+  }, [driverCoords, mapReady]);
 
   // ─── Animated route rendering ───
   useEffect(() => {
