@@ -135,13 +135,13 @@ async function fetchNearbyForType(
         const placeLng = r.geometry?.location?.lng() ?? lng;
         const dist = haversineMi(lat, lng, placeLat, placeLng);
 
-        // Try to get a photo URL, fallback to icon
-        let iconUrl = r.icon ?? "";
+        // Try to get a photo URL — prefer real photos over generic Google category icons
+        let iconUrl = "";
         if (r.photos && r.photos.length > 0) {
           try {
-            iconUrl = r.photos[0].getUrl({ maxWidth: 80, maxHeight: 80 });
+            iconUrl = r.photos[0].getUrl({ maxWidth: 120, maxHeight: 120 });
           } catch {
-            // keep icon
+            // no photo available
           }
         }
 
