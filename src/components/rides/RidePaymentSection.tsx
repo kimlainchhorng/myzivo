@@ -60,32 +60,57 @@ function AddCardForm({ onSuccess, onCancel, setupClientSecret }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe || !elements) {
+      setError("Stripe not loaded yet. Please wait a moment.");
+      return;
+    }
 
     setProcessing(true);
     setError(null);
 
-    const { error: setupError } = await stripe.confirmSetup({
-      elements,
-      confirmParams: {
-        return_url: window.location.href,
-      },
-      redirect: "if_required",
-    });
+    try {
+      // Submit the elements form first
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setError(submitError.message || "Please check your card details");
+        setProcessing(false);
+        return;
+      }
 
-    if (setupError) {
-      setError(setupError.message || "Failed to save card");
+      const { error: setupError } = await stripe.confirmSetup({
+        elements,
+        clientSecret: setupClientSecret,
+        confirmParams: {
+          return_url: window.location.href,
+        },
+        redirect: "if_required",
+      });
+
+      if (setupError) {
+        console.error("[AddCardForm] Setup error:", setupError);
+        setError(setupError.message || "Failed to save card");
+        setProcessing(false);
+      } else {
+        toast.success("Card saved successfully!");
+        setProcessing(false);
+        onSuccess();
+      }
+    } catch (err: any) {
+      console.error("[AddCardForm] Unexpected error:", err);
+      setError(err?.message || "Something went wrong");
       setProcessing(false);
-    } else {
-      toast.success("Card saved successfully!");
-      setProcessing(false);
-      onSuccess();
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <PaymentElement options={{ layout: "accordion", paymentMethodOrder: ["card", "apple_pay", "google_pay"], wallets: { applePay: "auto", googlePay: "auto" } }} />
+      <PaymentElement
+        options={{
+          layout: "tabs",
+          paymentMethodOrder: ["card"],
+          wallets: { applePay: "never", googlePay: "never" },
+        }}
+      />
       {error && <p className="text-xs text-destructive text-center">{error}</p>}
       <div className="flex gap-2">
         <Button
