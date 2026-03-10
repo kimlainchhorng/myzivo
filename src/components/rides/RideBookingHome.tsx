@@ -1522,6 +1522,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             userLocation={userLocation}
             onLocateUser={handleLocateUser}
             routePolyline={routeData?.polyline ?? null}
+            nearbyDrivers={realNearbyDrivers}
             driverCoords={
               (viewStep === "driver-en-route" || viewStep === "trip-in-progress") ? driverCoords : null
             }
