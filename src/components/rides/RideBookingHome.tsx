@@ -571,7 +571,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Driver tracking
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [driverEta, setDriverEta] = useState(MOCK_DRIVER.etaMin);
+  const [driverEta, setDriverEta] = useState(0);
   const trackingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Fetch user location on mount
