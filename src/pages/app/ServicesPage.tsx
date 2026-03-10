@@ -65,8 +65,8 @@ const serviceCategories: ServiceCategory[] = [
     subtitle: "Delivered to your door",
     services: [
       { label: "Food", href: "/eats", image: zivoEatsIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
-      { label: "Grocery", href: "/rides", image: zivoShoppingIcon, badge: "Promo", badgeVariant: "promo", animClass: "animate-food-wiggle" },
-      { label: "Alcohol", href: "/eats", image: zivoAlcoholIcon, animClass: "animate-food-wiggle" },
+      { label: "Grocery", href: "/rides", image: zivoShoppingIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
+      { label: "Alcohol", href: "/eats", image: zivoAlcoholIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
       { label: "Pharmacy", href: "/eats", image: zivoPharmacyIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
       { label: "Shopping", href: "/rides", image: zivoShoppingCartIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
     ],
