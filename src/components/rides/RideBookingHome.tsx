@@ -650,14 +650,24 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       // Try to find a nearby online driver
       if (pickup) {
-        const { data: nearby } = await supabase.rpc("get_nearby_drivers", {
+        // First get count of all nearby drivers
+        const { data: allNearby, error: nearbyError } = await supabase.rpc("get_nearby_drivers", {
           p_lat: pickup.lat,
           p_lng: pickup.lng,
           p_radius_m: 15000,
-          p_limit: 1,
+          p_limit: 20,
         });
 
-        if (nearby && nearby.length > 0) {
+        if (nearbyError) {
+          console.error("get_nearby_drivers error:", nearbyError);
+        }
+
+        const nearbyList = allNearby || [];
+        setNearbyDriverCount(nearbyList.length);
+        console.log("Nearby drivers found:", nearbyList.length, "pickup:", pickup.lat, pickup.lng);
+
+        if (nearbyList.length > 0) {
+          const nearbyDriver = nearbyList[0];
           const nearbyDriver = nearby[0];
           // Fetch full driver details
           const { data: driverRow } = await supabase
