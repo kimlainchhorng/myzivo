@@ -883,7 +883,11 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   }, [showUserLocationDot, userLocation, pickupCoords]);
 
   // Cleanup on unmount
-  useEffect(() => () => { clearAmbientCars(); }, [clearAmbientCars]);
+  useEffect(() => () => {
+    clearAmbientCars();
+    realDriverMarkersRef.current.forEach(m => m.setMap(null));
+    realDriverMarkersRef.current = [];
+  }, [clearAmbientCars]);
 
   return <div ref={mapContainerRef} className={`w-full h-full min-h-[200px] rounded-xl overflow-hidden ${className || ""}`} />;
 }
