@@ -2160,9 +2160,54 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
             )}
 
+            {/* Promo Code Section */}
+            <div className="rounded-2xl bg-card border border-border/20 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Tag className="w-4 h-4 text-primary" />
+                <span className="text-sm font-bold text-foreground">Promo Code</span>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter promo code"
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                  className="flex-1 h-10 font-mono text-sm uppercase tracking-wider"
+                  disabled={!!appliedPromo}
+                />
+                {appliedPromo ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-10 px-3 text-destructive border-destructive/30 hover:bg-destructive/5"
+                    onClick={() => { setAppliedPromo(null); setPromoInput(""); setPromoDiscount(0); }}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="h-10 px-4 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-semibold"
+                    disabled={!promoInput.trim() || promoValidating}
+                    onClick={handleApplyPromo}
+                  >
+                    {promoValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                  </Button>
+                )}
+              </div>
+              {appliedPromo && (
+                <div className="flex items-center gap-2 mt-2.5 px-1">
+                  <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-xs font-semibold text-primary">{appliedPromo.description} — saves ${promoDiscount.toFixed(2)}</span>
+                </div>
+              )}
+              {promoError && (
+                <p className="text-xs text-destructive mt-2 px-1">{promoError}</p>
+              )}
+            </div>
+
             {/* Payment Section */}
             <RidePaymentSection
-              price={currentPrice}
+              price={appliedPromo ? currentPrice - promoDiscount : currentPrice}
               vehicleName={currentVehicle.name}
               isSubmitting={isSubmitting}
               onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
