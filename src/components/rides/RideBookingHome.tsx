@@ -31,6 +31,7 @@ import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { reverseGeocode } from "@/services/mapsApi";
 import RidePaymentSection from "@/components/rides/RidePaymentSection";
+import CancelRideModal from "@/components/rides/CancelRideModal";
 import { Input } from "@/components/ui/input";
 import { Tag, Percent, CheckCircle2, Loader2 } from "lucide-react";
 
@@ -502,6 +503,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     return h < 23 ? h + 1 : 0;
   });
   const [scheduleMinute, setScheduleMinute] = useState(0);
+
+  // Cancel modal state
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   // Pick up other state
   const [showPickupOther, setShowPickupOther] = useState(false);
@@ -1172,12 +1176,26 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   };
 
   /* ─── Cancel ride ─── */
-  const handleCancelRide = async () => {
+  const handleOpenCancelModal = () => setShowCancelModal(true);
+
+  const handleConfirmCancel = async (reason: string, fee: number) => {
     if (rideRequestId) {
-      await supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideRequestId);
+      await supabase.from("ride_requests").update({
+        status: "cancelled",
+        cancel_reason: reason,
+        cancel_fee_cents: Math.round(fee * 100),
+      }).eq("id", rideRequestId);
+    }
+    setShowCancelModal(false);
+    if (fee > 0) {
+      toast.error(`Ride cancelled — $${fee.toFixed(2)} cancellation fee applied`);
+    } else {
+      toast.info("Ride cancelled — no fee charged");
     }
     handleReset();
   };
+
+  const handleCancelRide = handleOpenCancelModal;
 
   const filteredVehiclesByCategory = vehicleOptions.filter((v) => v.category === rideCategory);
 
@@ -2429,6 +2447,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               <Phone className="w-4 h-4" />
               Call
             </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-10 rounded-xl gap-1.5 text-sm text-destructive border-destructive/30 hover:bg-destructive/5"
+              onClick={handleCancelRide}
+            >
+              <X className="w-4 h-4" />
+              Cancel
+            </Button>
           </div>
         </div>
       )}
@@ -2633,6 +2659,23 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           </Button>
         </div>
       )}
+
+      {/* Cancel Ride Modal */}
+      <CancelRideModal
+        open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirmCancel={handleConfirmCancel}
+        role="customer"
+        tripPrice={currentPrice}
+        tripPhase={
+          viewStep === "searching" ? "searching"
+            : viewStep === "driver-assigned" ? "driver-assigned"
+            : viewStep === "driver-en-route" ? "driver-en-route"
+            : "trip-in-progress"
+        }
+        bookedPassengers={1}
+        driverWaitMinutes={0}
+      />
 
     </div>
   );
