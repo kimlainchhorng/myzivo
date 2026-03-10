@@ -66,8 +66,16 @@ const BRAND_DOMAINS: Record<string, string> = {
   "shell": "shell.com",
   "chevron": "chevron.com",
   "exxon": "exxon.com",
+  "exxonmobil": "exxonmobil.com",
+  "mobil": "exxonmobil.com",
   "bp": "bp.com",
   "valero": "valero.com",
+  "citgo": "citgo.com",
+  "sunoco": "sunoco.com",
+  "phillips 66": "phillips66.com",
+  "conoco": "conocophillips.com",
+  "sinclair": "sinclairoil.com",
+  "marathon": "marathonpetroleum.com",
   "circle k": "circlek.com",
   "speedway": "speedway.com",
   "racetrac": "racetrac.com",
@@ -77,18 +85,31 @@ const BRAND_DOMAINS: Record<string, string> = {
   "murphy usa": "murphyusa.com",
   "sam's club": "samsclub.com",
   "buc-ee's": "buc-ees.com",
-  "scenic seafood": "",
-  "snowcone island": "",
-  "empire wings": "",
+  "loves": "loves.com",
+  "love's": "loves.com",
+  "pilot": "pilotflyingj.com",
+  "flying j": "pilotflyingj.com",
+  "casey's": "caseys.com",
+  "cumberland farms": "cumberlandfarms.com",
+  "kwik trip": "kwiktrip.com",
+  "thorntons": "mythorntons.com",
+  "mapco": "mapco.com",
+  "stripes": "stripesstores.com",
 };
 
 function getBrandDomain(name: string): string | null {
   const lower = name.toLowerCase().trim();
+  // Exact match
   if (lower in BRAND_DOMAINS) {
     return BRAND_DOMAINS[lower] || null;
   }
-  for (const [key, domain] of Object.entries(BRAND_DOMAINS)) {
-    if (domain && (lower.includes(key) || key.includes(lower))) return domain;
+  // Partial match — check if any known brand name appears in the place name
+  // Sort by key length descending so "exxonmobil" matches before "exxon" or "mobil"
+  const sortedEntries = Object.entries(BRAND_DOMAINS)
+    .filter(([, domain]) => domain)
+    .sort((a, b) => b[0].length - a[0].length);
+  for (const [key, domain] of sortedEntries) {
+    if (lower.includes(key)) return domain;
   }
   return null;
 }
