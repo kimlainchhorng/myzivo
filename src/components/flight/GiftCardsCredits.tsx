@@ -44,10 +44,8 @@ interface GiftCardsCreditsProps {
   zivoCredits?: number;
 }
 
-const MOCK_GIFT_CARDS: GiftCard[] = [
-  { id: '1', code: 'ZIVO-GIFT-X7K9', balance: 150, originalAmount: 200, expiresAt: '2025-12-31', type: 'gift' },
-  { id: '2', code: 'WELCOME50', balance: 50, originalAmount: 50, expiresAt: '2025-06-30', type: 'promo' },
-];
+// TODO: Load gift cards from Supabase user_gift_cards table
+const MOCK_GIFT_CARDS: GiftCard[] = [];
 
 const VALID_PROMO_CODES: PromoCode[] = [
   { code: 'SUMMER20', discount: 20, type: 'percent', description: '20% off summer flights', minPurchase: 200 },
