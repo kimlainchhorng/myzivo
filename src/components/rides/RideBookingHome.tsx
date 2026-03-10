@@ -473,6 +473,37 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; description: string } | null>(null);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoValidating, setPromoValidating] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+
+  const handleApplyPromo = useCallback(async () => {
+    if (!promoInput.trim()) return;
+    setPromoValidating(true);
+    setPromoError(null);
+    try {
+      const { data, error } = await supabase.rpc("validate_coupon", {
+        p_code: promoInput.trim(),
+        p_user_id: user?.id || "",
+        p_order_total_cents: Math.round(currentPrice * 100),
+      });
+      if (error || !data || !(data as any).valid) {
+        setPromoError((data as any)?.error || error?.message || "Invalid promo code");
+      } else {
+        const d = data as any;
+        const discountAmt = (d.discount_amount_cents || 0) / 100;
+        setAppliedPromo({ code: promoInput.trim(), description: d.description || `${promoInput.trim()} applied` });
+        setPromoDiscount(Math.min(discountAmt, currentPrice));
+        toast.success(`Promo ${promoInput.trim()} applied!`);
+      }
+    } catch {
+      setPromoError("Unable to validate promo code");
+    } finally {
+      setPromoValidating(false);
+    }
+  }, [promoInput, currentPrice, user?.id]);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [searchSheetY, setSearchSheetY] = useState(-20); // -20 = full, 0 = half, positive = peek
   const [isReversingGeocode, setIsReversingGeocode] = useState(false);
