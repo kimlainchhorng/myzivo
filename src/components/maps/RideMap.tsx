@@ -76,6 +76,8 @@ interface RideMapProps {
   stopCoords?: { lat: number; lng: number }[];
   routePolyline?: string | { lat: number; lng: number }[] | null;
   driverCoords?: { lat: number; lng: number } | null;
+  /** Target for driver navigation line (pickup during en-route, dropoff during trip) */
+  driverNavigationTarget?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   showUserLocationDot?: boolean;
   className?: string;
@@ -142,7 +144,7 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
   return googleMapsPromise;
 }
 
-export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, routePolyline, driverCoords, userLocation, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
+export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, routePolyline, driverCoords, driverNavigationTarget, userLocation, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
   const [isReady, setIsReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failedReason, setFailedReason] = useState<string>("");
@@ -271,6 +273,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, route
       stopCoords={stopCoords}
       routePolyline={routePolyline}
       driverCoords={driverCoords}
+      driverNavigationTarget={driverNavigationTarget}
       userLocation={userLocation}
       showUserLocationDot={showUserLocationDot}
       className={className}
@@ -460,7 +463,7 @@ function spawnAmbientCars(
   return markers;
 }
 
-function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, driverCoords, userLocation, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
+function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, driverCoords, driverNavigationTarget, userLocation, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -471,6 +474,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const ambientCarsRef = useRef<google.maps.Marker[]>([]);
+  const driverNavLineRef = useRef<google.maps.Polyline | null>(null);
   const onCenterChangedRef = useRef<RideMapProps["onCenterChanged"]>(onCenterChanged);
   const [mapReady, setMapReady] = useState(false);
 
@@ -783,6 +787,42 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       ambientCarsRef.current.forEach((m) => m.setVisible(true));
     }
   }, [driverCoords]);
+
+  // ─── Driver navigation line (dashed line from driver to target) ───
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    // Clean up previous line
+    if (driverNavLineRef.current) {
+      driverNavLineRef.current.setMap(null);
+      driverNavLineRef.current = null;
+    }
+
+    if (driverCoords && driverNavigationTarget) {
+      driverNavLineRef.current = new google.maps.Polyline({
+        path: [driverCoords, driverNavigationTarget],
+        strokeColor: "#22c55e",
+        strokeWeight: 3,
+        strokeOpacity: 0,
+        geodesic: true,
+        icons: [{
+          icon: { path: "M 0,-1 0,1", strokeOpacity: 0.6, strokeColor: "#22c55e", scale: 3 },
+          offset: "0",
+          repeat: "12px",
+        }],
+        map,
+        zIndex: 90,
+      });
+    }
+
+    return () => {
+      if (driverNavLineRef.current) {
+        driverNavLineRef.current.setMap(null);
+        driverNavLineRef.current = null;
+      }
+    };
+  }, [driverCoords, driverNavigationTarget, mapReady]);
 
   // ─── User location dot ───
   useEffect(() => {

@@ -133,6 +133,7 @@ function MapSection({
   dropoffCoords,
   stopCoords = [],
   driverCoords,
+  driverNavigationTarget,
   userLocation,
   routePolyline,
   onLocateUser,
@@ -145,6 +146,7 @@ function MapSection({
   dropoffCoords?: { lat: number; lng: number } | null;
   stopCoords?: { lat: number; lng: number }[];
   driverCoords?: { lat: number; lng: number } | null;
+  driverNavigationTarget?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: string | null;
   onLocateUser?: () => void;
@@ -174,6 +176,7 @@ function MapSection({
           dropoffCoords={dropoffCoords || null}
           stopCoords={stopCoords}
           driverCoords={driverCoords || null}
+          driverNavigationTarget={driverNavigationTarget || null}
           userLocation={userLocation || null}
           showUserLocationDot={showUserLocationDot}
           routePolyline={routePolyline || null}
@@ -562,6 +565,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     if (viewStep !== "searching") return;
     const t = setTimeout(async () => {
       setViewStep("driver-assigned");
+      toast("Driver Found! 🚗", { description: `${MOCK_DRIVER.name} is on the way. Arriving in ~${MOCK_DRIVER.etaMin} minutes.` });
       if (rideRequestId) {
         await supabase.from("ride_requests").update({ status: "driver_assigned" }).eq("id", rideRequestId);
       }
@@ -575,6 +579,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setDriverEta(MOCK_DRIVER.etaMin);
     const t = setTimeout(() => {
       setViewStep("driver-en-route");
+      toast("Driver En Route 🚗", { description: "Your driver is heading to your pickup location." });
     }, 5000);
     return () => clearTimeout(t);
   }, [viewStep]);
@@ -600,6 +605,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       if (progress >= 1) {
         clearInterval(interval);
+        toast("Driver Arrived! 📍", { description: "Your driver has arrived at the pickup point." });
         setViewStep("trip-in-progress");
       }
     }, 1500);
@@ -631,6 +637,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       const t = setTimeout(async () => {
         clearInterval(interval);
+        toast.success("Trip Complete! 🎉", { description: "You've arrived at your destination. Rate your ride!" });
         setViewStep("trip-complete");
         if (rideRequestId) {
           await supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
@@ -1344,6 +1351,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             routePolyline={routeData?.polyline ?? null}
             driverCoords={
               (viewStep === "driver-en-route" || viewStep === "trip-in-progress") ? driverCoords : null
+            }
+            driverNavigationTarget={
+              viewStep === "driver-en-route" ? pickup :
+              viewStep === "trip-in-progress" ? destination : null
             }
           />
         </div>
@@ -2544,25 +2555,43 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="rounded-2xl bg-card border border-border/30 p-4 mb-6">
             <h4 className="text-sm font-bold text-foreground mb-3">Add a tip?</h4>
             <div className="flex gap-2">
-              {[1, 2, 5].map((amount) => (
-                <button
-                  key={amount}
-                  onClick={() => setTip(tip === amount ? null : amount)}
-                  className={cn(
-                    "flex-1 py-2 rounded-xl border text-sm font-bold transition-all",
-                    tip === amount
-                      ? "bg-foreground text-background border-foreground"
-                      : "bg-background text-foreground border-border/40 hover:border-foreground/30"
-                  )}
-                >
-                  ${amount}
-                </button>
-              ))}
+              {[5, 10, 20, 50].map((pct) => {
+                const tipAmount = Math.round(currentPrice * pct) / 100;
+                const isSelected = tip !== null && Math.abs(tip - tipAmount) < 0.01;
+                return (
+                  <button
+                    key={pct}
+                    onClick={() => setTip(isSelected ? null : tipAmount)}
+                    className={cn(
+                      "flex-1 py-2 rounded-xl border text-center transition-all",
+                      isSelected
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-background text-foreground border-border/40 hover:border-foreground/30"
+                    )}
+                  >
+                    <span className="text-sm font-bold block">{pct}%</span>
+                    <span className="text-[10px] opacity-70">${tipAmount.toFixed(2)}</span>
+                  </button>
+                );
+              })}
               <button
-                onClick={() => toast.info("Custom tip coming soon!")}
-                className="flex-1 py-2 rounded-xl border text-sm font-bold bg-background text-foreground border-border/40 hover:border-foreground/30 transition-all"
+                onClick={() => {
+                  const input = prompt("Enter custom tip amount ($):");
+                  if (input) {
+                    const val = parseFloat(input);
+                    if (!isNaN(val) && val > 0) setTip(val);
+                  }
+                }}
+                className={cn(
+                  "flex-1 py-2 rounded-xl border text-sm font-bold transition-all",
+                  tip !== null && ![5, 10, 20, 50].some(p => Math.abs(tip - Math.round(currentPrice * p) / 100) < 0.01)
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-background text-foreground border-border/40 hover:border-foreground/30"
+                )}
               >
-                Custom
+                {tip !== null && ![5, 10, 20, 50].some(p => Math.abs(tip - Math.round(currentPrice * p) / 100) < 0.01)
+                  ? `$${tip.toFixed(2)}`
+                  : "Custom"}
               </button>
             </div>
           </div>
