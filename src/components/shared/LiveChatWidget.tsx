@@ -4,7 +4,7 @@ import { MessageCircle, X, Send, Bot, User, Headphones, Loader2, Sparkles, Arrow
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 
 type ChatMessage = {
   id: number;
@@ -252,14 +252,17 @@ const LiveChatWidget = () => {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
+            drag
+            dragConstraints={{ top: -400, bottom: 100, left: -300, right: 0 }}
+            dragElastic={0.1}
+            dragMomentum={false}
+            whileDrag={{ scale: 1.1 }}
             onClick={() => setIsOpen(true)}
-            className="fixed right-4 md:right-6 z-50 w-14 h-14 bg-gradient-to-r from-primary to-primary/80 rounded-full shadow-xl shadow-primary/25 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform touch-manipulation"
+            className="fixed right-4 md:right-6 z-50 w-14 h-14 bg-gradient-to-r from-primary to-primary/80 rounded-full shadow-xl shadow-primary/25 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform touch-manipulation cursor-grab active:cursor-grabbing"
             style={{ bottom: "calc(72px + 88px + env(safe-area-inset-bottom, 0px))" }}
           >
             <MessageCircle className="w-6 h-6 text-primary-foreground" />
-            {/* Online dot */}
             <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background" />
-            {/* Pulse ring */}
             {pulseVisible && (
               <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
             )}
