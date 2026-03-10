@@ -2412,9 +2412,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
             </div>
 
-            {/* Vehicle summary card */}
+            {/* Vehicle summary + Fare breakdown card */}
             <div className="rounded-2xl bg-card border border-border/20 p-4">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 mb-3">
                 <div className="w-[72px] h-[52px] flex items-center justify-center shrink-0 bg-muted/10 rounded-xl">
                   <img src={VEHICLE_IMAGES[selectedVehicle] || VEHICLE_IMAGES["economy"]} alt={currentVehicle.name} className="w-full h-full object-contain" />
                 </div>
@@ -2422,8 +2422,45 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <p className="text-[15px] font-bold text-foreground">{currentVehicle.name} · {currentVehicle.capacity} seats</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{currentVehicle.etaMin} min away · {currentVehicle.desc}</p>
                 </div>
-                <p className="text-xl font-black text-foreground tabular-nums">${currentPrice.toFixed(2)}</p>
               </div>
+
+              {/* Fare Breakdown */}
+              {routeData && (
+                <div className="border-t border-border/15 pt-3 space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Base fare</span>
+                    <span className="text-foreground">${currentVehicle.basePrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Distance ({routeData.distance_miles} mi × ${currentVehicle.pricePerMile.toFixed(2)})</span>
+                    <span className="text-foreground">${(routeData.distance_miles * currentVehicle.pricePerMile).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Time ({routeData.duration_minutes} min × ${currentVehicle.perMinute.toFixed(2)})</span>
+                    <span className="text-foreground">${(routeData.duration_minutes * currentVehicle.perMinute).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Booking fee</span>
+                    <span className="text-foreground">${currentVehicle.bookingFee.toFixed(2)}</span>
+                  </div>
+                  {appliedPromo && promoDiscount > 0 && (
+                    <div className="flex justify-between text-primary">
+                      <span className="font-medium">Promo ({appliedPromo.code})</span>
+                      <span className="font-medium">-${promoDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-border/15 pt-2 mt-1">
+                    <span className="font-bold text-foreground">Total</span>
+                    <span className="font-bold text-foreground text-lg">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
+                  </div>
+                  {currentPrice <= currentVehicle.minimumFare && (
+                    <p className="text-[10px] text-muted-foreground/60 text-right">Minimum fare applied</p>
+                  )}
+                </div>
+              )}
+              {!routeData && (
+                <p className="text-xl font-black text-foreground text-right">${currentPrice.toFixed(2)}</p>
+              )}
             </div>
 
             {/* Route info pills */}
