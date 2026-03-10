@@ -2279,7 +2279,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
             {/* Payment Section */}
             <RidePaymentSection
-              price={appliedPromo ? currentPrice - promoDiscount : currentPrice}
+              price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
               vehicleName={currentVehicle.name}
               isSubmitting={isSubmitting}
               onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
