@@ -486,6 +486,32 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(userLocation?.lat ?? null, userLocation?.lng ?? null);
 
+  // Extract city from pickup address for pricing lookup
+  const pickupCity = useMemo(() => {
+    // No pickup yet — will use "default" pricing
+    return undefined;
+  }, []);
+
+  // Fetch admin-configured pricing from city_pricing table
+  const { data: cityPricingMap } = useCityPricing(pickupCity);
+
+  // Merge DB pricing into vehicle options (admin rates override defaults)
+  const vehicleOptions = useMemo(() => {
+    if (!cityPricingMap || Object.keys(cityPricingMap).length === 0) return DEFAULT_VEHICLE_OPTIONS;
+    return DEFAULT_VEHICLE_OPTIONS.map((v) => {
+      const dbPricing = cityPricingMap[v.id];
+      if (!dbPricing) return v;
+      return {
+        ...v,
+        basePrice: dbPricing.base_fare ?? v.basePrice,
+        pricePerMile: dbPricing.per_mile ?? v.pricePerMile,
+        perMinute: dbPricing.per_minute ?? v.perMinute,
+        bookingFee: dbPricing.booking_fee ?? v.bookingFee,
+        minimumFare: dbPricing.minimum_fare ?? v.minimumFare,
+      };
+    });
+  }, [cityPricingMap]);
+
   const [viewStep, setViewStep] = useState<ViewStep>("search");
   const [activeTab, setActiveTab] = useState<RideTab>("book");
    const [pickup, setPickup] = useState<PlaceData | null>(null);
