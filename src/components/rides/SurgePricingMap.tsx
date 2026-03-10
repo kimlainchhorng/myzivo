@@ -26,17 +26,11 @@ const demandConfig = {
   extreme: { color: "from-red-500/35 to-red-500/5", border: "border-red-500/30", text: "text-red-500", label: "Very high", badge: "bg-red-500/15" },
 };
 
-// Simulated surge zones
-const mockSurgeZones: SurgeZone[] = [
-  { id: "1", name: "Downtown", multiplier: 2.1, demand: "extreme", eta_minutes: 3, x: 45, y: 35, radius: 60 },
-  { id: "2", name: "Airport", multiplier: 1.8, demand: "high", eta_minutes: 5, x: 75, y: 55, radius: 50 },
-  { id: "3", name: "Midtown", multiplier: 1.4, demand: "moderate", eta_minutes: 4, x: 30, y: 60, radius: 45 },
-  { id: "4", name: "Suburbs", multiplier: 1.0, demand: "low", eta_minutes: 8, x: 15, y: 25, radius: 40 },
-  { id: "5", name: "University", multiplier: 1.6, demand: "high", eta_minutes: 6, x: 60, y: 75, radius: 42 },
-];
+// TODO: Load surge zones from Supabase surge_pricing or zone_multipliers table
+const initialSurgeZones: SurgeZone[] = [];
 
 export default function SurgePricingMap() {
-  const [zones, setZones] = useState<SurgeZone[]>(mockSurgeZones);
+  const [zones, setZones] = useState<SurgeZone[]>(initialSurgeZones);
   const [selectedZone, setSelectedZone] = useState<SurgeZone | null>(null);
   const [showInfo, setShowInfo] = useState(false);
 

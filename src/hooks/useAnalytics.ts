@@ -186,14 +186,13 @@ export const useDriverActivity = () => {
       const online = drivers?.filter(d => d.is_online && d.status === "verified").length || 0;
       const verified = drivers?.filter(d => d.status === "verified").length || 0;
 
-      // Simulate hourly data based on current stats
+      // TODO: Load real hourly driver analytics from Supabase
       const hours = ["6am", "9am", "12pm", "3pm", "6pm", "9pm"];
-      const multipliers = [0.3, 0.9, 0.8, 0.7, 1.0, 0.6];
 
-      return hours.map((hour, i) => ({
+      return hours.map((hour) => ({
         hour,
-        online: Math.round(verified * multipliers[i]),
-        busy: Math.round(online * multipliers[i] * 0.7),
+        online: 0,
+        busy: 0,
       }));
     },
   });

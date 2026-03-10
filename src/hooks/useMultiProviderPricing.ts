@@ -49,9 +49,8 @@ const CAR_PARTNERS = [
 ];
 
 /**
- * Generate simulated multi-provider pricing
- * For MVP: creates variance around base price (±5-15%)
- * Production: will call real partner APIs
+ * Multi-provider pricing — returns empty until real partner APIs are integrated
+ * TODO: Integrate TravelPayouts, Kiwi.com, or other meta-search APIs
  */
 export function useMultiProviderPricing(
   basePrice: number,
@@ -60,70 +59,13 @@ export function useMultiProviderPricing(
   itemId?: string
 ): MultiProviderResult {
   return useMemo(() => {
-    if (!basePrice || basePrice <= 0) {
-      return {
-        providers: [],
-        lowestPrice: 0,
-        officialPrice: 0,
-        savings: 0,
-        savingsPercent: 0,
-      };
-    }
-
-    const partners = service === "flights" 
-      ? FLIGHT_PARTNERS 
-      : service === "hotels" 
-        ? HOTEL_PARTNERS 
-        : CAR_PARTNERS;
-
-    // Generate deterministic "random" variance based on itemId
-    const seed = itemId ? hashCode(itemId) : Date.now();
-    
-    const providers: ProviderPrice[] = partners.map((partner, idx) => {
-      // Official price is the base price (from Duffel for flights)
-      if (partner.isOfficial) {
-        return {
-          id: partner.id,
-          name: partner.name,
-          price: basePrice,
-          currency,
-          isBestDeal: false,
-          isOfficialPrice: true,
-        };
-      }
-
-      // Generate variance: -15% to +10% from base
-      const variance = seededRandom(seed + idx) * 0.25 - 0.15; // -15% to +10%
-      const partnerPrice = Math.round(basePrice * (1 + variance));
-      
-      return {
-        id: partner.id,
-        name: partner.name,
-        price: partnerPrice,
-        currency,
-        isBestDeal: false,
-        isOfficialPrice: false,
-        discount: variance < 0 ? Math.abs(Math.round(variance * 100)) : undefined,
-      };
-    });
-
-    // Sort by price and mark best deal
-    providers.sort((a, b) => a.price - b.price);
-    if (providers.length > 0) {
-      providers[0].isBestDeal = true;
-    }
-
-    const lowestPrice = providers[0]?.price || basePrice;
-    const officialPrice = basePrice;
-    const savings = officialPrice - lowestPrice;
-    const savingsPercent = officialPrice > 0 ? Math.round((savings / officialPrice) * 100) : 0;
-
+    // No simulated prices — return empty until real partner APIs are integrated
     return {
-      providers,
-      lowestPrice,
-      officialPrice,
-      savings: Math.max(0, savings),
-      savingsPercent: Math.max(0, savingsPercent),
+      providers: [],
+      lowestPrice: 0,
+      officialPrice: basePrice || 0,
+      savings: 0,
+      savingsPercent: 0,
     };
   }, [basePrice, currency, service, itemId]);
 }
