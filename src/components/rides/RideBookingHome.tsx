@@ -1836,25 +1836,25 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 </p>
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
                   {[
-                    { logo: walmartLogo, name: "Walmart", sub: "Grocery & Shopping", mi: "1.2 mi", time: "4 min", price: "$5.50" },
-                    { logo: shellLogo, name: "Shell", sub: "Gas Station", mi: "0.8 mi", time: "3 min", price: "$4.25" },
-                    { logo: mcdonaldsLogo, name: "McDonald's", sub: "Fast Food", mi: "0.5 mi", time: "2 min", price: "$3.75" },
-                    { logo: dollarGeneralLogo, name: "Dollar General", sub: "Shopping", mi: "1.0 mi", time: "4 min", price: "$5.00" },
-                    { logo: winnDixieLogo, name: "Winn-Dixie", sub: "Grocery Store", mi: "1.5 mi", time: "5 min", price: "$6.25" },
-                    { logo: walgreensLogo, name: "Walgreens", sub: "Pharmacy", mi: "0.9 mi", time: "3 min", price: "$4.50" },
-                    { logo: chickfilaLogo, name: "Chick-fil-A", sub: "Fast Food", mi: "1.3 mi", time: "5 min", price: "$5.75" },
-                    { logo: circlekLogo, name: "Circle K", sub: "Gas & Snacks", mi: "0.6 mi", time: "2 min", price: "$3.50" },
+                    { logo: walmartLogo, name: "Walmart", address: "2050 Florida Blvd, Denham Springs", sub: "Grocery & Shopping", mi: "1.2 mi", time: "4 min", price: "$5.50" },
+                    { logo: shellLogo, name: "Shell", address: "1425 Range Ave, Denham Springs", sub: "Gas Station", mi: "0.8 mi", time: "3 min", price: "$4.25" },
+                    { logo: mcdonaldsLogo, name: "McDonald's", address: "920 S Range Ave, Denham Springs", sub: "Fast Food", mi: "0.5 mi", time: "2 min", price: "$3.75" },
+                    { logo: dollarGeneralLogo, name: "Dollar General", address: "1310 Florida Blvd SW, Denham Springs", sub: "Shopping", mi: "1.0 mi", time: "4 min", price: "$5.00" },
+                    { logo: winnDixieLogo, name: "Winn-Dixie", address: "2585 S Range Ave, Denham Springs", sub: "Grocery Store", mi: "1.5 mi", time: "5 min", price: "$6.25" },
+                    { logo: walgreensLogo, name: "Walgreens", address: "1802 S Range Ave, Denham Springs", sub: "Pharmacy", mi: "0.9 mi", time: "3 min", price: "$4.50" },
+                    { logo: chickfilaLogo, name: "Chick-fil-A", address: "2710 S Range Ave, Denham Springs", sub: "Fast Food", mi: "1.3 mi", time: "5 min", price: "$5.75" },
+                    { logo: circlekLogo, name: "Circle K", address: "800 Hatchell Ln, Denham Springs", sub: "Gas & Snacks", mi: "0.6 mi", time: "2 min", price: "$3.50" },
                   ].map((place, idx) => (
                     <button
                       key={idx}
                       onClick={() => toast.info(`Setting destination to ${place.name}`)}
-                      className="flex flex-col items-center min-w-[110px] w-[110px] rounded-2xl bg-card border border-border/20 p-3 hover:border-primary/30 hover:shadow-md transition-all duration-200 active:scale-95 shrink-0"
+                      className="flex flex-col items-center min-w-[130px] w-[130px] rounded-2xl bg-card border border-border/20 p-3 hover:border-primary/30 hover:shadow-md transition-all duration-200 active:scale-95 shrink-0"
                     >
                       <div className="w-12 h-12 rounded-full bg-muted/10 flex items-center justify-center mb-2 overflow-hidden">
                         <img src={place.logo} alt={place.name} className="w-9 h-9 object-contain" />
                       </div>
                       <p className="text-[12px] font-bold text-foreground text-center leading-tight truncate w-full">{place.name}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{place.sub}</p>
+                      <p className="text-[9px] text-muted-foreground/70 text-center leading-tight mt-0.5 line-clamp-2 min-h-[24px]">{place.address}</p>
                       <div className="flex items-center gap-1 mt-1.5">
                         <span className="text-[10px] text-muted-foreground">{place.mi}</span>
                         <span className="text-[8px] text-muted-foreground/30">•</span>
