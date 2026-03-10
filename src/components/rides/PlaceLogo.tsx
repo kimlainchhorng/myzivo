@@ -127,13 +127,24 @@ function PlaceLogoInner({ name, googlePhotoUrl, categoryType, className }: Place
   const currentSrc = sources[srcIndex];
   const isBrandLogo = brandUrl && srcIndex === 0;
 
+  // Color based on category
+  const bgColors: Record<string, string> = {
+    restaurant: "bg-orange-100 text-orange-600",
+    shop: "bg-blue-100 text-blue-600",
+    gas: "bg-emerald-100 text-emerald-600",
+  };
+  const fallbackColor = bgColors[categoryType] || "bg-muted text-muted-foreground";
+  const initial = name.charAt(0).toUpperCase();
+
   return (
     <div className={cn(
       "w-11 h-11 rounded-xl bg-white flex items-center justify-center overflow-hidden border border-border/10",
       className
     )}>
       {showIcon ? (
-        <FallbackIcon className="w-5 h-5 text-primary/50" />
+        <div className={cn("w-full h-full flex items-center justify-center font-bold text-sm", fallbackColor)}>
+          {initial}
+        </div>
       ) : (
         <img
           src={currentSrc}
