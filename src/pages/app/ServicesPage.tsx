@@ -168,6 +168,7 @@ const badgeStyles = {
   discount: "bg-primary text-primary-foreground shadow-primary/30",
   promo: "bg-primary/90 text-primary-foreground shadow-primary/20",
   new: "bg-foreground text-background shadow-foreground/20",
+  coming_soon: "bg-amber-500 text-white shadow-amber-500/30",
 };
 
 /* ── Page ── */
