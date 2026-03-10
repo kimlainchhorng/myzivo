@@ -527,6 +527,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   stopsRef.current = stops;
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
+  const [nearbyDriverCount, setNearbyDriverCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [promoInput, setPromoInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; description: string } | null>(null);
@@ -649,15 +650,24 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       // Try to find a nearby online driver
       if (pickup) {
-        const { data: nearby } = await supabase.rpc("get_nearby_drivers", {
+        // First get count of all nearby drivers
+        const { data: allNearby, error: nearbyError } = await supabase.rpc("get_nearby_drivers", {
           p_lat: pickup.lat,
           p_lng: pickup.lng,
           p_radius_m: 15000,
-          p_limit: 1,
+          p_limit: 20,
         });
 
-        if (nearby && nearby.length > 0) {
-          const nearbyDriver = nearby[0];
+        if (nearbyError) {
+          console.error("get_nearby_drivers error:", nearbyError);
+        }
+
+        const nearbyList = allNearby || [];
+        setNearbyDriverCount(nearbyList.length);
+        console.log("Nearby drivers found:", nearbyList.length, "pickup:", pickup.lat, pickup.lng);
+
+        if (nearbyList.length > 0) {
+          const nearbyDriver = nearbyList[0];
           // Fetch full driver details
           const { data: driverRow } = await supabase
             .from("drivers")
@@ -2546,7 +2556,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <h3 className="text-lg font-bold text-foreground mb-1">Finding your driver…</h3>
             <p className="text-sm text-muted-foreground mb-1">Searching nearby drivers</p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-              <span>Drivers nearby: 5</span>
+              <span>Drivers nearby: {nearbyDriverCount}</span>
               <span>·</span>
               <span>Estimated pickup: {currentVehicle.etaMin} min</span>
             </div>
