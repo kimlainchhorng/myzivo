@@ -193,7 +193,7 @@ export default function ServicesPage() {
       <div className="absolute top-[400px] -right-20 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header */}
-      <div className="px-5 pb-2 relative z-10" style={{ paddingTop: "calc(env(safe-area-inset-top, 20px) + 0.25rem)" }}>
+      <div className="px-5 pb-2 relative z-10" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
