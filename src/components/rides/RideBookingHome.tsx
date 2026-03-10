@@ -1084,13 +1084,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setRideRequestId(rideData.id);
 
       // 2. Create Stripe PaymentIntent (pre-authorization)
-      const amountCents = Math.round(currentPrice * 100);
+      const finalPrice = appliedPromo ? Math.max(currentPrice - promoDiscount, 0) : currentPrice;
+      const amountCents = Math.max(50, Math.round(finalPrice * 100));
       const { data: piData, error: piError } = await supabase.functions.invoke("create-ride-payment-intent", {
         body: {
           ride_request_id: rideData.id,
           amount_cents: amountCents,
           ride_type: selectedVehicle,
           payment_method_id: paymentMethodId || undefined,
+          promo_code: appliedPromo?.code || undefined,
+          discount_cents: appliedPromo ? Math.round(promoDiscount * 100) : 0,
         },
       });
 
