@@ -634,6 +634,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       const t = setTimeout(async () => {
         clearInterval(interval);
+        toast.success("Trip Complete! 🎉", { description: "You've arrived at your destination. Rate your ride!" });
         setViewStep("trip-complete");
         if (rideRequestId) {
           await supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
