@@ -108,22 +108,8 @@ export function usePriceAlerts() {
       
       // TODO: Check real price from partner API
       // Price alerts disabled until real pricing API is integrated
-      const newPrice = alert.currentPrice; // No simulated fluctuation
-      
-      if (isTriggered && !alert.triggered) {
-        toast.success(
-          `Price may have dropped! ${alert.route.fromCode} → ${alert.route.toCode} - Check partner sites for current prices`,
-          {
-            action: {
-              label: 'Compare Prices',
-              onClick: () => {
-                window.location.href = `/flights/${alert.route.fromCode.toLowerCase()}-to-${alert.route.toCode.toLowerCase()}`;
-              },
-            },
-            duration: 10000,
-          }
-        );
-      }
+      const newPrice = alert.currentPrice;
+      const isTriggered = newPrice <= alert.targetPrice;
 
       return {
         ...alert,
