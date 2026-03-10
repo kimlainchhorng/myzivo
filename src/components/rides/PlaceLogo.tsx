@@ -5,7 +5,7 @@
 import { useState, memo } from "react";
 import { cn } from "@/lib/utils";
 
-// Local brand logo imports
+// Local brand logo imports - Restaurants
 import logoMcdonalds from "@/assets/brand-logos/mcdonalds.png";
 import logoBurgerKing from "@/assets/brand-logos/burgerking.png";
 import logoJackInTheBox from "@/assets/brand-logos/jackinthebox.png";
@@ -19,6 +19,22 @@ import logoPopeyes from "@/assets/brand-logos/popeyes.png";
 import logoKfc from "@/assets/brand-logos/kfc.png";
 import logoPizzaHut from "@/assets/brand-logos/pizzahut.png";
 import logoDominos from "@/assets/brand-logos/dominos.png";
+import logoArbys from "@/assets/brand-logos/arbys.png";
+import logoSonic from "@/assets/brand-logos/sonic.png";
+import logoChipotle from "@/assets/brand-logos/chipotle.png";
+import logoPandaExpress from "@/assets/brand-logos/pandaexpress.png";
+import logoFiveGuys from "@/assets/brand-logos/fiveguys.png";
+import logoWingstop from "@/assets/brand-logos/wingstop.png";
+import logoIhop from "@/assets/brand-logos/ihop.png";
+import logoDennys from "@/assets/brand-logos/dennys.png";
+import logoPanera from "@/assets/brand-logos/panera.png";
+import logoApplebees from "@/assets/brand-logos/applebees.png";
+import logoChilis from "@/assets/brand-logos/chilis.png";
+import logoOliveGarden from "@/assets/brand-logos/olivegarden.png";
+import logoBWW from "@/assets/brand-logos/buffalowildwings.png";
+import logoRaisingCanes from "@/assets/brand-logos/raisingcanes.png";
+
+// Local brand logo imports - Gas Stations
 import logoShell from "@/assets/brand-logos/shell.png";
 import logoChevron from "@/assets/brand-logos/chevron.png";
 import logoExxon from "@/assets/brand-logos/exxon.png";
@@ -30,16 +46,33 @@ import logoSunoco from "@/assets/brand-logos/sunoco.png";
 import logoMarathon from "@/assets/brand-logos/marathon.png";
 import logoCircleK from "@/assets/brand-logos/circlek.png";
 import logoSpeedway from "@/assets/brand-logos/speedway.png";
+import logoWawa from "@/assets/brand-logos/wawa.png";
+import logoQuikTrip from "@/assets/brand-logos/quiktrip.png";
+
+// Local brand logo imports - Shops & Grocery
 import logoWalmart from "@/assets/brand-logos/walmart.png";
 import logoTarget from "@/assets/brand-logos/target.png";
 import logoCostco from "@/assets/brand-logos/costco.png";
 import logo7Eleven from "@/assets/brand-logos/7eleven.png";
 import logoWalgreens from "@/assets/brand-logos/walgreens.png";
 import logoCvs from "@/assets/brand-logos/cvs.png";
+import logoKroger from "@/assets/brand-logos/kroger.png";
+import logoDollarGeneral from "@/assets/brand-logos/dollargeneral.png";
+import logoTraderJoes from "@/assets/brand-logos/traderjoes.png";
+import logoWholeFoods from "@/assets/brand-logos/wholefoods.png";
 
 // Brand keyword → local logo (ordered longest-key-first for specificity)
 const BRAND_LOGOS: [string, string][] = [
+  // Multi-word matches first
   ["jack in the box", logoJackInTheBox],
+  ["buffalo wild wing", logoBWW],
+  ["raising cane", logoRaisingCanes],
+  ["olive garden", logoOliveGarden],
+  ["panda express", logoPandaExpress],
+  ["dollar general", logoDollarGeneral],
+  ["whole foods", logoWholeFoods],
+  ["trader joe", logoTraderJoes],
+  ["five guys", logoFiveGuys],
   ["chick-fil-a", logoChickFilA],
   ["pizza hut", logoPizzaHut],
   ["burger king", logoBurgerKing],
@@ -47,6 +80,8 @@ const BRAND_LOGOS: [string, string][] = [
   ["exxonmobil", logoExxon],
   ["circle k", logoCircleK],
   ["7-eleven", logo7Eleven],
+  ["quiktrip", logoQuikTrip],
+  // Single-word matches
   ["mcdonald", logoMcdonalds],
   ["wendy", logoWendys],
   ["subway", logoSubway],
@@ -54,6 +89,16 @@ const BRAND_LOGOS: [string, string][] = [
   ["dunkin", logoDunkin],
   ["popeyes", logoPopeyes],
   ["domino", logoDominos],
+  ["chipotle", logoChipotle],
+  ["wingstop", logoWingstop],
+  ["applebee", logoApplebees],
+  ["chili's", logoChilis],
+  ["chilis", logoChilis],
+  ["panera", logoPanera],
+  ["arby", logoArbys],
+  ["sonic", logoSonic],
+  ["ihop", logoIhop],
+  ["denny", logoDennys],
   ["chevron", logoChevron],
   ["marathon", logoMarathon],
   ["speedway", logoSpeedway],
@@ -61,12 +106,14 @@ const BRAND_LOGOS: [string, string][] = [
   ["walmart", logoWalmart],
   ["costco", logoCostco],
   ["target", logoTarget],
+  ["kroger", logoKroger],
   ["shell", logoShell],
   ["exxon", logoExxon],
   ["mobil", logoMobil],
   ["valero", logoValero],
   ["citgo", logoCitgo],
   ["sunoco", logoSunoco],
+  ["wawa", logoWawa],
   ["kfc", logoKfc],
   ["cvs", logoCvs],
   ["bp ", logoBp],
