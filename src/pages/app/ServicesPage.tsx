@@ -187,7 +187,7 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28 relative">
+    <div className="min-h-screen bg-background pb-28 relative overflow-x-hidden">
       {/* Decorative background orbs */}
       <div className="absolute top-20 -left-20 w-60 h-60 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-[400px] -right-20 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
