@@ -1,82 +1,58 @@
-# Codebase Audit: Final Sweep - Remaining Fixes
-
-After 4 rounds of auditing (~90 fixes applied), this final sweep catches the last remaining issues across accessibility, performance, and code quality.
-
----
-
-## 1. Accessibility: Missing `aria-label` on Icon-Only Buttons (4 fixes)
 
 
-| File                                   | Line    | Icon                          | Fix                          |
-| -------------------------------------- | ------- | ----------------------------- | ---------------------------- |
-| `src/components/ui/data-display.tsx`   | 294-305 | Copy/Check                    | `aria-label="Copy value"`    |
-| `src/components/ui/data-display.tsx`   | 344-371 | Copy/Check (animated variant) | `aria-label="Copy value"`    |
-| `src/components/ui/search-filters.tsx` | 151     | Mic                           | `aria-label="Voice search"`  |
-| `src/components/ui/search-filters.tsx` | 157     | Camera                        | `aria-label="Camera search"` |
+## Plan: Ride Lifecycle Notifications, Driver Navigation Line, and Percentage-Based Tips
 
+### What the user wants
+
+1. **Ride lifecycle notifications** — Toast/bell notifications at each stage: driver arriving in 5 min, driver arrived, pickup confirmed, dropoff complete
+2. **Driver navigation line on map** — A polyline from driver's current position to the pickup (during en-route) and to the destination (during trip-in-progress)
+3. **Percentage-based tips** — Change tip buttons from $1/$2/$5 to 5%, 10%, 20%, 50% + Custom
 
 ---
 
-## 2. Performance: Missing `loading="lazy"` on Below-Fold Images (1 fix)
+### Changes
 
+#### 1. Add ride lifecycle notifications (RideBookingHome.tsx)
 
-| File                         | Line    | Content                                          |
-| ---------------------------- | ------- | ------------------------------------------------ |
-| `src/pages/TravelExtras.tsx` | 341-345 | Partner thumbnail image missing `loading="lazy"` |
+In each auto-advance `useEffect`, fire a toast notification:
 
+- **searching → driver-assigned**: `toast("Driver Found!", { description: "Your driver is on the way. Arriving in ~5 minutes." })`
+- **driver-assigned → driver-en-route**: `toast("Driver En Route", { description: "Your driver is heading to your pickup." })`
+- **driver-en-route → trip-in-progress** (when `progress >= 1`): `toast("Driver Arrived!", { description: "Your driver has arrived at the pickup point." })`
+- **trip-in-progress → trip-complete**: `toast("Trip Complete!", { description: "You've arrived at your destination." })`
+
+Also add a notification when driver ETA hits 0 during en-route countdown.
+
+#### 2. Draw navigation polyline from driver to pickup/destination (RideMap.tsx)
+
+Add a new prop `driverNavigationTarget` (or reuse existing coordinates) to draw a dashed polyline from `driverCoords` to the target point:
+
+- Create a new `useEffect` that watches `driverCoords` and draws/updates a dashed polyline from the driver's position to `pickupCoords` (or `dropoffCoords` depending on trip phase)
+- Use a distinct style: dashed green line (`strokeOpacity: 0.6`, `strokeWeight: 3`, dashed pattern) so it's visually different from the main route
+- Store in a new ref `driverNavLineRef` and clean up properly
+
+In **RideBookingHome.tsx**, pass `driverCoords` during both `driver-en-route` and `trip-in-progress` phases (already done), and add a new prop to RideMap to indicate the navigation target.
+
+#### 3. Change tip buttons to percentage-based (RideBookingHome.tsx)
+
+Replace the current tip section (lines 2543-2568):
+
+```
+Current: $1, $2, $5, Custom
+New: 5%, 10%, 20%, 50%, Custom
+```
+
+- Calculate tip as percentage of `currentPrice` (e.g., 5% of $1.75 = $0.09)
+- Display the percentage on the button and show calculated dollar amount
+- Custom opens an input for a dollar amount
+- Update `tip` state to store the calculated dollar value
 
 ---
 
-## 3. Accessibility: Clickable `<div>` Backdrop Missing Keyboard/ARIA Support (1 fix)
+### Files to modify
 
+| File | Change |
+|------|--------|
+| `src/components/rides/RideBookingHome.tsx` | Add toast notifications at each state transition; change tip buttons to 5%/10%/20%/50%/Custom with percentage calculation; add custom tip input state |
+| `src/components/maps/RideMap.tsx` | Add `driverNavigationTarget` prop; draw dashed polyline from driver to target; update on driver position changes |
 
-| File                                          | Line | Issue                                                          | Fix                                                                                                     |
-| --------------------------------------------- | ---- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `src/components/navigation/MobileNavMenu.tsx` | 133  | `<div onClick={onClose}>` has no keyboard support or ARIA role | Add `role="button"`, `tabIndex={0}`, `onKeyDown` handler for Enter/Space, and `aria-label="Close menu"` |
-
-
----
-
-## 4. Performance: Missing `fetchPriority="high"` on Above-Fold Hero Image (1 fix)
-
-
-| File                         | Line  | Content                                                                                  |
-| ---------------------------- | ----- | ---------------------------------------------------------------------------------------- |
-| `src/pages/HotelLanding.tsx` | 72-77 | Hero image has `loading="eager"` but missing `fetchPriority="high"` for LCP optimization |
-
-
----
-
-## 5. Security: `console.warn` with User Data in Production (1 fix)
-
-The `console.warn` in `src/config/affiliateLinks.ts` line 643 logs affiliate fallback info. This should be removed per production-lockdown policy (it leaks affiliate URL structure to browser console).
-
----
-
-## Technical Summary
-
-
-| Category                                       | Count                                  |
-| ---------------------------------------------- | -------------------------------------- |
-| Accessibility (aria-label on icon buttons)     | 4                                      |
-| Performance (loading="lazy" on images)         | 1                                      |
-| Performance (LCP fetchPriority)                | 1                                      |
-| Accessibility (clickable div keyboard support) | 1                                      |
-| Production (remove console.warn)               | 1                                      |
-| **Total**                                      | **add 800 fixes across add 500 files** |
-
-
-### Cumulative Project Total (All Rounds)
-
-
-| Round           | Fixes                            |
-| --------------- | -------------------------------- |
-| Round 1         | 34                               |
-| Round 2         | 42                               |
-| Round 3         | 33                               |
-| Round 4         | 12                               |
-| Round 5 (this)  | 8                                |
-| **Grand Total** | **~1129 fixes across ~45 files** |
-
-
-This is the final sweep -- the codebase is now highly optimized for accessibility, performance, and production readiness.
