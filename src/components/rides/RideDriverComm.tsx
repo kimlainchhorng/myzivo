@@ -18,11 +18,7 @@ const quickReplies = [
   "Running late, 5 more minutes",
 ];
 
-const messages = [
-  { id: "1", sender: "driver", text: "Hi, I'm on my way. Will be there in 4 minutes.", time: "2:31 PM", read: true },
-  { id: "2", sender: "user", text: "Great, I'll be at the main entrance.", time: "2:32 PM", read: true },
-  { id: "3", sender: "driver", text: "Perfect, I see the building. Blue Toyota Camry.", time: "2:34 PM", read: true },
-];
+const messages: { id: string; sender: string; text: string; time: string; read: boolean }[] = [];
 
 const languages = [
   { code: "en", name: "English" },
