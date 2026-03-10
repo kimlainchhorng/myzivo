@@ -668,7 +668,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
         if (nearbyList.length > 0) {
           const nearbyDriver = nearbyList[0];
-          const nearbyDriver = nearby[0];
           // Fetch full driver details
           const { data: driverRow } = await supabase
             .from("drivers")
