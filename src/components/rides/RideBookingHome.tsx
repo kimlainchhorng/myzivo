@@ -13,7 +13,7 @@ import {
   Star, Phone, MessageSquare, Shield, Banknote,
   Smartphone, Wallet, X, Baby, Sparkles,
   Route, Timer, Bell, Package, Plane, Hotel, TrendingDown, Gem,
-  PawPrint, Accessibility, Plus
+  PawPrint, Accessibility, Plus, ShoppingCart, Fuel, UtensilsCrossed, Store, Pill
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
