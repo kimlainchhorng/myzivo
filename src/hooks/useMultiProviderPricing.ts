@@ -49,9 +49,8 @@ const CAR_PARTNERS = [
 ];
 
 /**
- * Generate simulated multi-provider pricing
- * For MVP: creates variance around base price (±5-15%)
- * Production: will call real partner APIs
+ * Multi-provider pricing — returns empty until real partner APIs are integrated
+ * TODO: Integrate TravelPayouts, Kiwi.com, or other meta-search APIs
  */
 export function useMultiProviderPricing(
   basePrice: number,
@@ -60,14 +59,14 @@ export function useMultiProviderPricing(
   itemId?: string
 ): MultiProviderResult {
   return useMemo(() => {
-    if (!basePrice || basePrice <= 0) {
-      return {
-        providers: [],
-        lowestPrice: 0,
-        officialPrice: 0,
-        savings: 0,
-        savingsPercent: 0,
-      };
+    // No simulated prices — return empty until real partner APIs are integrated
+    return {
+      providers: [],
+      lowestPrice: 0,
+      officialPrice: basePrice || 0,
+      savings: 0,
+      savingsPercent: 0,
+    };
     }
 
     const partners = service === "flights" 

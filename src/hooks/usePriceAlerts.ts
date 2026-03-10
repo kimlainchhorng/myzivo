@@ -106,11 +106,9 @@ export function usePriceAlerts() {
       // Skip already triggered alerts
       if (alert.triggered) return alert;
       
-      // Simulate indicative price fluctuation for demo/UX
-      // Real prices are only available on partner sites
-      const priceChange = (Math.random() - 0.5) * 50;
-      const newPrice = Math.max(alert.historicalLow, alert.currentPrice + priceChange);
-      const isTriggered = newPrice <= alert.targetPrice;
+      // TODO: Check real price from partner API
+      // Price alerts disabled until real pricing API is integrated
+      const newPrice = alert.currentPrice; // No simulated fluctuation
       
       if (isTriggered && !alert.triggered) {
         toast.success(

@@ -42,15 +42,9 @@ export function AIConciergeTrigger() {
     ]);
     setInput("");
 
-    // Simulated AI response
+    // TODO: Connect to real AI/support backend
     setTimeout(() => {
-      let response = "Thanks for your message! A support agent will assist you shortly. Average wait time: 2 mins.";
-      
-      if (text.toLowerCase().includes("track") || text.toLowerCase().includes("booking")) {
-        response = hasUpcomingTrips 
-          ? `I can see you have ${upcomingTrips.length} upcoming trip(s). Your flight BA-112 to London departs tomorrow at 08:30 AM. Would you like me to show you the details?`
-          : "I don't see any active bookings. Would you like to search for a new trip?";
-      }
+      const response = "Thanks for your message! A support agent will assist you shortly. Average wait time: 2 mins.";
 
       setMessages((prev) => [
         ...prev,
