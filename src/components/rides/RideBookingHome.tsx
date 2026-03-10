@@ -2394,9 +2394,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <h2 className="text-xl font-black text-foreground tracking-tight">Confirm your ride</h2>
           </div>
 
-          <div className="px-5 pb-2 space-y-2 flex-1 overflow-hidden flex flex-col min-h-0">
+          {/* Scrollable content */}
+          <div className="px-5 space-y-2 flex-1 overflow-y-auto min-h-0 pb-2">
             {/* Route card */}
-            <div className="rounded-xl bg-card border border-border/20 px-3.5 py-3 shrink-0">
+            <div className="rounded-xl bg-card border border-border/20 px-3.5 py-3">
               <div className="flex items-start gap-3">
                 <div className="flex flex-col items-center mt-0.5">
                   <div className="w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-primary/15" />
@@ -2417,7 +2418,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             </div>
 
             {/* Vehicle summary + Fare breakdown card */}
-            <div className="rounded-xl bg-card border border-border/20 px-3.5 py-3 shrink-0">
+            <div className="rounded-xl bg-card border border-border/20 px-3.5 py-3">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-[60px] h-[44px] flex items-center justify-center shrink-0 bg-muted/10 rounded-lg">
                   <img src={VEHICLE_IMAGES[selectedVehicle] || VEHICLE_IMAGES["economy"]} alt={currentVehicle.name} className="w-full h-full object-contain" />
@@ -2469,7 +2470,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
             {/* Route info pills */}
             {routeData && (
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center gap-1.5">
                 <div className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-card border border-border/20 px-2 py-2">
                   <Timer className="w-3.5 h-3.5 text-primary" />
                   <span className="text-[13px] font-bold text-foreground">{routeData.duration_minutes} min</span>
@@ -2488,7 +2489,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             )}
 
             {/* Promo Code Section */}
-            <div className="rounded-xl bg-card border border-border/20 px-3.5 py-3 shrink-0">
+            <div className="rounded-xl bg-card border border-border/20 px-3.5 py-3">
               <div className="flex items-center gap-2 mb-2">
                 <Tag className="w-3.5 h-3.5 text-primary" />
                 <span className="text-[13px] font-bold text-foreground">Promo Code</span>
@@ -2531,21 +2532,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <p className="text-[11px] text-destructive mt-1.5 px-0.5">{promoError}</p>
               )}
             </div>
+          </div>
 
-            {/* Payment Section — pushed to bottom */}
-            <div className="mt-auto shrink-0">
-              <RidePaymentSection
-                price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
-                vehicleName={currentVehicle.name}
-                isSubmitting={isSubmitting}
-                onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
-                onAuthorizeWithNewCard={() => handleRequestRide()}
-                clientSecret={clientSecret}
-                onPaymentSuccess={handlePaymentSuccess}
-                paymentFailed={paymentStep === "failed"}
-                onClearError={() => setPaymentStep("idle")}
-              />
-            </div>
+          {/* Payment Section — pinned at bottom */}
+          <div className="shrink-0 px-5 pb-3 pt-1 border-t border-border/10 bg-background">
+            <RidePaymentSection
+              price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
+              vehicleName={currentVehicle.name}
+              isSubmitting={isSubmitting}
+              onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
+              onAuthorizeWithNewCard={() => handleRequestRide()}
+              clientSecret={clientSecret}
+              onPaymentSuccess={handlePaymentSuccess}
+              paymentFailed={paymentStep === "failed"}
+              onClearError={() => setPaymentStep("idle")}
+            />
           </div>
         </div>
       )}
