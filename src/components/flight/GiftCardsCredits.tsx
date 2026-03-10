@@ -44,16 +44,11 @@ interface GiftCardsCreditsProps {
   zivoCredits?: number;
 }
 
-const MOCK_GIFT_CARDS: GiftCard[] = [
-  { id: '1', code: 'ZIVO-GIFT-X7K9', balance: 150, originalAmount: 200, expiresAt: '2025-12-31', type: 'gift' },
-  { id: '2', code: 'WELCOME50', balance: 50, originalAmount: 50, expiresAt: '2025-06-30', type: 'promo' },
-];
+// TODO: Load gift cards from Supabase user_gift_cards table
+const MOCK_GIFT_CARDS: GiftCard[] = [];
 
-const VALID_PROMO_CODES: PromoCode[] = [
-  { code: 'SUMMER20', discount: 20, type: 'percent', description: '20% off summer flights', minPurchase: 200 },
-  { code: 'FIRST50', discount: 50, type: 'fixed', description: '$50 off your first booking' },
-  { code: 'WEEKEND10', discount: 10, type: 'percent', description: '10% off weekend trips' },
-];
+// TODO: Load promo codes from Supabase promo_codes table
+const VALID_PROMO_CODES: PromoCode[] = [];
 
 export const GiftCardsCredits = ({ 
   className, 

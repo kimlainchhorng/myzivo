@@ -400,71 +400,7 @@ function animatePolyline(
   return { bgLine, animatedLine };
 }
 
-// ─── Ambient car icons by category ───
-const AMBIENT_CAR_ICONS = [
-  "/vehicles/economy-car-v2.png",   // Economy / Share / Pet
-  "/vehicles/economy-car-v2.png",   // weighted more (common)
-  "/vehicles/comfort-car-v2.png",   // Comfort
-  "/vehicles/xl-car-v2.png",        // XL / SUV
-  "/vehicles/black-lane-car-v2.png",// BLACK Lane
-];
-
-// ─── Ambient cars with minimum distance from pins ───
-function spawnAmbientCars(
-  map: google.maps.Map,
-  center: { lat: number; lng: number },
-  count = 5,
-  avoidPoints: { lat: number; lng: number }[] = []
-): google.maps.Marker[] {
-  const markers: google.maps.Marker[] = [];
-  const MIN_DISTANCE = 0.008;
-
-  for (let i = 0; i < count; i++) {
-    let lat: number, lng: number;
-    let attempts = 0;
-
-    do {
-      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.8;
-      const dist = 0.02 + Math.random() * 0.025;
-      lat = center.lat + Math.sin(angle) * dist;
-      lng = center.lng + Math.cos(angle) * dist * 1.3;
-      attempts++;
-    } while (
-      attempts < 10 &&
-      avoidPoints.some(
-        (p) => Math.abs(p.lat - lat) < MIN_DISTANCE && Math.abs(p.lng - lng) < MIN_DISTANCE
-      )
-    );
-
-    const iconUrl = AMBIENT_CAR_ICONS[i % AMBIENT_CAR_ICONS.length];
-    const marker = new google.maps.Marker({
-      position: { lat, lng },
-      map,
-      icon: {
-        url: iconUrl,
-        scaledSize: new google.maps.Size(30, 18),
-        anchor: new google.maps.Point(15, 9),
-      },
-      clickable: false,
-      zIndex: 10,
-    });
-    markers.push(marker);
-  }
-
-  const interval = setInterval(() => {
-    markers.forEach((m) => {
-      const pos = m.getPosition();
-      if (!pos) return;
-      m.setPosition({
-        lat: pos.lat() + (Math.random() - 0.5) * 0.00025,
-        lng: pos.lng() + (Math.random() - 0.5) * 0.00035,
-      });
-    });
-  }, 3000);
-
-  (markers as any).__driftInterval = interval;
-  return markers;
-}
+// Ambient cars removed — only real driver positions are shown on map
 
 function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers = [], showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -476,7 +412,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
-  const ambientCarsRef = useRef<google.maps.Marker[]>([]);
+  const ambientCarsRef = useRef<google.maps.Marker[]>([]); // kept for type compat, always empty
   const realDriverMarkersRef = useRef<google.maps.Marker[]>([]);
   const driverNavLineRef = useRef<google.maps.Polyline | null>(null);
   const onCenterChangedRef = useRef<RideMapProps["onCenterChanged"]>(onCenterChanged);
@@ -499,10 +435,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   }, []);
 
   const clearAmbientCars = useCallback(() => {
-    const cars = ambientCarsRef.current;
-    if ((cars as any).__driftInterval) clearInterval((cars as any).__driftInterval);
-    cars.forEach((m) => m.setMap(null));
-    ambientCarsRef.current = [];
+    // No-op: ambient cars removed, only real drivers shown
   }, []);
 
   // ─── Map init ───
@@ -543,9 +476,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         }
       });
 
-      // Spawn ambient cars (will be repositioned when coords arrive)
-      const carCenter = pickupCoords || userLocation || center;
-      ambientCarsRef.current = spawnAmbientCars(map, carCenter, 4, []);
+      // Real drivers are rendered by the nearbyDrivers effect
 
       setTimeout(() => {
         if (!mapRef.current) return;
@@ -681,12 +612,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       map.setZoom(15);
     }
 
-    // Spawn ambient cars away from pins
-    const avoidPoints = [pickupCoords, dropoffCoords].filter(Boolean) as { lat: number; lng: number }[];
-    if (pickupCoords && map) {
-      clearAmbientCars();
-      ambientCarsRef.current = spawnAmbientCars(map, pickupCoords, 4, avoidPoints);
-    }
+    // Real drivers rendered by nearbyDrivers effect
 
     return () => {
       if ((pulseCircleRef as any).__interval) clearInterval((pulseCircleRef as any).__interval);
@@ -785,10 +711,10 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
           title: "Driver", zIndex: 100,
         });
       }
-      ambientCarsRef.current.forEach((m) => m.setVisible(false));
+      // Driver assigned — hide nearby driver markers
     } else {
       if (driverMarkerRef.current) { driverMarkerRef.current.setMap(null); driverMarkerRef.current = null; }
-      ambientCarsRef.current.forEach((m) => m.setVisible(true));
+      // No driver — nearby drivers shown by their own effect
     }
   }, [driverCoords]);
 
@@ -802,9 +728,6 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     realDriverMarkersRef.current = [];
 
     if (nearbyDrivers.length > 0) {
-      // Hide ambient cars when showing real drivers
-      ambientCarsRef.current.forEach(m => m.setVisible(false));
-
       nearbyDrivers.forEach((d) => {
         const marker = new google.maps.Marker({
           position: { lat: d.lat, lng: d.lng },
@@ -820,10 +743,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         realDriverMarkersRef.current.push(marker);
       });
     } else {
-      // Show ambient cars again if no real drivers
-      if (!driverCoords) {
-        ambientCarsRef.current.forEach(m => m.setVisible(true));
-      }
+      // No real drivers nearby — map stays clean
     }
   }, [nearbyDrivers, mapReady, driverCoords]);
 
