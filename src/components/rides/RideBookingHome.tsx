@@ -2159,7 +2159,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
             {/* Choose a ride button — collapsed */}
             {!sheetExpanded && (
-              <div className="px-4 pt-2 shrink-0" style={{ paddingBottom: `calc(8px + ${SAFE_BOTTOM})` }}>
+              <div className="px-4 pt-2 pb-2 shrink-0">
                 {isLoadingRoute ? (
                   <div className="flex items-center justify-center py-3">
                     <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
