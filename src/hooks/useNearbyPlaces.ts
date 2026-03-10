@@ -135,14 +135,17 @@ async function fetchNearbyForType(
         const placeLng = r.geometry?.location?.lng() ?? lng;
         const dist = haversineMi(lat, lng, placeLat, placeLng);
 
-        // Try to get a photo URL — prefer real photos over generic Google category icons
+        // Get real photo from Google Places (same photos shown on Google Maps)
         let iconUrl = "";
         if (r.photos && r.photos.length > 0) {
           try {
-            iconUrl = r.photos[0].getUrl({ maxWidth: 120, maxHeight: 120 });
-          } catch {
-            // no photo available
+            iconUrl = r.photos[0].getUrl({ maxWidth: 200, maxHeight: 200 });
+          } catch (e) {
+            console.warn(`[NearbyPlaces] Photo fetch failed for ${r.name}:`, e);
           }
+        }
+        if (!iconUrl) {
+          console.log(`[NearbyPlaces] No photo available for: ${r.name}`);
         }
 
         return {
