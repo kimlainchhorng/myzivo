@@ -2572,11 +2572,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
           <div className="flex items-center gap-2 mb-3 text-sm">
             <Car className="w-4 h-4 text-muted-foreground shrink-0" />
-            <span className="font-semibold text-foreground">{MOCK_DRIVER.name}</span>
+            <span className="font-semibold text-foreground">{assignedDriver.name}</span>
             <span className="text-muted-foreground">|</span>
-            <span className="text-muted-foreground truncate">{MOCK_DRIVER.vehicle}</span>
+            <span className="text-muted-foreground truncate">{assignedDriver.vehicle}</span>
             <span className="text-muted-foreground">|</span>
-            <span className="font-mono font-bold text-foreground shrink-0">{MOCK_DRIVER.plate}</span>
+            <span className="font-mono font-bold text-foreground shrink-0">{assignedDriver.plate}</span>
           </div>
 
           <div className="flex gap-2">
