@@ -13,7 +13,7 @@ import {
   Star, Phone, MessageSquare, Shield, Banknote,
   Smartphone, Wallet, X, Baby, Sparkles,
   Route, Timer, Bell, Package, Plane, Hotel, TrendingDown, Gem,
-  PawPrint, Accessibility, Plus
+  PawPrint, Accessibility, Plus, ShoppingCart, Fuel, UtensilsCrossed, Store, Pill
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -1819,6 +1819,51 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Nearby Places */}
+              <div className="pt-5">
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <MapPin className="w-3 h-3 text-primary/60" />
+                  Nearby Places
+                </p>
+                <div className="space-y-1">
+                  {[
+                    { icon: ShoppingCart, name: "Walmart Supercenter", address: "Nearby • Grocery & Shopping", mi: "1.2 mi", time: "4 min", price: "$5.50", color: "text-blue-500", bg: "bg-blue-500/10 border-blue-500/15" },
+                    { icon: Fuel, name: "Shell Gas Station", address: "Nearby • Gas & Convenience", mi: "0.8 mi", time: "3 min", price: "$4.25", color: "text-orange-500", bg: "bg-orange-500/10 border-orange-500/15" },
+                    { icon: UtensilsCrossed, name: "McDonald's", address: "Nearby • Fast Food", mi: "0.5 mi", time: "2 min", price: "$3.75", color: "text-red-500", bg: "bg-red-500/10 border-red-500/15" },
+                    { icon: Store, name: "Dollar General", address: "Nearby • Shopping", mi: "1.0 mi", time: "4 min", price: "$5.00", color: "text-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/15" },
+                    { icon: ShoppingCart, name: "Winn-Dixie", address: "Nearby • Grocery Store", mi: "1.5 mi", time: "5 min", price: "$6.25", color: "text-green-600", bg: "bg-green-600/10 border-green-600/15" },
+                    { icon: Pill, name: "Walgreens Pharmacy", address: "Nearby • Pharmacy", mi: "0.9 mi", time: "3 min", price: "$4.50", color: "text-purple-500", bg: "bg-purple-500/10 border-purple-500/15" },
+                    { icon: UtensilsCrossed, name: "Chick-fil-A", address: "Nearby • Fast Food", mi: "1.3 mi", time: "5 min", price: "$5.75", color: "text-red-600", bg: "bg-red-600/10 border-red-600/15" },
+                    { icon: Fuel, name: "Circle K", address: "Nearby • Gas & Snacks", mi: "0.6 mi", time: "2 min", price: "$3.50", color: "text-amber-500", bg: "bg-amber-500/10 border-amber-500/15" },
+                  ].map((place, idx) => {
+                    const PlaceIcon = place.icon;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => toast.info(`Setting destination to ${place.name}`)}
+                        className="w-full flex items-center gap-3 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 active:scale-[0.98] group"
+                      >
+                        <div className={cn("w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border transition-colors", place.bg)}>
+                          <PlaceIcon className={cn("w-[18px] h-[18px]", place.color)} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[14px] font-bold text-foreground truncate">{place.name}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-xs text-muted-foreground">{place.mi}</span>
+                            <span className="text-muted-foreground/30">•</span>
+                            <span className="text-xs text-muted-foreground">{place.time}</span>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-bold text-primary">{place.price}</p>
+                          <p className="text-[10px] text-muted-foreground/50">est.</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Saved & Recent list */}
               <div className="pt-5 space-y-5">
