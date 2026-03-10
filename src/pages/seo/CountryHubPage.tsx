@@ -7,7 +7,7 @@
 
 import { useParams, Link, Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Plane, Hotel, Car, ArrowRight, MapPin, TrendingUp, Globe, Shield } from "lucide-react";
+import { Plane, Hotel, Car, ArrowRight, MapPin, TrendingUp, Globe, Shield, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
