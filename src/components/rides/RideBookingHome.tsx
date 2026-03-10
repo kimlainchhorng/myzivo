@@ -31,6 +31,8 @@ import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { reverseGeocode } from "@/services/mapsApi";
 import RidePaymentSection from "@/components/rides/RidePaymentSection";
+import { Input } from "@/components/ui/input";
+import { Tag, Percent, CheckCircle2, Loader2 } from "lucide-react";
 
 /* ─── Types ─── */
 interface PlaceData {
@@ -471,6 +473,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; description: string } | null>(null);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoValidating, setPromoValidating] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [searchSheetY, setSearchSheetY] = useState(-20); // -20 = full, 0 = half, positive = peek
   const [isReversingGeocode, setIsReversingGeocode] = useState(false);
@@ -707,6 +714,32 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const currentPrice = routeData
     ? calcPrice(currentVehicle, routeData.distance_miles, routeData.duration_minutes, surgeMultiplier)
     : calcPrice(currentVehicle, 0, 0, surgeMultiplier);
+
+  const handleApplyPromo = useCallback(async () => {
+    if (!promoInput.trim()) return;
+    setPromoValidating(true);
+    setPromoError(null);
+    try {
+      const { data, error } = await supabase.rpc("validate_coupon" as any, {
+        p_code: promoInput.trim(),
+        p_user_id: user?.id || "",
+        p_order_total_cents: Math.round(currentPrice * 100),
+      });
+      if (error || !data || !(data as any).valid) {
+        setPromoError((data as any)?.error || error?.message || "Invalid promo code");
+      } else {
+        const d = data as any;
+        const discountAmt = (d.discount_amount_cents || 0) / 100;
+        setAppliedPromo({ code: promoInput.trim(), description: d.description || `${promoInput.trim()} applied` });
+        setPromoDiscount(Math.min(discountAmt, currentPrice));
+        toast.success(`Promo ${promoInput.trim()} applied!`);
+      }
+    } catch {
+      setPromoError("Unable to validate promo code");
+    } finally {
+      setPromoValidating(false);
+    }
+  }, [promoInput, currentPrice, user?.id]);
 
   const handleTabChange = (tab: RideTab) => {
     setActiveTab(tab);
@@ -2158,9 +2191,54 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
             )}
 
+            {/* Promo Code Section */}
+            <div className="rounded-2xl bg-card border border-border/20 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Tag className="w-4 h-4 text-primary" />
+                <span className="text-sm font-bold text-foreground">Promo Code</span>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter promo code"
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                  className="flex-1 h-10 font-mono text-sm uppercase tracking-wider"
+                  disabled={!!appliedPromo}
+                />
+                {appliedPromo ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-10 px-3 text-destructive border-destructive/30 hover:bg-destructive/5"
+                    onClick={() => { setAppliedPromo(null); setPromoInput(""); setPromoDiscount(0); }}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="h-10 px-4 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-semibold"
+                    disabled={!promoInput.trim() || promoValidating}
+                    onClick={handleApplyPromo}
+                  >
+                    {promoValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                  </Button>
+                )}
+              </div>
+              {appliedPromo && (
+                <div className="flex items-center gap-2 mt-2.5 px-1">
+                  <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-xs font-semibold text-primary">{appliedPromo.description} — saves ${promoDiscount.toFixed(2)}</span>
+                </div>
+              )}
+              {promoError && (
+                <p className="text-xs text-destructive mt-2 px-1">{promoError}</p>
+              )}
+            </div>
+
             {/* Payment Section */}
             <RidePaymentSection
-              price={currentPrice}
+              price={appliedPromo ? currentPrice - promoDiscount : currentPrice}
               vehicleName={currentVehicle.name}
               isSubmitting={isSubmitting}
               onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
