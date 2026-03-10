@@ -602,6 +602,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       if (progress >= 1) {
         clearInterval(interval);
+        toast("Driver Arrived! 📍", { description: "Your driver has arrived at the pickup point." });
         setViewStep("trip-in-progress");
       }
     }, 1500);
