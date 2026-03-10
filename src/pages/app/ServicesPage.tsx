@@ -76,7 +76,7 @@ const serviceCategories: ServiceCategory[] = [
     subtitle: "Explore the world with ZIVO",
     services: [
       { label: "Flights", href: "/flights", image: zivoFlightsIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-plane-fly" },
-      { label: "Hotels", href: "/hotels", image: zivoHotelsIcon, animClass: "animate-pkg-bounce" },
+      { label: "Hotels", href: "/hotels", image: zivoHotelsIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
       { label: "Car Rental", href: "/rent-car", image: zivoRentalCarIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-car-run" },
       { label: "Insurance", href: "/travel-insurance", icon: Shield, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true },
       { label: "Things to Do", href: "/things-to-do", icon: MapPin, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true },
