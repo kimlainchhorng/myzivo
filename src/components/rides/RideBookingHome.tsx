@@ -1901,7 +1901,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                             <span className="text-[10px] text-muted-foreground/40">{cat.places.length} nearby</span>
                           </div>
                           <div
-                            className="flex gap-2.5 overflow-x-auto px-5 pb-2 snap-x snap-mandatory"
+                            className="flex gap-2.5 overflow-x-auto overflow-y-hidden px-5 pb-2 snap-x snap-mandatory touch-pan-x"
                             style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
                           >
                             {cat.places.map((place, idx) => (
