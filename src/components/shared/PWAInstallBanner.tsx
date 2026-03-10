@@ -65,7 +65,8 @@ export function PWAInstallBanner() {
     localStorage.setItem("pwa_banner_dismissed", String(Date.now()));
   };
 
-  if (!isMobile) return null;
+  // Only show in mobile browsers, never in native Capacitor apps or standalone PWA
+  if (!isMobile || Capacitor.isNativePlatform() || window.matchMedia("(display-mode: standalone)").matches) return null;
 
   return (
     <AnimatePresence>
