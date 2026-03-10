@@ -791,6 +791,41 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     }
   }, [driverCoords]);
 
+  // ─── Real nearby drivers (replaces ambient cars when provided) ───
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    // Clear old real driver markers
+    realDriverMarkersRef.current.forEach(m => m.setMap(null));
+    realDriverMarkersRef.current = [];
+
+    if (nearbyDrivers.length > 0) {
+      // Hide ambient cars when showing real drivers
+      ambientCarsRef.current.forEach(m => m.setVisible(false));
+
+      nearbyDrivers.forEach((d) => {
+        const marker = new google.maps.Marker({
+          position: { lat: d.lat, lng: d.lng },
+          map,
+          icon: {
+            url: "/vehicles/economy-car-v2.png",
+            scaledSize: new google.maps.Size(40, 22),
+            anchor: new google.maps.Point(20, 11),
+          },
+          title: "Nearby Driver",
+          zIndex: 5,
+        });
+        realDriverMarkersRef.current.push(marker);
+      });
+    } else {
+      // Show ambient cars again if no real drivers
+      if (!driverCoords) {
+        ambientCarsRef.current.forEach(m => m.setVisible(true));
+      }
+    }
+  }, [nearbyDrivers, mapReady, driverCoords]);
+
   // ─── Driver navigation line (dashed line from driver to target) ───
   useEffect(() => {
     const map = mapRef.current;
