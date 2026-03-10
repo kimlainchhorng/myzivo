@@ -176,6 +176,7 @@ function MapSection({
           dropoffCoords={dropoffCoords || null}
           stopCoords={stopCoords}
           driverCoords={driverCoords || null}
+          driverNavigationTarget={driverNavigationTarget || null}
           userLocation={userLocation || null}
           showUserLocationDot={showUserLocationDot}
           routePolyline={routePolyline || null}
