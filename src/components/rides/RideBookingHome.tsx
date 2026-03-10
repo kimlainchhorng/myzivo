@@ -2557,7 +2557,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <h3 className="text-lg font-bold text-foreground mb-1">Finding your driver…</h3>
             <p className="text-sm text-muted-foreground mb-1">Searching nearby drivers</p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-              <span>Drivers nearby: 5</span>
+              <span>Drivers nearby: {nearbyDriverCount}</span>
               <span>·</span>
               <span>Estimated pickup: {currentVehicle.etaMin} min</span>
             </div>
