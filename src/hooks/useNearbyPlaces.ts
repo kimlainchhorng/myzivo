@@ -187,13 +187,10 @@ export function useNearbyPlaces(userLat: number | null, userLng: number | null) 
       }
 
       // Ensure Google Maps JS is loaded with places library
-      if (!window.google?.maps?.places) {
-        // Wait a bit for maps to load
-        await new Promise((r) => setTimeout(r, 2000));
-        if (!window.google?.maps?.places || cancelled) {
-          setLoading(false);
-          return;
-        }
+      const placesReady = await ensureGooglePlaces(apiKey);
+      if (!placesReady || cancelled) {
+        setLoading(false);
+        return;
       }
 
       const results: NearbyCategory[] = [];
