@@ -646,6 +646,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     if (!center) return;
 
     const fetchNearby = async () => {
+      console.log("[NearbyDrivers] Searching around:", center.lat, center.lng, "radius: 15000m");
+      
+      // Also check raw drivers_status for debugging
+      const { data: rawStatus } = await supabase
+        .from("drivers_status")
+        .select("driver_id, lat, lng, is_online, is_busy, driver_state")
+        .eq("is_online", true)
+        .limit(10);
+      console.log("[NearbyDrivers] Raw online drivers_status:", rawStatus);
+
       const { data, error } = await supabase.rpc("get_nearby_drivers", {
         p_lat: center.lat,
         p_lng: center.lng,
@@ -653,9 +663,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         p_limit: 20,
       });
       if (error) {
-        console.error("Nearby drivers fetch error:", error);
+        console.error("[NearbyDrivers] RPC error:", error);
         return;
       }
+      console.log("[NearbyDrivers] RPC returned:", data?.length, "drivers", data);
       if (data) {
         setRealNearbyDrivers(data.map((d: any) => ({ lat: d.lat, lng: d.lng })));
       }
