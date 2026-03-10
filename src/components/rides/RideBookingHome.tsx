@@ -504,6 +504,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   });
   const [scheduleMinute, setScheduleMinute] = useState(0);
 
+  // Cancel modal state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+
   // Pick up other state
   const [showPickupOther, setShowPickupOther] = useState(false);
   const [otherName, setOtherName] = useState("");
