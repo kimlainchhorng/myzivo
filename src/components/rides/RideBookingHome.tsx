@@ -2652,6 +2652,23 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         </div>
       )}
 
+      {/* Cancel Ride Modal */}
+      <CancelRideModal
+        open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirmCancel={handleConfirmCancel}
+        role="customer"
+        tripPrice={currentPrice}
+        tripPhase={
+          viewStep === "searching" ? "searching"
+            : viewStep === "driver-assigned" ? "driver-assigned"
+            : viewStep === "driver-en-route" ? "driver-en-route"
+            : "trip-in-progress"
+        }
+        bookedPassengers={1}
+        driverWaitMinutes={0}
+      />
+
     </div>
   );
 }
