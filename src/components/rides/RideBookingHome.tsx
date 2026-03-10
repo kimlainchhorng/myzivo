@@ -1352,6 +1352,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             driverCoords={
               (viewStep === "driver-en-route" || viewStep === "trip-in-progress") ? driverCoords : null
             }
+            driverNavigationTarget={
+              viewStep === "driver-en-route" ? pickup :
+              viewStep === "trip-in-progress" ? destination : null
+            }
           />
         </div>
       )}
