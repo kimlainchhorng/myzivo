@@ -1836,59 +1836,57 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 )}
               </AnimatePresence>
 
-              {/* Nearby Places */}
-              <div className="pt-5">
-                <div className="flex items-center justify-between mb-3">
+              {/* Nearby Places — Horizontal Scroll */}
+              <div className="pt-5 -mx-5">
+                <div className="flex items-center justify-between mb-3 px-5">
                   <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                     <MapPin className="w-3 h-3 text-primary/60" />
                     Nearby Places
                   </p>
-                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground/50">
-                    <span>Scroll</span>
+                  <div className="flex items-center gap-0.5 text-[10px] text-muted-foreground/40 animate-pulse">
                     <ChevronRight className="w-3 h-3" />
+                    <ChevronRight className="w-3 h-3 -ml-1.5 opacity-60" />
                   </div>
                 </div>
                 <div
-                  className="flex gap-3 overflow-x-auto pb-3 -mx-5 px-5 snap-x snap-mandatory"
-                  style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+                  className="flex gap-2.5 overflow-x-auto px-5 pb-3 snap-x snap-mandatory"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
                 >
                   {[
-                    { logo: walmartLogo, name: "Walmart", address: "2050 Florida Blvd, Denham Springs", mi: "1.2 mi", time: "4 min", price: "$5.50", lat: 30.4713, lng: -90.9468 },
-                    { logo: shellLogo, name: "Shell", address: "1425 Range Ave, Denham Springs", mi: "0.8 mi", time: "3 min", price: "$4.25", lat: 30.4785, lng: -90.9552 },
-                    { logo: mcdonaldsLogo, name: "McDonald's", address: "920 S Range Ave, Denham Springs", mi: "0.5 mi", time: "2 min", price: "$3.75", lat: 30.4742, lng: -90.9563 },
-                    { logo: targetLogo, name: "Target", address: "7401 Florida Blvd, Baton Rouge", mi: "3.2 mi", time: "10 min", price: "$9.50", lat: 30.4538, lng: -90.9982 },
-                    { logo: dollarGeneralLogo, name: "Dollar General", address: "1310 Florida Blvd SW, Denham Springs", mi: "1.0 mi", time: "4 min", price: "$5.00", lat: 30.4695, lng: -90.9510 },
-                    { logo: starbucksLogo, name: "Starbucks", address: "2145 S Range Ave, Denham Springs", mi: "1.1 mi", time: "4 min", price: "$5.25", lat: 30.4720, lng: -90.9545 },
-                    { logo: winnDixieLogo, name: "Winn-Dixie", address: "2585 S Range Ave, Denham Springs", mi: "1.5 mi", time: "5 min", price: "$6.25", lat: 30.4628, lng: -90.9571 },
-                    { logo: walgreensLogo, name: "Walgreens", address: "1802 S Range Ave, Denham Springs", mi: "0.9 mi", time: "3 min", price: "$4.50", lat: 30.4755, lng: -90.9558 },
-                    { logo: cvsLogo, name: "CVS", address: "1950 Florida Blvd, Denham Springs", mi: "1.0 mi", time: "4 min", price: "$5.00", lat: 30.4710, lng: -90.9472 },
-                    { logo: chickfilaLogo, name: "Chick-fil-A", address: "2710 S Range Ave, Denham Springs", mi: "1.3 mi", time: "5 min", price: "$5.75", lat: 30.4610, lng: -90.9575 },
-                    { logo: popeyesLogo, name: "Popeyes", address: "1605 S Range Ave, Denham Springs", mi: "0.7 mi", time: "3 min", price: "$4.00", lat: 30.4768, lng: -90.9555 },
-                    { logo: subwayLogo, name: "Subway", address: "1420 Florida Blvd, Denham Springs", mi: "0.9 mi", time: "3 min", price: "$4.50", lat: 30.4725, lng: -90.9498 },
-                    { logo: burgerkingLogo, name: "Burger King", address: "830 S Range Ave, Denham Springs", mi: "0.4 mi", time: "2 min", price: "$3.50", lat: 30.4748, lng: -90.9560 },
-                    { logo: circlekLogo, name: "Circle K", address: "800 Hatchell Ln, Denham Springs", mi: "0.6 mi", time: "2 min", price: "$3.50", lat: 30.4760, lng: -90.9490 },
-                    { logo: homedepotLogo, name: "Home Depot", address: "2550 Florida Blvd, Denham Springs", mi: "1.8 mi", time: "6 min", price: "$7.00", lat: 30.4680, lng: -90.9430 },
-                    { logo: sevenelevenLogo, name: "7-Eleven", address: "1200 Hatchell Ln, Denham Springs", mi: "0.5 mi", time: "2 min", price: "$3.75", lat: 30.4770, lng: -90.9485 },
+                    { logo: walmartLogo, name: "Walmart", address: "2050 Florida Blvd", mi: "1.2", time: "4", price: "$5.50", lat: 30.4713, lng: -90.9468 },
+                    { logo: shellLogo, name: "Shell", address: "1425 Range Ave", mi: "0.8", time: "3", price: "$4.25", lat: 30.4785, lng: -90.9552 },
+                    { logo: mcdonaldsLogo, name: "McDonald's", address: "920 S Range Ave", mi: "0.5", time: "2", price: "$3.75", lat: 30.4742, lng: -90.9563 },
+                    { logo: targetLogo, name: "Target", address: "7401 Florida Blvd", mi: "3.2", time: "10", price: "$9.50", lat: 30.4538, lng: -90.9982 },
+                    { logo: dollarGeneralLogo, name: "Dollar General", address: "1310 Florida Blvd", mi: "1.0", time: "4", price: "$5.00", lat: 30.4695, lng: -90.9510 },
+                    { logo: starbucksLogo, name: "Starbucks", address: "2145 S Range Ave", mi: "1.1", time: "4", price: "$5.25", lat: 30.4720, lng: -90.9545 },
+                    { logo: winnDixieLogo, name: "Winn-Dixie", address: "2585 S Range Ave", mi: "1.5", time: "5", price: "$6.25", lat: 30.4628, lng: -90.9571 },
+                    { logo: walgreensLogo, name: "Walgreens", address: "1802 S Range Ave", mi: "0.9", time: "3", price: "$4.50", lat: 30.4755, lng: -90.9558 },
+                    { logo: cvsLogo, name: "CVS", address: "1950 Florida Blvd", mi: "1.0", time: "4", price: "$5.00", lat: 30.4710, lng: -90.9472 },
+                    { logo: chickfilaLogo, name: "Chick-fil-A", address: "2710 S Range Ave", mi: "1.3", time: "5", price: "$5.75", lat: 30.4610, lng: -90.9575 },
+                    { logo: popeyesLogo, name: "Popeyes", address: "1605 S Range Ave", mi: "0.7", time: "3", price: "$4.00", lat: 30.4768, lng: -90.9555 },
+                    { logo: subwayLogo, name: "Subway", address: "1420 Florida Blvd", mi: "0.9", time: "3", price: "$4.50", lat: 30.4725, lng: -90.9498 },
+                    { logo: burgerkingLogo, name: "Burger King", address: "830 S Range Ave", mi: "0.4", time: "2", price: "$3.50", lat: 30.4748, lng: -90.9560 },
+                    { logo: circlekLogo, name: "Circle K", address: "800 Hatchell Ln", mi: "0.6", time: "2", price: "$3.50", lat: 30.4760, lng: -90.9490 },
+                    { logo: homedepotLogo, name: "Home Depot", address: "2550 Florida Blvd", mi: "1.8", time: "6", price: "$7.00", lat: 30.4680, lng: -90.9430 },
+                    { logo: sevenelevenLogo, name: "7-Eleven", address: "1200 Hatchell Ln", mi: "0.5", time: "2", price: "$3.75", lat: 30.4770, lng: -90.9485 },
                   ].map((place, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleSavedPlace(place.address, place.lat, place.lng)}
-                      className="flex flex-col items-center min-w-[120px] w-[120px] rounded-2xl bg-card border border-border/20 p-3 hover:border-primary/30 hover:shadow-lg transition-all duration-200 active:scale-95 shrink-0 snap-start group"
+                      className="flex flex-col items-center min-w-[105px] w-[105px] rounded-2xl bg-card border border-border/15 py-3 px-2 hover:border-primary/30 hover:shadow-lg transition-all duration-200 active:scale-95 shrink-0 snap-start group"
                     >
-                      <div className="w-14 h-14 rounded-2xl bg-muted/8 border border-border/10 flex items-center justify-center mb-2.5 overflow-hidden group-hover:shadow-md group-hover:border-primary/20 transition-all duration-200">
-                        <img src={place.logo} alt={place.name} className="w-10 h-10 object-contain" />
+                      <div className="w-11 h-11 rounded-xl bg-background flex items-center justify-center mb-2 overflow-hidden border border-border/10 group-hover:border-primary/20 group-hover:shadow-sm transition-all duration-200">
+                        <img src={place.logo} alt={place.name} className="w-8 h-8 object-contain" loading="lazy" />
                       </div>
-                      <p className="text-[12px] font-bold text-foreground text-center leading-tight truncate w-full">{place.name}</p>
-                      <p className="text-[9px] text-muted-foreground/60 text-center leading-tight mt-0.5 line-clamp-2 min-h-[22px]">{place.address}</p>
-                      <div className="flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-muted/10">
-                        <span className="text-[10px] font-medium text-muted-foreground">{place.mi}</span>
-                        <span className="text-[8px] text-muted-foreground/30">•</span>
-                        <span className="text-[10px] font-medium text-muted-foreground">{place.time}</span>
-                      </div>
-                      <p className="text-[15px] font-extrabold text-primary mt-1.5">{place.price}</p>
-                      <p className="text-[9px] text-muted-foreground/40 -mt-0.5">est.</p>
+                      <p className="text-[11px] font-bold text-foreground text-center leading-tight truncate w-full">{place.name}</p>
+                      <p className="text-[9px] text-muted-foreground/50 text-center leading-snug mt-0.5 truncate w-full">{place.address}</p>
+                      <p className="text-[9px] text-muted-foreground mt-1.5">{place.mi} mi · {place.time} min</p>
+                      <p className="text-[14px] font-extrabold text-primary mt-1">{place.price}</p>
+                      <p className="text-[8px] text-muted-foreground/40">est.</p>
                     </button>
                   ))}
+                  {/* End spacer for last-card visibility */}
+                  <div className="min-w-[1px] shrink-0" />
                 </div>
               </div>
 
