@@ -2,8 +2,7 @@
  * PlaceLogo – Shows brand logos for known chains, Google Places photo for others.
  * Uses locally stored brand logos for reliability.
  */
-import { useState, useCallback, memo } from "react";
-import { UtensilsCrossed, ShoppingCart, Fuel, type LucideIcon } from "lucide-react";
+import { useState, memo } from "react";
 import { cn } from "@/lib/utils";
 
 // Local brand logo imports
@@ -38,62 +37,48 @@ import logo7Eleven from "@/assets/brand-logos/7eleven.png";
 import logoWalgreens from "@/assets/brand-logos/walgreens.png";
 import logoCvs from "@/assets/brand-logos/cvs.png";
 
-// Brand keyword → local logo image mapping
-// Keys are matched against lowercase place names using .includes()
+// Brand keyword → local logo (ordered longest-key-first for specificity)
 const BRAND_LOGOS: [string, string][] = [
-  // Restaurants (longer keys first for specificity)
   ["jack in the box", logoJackInTheBox],
   ["chick-fil-a", logoChickFilA],
   ["pizza hut", logoPizzaHut],
   ["burger king", logoBurgerKing],
   ["taco bell", logoTacoBell],
-  ["panda express", logoStarbucks], // fallback
+  ["exxonmobil", logoExxon],
+  ["circle k", logoCircleK],
+  ["7-eleven", logo7Eleven],
   ["mcdonald", logoMcdonalds],
   ["wendy", logoWendys],
   ["subway", logoSubway],
   ["starbucks", logoStarbucks],
   ["dunkin", logoDunkin],
   ["popeyes", logoPopeyes],
-  ["kfc", logoKfc],
   ["domino", logoDominos],
-  
-  // Gas Stations
-  ["exxonmobil", logoExxon],
-  ["circle k", logoCircleK],
   ["chevron", logoChevron],
   ["marathon", logoMarathon],
   ["speedway", logoSpeedway],
+  ["walgreens", logoWalgreens],
+  ["walmart", logoWalmart],
+  ["costco", logoCostco],
+  ["target", logoTarget],
   ["shell", logoShell],
   ["exxon", logoExxon],
   ["mobil", logoMobil],
   ["valero", logoValero],
   ["citgo", logoCitgo],
   ["sunoco", logoSunoco],
-  ["bp", logoBp],
-
-  // Shops & Grocery
-  ["7-eleven", logo7Eleven],
-  ["seven eleven", logo7Eleven],
-  ["walgreens", logoWalgreens],
-  ["walmart", logoWalmart],
-  ["target", logoTarget],
-  ["costco", logoCostco],
+  ["kfc", logoKfc],
   ["cvs", logoCvs],
+  ["bp ", logoBp],
 ];
 
 function getBrandLogoUrl(name: string): string | null {
   const lower = name.toLowerCase().trim();
   for (const [key, url] of BRAND_LOGOS) {
-    if (lower.includes(key)) return url;
+    if (lower.includes(key.trim())) return url;
   }
   return null;
 }
-
-const CAT_ICONS: Record<string, LucideIcon> = {
-  restaurant: UtensilsCrossed,
-  shop: ShoppingCart,
-  gas: Fuel,
-};
 
 interface PlaceLogoProps {
   name: string;
@@ -102,59 +87,53 @@ interface PlaceLogoProps {
   className?: string;
 }
 
+// Color palette for letter avatars
+const CATEGORY_COLORS: Record<string, string> = {
+  restaurant: "bg-orange-100 text-orange-600",
+  shop: "bg-blue-100 text-blue-600",
+  gas: "bg-emerald-100 text-emerald-600",
+};
+
 function PlaceLogoInner({ name, googlePhotoUrl, categoryType, className }: PlaceLogoProps) {
   const brandUrl = getBrandLogoUrl(name);
-  const sources = [
-    ...(brandUrl ? [brandUrl] : []),
-    ...(googlePhotoUrl ? [googlePhotoUrl] : []),
-  ];
+  const [brandFailed, setBrandFailed] = useState(false);
+  const [googleFailed, setGoogleFailed] = useState(false);
 
-  const [srcIndex, setSrcIndex] = useState(0);
-  const [showIcon, setShowIcon] = useState(sources.length === 0);
-
-  const handleError = useCallback(() => {
-    setSrcIndex((prev) => {
-      const next = prev + 1;
-      if (next >= sources.length) {
-        setShowIcon(true);
-        return prev;
-      }
-      return next;
-    });
-  }, [sources.length]);
-
-  const FallbackIcon = CAT_ICONS[categoryType] || UtensilsCrossed;
-  const currentSrc = sources[srcIndex];
-  const isBrandLogo = brandUrl && srcIndex === 0;
-
-  // Color based on category
-  const bgColors: Record<string, string> = {
-    restaurant: "bg-orange-100 text-orange-600",
-    shop: "bg-blue-100 text-blue-600",
-    gas: "bg-emerald-100 text-emerald-600",
-  };
-  const fallbackColor = bgColors[categoryType] || "bg-muted text-muted-foreground";
   const initial = name.charAt(0).toUpperCase();
+  const fallbackColor = CATEGORY_COLORS[categoryType] || "bg-muted text-muted-foreground";
+
+  // Determine what to show
+  const showBrand = brandUrl && !brandFailed;
+  const showGoogle = !showBrand && googlePhotoUrl && !googleFailed;
+  const showLetter = !showBrand && !showGoogle;
 
   return (
     <div className={cn(
       "w-11 h-11 rounded-xl bg-white flex items-center justify-center overflow-hidden border border-border/10",
       className
     )}>
-      {showIcon ? (
+      {showBrand && (
+        <img
+          src={brandUrl}
+          alt={name}
+          className="w-8 h-8 object-contain"
+          loading="lazy"
+          onError={() => setBrandFailed(true)}
+        />
+      )}
+      {showGoogle && (
+        <img
+          src={googlePhotoUrl}
+          alt={name}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          onError={() => setGoogleFailed(true)}
+        />
+      )}
+      {showLetter && (
         <div className={cn("w-full h-full flex items-center justify-center font-bold text-sm", fallbackColor)}>
           {initial}
         </div>
-      ) : (
-        <img
-          src={currentSrc}
-          alt={name}
-          className={cn(
-            isBrandLogo ? "w-8 h-8 object-contain" : "w-full h-full object-cover"
-          )}
-          loading="lazy"
-          onError={handleError}
-        />
       )}
     </div>
   );
