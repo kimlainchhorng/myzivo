@@ -476,6 +476,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const ambientCarsRef = useRef<google.maps.Marker[]>([]);
+  const realDriverMarkersRef = useRef<google.maps.Marker[]>([]);
   const driverNavLineRef = useRef<google.maps.Polyline | null>(null);
   const onCenterChangedRef = useRef<RideMapProps["onCenterChanged"]>(onCenterChanged);
   const [mapReady, setMapReady] = useState(false);
