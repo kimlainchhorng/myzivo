@@ -1,15 +1,16 @@
 /**
- * DriverEnRouteTracker - Real-time driver tracking with animated car, driver info, and action buttons
- * Inspired by Uber/Lyft's en-route experience
+ * DriverEnRouteTracker - Real-time driver tracking with live location from Supabase
+ * Subscribes to driver_locations table for live lat/lng updates
  */
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Car, Phone, MessageSquare, Share2, Shield, Star, Navigation, Clock, MapPin, ChevronUp, ChevronDown, X } from "lucide-react";
+import { Car, Phone, MessageSquare, Share2, Shield, Star, Navigation, Clock, MapPin, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { useDriverLocation } from "@/hooks/useDriverLocation";
 
 interface DriverInfo {
   name: string;
@@ -24,10 +25,13 @@ interface DriverInfo {
 
 interface EnRouteProps {
   tripId: string;
+  driverId?: string | null;
   driver?: DriverInfo;
   etaMinutes?: number;
   pickupAddress?: string;
   dropoffAddress?: string;
+  pickupCoords?: { lat: number; lng: number } | null;
+  dropoffCoords?: { lat: number; lng: number } | null;
   status?: "arriving" | "waiting" | "in_transit" | "almost_there";
   onCancel?: () => void;
   onContact?: (type: "call" | "message") => void;
@@ -50,43 +54,81 @@ const defaultDriver: DriverInfo = {
   vehicleColor: "",
 };
 
+/** Haversine distance in km */
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/** Calculate progress % based on driver position between two points */
+function calcProgress(
+  driverLat: number, driverLng: number,
+  fromLat: number, fromLng: number,
+  toLat: number, toLng: number
+): number {
+  const totalDist = haversineKm(fromLat, fromLng, toLat, toLng);
+  if (totalDist < 0.01) return 100;
+  const remaining = haversineKm(driverLat, driverLng, toLat, toLng);
+  return Math.min(100, Math.max(0, ((totalDist - remaining) / totalDist) * 100));
+}
+
 export default function DriverEnRouteTracker({
   tripId,
+  driverId,
   driver = defaultDriver,
   etaMinutes = 0,
   pickupAddress = "",
   dropoffAddress = "",
+  pickupCoords,
+  dropoffCoords,
   status = "arriving",
   onCancel,
   onContact,
   onShare,
 }: EnRouteProps) {
   const [expanded, setExpanded] = useState(false);
-  const [countdown, setCountdown] = useState(etaMinutes * 60);
-  const [carPosition, setCarPosition] = useState(0);
   const cfg = statusConfig[status];
 
-  // Countdown timer
-  useEffect(() => {
-    setCountdown(etaMinutes * 60);
-    const timer = setInterval(() => setCountdown(c => Math.max(0, c - 1)), 1000);
-    return () => clearInterval(timer);
-  }, [etaMinutes]);
+  // Real-time driver location
+  const { location: driverLocation, isConnected } = useDriverLocation(driverId);
 
-  // Animate car position along route
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCarPosition(prev => Math.min(100, prev + 0.5));
-    }, 200);
-    return () => clearInterval(interval);
-  }, []);
+  // Calculate live progress and ETA from real coordinates
+  const liveProgress = (() => {
+    if (!driverLocation) return cfg.progress;
+    const target = status === "in_transit" || status === "almost_there" ? dropoffCoords : pickupCoords;
+    const origin = status === "in_transit" || status === "almost_there" ? pickupCoords : null;
+    if (!target) return cfg.progress;
+    if (origin) {
+      return calcProgress(driverLocation.lat, driverLocation.lng, origin.lat, origin.lng, target.lat, target.lng);
+    }
+    // Estimate based on distance to target
+    const dist = haversineKm(driverLocation.lat, driverLocation.lng, target.lat, target.lng);
+    if (dist < 0.1) return 95;
+    if (dist < 0.5) return 80;
+    if (dist < 1) return 60;
+    if (dist < 3) return 40;
+    return 20;
+  })();
 
-  const mins = Math.floor(countdown / 60);
-  const secs = countdown % 60;
+  // Live ETA based on distance and speed
+  const liveEta = (() => {
+    if (!driverLocation) return etaMinutes;
+    const target = status === "in_transit" || status === "almost_there" ? dropoffCoords : pickupCoords;
+    if (!target) return etaMinutes;
+    const dist = haversineKm(driverLocation.lat, driverLocation.lng, target.lat, target.lng);
+    const speedKmh = driverLocation.speed && driverLocation.speed > 0 ? driverLocation.speed * 3.6 : 30; // default 30km/h
+    return Math.max(1, Math.round((dist / speedKmh) * 60));
+  })();
+
+  // Map car position as percentage for SVG
+  const carPercent = Math.min(100, Math.max(0, liveProgress));
 
   return (
     <div className="rounded-2xl bg-card border border-border/40 overflow-hidden shadow-lg">
-      {/* Map area with animated car */}
+      {/* Map area with car */}
       <div className="relative h-40 bg-gradient-to-br from-muted/40 to-muted/20 overflow-hidden">
         {/* Route line */}
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -103,7 +145,7 @@ export default function DriverEnRouteTracker({
             stroke="hsl(var(--primary))"
             strokeWidth="1"
             fill="none"
-            strokeDasharray={`${carPosition} 200`}
+            strokeDasharray={`${carPercent} 200`}
             opacity={0.8}
           />
         </svg>
@@ -120,15 +162,14 @@ export default function DriverEnRouteTracker({
           <span className="text-[8px] font-bold text-muted-foreground mt-1">Dropoff</span>
         </div>
 
-        {/* Animated car */}
+        {/* Car marker - positioned by live progress */}
         <motion.div
           className="absolute z-10"
-          style={{
-            left: `${10 + (carPosition / 100) * 80}%`,
-            top: `${80 - (carPosition / 100) * 60}%`,
+          animate={{
+            left: `${10 + (carPercent / 100) * 80}%`,
+            top: `${80 - (carPercent / 100) * 60}%`,
           }}
-          animate={{ rotate: [-5, 5, -5] }}
-          transition={{ repeat: Infinity, duration: 2 }}
+          transition={{ type: "spring", stiffness: 50, damping: 20 }}
         >
           <div className="relative">
             <div className="w-8 h-8 rounded-full bg-primary/90 flex items-center justify-center shadow-lg border-2 border-primary-foreground">
@@ -144,9 +185,14 @@ export default function DriverEnRouteTracker({
         <div className="absolute top-3 left-3 bg-card/90 backdrop-blur-sm rounded-xl px-3 py-2 border border-border/30 shadow-md">
           <div className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-primary" />
-            <span className="text-lg font-black text-foreground">{mins}:{secs.toString().padStart(2, "0")}</span>
+            <span className="text-lg font-black text-foreground">{liveEta} min</span>
           </div>
-          <span className="text-[9px] text-muted-foreground">ETA</span>
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] text-muted-foreground">ETA</span>
+            {isConnected && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Live" />
+            )}
+          </div>
         </div>
       </div>
 
@@ -155,10 +201,10 @@ export default function DriverEnRouteTracker({
         <div className="flex items-center justify-between mb-2">
           <span className={cn("text-sm font-bold", cfg.color)}>{cfg.label}</span>
           <Badge variant="outline" className="text-[9px] font-bold border-primary/20 text-primary bg-primary/5">
-            <Navigation className="w-2.5 h-2.5 mr-1" /> Live
+            <Navigation className="w-2.5 h-2.5 mr-1" /> {isConnected ? "Live" : "Connecting..."}
           </Badge>
         </div>
-        <Progress value={cfg.progress} className="h-1.5 mb-3" />
+        <Progress value={liveProgress} className="h-1.5 mb-3" />
       </div>
 
       {/* Driver card */}
@@ -218,7 +264,6 @@ export default function DriverEnRouteTracker({
           animate={{ height: "auto", opacity: 1 }}
           className="px-4 pb-4 overflow-hidden"
         >
-          {/* Route details */}
           <div className="space-y-3 mb-4">
             <div className="flex items-start gap-3">
               <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center mt-0.5 shrink-0">
@@ -240,7 +285,6 @@ export default function DriverEnRouteTracker({
             </div>
           </div>
 
-          {/* Safety & share */}
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="flex-1 h-9 text-xs" onClick={onShare}>
               <Share2 className="w-3.5 h-3.5 mr-1.5" /> Share trip
