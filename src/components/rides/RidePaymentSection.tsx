@@ -295,6 +295,19 @@ export default function RidePaymentSection({
   const handleAddCard = async () => {
     setAddingCard(true);
     try {
+      // Refresh session before calling edge function to ensure valid token
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast.error("Session expired. Please sign in again.");
+        navigate("/login");
+        return;
+      }
+      // If token is close to expiry, refresh it
+      const expiresAt = sessionData.session.expires_at;
+      if (expiresAt && expiresAt * 1000 - Date.now() < 60000) {
+        await supabase.auth.refreshSession();
+      }
+
       const resp = await supabase.functions.invoke("manage-payment-methods", {
         body: { action: "create_setup_intent" },
       });
