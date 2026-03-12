@@ -309,6 +309,18 @@ export default function GroceryPage() {
         </div>
       )}
 
+      {/* Checkout Drawer */}
+      <AnimatePresence>
+        {showCheckout && (
+          <GroceryCheckoutDrawer
+            items={cart.items}
+            total={cart.total}
+            onClose={() => setShowCheckout(false)}
+            onOrderPlaced={handleOrderPlaced}
+          />
+        )}
+      </AnimatePresence>
+
       <ZivoMobileNav />
     </div>
   );
