@@ -96,7 +96,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[32px] max-h-[94vh] overflow-hidden flex flex-col"
+        className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[32px] max-h-[92vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle bar */}
@@ -105,7 +105,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
         </div>
 
         {/* Scrollable content */}
-        <div className="overflow-y-auto flex-1 px-5 pb-4">
+        <div className="overflow-y-auto flex-1 min-h-0 px-5 pb-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
@@ -395,7 +395,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
         </div>
 
         {/* Sticky CTA */}
-        <div className="shrink-0 px-5 pb-6 pt-3 border-t border-border/10 bg-background/95 backdrop-blur-md">
+        <div className="shrink-0 px-5 pt-3 border-t border-border/10 bg-background/95 backdrop-blur-md" style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 1.5rem))" }}>
           <motion.div whileTap={isValid && !isSubmitting ? { scale: 0.97 } : {}}>
             <Button
               className="w-full h-[50px] rounded-2xl text-[14px] font-bold shadow-lg shadow-primary/20 gap-2"
