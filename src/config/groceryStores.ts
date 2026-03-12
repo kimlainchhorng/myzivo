@@ -101,6 +101,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyTitle: "Search Best Buy Products",
     emptyDescription: "Shop electronics, appliances, and tech from Best Buy. A ZIVO driver delivers to your door.",
     promo: "No markups",
+    defaultQuery: "electronics deals",
   },
   {
     name: "Lowe's",
