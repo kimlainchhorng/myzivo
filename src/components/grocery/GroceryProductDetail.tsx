@@ -327,6 +327,15 @@ export function GroceryProductDetail({
                   currentPrice={product.price}
                 />
 
+                {/* ── Frequently Bought Together ── */}
+                <GroceryFrequentlyBoughtTogether
+                  currentProduct={product}
+                  allProducts={allProducts}
+                  cartProductIds={new Set(allProducts.filter((p) => false).map((p) => p.productId))}
+                  onAddAll={(products) => products.forEach((p) => onAdd(p))}
+                  onAdd={onAdd}
+                />
+
                 {/* ── Expandable Sections ── */}
                 <div className="space-y-0 rounded-2xl border border-border/20 overflow-hidden bg-muted/10">
                   {/* Product Details */}
