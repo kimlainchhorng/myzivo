@@ -14,6 +14,7 @@ import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { useState, useMemo } from "react";
 import { GROCERY_STORES } from "@/config/groceryStores";
 import { GroceryPriceCompare } from "@/components/grocery/GroceryPriceCompare";
+import { GroceryFrequentlyBoughtTogether } from "@/components/grocery/GroceryFrequentlyBoughtTogether";
 
 interface GroceryProductDetailProps {
   product: StoreProduct | null;
