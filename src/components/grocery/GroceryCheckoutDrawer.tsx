@@ -1,12 +1,13 @@
 /**
- * GroceryCheckoutDrawer - 2026 Spatial UI Checkout
+ * GroceryCheckoutDrawer - 2026 Spatial UI Checkout (v2)
+ * Step-based checkout with promo code support
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin, Loader2, X, ShoppingCart, Truck, Shield, User, Phone,
   ChevronDown, ChevronUp, Lock, CheckCircle, Package, Clock, Heart,
-  CreditCard, Sparkles, Timer, BadgeCheck,
+  CreditCard, Sparkles, Timer, BadgeCheck, ArrowRight, ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { GroceryCartItem } from "@/hooks/useGroceryCart";
+import { GroceryPromoInput } from "@/components/grocery/GroceryPromoBanner";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
