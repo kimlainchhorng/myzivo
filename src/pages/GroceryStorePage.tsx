@@ -111,46 +111,52 @@ function FeaturedProductRow({ products, onAdd, cart }: {
   const featured = [...products].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)).slice(0, 5);
 
   return (
-    <div className="px-4 pt-3 pb-1">
-      <div className="flex items-center gap-1.5 mb-2">
-        <Sparkles className="h-3 w-3 text-primary" />
-        <span className="text-[11px] font-bold text-foreground/70 uppercase tracking-wider">Top Picks</span>
+    <div className="pt-3 pb-2">
+      <div className="flex items-center gap-1.5 mb-3 px-4">
+        <Sparkles className="h-3.5 w-3.5 text-primary" />
+        <span className="text-[12px] font-bold text-foreground/80 uppercase tracking-wider">Top Picks</span>
+        <span className="text-[10px] text-muted-foreground ml-auto">Scroll →</span>
       </div>
-      <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-1">
+      <div
+        className="flex gap-3 overflow-x-auto pb-2 px-4 snap-x snap-mandatory"
+        style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
         {featured.map((p, i) => {
           const inCart = cart.items.find((c) => c.productId === p.productId);
           return (
             <motion.div
               key={p.productId}
-              initial={{ opacity: 0, x: 16 }}
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.06, type: "spring", stiffness: 300, damping: 24 }}
-              className="shrink-0 w-[140px] rounded-[18px] border border-border/30 bg-card/80 backdrop-blur-sm overflow-hidden group"
+              className="snap-start shrink-0 w-[150px] rounded-2xl border border-border/30 bg-card overflow-hidden group hover:border-primary/20 hover:shadow-lg transition-all duration-200"
             >
-              <div className="relative h-[100px] bg-gradient-to-br from-muted/10 to-muted/30 flex items-center justify-center p-3">
+              <div className="relative h-[120px] bg-gradient-to-br from-primary/[0.03] to-muted/20 flex items-center justify-center p-3.5 cursor-pointer" onClick={() => onAdd(p)}>
                 {p.image ? (
-                  <img src={p.image} alt={p.name} className="h-full w-full object-contain" loading="lazy" referrerPolicy="no-referrer" />
+                  <img src={p.image} alt={p.name} className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy" referrerPolicy="no-referrer" />
                 ) : (
-                  <Package className="h-8 w-8 text-muted-foreground/15" />
+                  <Package className="h-10 w-10 text-muted-foreground/10" />
                 )}
                 {p.rating != null && (
-                  <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 px-1 py-0.5 rounded-full bg-background/80 backdrop-blur-sm text-[8px]">
-                    <Star className="h-2 w-2 fill-amber-400 text-amber-400" />
-                    <span className="font-bold">{p.rating}</span>
+                  <div className="absolute top-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg bg-background/90 backdrop-blur-sm border border-border/20 shadow-sm">
+                    <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                    <span className="text-[9px] font-bold text-foreground">{p.rating}</span>
                   </div>
                 )}
+                {/* Stock indicator */}
+                <span className="absolute top-2 left-2 h-2 w-2 rounded-full bg-emerald-500 border border-background shadow-sm" />
               </div>
-              <div className="p-2.5">
-                <p className="text-[10px] font-semibold line-clamp-1 text-foreground/90">{p.name}</p>
-                <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-[14px] font-extrabold text-foreground">${p.price.toFixed(2)}</span>
+              <div className="p-2.5 space-y-1.5">
+                <p className="text-[11px] font-semibold line-clamp-2 text-foreground/90 leading-snug min-h-[28px]">{p.name}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[15px] font-extrabold text-foreground tracking-tight">${p.price.toFixed(2)}</span>
                   <motion.button
-                    whileTap={{ scale: 0.85 }}
+                    whileTap={{ scale: 0.8 }}
                     onClick={() => onAdd(p)}
-                    className={`h-7 w-7 rounded-full flex items-center justify-center transition-all ${
+                    className={`h-8 w-8 rounded-xl flex items-center justify-center transition-all duration-200 ${
                       inCart
                         ? "bg-primary text-primary-foreground shadow-md shadow-primary/30"
-                        : "bg-primary/15 text-primary hover:bg-primary/25"
+                        : "bg-primary/10 text-primary hover:bg-primary/20 border border-primary/15"
                     }`}
                   >
                     {inCart ? <span className="text-[10px] font-bold">{inCart.quantity}</span> : <Plus className="h-3.5 w-3.5" />}
