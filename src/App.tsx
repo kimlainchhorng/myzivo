@@ -343,6 +343,7 @@ const App = () => (
                 <Route path="/delivery" element={<DeliveryPage />} />
                 <Route path="/grocery" element={<GroceryPage />} />
                 <Route path="/drive" element={<DrivePage />} />
+                <Route path="/driver/orders" element={<DriverOrdersPage />} />
                 <Route path="/driver/shopping/:orderId" element={<DriverShoppingList />} />
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
