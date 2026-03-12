@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.costco-search]
 verify_jwt = false
+
+[functions.target-search]
+verify_jwt = false
+
+[functions.kroger-search]
+verify_jwt = false
