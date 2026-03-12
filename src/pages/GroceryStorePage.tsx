@@ -31,7 +31,7 @@ export default function GroceryStorePage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const storeName = storeCfg?.name ?? "Walmart";
-  const { products, isLoading, error, search, clearResults } = useStoreSearch(storeName);
+  const { products, isLoading, isLoadingMore, hasMore, error, search, loadMore, clearResults } = useStoreSearch(storeName);
   const cart = useGroceryCart();
   const hasLoadedDefaults = useRef(false);
 
