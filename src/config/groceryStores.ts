@@ -112,6 +112,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyTitle: "Search Lowe's Products",
     emptyDescription: "Shop home improvement, tools, and hardware from Lowe's.",
     promo: "$15 off",
+    defaultQuery: "tools hardware",
   },
   {
     name: "Petco",
