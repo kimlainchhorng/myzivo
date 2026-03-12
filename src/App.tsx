@@ -51,6 +51,7 @@ const GroceryOrderPlaced = lazy(() => import("./pages/grocery/GroceryOrderPlaced
 const DrivePage = lazy(() => import("./pages/DrivePage"));
 const DriverShoppingList = lazy(() => import("./pages/DriverShoppingList"));
 const DriverOrdersPage = lazy(() => import("./pages/DriverOrdersPage"));
+const AdminShoppingOrders = lazy(() => import("./pages/admin/AdminShoppingOrders"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"));
 const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
@@ -356,6 +357,7 @@ const App = () => (
                 <Route path="/driver/performance" element={<DriverPerformancePage />} />
                 <Route path="/driver/map" element={<DriverMapPage />} />
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
+                <Route path="/admin/shopping-orders" element={<AdminShoppingOrders />} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
                 <Route path="/insurance" element={<PreserveQueryRedirect to="/travel-insurance" />} />
