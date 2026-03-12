@@ -123,6 +123,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyTitle: "Search Petco Products",
     emptyDescription: "Shop pet food, supplies, and essentials from Petco.",
     promo: "$10 off",
+    defaultQuery: "pet food",
   },
   {
     name: "Kroger",
