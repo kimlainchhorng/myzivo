@@ -105,7 +105,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
         </div>
 
         {/* Scrollable content */}
-        <div className="overflow-y-auto flex-1 px-5 pb-4">
+        <div className="overflow-y-auto flex-1 min-h-0 px-5 pb-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
