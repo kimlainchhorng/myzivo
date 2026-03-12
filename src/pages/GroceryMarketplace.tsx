@@ -1,40 +1,102 @@
 /**
- * GroceryMarketplace - 2026 Spatial UI store selection (v2)
+ * GroceryMarketplace - 2026 Spatial UI store selection (v3)
  */
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Search, ShoppingCart, Sparkles, Clock, Zap, ChevronRight, TrendingUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { GROCERY_STORES } from "@/config/groceryStores";
+import GroceryCategories from "@/components/grocery/GroceryCategories";
+import GroceryPromos from "@/components/grocery/GroceryPromos";
+import { GROCERY_STORES, type StoreCategory, type StoreConfig } from "@/config/groceryStores";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { useState, useMemo } from "react";
 
 const container = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.05 } },
+  show: { transition: { staggerChildren: 0.04 } },
 };
 
 const cardVariant = {
-  hidden: { opacity: 0, y: 24, scale: 0.95 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, stiffness: 300, damping: 22 } },
+  hidden: { opacity: 0, y: 20, scale: 0.96 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, stiffness: 320, damping: 24 } },
+  exit: { opacity: 0, y: -10, scale: 0.96, transition: { duration: 0.15 } },
 };
+
+function StoreCard({ store, layout }: { store: StoreConfig; layout: "grid" | "list" }) {
+  const navigate = useNavigate();
+
+  if (layout === "grid") {
+    return (
+      <motion.button
+        variants={cardVariant}
+        layout
+        whileTap={{ scale: 0.96 }}
+        onClick={() => navigate(`/grocery/store/${store.slug}`)}
+        className="group relative flex flex-col items-center gap-2.5 p-4 pt-5 rounded-[20px] border border-border/40 bg-card/90 backdrop-blur-sm hover:bg-card hover:border-primary/20 hover:shadow-xl hover:shadow-primary/8 transition-all duration-300"
+      >
+        {store.promo && (
+          <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[9px] font-bold">
+            {store.promo}
+          </span>
+        )}
+        <div className="h-14 w-14 rounded-2xl bg-background border border-border/30 flex items-center justify-center p-2 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
+          <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
+        </div>
+        <div className="text-center w-full">
+          <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
+            {store.name}
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-0.5 capitalize">{store.category}</p>
+        </div>
+      </motion.button>
+    );
+  }
+
+  return (
+    <motion.button
+      variants={cardVariant}
+      layout
+      whileTap={{ scale: 0.97 }}
+      onClick={() => navigate(`/grocery/store/${store.slug}`)}
+      className="group w-full flex items-center gap-3.5 p-3.5 rounded-[18px] border border-border/30 bg-card/70 backdrop-blur-sm hover:bg-card hover:border-primary/15 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+    >
+      <div className="h-11 w-11 rounded-xl bg-background border border-border/30 flex items-center justify-center p-1.5 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0">
+        <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
+      </div>
+      <div className="flex-1 min-w-0 text-left">
+        <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
+          {store.name}
+        </p>
+        {store.promo ? (
+          <p className="text-[10px] text-primary font-semibold mt-0.5">{store.promo}</p>
+        ) : (
+          <p className="text-[10px] text-muted-foreground mt-0.5 capitalize">{store.category}</p>
+        )}
+      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary/60 transition-colors shrink-0" />
+    </motion.button>
+  );
+}
 
 export default function GroceryMarketplace() {
   const navigate = useNavigate();
   const cart = useGroceryCart();
   const [filter, setFilter] = useState("");
+  const [category, setCategory] = useState<StoreCategory | "all">("all");
 
-  const filteredStores = useMemo(
-    () =>
-      filter.trim()
-        ? GROCERY_STORES.filter((s) =>
-            s.name.toLowerCase().includes(filter.toLowerCase())
-          )
-        : GROCERY_STORES,
-    [filter]
-  );
+  const filteredStores = useMemo(() => {
+    let stores = GROCERY_STORES;
+    if (category !== "all") {
+      stores = stores.filter((s) => s.category === category);
+    }
+    if (filter.trim()) {
+      stores = stores.filter((s) =>
+        s.name.toLowerCase().includes(filter.toLowerCase())
+      );
+    }
+    return stores;
+  }, [filter, category]);
 
   const popularStores = filteredStores.slice(0, 4);
   const moreStores = filteredStores.slice(4);
@@ -83,7 +145,7 @@ export default function GroceryMarketplace() {
         </div>
 
         {/* Search */}
-        <div className="px-4 pb-3">
+        <div className="px-4 pb-2">
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
             <Input
@@ -94,6 +156,9 @@ export default function GroceryMarketplace() {
             />
           </div>
         </div>
+
+        {/* Category chips */}
+        <GroceryCategories active={category} onChange={setCategory} />
       </div>
 
       {/* Hero banner */}
@@ -115,8 +180,6 @@ export default function GroceryMarketplace() {
             </p>
           </div>
         </div>
-
-        {/* Quick stats inline */}
         <div className="flex items-center gap-4 mt-3 pt-3 border-t border-primary/10">
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
             <Clock className="h-3 w-3 text-primary" />
@@ -133,44 +196,33 @@ export default function GroceryMarketplace() {
         </div>
       </motion.div>
 
+      {/* Deals carousel */}
+      <GroceryPromos />
+
       {/* Popular stores section */}
-      <div className="px-4 pt-5 pb-2">
-        <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">Popular Stores</h2>
-      </div>
+      {popularStores.length > 0 && (
+        <>
+          <div className="px-4 pt-5 pb-2">
+            <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">
+              {category === "all" ? "Popular Stores" : `${category.charAt(0).toUpperCase() + category.slice(1)} Stores`}
+            </h2>
+          </div>
 
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="px-4 grid grid-cols-2 gap-2.5"
-      >
-      {popularStores.map((store) => (
-          <motion.button
-            key={store.slug}
-            variants={cardVariant}
-            whileTap={{ scale: 0.96 }}
-            onClick={() => navigate(`/grocery/store/${store.slug}`)}
-            className="group relative flex flex-col items-center gap-2.5 p-4 pt-5 rounded-[20px] border border-border/40 bg-card/90 backdrop-blur-sm hover:bg-card hover:border-primary/20 hover:shadow-xl hover:shadow-primary/8 transition-all duration-300"
-          >
-            {/* Logo */}
-            <div className="h-14 w-14 rounded-2xl bg-background border border-border/30 flex items-center justify-center p-2 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
-              <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
-            </div>
-
-            {/* Name + promo */}
-            <div className="text-center w-full">
-              <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
-                {store.name}
-              </p>
-              {store.promo ? (
-                <p className="text-[10px] text-primary font-semibold mt-0.5">{store.promo}</p>
-              ) : (
-                <p className="text-[10px] text-muted-foreground mt-0.5">Shop now</p>
-              )}
-            </div>
-          </motion.button>
-        ))}
-      </motion.div>
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={`grid-${category}`}
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="px-4 grid grid-cols-2 gap-2.5"
+            >
+              {popularStores.map((store) => (
+                <StoreCard key={store.slug} store={store} layout="grid" />
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        </>
+      )}
 
       {/* More stores section */}
       {moreStores.length > 0 && (
@@ -179,35 +231,19 @@ export default function GroceryMarketplace() {
             <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">More Stores</h2>
           </div>
 
-          <motion.div
-            variants={container}
-            initial="hidden"
-            animate="show"
-            className="px-4 space-y-2"
-          >
-            {moreStores.map((store) => (
-              <motion.button
-                key={store.slug}
-                variants={cardVariant}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => navigate(`/grocery/store/${store.slug}`)}
-                className="group w-full flex items-center gap-3.5 p-3.5 rounded-[18px] border border-border/30 bg-card/70 backdrop-blur-sm hover:bg-card hover:border-primary/15 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-              >
-                <div className="h-11 w-11 rounded-xl bg-background border border-border/30 flex items-center justify-center p-1.5 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0">
-                  <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
-                    {store.name}
-                  </p>
-                  {store.promo && (
-                    <p className="text-[10px] text-primary font-semibold mt-0.5">{store.promo}</p>
-                  )}
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary/60 transition-colors shrink-0" />
-              </motion.button>
-            ))}
-          </motion.div>
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={`list-${category}`}
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="px-4 space-y-2"
+            >
+              {moreStores.map((store) => (
+                <StoreCard key={store.slug} store={store} layout="list" />
+              ))}
+            </motion.div>
+          </AnimatePresence>
         </>
       )}
 
