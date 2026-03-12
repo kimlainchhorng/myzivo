@@ -234,6 +234,7 @@ export default function GroceryPage() {
               cartItem={cart.items.find((c) => c.productId === product.productId)}
               onAdd={handleAdd}
               onUpdateQuantity={cart.updateQuantity}
+              onSelect={setSelectedProduct}
             />
           ))}
         </div>

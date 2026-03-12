@@ -593,6 +593,7 @@ export default function GroceryStorePage() {
               cartItem={cart.items.find((c) => c.productId === product.productId)}
               onAdd={handleAdd}
               onUpdateQuantity={cart.updateQuantity}
+              onSelect={setSelectedProduct}
             />
           ))}
         </div>
