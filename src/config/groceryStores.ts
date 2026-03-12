@@ -23,6 +23,8 @@ export type StoreName =
   | "Lowe's"
   | "Petco";
 
+export type StoreCategory = "grocery" | "electronics" | "home" | "pets" | "pharmacy";
+
 export interface StoreConfig {
   name: StoreName;
   /** URL-safe slug used in /grocery/store/:slug */
@@ -37,6 +39,8 @@ export interface StoreConfig {
   promo?: string;
   /** Default query to auto-fetch products on page load */
   defaultQuery: string;
+  /** Store category for filtering */
+  category: StoreCategory;
 }
 
 export const GROCERY_STORES: StoreConfig[] = [
