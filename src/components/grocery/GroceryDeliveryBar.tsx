@@ -82,7 +82,7 @@ export default function GroceryDeliveryBar() {
   // Cleanup debounce
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
-  /** Auto-detect address via GPS + reverse geocoding */
+  /** Auto-detect address via GPS + Google Maps reverse geocode */
   const autoDetectAddress = useCallback(() => {
     if (!navigator.geolocation) {
       toast.error("Geolocation not supported on this device");
@@ -93,19 +93,13 @@ export default function GroceryDeliveryBar() {
       async (pos) => {
         try {
           const { latitude, longitude } = pos.coords;
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
-            { headers: { "Accept-Language": "en" } }
-          );
-          const data = await res.json();
-          if (data?.address) {
-            const a = data.address;
-            const street = [a.house_number, a.road].filter(Boolean).join(" ");
-            const city = a.city || a.town || a.village || "";
-            const state = a.state || "";
-            const zip = a.postcode || "";
-            const full = [street, city, state, zip].filter(Boolean).join(", ");
-            setNewAddress(full);
+          const { data, error } = await supabase.functions.invoke("maps-reverse-geocode", {
+            body: { lat: latitude, lng: longitude },
+          });
+          if (error) throw error;
+          const address = data?.address || data?.formatted_address || data?.results?.[0]?.formatted_address;
+          if (address) {
+            setNewAddress(address);
             toast.success("Address detected");
           } else {
             toast.error("Could not determine address");
