@@ -2,12 +2,13 @@
  * GroceryDeliveryBar - "Deliver to" address picker for grocery pages
  * Shows saved Home/Work addresses with quick-add flow
  */
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Home, Briefcase, Plus, ChevronDown, Check, X, Navigation } from "lucide-react";
+import { MapPin, Home, Briefcase, Plus, ChevronDown, Check, X, Navigation, Loader2, LocateFixed } from "lucide-react";
 import { useDeliveryAddress, type DeliveryAddress } from "@/hooks/useDeliveryAddress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const LABEL_ICONS: Record<DeliveryAddress["label"], React.ElementType> = {
   Home,
@@ -28,6 +29,53 @@ export default function GroceryDeliveryBar() {
   const [newLabel, setNewLabel] = useState<DeliveryAddress["label"]>("Home");
   const [newAddress, setNewAddress] = useState("");
   const [newApt, setNewApt] = useState("");
+  const [isLocating, setIsLocating] = useState(false);
+
+  /** Auto-detect address via GPS + reverse geocoding */
+  const autoDetectAddress = useCallback(() => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation not supported on this device");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+            { headers: { "Accept-Language": "en" } }
+          );
+          const data = await res.json();
+          if (data?.address) {
+            const a = data.address;
+            const street = [a.house_number, a.road].filter(Boolean).join(" ");
+            const city = a.city || a.town || a.village || "";
+            const state = a.state || "";
+            const zip = a.postcode || "";
+            const full = [street, city, state, zip].filter(Boolean).join(", ");
+            setNewAddress(full);
+            toast.success("Address detected");
+          } else {
+            toast.error("Could not determine address");
+          }
+        } catch {
+          toast.error("Failed to detect address");
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (err) => {
+        setIsLocating(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          toast.error("Location permission denied");
+        } else {
+          toast.error("Could not get your location");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
 
   const handleAdd = () => {
     if (!newAddress.trim()) return;
@@ -191,6 +239,23 @@ export default function GroceryDeliveryBar() {
                         );
                       })}
                     </div>
+
+                    {/* Auto-detect location */}
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={autoDetectAddress}
+                      disabled={isLocating}
+                      className="w-full flex items-center gap-2 p-2.5 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all disabled:opacity-60"
+                    >
+                      {isLocating ? (
+                        <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                      ) : (
+                        <LocateFixed className="h-4 w-4 text-primary" />
+                      )}
+                      <span className="text-[11px] font-semibold text-primary">
+                        {isLocating ? "Detecting location…" : "Use my current location"}
+                      </span>
+                    </motion.button>
 
                     {/* Address input */}
                     <Input
