@@ -192,12 +192,20 @@ export function GroceryProductDetail({
                   </div>
                 </div>
 
-                {/* Brand */}
-                {product.brand && (
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-[0.14em] font-bold leading-none">
-                    {product.brand}
-                  </p>
-                )}
+                {/* Brand & Size row */}
+                <div className="flex items-center gap-3">
+                  {product.brand && (
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-[0.14em] font-bold leading-none">
+                      {product.brand}
+                    </p>
+                  )}
+                  {sizeInfo && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/40 border border-border/15">
+                      <Box className="h-2.5 w-2.5 text-muted-foreground/60" />
+                      <span className="text-[9px] font-semibold text-muted-foreground">{sizeInfo}</span>
+                    </div>
+                  )}
+                </div>
 
                 {/* Name */}
                 <h2 className="text-xl font-bold text-foreground leading-snug tracking-tight">{product.name}</h2>
