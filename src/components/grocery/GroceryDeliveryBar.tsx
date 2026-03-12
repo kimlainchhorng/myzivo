@@ -1,6 +1,6 @@
 /**
  * GroceryDeliveryBar - "Deliver to" address picker for grocery pages
- * Shows saved Home/Work addresses with quick-add flow
+ * Uses Google Maps Places autocomplete via edge functions
  */
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,13 +9,12 @@ import { useDeliveryAddress, type DeliveryAddress } from "@/hooks/useDeliveryAdd
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AddressSuggestion {
   display: string;
-  street: string;
-  city: string;
-  state: string;
-  zip: string;
+  mainText: string;
+  placeId: string;
 }
 
 const LABEL_ICONS: Record<DeliveryAddress["label"], React.ElementType> = {
@@ -43,7 +42,7 @@ export default function GroceryDeliveryBar() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-  /** Autocomplete address search via Nominatim */
+  /** Autocomplete address search via Google Maps */
   const searchAddress = useCallback((query: string) => {
     setNewAddress(query);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -55,25 +54,15 @@ export default function GroceryDeliveryBar() {
     debounceRef.current = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=us`,
-          { headers: { "Accept-Language": "en" } }
-        );
-        const data = await res.json();
-        const mapped: AddressSuggestion[] = data.map((item: any) => {
-          const a = item.address || {};
-          const street = [a.house_number, a.road].filter(Boolean).join(" ");
-          const city = a.city || a.town || a.village || a.county || "";
-          const state = a.state || "";
-          const zip = a.postcode || "";
-          return {
-            display: item.display_name,
-            street,
-            city,
-            state,
-            zip,
-          };
+        const { data, error } = await supabase.functions.invoke("maps-autocomplete", {
+          body: { input: query.trim() },
         });
+        if (error) throw error;
+        const mapped: AddressSuggestion[] = (data?.suggestions || []).map((s: any) => ({
+          display: s.description || "",
+          mainText: s.main_text || s.description?.split(",")[0] || "",
+          placeId: s.place_id || "",
+        }));
         setSuggestions(mapped);
         setShowSuggestions(mapped.length > 0);
       } catch {
@@ -85,8 +74,7 @@ export default function GroceryDeliveryBar() {
   }, []);
 
   const selectSuggestion = useCallback((s: AddressSuggestion) => {
-    const full = [s.street, s.city, s.state, s.zip].filter(Boolean).join(", ");
-    setNewAddress(full);
+    setNewAddress(s.display);
     setSuggestions([]);
     setShowSuggestions(false);
   }, []);
@@ -94,7 +82,7 @@ export default function GroceryDeliveryBar() {
   // Cleanup debounce
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
-  /** Auto-detect address via GPS + reverse geocoding */
+  /** Auto-detect address via GPS + Google Maps reverse geocode */
   const autoDetectAddress = useCallback(() => {
     if (!navigator.geolocation) {
       toast.error("Geolocation not supported on this device");
@@ -105,19 +93,13 @@ export default function GroceryDeliveryBar() {
       async (pos) => {
         try {
           const { latitude, longitude } = pos.coords;
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
-            { headers: { "Accept-Language": "en" } }
-          );
-          const data = await res.json();
-          if (data?.address) {
-            const a = data.address;
-            const street = [a.house_number, a.road].filter(Boolean).join(" ");
-            const city = a.city || a.town || a.village || "";
-            const state = a.state || "";
-            const zip = a.postcode || "";
-            const full = [street, city, state, zip].filter(Boolean).join(", ");
-            setNewAddress(full);
+          const { data, error } = await supabase.functions.invoke("maps-reverse-geocode", {
+            body: { lat: latitude, lng: longitude },
+          });
+          if (error) throw error;
+          const address = data?.address || data?.formatted_address || data?.results?.[0]?.formatted_address;
+          if (address) {
+            setNewAddress(address);
             toast.success("Address detected");
           } else {
             toast.error("Could not determine address");
@@ -355,10 +337,10 @@ export default function GroceryDeliveryBar() {
                                 <MapPin className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
                                 <div className="min-w-0">
                                   <p className="text-[11px] font-semibold text-foreground truncate">
-                                    {s.street || s.city}
+                                    {s.mainText}
                                   </p>
                                   <p className="text-[10px] text-muted-foreground truncate">
-                                    {[s.city, s.state, s.zip].filter(Boolean).join(", ")}
+                                    {s.display}
                                   </p>
                                 </div>
                               </button>
