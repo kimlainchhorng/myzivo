@@ -310,6 +310,10 @@ export default function GroceryStorePage() {
   };
 
   const handleOrderPlaced = (orderId: string) => {
+    // Save items to order history for "Order Again"
+    saveToOrderHistory(cart.items.map((i) => ({
+      productId: i.productId, name: i.name, price: i.price, image: i.image, brand: i.brand, store: i.store,
+    })));
     cart.clearCart();
     setShowCheckout(false);
     navigate(`/grocery/order-placed?id=${orderId}`);
