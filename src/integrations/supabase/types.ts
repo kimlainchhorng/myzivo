@@ -34471,6 +34471,7 @@ export type Database = {
           delivery_lng: number | null
           driver_id: string | null
           driver_notes: string | null
+          final_total: number | null
           id: string
           items: Json
           order_type: string
@@ -34499,6 +34500,7 @@ export type Database = {
           delivery_lng?: number | null
           driver_id?: string | null
           driver_notes?: string | null
+          final_total?: number | null
           id?: string
           items?: Json
           order_type?: string
@@ -34527,6 +34529,7 @@ export type Database = {
           delivery_lng?: number | null
           driver_id?: string | null
           driver_notes?: string | null
+          final_total?: number | null
           id?: string
           items?: Json
           order_type?: string
