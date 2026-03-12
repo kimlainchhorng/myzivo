@@ -19,6 +19,7 @@ import { GroceryDealsSection } from "@/components/grocery/GroceryDealsSection";
 import { GroceryStoreSearch } from "@/components/grocery/GroceryStoreSearch";
 import { GroceryFilters, GroceryFilterButton, applyFilters, hasActiveFilters, EMPTY_FILTERS, type ActiveFilters } from "@/components/grocery/GroceryFilters";
 import { GroceryPromoBanner } from "@/components/grocery/GroceryPromoBanner";
+import { GroceryStoreHero } from "@/components/grocery/GroceryStoreHero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -442,6 +443,9 @@ export default function GroceryStorePage() {
           ))}
         </div>
       </div>
+
+      {/* Store Hero Card */}
+      <GroceryStoreHero store={storeCfg} liveEta={liveEta} isOpen={status.isOpen} />
 
       {/* Promo Banner */}
       <GroceryPromoBanner />

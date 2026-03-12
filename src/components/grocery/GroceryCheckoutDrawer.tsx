@@ -1,12 +1,13 @@
 /**
- * GroceryCheckoutDrawer - 2026 Spatial UI Checkout
+ * GroceryCheckoutDrawer - 2026 Spatial UI Checkout (v2)
+ * Step-based checkout with promo code support
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin, Loader2, X, ShoppingCart, Truck, Shield, User, Phone,
   ChevronDown, ChevronUp, Lock, CheckCircle, Package, Clock, Heart,
-  CreditCard, Sparkles, Timer, BadgeCheck,
+  CreditCard, Sparkles, Timer, BadgeCheck, ArrowRight, ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { GroceryCartItem } from "@/hooks/useGroceryCart";
+import { GroceryPromoInput } from "@/components/grocery/GroceryPromoBanner";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -35,8 +37,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [showItems, setShowItems] = useState(false);
   const [deliveryNote, setDeliveryNote] = useState("");
   const [leaveAtDoor, setLeaveAtDoor] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1); // 1 = details, 2 = review
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoCode, setPromoCode] = useState("");
 
-  const grandTotal = total + DELIVERY_FEE + SERVICE_FEE + tip;
+  const grandTotal = Math.max(0, total + DELIVERY_FEE + SERVICE_FEE + tip - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
   const handleStripeCheckout = async () => {
@@ -109,6 +114,15 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
+              {step === 2 && (
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => setStep(1)}
+                  className="p-1.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </motion.button>
+              )}
               <motion.div
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -118,9 +132,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                 <Package className="h-5 w-5 text-primary" />
               </motion.div>
               <div>
-                <h2 className="text-lg font-bold tracking-tight">Checkout</h2>
+                <h2 className="text-lg font-bold tracking-tight">
+                  {step === 1 ? "Delivery Details" : "Review Order"}
+                </h2>
                 <p className="text-[11px] text-muted-foreground">
-                  {itemCount} items from {items[0]?.store}
+                  Step {step} of 2 · {itemCount} items from {items[0]?.store}
                 </p>
               </div>
             </div>
@@ -131,6 +147,12 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
             >
               <X className="h-4.5 w-4.5" />
             </motion.button>
+          </div>
+
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex-1 h-1 rounded-full bg-primary" />
+            <div className={`flex-1 h-1 rounded-full transition-colors ${step >= 2 ? "bg-primary" : "bg-muted/40"}`} />
           </div>
 
           {/* Estimated delivery banner */}
@@ -248,6 +270,12 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                     <Heart className="h-3 w-3 text-pink-500" /> Driver tip
                   </span>
                   <span className="text-foreground tabular-nums">${tip.toFixed(2)}</span>
+                </div>
+              )}
+              {promoDiscount > 0 && (
+                <div className="flex justify-between text-[12px] text-emerald-600">
+                  <span>Promo discount</span>
+                  <span className="font-semibold">-${promoDiscount.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-[15px] font-bold pt-2 mt-1.5 border-t border-border/10">
@@ -387,6 +415,21 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                 <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
               </div>
             ))}
+          </motion.div>
+
+          {/* Promo code */}
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.32 }}
+            className="mb-4"
+          >
+            <GroceryPromoInput
+              onApply={(code, discount) => {
+                setPromoCode(code);
+                setPromoDiscount(discount);
+              }}
+            />
           </motion.div>
 
           <p className="text-[9px] text-muted-foreground/60 text-center mb-3 leading-relaxed px-4">

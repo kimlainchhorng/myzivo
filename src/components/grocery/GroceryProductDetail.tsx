@@ -14,6 +14,7 @@ import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { useState, useMemo } from "react";
 import { GROCERY_STORES } from "@/config/groceryStores";
 import { GroceryPriceCompare } from "@/components/grocery/GroceryPriceCompare";
+import { GroceryFrequentlyBoughtTogether } from "@/components/grocery/GroceryFrequentlyBoughtTogether";
 
 interface GroceryProductDetailProps {
   product: StoreProduct | null;
@@ -324,6 +325,15 @@ export function GroceryProductDetail({
                   productName={product.name}
                   currentStore={product.store}
                   currentPrice={product.price}
+                />
+
+                {/* ── Frequently Bought Together ── */}
+                <GroceryFrequentlyBoughtTogether
+                  currentProduct={product}
+                  allProducts={allProducts}
+                  cartProductIds={new Set(allProducts.filter((p) => false).map((p) => p.productId))}
+                  onAddAll={(products) => products.forEach((p) => onAdd(p))}
+                  onAdd={onAdd}
                 />
 
                 {/* ── Expandable Sections ── */}
