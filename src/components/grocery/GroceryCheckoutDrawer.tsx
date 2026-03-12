@@ -432,6 +432,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
             />
           </motion.div>
 
+          <p className="text-[9px] text-muted-foreground/60 text-center mb-3 leading-relaxed px-4">
             You'll be redirected to Stripe for secure payment. A verified ZIVO driver will shop your items and deliver to your door.
           </p>
         </div>
