@@ -16,6 +16,7 @@ import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { GroceryHeroSkeleton, GroceryGridSkeleton } from "@/components/grocery/GroceryStoreSkeleton";
 import { getStoreStatus, getLiveEta } from "@/utils/storeStatus";
+import GroceryDeliveryBar from "@/components/grocery/GroceryDeliveryBar";
 
 const container = {
   hidden: {},
