@@ -49,6 +49,7 @@ const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
 const GroceryPage = lazy(() => import("./pages/GroceryPage"));
 const DrivePage = lazy(() => import("./pages/DrivePage"));
 const DriverShoppingList = lazy(() => import("./pages/DriverShoppingList"));
+const DriverOrdersPage = lazy(() => import("./pages/DriverOrdersPage"));
 const TripsListPage = lazy(() => import("./pages/trips/TripsListPage"));
 const TripDetailPage = lazy(() => import("./pages/trips/TripDetailPage"));
 
