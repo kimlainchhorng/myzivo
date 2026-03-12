@@ -2,7 +2,7 @@
  * GroceryStorePage - Product search for a specific store
  * Reads store slug from URL params, renders search + cart
  */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -31,9 +31,28 @@ export default function GroceryStorePage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const storeName = storeCfg?.name ?? "Walmart";
-  const { products, isLoading, error, search, clearResults } = useStoreSearch(storeName);
+  const { products, isLoading, isLoadingMore, hasMore, error, search, loadMore, clearResults } = useStoreSearch(storeName);
   const cart = useGroceryCart();
   const hasLoadedDefaults = useRef(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore && !isLoading) {
+          loadMore();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, isLoading, loadMore]);
 
   // Auto-fetch default products on mount
   useEffect(() => {
@@ -236,6 +255,14 @@ export default function GroceryStorePage() {
               onUpdateQuantity={cart.updateQuantity}
             />
           ))}
+        </div>
+      )}
+
+      {/* Load more sentinel + spinner */}
+      <div ref={sentinelRef} className="h-1" />
+      {isLoadingMore && (
+        <div className="flex justify-center py-6">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       )}
 

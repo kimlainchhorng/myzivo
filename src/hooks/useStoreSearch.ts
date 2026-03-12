@@ -1,7 +1,7 @@
 /**
- * useStoreSearch - Generic product search hook driven by store config
+ * useStoreSearch - Generic product search hook with pagination
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { StoreName } from "@/config/groceryStores";
 import { getStoreConfig } from "@/config/groceryStores";
 
@@ -22,57 +22,104 @@ export interface StoreProduct {
 export function useStoreSearch(store: StoreName) {
   const [products, setProducts] = useState<StoreProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const pageRef = useRef(1);
+  const lastQueryRef = useRef("");
+
+  const fetchPage = useCallback(
+    async (query: string, page: number, append: boolean) => {
+      const cfg = getStoreConfig(store);
+      const url = `${SUPABASE_URL}/functions/v1/${cfg.edgeFunction}?q=${encodeURIComponent(query)}&page=${page}`;
+      console.log(`[StoreSearch][${store}] Fetching page ${page}:`, query);
+
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          apikey: SUPABASE_KEY,
+        },
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Request failed (${res.status})`);
+      }
+
+      const data = await res.json();
+      const mapped: StoreProduct[] = (data.products || []).map((p: any) => ({
+        ...p,
+        store,
+      }));
+
+      console.log(`[StoreSearch][${store}] Page ${page} results:`, mapped.length);
+
+      if (append) {
+        setProducts((prev) => {
+          const existingIds = new Set(prev.map((p) => p.productId));
+          const newItems = mapped.filter((p) => !existingIds.has(p.productId));
+          return [...prev, ...newItems];
+        });
+      } else {
+        setProducts(mapped);
+      }
+
+      setHasMore(mapped.length >= 10);
+    },
+    [store]
+  );
 
   const search = useCallback(
     async (query: string) => {
       if (!query || query.trim().length < 2) {
         setProducts([]);
+        setHasMore(false);
         return;
       }
 
+      pageRef.current = 1;
+      lastQueryRef.current = query;
       setIsLoading(true);
       setError(null);
 
       try {
-        const cfg = getStoreConfig(store);
-        const url = `${SUPABASE_URL}/functions/v1/${cfg.edgeFunction}?q=${encodeURIComponent(query)}`;
-        console.log(`[StoreSearch][${store}] Searching:`, query);
-
-        const res = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${SUPABASE_KEY}`,
-            apikey: SUPABASE_KEY,
-          },
-        });
-
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.error || `Request failed (${res.status})`);
-        }
-
-        const data = await res.json();
-        const mapped: StoreProduct[] = (data.products || []).map((p: any) => ({
-          ...p,
-          store,
-        }));
-        console.log(`[StoreSearch][${store}] Results:`, mapped.length);
-        setProducts(mapped);
+        await fetchPage(query, 1, false);
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Search failed";
         setError(msg);
         setProducts([]);
+        setHasMore(false);
       } finally {
         setIsLoading(false);
       }
     },
-    [store]
+    [fetchPage]
   );
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !lastQueryRef.current) return;
+
+    const nextPage = pageRef.current + 1;
+    setIsLoadingMore(true);
+
+    try {
+      await fetchPage(lastQueryRef.current, nextPage, true);
+      pageRef.current = nextPage;
+    } catch (e) {
+      console.error("[StoreSearch] loadMore error:", e);
+      setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [fetchPage, isLoadingMore]);
 
   const clearResults = useCallback(() => {
     setProducts([]);
     setError(null);
+    setHasMore(false);
+    pageRef.current = 1;
+    lastQueryRef.current = "";
   }, []);
 
-  return { products, isLoading, error, search, clearResults };
+  return { products, isLoading, isLoadingMore, hasMore, error, search, loadMore, clearResults };
 }
