@@ -9,6 +9,7 @@ import {
   ArrowLeft, Search, ShoppingCart, Plus, Minus, Trash2,
   Loader2, Star, X, ChevronRight, Package, Store,
 } from "lucide-react";
+import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
