@@ -100,7 +100,7 @@ export function GroceryProductDetail({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[94vh] bg-card rounded-t-[28px] overflow-hidden flex flex-col shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] bg-card rounded-t-[28px] overflow-hidden flex flex-col shadow-2xl"
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1 shrink-0">
