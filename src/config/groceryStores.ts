@@ -79,6 +79,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     placeholder: "Search Target products…",
     emptyTitle: "Search Target Products",
     emptyDescription: "Find everyday essentials and top brands at Target. A ZIVO driver will shop and deliver to your door.",
+    defaultQuery: "grocery essentials",
   },
   {
     name: "Walgreens",
