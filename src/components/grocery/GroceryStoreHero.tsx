@@ -4,6 +4,7 @@
 import { motion } from "framer-motion";
 import { Clock, Star, MapPin, Truck, Shield, Zap, Percent, Award } from "lucide-react";
 import type { StoreConfig } from "@/config/groceryStores";
+import { DELIVERY_FEE, formatFee } from "@/config/groceryPricing";
 
 interface Props {
   store: StoreConfig;
@@ -93,7 +94,7 @@ export function GroceryStoreHero({ store, liveEta, isOpen }: Props) {
           {[
             { icon: Clock, label: `${liveEta} min`, sub: "Delivery", color: "text-primary", bg: "bg-primary/5" },
             { icon: Star, label: `${store.rating}`, sub: "Rating", color: "text-amber-500", bg: "bg-amber-500/5" },
-            { icon: Truck, label: "$5.99", sub: "Delivery fee", color: "text-primary", bg: "bg-primary/5" },
+            { icon: Truck, label: formatFee(DELIVERY_FEE), sub: "Delivery fee", color: "text-primary", bg: "bg-primary/5" },
           ].map((stat, i) => (
             <motion.div
               key={stat.sub}

@@ -6,12 +6,13 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Truck, Shield, Clock, MapPin, X, Tag, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { DELIVERY_FEE, formatFee } from "@/config/groceryPricing";
 
 const SERVICE_INFO = [
   { id: "same-day", icon: Clock, title: "Same-Day Delivery", desc: "Order by 3pm for same-day", gradient: "from-primary/12 via-primary/8 to-primary/4", accent: "text-primary" },
   { id: "in-store", icon: MapPin, title: "In-Store Prices", desc: "No markup on products", gradient: "from-emerald-500/12 via-emerald-400/8 to-emerald-300/4", accent: "text-emerald-600" },
   { id: "quality", icon: Shield, title: "Quality Guarantee", desc: "Fresh items or your money back", gradient: "from-amber-500/12 via-amber-400/8 to-amber-300/4", accent: "text-amber-600" },
-  { id: "delivery", icon: Truck, title: "$5.99 Delivery", desc: "Flat rate, no hidden fees", gradient: "from-violet-500/12 via-violet-400/8 to-violet-300/4", accent: "text-violet-600" },
+  { id: "delivery", icon: Truck, title: `${formatFee(DELIVERY_FEE)} Delivery`, desc: "Flat rate, no hidden fees", gradient: "from-violet-500/12 via-violet-400/8 to-violet-300/4", accent: "text-violet-600" },
 ];
 
 export function GroceryPromoBanner() {
@@ -106,23 +107,9 @@ export function GroceryPromoInput({
       // RPC not available, fall through to local validation
     }
 
-    // Fallback: known codes
-    if (upper === "ZIVO10" || upper === "GROCERY10") {
-      setDiscount(10);
-      setStatus("applied");
-      onApply(upper, 10);
-    } else if (upper === "SAVE5") {
-      setDiscount(5);
-      setStatus("applied");
-      onApply(upper, 5);
-    } else if (upper === "FREESHIP") {
-      setDiscount(5.99);
-      setStatus("applied");
-      onApply(upper, 5.99);
-    } else {
-      setStatus("invalid");
-      setTimeout(() => setStatus("idle"), 2000);
-    }
+    // No local fallback — all promo codes are validated server-side
+    setStatus("invalid");
+    setTimeout(() => setStatus("idle"), 2000);
   };
 
   return (
