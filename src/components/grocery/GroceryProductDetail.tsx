@@ -5,7 +5,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Plus, Minus, Check, Package, Star, MapPin, ShieldCheck,
-  Truck, Clock, Info, ChevronRight, Heart, Share2, Barcode,
+  Truck, Clock, Info, ChevronRight, Heart, Barcode, Weight, Ruler, Box,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StoreProduct } from "@/hooks/useStoreSearch";
