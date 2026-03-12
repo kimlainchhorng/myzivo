@@ -56,6 +56,7 @@ const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"));
 const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
 const DriverMapPage = lazy(() => import("./pages/driver/DriverMapPage"));
+const DriverShopPage = lazy(() => import("./pages/driver/DriverShopPage"));
 const TripsListPage = lazy(() => import("./pages/trips/TripsListPage"));
 const TripDetailPage = lazy(() => import("./pages/trips/TripDetailPage"));
 
@@ -352,6 +353,7 @@ const App = () => (
                 <Route path="/drive" element={<DrivePage />} />
                 <Route path="/driver/orders" element={<DriverOrdersPage />} />
                 <Route path="/driver/shopping/:orderId" element={<DriverShoppingList />} />
+                <Route path="/driver/shop/:orderId" element={<DriverShopPage />} />
                 <Route path="/driver/home" element={<DriverHomePage />} />
                 <Route path="/driver/earnings" element={<DriverEarningsPage />} />
                 <Route path="/driver/performance" element={<DriverPerformancePage />} />
