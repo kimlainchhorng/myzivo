@@ -53,6 +53,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyTitle: "Search Walmart Products",
     emptyDescription: "Search for groceries, household items, and more. A ZIVO driver will shop and deliver to your door.",
     defaultQuery: "grocery essentials",
+    category: "grocery",
   },
   {
     name: "Costco",
@@ -64,6 +65,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyDescription: "Browse Costco's bulk deals and everyday essentials. A ZIVO driver handles the shopping for you.",
     promo: "$10 off",
     defaultQuery: "bulk groceries",
+    category: "grocery",
   },
   {
     name: "Sam's Club",
@@ -74,6 +76,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyTitle: "Search Sam's Club Products",
     emptyDescription: "Shop warehouse prices and bulk deals from Sam's Club. A ZIVO driver delivers right to you.",
     defaultQuery: "snacks drinks",
+    category: "grocery",
   },
   {
     name: "Target",
@@ -84,6 +87,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyTitle: "Search Target Products",
     emptyDescription: "Find everyday essentials and top brands at Target. A ZIVO driver will shop and deliver to your door.",
     defaultQuery: "grocery essentials",
+    category: "grocery",
   },
   {
     name: "Walgreens",
@@ -95,6 +99,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyDescription: "Shop pharmacy, health, and everyday essentials from Walgreens.",
     promo: "No markups",
     defaultQuery: "health essentials",
+    category: "pharmacy",
   },
   {
     name: "Best Buy",
@@ -106,6 +111,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyDescription: "Shop electronics, appliances, and tech from Best Buy. A ZIVO driver delivers to your door.",
     promo: "No markups",
     defaultQuery: "electronics deals",
+    category: "electronics",
   },
   {
     name: "Lowe's",
@@ -117,6 +123,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyDescription: "Shop home improvement, tools, and hardware from Lowe's.",
     promo: "$15 off",
     defaultQuery: "tools hardware",
+    category: "home",
   },
   {
     name: "Petco",
@@ -128,6 +135,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyDescription: "Shop pet food, supplies, and essentials from Petco.",
     promo: "$10 off",
     defaultQuery: "pet food",
+    category: "pets",
   },
   {
     name: "Kroger",
@@ -138,6 +146,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyTitle: "Search Kroger Products",
     emptyDescription: "Shop fresh groceries and household staples from Kroger. A ZIVO driver delivers right to you.",
     defaultQuery: "fresh groceries",
+    category: "grocery",
   },
 ];
 
