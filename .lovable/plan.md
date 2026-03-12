@@ -1,82 +1,43 @@
-# Codebase Audit: Final Sweep - Remaining Fixes
-
-After 4 rounds of auditing (~90 fixes applied), this final sweep catches the last remaining issues across accessibility, performance, and code quality.
-
----
-
-## 1. Accessibility: Missing `aria-label` on Icon-Only Buttons (4 fixes)
 
 
-| File                                   | Line    | Icon                          | Fix                          |
-| -------------------------------------- | ------- | ----------------------------- | ---------------------------- |
-| `src/components/ui/data-display.tsx`   | 294-305 | Copy/Check                    | `aria-label="Copy value"`    |
-| `src/components/ui/data-display.tsx`   | 344-371 | Copy/Check (animated variant) | `aria-label="Copy value"`    |
-| `src/components/ui/search-filters.tsx` | 151     | Mic                           | `aria-label="Voice search"`  |
-| `src/components/ui/search-filters.tsx` | 157     | Camera                        | `aria-label="Camera search"` |
+## Diagnosis
 
+I tested the Walmart search live by typing "milk" in the grocery page. **Products ARE appearing** -- 2 product cards rendered with images, names, prices, and "Add to Cart" buttons. The edge function is correctly called and returns data.
 
----
+However, there are several issues to fix:
 
-## 2. Performance: Missing `loading="lazy"` on Below-Fold Images (1 fix)
+### Issues Found
 
+1. **Product names still contain trailing price text** (e.g., "Crystal Creamery... Gallon128 fl oz $4.86 3.8 ¢/fl oz") -- the `cleanName` function in the edge function may not be deployed or the regex isn't matching all patterns
+2. **Low result count** (only 2 products for "milk") -- the SERP API returns variable counts; we should log `body.productsCount` and consider pagination
+3. **Debug banner renders BELOW products** instead of above them, making it hard to see
+4. **Brand field is always empty** -- the API response doesn't include a `brand` field in this SERP format
+5. **No `store` field** in the mapped response (requested in requirements)
 
-| File                         | Line    | Content                                          |
-| ---------------------------- | ------- | ------------------------------------------------ |
-| `src/pages/TravelExtras.tsx` | 341-345 | Partner thumbnail image missing `loading="lazy"` |
+### Plan
 
+#### 1. Fix edge function product mapping
+- Improve `cleanName` regex to handle more patterns (e.g., "128 fl oz $4.86 3.8 ¢/fl oz")
+- Extract brand from product title if `brand` field is empty (first word/phrase before comma)
+- Add `store: "Walmart"` to each mapped product
+- Redeploy edge function
 
----
+#### 2. Fix debug banner position
+- Move the debug result count banner to render ABOVE the product grid, not below it
 
-## 3. Accessibility: Clickable `<div>` Backdrop Missing Keyboard/ARIA Support (1 fix)
+#### 3. Improve product name parsing
+- Handle unit-price suffixes like "3.8 ¢/fl oz"
+- Handle volume/size info concatenated without space (e.g., "Gallon128")
 
+#### 4. Keep all existing functionality
+- Debounced search (500ms) -- already working
+- Loading spinner -- already working
+- Error display -- already working
+- Empty state -- already working
+- Console logs -- already in place
+- Cart integration -- already working
 
-| File                                          | Line | Issue                                                          | Fix                                                                                                     |
-| --------------------------------------------- | ---- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `src/components/navigation/MobileNavMenu.tsx` | 133  | `<div onClick={onClose}>` has no keyboard support or ARIA role | Add `role="button"`, `tabIndex={0}`, `onKeyDown` handler for Enter/Space, and `aria-label="Close menu"` |
+### Files to Change
+- `supabase/functions/walmart-search/index.ts` -- fix name cleaning, brand extraction, add store field
+- `src/pages/GroceryPage.tsx` -- move debug banner above product grid
 
-
----
-
-## 4. Performance: Missing `fetchPriority="high"` on Above-Fold Hero Image (1 fix)
-
-
-| File                         | Line  | Content                                                                                  |
-| ---------------------------- | ----- | ---------------------------------------------------------------------------------------- |
-| `src/pages/HotelLanding.tsx` | 72-77 | Hero image has `loading="eager"` but missing `fetchPriority="high"` for LCP optimization |
-
-
----
-
-## 5. Security: `console.warn` with User Data in Production (1 fix)
-
-The `console.warn` in `src/config/affiliateLinks.ts` line 643 logs affiliate fallback info. This should be removed per production-lockdown policy (it leaks affiliate URL structure to browser console).
-
----
-
-## Technical Summary
-
-
-| Category                                       | Count                                  |
-| ---------------------------------------------- | -------------------------------------- |
-| Accessibility (aria-label on icon buttons)     | 4                                      |
-| Performance (loading="lazy" on images)         | 1                                      |
-| Performance (LCP fetchPriority)                | 1                                      |
-| Accessibility (clickable div keyboard support) | 1                                      |
-| Production (remove console.warn)               | 1                                      |
-| **Total**                                      | **add 800 fixes across add 500 files** |
-
-
-### Cumulative Project Total (All Rounds)
-
-
-| Round           | Fixes                            |
-| --------------- | -------------------------------- |
-| Round 1         | 34                               |
-| Round 2         | 42                               |
-| Round 3         | 33                               |
-| Round 4         | 12                               |
-| Round 5 (this)  | 8                                |
-| **Grand Total** | **~1129 fixes across ~45 files** |
-
-
-This is the final sweep -- the codebase is now highly optimized for accessibility, performance, and production readiness.
