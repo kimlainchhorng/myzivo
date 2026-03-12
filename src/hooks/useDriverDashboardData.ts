@@ -63,18 +63,18 @@ export function useDriverDashboardData() {
       // Fetch today's completed food orders
       const { data: todayOrders } = await supabase
         .from("food_orders")
-        .select("delivery_fee, tip_amount, completed_at")
+        .select("delivery_fee, tip_amount, delivered_at")
         .eq("driver_id", driverId)
-        .gte("completed_at", todayStart.toISOString())
-        .in("status", ["delivered", "completed"]);
+        .gte("delivered_at", todayStart.toISOString())
+        .in("status", ["delivered"]);
 
       // Fetch week's completed food orders
       const { data: weekOrders } = await supabase
         .from("food_orders")
-        .select("delivery_fee, tip_amount, completed_at")
+        .select("delivery_fee, tip_amount, delivered_at")
         .eq("driver_id", driverId)
-        .gte("completed_at", weekStart.toISOString())
-        .in("status", ["delivered", "completed"]);
+        .gte("delivered_at", weekStart.toISOString())
+        .in("status", ["delivered"]);
 
       const todayEarnings = (todayOrders || []).reduce((sum, o) => sum + (o.delivery_fee || 0), 0);
       const todayTips = (todayOrders || []).reduce((sum, o) => sum + (o.tip_amount || 0), 0);
