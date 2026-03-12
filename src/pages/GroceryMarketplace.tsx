@@ -4,7 +4,7 @@
  */
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Sparkles, Clock, Zap, ChevronRight, TrendingUp, Star, Store, MapPin, Truck, Shield, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Sparkles, Clock, Zap, ChevronRight, TrendingUp, Star, Store, MapPin, Truck, Shield, Loader2, AlertCircle, ClipboardList } from "lucide-react";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import GroceryCategories from "@/components/grocery/GroceryCategories";
 import GroceryPromos from "@/components/grocery/GroceryPromos";
@@ -54,18 +54,19 @@ function FeaturedStore({ store, eta, location }: { store: StoreConfig; eta: numb
       transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.1 }}
       whileTap={{ scale: 0.97 }}
       onClick={() => navigate(`/grocery/store/${store.slug}`)}
-      className="w-full relative p-4 rounded-[24px] border border-primary/20 bg-gradient-to-br from-primary/8 via-primary/4 to-transparent backdrop-blur-sm overflow-hidden group"
+      className="w-full relative p-5 rounded-[24px] border border-primary/15 bg-card overflow-hidden group hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
     >
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Subtle gradient accent */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent rounded-t-[24px]" />
 
       <div className="relative flex items-center gap-4">
-        <div className="h-16 w-16 rounded-[20px] bg-background border border-border/30 flex items-center justify-center p-2.5 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+        <div className="h-[72px] w-[72px] rounded-[20px] bg-background border border-border/30 flex items-center justify-center p-3 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300 shrink-0">
           <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
         </div>
         <div className="flex-1 min-w-0 text-left">
           <div className="flex items-center gap-2 mb-1">
             <StatusDot isOpen={status.isOpen} />
-            <span className={`text-[10px] font-semibold ${status.isOpen ? "text-emerald-500" : "text-muted-foreground/50"}`}>
+            <span className={`text-[11px] font-semibold ${status.isOpen ? "text-emerald-500" : "text-muted-foreground/50"}`}>
               {status.label}
             </span>
             {store.promo && (
@@ -74,25 +75,25 @@ function FeaturedStore({ store, eta, location }: { store: StoreConfig; eta: numb
               </span>
             )}
           </div>
-          <p className="text-base font-bold text-foreground group-hover:text-primary transition-colors">{store.name}</p>
+          <p className="text-lg font-extrabold text-foreground group-hover:text-primary transition-colors tracking-tight">{store.name}</p>
           {location && (
             <p className="text-[10px] text-muted-foreground truncate mt-0.5 flex items-center gap-1">
               <MapPin className="h-2.5 w-2.5 shrink-0" />
               {location.address}
             </p>
           )}
-          <div className="flex items-center gap-3 mt-1">
-            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-3 mt-1.5">
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium">
               <Truck className="h-3 w-3 text-primary" />
               {eta}m
             </span>
             {location?.distance_miles != null && (
-              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium">
                 <MapPin className="h-3 w-3 text-primary" />
                 {location.distance_miles} mi
               </span>
             )}
-            <span className="flex items-center gap-1 text-[11px] text-amber-400">
+            <span className="flex items-center gap-1 text-[11px] text-amber-500 font-semibold">
               <Star className="h-3 w-3 fill-current" />
               {location?.rating || store.rating}
             </span>
@@ -116,13 +117,13 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
       layout
       whileTap={{ scale: 0.97 }}
       onClick={() => navigate(`/grocery/store/${store.slug}`)}
-      className={`group w-full flex items-center gap-3.5 p-3.5 rounded-[18px] border bg-card/70 backdrop-blur-sm hover:bg-card transition-all duration-300 ${
+      className={`group w-full flex items-center gap-4 p-4 rounded-[20px] border bg-card transition-all duration-300 ${
         status.isOpen
-          ? "border-border/30 hover:border-primary/15 hover:shadow-lg hover:shadow-primary/5"
-          : "border-border/20 opacity-70"
+          ? "border-border/25 hover:border-primary/15 hover:shadow-xl hover:shadow-primary/5"
+          : "border-border/15 opacity-60"
       }`}
     >
-      <div className="relative h-12 w-12 rounded-xl bg-background border border-border/30 flex items-center justify-center p-1.5 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0">
+      <div className="relative h-14 w-14 rounded-2xl bg-background border border-border/25 flex items-center justify-center p-2 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0">
         <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
         <div className="absolute -top-0.5 -right-0.5">
           <StatusDot isOpen={status.isOpen} />
@@ -130,7 +131,7 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
       </div>
       <div className="flex-1 min-w-0 text-left">
         <div className="flex items-center gap-2">
-          <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
+          <p className="text-[14px] font-bold text-foreground group-hover:text-primary transition-colors duration-200">
             {store.name}
           </p>
           {store.promo && (
@@ -150,24 +151,25 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
             {location.address}
           </p>
         )}
-        <div className="flex items-center gap-2.5 mt-1">
-          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+        <div className="flex items-center gap-2.5 mt-1.5">
+          <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground font-medium">
             <Clock className="h-2.5 w-2.5" />
             {eta}m
           </span>
           {location?.distance_miles != null && (
-            <span className="flex items-center gap-0.5 text-[10px] text-primary font-medium">
+            <span className="flex items-center gap-0.5 text-[11px] text-primary font-semibold">
               <MapPin className="h-2.5 w-2.5" />
               {location.distance_miles} mi
             </span>
           )}
-          <span className="flex items-center gap-0.5 text-[10px] text-amber-400">
+          <span className="flex items-center gap-0.5 text-[11px] text-amber-500 font-semibold">
             <Star className="h-2.5 w-2.5 fill-current" />
             {location?.rating || store.rating}
           </span>
+          <span className="text-[10px] text-muted-foreground">{store.hours}</span>
         </div>
       </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary/60 transition-colors shrink-0" />
+      <ChevronRight className="h-4 w-4 text-muted-foreground/25 group-hover:text-primary/60 transition-colors shrink-0" />
     </motion.button>
   );
 }
@@ -332,25 +334,35 @@ export default function GroceryMarketplace() {
               )}
             </div>
           </div>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => navigate("/grocery/store/walmart")}
-            className="relative p-2.5 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
-            aria-label="Shopping cart"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {cart.itemCount > 0 && (
-              <motion.span
-                key={cart.itemCount}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold min-w-[22px] h-[22px] px-1 shadow-lg shadow-primary/40 ring-2 ring-background"
-              >
-                {cart.itemCount}
-              </motion.span>
-            )}
-          </motion.button>
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate("/grocery/orders")}
+              className="p-2.5 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
+              aria-label="My orders"
+            >
+              <ClipboardList className="h-5 w-5" />
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate("/grocery/store/walmart")}
+              className="relative p-2.5 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
+              aria-label="Shopping cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cart.itemCount > 0 && (
+                <motion.span
+                  key={cart.itemCount}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                  className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold min-w-[22px] h-[22px] px-1 shadow-lg shadow-primary/40 ring-2 ring-background"
+                >
+                  {cart.itemCount}
+                </motion.span>
+              )}
+            </motion.button>
+          </div>
         </div>
 
         {/* Delivery address */}
