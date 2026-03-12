@@ -349,6 +349,10 @@ const App = () => (
                 <Route path="/drive" element={<DrivePage />} />
                 <Route path="/driver/orders" element={<DriverOrdersPage />} />
                 <Route path="/driver/shopping/:orderId" element={<DriverShoppingList />} />
+                <Route path="/driver/home" element={<DriverHomePage />} />
+                <Route path="/driver/earnings" element={<DriverEarningsPage />} />
+                <Route path="/driver/performance" element={<DriverPerformancePage />} />
+                <Route path="/driver/map" element={<DriverMapPage />} />
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
