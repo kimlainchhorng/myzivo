@@ -59,6 +59,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyTitle: "Search Costco Products",
     emptyDescription: "Browse Costco's bulk deals and everyday essentials. A ZIVO driver handles the shopping for you.",
     promo: "$10 off",
+    defaultQuery: "bulk groceries",
   },
   {
     name: "Sam's Club",
