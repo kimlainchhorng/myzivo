@@ -82,13 +82,45 @@ export default function DriverShoppingList() {
   const foundCount = items.filter((i) => i.found).length;
 
   const handleReceiptUpload = async () => {
-    setIsUploading(true);
-    // TODO: integrate with Supabase storage for real upload
-    setTimeout(() => {
-      setReceiptUploaded(true);
-      setIsUploading(false);
-      toast.success("Receipt uploaded");
-    }, 1500);
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.capture = "environment";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      setIsUploading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${user?.id || "anon"}/${orderId}.${ext}`;
+
+        const { error: uploadErr } = await supabase.storage
+          .from("receipt-photos")
+          .upload(path, file, { upsert: true, contentType: file.type });
+
+        if (uploadErr) throw uploadErr;
+
+        const { data: urlData } = supabase.storage
+          .from("receipt-photos")
+          .getPublicUrl(path);
+
+        await supabase
+          .from("shopping_orders")
+          .update({ receipt_photo_url: urlData.publicUrl, updated_at: new Date().toISOString() })
+          .eq("id", orderId);
+
+        setReceiptUploaded(true);
+        toast.success("Receipt uploaded");
+      } catch (err: any) {
+        console.error("Upload error:", err);
+        toast.error(err.message || "Upload failed");
+      } finally {
+        setIsUploading(false);
+      }
+    };
+    input.click();
   };
 
   const currentStatusIndex = STATUS_FLOW.indexOf(order?.status as any);
