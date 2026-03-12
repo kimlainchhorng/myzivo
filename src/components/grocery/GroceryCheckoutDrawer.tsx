@@ -96,7 +96,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[32px] max-h-[94vh] overflow-hidden flex flex-col"
+        className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[32px] max-h-[92vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle bar */}
