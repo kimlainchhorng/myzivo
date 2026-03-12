@@ -219,9 +219,13 @@ export default function GroceryStorePage() {
   useEffect(() => {
     if (storeCfg && !hasLoadedDefaults.current) {
       hasLoadedDefaults.current = true;
-      search(storeCfg.defaultQuery);
+      // Load initial page, then auto-load 2 more pages for a fuller grid
+      search(storeCfg.defaultQuery).then(() => {
+        setTimeout(() => loadMore(), 800);
+        setTimeout(() => loadMore(), 1800);
+      });
     }
-  }, [storeCfg, search]);
+  }, [storeCfg, search, loadMore]);
 
   // Sorted products
   const sortedProducts = useMemo(() => {
