@@ -127,7 +127,7 @@ serve(async (req) => {
       str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
 
     // Build proxy URL for images
-    const functionBaseUrl = `${url.origin}/functions/v1/costco-search`;
+    const functionBaseUrl = `https://${url.hostname}/functions/v1/costco-search`;
     const toProxyImageUrl = (src: string): string =>
       src ? `${functionBaseUrl}?img=${encodeURIComponent(decodeHtml(src))}` : "";
 
