@@ -118,7 +118,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
     }
   };
 
-  const savingsAmount = (total * 0.08).toFixed(2);
+  // No fake savings — real pricing only
 
   return (
     <motion.div
@@ -383,15 +383,15 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   </button>
                 </div>
 
-                {/* Savings chip */}
+                {/* Service info */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/15 w-fit mb-4"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/15 w-fit mb-4"
                 >
-                  <Sparkles className="h-3 w-3 text-emerald-500" />
-                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                    You're saving ${savingsAmount} with ZIVO pricing
+                  <Sparkles className="h-3 w-3 text-primary" />
+                  <span className="text-[10px] font-semibold text-primary">
+                    In-store prices · No markup
                   </span>
                 </motion.div>
 

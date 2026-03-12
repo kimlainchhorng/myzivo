@@ -1,12 +1,12 @@
 /**
  * GroceryProductDetail - 2026 Spatial UI product detail drawer
- * Premium glassmorphic design with rich product info
+ * Real data only - no fake savings/markups
  */
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Plus, Minus, Check, Package, Star, MapPin, ShieldCheck,
   Truck, Clock, Info, ChevronRight, ChevronDown, Heart, Barcode,
-  Ruler, Box, Leaf, Zap, RotateCcw, Tag, ShoppingBag,
+  Ruler, Box, Leaf, Zap, RotateCcw, Tag, ShoppingBag, ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StoreProduct } from "@/hooks/useStoreSearch";
@@ -15,6 +15,8 @@ import { useState, useMemo } from "react";
 import { GROCERY_STORES } from "@/config/groceryStores";
 import { GroceryPriceCompare } from "@/components/grocery/GroceryPriceCompare";
 import { GroceryFrequentlyBoughtTogether } from "@/components/grocery/GroceryFrequentlyBoughtTogether";
+import { useShoppingList } from "@/hooks/useShoppingList";
+import { toast } from "sonner";
 
 interface GroceryProductDetailProps {
   product: StoreProduct | null;
@@ -64,6 +66,7 @@ export function GroceryProductDetail({
   const [quantity, setQuantity] = useState(1);
   const [liked, setLiked] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const shoppingList = useShoppingList();
 
   const relatedProducts = useMemo(() => {
     if (!product || allProducts.length === 0) return [];
@@ -81,6 +84,11 @@ export function GroceryProductDetail({
     setTimeout(() => setJustAdded(false), 900);
   };
 
+  const handleAddToList = () => {
+    shoppingList.addItem(product.name);
+    toast.success("Added to shopping list", { duration: 1500 });
+  };
+
   const handleRelatedSelect = (p: StoreProduct) => {
     setImgError(false);
     setJustAdded(false);
@@ -92,9 +100,6 @@ export function GroceryProductDetail({
   const toggleSection = (s: string) => setExpandedSection(expandedSection === s ? null : s);
 
   const storeLogo = getStoreLogo(product.store);
-  const showSavings = product.price > 5 && product.inStock;
-  const originalPrice = showSavings ? +(product.price * 1.08).toFixed(2) : null;
-  const savings = originalPrice ? +((originalPrice - product.price).toFixed(2)) : 0;
   const totalPrice = cartItem ? product.price * cartItem.quantity : product.price * quantity;
   const meta = extractProductMeta(product.name);
   const unitPrice = meta.count ? (product.price / parseInt(meta.count)).toFixed(2) : null;
@@ -130,6 +135,14 @@ export function GroceryProductDetail({
             <div className="absolute top-3.5 right-4 z-20 flex items-center gap-2">
               <motion.button
                 whileTap={{ scale: 0.85 }}
+                onClick={handleAddToList}
+                className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-xl border border-border/40 flex items-center justify-center shadow-lg"
+                aria-label="Add to shopping list"
+              >
+                <ClipboardList className="h-[18px] w-[18px] text-foreground/50" />
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.85 }}
                 onClick={() => setLiked(!liked)}
                 className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-xl border border-border/40 flex items-center justify-center shadow-lg"
                 aria-label="Save"
@@ -151,7 +164,6 @@ export function GroceryProductDetail({
 
               {/* ── Hero Image ── */}
               <div className="relative flex items-center justify-center px-8 pt-2 pb-4" style={{ minHeight: 260 }}>
-                {/* Subtle radial glow behind product */}
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] via-transparent to-transparent" />
 
                 {product.image && !imgError ? (
@@ -268,7 +280,7 @@ export function GroceryProductDetail({
                   {product.name}
                 </motion.h2>
 
-                {/* Price block */}
+                {/* Price block - real prices only */}
                 <motion.div
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -279,20 +291,6 @@ export function GroceryProductDetail({
                     <span className="text-[34px] font-black text-foreground tracking-tight leading-none">
                       ${typeof product.price === "number" ? product.price.toFixed(2) : product.price}
                     </span>
-                    {originalPrice && (
-                      <span className="text-base text-muted-foreground/40 line-through pb-1">
-                        ${originalPrice.toFixed(2)}
-                      </span>
-                    )}
-                    {showSavings && savings > 0 && (
-                      <motion.span
-                        initial={{ scale: 0.8 }}
-                        animate={{ scale: 1 }}
-                        className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-bold text-emerald-600"
-                      >
-                        Save ${savings.toFixed(2)}
-                      </motion.span>
-                    )}
                   </div>
                   {unitPrice && (
                     <p className="text-[11px] text-muted-foreground">
@@ -331,7 +329,7 @@ export function GroceryProductDetail({
                 <GroceryFrequentlyBoughtTogether
                   currentProduct={product}
                   allProducts={allProducts}
-                  cartProductIds={new Set(allProducts.filter((p) => false).map((p) => p.productId))}
+                  cartProductIds={new Set(allProducts.filter(() => false).map((p) => p.productId))}
                   onAddAll={(products) => products.forEach((p) => onAdd(p))}
                   onAdd={onAdd}
                 />
@@ -388,7 +386,7 @@ export function GroceryProductDetail({
 
                   <div className="h-px bg-border/15 mx-4" />
 
-                  {/* Nutrition / Highlights */}
+                  {/* Highlights */}
                   <button
                     onClick={() => toggleSection("highlights")}
                     className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-muted/20 transition-colors"
