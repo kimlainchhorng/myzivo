@@ -14,6 +14,7 @@ export interface WalmartProduct {
   brand: string;
   rating: number | null;
   inStock: boolean;
+  store: string;
 }
 
 export function useWalmartSearch() {
