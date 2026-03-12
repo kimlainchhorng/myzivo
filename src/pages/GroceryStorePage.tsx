@@ -119,7 +119,7 @@ export default function GroceryStorePage() {
               className="pl-10 pr-8 rounded-xl bg-muted/50 border-border/50"
             />
             {query && (
-              <button onClick={() => { setQuery(""); clearResults(); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <button onClick={() => { setQuery(""); search(storeCfg.defaultQuery); }} className="absolute right-3 top-1/2 -translate-y-1/2">
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
             )}
