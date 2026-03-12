@@ -133,6 +133,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     placeholder: "Search Kroger products…",
     emptyTitle: "Search Kroger Products",
     emptyDescription: "Shop fresh groceries and household staples from Kroger. A ZIVO driver delivers right to you.",
+    defaultQuery: "fresh groceries",
   },
 ];
 
