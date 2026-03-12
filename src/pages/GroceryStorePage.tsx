@@ -232,11 +232,7 @@ export default function GroceryStorePage() {
         </div>
       )}
 
-      {!isLoading && query.length >= 2 && products.length === 0 && !error && (
-        <div className="text-center py-12 text-sm text-muted-foreground">
-          No {storeName} products found for this query
-        </div>
-      )}
+
 
       <AnimatePresence>
         {showCheckout && (
