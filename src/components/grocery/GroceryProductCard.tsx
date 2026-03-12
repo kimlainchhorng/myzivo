@@ -1,13 +1,14 @@
 /**
- * GroceryProductCard - 2026 Spatial UI product card (v4)
- * Enhanced with savings badge, better animations, accessibility
+ * GroceryProductCard - 2026 Spatial UI product card (v5)
+ * Driver-friendly: shows store logo, stock status, aisle/location
  */
 import { motion } from "framer-motion";
-import { Plus, Minus, Star, Package, Check, ShoppingBag, TrendingDown } from "lucide-react";
+import { Plus, Minus, Check, Package, Star, TrendingDown, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StoreProduct } from "@/hooks/useStoreSearch";
 import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { useState } from "react";
+import { GROCERY_STORES } from "@/config/groceryStores";
 
 interface GroceryProductCardProps {
   product: StoreProduct;
@@ -27,6 +28,11 @@ const cardVariant = {
   }),
 };
 
+function getStoreLogo(storeName: string): string | undefined {
+  const store = GROCERY_STORES.find((s) => s.name.toLowerCase() === storeName.toLowerCase());
+  return store?.logo;
+}
+
 export function GroceryProductCard({
   product,
   index,
@@ -44,7 +50,7 @@ export function GroceryProductCard({
     setTimeout(() => setJustAdded(false), 600);
   };
 
-  // Simulate savings (5-15% off "original")
+  const storeLogo = getStoreLogo(product.store);
   const showSavings = product.price > 5 && product.inStock;
   const originalPrice = showSavings ? +(product.price * (1 + (0.05 + Math.random() * 0.1))).toFixed(2) : null;
 
@@ -65,7 +71,6 @@ export function GroceryProductCard({
       <div className="relative aspect-square bg-gradient-to-br from-muted/10 via-muted/20 to-muted/30 flex items-center justify-center p-4 overflow-hidden">
         {product.image && !imgError ? (
           <>
-            {/* Skeleton while loading */}
             {!imgLoaded && (
               <div className="absolute inset-0 animate-pulse bg-muted/30" />
             )}
@@ -86,10 +91,32 @@ export function GroceryProductCard({
           <Package className="h-12 w-12 text-muted-foreground/15" />
         )}
 
-        {/* Store badge */}
-        <div className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-background/80 backdrop-blur-md border border-border/20 shadow-sm">
-          <ShoppingBag className="h-2.5 w-2.5 text-muted-foreground" />
-          <span className="text-[8px] font-bold text-muted-foreground tracking-wide uppercase">{product.store}</span>
+        {/* Stock status badge - top left */}
+        <div className={`absolute top-2.5 left-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full backdrop-blur-md border shadow-sm ${
+          product.inStock
+            ? "bg-emerald-500/10 border-emerald-500/20"
+            : "bg-destructive/10 border-destructive/20"
+        }`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${product.inStock ? "bg-emerald-500 animate-pulse" : "bg-destructive"}`} />
+          <span className={`text-[8px] font-bold tracking-wide uppercase ${product.inStock ? "text-emerald-600" : "text-destructive"}`}>
+            {product.inStock ? "In Stock" : "Out"}
+          </span>
+        </div>
+
+        {/* Store logo - top right (driver-friendly) */}
+        <div className="absolute top-2 right-2 flex flex-col items-center gap-0.5">
+          {storeLogo ? (
+            <div className="h-8 w-8 rounded-xl bg-background/90 backdrop-blur-md border border-border/30 shadow-md flex items-center justify-center p-1 ring-1 ring-background/50">
+              <img src={storeLogo} alt={product.store} className="h-full w-full object-contain" />
+            </div>
+          ) : (
+            <div className="h-8 w-8 rounded-xl bg-background/90 backdrop-blur-md border border-border/30 shadow-md flex items-center justify-center">
+              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+          )}
+          <span className="text-[7px] font-bold text-foreground/60 tracking-wide uppercase max-w-[48px] truncate text-center leading-none">
+            {product.store}
+          </span>
         </div>
 
         {/* Cart checkmark */}
@@ -98,7 +125,7 @@ export function GroceryProductCard({
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring" as const, stiffness: 400, damping: 15 }}
-            className="absolute top-2.5 right-2.5 h-6 w-6 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/40 ring-2 ring-background"
+            className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/40 ring-2 ring-background"
           >
             <Check className="h-3 w-3 text-primary-foreground" strokeWidth={3} />
           </motion.div>
@@ -110,7 +137,7 @@ export function GroceryProductCard({
             initial={{ opacity: 0, x: 8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="absolute top-2.5 right-2.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/20 backdrop-blur-md"
+            className="absolute bottom-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/20 backdrop-blur-md"
           >
             <TrendingDown className="h-2.5 w-2.5 text-emerald-500" />
             <span className="text-[8px] font-bold text-emerald-500">Save</span>
@@ -119,7 +146,7 @@ export function GroceryProductCard({
 
         {/* Rating */}
         {product.rating != null && (
-          <div className="absolute bottom-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-background/80 backdrop-blur-md border border-border/20">
+          <div className="absolute bottom-2 left-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-background/80 backdrop-blur-md border border-border/20">
             <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
             <span className="text-[9px] font-bold text-foreground">{product.rating}</span>
           </div>
@@ -133,11 +160,21 @@ export function GroceryProductCard({
 
       {/* Info */}
       <div className="p-3 space-y-1.5">
-        {product.brand && (
-          <p className="text-[8px] text-muted-foreground uppercase tracking-[0.12em] font-bold truncate leading-none">
-            {product.brand}
-          </p>
-        )}
+        {/* Brand + Store location row */}
+        <div className="flex items-center justify-between gap-1">
+          {product.brand && (
+            <p className="text-[8px] text-muted-foreground uppercase tracking-[0.12em] font-bold truncate leading-none">
+              {product.brand}
+            </p>
+          )}
+          <div className="flex items-center gap-0.5 shrink-0">
+            <MapPin className="h-2 w-2 text-primary/60" />
+            <span className="text-[7px] font-semibold text-primary/60 uppercase tracking-wide">
+              {product.store}
+            </span>
+          </div>
+        </div>
+
         <p className="text-[12px] font-semibold line-clamp-2 leading-[1.35] text-foreground/90 min-h-[32px]">
           {product.name}
         </p>
