@@ -16,7 +16,7 @@ import { GroceryProductDetail } from "@/components/grocery/GroceryProductDetail"
 import { GroceryOrderAgain, saveToOrderHistory } from "@/components/grocery/GroceryOrderAgain";
 import { GroceryCategoryBrowser } from "@/components/grocery/GroceryCategoryBrowser";
 import { GroceryDealsSection } from "@/components/grocery/GroceryDealsSection";
-import { GrocerySmartSearch } from "@/components/grocery/GrocerySmartSearch";
+import { GroceryStoreSearch } from "@/components/grocery/GroceryStoreSearch";
 import { GroceryFilters, GroceryFilterButton, applyFilters, hasActiveFilters, EMPTY_FILTERS, type ActiveFilters } from "@/components/grocery/GroceryFilters";
 import { GroceryPromoBanner } from "@/components/grocery/GroceryPromoBanner";
 import { Button } from "@/components/ui/button";
