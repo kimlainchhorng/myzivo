@@ -27,20 +27,21 @@ export type StoreCategory = "grocery" | "electronics" | "home" | "pets" | "pharm
 
 export interface StoreConfig {
   name: StoreName;
-  /** URL-safe slug used in /grocery/store/:slug */
   slug: string;
   logo: string;
-  /** Edge-function name under /functions/v1/ */
   edgeFunction: string;
   placeholder: string;
   emptyTitle: string;
   emptyDescription: string;
-  /** Optional promo badge shown on marketplace card */
   promo?: string;
-  /** Default query to auto-fetch products on page load */
   defaultQuery: string;
-  /** Store category for filtering */
   category: StoreCategory;
+  /** Estimated delivery time in minutes */
+  deliveryMin: number;
+  /** Store rating (1-5) */
+  rating: number;
+  /** Store hours display */
+  hours: string;
 }
 
 export const GROCERY_STORES: StoreConfig[] = [
