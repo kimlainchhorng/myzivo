@@ -46,7 +46,8 @@ const RideTrackingPage = lazy(() => import("./pages/app/RideTrackingPage"));
 const RideHubPage = lazy(() => import("./pages/app/RideHubPage"));
 const EatsLanding = lazy(() => import("./pages/EatsLanding"));
 const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
-const GroceryPage = lazy(() => import("./pages/GroceryPage"));
+const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
+const GroceryStorePage = lazy(() => import("./pages/GroceryStorePage"));
 const GroceryOrderPlaced = lazy(() => import("./pages/grocery/GroceryOrderPlaced"));
 const DrivePage = lazy(() => import("./pages/DrivePage"));
 const DriverShoppingList = lazy(() => import("./pages/DriverShoppingList"));
@@ -348,7 +349,8 @@ const App = () => (
                 <Route path="/account" element={<PreserveQueryRedirect to="/profile" />} />
                 <Route path="/alerts" element={<PreserveQueryRedirect to="/notifications" />} />
                 <Route path="/delivery" element={<DeliveryPage />} />
-                <Route path="/grocery" element={<GroceryPage />} />
+                <Route path="/grocery" element={<GroceryMarketplace />} />
+                <Route path="/grocery/store/:slug" element={<GroceryStorePage />} />
                 <Route path="/grocery/order-placed" element={<GroceryOrderPlaced />} />
                 <Route path="/drive" element={<DrivePage />} />
                 <Route path="/driver/orders" element={<DriverOrdersPage />} />
