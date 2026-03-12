@@ -117,13 +117,13 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
       layout
       whileTap={{ scale: 0.97 }}
       onClick={() => navigate(`/grocery/store/${store.slug}`)}
-      className={`group w-full flex items-center gap-3.5 p-3.5 rounded-[18px] border bg-card/70 backdrop-blur-sm hover:bg-card transition-all duration-300 ${
+      className={`group w-full flex items-center gap-4 p-4 rounded-[20px] border bg-card transition-all duration-300 ${
         status.isOpen
-          ? "border-border/30 hover:border-primary/15 hover:shadow-lg hover:shadow-primary/5"
-          : "border-border/20 opacity-70"
+          ? "border-border/25 hover:border-primary/15 hover:shadow-xl hover:shadow-primary/5"
+          : "border-border/15 opacity-60"
       }`}
     >
-      <div className="relative h-12 w-12 rounded-xl bg-background border border-border/30 flex items-center justify-center p-1.5 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0">
+      <div className="relative h-14 w-14 rounded-2xl bg-background border border-border/25 flex items-center justify-center p-2 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0">
         <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
         <div className="absolute -top-0.5 -right-0.5">
           <StatusDot isOpen={status.isOpen} />
@@ -131,7 +131,7 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
       </div>
       <div className="flex-1 min-w-0 text-left">
         <div className="flex items-center gap-2">
-          <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
+          <p className="text-[14px] font-bold text-foreground group-hover:text-primary transition-colors duration-200">
             {store.name}
           </p>
           {store.promo && (
@@ -151,24 +151,25 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
             {location.address}
           </p>
         )}
-        <div className="flex items-center gap-2.5 mt-1">
-          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+        <div className="flex items-center gap-2.5 mt-1.5">
+          <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground font-medium">
             <Clock className="h-2.5 w-2.5" />
             {eta}m
           </span>
           {location?.distance_miles != null && (
-            <span className="flex items-center gap-0.5 text-[10px] text-primary font-medium">
+            <span className="flex items-center gap-0.5 text-[11px] text-primary font-semibold">
               <MapPin className="h-2.5 w-2.5" />
               {location.distance_miles} mi
             </span>
           )}
-          <span className="flex items-center gap-0.5 text-[10px] text-amber-400">
+          <span className="flex items-center gap-0.5 text-[11px] text-amber-500 font-semibold">
             <Star className="h-2.5 w-2.5 fill-current" />
             {location?.rating || store.rating}
           </span>
+          <span className="text-[10px] text-muted-foreground">{store.hours}</span>
         </div>
       </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary/60 transition-colors shrink-0" />
+      <ChevronRight className="h-4 w-4 text-muted-foreground/25 group-hover:text-primary/60 transition-colors shrink-0" />
     </motion.button>
   );
 }
