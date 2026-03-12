@@ -580,6 +580,24 @@ export default function GroceryStorePage() {
         </motion.div>
       )}
 
+      {/* Order Again */}
+      {!isLoading && !query && (
+        <GroceryOrderAgain
+          store={storeName}
+          onAdd={handleAdd}
+          cartProductIds={new Set(cart.items.map((c) => c.productId))}
+        />
+      )}
+
+      {/* Today's Deals */}
+      {!isLoading && products.length > 5 && (
+        <GroceryDealsSection
+          products={products}
+          onAdd={handleAdd}
+          cartProductIds={new Set(cart.items.map((c) => c.productId))}
+        />
+      )}
+
       {/* Featured horizontal row */}
       {!isLoading && products.length > 3 && (
         <FeaturedProductRow products={products} onAdd={handleAdd} cart={cart} />
