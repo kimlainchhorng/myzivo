@@ -16,7 +16,7 @@ export interface StoreProduct {
   brand: string;
   rating: number | null;
   inStock: boolean;
-  store: StoreName;
+  store: string;
 }
 
 export function useStoreSearch(store: StoreName) {
