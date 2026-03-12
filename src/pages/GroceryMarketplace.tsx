@@ -1,16 +1,19 @@
 /**
- * GroceryMarketplace - 2026 Spatial UI store selection (v3)
+ * GroceryMarketplace - 2026 Spatial UI store selection (v4)
  */
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Search, ShoppingCart, Sparkles, Clock, Zap, ChevronRight, TrendingUp } from "lucide-react";
+import { ArrowLeft, Search, ShoppingCart, Sparkles, Clock, Zap, ChevronRight, TrendingUp, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import GroceryCategories from "@/components/grocery/GroceryCategories";
 import GroceryPromos from "@/components/grocery/GroceryPromos";
+import GroceryRecentStores from "@/components/grocery/GroceryRecentStores";
+import GroceryReorder from "@/components/grocery/GroceryReorder";
 import { GROCERY_STORES, type StoreCategory, type StoreConfig } from "@/config/groceryStores";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { GroceryHeroSkeleton, GroceryGridSkeleton, GroceryListSkeleton } from "@/components/grocery/GroceryStoreSkeleton";
 
 const container = {
   hidden: {},
@@ -20,39 +23,47 @@ const container = {
 const cardVariant = {
   hidden: { opacity: 0, y: 20, scale: 0.96 },
   show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, stiffness: 320, damping: 24 } },
-  exit: { opacity: 0, y: -10, scale: 0.96, transition: { duration: 0.15 } },
 };
 
-function StoreCard({ store, layout }: { store: StoreConfig; layout: "grid" | "list" }) {
+function StoreCardGrid({ store }: { store: StoreConfig }) {
   const navigate = useNavigate();
-
-  if (layout === "grid") {
-    return (
-      <motion.button
-        variants={cardVariant}
-        layout
-        whileTap={{ scale: 0.96 }}
-        onClick={() => navigate(`/grocery/store/${store.slug}`)}
-        className="group relative flex flex-col items-center gap-2.5 p-4 pt-5 rounded-[20px] border border-border/40 bg-card/90 backdrop-blur-sm hover:bg-card hover:border-primary/20 hover:shadow-xl hover:shadow-primary/8 transition-all duration-300"
-      >
-        {store.promo && (
-          <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[9px] font-bold">
-            {store.promo}
+  return (
+    <motion.button
+      variants={cardVariant}
+      layout
+      whileTap={{ scale: 0.96 }}
+      onClick={() => navigate(`/grocery/store/${store.slug}`)}
+      className="group relative flex flex-col items-center gap-2 p-4 pt-5 pb-3.5 rounded-[20px] border border-border/40 bg-card/90 backdrop-blur-sm hover:bg-card hover:border-primary/20 hover:shadow-xl hover:shadow-primary/8 transition-all duration-300"
+    >
+      {store.promo && (
+        <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[9px] font-bold">
+          {store.promo}
+        </span>
+      )}
+      <div className="h-14 w-14 rounded-2xl bg-background border border-border/30 flex items-center justify-center p-2 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
+        <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
+      </div>
+      <div className="text-center w-full">
+        <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
+          {store.name}
+        </p>
+        <div className="flex items-center justify-center gap-2 mt-1">
+          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+            <Clock className="h-2.5 w-2.5" />
+            {store.deliveryMin}m
           </span>
-        )}
-        <div className="h-14 w-14 rounded-2xl bg-background border border-border/30 flex items-center justify-center p-2 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
-          <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
+          <span className="flex items-center gap-0.5 text-[10px] text-amber-400">
+            <Star className="h-2.5 w-2.5 fill-current" />
+            {store.rating}
+          </span>
         </div>
-        <div className="text-center w-full">
-          <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
-            {store.name}
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5 capitalize">{store.category}</p>
-        </div>
-      </motion.button>
-    );
-  }
+      </div>
+    </motion.button>
+  );
+}
 
+function StoreCardList({ store }: { store: StoreConfig }) {
+  const navigate = useNavigate();
   return (
     <motion.button
       variants={cardVariant}
@@ -65,14 +76,27 @@ function StoreCard({ store, layout }: { store: StoreConfig; layout: "grid" | "li
         <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
       </div>
       <div className="flex-1 min-w-0 text-left">
-        <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
-          {store.name}
-        </p>
-        {store.promo ? (
-          <p className="text-[10px] text-primary font-semibold mt-0.5">{store.promo}</p>
-        ) : (
-          <p className="text-[10px] text-muted-foreground mt-0.5 capitalize">{store.category}</p>
-        )}
+        <div className="flex items-center gap-2">
+          <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
+            {store.name}
+          </p>
+          {store.promo && (
+            <span className="px-1.5 py-0.5 rounded-full bg-primary/15 text-primary text-[8px] font-bold">
+              {store.promo}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2.5 mt-0.5">
+          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+            <Clock className="h-2.5 w-2.5" />
+            {store.deliveryMin}m
+          </span>
+          <span className="flex items-center gap-0.5 text-[10px] text-amber-400">
+            <Star className="h-2.5 w-2.5 fill-current" />
+            {store.rating}
+          </span>
+          <span className="text-[10px] text-muted-foreground/60">{store.hours}</span>
+        </div>
       </div>
       <ChevronRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary/60 transition-colors shrink-0" />
     </motion.button>
@@ -84,6 +108,12 @@ export default function GroceryMarketplace() {
   const cart = useGroceryCart();
   const [filter, setFilter] = useState("");
   const [category, setCategory] = useState<StoreCategory | "all">("all");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setIsLoading(false), 400);
+    return () => clearTimeout(t);
+  }, []);
 
   const filteredStores = useMemo(() => {
     let stores = GROCERY_STORES;
@@ -161,97 +191,115 @@ export default function GroceryMarketplace() {
         <GroceryCategories active={category} onChange={setCategory} />
       </div>
 
-      {/* Hero banner */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 25 }}
-        className="mx-4 mt-4 p-4 rounded-[20px] bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 backdrop-blur-sm relative overflow-hidden"
-      >
-        <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
-        <div className="relative flex items-start gap-3">
-          <div className="p-2.5 rounded-2xl bg-primary/15 shrink-0">
-            <Zap className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-bold">Shop from any store</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-              Pick a store, add items, and a ZIVO driver shops & delivers to your door.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-primary/10">
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-            <Clock className="h-3 w-3 text-primary" />
-            <span>~45 min</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-            <Sparkles className="h-3 w-3 text-primary" />
-            <span>No markups</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-            <TrendingUp className="h-3 w-3 text-primary" />
-            <span>Real-time prices</span>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Deals carousel */}
-      <GroceryPromos />
-
-      {/* Popular stores section */}
-      {popularStores.length > 0 && (
+      {isLoading ? (
         <>
+          <GroceryHeroSkeleton />
           <div className="px-4 pt-5 pb-2">
-            <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">
-              {category === "all" ? "Popular Stores" : `${category.charAt(0).toUpperCase() + category.slice(1)} Stores`}
-            </h2>
+            <div className="h-4 w-28 rounded bg-muted/40" />
           </div>
-
-          <AnimatePresence mode="popLayout">
-            <motion.div
-              key={`grid-${category}`}
-              variants={container}
-              initial="hidden"
-              animate="show"
-              className="px-4 grid grid-cols-2 gap-2.5"
-            >
-              {popularStores.map((store) => (
-                <StoreCard key={store.slug} store={store} layout="grid" />
-              ))}
-            </motion.div>
-          </AnimatePresence>
+          <GroceryGridSkeleton />
         </>
-      )}
-
-      {/* More stores section */}
-      {moreStores.length > 0 && (
+      ) : (
         <>
-          <div className="px-4 pt-5 pb-2">
-            <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">More Stores</h2>
-          </div>
+          {/* Hero banner */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05, type: "spring", stiffness: 300, damping: 25 }}
+            className="mx-4 mt-4 p-4 rounded-[20px] bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 backdrop-blur-sm relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
+            <div className="relative flex items-start gap-3">
+              <div className="p-2.5 rounded-2xl bg-primary/15 shrink-0">
+                <Zap className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-bold">Shop from any store</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                  Pick a store, add items, and a ZIVO driver shops & delivers to your door.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-primary/10">
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                <Clock className="h-3 w-3 text-primary" />
+                <span>~45 min</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                <Sparkles className="h-3 w-3 text-primary" />
+                <span>No markups</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                <TrendingUp className="h-3 w-3 text-primary" />
+                <span>Real-time prices</span>
+              </div>
+            </div>
+          </motion.div>
 
-          <AnimatePresence mode="popLayout">
-            <motion.div
-              key={`list-${category}`}
-              variants={container}
-              initial="hidden"
-              animate="show"
-              className="px-4 space-y-2"
-            >
-              {moreStores.map((store) => (
-                <StoreCard key={store.slug} store={store} layout="list" />
-              ))}
-            </motion.div>
-          </AnimatePresence>
+          {/* Recent stores */}
+          <GroceryRecentStores />
+
+          {/* Deals carousel */}
+          <GroceryPromos />
+
+          {/* Order Again */}
+          <GroceryReorder />
+
+          {/* Popular stores */}
+          {popularStores.length > 0 && (
+            <>
+              <div className="px-4 pt-5 pb-2">
+                <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">
+                  {category === "all" ? "Popular Stores" : `${category.charAt(0).toUpperCase() + category.slice(1)} Stores`}
+                </h2>
+              </div>
+
+              <AnimatePresence mode="popLayout">
+                <motion.div
+                  key={`grid-${category}`}
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="px-4 grid grid-cols-2 gap-2.5"
+                >
+                  {popularStores.map((store) => (
+                    <StoreCardGrid key={store.slug} store={store} />
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            </>
+          )}
+
+          {/* More stores */}
+          {moreStores.length > 0 && (
+            <>
+              <div className="px-4 pt-5 pb-2">
+                <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">More Stores</h2>
+              </div>
+
+              <AnimatePresence mode="popLayout">
+                <motion.div
+                  key={`list-${category}`}
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="px-4 space-y-2"
+                >
+                  {moreStores.map((store) => (
+                    <StoreCardList key={store.slug} store={store} />
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            </>
+          )}
+
+          {filteredStores.length === 0 && (
+            <div className="text-center py-16">
+              <Search className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">No stores found</p>
+            </div>
+          )}
         </>
-      )}
-
-      {filteredStores.length === 0 && (
-        <div className="text-center py-16">
-          <Search className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">No stores found</p>
-        </div>
       )}
 
       <ZivoMobileNav />
