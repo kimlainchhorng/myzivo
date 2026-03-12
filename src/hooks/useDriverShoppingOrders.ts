@@ -58,7 +58,7 @@ export function useDriverShoppingOrders() {
           .not("status", "in", '("delivered","cancelled")')
           .order("placed_at", { ascending: true });
 
-        setAssigned(mine || []);
+        setAssigned((mine || []).map((o) => ({ ...o, items: Array.isArray(o.items) ? o.items : [] })));
       }
     } finally {
       setIsLoading(false);
