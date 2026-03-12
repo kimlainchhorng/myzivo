@@ -2,7 +2,9 @@
  * useWalmartSearch - Search Walmart products via edge function
  */
 import { useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export interface WalmartProduct {
   productId: string;
@@ -29,21 +31,21 @@ export function useWalmartSearch() {
     setError(null);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("walmart-search", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        body: null,
-        // Pass query as URL search params via the function URL
+      const url = `${SUPABASE_URL}/functions/v1/walmart-search?q=${encodeURIComponent(query)}`;
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          apikey: SUPABASE_KEY,
+        },
       });
 
-      // supabase.functions.invoke doesn't support query params natively,
-      // so we use the POST body approach instead
-      const { data: result, error: err } = await supabase.functions.invoke("walmart-search?q=" + encodeURIComponent(query));
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Request failed (${res.status})`);
+      }
 
-      if (err) throw new Error(err.message);
-      if (result?.error) throw new Error(result.error);
-
-      setProducts(result?.products || []);
+      const data = await res.json();
+      setProducts(data.products || []);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Search failed";
       setError(msg);
