@@ -51,10 +51,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
         store: i.store,
       }));
 
+      const storeName = items[0]?.store || "Walmart";
+
       const { data, error } = await supabase
         .from("shopping_orders")
-        const storeName = items[0]?.store || "Walmart";
-
         .insert({
           user_id: user?.id || null,
           store: storeName,
