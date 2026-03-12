@@ -108,48 +108,63 @@ export default function GroceryStorePage() {
       </div>
 
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
+      <div className="sticky top-0 z-30 bg-background/70 backdrop-blur-2xl border-b border-border/20">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate("/grocery")} className="p-2 rounded-2xl hover:bg-muted/60 transition-colors duration-200">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => navigate("/grocery")}
+            className="p-2 rounded-2xl hover:bg-muted/60 transition-colors duration-200"
+          >
             <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <div className="h-8 w-8 rounded-xl bg-white border border-border/20 flex items-center justify-center p-1 shadow-sm">
+          </motion.button>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="h-9 w-9 rounded-2xl bg-background border border-border/30 flex items-center justify-center p-1.5 shadow-sm">
               <img src={storeCfg.logo} alt={storeName} className="h-full w-full object-contain" />
             </div>
             <div>
-              <h1 className="text-lg font-bold truncate leading-tight">{storeName}</h1>
-              <p className="text-[10px] text-muted-foreground">Delivered by ZIVO</p>
+              <h1 className="text-base font-bold truncate leading-tight">{storeName}</h1>
+              <p className="text-[10px] text-muted-foreground font-medium">Delivered by ZIVO</p>
             </div>
           </div>
-          <button onClick={() => setShowCart(!showCart)} className="relative p-2.5 rounded-2xl bg-muted/40 hover:bg-muted/60 transition-colors duration-200">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowCart(!showCart)}
+            className="relative p-2.5 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
+          >
             <ShoppingCart className="h-5 w-5" />
             {cart.itemCount > 0 && (
               <motion.span
+                key={cart.itemCount}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold min-w-[20px] h-[20px] px-1 shadow-lg shadow-primary/30"
+                transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold min-w-[22px] h-[22px] px-1 shadow-lg shadow-primary/40 ring-2 ring-background"
               >
                 {cart.itemCount}
               </motion.span>
             )}
-          </button>
+          </motion.button>
         </div>
 
         {/* Search */}
         <div className="px-4 pb-3">
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
             <Input
               placeholder={storeCfg.placeholder}
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 pr-9 rounded-2xl bg-muted/40 border-border/30 h-11 text-sm input-focus-glow"
+              className="pl-10 pr-9 rounded-2xl bg-muted/30 border-border/20 h-11 text-sm focus:bg-muted/50 transition-colors"
             />
             {query && (
-              <button onClick={() => { setQuery(""); search(storeCfg.defaultQuery); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted">
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button>
+              <motion.button
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                onClick={() => { setQuery(""); search(storeCfg.defaultQuery); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full bg-muted/60 hover:bg-muted"
+              >
+                <X className="h-3 w-3 text-muted-foreground" />
+              </motion.button>
             )}
           </div>
         </div>
