@@ -90,6 +90,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyTitle: "Search Walgreens Products",
     emptyDescription: "Shop pharmacy, health, and everyday essentials from Walgreens.",
     promo: "No markups",
+    defaultQuery: "health essentials",
   },
   {
     name: "Best Buy",
