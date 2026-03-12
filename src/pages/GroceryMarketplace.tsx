@@ -1,10 +1,10 @@
 /**
- * GroceryMarketplace - 2026 Spatial UI store selection (v6)
- * Featured spotlight, live pulse, category counts, premium motion
+ * GroceryMarketplace - Real nearby store detection with same-day delivery
+ * Shows only stores within 15mi of customer's delivery address
  */
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Sparkles, Clock, Zap, ChevronRight, TrendingUp, Star, Store, MapPin, Truck, Shield } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Sparkles, Clock, Zap, ChevronRight, TrendingUp, Star, Store, MapPin, Truck, Shield, Loader2, AlertCircle } from "lucide-react";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import GroceryCategories from "@/components/grocery/GroceryCategories";
 import GroceryPromos from "@/components/grocery/GroceryPromos";
@@ -13,10 +13,12 @@ import GroceryReorder from "@/components/grocery/GroceryReorder";
 import GrocerySmartSearch from "@/components/grocery/GrocerySmartSearch";
 import { GROCERY_STORES, type StoreCategory, type StoreConfig } from "@/config/groceryStores";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useNearbyGroceryStores, type NearbyStoreLocation } from "@/hooks/useNearbyGroceryStores";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { GroceryHeroSkeleton, GroceryGridSkeleton } from "@/components/grocery/GroceryStoreSkeleton";
 import { getStoreStatus, getLiveEta } from "@/utils/storeStatus";
 import GroceryDeliveryBar from "@/components/grocery/GroceryDeliveryBar";
+import type { DeliveryAddress } from "@/hooks/useDeliveryAddress";
 
 const container = {
   hidden: {},
@@ -40,8 +42,8 @@ function StatusDot({ isOpen }: { isOpen: boolean }) {
   );
 }
 
-/* ─── Featured spotlight card ─── */
-function FeaturedStore({ store, eta }: { store: StoreConfig; eta: number }) {
+/* ─── Featured spotlight card with real location ─── */
+function FeaturedStore({ store, eta, location }: { store: StoreConfig; eta: number; location?: NearbyStoreLocation }) {
   const navigate = useNavigate();
   const status = getStoreStatus(store.hours);
 
@@ -54,9 +56,7 @@ function FeaturedStore({ store, eta }: { store: StoreConfig; eta: number }) {
       onClick={() => navigate(`/grocery/store/${store.slug}`)}
       className="w-full relative p-4 rounded-[24px] border border-primary/20 bg-gradient-to-br from-primary/8 via-primary/4 to-transparent backdrop-blur-sm overflow-hidden group"
     >
-      {/* Decorative glow */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-20 h-20 bg-accent/8 rounded-full blur-2xl pointer-events-none" />
 
       <div className="relative flex items-center gap-4">
         <div className="h-16 w-16 rounded-[20px] bg-background border border-border/30 flex items-center justify-center p-2.5 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
@@ -75,14 +75,26 @@ function FeaturedStore({ store, eta }: { store: StoreConfig; eta: number }) {
             )}
           </div>
           <p className="text-base font-bold text-foreground group-hover:text-primary transition-colors">{store.name}</p>
+          {location && (
+            <p className="text-[10px] text-muted-foreground truncate mt-0.5 flex items-center gap-1">
+              <MapPin className="h-2.5 w-2.5 shrink-0" />
+              {location.address}
+            </p>
+          )}
           <div className="flex items-center gap-3 mt-1">
             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
               <Truck className="h-3 w-3 text-primary" />
               {eta}m
             </span>
+            {location?.distance_miles != null && (
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <MapPin className="h-3 w-3 text-primary" />
+                {location.distance_miles} mi
+              </span>
+            )}
             <span className="flex items-center gap-1 text-[11px] text-amber-400">
               <Star className="h-3 w-3 fill-current" />
-              {store.rating}
+              {location?.rating || store.rating}
             </span>
             <span className="text-[11px] text-muted-foreground">{store.hours}</span>
           </div>
@@ -93,62 +105,8 @@ function FeaturedStore({ store, eta }: { store: StoreConfig; eta: number }) {
   );
 }
 
-/* ─── Grid card ─── */
-function StoreCardGrid({ store, eta }: { store: StoreConfig; eta: number }) {
-  const navigate = useNavigate();
-  const status = getStoreStatus(store.hours);
-
-  return (
-    <motion.button
-      variants={cardVariant}
-      layout
-      whileTap={{ scale: 0.95 }}
-      onClick={() => navigate(`/grocery/store/${store.slug}`)}
-      className={`group relative flex flex-col items-center gap-2 p-4 pt-5 pb-3.5 rounded-[20px] border bg-card/90 backdrop-blur-sm hover:bg-card hover:shadow-xl transition-all duration-300 ${
-        status.isOpen
-          ? "border-border/40 hover:border-primary/20 hover:shadow-primary/8"
-          : "border-border/20 opacity-70"
-      }`}
-    >
-      {store.promo && (
-        <motion.span
-          initial={{ scale: 0, rotate: -12 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring" as const, stiffness: 400, damping: 15, delay: 0.2 }}
-          className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[9px] font-bold"
-        >
-          {store.promo}
-        </motion.span>
-      )}
-      
-      <div className="absolute top-2.5 left-2.5">
-        <StatusDot isOpen={status.isOpen} />
-      </div>
-
-      <div className="h-14 w-14 rounded-2xl bg-background border border-border/30 flex items-center justify-center p-2 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
-        <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
-      </div>
-      <div className="text-center w-full">
-        <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
-          {store.name}
-        </p>
-        <div className="flex items-center justify-center gap-2 mt-1">
-          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-            <Clock className="h-2.5 w-2.5" />
-            {eta}m
-          </span>
-          <span className="flex items-center gap-0.5 text-[10px] text-amber-400">
-            <Star className="h-2.5 w-2.5 fill-current" />
-            {store.rating}
-          </span>
-        </div>
-      </div>
-    </motion.button>
-  );
-}
-
-/* ─── List card ─── */
-function StoreCardList({ store, eta }: { store: StoreConfig; eta: number }) {
+/* ─── Store card with real location ─── */
+function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; eta: number; location?: NearbyStoreLocation }) {
   const navigate = useNavigate();
   const status = getStoreStatus(store.hours);
 
@@ -164,7 +122,7 @@ function StoreCardList({ store, eta }: { store: StoreConfig; eta: number }) {
           : "border-border/20 opacity-70"
       }`}
     >
-      <div className="relative h-11 w-11 rounded-xl bg-background border border-border/30 flex items-center justify-center p-1.5 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0">
+      <div className="relative h-12 w-12 rounded-xl bg-background border border-border/30 flex items-center justify-center p-1.5 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0">
         <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
         <div className="absolute -top-0.5 -right-0.5">
           <StatusDot isOpen={status.isOpen} />
@@ -180,18 +138,32 @@ function StoreCardList({ store, eta }: { store: StoreConfig; eta: number }) {
               {store.promo}
             </span>
           )}
+          {location?.open_now === true && (
+            <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[8px] font-bold">
+              Open
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-2.5 mt-0.5">
+        {location && (
+          <p className="text-[10px] text-muted-foreground truncate mt-0.5 flex items-center gap-1">
+            <MapPin className="h-2.5 w-2.5 shrink-0" />
+            {location.address}
+          </p>
+        )}
+        <div className="flex items-center gap-2.5 mt-1">
           <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
             <Clock className="h-2.5 w-2.5" />
             {eta}m
           </span>
+          {location?.distance_miles != null && (
+            <span className="flex items-center gap-0.5 text-[10px] text-primary font-medium">
+              <MapPin className="h-2.5 w-2.5" />
+              {location.distance_miles} mi
+            </span>
+          )}
           <span className="flex items-center gap-0.5 text-[10px] text-amber-400">
             <Star className="h-2.5 w-2.5 fill-current" />
-            {store.rating}
-          </span>
-          <span className={`text-[10px] font-medium ${status.isOpen ? "text-emerald-500" : "text-muted-foreground/50"}`}>
-            {status.label}
+            {location?.rating || store.rating}
           </span>
         </div>
       </div>
@@ -208,19 +180,66 @@ export default function GroceryMarketplace() {
   const [filter, setFilter] = useState("");
   const [category, setCategory] = useState<StoreCategory | "all">("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [currentAddress, setCurrentAddress] = useState<DeliveryAddress | null>(null);
+  const { stores: nearbyStores, isLoading: isLoadingStores, fetchNearbyStores, maxRadius } = useNearbyGroceryStores();
 
-  // Live ETAs — refresh every 30s
+  // Track if we've searched for this address
+  const lastSearchedCoords = useRef<string>("");
+
+  // When address changes and has coordinates, search for nearby stores
+  const handleAddressChange = useCallback((addr: DeliveryAddress | null) => {
+    setCurrentAddress(addr);
+    if (addr?.lat && addr?.lng) {
+      const coordKey = `${addr.lat},${addr.lng}`;
+      if (coordKey !== lastSearchedCoords.current) {
+        lastSearchedCoords.current = coordKey;
+        fetchNearbyStores(addr.lat, addr.lng);
+      }
+    }
+  }, [fetchNearbyStores]);
+
+  // Build map of store slug → nearest location
+  const nearbyBySlug = useMemo(() => {
+    const map: Record<string, NearbyStoreLocation> = {};
+    for (const loc of nearbyStores) {
+      // Keep the closest location for each chain
+      if (!map[loc.slug] || (loc.distance_miles ?? 99) < (map[loc.slug].distance_miles ?? 99)) {
+        map[loc.slug] = loc;
+      }
+    }
+    return map;
+  }, [nearbyStores]);
+
+  // Which store configs have a nearby location?
+  const availableStores = useMemo(() => {
+    // If no address set, show all stores
+    if (!currentAddress?.lat || !currentAddress?.lng) return GROCERY_STORES;
+    // If still loading, show all
+    if (isLoadingStores) return GROCERY_STORES;
+    // Only show stores with nearby locations
+    return GROCERY_STORES.filter((s) => nearbyBySlug[s.slug]);
+  }, [currentAddress, isLoadingStores, nearbyBySlug]);
+
+  // Live ETAs — use distance-based if available
   const [etas, setEtas] = useState<Record<string, number>>({});
   useEffect(() => {
     const compute = () => {
       const map: Record<string, number> = {};
-      GROCERY_STORES.forEach((s) => { map[s.slug] = getLiveEta(s.deliveryMin); });
+      GROCERY_STORES.forEach((s) => {
+        const nearbyLoc = nearbyBySlug[s.slug];
+        if (nearbyLoc?.distance_miles) {
+          // Rough ETA: 3 min/mile driving + 15 min shopping
+          map[s.slug] = Math.round(nearbyLoc.distance_miles * 3 + 15);
+        } else {
+          map[s.slug] = getLiveEta(s.deliveryMin);
+        }
+      });
       setEtas(map);
     };
     compute();
     const interval = setInterval(compute, 30_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [nearbyBySlug]);
 
   // Parallax for hero
   const { scrollY } = useScroll();
@@ -233,7 +252,7 @@ export default function GroceryMarketplace() {
   }, []);
 
   const filteredStores = useMemo(() => {
-    let stores = GROCERY_STORES;
+    let stores = availableStores;
     if (category !== "all") {
       stores = stores.filter((s) => s.category === category);
     }
@@ -242,32 +261,34 @@ export default function GroceryMarketplace() {
         s.name.toLowerCase().includes(filter.toLowerCase())
       );
     }
-    return stores;
-  }, [filter, category]);
+    // Sort by distance if available
+    return stores.sort((a, b) => {
+      const distA = nearbyBySlug[a.slug]?.distance_miles ?? 99;
+      const distB = nearbyBySlug[b.slug]?.distance_miles ?? 99;
+      return distA - distB;
+    });
+  }, [filter, category, availableStores, nearbyBySlug]);
 
-  // Category counts for badges
+  // Category counts
   const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: GROCERY_STORES.length };
-    GROCERY_STORES.forEach((s) => {
+    const counts: Record<string, number> = { all: availableStores.length };
+    availableStores.forEach((s) => {
       counts[s.category] = (counts[s.category] || 0) + 1;
     });
     return counts;
-  }, []);
+  }, [availableStores]);
 
-  // Featured store = highest rated open store
+  // Featured store = closest open store
   const featuredStore = useMemo(() => {
     if (filter.trim() || category !== "all") return null;
-    return [...GROCERY_STORES]
-      .filter((s) => getStoreStatus(s.hours).isOpen)
-      .sort((a, b) => b.rating - a.rating)[0] || null;
-  }, [filter, category]);
+    return filteredStores.filter((s) => getStoreStatus(s.hours).isOpen)[0] || null;
+  }, [filter, category, filteredStores]);
 
   const nonFeaturedStores = useMemo(() => {
     return filteredStores.filter((s) => s.slug !== featuredStore?.slug);
   }, [filteredStores, featuredStore]);
 
-  const popularStores = nonFeaturedStores.slice(0, 4);
-  const moreStores = nonFeaturedStores.slice(4);
+  const hasAddress = !!currentAddress?.lat && !!currentAddress?.lng;
 
   return (
     <div ref={scrollRef} className="min-h-screen bg-background pb-24 relative overflow-hidden">
@@ -306,7 +327,7 @@ export default function GroceryMarketplace() {
                   className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/40 text-[9px] font-bold text-muted-foreground"
                 >
                   <Store className="h-2.5 w-2.5" />
-                  {GROCERY_STORES.length} stores
+                  {availableStores.length} stores
                 </motion.span>
               )}
             </div>
@@ -333,12 +354,12 @@ export default function GroceryMarketplace() {
         </div>
 
         {/* Delivery address */}
-        <GroceryDeliveryBar />
+        <GroceryDeliveryBar onAddressChange={handleAddressChange} />
 
         {/* Smart search */}
         <GrocerySmartSearch value={filter} onChange={setFilter} />
 
-        {/* Category chips with counts */}
+        {/* Category chips */}
         <GroceryCategories active={category} onChange={setCategory} counts={categoryCounts} />
       </div>
 
@@ -356,7 +377,7 @@ export default function GroceryMarketplace() {
         </motion.div>
       ) : (
         <>
-          {/* Hero banner with parallax */}
+          {/* Hero banner */}
           <motion.div
             style={{ y: heroY, scale: heroScale }}
             initial={{ opacity: 0, y: 16 }}
@@ -374,36 +395,76 @@ export default function GroceryMarketplace() {
                 <Zap className="h-5 w-5 text-primary" />
               </motion.div>
               <div>
-                <p className="text-sm font-bold">Shop from any store</p>
+                <p className="text-sm font-bold">Same-day delivery</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                  Pick a store, add items, and a ZIVO driver shops & delivers to your door.
+                  {hasAddress
+                    ? "Showing real stores near you. A ZIVO driver shops in-store & delivers same day."
+                    : "Add your address to see nearby stores with same-day delivery."
+                  }
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-4 mt-3 pt-3 border-t border-primary/10">
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
                 <Clock className="h-3 w-3 text-primary" />
-                <span>~45 min</span>
+                <span>Same day</span>
               </div>
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
                 <Shield className="h-3 w-3 text-primary" />
-                <span>No markups</span>
+                <span>In-store prices</span>
               </div>
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                <TrendingUp className="h-3 w-3 text-primary" />
-                <span>Real-time prices</span>
+                <MapPin className="h-3 w-3 text-primary" />
+                <span>Within {maxRadius} mi</span>
               </div>
             </div>
           </motion.div>
 
-          {/* Featured spotlight */}
+          {/* Loading nearby stores indicator */}
+          {isLoadingStores && hasAddress && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center justify-center gap-2 py-6"
+            >
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-[12px] text-muted-foreground">Finding stores near you…</span>
+            </motion.div>
+          )}
+
+          {/* No stores nearby warning */}
+          {!isLoadingStores && hasAddress && availableStores.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mx-4 mt-4 p-4 rounded-[20px] border border-amber-500/20 bg-amber-500/5"
+            >
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-bold text-foreground">No stores nearby</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    No grocery stores found within {maxRadius} miles of your address. Try updating your delivery address.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Featured spotlight — closest store */}
           {featuredStore && (
             <div className="px-4 pt-4">
               <div className="flex items-center gap-1.5 mb-2.5">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
-                <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">Featured</h2>
+                <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">
+                  {hasAddress ? "Nearest Store" : "Featured"}
+                </h2>
               </div>
-              <FeaturedStore store={featuredStore} eta={etas[featuredStore.slug] ?? featuredStore.deliveryMin} />
+              <FeaturedStore
+                store={featuredStore}
+                eta={etas[featuredStore.slug] ?? featuredStore.deliveryMin}
+                location={nearbyBySlug[featuredStore.slug]}
+              />
             </div>
           )}
 
@@ -416,12 +477,12 @@ export default function GroceryMarketplace() {
           {/* Order Again */}
           <GroceryReorder />
 
-          {/* Popular stores */}
-          {popularStores.length > 0 && (
+          {/* Nearby stores list */}
+          {nonFeaturedStores.length > 0 && (
             <>
               <div className="px-4 pt-5 pb-2 flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">
-                  {category === "all" ? "Popular Stores" : `${category.charAt(0).toUpperCase() + category.slice(1)} Stores`}
+                  {hasAddress ? "Stores Near You" : "All Stores"}
                 </h2>
                 <motion.span
                   key={filteredStores.length}
@@ -435,44 +496,26 @@ export default function GroceryMarketplace() {
 
               <AnimatePresence mode="popLayout">
                 <motion.div
-                  key={`grid-${category}`}
-                  variants={container}
-                  initial="hidden"
-                  animate="show"
-                  className="px-4 grid grid-cols-2 gap-2.5"
-                >
-                  {popularStores.map((store) => (
-                    <StoreCardGrid key={store.slug} store={store} eta={etas[store.slug] ?? store.deliveryMin} />
-                  ))}
-                </motion.div>
-              </AnimatePresence>
-            </>
-          )}
-
-          {/* More stores */}
-          {moreStores.length > 0 && (
-            <>
-              <div className="px-4 pt-5 pb-2">
-                <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">More Stores</h2>
-              </div>
-
-              <AnimatePresence mode="popLayout">
-                <motion.div
                   key={`list-${category}`}
                   variants={container}
                   initial="hidden"
                   animate="show"
                   className="px-4 space-y-2"
                 >
-                  {moreStores.map((store) => (
-                    <StoreCardList key={store.slug} store={store} eta={etas[store.slug] ?? store.deliveryMin} />
+                  {nonFeaturedStores.map((store) => (
+                    <StoreCardWithLocation
+                      key={store.slug}
+                      store={store}
+                      eta={etas[store.slug] ?? store.deliveryMin}
+                      location={nearbyBySlug[store.slug]}
+                    />
                   ))}
                 </motion.div>
               </AnimatePresence>
             </>
           )}
 
-          {filteredStores.length === 0 && (
+          {filteredStores.length === 0 && !isLoadingStores && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -480,7 +523,7 @@ export default function GroceryMarketplace() {
             >
               <Store className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">No stores found</p>
-              <p className="text-[11px] text-muted-foreground/60 mt-1">Try a different search or category</p>
+              <p className="text-[11px] text-muted-foreground/60 mt-1">Try a different address or search</p>
             </motion.div>
           )}
         </>
