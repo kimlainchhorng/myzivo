@@ -57,6 +57,12 @@ serve(async (req) => {
 
     const rawProducts = data.products || data.data?.products || data.data || [];
     console.log("[costco-search] Raw products count:", rawProducts.length);
+    if (data.data) {
+      console.log("[costco-search] data.data type:", typeof data.data, Array.isArray(data.data) ? "array" : "");
+      if (typeof data.data === "object" && !Array.isArray(data.data)) {
+        console.log("[costco-search] data.data keys:", Object.keys(data.data).slice(0, 10));
+      }
+    }
     if (rawProducts.length > 0) {
       console.log("[costco-search] Sample product keys:", Object.keys(rawProducts[0]).slice(0, 15));
     }
