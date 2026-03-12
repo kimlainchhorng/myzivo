@@ -266,6 +266,8 @@ export default function GroceryPage() {
         onClose={() => setSelectedProduct(null)}
         onAdd={handleAdd}
         onUpdateQuantity={cart.updateQuantity}
+        allProducts={products}
+        onSelect={setSelectedProduct}
       />
 
       <ZivoMobileNav />
