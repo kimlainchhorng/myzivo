@@ -443,6 +443,9 @@ export default function GroceryStorePage() {
         </div>
       </div>
 
+      {/* Promo Banner */}
+      <GroceryPromoBanner />
+
       {/* Cart Drawer */}
       <AnimatePresence>
         {showCart && (
