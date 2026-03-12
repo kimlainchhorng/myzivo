@@ -53,7 +53,6 @@ export function GroceryFrequentlyBoughtTogether({
 
   const selectedProducts = suggestions.filter((s) => selectedIds.has(s.productId));
   const bundleTotal = currentProduct.price + selectedProducts.reduce((s, p) => s + p.price, 0);
-  const bundleSavings = (bundleTotal * 0.05).toFixed(2);
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
