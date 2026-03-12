@@ -48,6 +48,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     placeholder: "Search Walmart products…",
     emptyTitle: "Search Walmart Products",
     emptyDescription: "Search for groceries, household items, and more. A ZIVO driver will shop and deliver to your door.",
+    defaultQuery: "grocery essentials",
   },
   {
     name: "Costco",
