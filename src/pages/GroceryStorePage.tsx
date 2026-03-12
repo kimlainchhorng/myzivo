@@ -27,12 +27,15 @@ import GroceryDeliveryBar from "@/components/grocery/GroceryDeliveryBar";
 
 const QUICK_FILTERS = [
   { label: "🔥 Popular", query: "popular items" },
-  { label: "🥛 Dairy", query: "dairy milk cheese" },
-  { label: "🍞 Bakery", query: "bread bakery" },
-  { label: "🥩 Meat", query: "meat chicken beef" },
-  { label: "🥤 Drinks", query: "drinks beverages" },
-  { label: "🧹 Cleaning", query: "cleaning supplies" },
-  { label: "🍿 Snacks", query: "snacks chips" },
+  { label: "🥛 Dairy", query: "dairy milk cheese yogurt" },
+  { label: "🍞 Bakery", query: "bread bakery rolls" },
+  { label: "🥩 Meat", query: "meat chicken beef pork" },
+  { label: "🥤 Drinks", query: "drinks beverages water juice soda" },
+  { label: "🧹 Cleaning", query: "cleaning supplies soap detergent" },
+  { label: "🍿 Snacks", query: "snacks chips crackers cookies" },
+  { label: "🥦 Produce", query: "fresh fruits vegetables organic" },
+  { label: "🧊 Frozen", query: "frozen meals pizza ice cream" },
+  { label: "🍝 Pantry", query: "pasta rice cereal canned" },
 ];
 
 type SortMode = "default" | "price-low" | "price-high" | "rating";
