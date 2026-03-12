@@ -332,6 +332,9 @@ export default function GroceryMarketplace() {
           </motion.button>
         </div>
 
+        {/* Delivery address */}
+        <GroceryDeliveryBar />
+
         {/* Smart search */}
         <GrocerySmartSearch value={filter} onChange={setFilter} />
 
