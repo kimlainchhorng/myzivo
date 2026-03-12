@@ -622,14 +622,17 @@ export default function GroceryStorePage() {
               </motion.span>
             )}
           </div>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={cycleSortMode}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-muted/30 border border-border/20 hover:bg-muted/50 transition-colors"
-          >
-            <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
-            <span className="text-[10px] font-semibold text-muted-foreground">{sortLabel[sortMode]}</span>
-          </motion.button>
+          <div className="flex items-center gap-1.5">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={cycleSortMode}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-muted/30 border border-border/20 hover:bg-muted/50 transition-colors"
+            >
+              <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+              <span className="text-[10px] font-semibold text-muted-foreground">{sortLabel[sortMode]}</span>
+            </motion.button>
+            <GroceryFilterButton activeCount={filterCount} onClick={() => setShowFilters(true)} />
+          </div>
         </motion.div>
       )}
 
