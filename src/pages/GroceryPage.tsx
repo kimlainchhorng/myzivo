@@ -309,12 +309,6 @@ export default function GroceryPage() {
         </div>
       )}
 
-      {/* Debug: result count */}
-      {!isLoading && query.length >= 2 && products.length > 0 && (
-        <div className="mx-4 mb-2 px-3 py-1.5 rounded-lg bg-muted/60 text-[11px] text-muted-foreground font-mono">
-          🐛 Debug: {products.length} products returned for "{query}"
-        </div>
-      )}
 
       {/* No results */}
       {!isLoading && query.length >= 2 && products.length === 0 && !error && (

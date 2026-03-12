@@ -86,10 +86,28 @@ serve(async (req) => {
       return match ? match[1] : crypto.randomUUID().slice(0, 12);
     };
 
-    // Clean product name by removing trailing price info like "$4.86 3.8 ¢/fl oz"
+    // Clean product name: remove trailing size+price like "Gallon128 fl oz $4.86 3.8 ¢/fl oz"
     const cleanName = (name: string): string => {
       if (!name) return "";
-      return name.replace(/\s*\$[\d.,]+.*$/, "").trim();
+      // Remove everything from the first $ onward (price + unit price)
+      let cleaned = name.replace(/\s*\$[\d.,]+.*$/, "");
+      // Remove trailing quantity patterns like "128 fl oz", "64 oz", "1 Gallon" etc.
+      cleaned = cleaned.replace(/\s*\d+(\.\d+)?\s*(fl\s*oz|oz|gal|gallon|ct|pk|lb|ml|l|kg|g)\s*$/i, "");
+      // Fix concatenated size like "Gallon128" → "Gallon"
+      cleaned = cleaned.replace(/(\D)(\d+)\s*$/, "$1");
+      return cleaned.trim().replace(/,\s*$/, "").trim();
+    };
+
+    // Extract brand: use API brand field, or first segment before comma in title
+    const extractBrand = (item: any): string => {
+      if (item.brand) return item.brand;
+      if (item.brandName) return item.brandName;
+      const title = item.title || item.name || "";
+      const firstComma = title.indexOf(",");
+      if (firstComma > 0 && firstComma < 40) {
+        return title.slice(0, firstComma).trim();
+      }
+      return "";
     };
 
     const items = rawProducts.map((item: any) => ({
@@ -97,9 +115,10 @@ serve(async (req) => {
       name: cleanName(item.title || item.name || ""),
       price: parsePrice(item.price),
       image: item.image || item.thumbnailImage || item.largeFrontImage || "",
-      brand: item.brand || item.brandName || "",
+      brand: extractBrand(item),
       rating: item.rating?.average ?? item.customerRating ?? item.ratings ?? null,
       inStock: true,
+      store: "Walmart",
     }));
 
     console.log("[walmart-search] Mapped items count:", items.length);
