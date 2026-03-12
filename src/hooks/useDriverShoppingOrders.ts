@@ -47,7 +47,7 @@ export function useDriverShoppingOrders() {
         .is("driver_id", null)
         .order("placed_at", { ascending: true });
 
-      setAvailable(pending || []);
+      setAvailable((pending || []).map((o) => ({ ...o, items: Array.isArray(o.items) ? o.items : [] })));
 
       // My assigned orders (not delivered/cancelled)
       if (driver) {
