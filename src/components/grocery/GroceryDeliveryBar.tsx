@@ -2,13 +2,21 @@
  * GroceryDeliveryBar - "Deliver to" address picker for grocery pages
  * Shows saved Home/Work addresses with quick-add flow
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Home, Briefcase, Plus, ChevronDown, Check, X, Navigation, Loader2, LocateFixed } from "lucide-react";
+import { MapPin, Home, Briefcase, Plus, ChevronDown, Check, X, Navigation, Loader2, LocateFixed, Search } from "lucide-react";
 import { useDeliveryAddress, type DeliveryAddress } from "@/hooks/useDeliveryAddress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+
+interface AddressSuggestion {
+  display: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+}
 
 const LABEL_ICONS: Record<DeliveryAddress["label"], React.ElementType> = {
   Home,
@@ -30,6 +38,61 @@ export default function GroceryDeliveryBar() {
   const [newAddress, setNewAddress] = useState("");
   const [newApt, setNewApt] = useState("");
   const [isLocating, setIsLocating] = useState(false);
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  /** Autocomplete address search via Nominatim */
+  const searchAddress = useCallback((query: string) => {
+    setNewAddress(query);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (query.trim().length < 3) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=us`,
+          { headers: { "Accept-Language": "en" } }
+        );
+        const data = await res.json();
+        const mapped: AddressSuggestion[] = data.map((item: any) => {
+          const a = item.address || {};
+          const street = [a.house_number, a.road].filter(Boolean).join(" ");
+          const city = a.city || a.town || a.village || a.county || "";
+          const state = a.state || "";
+          const zip = a.postcode || "";
+          return {
+            display: item.display_name,
+            street,
+            city,
+            state,
+            zip,
+          };
+        });
+        setSuggestions(mapped);
+        setShowSuggestions(mapped.length > 0);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+  }, []);
+
+  const selectSuggestion = useCallback((s: AddressSuggestion) => {
+    const full = [s.street, s.city, s.state, s.zip].filter(Boolean).join(", ");
+    setNewAddress(full);
+    setSuggestions([]);
+    setShowSuggestions(false);
+  }, []);
+
+  // Cleanup debounce
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
   /** Auto-detect address via GPS + reverse geocoding */
   const autoDetectAddress = useCallback(() => {
@@ -257,14 +320,53 @@ export default function GroceryDeliveryBar() {
                       </span>
                     </motion.button>
 
-                    {/* Address input */}
-                    <Input
-                      value={newAddress}
-                      onChange={(e) => setNewAddress(e.target.value)}
-                      placeholder="Street address"
-                      className="h-10 rounded-xl text-[12px] bg-muted/10 border-border/20"
-                      autoFocus
-                    />
+                    {/* Address input with autocomplete */}
+                    <div className="relative">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
+                        <Input
+                          value={newAddress}
+                          onChange={(e) => searchAddress(e.target.value)}
+                          onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                          placeholder="Search street address…"
+                          className="h-10 rounded-xl text-[12px] bg-muted/10 border-border/20 pl-9 pr-8"
+                          autoFocus
+                        />
+                        {isSearching && (
+                          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary animate-spin" />
+                        )}
+                      </div>
+
+                      {/* Suggestions dropdown */}
+                      <AnimatePresence>
+                        {showSuggestions && suggestions.length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="absolute left-0 right-0 top-full mt-1 z-50 bg-background border border-border/30 rounded-xl shadow-xl overflow-hidden max-h-[200px] overflow-y-auto"
+                          >
+                            {suggestions.map((s, i) => (
+                              <button
+                                key={i}
+                                onClick={() => selectSuggestion(s)}
+                                className="w-full flex items-start gap-2.5 px-3 py-2.5 hover:bg-muted/30 transition-colors text-left border-b border-border/10 last:border-0"
+                              >
+                                <MapPin className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                                <div className="min-w-0">
+                                  <p className="text-[11px] font-semibold text-foreground truncate">
+                                    {s.street || s.city}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground truncate">
+                                    {[s.city, s.state, s.zip].filter(Boolean).join(", ")}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                     <Input
                       value={newApt}
                       onChange={(e) => setNewApt(e.target.value)}
