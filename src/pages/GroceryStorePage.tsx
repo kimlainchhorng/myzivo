@@ -264,20 +264,20 @@ export default function GroceryStorePage() {
       {/* Result count */}
       {!isLoading && products.length > 0 && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mx-4 mt-3 mb-1 flex items-center gap-2"
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-4 mt-4 mb-2 flex items-center gap-2"
         >
           <Sparkles className="h-3.5 w-3.5 text-primary" />
-          <span className="text-[11px] text-muted-foreground font-medium">
-            {products.length} products{query ? ` for "${query}"` : ""}
+          <span className="text-xs text-muted-foreground font-medium">
+            {products.length} product{products.length !== 1 ? "s" : ""}{query ? ` for "${query}"` : ""}
           </span>
         </motion.div>
       )}
 
       {/* Product Grid */}
       {!isLoading && products.length > 0 && (
-        <div className="px-4 py-2 grid grid-cols-2 gap-3">
+        <div className="px-4 pb-2 grid grid-cols-2 gap-2.5">
           {products.map((product, i) => (
             <GroceryProductCard
               key={product.productId || i}

@@ -1,8 +1,8 @@
 /**
- * GroceryProductCard - 2026 Spatial UI product card
+ * GroceryProductCard - 2026 Spatial UI product card (v2)
  */
 import { motion } from "framer-motion";
-import { Plus, Minus, Star, Package, Check } from "lucide-react";
+import { Plus, Minus, Star, Package, Check, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { StoreProduct } from "@/hooks/useStoreSearch";
@@ -25,18 +25,22 @@ export function GroceryProductCard({
 }: GroceryProductCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.03, type: "spring", stiffness: 260, damping: 20 }}
-      className="group rounded-3xl border border-border/40 bg-card/80 backdrop-blur-sm overflow-hidden hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+      transition={{ delay: index * 0.04, type: "spring", stiffness: 280, damping: 22 }}
+      className={`group relative rounded-[20px] bg-card border transition-all duration-300 overflow-hidden ${
+        cartItem
+          ? "border-primary/30 shadow-md shadow-primary/10"
+          : "border-border/40 hover:border-primary/15 hover:shadow-lg hover:shadow-primary/5"
+      }`}
     >
-      {/* Image */}
-      <div className="aspect-square bg-white p-4 flex items-center justify-center relative overflow-hidden">
+      {/* Image container */}
+      <div className="relative aspect-[4/3] bg-gradient-to-b from-muted/20 to-muted/40 flex items-center justify-center p-5 overflow-hidden">
         {product.image ? (
           <img
             src={product.image}
             alt={product.name}
-            className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500"
+            className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-500 ease-out drop-shadow-sm"
             loading="lazy"
             referrerPolicy="no-referrer"
             onError={(e) => {
@@ -45,76 +49,95 @@ export function GroceryProductCard({
             }}
           />
         ) : null}
-        <Package className={`h-12 w-12 text-muted-foreground/20 absolute ${product.image ? "hidden" : ""}`} />
-        
-        {/* Store badge */}
-        <Badge variant="secondary" className="absolute top-2.5 left-2.5 text-[9px] px-2 py-0.5 bg-background/80 backdrop-blur-sm border-border/30 font-medium">
-          {product.store}
-        </Badge>
+        <Package className={`h-10 w-10 text-muted-foreground/15 absolute ${product.image ? "hidden" : ""}`} />
 
-        {/* Cart indicator */}
+        {/* Store badge - top left pill */}
+        <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full bg-background/90 backdrop-blur-md border border-border/20 shadow-sm">
+          <ShoppingBag className="h-2.5 w-2.5 text-muted-foreground" />
+          <span className="text-[9px] font-semibold text-muted-foreground tracking-wide">{product.store}</span>
+        </div>
+
+        {/* Cart indicator - animated checkmark */}
         {cartItem && (
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute top-2.5 right-2.5 h-6 w-6 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+            className="absolute top-2 right-2 h-7 w-7 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/40 ring-2 ring-background"
           >
-            <Check className="h-3.5 w-3.5 text-primary-foreground" />
+            <Check className="h-3.5 w-3.5 text-primary-foreground" strokeWidth={3} />
           </motion.div>
+        )}
+
+        {/* Rating pill - bottom right */}
+        {product.rating != null && (
+          <div className="absolute bottom-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-background/90 backdrop-blur-md border border-border/20">
+            <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+            <span className="text-[10px] font-bold text-foreground">{product.rating}</span>
+          </div>
         )}
       </div>
 
-      {/* Info */}
-      <div className="p-3.5 space-y-1.5">
+      {/* Info section */}
+      <div className="p-3 space-y-1">
         {product.brand && (
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium truncate">
+          <p className="text-[9px] text-muted-foreground uppercase tracking-[0.1em] font-semibold truncate">
             {product.brand}
           </p>
         )}
-        <p className="text-sm font-semibold line-clamp-2 leading-snug">{product.name}</p>
-        <div className="flex items-center justify-between pt-1">
-          <span className="text-base font-bold text-primary">
+        <p className="text-[13px] font-semibold line-clamp-2 leading-[1.3] text-foreground/90">
+          {product.name}
+        </p>
+        
+        {/* Price */}
+        <div className="pt-0.5">
+          <span className="text-lg font-extrabold text-primary tracking-tight">
             ${typeof product.price === "number" ? product.price.toFixed(2) : product.price}
           </span>
-          {product.rating != null && (
-            <span className="flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-lg">
-              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-              {product.rating}
-            </span>
-          )}
         </div>
 
         {/* Actions */}
-        <div className="pt-1.5">
+        <div className="pt-1">
           {!product.inStock ? (
-            <Badge variant="secondary" className="text-[10px] w-full justify-center py-1.5 rounded-xl">
+            <div className="text-[10px] text-muted-foreground text-center py-2 rounded-xl bg-muted/40 font-medium">
               Out of Stock
-            </Badge>
+            </div>
           ) : cartItem ? (
-            <div className="flex items-center gap-1.5">
-              <button
+            <div className="flex items-center justify-between bg-primary/10 rounded-[14px] p-1">
+              <motion.button
+                whileTap={{ scale: 0.85 }}
                 onClick={() => onUpdateQuantity(product.productId, cartItem.quantity - 1)}
-                className="p-2 rounded-xl bg-muted/60 hover:bg-muted active:scale-95 transition-all duration-200"
+                className="h-8 w-8 rounded-xl bg-background flex items-center justify-center shadow-sm border border-border/30 hover:bg-muted transition-colors"
               >
                 <Minus className="h-3.5 w-3.5" />
-              </button>
-              <span className="text-sm font-bold w-8 text-center">{cartItem.quantity}</span>
-              <button
+              </motion.button>
+              <motion.span
+                key={cartItem.quantity}
+                initial={{ scale: 1.3 }}
+                animate={{ scale: 1 }}
+                className="text-sm font-extrabold text-primary min-w-[28px] text-center"
+              >
+                {cartItem.quantity}
+              </motion.span>
+              <motion.button
+                whileTap={{ scale: 0.85 }}
                 onClick={() => onUpdateQuantity(product.productId, cartItem.quantity + 1)}
-                className="p-2 rounded-xl bg-muted/60 hover:bg-muted active:scale-95 transition-all duration-200"
+                className="h-8 w-8 rounded-xl bg-background flex items-center justify-center shadow-sm border border-border/30 hover:bg-muted transition-colors"
               >
                 <Plus className="h-3.5 w-3.5" />
-              </button>
+              </motion.button>
             </div>
           ) : (
-            <Button
-              size="sm"
-              className="w-full rounded-2xl text-xs h-9 font-semibold active:scale-95 transition-transform duration-200"
-              onClick={() => onAdd(product)}
-            >
-              <Plus className="h-3.5 w-3.5 mr-1.5" />
-              Add to Cart
-            </Button>
+            <motion.div whileTap={{ scale: 0.96 }}>
+              <Button
+                size="sm"
+                className="w-full rounded-[14px] text-xs h-9 font-bold gap-1.5 shadow-sm shadow-primary/20"
+                onClick={() => onAdd(product)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add to Cart
+              </Button>
+            </motion.div>
           )}
         </div>
       </div>
