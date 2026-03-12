@@ -216,9 +216,16 @@ export default function GroceryStorePage() {
         </div>
       )}
 
+      {/* Debug banner */}
+      {!isLoading && products.length > 0 && (
+        <div className="mx-4 mt-3 mb-1 px-3 py-1.5 rounded-lg bg-muted/60 text-[11px] text-muted-foreground font-mono">
+          🐛 {products.length} products from {storeName}{query ? ` for "${query}"` : ""}
+        </div>
+      )}
+
       {/* Product Grid */}
       {!isLoading && products.length > 0 && (
-        <div className="px-4 py-4 grid grid-cols-2 gap-3">
+        <div className="px-4 py-2 grid grid-cols-2 gap-3">
           {products.map((product, i) => (
             <GroceryProductCard
               key={product.productId || i}
