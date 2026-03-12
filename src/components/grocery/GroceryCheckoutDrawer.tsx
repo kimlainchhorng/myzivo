@@ -37,8 +37,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [showItems, setShowItems] = useState(false);
   const [deliveryNote, setDeliveryNote] = useState("");
   const [leaveAtDoor, setLeaveAtDoor] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1); // 1 = details, 2 = review
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoCode, setPromoCode] = useState("");
 
-  const grandTotal = total + DELIVERY_FEE + SERVICE_FEE + tip;
+  const grandTotal = Math.max(0, total + DELIVERY_FEE + SERVICE_FEE + tip - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
   const handleStripeCheckout = async () => {
