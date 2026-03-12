@@ -57,7 +57,6 @@ export const GROCERY_STORES: StoreConfig[] = [
     placeholder: "Search Costco products…",
     emptyTitle: "Search Costco Products",
     emptyDescription: "Browse Costco's bulk deals and everyday essentials. A ZIVO driver handles the shopping for you.",
-    promo: "$10 off",
     defaultQuery: "food",
     category: "grocery",
     deliveryMin: 50,

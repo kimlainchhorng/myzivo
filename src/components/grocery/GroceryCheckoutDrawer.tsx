@@ -20,6 +20,7 @@ import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { GroceryPromoInput } from "@/components/grocery/GroceryPromoBanner";
 import { getLiveEta } from "@/utils/storeStatus";
 import { getStoreConfig, type StoreName, GROCERY_STORES } from "@/config/groceryStores";
+import { DELIVERY_FEE, SERVICE_FEE, TIP_OPTIONS } from "@/config/groceryPricing";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -27,10 +28,6 @@ interface GroceryCheckoutDrawerProps {
   onClose: () => void;
   onOrderPlaced: (orderId: string) => void;
 }
-
-const DELIVERY_FEE = 5.99;
-const SERVICE_FEE = 1.99;
-const TIP_OPTIONS = [0, 2, 3, 5];
 
 type SubstitutionPref = "contact_me" | "best_match" | "refund";
 

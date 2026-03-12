@@ -107,23 +107,9 @@ export function GroceryPromoInput({
       // RPC not available, fall through to local validation
     }
 
-    // Fallback: known codes
-    if (upper === "ZIVO10" || upper === "GROCERY10") {
-      setDiscount(10);
-      setStatus("applied");
-      onApply(upper, 10);
-    } else if (upper === "SAVE5") {
-      setDiscount(5);
-      setStatus("applied");
-      onApply(upper, 5);
-    } else if (upper === "FREESHIP") {
-      setDiscount(5.99);
-      setStatus("applied");
-      onApply(upper, 5.99);
-    } else {
-      setStatus("invalid");
-      setTimeout(() => setStatus("idle"), 2000);
-    }
+    // No local fallback — all promo codes are validated server-side
+    setStatus("invalid");
+    setTimeout(() => setStatus("idle"), 2000);
   };
 
   return (
