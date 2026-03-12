@@ -39,15 +39,13 @@ export function GroceryProductCard({
             className="h-full w-full object-contain"
             loading="lazy"
             referrerPolicy="no-referrer"
-            crossOrigin="anonymous"
             onError={(e) => {
-              const target = e.currentTarget;
-              target.style.display = "none";
-              target.parentElement?.querySelector(".fallback-icon")?.classList.remove("hidden");
+              e.currentTarget.style.display = "none";
+              e.currentTarget.nextElementSibling?.classList.remove("hidden");
             }}
           />
         ) : null}
-        <Package className={`fallback-icon h-12 w-12 text-muted-foreground/30 ${product.image ? "hidden" : ""}`} />
+        <Package className={`h-12 w-12 text-muted-foreground/30 absolute ${product.image ? "hidden" : ""}`} />
         <Badge variant="secondary" className="absolute top-2 left-2 text-[9px] px-1.5 py-0.5">
           {product.store}
         </Badge>
