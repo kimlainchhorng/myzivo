@@ -6,6 +6,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Truck, Shield, Clock, MapPin, X, Tag, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { DELIVERY_FEE, formatFee } from "@/config/groceryPricing";
 
 const SERVICE_INFO = [
   { id: "same-day", icon: Clock, title: "Same-Day Delivery", desc: "Order by 3pm for same-day", gradient: "from-primary/12 via-primary/8 to-primary/4", accent: "text-primary" },
