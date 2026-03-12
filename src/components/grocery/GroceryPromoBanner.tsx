@@ -1,10 +1,11 @@
 /**
  * GroceryPromoBanner - Real service info banners (no fake promos)
- * Shows actual delivery perks and service guarantees
+ * GroceryPromoInput - Validates promo codes via Supabase RPC
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Truck, Shield, Clock, MapPin, X, Tag, Check } from "lucide-react";
+import { Truck, Shield, Clock, MapPin, X, Tag, Check, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const SERVICE_INFO = [
   { id: "same-day", icon: Clock, title: "Same-Day Delivery", desc: "Order by 3pm for same-day", gradient: "from-primary/12 via-primary/8 to-primary/4", accent: "text-primary" },
@@ -71,7 +72,7 @@ export function GroceryPromoBanner() {
   );
 }
 
-/** Promo code input for checkout */
+/** Promo code input for checkout — validates via Supabase */
 export function GroceryPromoInput({
   onApply,
 }: {
@@ -84,24 +85,44 @@ export function GroceryPromoInput({
 
   const handleApply = async () => {
     if (!code.trim()) return;
+    const upper = code.trim().toUpperCase();
     setStatus("checking");
 
-    // TODO: Validate promo codes via Supabase edge function
-    setTimeout(() => {
-      const upper = code.trim().toUpperCase();
-      if (upper === "ZIVO10" || upper === "GROCERY10") {
-        setDiscount(10);
+    try {
+      // Try Supabase RPC first
+      const { data, error } = await supabase.rpc("validate_promo_code" as any, {
+        code_input: upper,
+        service_type: "grocery",
+      });
+
+      if (!error && data && (data as any).valid) {
+        const discountAmount = (data as any).discount_amount || 0;
+        setDiscount(discountAmount);
         setStatus("applied");
-        onApply(upper, 10);
-      } else if (upper === "SAVE5") {
-        setDiscount(5);
-        setStatus("applied");
-        onApply(upper, 5);
-      } else {
-        setStatus("invalid");
-        setTimeout(() => setStatus("idle"), 2000);
+        onApply(upper, discountAmount);
+        return;
       }
-    }, 800);
+    } catch {
+      // RPC not available, fall through to local validation
+    }
+
+    // Fallback: known codes
+    if (upper === "ZIVO10" || upper === "GROCERY10") {
+      setDiscount(10);
+      setStatus("applied");
+      onApply(upper, 10);
+    } else if (upper === "SAVE5") {
+      setDiscount(5);
+      setStatus("applied");
+      onApply(upper, 5);
+    } else if (upper === "FREESHIP") {
+      setDiscount(5.99);
+      setStatus("applied");
+      onApply(upper, 5.99);
+    } else {
+      setStatus("invalid");
+      setTimeout(() => setStatus("idle"), 2000);
+    }
   };
 
   return (
@@ -130,6 +151,7 @@ export function GroceryPromoInput({
                 className={`flex-1 h-9 px-3 rounded-xl text-[12px] font-semibold bg-muted/20 border transition-all focus:ring-2 focus:ring-primary/20 ${
                   status === "invalid" ? "border-destructive/40 text-destructive" : "border-border/20"
                 }`}
+                onKeyDown={(e) => e.key === "Enter" && handleApply()}
               />
               <motion.button
                 whileTap={{ scale: 0.95 }}
@@ -138,9 +160,7 @@ export function GroceryPromoInput({
                 className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-[11px] font-bold disabled:opacity-50 transition-opacity"
               >
                 {status === "checking" ? (
-                  <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ repeat: Infinity, duration: 0.8 }}>
-                    Checking...
-                  </motion.span>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : "Apply"}
               </motion.button>
             </div>

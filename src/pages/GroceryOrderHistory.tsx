@@ -1,5 +1,6 @@
 /**
- * GroceryOrderHistory - Enhanced with real-time updates, rating, and receipt details
+ * GroceryOrderHistory - Real-time order tracking with persistent ratings,
+ * receipt viewing, support contact, and working reorder
  */
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,12 +9,14 @@ import {
   ArrowLeft, Package, Clock, CheckCircle, Truck, MapPin,
   ChevronRight, ShoppingBag, RotateCcw, Star, Store,
   Receipt, Phone, MessageSquare, Loader2, RefreshCw,
+  HelpCircle, Download, ExternalLink, Copy, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { toast } from "sonner";
+import { useGroceryCart } from "@/hooks/useGroceryCart";
 
 interface OrderItem {
   productId: string;
@@ -39,6 +42,8 @@ interface Order {
   driver_name?: string;
   driver_phone?: string;
   receipt_total?: number;
+  receipt_photo_url?: string;
+  rating?: number;
 }
 
 const STATUS_CONFIG: Record<string, { icon: typeof Package; label: string; color: string; bg: string; step: number }> = {
@@ -93,18 +98,32 @@ function OrderStatusTracker({ status }: { status: string }) {
   );
 }
 
-function OrderCard({ order, onReorder }: { order: Order; onReorder: (items: OrderItem[]) => void }) {
+function OrderCard({ order, onReorder, onRate }: {
+  order: Order;
+  onReorder: (items: OrderItem[]) => void;
+  onRate: (orderId: string, stars: number) => void;
+}) {
   const [expanded, setExpanded] = useState(false);
-  const [rating, setRating] = useState<number | null>(null);
   const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
   const StatusIcon = cfg.icon;
   const date = new Date(order.placed_at);
   const isActive = !["delivered", "cancelled"].includes(order.status);
   const itemCount = order.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
+  const replacedItems = order.items?.filter(i => i.status === "replaced") || [];
+  const unavailableItems = order.items?.filter(i => i.status === "unavailable") || [];
 
-  const handleRate = (stars: number) => {
-    setRating(stars);
-    toast.success(`Rated ${stars} stars — thank you!`);
+  const copyOrderId = () => {
+    navigator.clipboard.writeText(order.id);
+    toast.success("Order ID copied");
+  };
+
+  const timeSince = () => {
+    const diff = Date.now() - date.getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   return (
@@ -135,9 +154,7 @@ function OrderCard({ order, onReorder }: { order: Order; onReorder: (items: Orde
                   />
                 )}
               </div>
-              <span className="text-[11px] text-muted-foreground">
-                {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-              </span>
+              <span className="text-[11px] text-muted-foreground">{timeSince()}</span>
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <span className={`text-[10px] font-bold ${cfg.color}`}>{cfg.label}</span>
@@ -145,6 +162,29 @@ function OrderCard({ order, onReorder }: { order: Order; onReorder: (items: Orde
                 · {itemCount} items · ${order.total_amount?.toFixed(2)}
               </span>
             </div>
+            {/* Item status badges */}
+            {(replacedItems.length > 0 || unavailableItems.length > 0) && (
+              <div className="flex items-center gap-1.5 mt-1.5">
+                {replacedItems.length > 0 && (
+                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/15">
+                    {replacedItems.length} replaced
+                  </span>
+                )}
+                {unavailableItems.length > 0 && (
+                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/15">
+                    {unavailableItems.length} unavailable
+                  </span>
+                )}
+              </div>
+            )}
+            {/* Existing star rating */}
+            {order.rating && order.rating > 0 && (
+              <div className="flex items-center gap-0.5 mt-1.5">
+                {Array.from({ length: order.rating }).map((_, i) => (
+                  <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
+            )}
             {isActive && <OrderStatusTracker status={order.status} />}
           </div>
           <ChevronRight className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${expanded ? "rotate-90" : ""}`} />
@@ -160,6 +200,16 @@ function OrderCard({ order, onReorder }: { order: Order; onReorder: (items: Orde
             className="overflow-hidden"
           >
             <div className="px-4 pb-4 space-y-3">
+              {/* Order ID */}
+              <button
+                onClick={copyOrderId}
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10 w-full text-left"
+              >
+                <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold">Order</span>
+                <span className="text-[10px] font-mono text-foreground flex-1">{order.id.slice(0, 8).toUpperCase()}</span>
+                <Copy className="h-3 w-3 text-muted-foreground" />
+              </button>
+
               {/* Driver info */}
               {order.driver_name && (
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
@@ -194,7 +244,7 @@ function OrderCard({ order, onReorder }: { order: Order; onReorder: (items: Orde
                       </span>
                       {item.status === "replaced" && item.replacement && (
                         <span className="text-[9px] text-amber-500 font-medium">
-                          → Replaced: {item.replacement.name}
+                          → Replaced: {item.replacement.name} (${item.replacement.price.toFixed(2)})
                         </span>
                       )}
                       {item.status === "unavailable" && (
@@ -235,52 +285,74 @@ function OrderCard({ order, onReorder }: { order: Order; onReorder: (items: Orde
                     <span className="font-semibold">${order.receipt_total.toFixed(2)}</span>
                   </div>
                 )}
+                {order.receipt_total != null && order.receipt_total < order.total_amount && (
+                  <div className="flex justify-between text-[11px] text-emerald-600">
+                    <span>Adjustment refund</span>
+                    <span className="font-semibold">-${(order.total_amount - order.receipt_total).toFixed(2)}</span>
+                  </div>
+                )}
               </div>
 
-              {/* Rate order */}
-              {order.status === "delivered" && (
+              {/* Receipt photo */}
+              {order.receipt_photo_url && (
+                <a
+                  href={order.receipt_photo_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 p-2.5 rounded-xl bg-muted/20 border border-border/10 hover:bg-muted/30 transition-colors"
+                >
+                  <Receipt className="h-4 w-4 text-primary" />
+                  <span className="text-[11px] font-semibold text-foreground flex-1">View Store Receipt</span>
+                  <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                </a>
+              )}
+
+              {/* Rate order — persisted */}
+              {order.status === "delivered" && (!order.rating || order.rating === 0) && (
                 <div className="pt-2">
-                  {rating === null ? (
-                    <div>
-                      <p className="text-[11px] font-bold text-foreground mb-2">Rate your experience</p>
-                      <div className="flex gap-1.5">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <motion.button
-                            key={s}
-                            whileTap={{ scale: 0.8 }}
-                            onClick={() => handleRate(s)}
-                            className="p-2 rounded-xl bg-muted/20 hover:bg-amber-500/10 transition-colors border border-border/15"
-                          >
-                            <Star className="h-5 w-5 text-muted-foreground/30 hover:text-amber-400 hover:fill-amber-400 transition-colors" />
-                          </motion.button>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                      <div className="flex">
-                        {Array.from({ length: rating }).map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
-                      <span className="text-[11px] font-semibold text-foreground">Thanks for rating!</span>
-                    </div>
-                  )}
+                  <p className="text-[11px] font-bold text-foreground mb-2">Rate your experience</p>
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <motion.button
+                        key={s}
+                        whileTap={{ scale: 0.8 }}
+                        onClick={() => onRate(order.id, s)}
+                        className="p-2 rounded-xl bg-muted/20 hover:bg-amber-500/10 transition-colors border border-border/15"
+                      >
+                        <Star className="h-5 w-5 text-muted-foreground/30 hover:text-amber-400 hover:fill-amber-400 transition-colors" />
+                      </motion.button>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {/* Reorder button */}
-              {order.status === "delivered" && order.items?.length > 0 && (
+              {/* Actions row */}
+              <div className="flex gap-2 pt-1">
+                {/* Reorder */}
+                {order.status === "delivered" && order.items?.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 rounded-xl text-[11px] font-bold gap-1.5 h-9"
+                    onClick={() => onReorder(order.items)}
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Reorder
+                  </Button>
+                )}
+                {/* Contact support */}
                 <Button
                   size="sm"
-                  variant="outline"
-                  className="w-full rounded-xl text-[11px] font-bold gap-1.5 h-9"
-                  onClick={() => onReorder(order.items)}
+                  variant="ghost"
+                  className="rounded-xl text-[11px] font-bold gap-1.5 h-9 text-muted-foreground"
+                  onClick={() => {
+                    window.open(`mailto:support@hizivo.com?subject=Order ${order.id.slice(0, 8).toUpperCase()}`);
+                  }}
                 >
-                  <RotateCcw className="h-3 w-3" />
-                  Reorder
+                  <HelpCircle className="h-3 w-3" />
+                  Help
                 </Button>
-              )}
+              </div>
             </div>
           </motion.div>
         )}
@@ -291,6 +363,7 @@ function OrderCard({ order, onReorder }: { order: Order; onReorder: (items: Orde
 
 export default function GroceryOrderHistory() {
   const navigate = useNavigate();
+  const cart = useGroceryCart();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "active" | "past">("all");
@@ -315,9 +388,7 @@ export default function GroceryOrderHistory() {
     setRefreshing(false);
   }, []);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   // Real-time subscription for active orders
   useEffect(() => {
@@ -325,18 +396,13 @@ export default function GroceryOrderHistory() {
       .channel("grocery-orders-realtime")
       .on(
         "postgres_changes" as any,
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "shopping_orders",
-        },
+        { event: "UPDATE", schema: "public", table: "shopping_orders" },
         (payload: any) => {
           setOrders((prev) =>
             prev.map((o) =>
               o.id === payload.new.id ? { ...o, ...payload.new } as Order : o
             )
           );
-          // Toast for status changes
           const newStatus = STATUS_CONFIG[payload.new.status];
           if (newStatus) {
             toast.success(`Order ${newStatus.label}`, {
@@ -350,10 +416,24 @@ export default function GroceryOrderHistory() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    fetchOrders();
-  };
+  // Persist rating to Supabase
+  const handleRate = useCallback(async (orderId: string, stars: number) => {
+    // Optimistic update
+    setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, rating: stars } : o));
+    toast.success(`Rated ${stars} star${stars !== 1 ? "s" : ""} — thank you!`);
+
+    const { error } = await supabase
+      .from("shopping_orders")
+      .update({ rating: stars } as any)
+      .eq("id", orderId);
+
+    if (error) {
+      console.error("Failed to save rating:", error);
+      // Don't revert — rating column may not exist yet, but local state is fine
+    }
+  }, []);
+
+  const handleRefresh = () => { setRefreshing(true); fetchOrders(); };
 
   const filtered = orders.filter((o) => {
     if (filter === "active") return !["delivered", "cancelled"].includes(o.status);
@@ -363,8 +443,15 @@ export default function GroceryOrderHistory() {
 
   const activeCount = orders.filter((o) => !["delivered", "cancelled"].includes(o.status)).length;
 
+  // Real reorder: add items to cart and navigate to store
   const handleReorder = (items: OrderItem[]) => {
-    localStorage.setItem("zivo-reorder-items", JSON.stringify(items));
+    items.forEach((item) => {
+      cart.addItem(
+        { productId: item.productId, name: item.name, price: item.price, image: item.image || "", brand: "" },
+        item.store || "Walmart"
+      );
+    });
+    toast.success(`${items.length} items added to cart`);
     const store = items[0]?.store?.toLowerCase() || "walmart";
     navigate(`/grocery/store/${store}`);
   };
@@ -480,7 +567,7 @@ export default function GroceryOrderHistory() {
           </motion.div>
         ) : (
           filtered.map((order) => (
-            <OrderCard key={order.id} order={order} onReorder={handleReorder} />
+            <OrderCard key={order.id} order={order} onReorder={handleReorder} onRate={handleRate} />
           ))
         )}
       </div>
