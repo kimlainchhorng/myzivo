@@ -185,25 +185,35 @@ export default function GroceryStorePage() {
         )}
       </AnimatePresence>
 
-      {/* Empty State */}
-      {!query && products.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-          <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-            <Store className="h-8 w-8 text-primary" />
-          </div>
-          <h2 className="text-lg font-bold mb-1">{storeCfg.emptyTitle}</h2>
-          <p className="text-sm text-muted-foreground max-w-xs">{storeCfg.emptyDescription}</p>
-        </div>
-      )}
-
+      {/* Loading skeletons */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="px-4 py-4 grid grid-cols-2 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border/50 bg-card overflow-hidden animate-pulse">
+              <div className="aspect-square bg-muted" />
+              <div className="p-3 space-y-2">
+                <div className="h-2.5 bg-muted rounded w-1/3" />
+                <div className="h-3 bg-muted rounded w-full" />
+                <div className="h-3 bg-muted rounded w-2/3" />
+                <div className="h-8 bg-muted rounded-xl mt-2" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {error && (
+      {/* Error */}
+      {!isLoading && error && (
         <div className="mx-4 p-4 rounded-xl bg-destructive/10 text-destructive text-sm text-center">{error}</div>
+      )}
+
+      {/* Empty — only show if not loading and no products after fetch */}
+      {!isLoading && !error && products.length === 0 && (
+        <div className="text-center py-12 text-sm text-muted-foreground">
+          {query.length >= 2
+            ? `No ${storeName} products found for "${query}"`
+            : "No products available right now"}
+        </div>
       )}
 
       {/* Product Grid */}
