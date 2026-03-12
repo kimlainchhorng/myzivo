@@ -1,19 +1,19 @@
 /**
- * GroceryStorePage - Product search for a specific store
- * Reads store slug from URL params, renders search + cart
+ * GroceryStorePage - 2026 Spatial UI product search
  */
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Search, ShoppingCart, Plus, Minus, Trash2,
-  Loader2, X, Package, Store,
+  Loader2, X, Package, Store, Sparkles,
 } from "lucide-react";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
 import { GroceryProductCard } from "@/components/grocery/GroceryProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useStoreSearch, type StoreProduct } from "@/hooks/useStoreSearch";
@@ -36,25 +36,21 @@ export default function GroceryStorePage() {
   const hasLoadedDefaults = useRef(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // Infinite scroll observer
+  // Infinite scroll
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoadingMore && !isLoading) {
-          loadMore();
-        }
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore && !isLoading) loadMore();
       },
       { rootMargin: "200px" }
     );
-
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasMore, isLoadingMore, isLoading, loadMore]);
 
-  // Auto-fetch default products on mount
+  // Auto-fetch
   useEffect(() => {
     if (storeCfg && !hasLoadedDefaults.current) {
       hasLoadedDefaults.current = true;
@@ -62,7 +58,6 @@ export default function GroceryStorePage() {
     }
   }, [storeCfg, search]);
 
-  // Fallback if slug doesn't match
   if (!storeCfg) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
@@ -78,7 +73,6 @@ export default function GroceryStorePage() {
     setQuery(val);
     clearTimeout(debounceRef.current);
     if (val.trim().length < 2) {
-      // Clear search → re-fetch defaults
       debounceRef.current = setTimeout(() => search(storeCfg.defaultQuery), 100);
       return;
     }
@@ -90,7 +84,7 @@ export default function GroceryStorePage() {
       { productId: p.productId, name: p.name, price: p.price, image: p.image, brand: p.brand },
       storeName
     );
-    toast.success(`Added to cart`);
+    toast.success("Added to cart");
   };
 
   const handleCheckout = () => {
@@ -106,23 +100,38 @@ export default function GroceryStorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
+      {/* Background orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-primary/8 blur-3xl" />
+        <div className="absolute bottom-1/3 -left-20 h-48 w-48 rounded-full bg-accent/10 blur-3xl" />
+      </div>
+
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/50">
+      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate("/grocery")} className="p-1.5 rounded-xl hover:bg-muted">
+          <button onClick={() => navigate("/grocery")} className="p-2 rounded-2xl hover:bg-muted/60 transition-colors duration-200">
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <img src={storeCfg.logo} alt={storeName} className="h-7 w-7 rounded-lg object-contain" />
-            <h1 className="text-lg font-bold truncate">{storeName}</h1>
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <div className="h-8 w-8 rounded-xl bg-white border border-border/20 flex items-center justify-center p-1 shadow-sm">
+              <img src={storeCfg.logo} alt={storeName} className="h-full w-full object-contain" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold truncate leading-tight">{storeName}</h1>
+              <p className="text-[10px] text-muted-foreground">Delivered by ZIVO</p>
+            </div>
           </div>
-          <button onClick={() => setShowCart(!showCart)} className="relative p-2 rounded-xl hover:bg-muted">
+          <button onClick={() => setShowCart(!showCart)} className="relative p-2.5 rounded-2xl bg-muted/40 hover:bg-muted/60 transition-colors duration-200">
             <ShoppingCart className="h-5 w-5" />
             {cart.itemCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold min-w-[18px] h-[18px] px-1">
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-1 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold min-w-[20px] h-[20px] px-1 shadow-lg shadow-primary/30"
+              >
                 {cart.itemCount}
-              </span>
+              </motion.span>
             )}
           </button>
         </div>
@@ -130,15 +139,15 @@ export default function GroceryStorePage() {
         {/* Search */}
         <div className="px-4 pb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={storeCfg.placeholder}
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 pr-8 rounded-xl bg-muted/50 border-border/50"
+              className="pl-10 pr-9 rounded-2xl bg-muted/40 border-border/30 h-11 text-sm input-focus-glow"
             />
             {query && (
-              <button onClick={() => { setQuery(""); search(storeCfg.defaultQuery); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <button onClick={() => { setQuery(""); search(storeCfg.defaultQuery); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted">
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
             )}
@@ -150,38 +159,39 @@ export default function GroceryStorePage() {
       <AnimatePresence>
         {showCart && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="sticky top-[120px] z-20 mx-4 mb-4 bg-card rounded-2xl border border-border shadow-lg overflow-hidden"
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="sticky top-[128px] z-20 mx-4 mb-4 bg-card/90 backdrop-blur-xl rounded-3xl border border-border/40 shadow-xl overflow-hidden"
           >
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold">Shopping Cart ({cart.itemCount})</h3>
+                <h3 className="font-bold text-sm">Cart ({cart.itemCount})</h3>
                 {cart.items.length > 0 && (
-                  <button onClick={cart.clearCart} className="text-xs text-destructive hover:underline">Clear all</button>
+                  <button onClick={cart.clearCart} className="text-[11px] text-destructive hover:underline font-medium">Clear</button>
                 )}
               </div>
 
               {cart.items.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Your cart is empty</p>
+                <div className="text-center py-6">
+                  <ShoppingCart className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Your cart is empty</p>
+                </div>
               ) : (
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {cart.items.map((item) => (
-                    <div key={item.productId} className="flex items-center gap-3 p-2 rounded-xl bg-muted/30">
-                       {item.image && <img src={item.image} alt="" className="h-12 w-12 rounded-lg object-contain bg-white" />}
+                    <div key={item.productId} className="flex items-center gap-3 p-2.5 rounded-2xl bg-muted/30 border border-border/20">
+                      {item.image && <img src={item.image} alt="" className="h-11 w-11 rounded-xl object-contain bg-white" referrerPolicy="no-referrer" />}
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate">{item.name}</p>
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-xs text-muted-foreground">${item.price.toFixed(2)} × {item.quantity} = <span className="font-semibold text-foreground">${(item.price * item.quantity).toFixed(2)}</span></p>
-                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">{item.store}</Badge>
-                        </div>
+                        <p className="text-xs font-semibold truncate">{item.name}</p>
+                        <p className="text-[11px] text-muted-foreground">${item.price.toFixed(2)} × {item.quantity} = <span className="font-semibold text-foreground">${(item.price * item.quantity).toFixed(2)}</span></p>
                       </div>
                       <div className="flex items-center gap-1">
-                        <button onClick={() => cart.updateQuantity(item.productId, item.quantity - 1)} className="p-1 rounded-lg hover:bg-muted"><Minus className="h-3 w-3" /></button>
-                        <span className="text-xs font-semibold w-5 text-center">{item.quantity}</span>
-                        <button onClick={() => cart.updateQuantity(item.productId, item.quantity + 1)} className="p-1 rounded-lg hover:bg-muted"><Plus className="h-3 w-3" /></button>
-                        <button onClick={() => cart.removeItem(item.productId)} className="p-1 rounded-lg hover:bg-destructive/10 ml-1"><Trash2 className="h-3 w-3 text-destructive" /></button>
+                        <button onClick={() => cart.updateQuantity(item.productId, item.quantity - 1)} className="p-1.5 rounded-xl hover:bg-muted active:scale-95 transition-all"><Minus className="h-3 w-3" /></button>
+                        <span className="text-xs font-bold w-5 text-center">{item.quantity}</span>
+                        <button onClick={() => cart.updateQuantity(item.productId, item.quantity + 1)} className="p-1.5 rounded-xl hover:bg-muted active:scale-95 transition-all"><Plus className="h-3 w-3" /></button>
+                        <button onClick={() => cart.removeItem(item.productId)} className="p-1.5 rounded-xl hover:bg-destructive/10 ml-0.5 active:scale-95 transition-all"><Trash2 className="h-3 w-3 text-destructive" /></button>
                       </div>
                     </div>
                   ))}
@@ -189,14 +199,14 @@ export default function GroceryStorePage() {
               )}
 
               {cart.items.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-border/50">
-                  <div className="flex justify-between text-sm font-semibold mb-3">
-                    <span>Total</span><span>${cart.total.toFixed(2)}</span>
+                <div className="mt-3 pt-3 border-t border-border/30">
+                  <div className="flex justify-between text-sm font-bold mb-3">
+                    <span>Total</span><span className="text-primary">${cart.total.toFixed(2)}</span>
                   </div>
-                  <Button onClick={handleCheckout} className="w-full rounded-xl" size="sm">
-                    <Package className="h-4 w-4 mr-2" />Place Shopping Order
+                  <Button onClick={handleCheckout} className="w-full rounded-2xl h-11 font-bold active:scale-95 transition-transform">
+                    <Package className="h-4 w-4 mr-2" />Place Order
                   </Button>
-                  <p className="text-[10px] text-muted-foreground text-center mt-2">A driver will purchase and deliver your items</p>
+                  <p className="text-[10px] text-muted-foreground text-center mt-2">A ZIVO driver will shop & deliver</p>
                 </div>
               )}
             </div>
@@ -208,13 +218,13 @@ export default function GroceryStorePage() {
       {isLoading && (
         <div className="px-4 py-4 grid grid-cols-2 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-border/50 bg-card overflow-hidden animate-pulse">
-              <div className="aspect-square bg-muted" />
-              <div className="p-3 space-y-2">
-                <div className="h-2.5 bg-muted rounded w-1/3" />
-                <div className="h-3 bg-muted rounded w-full" />
-                <div className="h-3 bg-muted rounded w-2/3" />
-                <div className="h-8 bg-muted rounded-xl mt-2" />
+            <div key={i} className="rounded-3xl border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden">
+              <Skeleton className="aspect-square" />
+              <div className="p-3.5 space-y-2.5">
+                <Skeleton className="h-2.5 w-1/3 rounded-lg" />
+                <Skeleton className="h-3.5 w-full rounded-lg" />
+                <Skeleton className="h-3 w-2/3 rounded-lg" />
+                <Skeleton className="h-9 w-full rounded-2xl mt-2" />
               </div>
             </div>
           ))}
@@ -223,23 +233,31 @@ export default function GroceryStorePage() {
 
       {/* Error */}
       {!isLoading && error && (
-        <div className="mx-4 p-4 rounded-xl bg-destructive/10 text-destructive text-sm text-center">{error}</div>
+        <div className="mx-4 mt-4 p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center">{error}</div>
       )}
 
-      {/* Empty — only show if not loading and no products after fetch */}
+      {/* Empty */}
       {!isLoading && !error && products.length === 0 && (
-        <div className="text-center py-12 text-sm text-muted-foreground">
-          {query.length >= 2
-            ? `No ${storeName} products found for "${query}"`
-            : "No products available right now"}
+        <div className="text-center py-16">
+          <Search className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">
+            {query.length >= 2 ? `No products found for "${query}"` : "No products available"}
+          </p>
         </div>
       )}
 
-      {/* Debug banner */}
+      {/* Result count */}
       {!isLoading && products.length > 0 && (
-        <div className="mx-4 mt-3 mb-1 px-3 py-1.5 rounded-lg bg-muted/60 text-[11px] text-muted-foreground font-mono">
-          🐛 {products.length} products from {storeName}{query ? ` for "${query}"` : ""}
-        </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mx-4 mt-3 mb-1 flex items-center gap-2"
+        >
+          <Sparkles className="h-3.5 w-3.5 text-primary" />
+          <span className="text-[11px] text-muted-foreground font-medium">
+            {products.length} products{query ? ` for "${query}"` : ""}
+          </span>
+        </motion.div>
       )}
 
       {/* Product Grid */}
@@ -258,15 +276,16 @@ export default function GroceryStorePage() {
         </div>
       )}
 
-      {/* Load more sentinel + spinner */}
+      {/* Load more */}
       <div ref={sentinelRef} className="h-1" />
       {isLoadingMore && (
         <div className="flex justify-center py-6">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Loading more…</span>
+          </div>
         </div>
       )}
-
-
 
       <AnimatePresence>
         {showCheckout && (
