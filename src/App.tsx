@@ -349,7 +349,8 @@ const App = () => (
                 <Route path="/account" element={<PreserveQueryRedirect to="/profile" />} />
                 <Route path="/alerts" element={<PreserveQueryRedirect to="/notifications" />} />
                 <Route path="/delivery" element={<DeliveryPage />} />
-                <Route path="/grocery" element={<GroceryPage />} />
+                <Route path="/grocery" element={<GroceryMarketplace />} />
+                <Route path="/grocery/store/:slug" element={<GroceryStorePage />} />
                 <Route path="/grocery/order-placed" element={<GroceryOrderPlaced />} />
                 <Route path="/drive" element={<DrivePage />} />
                 <Route path="/driver/orders" element={<DriverOrdersPage />} />

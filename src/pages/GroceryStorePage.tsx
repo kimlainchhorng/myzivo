@@ -14,17 +14,25 @@ import { GroceryProductCard } from "@/components/grocery/GroceryProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useStoreSearch, type StoreProduct } from "@/hooks/useStoreSearch";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
-import { getStoreBySlug, type StoreName } from "@/config/groceryStores";
+import { getStoreBySlug } from "@/config/groceryStores";
 
 export default function GroceryStorePage() {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const storeCfg = getStoreBySlug(slug || "walmart");
+
+  const [query, setQuery] = useState("");
+  const [showCart, setShowCart] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const storeName = storeCfg?.name ?? "Walmart";
+  const { products, isLoading, error, search, clearResults } = useStoreSearch(storeName);
+  const cart = useGroceryCart();
 
   // Fallback if slug doesn't match
   if (!storeCfg) {
@@ -38,43 +46,20 @@ export default function GroceryStorePage() {
     );
   }
 
-  return <StorePageInner storeName={storeCfg.name} />;
-}
-
-function StorePageInner({ storeName }: { storeName: StoreName }) {
-  const navigate = useNavigate();
-  const storeCfg = getStoreBySlug(
-    // re-lookup to get full config
-    (() => {
-      const { GROCERY_STORES } = require("@/config/groceryStores");
-      return GROCERY_STORES.find((s: any) => s.name === storeName)?.slug || "walmart";
-    })()
-  )!;
-  const [query, setQuery] = useState("");
-  const [showCart, setShowCart] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
-  const { products, isLoading, error, search, clearResults } = useStoreSearch(storeName);
-  const cart = useGroceryCart();
-
-  const handleSearch = useCallback(
-    (val: string) => {
-      setQuery(val);
-      clearTimeout(debounceRef.current);
-      if (val.trim().length < 2) { clearResults(); return; }
-      debounceRef.current = setTimeout(() => search(val), 500);
-    },
-    [search, clearResults]
-  );
+  const handleSearch = (val: string) => {
+    setQuery(val);
+    clearTimeout(debounceRef.current);
+    if (val.trim().length < 2) { clearResults(); return; }
+    debounceRef.current = setTimeout(() => search(val), 500);
+  };
 
   const handleAdd = (p: StoreProduct) => {
     cart.addItem(
       { productId: p.productId, name: p.name, price: p.price, image: p.image, brand: p.brand },
-      p.store
+      storeName
     );
     toast.success(`Added to cart`);
   };
-
-  const [showCheckout, setShowCheckout] = useState(false);
 
   const handleCheckout = () => {
     if (cart.itemCount === 0) { toast.error("Your cart is empty"); return; }
