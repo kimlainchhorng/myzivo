@@ -217,12 +217,6 @@ export default function GroceryPage() {
         <div className="mx-4 p-4 rounded-xl bg-destructive/10 text-destructive text-sm text-center">{error}</div>
       )}
 
-      {/* ── Debug banner ── */}
-      {!isLoading && query.length >= 2 && products.length > 0 && (
-        <div className="mx-4 mt-3 mb-1 px-3 py-1.5 rounded-lg bg-muted/60 text-[11px] text-muted-foreground font-mono">
-          🐛 Debug: {products.length} products from {selectedStore} for "{query}"
-        </div>
-      )}
 
       {/* ── Product Grid ── */}
       {!isLoading && products.length > 0 && (
