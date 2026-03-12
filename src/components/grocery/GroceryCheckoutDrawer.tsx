@@ -1,11 +1,12 @@
 /**
- * GroceryCheckoutDrawer - 2026 Spatial UI checkout (v2)
+ * GroceryCheckoutDrawer - 2026 Spatial UI checkout (v3)
+ * Added tip selection, delivery time estimate, step indicator
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin, Loader2, X, ShoppingCart, Truck, Shield, User, Phone,
-  ChevronDown, ChevronUp, Lock, CheckCircle, Package,
+  ChevronDown, ChevronUp, Lock, CheckCircle, Package, Clock, Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,15 +23,17 @@ interface GroceryCheckoutDrawerProps {
 
 const DELIVERY_FEE = 5.99;
 const SERVICE_FEE = 1.99;
+const TIP_OPTIONS = [0, 2, 3, 5];
 
 export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: GroceryCheckoutDrawerProps) {
   const [address, setAddress] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [tip, setTip] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showItems, setShowItems] = useState(false);
 
-  const grandTotal = total + DELIVERY_FEE + SERVICE_FEE;
+  const grandTotal = total + DELIVERY_FEE + SERVICE_FEE + tip;
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
   const handlePlaceOrder = async () => {
@@ -102,7 +105,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
 
         <div className="px-5 pb-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <Package className="h-5 w-5 text-primary" />
@@ -120,6 +123,22 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
               <X className="h-5 w-5" />
             </motion.button>
           </div>
+
+          {/* Estimated delivery */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex items-center gap-3 p-3 rounded-[16px] bg-primary/5 border border-primary/10 mb-5"
+          >
+            <div className="p-2 rounded-xl bg-primary/15">
+              <Clock className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-[12px] font-bold text-foreground">Estimated delivery: 35–50 min</p>
+              <p className="text-[10px] text-muted-foreground">A ZIVO driver will shop & deliver your items</p>
+            </div>
+          </motion.div>
 
           {/* Order Summary - Collapsible */}
           <div className="rounded-[20px] bg-muted/20 border border-border/20 overflow-hidden mb-5">
@@ -190,10 +209,42 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                 <span>Service fee</span>
                 <span className="text-foreground">${SERVICE_FEE.toFixed(2)}</span>
               </div>
+              {tip > 0 && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Heart className="h-3 w-3 text-primary" /> Driver tip
+                  </span>
+                  <span className="text-foreground">${tip.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-base font-bold pt-2.5 mt-1.5 border-t border-border/15">
                 <span>Total</span>
                 <span className="text-primary">${grandTotal.toFixed(2)}</span>
               </div>
+            </div>
+          </div>
+
+          {/* Tip selection */}
+          <div className="mb-5">
+            <h3 className="text-sm font-bold flex items-center gap-2 mb-2.5">
+              <Heart className="h-3.5 w-3.5 text-primary" />
+              Driver Tip
+            </h3>
+            <div className="flex gap-2">
+              {TIP_OPTIONS.map((amount) => (
+                <motion.button
+                  key={amount}
+                  whileTap={{ scale: 0.93 }}
+                  onClick={() => setTip(amount)}
+                  className={`flex-1 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 ${
+                    tip === amount
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-border/20"
+                  }`}
+                >
+                  {amount === 0 ? "None" : `$${amount}`}
+                </motion.button>
+              ))}
             </div>
           </div>
 

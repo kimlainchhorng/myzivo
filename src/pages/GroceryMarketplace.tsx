@@ -1,10 +1,10 @@
 /**
- * GroceryMarketplace - 2026 Spatial UI store selection (v5)
- * Smart search, live status, premium animations
+ * GroceryMarketplace - 2026 Spatial UI store selection (v6)
+ * Featured spotlight, live pulse, category counts, premium motion
  */
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Sparkles, Clock, Zap, ChevronRight, TrendingUp, Star, Store } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Sparkles, Clock, Zap, ChevronRight, TrendingUp, Star, Store, MapPin, Truck, Shield } from "lucide-react";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import GroceryCategories from "@/components/grocery/GroceryCategories";
 import GroceryPromos from "@/components/grocery/GroceryPromos";
@@ -39,6 +39,59 @@ function StatusDot({ isOpen }: { isOpen: boolean }) {
   );
 }
 
+/* ─── Featured spotlight card ─── */
+function FeaturedStore({ store, eta }: { store: StoreConfig; eta: number }) {
+  const navigate = useNavigate();
+  const status = getStoreStatus(store.hours);
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.1 }}
+      whileTap={{ scale: 0.97 }}
+      onClick={() => navigate(`/grocery/store/${store.slug}`)}
+      className="w-full relative p-4 rounded-[24px] border border-primary/20 bg-gradient-to-br from-primary/8 via-primary/4 to-transparent backdrop-blur-sm overflow-hidden group"
+    >
+      {/* Decorative glow */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-20 h-20 bg-accent/8 rounded-full blur-2xl pointer-events-none" />
+
+      <div className="relative flex items-center gap-4">
+        <div className="h-16 w-16 rounded-[20px] bg-background border border-border/30 flex items-center justify-center p-2.5 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+          <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <div className="flex items-center gap-2 mb-1">
+            <StatusDot isOpen={status.isOpen} />
+            <span className={`text-[10px] font-semibold ${status.isOpen ? "text-emerald-500" : "text-muted-foreground/50"}`}>
+              {status.label}
+            </span>
+            {store.promo && (
+              <span className="px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[9px] font-bold animate-pulse">
+                {store.promo}
+              </span>
+            )}
+          </div>
+          <p className="text-base font-bold text-foreground group-hover:text-primary transition-colors">{store.name}</p>
+          <div className="flex items-center gap-3 mt-1">
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Truck className="h-3 w-3 text-primary" />
+              {eta}m
+            </span>
+            <span className="flex items-center gap-1 text-[11px] text-amber-400">
+              <Star className="h-3 w-3 fill-current" />
+              {store.rating}
+            </span>
+            <span className="text-[11px] text-muted-foreground">{store.hours}</span>
+          </div>
+        </div>
+        <ChevronRight className="h-5 w-5 text-muted-foreground/30 group-hover:text-primary/60 transition-colors shrink-0" />
+      </div>
+    </motion.button>
+  );
+}
+
 /* ─── Grid card ─── */
 function StoreCardGrid({ store, eta }: { store: StoreConfig; eta: number }) {
   const navigate = useNavigate();
@@ -67,7 +120,6 @@ function StoreCardGrid({ store, eta }: { store: StoreConfig; eta: number }) {
         </motion.span>
       )}
       
-      {/* Status dot */}
       <div className="absolute top-2.5 left-2.5">
         <StatusDot isOpen={status.isOpen} />
       </div>
@@ -192,8 +244,29 @@ export default function GroceryMarketplace() {
     return stores;
   }, [filter, category]);
 
-  const popularStores = filteredStores.slice(0, 4);
-  const moreStores = filteredStores.slice(4);
+  // Category counts for badges
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: GROCERY_STORES.length };
+    GROCERY_STORES.forEach((s) => {
+      counts[s.category] = (counts[s.category] || 0) + 1;
+    });
+    return counts;
+  }, []);
+
+  // Featured store = highest rated open store
+  const featuredStore = useMemo(() => {
+    if (filter.trim() || category !== "all") return null;
+    return [...GROCERY_STORES]
+      .filter((s) => getStoreStatus(s.hours).isOpen)
+      .sort((a, b) => b.rating - a.rating)[0] || null;
+  }, [filter, category]);
+
+  const nonFeaturedStores = useMemo(() => {
+    return filteredStores.filter((s) => s.slug !== featuredStore?.slug);
+  }, [filteredStores, featuredStore]);
+
+  const popularStores = nonFeaturedStores.slice(0, 4);
+  const moreStores = nonFeaturedStores.slice(4);
 
   return (
     <div ref={scrollRef} className="min-h-screen bg-background pb-24 relative overflow-hidden">
@@ -261,8 +334,8 @@ export default function GroceryMarketplace() {
         {/* Smart search */}
         <GrocerySmartSearch value={filter} onChange={setFilter} />
 
-        {/* Category chips */}
-        <GroceryCategories active={category} onChange={setCategory} />
+        {/* Category chips with counts */}
+        <GroceryCategories active={category} onChange={setCategory} counts={categoryCounts} />
       </div>
 
       {isLoading ? (
@@ -309,7 +382,7 @@ export default function GroceryMarketplace() {
                 <span>~45 min</span>
               </div>
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                <Sparkles className="h-3 w-3 text-primary" />
+                <Shield className="h-3 w-3 text-primary" />
                 <span>No markups</span>
               </div>
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
@@ -318,6 +391,17 @@ export default function GroceryMarketplace() {
               </div>
             </div>
           </motion.div>
+
+          {/* Featured spotlight */}
+          {featuredStore && (
+            <div className="px-4 pt-4">
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">Featured</h2>
+              </div>
+              <FeaturedStore store={featuredStore} eta={etas[featuredStore.slug] ?? featuredStore.deliveryMin} />
+            </div>
+          )}
 
           {/* Recent stores */}
           <GroceryRecentStores />

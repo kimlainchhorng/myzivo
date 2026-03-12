@@ -1,13 +1,13 @@
 /**
- * GroceryStorePage - 2026 Spatial UI product search (v2)
- * Enhanced with floating cart bar, improved header, better loading states
+ * GroceryStorePage - 2026 Spatial UI product search (v3)
+ * Quick filters, improved cart with swipe hints, delivery countdown, haptic feedback
  */
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import {
   ArrowLeft, Search, ShoppingCart, Plus, Minus, Trash2,
-  Loader2, X, Package, Store, Sparkles, Clock, Star, ChevronUp,
+  Loader2, X, Package, Store, Sparkles, Clock, Star, ChevronUp, Filter, Flame,
 } from "lucide-react";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
 import { GroceryProductCard } from "@/components/grocery/GroceryProductCard";
@@ -19,8 +19,90 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useStoreSearch, type StoreProduct } from "@/hooks/useStoreSearch";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { getStoreBySlug } from "@/config/groceryStores";
-import { getStoreStatus } from "@/utils/storeStatus";
+import { getStoreStatus, getLiveEta } from "@/utils/storeStatus";
 import { addRecentStore } from "@/components/grocery/GroceryRecentStores";
+
+const QUICK_FILTERS = [
+  { label: "🔥 Popular", query: "popular items" },
+  { label: "🥛 Dairy", query: "dairy milk cheese" },
+  { label: "🍞 Bakery", query: "bread bakery" },
+  { label: "🥩 Meat", query: "meat chicken beef" },
+  { label: "🥤 Drinks", query: "drinks beverages" },
+  { label: "🧹 Cleaning", query: "cleaning supplies" },
+  { label: "🍿 Snacks", query: "snacks chips" },
+];
+
+/* ─── Swipeable cart item ─── */
+function SwipeableCartItem({
+  item,
+  index,
+  onUpdateQuantity,
+  onRemove,
+}: {
+  item: { productId: string; name: string; price: number; image: string; quantity: number };
+  index: number;
+  onUpdateQuantity: (id: string, qty: number) => void;
+  onRemove: (id: string) => void;
+}) {
+  const x = useMotionValue(0);
+  const bg = useTransform(x, [-100, 0], ["hsl(0 84% 60% / 0.15)", "transparent"]);
+  const trashOpacity = useTransform(x, [-80, -30], [1, 0]);
+
+  const handleDragEnd = (_: any, info: PanInfo) => {
+    if (info.offset.x < -80) {
+      onRemove(item.productId);
+    }
+  };
+
+  return (
+    <motion.div className="relative overflow-hidden rounded-[16px]" style={{ backgroundColor: bg }}>
+      {/* Delete hint behind */}
+      <motion.div
+        className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-destructive"
+        style={{ opacity: trashOpacity }}
+      >
+        <Trash2 className="h-4 w-4" />
+        <span className="text-[10px] font-bold">Remove</span>
+      </motion.div>
+
+      <motion.div
+        style={{ x }}
+        drag="x"
+        dragConstraints={{ left: -100, right: 0 }}
+        dragElastic={0.1}
+        onDragEnd={handleDragEnd}
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: index * 0.03 }}
+        className="flex items-center gap-2.5 p-2 bg-muted/20 border border-border/15 rounded-[16px] relative"
+      >
+        {item.image && (
+          <div className="h-10 w-10 rounded-xl bg-background border border-border/20 flex items-center justify-center p-1 shrink-0">
+            <img src={item.image} alt="" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-semibold truncate">{item.name}</p>
+          <p className="text-[10px] text-muted-foreground">
+            ${item.price.toFixed(2)} × {item.quantity} = <span className="font-bold text-foreground">${(item.price * item.quantity).toFixed(2)}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-0.5 shrink-0">
+          <motion.button whileTap={{ scale: 0.8 }} onClick={() => onUpdateQuantity(item.productId, item.quantity - 1)} className="p-1.5 rounded-lg hover:bg-muted active:scale-95 transition-all"><Minus className="h-3 w-3" /></motion.button>
+          <motion.span
+            key={item.quantity}
+            initial={{ scale: 1.3 }}
+            animate={{ scale: 1 }}
+            className="text-[11px] font-bold w-4 text-center"
+          >
+            {item.quantity}
+          </motion.span>
+          <motion.button whileTap={{ scale: 0.8 }} onClick={() => onUpdateQuantity(item.productId, item.quantity + 1)} className="p-1.5 rounded-lg hover:bg-muted active:scale-95 transition-all"><Plus className="h-3 w-3" /></motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 export default function GroceryStorePage() {
   const navigate = useNavigate();
@@ -30,6 +112,7 @@ export default function GroceryStorePage() {
   const [query, setQuery] = useState("");
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const storeName = storeCfg?.name ?? "Walmart";
@@ -37,6 +120,16 @@ export default function GroceryStorePage() {
   const cart = useGroceryCart();
   const hasLoadedDefaults = useRef(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Live ETA
+  const [liveEta, setLiveEta] = useState(storeCfg?.deliveryMin ?? 35);
+  useEffect(() => {
+    if (!storeCfg) return;
+    const compute = () => setLiveEta(getLiveEta(storeCfg.deliveryMin));
+    compute();
+    const interval = setInterval(compute, 30_000);
+    return () => clearInterval(interval);
+  }, [storeCfg]);
 
   // Track recent store visit
   useEffect(() => {
@@ -80,12 +173,25 @@ export default function GroceryStorePage() {
 
   const handleSearch = (val: string) => {
     setQuery(val);
+    setActiveFilter(null);
     clearTimeout(debounceRef.current);
     if (val.trim().length < 2) {
       debounceRef.current = setTimeout(() => search(storeCfg.defaultQuery), 100);
       return;
     }
     debounceRef.current = setTimeout(() => search(val), 500);
+  };
+
+  const handleQuickFilter = (filter: typeof QUICK_FILTERS[0]) => {
+    if (activeFilter === filter.label) {
+      setActiveFilter(null);
+      setQuery("");
+      search(storeCfg.defaultQuery);
+    } else {
+      setActiveFilter(filter.label);
+      setQuery("");
+      search(filter.query);
+    }
   };
 
   const handleAdd = (p: StoreProduct) => {
@@ -130,7 +236,6 @@ export default function GroceryStorePage() {
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="relative h-10 w-10 rounded-2xl bg-background border border-border/30 flex items-center justify-center p-1.5 shadow-sm">
               <img src={storeCfg.logo} alt={storeName} className="h-full w-full object-contain" />
-              {/* Live status dot */}
               <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
                 {status.isOpen && (
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
@@ -143,10 +248,15 @@ export default function GroceryStorePage() {
               <div className="flex items-center gap-2">
                 <p className="text-[10px] text-muted-foreground font-medium">Delivered by ZIVO</p>
                 <span className="text-[9px] text-muted-foreground/60">·</span>
-                <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                <motion.span
+                  key={liveEta}
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-0.5 text-[10px] text-primary font-semibold"
+                >
                   <Clock className="h-2.5 w-2.5" />
-                  {storeCfg.deliveryMin}m
-                </span>
+                  {liveEta}m
+                </motion.span>
                 <span className="flex items-center gap-0.5 text-[10px] text-amber-400">
                   <Star className="h-2.5 w-2.5 fill-current" />
                   {storeCfg.rating}
@@ -176,7 +286,7 @@ export default function GroceryStorePage() {
         </div>
 
         {/* Search */}
-        <div className="px-4 pb-3">
+        <div className="px-4 pb-2">
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
             <Input
@@ -191,13 +301,31 @@ export default function GroceryStorePage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 whileTap={{ scale: 0.8 }}
-                onClick={() => { setQuery(""); search(storeCfg.defaultQuery); }}
+                onClick={() => { setQuery(""); search(storeCfg.defaultQuery); setActiveFilter(null); }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full bg-muted/60 hover:bg-muted transition-colors"
               >
                 <X className="h-3 w-3 text-muted-foreground" />
               </motion.button>
             )}
           </div>
+        </div>
+
+        {/* Quick filter chips */}
+        <div className="flex gap-1.5 px-4 pb-3 overflow-x-auto scrollbar-hide">
+          {QUICK_FILTERS.map((f) => (
+            <motion.button
+              key={f.label}
+              whileTap={{ scale: 0.93 }}
+              onClick={() => handleQuickFilter(f)}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap shrink-0 transition-all duration-200 ${
+                activeFilter === f.label
+                  ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25"
+                  : "bg-muted/30 text-muted-foreground hover:bg-muted/60 border border-border/20"
+              }`}
+            >
+              {f.label}
+            </motion.button>
+          ))}
         </div>
       </div>
 
@@ -209,7 +337,7 @@ export default function GroceryStorePage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.97 }}
             transition={{ type: "spring" as const, stiffness: 300, damping: 25 }}
-            className="sticky top-[132px] z-20 mx-4 mb-4 bg-card/95 backdrop-blur-xl rounded-[24px] border border-border/40 shadow-2xl overflow-hidden"
+            className="sticky top-[180px] z-20 mx-4 mb-4 bg-card/95 backdrop-blur-xl rounded-[24px] border border-border/40 shadow-2xl overflow-hidden"
           >
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
@@ -237,35 +365,22 @@ export default function GroceryStorePage() {
                   <p className="text-sm text-muted-foreground">Your cart is empty</p>
                 </div>
               ) : (
-                <div className="space-y-1.5 max-h-56 overflow-y-auto scrollbar-hide">
-                  {cart.items.map((item, i) => (
-                    <motion.div
-                      key={item.productId}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.03 }}
-                      className="flex items-center gap-2.5 p-2 rounded-[16px] bg-muted/20 border border-border/15"
-                    >
-                      {item.image && (
-                        <div className="h-10 w-10 rounded-xl bg-background border border-border/20 flex items-center justify-center p-1 shrink-0">
-                          <img src={item.image} alt="" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-semibold truncate">{item.name}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          ${item.price.toFixed(2)} × {item.quantity} = <span className="font-bold text-foreground">${(item.price * item.quantity).toFixed(2)}</span>
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        <motion.button whileTap={{ scale: 0.8 }} onClick={() => cart.updateQuantity(item.productId, item.quantity - 1)} className="p-1.5 rounded-lg hover:bg-muted active:scale-95 transition-all"><Minus className="h-3 w-3" /></motion.button>
-                        <span className="text-[11px] font-bold w-4 text-center">{item.quantity}</span>
-                        <motion.button whileTap={{ scale: 0.8 }} onClick={() => cart.updateQuantity(item.productId, item.quantity + 1)} className="p-1.5 rounded-lg hover:bg-muted active:scale-95 transition-all"><Plus className="h-3 w-3" /></motion.button>
-                        <motion.button whileTap={{ scale: 0.8 }} onClick={() => cart.removeItem(item.productId)} className="p-1.5 rounded-lg hover:bg-destructive/10 ml-0.5 active:scale-95 transition-all"><Trash2 className="h-3 w-3 text-destructive" /></motion.button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                <>
+                  <div className="space-y-1.5 max-h-56 overflow-y-auto scrollbar-hide">
+                    {cart.items.map((item, i) => (
+                      <SwipeableCartItem
+                        key={item.productId}
+                        item={item}
+                        index={i}
+                        onUpdateQuantity={cart.updateQuantity}
+                        onRemove={cart.removeItem}
+                      />
+                    ))}
+                  </div>
+                  {cart.items.length > 1 && (
+                    <p className="text-[9px] text-muted-foreground/50 text-center mt-1.5">← Swipe left to remove</p>
+                  )}
+                </>
               )}
 
               {cart.items.length > 0 && (
@@ -347,12 +462,24 @@ export default function GroceryStorePage() {
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mx-4 mt-4 mb-2 flex items-center gap-2"
+          className="mx-4 mt-4 mb-2 flex items-center justify-between"
         >
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
-          <span className="text-xs text-muted-foreground font-medium">
-            {products.length} product{products.length !== 1 ? "s" : ""}{query ? ` for "${query}"` : ""}
-          </span>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs text-muted-foreground font-medium">
+              {products.length} product{products.length !== 1 ? "s" : ""}{query ? ` for "${query}"` : ""}
+            </span>
+          </div>
+          {activeFilter && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="flex items-center gap-1 text-[10px] text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full"
+            >
+              <Filter className="h-2.5 w-2.5" />
+              {activeFilter}
+            </motion.span>
+          )}
         </motion.div>
       )}
 
@@ -387,7 +514,7 @@ export default function GroceryStorePage() {
         </div>
       )}
 
-      {/* Floating cart bar - fixed at bottom when cart has items */}
+      {/* Floating cart bar */}
       <AnimatePresence>
         {cart.itemCount > 0 && !showCart && !showCheckout && (
           <motion.div
@@ -408,7 +535,15 @@ export default function GroceryStorePage() {
                 </div>
                 <div className="text-left">
                   <p className="text-[12px] font-bold">{cart.itemCount} item{cart.itemCount !== 1 ? "s" : ""}</p>
-                  <p className="text-[10px] opacity-80">Tap to view cart</p>
+                  <motion.p
+                    key={liveEta}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-[10px] opacity-80 flex items-center gap-1"
+                  >
+                    <Clock className="h-2.5 w-2.5" />
+                    Est. delivery {liveEta}m
+                  </motion.p>
                 </div>
               </div>
               <div className="text-right">
