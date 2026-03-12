@@ -4,7 +4,7 @@
  */
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Sparkles, Clock, Zap, ChevronRight, TrendingUp, Star, Store, MapPin, Truck, Shield, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Sparkles, Clock, Zap, ChevronRight, TrendingUp, Star, Store, MapPin, Truck, Shield, Loader2, AlertCircle, ClipboardList } from "lucide-react";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import GroceryCategories from "@/components/grocery/GroceryCategories";
 import GroceryPromos from "@/components/grocery/GroceryPromos";
