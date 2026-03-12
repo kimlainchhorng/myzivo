@@ -8,7 +8,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import {
   ArrowLeft, Search, ShoppingCart, Plus, Minus, Trash2,
   Loader2, X, Package, Store, Sparkles, Clock, Star, ChevronUp, Filter,
-  ArrowUpDown, Grid3X3, LayoutList, TrendingDown,
+  ArrowUpDown, Grid3X3, LayoutList, TrendingDown, SlidersHorizontal,
 } from "lucide-react";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
 import { GroceryProductCard } from "@/components/grocery/GroceryProductCard";
@@ -16,6 +16,9 @@ import { GroceryProductDetail } from "@/components/grocery/GroceryProductDetail"
 import { GroceryOrderAgain, saveToOrderHistory } from "@/components/grocery/GroceryOrderAgain";
 import { GroceryCategoryBrowser } from "@/components/grocery/GroceryCategoryBrowser";
 import { GroceryDealsSection } from "@/components/grocery/GroceryDealsSection";
+import { GrocerySmartSearch } from "@/components/grocery/GrocerySmartSearch";
+import { GroceryFilters, GroceryFilterButton, applyFilters, hasActiveFilters, EMPTY_FILTERS, type ActiveFilters } from "@/components/grocery/GroceryFilters";
+import { GroceryPromoBanner } from "@/components/grocery/GroceryPromoBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
