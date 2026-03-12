@@ -1,12 +1,12 @@
 /**
- * GroceryCheckoutDrawer - 2026 Spatial UI checkout (v3)
- * Added tip selection, delivery time estimate, step indicator
+ * GroceryCheckoutDrawer - Real Stripe Checkout integration
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin, Loader2, X, ShoppingCart, Truck, Shield, User, Phone,
   ChevronDown, ChevronUp, Lock, CheckCircle, Package, Clock, Heart,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,45 +36,42 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const grandTotal = total + DELIVERY_FEE + SERVICE_FEE + tip;
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
-  const handlePlaceOrder = async () => {
+  const handleStripeCheckout = async () => {
     if (!address.trim()) { toast.error("Please enter a delivery address"); return; }
     if (!name.trim()) { toast.error("Please enter your name"); return; }
 
     setIsSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
       const orderItems = items.map((i) => ({
         productId: i.productId, name: i.name, price: i.price,
         image: i.image, brand: i.brand, quantity: i.quantity, store: i.store,
       }));
 
-      const storeName = items[0]?.store || "Walmart";
+      const storeName = items[0]?.store || "Unknown";
 
-      const { data, error } = await supabase
-        .from("shopping_orders")
-        .insert({
-          user_id: user?.id || null,
-          store: storeName,
-          order_type: "shopping_delivery",
-          status: "pending",
-          items: orderItems as any,
-          total_amount: total,
-          delivery_fee: DELIVERY_FEE,
+      const { data, error } = await supabase.functions.invoke("create-grocery-checkout", {
+        body: {
+          items: orderItems,
           delivery_address: address.trim(),
           customer_name: name.trim(),
           customer_phone: phone.trim() || null,
-          customer_email: user?.email || null,
-          placed_at: new Date().toISOString(),
-        })
-        .select("id")
-        .single();
+          tip,
+          store: storeName,
+        },
+      });
 
-      if (error) throw error;
-      onOrderPlaced(data.id);
+      if (error) throw new Error(error.message || "Checkout failed");
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
     } catch (err: any) {
       console.error("Checkout error:", err);
-      toast.error(err.message || "Failed to place order");
+      toast.error(err.message || "Failed to start checkout");
     } finally {
       setIsSubmitting(false);
     }
@@ -301,25 +298,25 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
           </div>
 
           <p className="text-[10px] text-muted-foreground text-center mb-4 leading-relaxed">
-            A verified ZIVO driver will shop your items and deliver to your door. Payment is collected upon delivery.
+            You'll be redirected to Stripe for secure payment. A verified ZIVO driver will then shop your items and deliver to your door.
           </p>
 
-          {/* Place Order */}
+          {/* Pay with Stripe */}
           <motion.div whileTap={isValid && !isSubmitting ? { scale: 0.97 } : {}}>
             <Button
               className="w-full h-[52px] rounded-2xl text-[15px] font-bold shadow-lg shadow-primary/25 gap-2"
               disabled={isSubmitting || !isValid}
-              onClick={handlePlaceOrder}
+              onClick={handleStripeCheckout}
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Placing Order…
+                  Redirecting to payment…
                 </>
               ) : (
                 <>
-                  <Lock className="h-4 w-4" />
-                  Place Order · ${grandTotal.toFixed(2)}
+                  <CreditCard className="h-4 w-4" />
+                  Pay ${grandTotal.toFixed(2)} · Stripe Checkout
                 </>
               )}
             </Button>
