@@ -1,9 +1,9 @@
 /**
- * GroceryProductCard - 2026 Spatial UI product card (v5)
- * Driver-friendly: shows store logo, stock status, aisle/location
+ * GroceryProductCard - 2026 Spatial UI product card (v6)
+ * Redesigned: bigger images, better spacing, savings badge, brand tag
  */
 import { motion } from "framer-motion";
-import { Plus, Minus, Check, Package, Star, TrendingDown, MapPin } from "lucide-react";
+import { Plus, Minus, Check, Package, Star, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StoreProduct } from "@/hooks/useStoreSearch";
 import type { GroceryCartItem } from "@/hooks/useGroceryCart";
@@ -20,18 +20,26 @@ interface GroceryProductCardProps {
 }
 
 const cardVariant = {
-  hidden: { opacity: 0, y: 24, scale: 0.95 },
+  hidden: { opacity: 0, y: 20, scale: 0.96 },
   show: (i: number) => ({
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { delay: i * 0.03, type: "spring" as const, stiffness: 300, damping: 24 },
+    transition: { delay: i * 0.025, type: "spring" as const, stiffness: 320, damping: 26 },
   }),
 };
 
 function getStoreLogo(storeName: string): string | undefined {
   const store = GROCERY_STORES.find((s) => s.name.toLowerCase() === storeName.toLowerCase());
   return store?.logo;
+}
+
+function calcSavings(price: number, id: string): { original: number; pct: number } | null {
+  if (price <= 2 || price > 150) return null;
+  const hash = id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const markup = 0.08 + (hash % 18) * 0.01;
+  if (markup < 0.12) return null;
+  return { original: +(price / (1 - markup)).toFixed(2), pct: Math.round(markup * 100) };
 }
 
 export function GroceryProductCard({
@@ -53,8 +61,7 @@ export function GroceryProductCard({
   };
 
   const storeLogo = getStoreLogo(product.store);
-  const showSavings = product.price > 5 && product.inStock;
-  const originalPrice = showSavings ? +(product.price * (1 + (0.05 + Math.random() * 0.1))).toFixed(2) : null;
+  const savings = calcSavings(product.price, product.productId);
 
   return (
     <motion.div
@@ -71,47 +78,54 @@ export function GroceryProductCard({
     >
       {/* Image */}
       <div
-        className="relative aspect-square bg-gradient-to-br from-muted/10 to-muted/25 flex items-center justify-center p-2.5 overflow-hidden cursor-pointer"
+        className="relative aspect-[4/3.5] bg-gradient-to-br from-muted/5 to-muted/20 flex items-center justify-center p-3 overflow-hidden cursor-pointer"
         onClick={() => onSelect?.(product)}
       >
         {product.image && !imgError ? (
           <>
-            {!imgLoaded && <div className="absolute inset-0 animate-pulse bg-muted/30" />}
+            {!imgLoaded && <div className="absolute inset-0 animate-pulse bg-muted/20" />}
             <motion.img
               src={product.image}
               alt={product.name}
-              className="h-full w-full object-contain"
+              className="h-full w-full object-contain drop-shadow-sm"
               loading="lazy"
               referrerPolicy="no-referrer"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: imgLoaded ? 1 : 0.9, opacity: imgLoaded ? 1 : 0 }}
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: imgLoaded ? 1 : 0.92, opacity: imgLoaded ? 1 : 0 }}
               transition={{ duration: 0.3 }}
               onLoad={() => setImgLoaded(true)}
               onError={() => setImgError(true)}
             />
           </>
         ) : (
-          <Package className="h-8 w-8 text-muted-foreground/15" />
+          <Package className="h-8 w-8 text-muted-foreground/10" />
         )}
 
-        {/* Stock dot - top left */}
+        {/* Stock dot */}
         <span className={`absolute top-1.5 left-1.5 h-2 w-2 rounded-full border border-background shadow-sm ${
           product.inStock ? "bg-emerald-500" : "bg-destructive"
         }`} />
 
-        {/* Store logo - top right */}
-        {storeLogo && (
+        {/* Savings badge */}
+        {savings && (
+          <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-orange-500 text-white shadow-sm">
+            <span className="text-[8px] font-bold">-{savings.pct}%</span>
+          </div>
+        )}
+
+        {/* Store logo */}
+        {storeLogo && !savings && (
           <div className="absolute top-1 right-1 h-5 w-5 rounded-md bg-background/90 backdrop-blur-sm border border-border/30 flex items-center justify-center p-0.5">
             <img src={storeLogo} alt={product.store} className="h-full w-full object-contain" />
           </div>
         )}
 
-        {/* Cart check */}
+        {/* Cart badge */}
         {cartItem && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute bottom-1 right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center ring-1.5 ring-background"
+            className="absolute bottom-1.5 right-1.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center ring-1.5 ring-background"
           >
             <Check className="h-2.5 w-2.5 text-primary-foreground" strokeWidth={3} />
           </motion.div>
@@ -119,70 +133,82 @@ export function GroceryProductCard({
 
         {/* Rating */}
         {product.rating != null && (
-          <div className="absolute bottom-1 left-1 flex items-center gap-0.5 px-1 py-0.5 rounded-md bg-background/80 backdrop-blur-sm">
-            <Star className="h-2 w-2 fill-amber-400 text-amber-400" />
-            <span className="text-[7px] font-bold text-foreground">{product.rating}</span>
+          <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-background/85 backdrop-blur-sm">
+            <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+            <span className="text-[8px] font-bold text-foreground">{product.rating}</span>
           </div>
         )}
       </div>
 
       {/* Info */}
-      <div className="p-2 space-y-0.5">
+      <div className="p-2.5 space-y-1">
+        {/* Brand */}
+        {product.brand && (
+          <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
+            {product.brand}
+          </p>
+        )}
+
         <p
-          className="text-[10px] font-semibold line-clamp-2 leading-[1.3] text-foreground/90 min-h-[26px] cursor-pointer"
+          className="text-[11px] font-semibold line-clamp-2 leading-snug text-foreground/90 min-h-[28px] cursor-pointer hover:text-primary transition-colors"
           onClick={() => onSelect?.(product)}
         >
           {product.name}
         </p>
 
         {/* Price */}
-        <div className="flex items-baseline gap-1">
-          <span className="text-[13px] font-extrabold text-foreground tracking-tight">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[14px] font-extrabold text-foreground tracking-tight">
             ${typeof product.price === "number" ? product.price.toFixed(2) : product.price}
           </span>
+          {savings && (
+            <span className="text-[10px] text-muted-foreground line-through">
+              ${savings.original.toFixed(2)}
+            </span>
+          )}
         </div>
 
         {/* CTA */}
         {!product.inStock ? (
-          <div className="text-[8px] text-muted-foreground text-center py-1.5 rounded-lg bg-muted/30 font-medium">
+          <div className="text-[9px] text-muted-foreground text-center py-2 rounded-xl bg-muted/30 font-medium">
             Out of Stock
           </div>
         ) : cartItem ? (
-          <div className="flex items-center justify-between bg-primary/10 rounded-lg p-0.5 border border-primary/15">
+          <div className="flex items-center justify-between bg-primary/10 rounded-xl p-0.5 border border-primary/15">
             <motion.button
               whileTap={{ scale: 0.8 }}
               onClick={() => onUpdateQuantity(product.productId, cartItem.quantity - 1)}
-              className="h-6 w-6 rounded-md bg-background flex items-center justify-center border border-border/20"
+              className="h-7 w-7 rounded-lg bg-background flex items-center justify-center border border-border/20"
               aria-label="Decrease"
             >
-              <Minus className="h-2.5 w-2.5" />
+              <Minus className="h-3 w-3" />
             </motion.button>
-            <span className="text-[11px] font-extrabold text-primary min-w-[18px] text-center">
+            <span className="text-[12px] font-extrabold text-primary min-w-[20px] text-center">
               {cartItem.quantity}
             </span>
             <motion.button
               whileTap={{ scale: 0.8 }}
               onClick={() => onUpdateQuantity(product.productId, cartItem.quantity + 1)}
-              className="h-6 w-6 rounded-md bg-background flex items-center justify-center border border-border/20"
+              className="h-7 w-7 rounded-lg bg-background flex items-center justify-center border border-border/20"
               aria-label="Increase"
             >
-              <Plus className="h-2.5 w-2.5" />
+              <Plus className="h-3 w-3" />
             </motion.button>
           </div>
         ) : (
           <motion.div whileTap={{ scale: 0.95 }}>
             <Button
               size="sm"
-              className="w-full rounded-lg text-[9px] h-7 font-bold gap-0.5 shadow-sm"
+              className="w-full rounded-xl text-[10px] h-8 font-bold gap-1 shadow-sm"
               onClick={handleAdd}
               aria-label={`Add ${product.name}`}
             >
               {justAdded ? (
-                <Check className="h-2.5 w-2.5" />
+                <Check className="h-3 w-3" />
               ) : (
-                <Plus className="h-2.5 w-2.5" />
+                <Plus className="h-3 w-3" />
               )}
-              {justAdded ? "Added!" : "Add"}
+              {justAdded ? "Added!" : "Add to Cart"}
             </Button>
           </motion.div>
         )}
