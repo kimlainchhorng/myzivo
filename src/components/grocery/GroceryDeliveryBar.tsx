@@ -29,6 +29,53 @@ export default function GroceryDeliveryBar() {
   const [newLabel, setNewLabel] = useState<DeliveryAddress["label"]>("Home");
   const [newAddress, setNewAddress] = useState("");
   const [newApt, setNewApt] = useState("");
+  const [isLocating, setIsLocating] = useState(false);
+
+  /** Auto-detect address via GPS + reverse geocoding */
+  const autoDetectAddress = useCallback(() => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation not supported on this device");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+            { headers: { "Accept-Language": "en" } }
+          );
+          const data = await res.json();
+          if (data?.address) {
+            const a = data.address;
+            const street = [a.house_number, a.road].filter(Boolean).join(" ");
+            const city = a.city || a.town || a.village || "";
+            const state = a.state || "";
+            const zip = a.postcode || "";
+            const full = [street, city, state, zip].filter(Boolean).join(", ");
+            setNewAddress(full);
+            toast.success("Address detected");
+          } else {
+            toast.error("Could not determine address");
+          }
+        } catch {
+          toast.error("Failed to detect address");
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (err) => {
+        setIsLocating(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          toast.error("Location permission denied");
+        } else {
+          toast.error("Could not get your location");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
 
   const handleAdd = () => {
     if (!newAddress.trim()) return;
