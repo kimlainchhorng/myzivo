@@ -240,6 +240,23 @@ export default function GroceryDeliveryBar() {
                       })}
                     </div>
 
+                    {/* Auto-detect location */}
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={autoDetectAddress}
+                      disabled={isLocating}
+                      className="w-full flex items-center gap-2 p-2.5 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all disabled:opacity-60"
+                    >
+                      {isLocating ? (
+                        <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                      ) : (
+                        <LocateFixed className="h-4 w-4 text-primary" />
+                      )}
+                      <span className="text-[11px] font-semibold text-primary">
+                        {isLocating ? "Detecting location…" : "Use my current location"}
+                      </span>
+                    </motion.button>
+
                     {/* Address input */}
                     <Input
                       value={newAddress}
