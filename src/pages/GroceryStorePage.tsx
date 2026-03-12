@@ -365,6 +365,9 @@ export default function GroceryStorePage() {
           </motion.button>
         </div>
 
+        {/* Delivery address */}
+        <GroceryDeliveryBar />
+
         {/* Search */}
         <div className="px-4 pb-2">
           <div className="relative">
