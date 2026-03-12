@@ -276,15 +276,18 @@ export default function GroceryStorePage() {
     }
   };
 
-  // Sorted products
+  // Filter + sort products
+  const filteredProducts = useMemo(() => applyFilters(products, filters), [products, filters]);
   const sortedProducts = useMemo(() => {
-    if (sortMode === "default") return products;
-    const sorted = [...products];
+    if (sortMode === "default") return filteredProducts;
+    const sorted = [...filteredProducts];
     if (sortMode === "price-low") sorted.sort((a, b) => a.price - b.price);
     if (sortMode === "price-high") sorted.sort((a, b) => b.price - a.price);
     if (sortMode === "rating") sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     return sorted;
-  }, [products, sortMode]);
+  }, [filteredProducts, sortMode]);
+
+  const filterCount = (filters.priceRange ? 1 : 0) + (filters.minRating ? 1 : 0) + filters.dietary.length + filters.brands.length;
 
   if (!storeCfg) {
     return (
