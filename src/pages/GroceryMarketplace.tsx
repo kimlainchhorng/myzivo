@@ -54,18 +54,19 @@ function FeaturedStore({ store, eta, location }: { store: StoreConfig; eta: numb
       transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.1 }}
       whileTap={{ scale: 0.97 }}
       onClick={() => navigate(`/grocery/store/${store.slug}`)}
-      className="w-full relative p-4 rounded-[24px] border border-primary/20 bg-gradient-to-br from-primary/8 via-primary/4 to-transparent backdrop-blur-sm overflow-hidden group"
+      className="w-full relative p-5 rounded-[24px] border border-primary/15 bg-card overflow-hidden group hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
     >
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Subtle gradient accent */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent rounded-t-[24px]" />
 
       <div className="relative flex items-center gap-4">
-        <div className="h-16 w-16 rounded-[20px] bg-background border border-border/30 flex items-center justify-center p-2.5 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+        <div className="h-[72px] w-[72px] rounded-[20px] bg-background border border-border/30 flex items-center justify-center p-3 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300 shrink-0">
           <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
         </div>
         <div className="flex-1 min-w-0 text-left">
           <div className="flex items-center gap-2 mb-1">
             <StatusDot isOpen={status.isOpen} />
-            <span className={`text-[10px] font-semibold ${status.isOpen ? "text-emerald-500" : "text-muted-foreground/50"}`}>
+            <span className={`text-[11px] font-semibold ${status.isOpen ? "text-emerald-500" : "text-muted-foreground/50"}`}>
               {status.label}
             </span>
             {store.promo && (
@@ -74,25 +75,25 @@ function FeaturedStore({ store, eta, location }: { store: StoreConfig; eta: numb
               </span>
             )}
           </div>
-          <p className="text-base font-bold text-foreground group-hover:text-primary transition-colors">{store.name}</p>
+          <p className="text-lg font-extrabold text-foreground group-hover:text-primary transition-colors tracking-tight">{store.name}</p>
           {location && (
             <p className="text-[10px] text-muted-foreground truncate mt-0.5 flex items-center gap-1">
               <MapPin className="h-2.5 w-2.5 shrink-0" />
               {location.address}
             </p>
           )}
-          <div className="flex items-center gap-3 mt-1">
-            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-3 mt-1.5">
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium">
               <Truck className="h-3 w-3 text-primary" />
               {eta}m
             </span>
             {location?.distance_miles != null && (
-              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium">
                 <MapPin className="h-3 w-3 text-primary" />
                 {location.distance_miles} mi
               </span>
             )}
-            <span className="flex items-center gap-1 text-[11px] text-amber-400">
+            <span className="flex items-center gap-1 text-[11px] text-amber-500 font-semibold">
               <Star className="h-3 w-3 fill-current" />
               {location?.rating || store.rating}
             </span>
