@@ -1,6 +1,6 @@
 /**
  * useDeliveryAddress - Manage saved delivery addresses (Home, Work, Custom)
- * Persists to localStorage for quick access across grocery pages.
+ * Persists to localStorage. Now includes lat/lng for proximity features.
  */
 import { useState, useEffect, useCallback } from "react";
 
@@ -13,6 +13,10 @@ export interface DeliveryAddress {
   /** Optional delivery instructions */
   instructions?: string;
   isDefault: boolean;
+  /** Latitude for proximity features */
+  lat?: number;
+  /** Longitude for proximity features */
+  lng?: number;
 }
 
 const STORAGE_KEY = "zivo_delivery_addresses";
