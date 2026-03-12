@@ -1,14 +1,10 @@
 import { motion } from "framer-motion";
-import { ShoppingCart, Cpu, Home, PawPrint, Pill, LayoutGrid } from "lucide-react";
+import { ShoppingCart, LayoutGrid } from "lucide-react";
 import type { StoreCategory } from "@/config/groceryStores";
 
 const CATEGORIES: { id: StoreCategory | "all"; label: string; icon: React.ElementType }[] = [
   { id: "all", label: "All", icon: LayoutGrid },
   { id: "grocery", label: "Grocery", icon: ShoppingCart },
-  { id: "electronics", label: "Electronics", icon: Cpu },
-  { id: "home", label: "Home", icon: Home },
-  { id: "pets", label: "Pets", icon: PawPrint },
-  { id: "pharmacy", label: "Pharmacy", icon: Pill },
 ];
 
 interface Props {
