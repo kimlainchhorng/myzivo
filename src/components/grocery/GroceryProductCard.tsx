@@ -89,12 +89,11 @@ export function GroceryProductCard({
         ) : (
           <Button
             size="sm"
-            variant="outline"
             className="w-full rounded-xl text-xs h-8 mt-1"
             onClick={() => onAdd(product)}
           >
             <Plus className="h-3 w-3 mr-1" />
-            Add to Cart
+            Add
           </Button>
         )}
       </div>
