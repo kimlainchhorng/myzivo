@@ -27,12 +27,15 @@ import GroceryDeliveryBar from "@/components/grocery/GroceryDeliveryBar";
 
 const QUICK_FILTERS = [
   { label: "🔥 Popular", query: "popular items" },
-  { label: "🥛 Dairy", query: "dairy milk cheese" },
-  { label: "🍞 Bakery", query: "bread bakery" },
-  { label: "🥩 Meat", query: "meat chicken beef" },
-  { label: "🥤 Drinks", query: "drinks beverages" },
-  { label: "🧹 Cleaning", query: "cleaning supplies" },
-  { label: "🍿 Snacks", query: "snacks chips" },
+  { label: "🥛 Dairy", query: "dairy milk cheese yogurt" },
+  { label: "🍞 Bakery", query: "bread bakery rolls" },
+  { label: "🥩 Meat", query: "meat chicken beef pork" },
+  { label: "🥤 Drinks", query: "drinks beverages water juice soda" },
+  { label: "🧹 Cleaning", query: "cleaning supplies soap detergent" },
+  { label: "🍿 Snacks", query: "snacks chips crackers cookies" },
+  { label: "🥦 Produce", query: "fresh fruits vegetables organic" },
+  { label: "🧊 Frozen", query: "frozen meals pizza ice cream" },
+  { label: "🍝 Pantry", query: "pasta rice cereal canned" },
 ];
 
 type SortMode = "default" | "price-low" | "price-high" | "rating";
@@ -218,6 +221,8 @@ export default function GroceryStorePage() {
 
   // Auto-load multiple pages on mount for a fuller grid
   const autoLoadCount = useRef(0);
+  const autoLoadTimer = useRef<ReturnType<typeof setTimeout>>();
+  
   useEffect(() => {
     if (storeCfg && !hasLoadedDefaults.current) {
       hasLoadedDefaults.current = true;
@@ -225,16 +230,43 @@ export default function GroceryStorePage() {
     }
   }, [storeCfg, search]);
 
-  // After initial results arrive, auto-load more pages for a fuller grid
+  // After each page finishes loading, auto-queue the next one (up to 5 extra pages)
   useEffect(() => {
-    if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && autoLoadCount.current < 4) {
-      const timer = setTimeout(() => {
+    if (autoLoadTimer.current) clearTimeout(autoLoadTimer.current);
+    if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && autoLoadCount.current < 5) {
+      autoLoadTimer.current = setTimeout(() => {
         autoLoadCount.current += 1;
         loadMore();
-      }, 500);
-      return () => clearTimeout(timer);
+      }, 400);
     }
+    return () => { if (autoLoadTimer.current) clearTimeout(autoLoadTimer.current); };
   }, [isLoading, isLoadingMore, products.length, hasMore, loadMore]);
+
+  // Reset auto-load counter when user manually searches
+  const handleSearch = (val: string) => {
+    setQuery(val);
+    setActiveFilter(null);
+    autoLoadCount.current = 0;
+    clearTimeout(debounceRef.current);
+    if (val.trim().length < 2) {
+      debounceRef.current = setTimeout(() => search(storeCfg!.defaultQuery), 100);
+      return;
+    }
+    debounceRef.current = setTimeout(() => search(val), 500);
+  };
+
+  const handleQuickFilter = (filter: typeof QUICK_FILTERS[0]) => {
+    autoLoadCount.current = 0;
+    if (activeFilter === filter.label) {
+      setActiveFilter(null);
+      setQuery("");
+      search(storeCfg!.defaultQuery);
+    } else {
+      setActiveFilter(filter.label);
+      setQuery("");
+      search(filter.query);
+    }
+  };
 
   // Sorted products
   const sortedProducts = useMemo(() => {
@@ -259,28 +291,6 @@ export default function GroceryStorePage() {
 
   const status = getStoreStatus(storeCfg.hours);
 
-  const handleSearch = (val: string) => {
-    setQuery(val);
-    setActiveFilter(null);
-    clearTimeout(debounceRef.current);
-    if (val.trim().length < 2) {
-      debounceRef.current = setTimeout(() => search(storeCfg.defaultQuery), 100);
-      return;
-    }
-    debounceRef.current = setTimeout(() => search(val), 500);
-  };
-
-  const handleQuickFilter = (filter: typeof QUICK_FILTERS[0]) => {
-    if (activeFilter === filter.label) {
-      setActiveFilter(null);
-      setQuery("");
-      search(storeCfg.defaultQuery);
-    } else {
-      setActiveFilter(filter.label);
-      setQuery("");
-      search(filter.query);
-    }
-  };
 
   const handleAdd = (p: StoreProduct) => {
     cart.addItem(
@@ -405,7 +415,7 @@ export default function GroceryStorePage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 whileTap={{ scale: 0.8 }}
-                onClick={() => { setQuery(""); search(storeCfg.defaultQuery); setActiveFilter(null); }}
+                onClick={() => { setQuery(""); autoLoadCount.current = 0; search(storeCfg.defaultQuery); setActiveFilter(null); }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full bg-muted/60 hover:bg-muted transition-colors"
               >
                 <X className="h-3 w-3 text-muted-foreground" />
