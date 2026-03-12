@@ -69,6 +69,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     placeholder: "Search Sam's Club products…",
     emptyTitle: "Search Sam's Club Products",
     emptyDescription: "Shop warehouse prices and bulk deals from Sam's Club. A ZIVO driver delivers right to you.",
+    defaultQuery: "snacks drinks",
   },
   {
     name: "Target",
