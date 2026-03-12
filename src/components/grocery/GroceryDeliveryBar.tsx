@@ -320,14 +320,53 @@ export default function GroceryDeliveryBar() {
                       </span>
                     </motion.button>
 
-                    {/* Address input */}
-                    <Input
-                      value={newAddress}
-                      onChange={(e) => setNewAddress(e.target.value)}
-                      placeholder="Street address"
-                      className="h-10 rounded-xl text-[12px] bg-muted/10 border-border/20"
-                      autoFocus
-                    />
+                    {/* Address input with autocomplete */}
+                    <div className="relative">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
+                        <Input
+                          value={newAddress}
+                          onChange={(e) => searchAddress(e.target.value)}
+                          onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                          placeholder="Search street address…"
+                          className="h-10 rounded-xl text-[12px] bg-muted/10 border-border/20 pl-9 pr-8"
+                          autoFocus
+                        />
+                        {isSearching && (
+                          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary animate-spin" />
+                        )}
+                      </div>
+
+                      {/* Suggestions dropdown */}
+                      <AnimatePresence>
+                        {showSuggestions && suggestions.length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="absolute left-0 right-0 top-full mt-1 z-50 bg-background border border-border/30 rounded-xl shadow-xl overflow-hidden max-h-[200px] overflow-y-auto"
+                          >
+                            {suggestions.map((s, i) => (
+                              <button
+                                key={i}
+                                onClick={() => selectSuggestion(s)}
+                                className="w-full flex items-start gap-2.5 px-3 py-2.5 hover:bg-muted/30 transition-colors text-left border-b border-border/10 last:border-0"
+                              >
+                                <MapPin className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                                <div className="min-w-0">
+                                  <p className="text-[11px] font-semibold text-foreground truncate">
+                                    {s.street || s.city}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground truncate">
+                                    {[s.city, s.state, s.zip].filter(Boolean).join(", ")}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                     <Input
                       value={newApt}
                       onChange={(e) => setNewApt(e.target.value)}
