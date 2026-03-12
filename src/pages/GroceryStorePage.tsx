@@ -22,6 +22,7 @@ import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { getStoreBySlug } from "@/config/groceryStores";
 import { getStoreStatus, getLiveEta } from "@/utils/storeStatus";
 import { addRecentStore } from "@/components/grocery/GroceryRecentStores";
+import GroceryDeliveryBar from "@/components/grocery/GroceryDeliveryBar";
 
 const QUICK_FILTERS = [
   { label: "🔥 Popular", query: "popular items" },
