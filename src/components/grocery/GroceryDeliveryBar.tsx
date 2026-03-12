@@ -2,12 +2,13 @@
  * GroceryDeliveryBar - "Deliver to" address picker for grocery pages
  * Shows saved Home/Work addresses with quick-add flow
  */
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Home, Briefcase, Plus, ChevronDown, Check, X, Navigation } from "lucide-react";
+import { MapPin, Home, Briefcase, Plus, ChevronDown, Check, X, Navigation, Loader2, LocateFixed } from "lucide-react";
 import { useDeliveryAddress, type DeliveryAddress } from "@/hooks/useDeliveryAddress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const LABEL_ICONS: Record<DeliveryAddress["label"], React.ElementType> = {
   Home,
