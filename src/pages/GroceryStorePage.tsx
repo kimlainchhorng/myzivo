@@ -585,7 +585,7 @@ export default function GroceryStorePage() {
 
       {/* Product Grid */}
       {!isLoading && sortedProducts.length > 0 && (
-        <div className="px-4 pb-2 grid grid-cols-2 gap-2.5">
+        <div className="px-2.5 pb-2 grid grid-cols-3 sm:grid-cols-4 gap-2">
           {sortedProducts.map((product, i) => (
             <GroceryProductCard
               key={product.productId || i}
