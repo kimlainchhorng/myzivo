@@ -319,6 +319,13 @@ export function GroceryProductDetail({
                   ))}
                 </motion.div>
 
+                {/* ── Price Comparison ── */}
+                <GroceryPriceCompare
+                  productName={product.name}
+                  currentStore={product.store}
+                  currentPrice={product.price}
+                />
+
                 {/* ── Expandable Sections ── */}
                 <div className="space-y-0 rounded-2xl border border-border/20 overflow-hidden bg-muted/10">
                   {/* Product Details */}
