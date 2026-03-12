@@ -114,6 +114,15 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
+              {step === 2 && (
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => setStep(1)}
+                  className="p-1.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </motion.button>
+              )}
               <motion.div
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -123,9 +132,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                 <Package className="h-5 w-5 text-primary" />
               </motion.div>
               <div>
-                <h2 className="text-lg font-bold tracking-tight">Checkout</h2>
+                <h2 className="text-lg font-bold tracking-tight">
+                  {step === 1 ? "Delivery Details" : "Review Order"}
+                </h2>
                 <p className="text-[11px] text-muted-foreground">
-                  {itemCount} items from {items[0]?.store}
+                  Step {step} of 2 · {itemCount} items from {items[0]?.store}
                 </p>
               </div>
             </div>
@@ -136,6 +147,12 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
             >
               <X className="h-4.5 w-4.5" />
             </motion.button>
+          </div>
+
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex-1 h-1 rounded-full bg-primary" />
+            <div className={`flex-1 h-1 rounded-full transition-colors ${step >= 2 ? "bg-primary" : "bg-muted/40"}`} />
           </div>
 
           {/* Estimated delivery banner */}
