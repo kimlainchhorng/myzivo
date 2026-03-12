@@ -1,12 +1,12 @@
 /**
- * useStoreSearch - Search products from Walmart or Costco via edge functions
+ * useStoreSearch - Generic product search hook driven by store config
  */
 import { useState, useCallback } from "react";
+import type { StoreName } from "@/config/groceryStores";
+import { getStoreConfig } from "@/config/groceryStores";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-export type StoreName = "Walmart" | "Costco";
 
 export interface StoreProduct {
   productId: string;
@@ -18,11 +18,6 @@ export interface StoreProduct {
   inStock: boolean;
   store: StoreName;
 }
-
-const FUNCTION_MAP: Record<StoreName, string> = {
-  Walmart: "walmart-search",
-  Costco: "costco-search",
-};
 
 export function useStoreSearch(store: StoreName) {
   const [products, setProducts] = useState<StoreProduct[]>([]);
@@ -40,8 +35,8 @@ export function useStoreSearch(store: StoreName) {
       setError(null);
 
       try {
-        const fn = FUNCTION_MAP[store];
-        const url = `${SUPABASE_URL}/functions/v1/${fn}?q=${encodeURIComponent(query)}`;
+        const cfg = getStoreConfig(store);
+        const url = `${SUPABASE_URL}/functions/v1/${cfg.edgeFunction}?q=${encodeURIComponent(query)}`;
         console.log(`[StoreSearch][${store}] Searching:`, query);
 
         const res = await fetch(url, {
@@ -59,7 +54,7 @@ export function useStoreSearch(store: StoreName) {
         const data = await res.json();
         const mapped: StoreProduct[] = (data.products || []).map((p: any) => ({
           ...p,
-          store: store,
+          store,
         }));
         console.log(`[StoreSearch][${store}] Results:`, mapped.length);
         setProducts(mapped);
