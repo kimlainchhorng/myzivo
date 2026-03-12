@@ -144,22 +144,22 @@ export default function GroceryMarketplace() {
         animate="show"
         className="px-4 grid grid-cols-2 gap-2.5"
       >
-        {popularStores.map((store) => (
+      {popularStores.map((store) => (
           <motion.button
             key={store.slug}
             variants={cardVariant}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => navigate(`/grocery/store/${store.slug}`)}
-            className="group relative flex items-center gap-3 p-3.5 rounded-[18px] border border-border/40 bg-card/90 backdrop-blur-sm hover:bg-card hover:border-primary/20 hover:shadow-xl hover:shadow-primary/8 transition-all duration-300"
+            className="group relative flex flex-col items-center gap-2.5 p-4 pt-5 rounded-[20px] border border-border/40 bg-card/90 backdrop-blur-sm hover:bg-card hover:border-primary/20 hover:shadow-xl hover:shadow-primary/8 transition-all duration-300"
           >
             {/* Logo */}
-            <div className="h-12 w-12 rounded-2xl bg-background border border-border/30 flex items-center justify-center p-1.5 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0">
+            <div className="h-14 w-14 rounded-2xl bg-background border border-border/30 flex items-center justify-center p-2 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
               <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
             </div>
 
             {/* Name + promo */}
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200 truncate">
+            <div className="text-center w-full">
+              <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
                 {store.name}
               </p>
               {store.promo ? (
@@ -168,8 +168,6 @@ export default function GroceryMarketplace() {
                 <p className="text-[10px] text-muted-foreground mt-0.5">Shop now</p>
               )}
             </div>
-
-            <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary/60 transition-colors shrink-0" />
           </motion.button>
         ))}
       </motion.div>
