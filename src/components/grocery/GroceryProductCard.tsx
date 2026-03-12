@@ -16,6 +16,7 @@ interface GroceryProductCardProps {
   cartItem?: GroceryCartItem;
   onAdd: (product: StoreProduct) => void;
   onUpdateQuantity: (productId: string, quantity: number) => void;
+  onSelect?: (product: StoreProduct) => void;
 }
 
 const cardVariant = {
@@ -39,6 +40,7 @@ export function GroceryProductCard({
   cartItem,
   onAdd,
   onUpdateQuantity,
+  onSelect,
 }: GroceryProductCardProps) {
   const [imgError, setImgError] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
@@ -68,7 +70,7 @@ export function GroceryProductCard({
       }`}
     >
       {/* Image */}
-      <div className="relative aspect-square bg-gradient-to-br from-muted/10 via-muted/20 to-muted/30 flex items-center justify-center p-4 overflow-hidden">
+      <div className="relative aspect-square bg-gradient-to-br from-muted/10 via-muted/20 to-muted/30 flex items-center justify-center p-4 overflow-hidden cursor-pointer" onClick={() => onSelect?.(product)}>
         {product.image && !imgError ? (
           <>
             {!imgLoaded && (
@@ -175,7 +177,7 @@ export function GroceryProductCard({
           </div>
         </div>
 
-        <p className="text-[12px] font-semibold line-clamp-2 leading-[1.35] text-foreground/90 min-h-[32px]">
+        <p className="text-[12px] font-semibold line-clamp-2 leading-[1.35] text-foreground/90 min-h-[32px] cursor-pointer" onClick={() => onSelect?.(product)}>
           {product.name}
         </p>
 

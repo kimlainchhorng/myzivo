@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
 import { GroceryProductCard } from "@/components/grocery/GroceryProductCard";
+import { GroceryProductDetail } from "@/components/grocery/GroceryProductDetail";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -175,6 +176,7 @@ export default function GroceryStorePage() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>("default");
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const storeName = storeCfg?.name ?? "Walmart";
@@ -592,6 +594,7 @@ export default function GroceryStorePage() {
               cartItem={cart.items.find((c) => c.productId === product.productId)}
               onAdd={handleAdd}
               onUpdateQuantity={cart.updateQuantity}
+              onSelect={setSelectedProduct}
             />
           ))}
         </div>
@@ -662,6 +665,14 @@ export default function GroceryStorePage() {
           />
         )}
       </AnimatePresence>
+
+      <GroceryProductDetail
+        product={selectedProduct}
+        cartItem={selectedProduct ? cart.items.find((c) => c.productId === selectedProduct.productId) : undefined}
+        onClose={() => setSelectedProduct(null)}
+        onAdd={handleAdd}
+        onUpdateQuantity={cart.updateQuantity}
+      />
 
       <ZivoMobileNav />
     </div>
