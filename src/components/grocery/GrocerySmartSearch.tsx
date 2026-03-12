@@ -1,10 +1,11 @@
 /**
- * GrocerySmartSearch — autocomplete with recent searches, trending, store matches
+ * GrocerySmartSearch — autocomplete with recent searches & real store matches only
+ * No fake trending items for non-existent stores
  */
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Store, ShoppingBag, ArrowRight, X, Clock, TrendingUp, Sparkles } from "lucide-react";
+import { Search, Store, ArrowRight, X, Clock, TrendingUp, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { GROCERY_STORES } from "@/config/groceryStores";
 
@@ -23,13 +24,14 @@ function addRecentSearch(q: string) {
   localStorage.setItem(RECENT_KEY, JSON.stringify(updated));
 }
 
+// Only real store categories for trending
 const TRENDING = [
   { query: "Milk & Dairy", store: "walmart", icon: "🥛" },
   { query: "Fresh Produce", store: "kroger", icon: "🥬" },
   { query: "Snacks & Chips", store: "costco", icon: "🍿" },
-  { query: "Pet Food", store: "petco", icon: "🐾" },
-  { query: "Vitamins", store: "walgreens", icon: "💊" },
-  { query: "Phone Charger", store: "best-buy", icon: "🔌" },
+  { query: "Frozen Meals", store: "target", icon: "🧊" },
+  { query: "Bakery & Bread", store: "walmart", icon: "🍞" },
+  { query: "Beverages", store: "kroger", icon: "🥤" },
 ];
 
 interface Props {
@@ -172,11 +174,11 @@ export default function GrocerySmartSearch({ value, onChange }: Props) {
               </div>
             )}
 
-            {/* Trending / product suggestions */}
+            {/* Trending / product suggestions — real stores only */}
             {trendingResults.length > 0 && (
               <div className={`p-2 ${storeResults.length > 0 || (!query && recentSearches.length > 0) ? "border-t border-border/20" : ""}`}>
                 <p className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                  {query ? <><Sparkles className="h-2.5 w-2.5" /> Products</> : <><TrendingUp className="h-2.5 w-2.5" /> Trending</>}
+                  {query ? <><Sparkles className="h-2.5 w-2.5" /> Suggestions</> : <><TrendingUp className="h-2.5 w-2.5" /> Popular Categories</>}
                 </p>
                 {trendingResults.map((product) => {
                   const store = GROCERY_STORES.find((s) => s.slug === product.store);

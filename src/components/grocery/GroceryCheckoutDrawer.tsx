@@ -118,7 +118,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
     }
   };
 
-  const savingsAmount = (total * 0.08).toFixed(2);
+  // No fake savings — real pricing only
 
   return (
     <motion.div
