@@ -38,6 +38,61 @@ export default function GroceryDeliveryBar() {
   const [newAddress, setNewAddress] = useState("");
   const [newApt, setNewApt] = useState("");
   const [isLocating, setIsLocating] = useState(false);
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  /** Autocomplete address search via Nominatim */
+  const searchAddress = useCallback((query: string) => {
+    setNewAddress(query);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (query.trim().length < 3) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=us`,
+          { headers: { "Accept-Language": "en" } }
+        );
+        const data = await res.json();
+        const mapped: AddressSuggestion[] = data.map((item: any) => {
+          const a = item.address || {};
+          const street = [a.house_number, a.road].filter(Boolean).join(" ");
+          const city = a.city || a.town || a.village || a.county || "";
+          const state = a.state || "";
+          const zip = a.postcode || "";
+          return {
+            display: item.display_name,
+            street,
+            city,
+            state,
+            zip,
+          };
+        });
+        setSuggestions(mapped);
+        setShowSuggestions(mapped.length > 0);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+  }, []);
+
+  const selectSuggestion = useCallback((s: AddressSuggestion) => {
+    const full = [s.street, s.city, s.state, s.zip].filter(Boolean).join(", ");
+    setNewAddress(full);
+    setSuggestions([]);
+    setShowSuggestions(false);
+  }, []);
+
+  // Cleanup debounce
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
   /** Auto-detect address via GPS + reverse geocoding */
   const autoDetectAddress = useCallback(() => {
