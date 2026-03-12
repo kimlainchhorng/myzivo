@@ -35,6 +35,8 @@ export interface StoreConfig {
   emptyDescription: string;
   /** Optional promo badge shown on marketplace card */
   promo?: string;
+  /** Default query to auto-fetch products on page load */
+  defaultQuery: string;
 }
 
 export const GROCERY_STORES: StoreConfig[] = [
