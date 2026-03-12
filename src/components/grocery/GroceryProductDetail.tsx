@@ -5,7 +5,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Plus, Minus, Check, Package, Star, MapPin, ShieldCheck,
-  Truck, Clock, Info, ChevronRight, Heart, Share2, Barcode,
+  Truck, Clock, Info, ChevronRight, Heart, Barcode, Weight, Ruler, Box,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StoreProduct } from "@/hooks/useStoreSearch";
@@ -77,6 +77,10 @@ export function GroceryProductDetail({
     ? (product.price * cartItem.quantity)
     : (product.price * quantity);
 
+  // Extract size info from product name
+  const sizeMatch = product.name.match(/(\d+[\s-]?(?:oz|fl oz|lb|lbs|ct|count|pk|pack|rolls|sheets|gal|qt|pt|ml|L|kg|g)\.?)/i);
+  const sizeInfo = sizeMatch ? sizeMatch[1] : null;
+
   return (
     <AnimatePresence>
       {product && (
@@ -96,7 +100,7 @@ export function GroceryProductDetail({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[94vh] bg-card rounded-t-[28px] overflow-hidden flex flex-col shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] bg-card rounded-t-[28px] overflow-hidden flex flex-col shadow-2xl"
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1 shrink-0">
@@ -188,12 +192,20 @@ export function GroceryProductDetail({
                   </div>
                 </div>
 
-                {/* Brand */}
-                {product.brand && (
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-[0.14em] font-bold leading-none">
-                    {product.brand}
-                  </p>
-                )}
+                {/* Brand & Size row */}
+                <div className="flex items-center gap-3">
+                  {product.brand && (
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-[0.14em] font-bold leading-none">
+                      {product.brand}
+                    </p>
+                  )}
+                  {sizeInfo && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/40 border border-border/15">
+                      <Box className="h-2.5 w-2.5 text-muted-foreground/60" />
+                      <span className="text-[9px] font-semibold text-muted-foreground">{sizeInfo}</span>
+                    </div>
+                  )}
+                </div>
 
                 {/* Name */}
                 <h2 className="text-xl font-bold text-foreground leading-snug tracking-tight">{product.name}</h2>
@@ -261,8 +273,11 @@ export function GroceryProductDetail({
                             <p className="text-sm font-semibold text-foreground">{product.brand || "—"}</p>
                           </div>
                           <div className="p-3 rounded-xl bg-muted/30 border border-border/15">
-                            <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mb-1">Store</p>
-                            <p className="text-sm font-semibold text-foreground">{product.store}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mb-1">Size</p>
+                            <div className="flex items-center gap-1">
+                              <Ruler className="h-3 w-3 text-muted-foreground/50" />
+                              <p className="text-sm font-semibold text-foreground">{sizeInfo || "Standard"}</p>
+                            </div>
                           </div>
                           <div className="p-3 rounded-xl bg-muted/30 border border-border/15">
                             <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mb-1">Rating</p>
@@ -276,6 +291,14 @@ export function GroceryProductDetail({
                             <p className={`text-sm font-semibold ${product.inStock ? "text-emerald-600" : "text-destructive"}`}>
                               {product.inStock ? "In Stock" : "Unavailable"}
                             </p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-muted/30 border border-border/15">
+                            <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mb-1">Store</p>
+                            <p className="text-sm font-semibold text-foreground">{product.store}</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-muted/30 border border-border/15">
+                            <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mb-1">Fulfillment</p>
+                            <p className="text-sm font-semibold text-foreground">Same-Day</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-muted/20 border border-border/10">
@@ -324,7 +347,7 @@ export function GroceryProductDetail({
             </div>
 
             {/* Sticky bottom CTA */}
-            <div className="shrink-0 p-4 pb-6 border-t border-border/20 bg-card shadow-[0_-4px_20px_-4px_hsl(var(--foreground)/0.05)]">
+            <div className="shrink-0 p-4 pb-8 border-t border-border/20 bg-card shadow-[0_-4px_20px_-4px_hsl(var(--foreground)/0.05)]">
               {!product.inStock ? (
                 <div className="text-sm text-muted-foreground text-center py-3.5 rounded-2xl bg-muted/30 font-medium border border-border/20">
                   Out of Stock
