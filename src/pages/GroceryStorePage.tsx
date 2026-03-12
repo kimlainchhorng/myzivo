@@ -225,16 +225,16 @@ export default function GroceryStorePage() {
     }
   }, [storeCfg, search]);
 
-  // After initial results arrive, auto-load more pages
+  // After initial results arrive, auto-load more pages for a fuller grid
   useEffect(() => {
-    if (!isLoading && products.length > 0 && hasMore && autoLoadCount.current < 4) {
+    if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && autoLoadCount.current < 4) {
       const timer = setTimeout(() => {
         autoLoadCount.current += 1;
         loadMore();
-      }, 600);
+      }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isLoading, products.length, hasMore, loadMore]);
+  }, [isLoading, isLoadingMore, products.length, hasMore, loadMore]);
 
   // Sorted products
   const sortedProducts = useMemo(() => {
