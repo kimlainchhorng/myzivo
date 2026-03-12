@@ -451,6 +451,15 @@ export default function GroceryStorePage() {
       {/* Promo Banner */}
       <GroceryPromoBanner />
 
+      {/* Shopping List */}
+      <GroceryShoppingList
+        onSearchItem={(text) => {
+          autoLoadCount.current = 0;
+          setQuery(text);
+          search(text);
+        }}
+      />
+
       {/* Cart Drawer */}
       <AnimatePresence>
         {showCart && (
