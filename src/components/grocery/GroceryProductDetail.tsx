@@ -347,7 +347,7 @@ export function GroceryProductDetail({
             </div>
 
             {/* Sticky bottom CTA */}
-            <div className="shrink-0 p-4 pb-6 border-t border-border/20 bg-card shadow-[0_-4px_20px_-4px_hsl(var(--foreground)/0.05)]">
+            <div className="shrink-0 p-4 pb-8 border-t border-border/20 bg-card shadow-[0_-4px_20px_-4px_hsl(var(--foreground)/0.05)]">
               {!product.inStock ? (
                 <div className="text-sm text-muted-foreground text-center py-3.5 rounded-2xl bg-muted/30 font-medium border border-border/20">
                   Out of Stock
