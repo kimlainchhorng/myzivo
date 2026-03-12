@@ -46,6 +46,7 @@ const RideTrackingPage = lazy(() => import("./pages/app/RideTrackingPage"));
 const RideHubPage = lazy(() => import("./pages/app/RideHubPage"));
 const EatsLanding = lazy(() => import("./pages/EatsLanding"));
 const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
+const GroceryPage = lazy(() => import("./pages/GroceryPage"));
 const DrivePage = lazy(() => import("./pages/DrivePage"));
 const TripsListPage = lazy(() => import("./pages/trips/TripsListPage"));
 const TripDetailPage = lazy(() => import("./pages/trips/TripDetailPage"));
