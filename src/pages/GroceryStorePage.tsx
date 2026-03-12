@@ -8,7 +8,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import {
   ArrowLeft, Search, ShoppingCart, Plus, Minus, Trash2,
   Loader2, X, Package, Store, Sparkles, Clock, Star, ChevronUp, Filter,
-  ArrowUpDown, Grid3X3, LayoutList, TrendingDown,
+  ArrowUpDown, Grid3X3, LayoutList, TrendingDown, SlidersHorizontal,
 } from "lucide-react";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
 import { GroceryProductCard } from "@/components/grocery/GroceryProductCard";
@@ -16,6 +16,9 @@ import { GroceryProductDetail } from "@/components/grocery/GroceryProductDetail"
 import { GroceryOrderAgain, saveToOrderHistory } from "@/components/grocery/GroceryOrderAgain";
 import { GroceryCategoryBrowser } from "@/components/grocery/GroceryCategoryBrowser";
 import { GroceryDealsSection } from "@/components/grocery/GroceryDealsSection";
+import { GroceryStoreSearch } from "@/components/grocery/GroceryStoreSearch";
+import { GroceryFilters, GroceryFilterButton, applyFilters, hasActiveFilters, EMPTY_FILTERS, type ActiveFilters } from "@/components/grocery/GroceryFilters";
+import { GroceryPromoBanner } from "@/components/grocery/GroceryPromoBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -189,6 +192,8 @@ export default function GroceryStorePage() {
   const [sortMode, setSortMode] = useState<SortMode>("default");
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
+  const [filters, setFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
+  const [showFilters, setShowFilters] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const storeName = storeCfg?.name ?? "Walmart";
@@ -271,15 +276,18 @@ export default function GroceryStorePage() {
     }
   };
 
-  // Sorted products
+  // Filter + sort products
+  const filteredProducts = useMemo(() => applyFilters(products, filters), [products, filters]);
   const sortedProducts = useMemo(() => {
-    if (sortMode === "default") return products;
-    const sorted = [...products];
+    if (sortMode === "default") return filteredProducts;
+    const sorted = [...filteredProducts];
     if (sortMode === "price-low") sorted.sort((a, b) => a.price - b.price);
     if (sortMode === "price-high") sorted.sort((a, b) => b.price - a.price);
     if (sortMode === "rating") sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     return sorted;
-  }, [products, sortMode]);
+  }, [filteredProducts, sortMode]);
+
+  const filterCount = (filters.priceRange ? 1 : 0) + (filters.minRating ? 1 : 0) + filters.dietary.length + filters.brands.length;
 
   if (!storeCfg) {
     return (
@@ -406,30 +414,15 @@ export default function GroceryStorePage() {
         {/* Delivery address */}
         <GroceryDeliveryBar />
 
-        {/* Search */}
-        <div className="px-4 pb-2">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-            <Input
-              placeholder={storeCfg.placeholder}
-              value={query}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 pr-9 rounded-2xl bg-muted/30 border-border/20 h-11 text-sm focus:bg-muted/50 transition-colors"
-              aria-label={`Search ${storeName} products`}
-            />
-            {query && (
-              <motion.button
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                whileTap={{ scale: 0.8 }}
-                onClick={() => { setQuery(""); autoLoadCount.current = 0; search(storeCfg.defaultQuery); setActiveFilter(null); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full bg-muted/60 hover:bg-muted transition-colors"
-              >
-                <X className="h-3 w-3 text-muted-foreground" />
-              </motion.button>
-            )}
-          </div>
-        </div>
+        {/* Smart Search */}
+        <GroceryStoreSearch
+          placeholder={storeCfg.placeholder}
+          storeName={storeName}
+          query={query}
+          onSearch={handleSearch}
+          onSubmit={(val) => { autoLoadCount.current = 0; setQuery(val); search(val); }}
+          onClear={() => { setQuery(""); autoLoadCount.current = 0; search(storeCfg.defaultQuery); setActiveFilter(null); }}
+        />
 
         {/* Quick filter chips */}
         <div className="flex gap-1.5 px-4 pb-3 overflow-x-auto scrollbar-hide">
@@ -449,6 +442,9 @@ export default function GroceryStorePage() {
           ))}
         </div>
       </div>
+
+      {/* Promo Banner */}
+      <GroceryPromoBanner />
 
       {/* Cart Drawer */}
       <AnimatePresence>
@@ -626,14 +622,17 @@ export default function GroceryStorePage() {
               </motion.span>
             )}
           </div>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={cycleSortMode}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-muted/30 border border-border/20 hover:bg-muted/50 transition-colors"
-          >
-            <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
-            <span className="text-[10px] font-semibold text-muted-foreground">{sortLabel[sortMode]}</span>
-          </motion.button>
+          <div className="flex items-center gap-1.5">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={cycleSortMode}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-muted/30 border border-border/20 hover:bg-muted/50 transition-colors"
+            >
+              <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+              <span className="text-[10px] font-semibold text-muted-foreground">{sortLabel[sortMode]}</span>
+            </motion.button>
+            <GroceryFilterButton activeCount={filterCount} onClick={() => setShowFilters(true)} />
+          </div>
         </motion.div>
       )}
 
@@ -742,6 +741,14 @@ export default function GroceryStorePage() {
         onUpdateQuantity={cart.updateQuantity}
         allProducts={sortedProducts}
         onSelect={setSelectedProduct}
+      />
+
+      <GroceryFilters
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        filters={filters}
+        onApply={setFilters}
+        products={products}
       />
 
       <ZivoMobileNav />
