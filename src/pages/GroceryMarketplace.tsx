@@ -433,6 +433,9 @@ export default function GroceryMarketplace() {
             </div>
           </motion.div>
 
+          {/* How it works */}
+          <GroceryHowItWorks />
+
           {/* Loading nearby stores indicator */}
           {isLoadingStores && hasAddress && (
             <motion.div
