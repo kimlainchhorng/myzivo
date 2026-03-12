@@ -1,9 +1,9 @@
 /**
- * GroceryProductCard - 2026 Spatial UI product card (v7)
- * Enhanced: image shimmer, hover lift, animated cart counter, savings pulse
+ * GroceryProductCard - 2026 Spatial UI product card (v8)
+ * Real data only - no fake savings/discounts
  */
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Minus, Check, Package, Star, TrendingDown } from "lucide-react";
+import { Plus, Minus, Check, Package, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StoreProduct } from "@/hooks/useStoreSearch";
 import type { GroceryCartItem } from "@/hooks/useGroceryCart";
@@ -34,14 +34,6 @@ function getStoreLogo(storeName: string): string | undefined {
   return store?.logo;
 }
 
-function calcSavings(price: number, id: string): { original: number; pct: number } | null {
-  if (price <= 2 || price > 150) return null;
-  const hash = id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  const markup = 0.08 + (hash % 18) * 0.01;
-  if (markup < 0.12) return null;
-  return { original: +(price / (1 - markup)).toFixed(2), pct: Math.round(markup * 100) };
-}
-
 export function GroceryProductCard({
   product,
   index,
@@ -61,7 +53,6 @@ export function GroceryProductCard({
   };
 
   const storeLogo = getStoreLogo(product.store);
-  const savings = calcSavings(product.price, product.productId);
 
   return (
     <motion.div
@@ -111,20 +102,8 @@ export function GroceryProductCard({
           product.inStock ? "bg-emerald-500" : "bg-destructive"
         }`} />
 
-        {/* Savings badge */}
-        {savings && (
-          <motion.div
-            initial={{ scale: 0, rotate: -10 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ delay: index * 0.02 + 0.15, type: "spring", stiffness: 400, damping: 15 }}
-            className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-sm"
-          >
-            <span className="text-[8px] font-bold">-{savings.pct}%</span>
-          </motion.div>
-        )}
-
         {/* Store logo */}
-        {storeLogo && !savings && (
+        {storeLogo && (
           <div className="absolute top-1 right-1 h-5 w-5 rounded-md bg-background/90 backdrop-blur-sm border border-border/30 flex items-center justify-center p-0.5">
             <img src={storeLogo} alt={product.store} className="h-full w-full object-contain" />
           </div>
@@ -182,11 +161,6 @@ export function GroceryProductCard({
           <span className="text-[14px] font-extrabold text-foreground tracking-tight">
             ${typeof product.price === "number" ? product.price.toFixed(2) : product.price}
           </span>
-          {savings && (
-            <span className="text-[10px] text-muted-foreground line-through">
-              ${savings.original.toFixed(2)}
-            </span>
-          )}
         </div>
 
         {/* CTA */}

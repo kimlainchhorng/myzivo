@@ -1,11 +1,11 @@
 /**
- * GroceryDealsSection - Flash deals with countdown timer + savings
- * Visual: orange accent, animated badges, urgency indicators
+ * GroceryDealsSection - Shows top-rated & best-value products (real data only)
+ * No fake discounts — highlights real ratings and low prices
  */
 import { motion, AnimatePresence } from "framer-motion";
-import { Tag, TrendingDown, Plus, Check, Package, Flame, Clock, Zap } from "lucide-react";
+import { TrendingUp, Plus, Check, Package, Star, Award } from "lucide-react";
 import type { StoreProduct } from "@/hooks/useStoreSearch";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 
 interface GroceryDealsSectionProps {
   products: StoreProduct[];
@@ -13,68 +13,28 @@ interface GroceryDealsSectionProps {
   cartProductIds: Set<string>;
 }
 
-function calcSavings(price: number, productId: string): { original: number; pct: number } | null {
-  if (price <= 1 || price > 200) return null;
-  const hash = productId.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  const markup = 0.08 + (hash % 20) * 0.01;
-  if (markup < 0.10) return null;
-  const original = +(price / (1 - markup)).toFixed(2);
-  const pct = Math.round(markup * 100);
-  return { original, pct };
-}
-
-/* ─── Countdown timer ─── */
-function DealCountdown() {
-  const [timeLeft, setTimeLeft] = useState("");
-
-  useEffect(() => {
-    const compute = () => {
-      const now = new Date();
-      const end = new Date();
-      end.setHours(23, 59, 59, 999);
-      const diff = end.getTime() - now.getTime();
-      const h = Math.floor(diff / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      setTimeLeft(`${h}h ${m}m`);
-    };
-    compute();
-    const interval = setInterval(compute, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/20"
-    >
-      <Clock className="h-2.5 w-2.5 text-orange-500" />
-      <span className="text-[9px] font-bold text-orange-600">{timeLeft} left</span>
-    </motion.div>
-  );
-}
-
 export function GroceryDealsSection({ products, onAdd, cartProductIds }: GroceryDealsSectionProps) {
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
-  const deals = useMemo(() => {
+  // Show best-value products: in stock, has rating, sorted by rating then price
+  const bestPicks = useMemo(() => {
     return products
-      .filter((p) => p.inStock && p.price > 0)
-      .map((p) => ({ product: p, savings: calcSavings(p.price, p.productId) }))
-      .filter((d) => d.savings !== null && d.savings.pct >= 12)
-      .sort((a, b) => (b.savings?.pct ?? 0) - (a.savings?.pct ?? 0))
+      .filter((p) => p.inStock && p.price > 0 && p.rating != null && p.rating > 0)
+      .sort((a, b) => {
+        const ratingDiff = (b.rating ?? 0) - (a.rating ?? 0);
+        if (ratingDiff !== 0) return ratingDiff;
+        return a.price - b.price;
+      })
       .slice(0, 12);
   }, [products]);
 
-  if (deals.length < 3) return null;
+  if (bestPicks.length < 3) return null;
 
   const handleAdd = (p: StoreProduct) => {
     onAdd(p);
     setAddedIds((prev) => new Set(prev).add(p.productId));
     setTimeout(() => setAddedIds((prev) => { const next = new Set(prev); next.delete(p.productId); return next; }), 800);
   };
-
-  const maxSavings = deals[0]?.savings?.pct ?? 0;
 
   return (
     <motion.div
@@ -83,31 +43,31 @@ export function GroceryDealsSection({ products, onAdd, cartProductIds }: Grocery
       transition={{ type: "spring", stiffness: 300, damping: 26 }}
       className="pt-4 pb-1"
     >
-      {/* Header with countdown */}
+      {/* Header */}
       <div className="flex items-center gap-2 mb-3 px-4">
-        <div className="flex items-center justify-center h-7 w-7 rounded-xl bg-gradient-to-br from-orange-500/15 to-orange-400/5">
-          <Flame className="h-4 w-4 text-orange-500" />
+        <div className="flex items-center justify-center h-7 w-7 rounded-xl bg-gradient-to-br from-amber-500/15 to-amber-400/5">
+          <Award className="h-4 w-4 text-amber-500" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-[13px] font-bold text-foreground tracking-tight">Flash Deals</span>
-            <span className="px-1.5 py-0.5 rounded-full bg-orange-500 text-white text-[8px] font-bold shadow-sm shadow-orange-500/30">
-              Up to {maxSavings}% off
+            <span className="text-[13px] font-bold text-foreground tracking-tight">Top Rated</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 text-[8px] font-bold">
+              ★ Best picks
             </span>
           </div>
         </div>
-        <DealCountdown />
+        <span className="text-[10px] text-muted-foreground">Scroll →</span>
       </div>
 
-      {/* Deals carousel */}
+      {/* Products carousel */}
       <div
         className="flex gap-2.5 overflow-x-auto pb-2 px-4 snap-x snap-mandatory"
         style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
       >
-        {deals.map(({ product: p, savings }, i) => {
+        {bestPicks.map((p, i) => {
           const inCart = cartProductIds.has(p.productId);
           const justAdded = addedIds.has(p.productId);
-          const isHot = (savings?.pct ?? 0) >= 20;
+          const isTopRated = (p.rating ?? 0) >= 4.5;
 
           return (
             <motion.div
@@ -115,9 +75,9 @@ export function GroceryDealsSection({ products, onAdd, cartProductIds }: Grocery
               initial={{ opacity: 0, x: 16, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               transition={{ delay: i * 0.04, type: "spring", stiffness: 300, damping: 24 }}
-              className="snap-start shrink-0 w-[145px] rounded-2xl border border-orange-200/30 bg-card overflow-hidden group hover:border-orange-300/40 hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300"
+              className="snap-start shrink-0 w-[145px] rounded-2xl border border-amber-200/30 bg-card overflow-hidden group hover:border-amber-300/40 hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-300"
             >
-              <div className="relative h-[105px] bg-gradient-to-br from-orange-50/30 to-muted/20 dark:from-orange-950/10 flex items-center justify-center p-3">
+              <div className="relative h-[105px] bg-gradient-to-br from-amber-50/30 to-muted/20 dark:from-amber-950/10 flex items-center justify-center p-3">
                 {p.image ? (
                   <img
                     src={p.image}
@@ -130,40 +90,37 @@ export function GroceryDealsSection({ products, onAdd, cartProductIds }: Grocery
                   <Package className="h-8 w-8 text-muted-foreground/10" />
                 )}
 
-                {/* Savings badge */}
-                <motion.div
-                  initial={{ scale: 0, rotate: -10 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: i * 0.04 + 0.2, type: "spring", stiffness: 400, damping: 15 }}
-                  className={`absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-lg shadow-sm ${
-                    isHot ? "bg-gradient-to-r from-orange-500 to-red-500" : "bg-orange-500"
-                  } text-white`}
-                >
-                  <span className="text-[9px] font-bold">-{savings?.pct}%</span>
-                </motion.div>
-
-                {/* Hot badge */}
-                {isHot && (
-                  <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg bg-red-500/90 text-white shadow-sm">
-                    <Zap className="h-2 w-2 fill-current" />
-                    <span className="text-[8px] font-bold">HOT</span>
+                {/* Rating badge */}
+                {p.rating != null && (
+                  <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg bg-background/90 backdrop-blur-sm border border-border/20 shadow-sm">
+                    <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                    <span className="text-[9px] font-bold text-foreground">{p.rating}</span>
                   </div>
                 )}
+
+                {/* Top rated badge */}
+                {isTopRated && (
+                  <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg bg-amber-500/90 text-white shadow-sm">
+                    <TrendingUp className="h-2 w-2" />
+                    <span className="text-[8px] font-bold">TOP</span>
+                  </div>
+                )}
+
+                {/* Stock dot */}
+                <span className="absolute bottom-1.5 left-1.5 h-2 w-2 rounded-full bg-emerald-500 border border-background shadow-sm" />
               </div>
 
               <div className="p-2.5 space-y-1.5">
                 <p className="text-[10px] font-semibold line-clamp-2 text-foreground/90 leading-snug min-h-[24px]">{p.name}</p>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[14px] font-extrabold text-foreground">${p.price.toFixed(2)}</span>
-                  {savings && (
-                    <span className="text-[10px] text-muted-foreground line-through">${savings.original.toFixed(2)}</span>
-                  )}
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-0.5 text-[9px] font-bold text-orange-600">
-                    <TrendingDown className="h-2.5 w-2.5" />
-                    Save ${savings ? (savings.original - p.price).toFixed(2) : ""}
-                  </span>
+                  {p.brand && (
+                    <span className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wide truncate max-w-[70px]">
+                      {p.brand}
+                    </span>
+                  )}
                   <motion.button
                     whileTap={{ scale: 0.8 }}
                     onClick={() => handleAdd(p)}
