@@ -176,6 +176,7 @@ export default function GroceryStorePage() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>("default");
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const storeName = storeCfg?.name ?? "Walmart";
