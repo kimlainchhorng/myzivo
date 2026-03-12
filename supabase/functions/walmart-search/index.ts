@@ -86,16 +86,20 @@ serve(async (req) => {
       return match ? match[1] : crypto.randomUUID().slice(0, 12);
     };
 
-    // Clean product name: remove trailing size+price like "Gallon128 fl oz $4.86 3.8 ¢/fl oz"
+    // Clean product name: remove trailing size+price junk
     const cleanName = (name: string): string => {
       if (!name) return "";
       // Remove everything from the first $ onward (price + unit price)
       let cleaned = name.replace(/\s*\$[\d.,]+.*$/, "");
-      // Remove trailing quantity patterns like "128 fl oz", "64 oz", "1 Gallon" etc.
-      cleaned = cleaned.replace(/\s*\d+(\.\d+)?\s*(fl\s*oz|oz|gal|gallon|ct|pk|lb|ml|l|kg|g)\s*$/i, "");
+      // Remove unit-price patterns like "3.8 ¢/fl oz" or "2.5¢/oz"
+      cleaned = cleaned.replace(/\s*[\d.]+\s*¢\/[a-z\s]+$/i, "");
+      // Remove trailing quantity patterns like "128 fl oz", "64 oz", "1 Gallon", "12 ct", "2 pk", "16.9 fl oz" etc.
+      cleaned = cleaned.replace(/\s*,?\s*\d+(\.\d+)?\s*(fl\s*oz|oz|gal|gallon|ct|count|pk|pack|lb|lbs|ml|l|kg|g|pt|qt|each)\s*$/i, "");
       // Fix concatenated size like "Gallon128" → "Gallon"
-      cleaned = cleaned.replace(/(\D)(\d+)\s*$/, "$1");
-      return cleaned.trim().replace(/,\s*$/, "").trim();
+      cleaned = cleaned.replace(/([a-zA-Z])(\d{2,})\s*$/, "$1");
+      // Remove trailing commas, dashes, pipes
+      cleaned = cleaned.replace(/[\s,\-|]+$/, "").trim();
+      return cleaned;
     };
 
     // Extract brand: use API brand field, or first segment before comma in title
