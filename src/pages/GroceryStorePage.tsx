@@ -444,6 +444,9 @@ export default function GroceryStorePage() {
         </div>
       </div>
 
+      {/* Store Hero Card */}
+      <GroceryStoreHero store={storeCfg} liveEta={liveEta} isOpen={status.isOpen} />
+
       {/* Promo Banner */}
       <GroceryPromoBanner />
 
