@@ -1,17 +1,18 @@
 /**
- * DriverShoppingList - Driver view for shopping delivery orders
- * Shows the list of items to purchase, allows marking found & uploading receipt
+ * DriverShoppingList - Driver view for a specific shopping delivery order
+ * Shows items to purchase, allows marking found & uploading receipt, status progression
  */
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, CheckCircle, Circle, Camera, Package,
-  MapPin, Phone, Upload, Loader2,
+  MapPin, Phone, Loader2, ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ShoppingItem {
   productId: string;
@@ -22,20 +23,52 @@ interface ShoppingItem {
   found: boolean;
 }
 
-// TODO: Replace with real order data from Supabase
-const MOCK_ORDER = {
-  id: "ZS-00000001",
-  store: "Walmart",
-  customerName: "Customer",
-  deliveryAddress: "Delivery address pending",
-  items: [] as ShoppingItem[],
+const STATUS_FLOW = ["accepted", "shopping", "shopping_complete", "picked_up", "delivered"] as const;
+
+const STATUS_LABELS: Record<string, string> = {
+  accepted: "Start Shopping",
+  shopping: "Done Shopping",
+  shopping_complete: "Picked Up",
+  picked_up: "Confirm Delivery",
 };
 
 export default function DriverShoppingList() {
   const navigate = useNavigate();
-  const [items, setItems] = useState<ShoppingItem[]>(MOCK_ORDER.items);
+  const { orderId } = useParams();
+  const [order, setOrder] = useState<any>(null);
+  const [items, setItems] = useState<ShoppingItem[]>([]);
   const [receiptUploaded, setReceiptUploaded] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!orderId) return;
+    const fetch = async () => {
+      setIsLoading(true);
+      const { data } = await supabase
+        .from("shopping_orders")
+        .select("*")
+        .eq("id", orderId)
+        .maybeSingle();
+
+      if (data) {
+        setOrder(data);
+        const rawItems = Array.isArray(data.items) ? data.items : [];
+        setItems(rawItems.map((it: any) => ({
+          productId: it.productId || it.id || crypto.randomUUID(),
+          name: it.name || "Item",
+          quantity: it.quantity || 1,
+          price: it.price || 0,
+          brand: it.brand || "",
+          found: it.found || false,
+        })));
+        if (data.receipt_photo_url) setReceiptUploaded(true);
+      }
+      setIsLoading(false);
+    };
+    fetch();
+  }, [orderId]);
 
   const toggleFound = (productId: string) => {
     setItems((prev) =>
@@ -49,8 +82,8 @@ export default function DriverShoppingList() {
   const foundCount = items.filter((i) => i.found).length;
 
   const handleReceiptUpload = async () => {
-    // TODO: integrate with Supabase storage
     setIsUploading(true);
+    // TODO: integrate with Supabase storage for real upload
     setTimeout(() => {
       setReceiptUploaded(true);
       setIsUploading(false);
@@ -58,23 +91,86 @@ export default function DriverShoppingList() {
     }, 1500);
   };
 
-  const handleConfirmDelivery = () => {
-    toast.success("Delivery confirmed!");
-    // TODO: update order status in DB
+  const currentStatusIndex = STATUS_FLOW.indexOf(order?.status as any);
+  const nextStatus = currentStatusIndex >= 0 && currentStatusIndex < STATUS_FLOW.length - 1
+    ? STATUS_FLOW[currentStatusIndex + 1]
+    : null;
+
+  const handleAdvanceStatus = async () => {
+    if (!nextStatus || !orderId) return;
+    setIsUpdating(true);
+
+    const timestampField: Record<string, string> = {
+      shopping: "shopping_started_at",
+      shopping_complete: "shopping_completed_at",
+      picked_up: "picked_up_at",
+      delivered: "delivered_at",
+    };
+
+    const updates: any = {
+      status: nextStatus,
+      updated_at: new Date().toISOString(),
+    };
+    const tsField = timestampField[nextStatus];
+    if (tsField) updates[tsField] = new Date().toISOString();
+
+    const { error } = await supabase
+      .from("shopping_orders")
+      .update(updates)
+      .eq("id", orderId);
+
+    setIsUpdating(false);
+
+    if (!error) {
+      setOrder((prev: any) => ({ ...prev, status: nextStatus }));
+      if (nextStatus === "delivered") {
+        toast.success("Delivery confirmed! 🎉");
+        setTimeout(() => navigate("/driver/orders"), 1500);
+      } else {
+        toast.success(`Status updated to ${nextStatus.replace("_", " ")}`);
+      }
+    } else {
+      toast.error("Failed to update status");
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-6">
+        <Package className="h-12 w-12 text-muted-foreground/30" />
+        <p className="text-sm text-muted-foreground">Order not found</p>
+        <Button variant="outline" onClick={() => navigate("/driver/orders")}>
+          Back to Orders
+        </Button>
+      </div>
+    );
+  }
+
+  const canAdvance = nextStatus === "shopping"
+    || (nextStatus === "shopping_complete" && allFound)
+    || (nextStatus === "picked_up" && receiptUploaded)
+    || nextStatus === "delivered";
 
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-1.5 rounded-xl hover:bg-muted">
+          <button onClick={() => navigate("/driver/orders")} className="p-1.5 rounded-xl hover:bg-muted">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex-1">
             <h1 className="text-lg font-bold">Shopping List</h1>
             <p className="text-xs text-muted-foreground">
-              Order {MOCK_ORDER.id} • {MOCK_ORDER.store}
+              {order.id.slice(0, 8)} • {order.store}
             </p>
           </div>
           <div className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
@@ -83,22 +179,46 @@ export default function DriverShoppingList() {
         </div>
       </div>
 
+      {/* Status Progress */}
+      <div className="mx-4 mt-4 flex gap-1">
+        {STATUS_FLOW.map((s, i) => (
+          <div
+            key={s}
+            className={cn(
+              "h-1.5 flex-1 rounded-full transition-colors",
+              i <= currentStatusIndex ? "bg-primary" : "bg-muted"
+            )}
+          />
+        ))}
+      </div>
+
       {/* Delivery Info */}
-      <div className="mx-4 mt-4 p-3 rounded-xl bg-muted/50 border border-border/50">
-        <div className="flex items-center gap-2 text-sm">
-          <MapPin className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">Deliver to:</span>
-          <span className="font-medium truncate">{MOCK_ORDER.deliveryAddress}</span>
-        </div>
+      <div className="mx-4 mt-3 p-3 rounded-xl bg-muted/50 border border-border/50 space-y-2">
+        {order.delivery_address && (
+          <div className="flex items-center gap-2 text-sm">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium truncate">{order.delivery_address}</span>
+          </div>
+        )}
+        {order.customer_name && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Customer:</span>
+            <span className="font-medium">{order.customer_name}</span>
+          </div>
+        )}
+        {order.customer_phone && (
+          <a href={`tel:${order.customer_phone}`} className="flex items-center gap-2 text-sm text-primary">
+            <Phone className="h-4 w-4" />
+            <span>{order.customer_phone}</span>
+          </a>
+        )}
       </div>
 
       {/* Items */}
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-          <Package className="h-12 w-12 text-muted-foreground/30 mb-3" />
-          <p className="text-sm text-muted-foreground">
-            No shopping orders assigned yet.
-          </p>
+          <ShoppingCart className="h-12 w-12 text-muted-foreground/30 mb-3" />
+          <p className="text-sm text-muted-foreground">No items in this order.</p>
         </div>
       ) : (
         <div className="px-4 mt-4 space-y-2">
@@ -140,9 +260,9 @@ export default function DriverShoppingList() {
         </div>
       )}
 
-      {/* Receipt Upload & Confirm */}
-      {items.length > 0 && (
-        <div className="px-4 mt-6 space-y-3">
+      {/* Actions */}
+      <div className="px-4 mt-6 space-y-3">
+        {order.status === "shopping" && (
           <Button
             variant="outline"
             className="w-full rounded-xl"
@@ -158,16 +278,19 @@ export default function DriverShoppingList() {
             )}
             {receiptUploaded ? "Receipt Uploaded" : "Upload Receipt Photo"}
           </Button>
+        )}
 
+        {nextStatus && (
           <Button
             className="w-full rounded-xl"
-            disabled={!allFound || !receiptUploaded}
-            onClick={handleConfirmDelivery}
+            disabled={!canAdvance || isUpdating}
+            onClick={handleAdvanceStatus}
           >
-            Confirm Delivery
+            {isUpdating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {STATUS_LABELS[order.status] || "Next Step"}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
