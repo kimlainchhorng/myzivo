@@ -34,7 +34,7 @@ serve(async (req) => {
       );
     }
 
-    const apiUrl = `https://${RAPID_API_HOST}/search?query=${encodeURIComponent(query)}&page=${page}&country=us`;
+    const apiUrl = `https://${RAPID_API_HOST}/product/search?query=${encodeURIComponent(query)}&page=${page}&country=us`;
 
     console.log("[costco-search] Query:", query, "| API URL:", apiUrl);
 
