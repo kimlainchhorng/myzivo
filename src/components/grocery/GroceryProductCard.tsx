@@ -1,8 +1,8 @@
 /**
- * GroceryProductCard - 2026 Spatial UI product card (v6)
- * Redesigned: bigger images, better spacing, savings badge, brand tag
+ * GroceryProductCard - 2026 Spatial UI product card (v7)
+ * Enhanced: image shimmer, hover lift, animated cart counter, savings pulse
  */
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Minus, Check, Package, Star, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StoreProduct } from "@/hooks/useStoreSearch";
@@ -25,7 +25,7 @@ const cardVariant = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { delay: i * 0.025, type: "spring" as const, stiffness: 320, damping: 26 },
+    transition: { delay: i * 0.02, type: "spring" as const, stiffness: 320, damping: 26 },
   }),
 };
 
@@ -69,11 +69,12 @@ export function GroceryProductCard({
       variants={cardVariant}
       initial="hidden"
       animate="show"
+      whileHover={{ y: -2, transition: { duration: 0.2 } }}
       whileTap={{ scale: 0.97 }}
       className={`group relative rounded-2xl bg-card border transition-all duration-300 overflow-hidden ${
         cartItem
           ? "border-primary/30 shadow-md shadow-primary/10 ring-1 ring-primary/10"
-          : "border-border/30 hover:border-primary/15 hover:shadow-lg hover:shadow-primary/5"
+          : "border-border/30 hover:border-primary/15 hover:shadow-xl hover:shadow-primary/5"
       }`}
     >
       {/* Image */}
@@ -83,11 +84,15 @@ export function GroceryProductCard({
       >
         {product.image && !imgError ? (
           <>
-            {!imgLoaded && <div className="absolute inset-0 animate-pulse bg-muted/20" />}
+            {!imgLoaded && (
+              <div className="absolute inset-0 bg-muted/10">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite]" />
+              </div>
+            )}
             <motion.img
               src={product.image}
               alt={product.name}
-              className="h-full w-full object-contain drop-shadow-sm"
+              className="h-full w-full object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
               referrerPolicy="no-referrer"
               initial={{ scale: 0.92, opacity: 0 }}
@@ -108,9 +113,14 @@ export function GroceryProductCard({
 
         {/* Savings badge */}
         {savings && (
-          <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-orange-500 text-white shadow-sm">
+          <motion.div
+            initial={{ scale: 0, rotate: -10 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ delay: index * 0.02 + 0.15, type: "spring", stiffness: 400, damping: 15 }}
+            className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-sm"
+          >
             <span className="text-[8px] font-bold">-{savings.pct}%</span>
-          </div>
+          </motion.div>
         )}
 
         {/* Store logo */}
@@ -120,16 +130,27 @@ export function GroceryProductCard({
           </div>
         )}
 
-        {/* Cart badge */}
-        {cartItem && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute bottom-1.5 right-1.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center ring-1.5 ring-background"
-          >
-            <Check className="h-2.5 w-2.5 text-primary-foreground" strokeWidth={3} />
-          </motion.div>
-        )}
+        {/* Cart badge with counter */}
+        <AnimatePresence>
+          {cartItem && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+              className="absolute bottom-1.5 right-1.5 h-6 min-w-[24px] px-1 rounded-full bg-primary flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30"
+            >
+              <motion.span
+                key={cartItem.quantity}
+                initial={{ scale: 1.4 }}
+                animate={{ scale: 1 }}
+                className="text-[9px] font-extrabold text-primary-foreground"
+              >
+                {cartItem.quantity}
+              </motion.span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Rating */}
         {product.rating != null && (
@@ -150,7 +171,7 @@ export function GroceryProductCard({
         )}
 
         <p
-          className="text-[11px] font-semibold line-clamp-2 leading-snug text-foreground/90 min-h-[28px] cursor-pointer hover:text-primary transition-colors"
+          className="text-[11px] font-semibold line-clamp-2 leading-snug text-foreground/90 min-h-[28px] cursor-pointer hover:text-primary transition-colors duration-200"
           onClick={() => onSelect?.(product)}
         >
           {product.name}
@@ -178,18 +199,23 @@ export function GroceryProductCard({
             <motion.button
               whileTap={{ scale: 0.8 }}
               onClick={() => onUpdateQuantity(product.productId, cartItem.quantity - 1)}
-              className="h-7 w-7 rounded-lg bg-background flex items-center justify-center border border-border/20"
+              className="h-7 w-7 rounded-lg bg-background flex items-center justify-center border border-border/20 hover:bg-muted/50 transition-colors"
               aria-label="Decrease"
             >
               <Minus className="h-3 w-3" />
             </motion.button>
-            <span className="text-[12px] font-extrabold text-primary min-w-[20px] text-center">
+            <motion.span
+              key={cartItem.quantity}
+              initial={{ scale: 1.3 }}
+              animate={{ scale: 1 }}
+              className="text-[12px] font-extrabold text-primary min-w-[20px] text-center"
+            >
               {cartItem.quantity}
-            </span>
+            </motion.span>
             <motion.button
               whileTap={{ scale: 0.8 }}
               onClick={() => onUpdateQuantity(product.productId, cartItem.quantity + 1)}
-              className="h-7 w-7 rounded-lg bg-background flex items-center justify-center border border-border/20"
+              className="h-7 w-7 rounded-lg bg-background flex items-center justify-center border border-border/20 hover:bg-muted/50 transition-colors"
               aria-label="Increase"
             >
               <Plus className="h-3 w-3" />
@@ -203,12 +229,17 @@ export function GroceryProductCard({
               onClick={handleAdd}
               aria-label={`Add ${product.name}`}
             >
-              {justAdded ? (
-                <Check className="h-3 w-3" />
-              ) : (
-                <Plus className="h-3 w-3" />
-              )}
-              {justAdded ? "Added!" : "Add to Cart"}
+              <AnimatePresence mode="wait">
+                {justAdded ? (
+                  <motion.span key="added" initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1">
+                    <Check className="h-3 w-3" /> Added!
+                  </motion.span>
+                ) : (
+                  <motion.span key="add" initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1">
+                    <Plus className="h-3 w-3" /> Add to Cart
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </Button>
           </motion.div>
         )}
