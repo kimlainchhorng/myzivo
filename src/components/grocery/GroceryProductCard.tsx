@@ -31,7 +31,7 @@ export function GroceryProductCard({
       className="rounded-2xl border border-border/50 bg-card overflow-hidden"
     >
       {/* Image */}
-      <div className="aspect-square bg-white p-3 flex items-center justify-center relative">
+      <div className="aspect-square bg-white p-4 flex items-center justify-center relative">
         {product.image ? (
           <img
             src={product.image}
@@ -40,7 +40,7 @@ export function GroceryProductCard({
             loading="lazy"
           />
         ) : (
-          <Package className="h-10 w-10 text-muted-foreground/30" />
+          <Package className="h-12 w-12 text-muted-foreground/30" />
         )}
         <Badge variant="secondary" className="absolute top-2 left-2 text-[9px] px-1.5 py-0.5">
           {product.store}
@@ -48,14 +48,14 @@ export function GroceryProductCard({
       </div>
 
       {/* Info */}
-      <div className="p-3 space-y-1">
+      <div className="p-3 space-y-1.5">
         {product.brand && (
           <p className="text-[10px] text-muted-foreground uppercase tracking-wide truncate">
             {product.brand}
           </p>
         )}
-        <p className="text-xs font-medium line-clamp-2 leading-tight">{product.name}</p>
-        <div className="flex items-center justify-between pt-1">
+        <p className="text-sm font-medium line-clamp-2 leading-snug">{product.name}</p>
+        <div className="flex items-center justify-between pt-0.5">
           <span className="text-sm font-bold text-primary">
             ${typeof product.price === "number" ? product.price.toFixed(2) : product.price}
           </span>
@@ -89,12 +89,11 @@ export function GroceryProductCard({
         ) : (
           <Button
             size="sm"
-            variant="outline"
             className="w-full rounded-xl text-xs h-8 mt-1"
             onClick={() => onAdd(product)}
           >
             <Plus className="h-3 w-3 mr-1" />
-            Add to Cart
+            Add
           </Button>
         )}
       </div>

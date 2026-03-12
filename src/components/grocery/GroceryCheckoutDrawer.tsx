@@ -51,11 +51,13 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
         store: i.store,
       }));
 
+      const storeName = items[0]?.store || "Walmart";
+
       const { data, error } = await supabase
         .from("shopping_orders")
         .insert({
           user_id: user?.id || null,
-          store: "Walmart",
+          store: storeName,
           order_type: "shopping_delivery",
           status: "pending",
           items: orderItems as any,
@@ -115,7 +117,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
           <div className="rounded-xl bg-muted/50 border border-border/50 p-3 mb-5">
             <div className="flex items-center gap-2 mb-2">
               <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-semibold">{items.length} items from Walmart</span>
+              <span className="text-sm font-semibold">{items.length} items from {items[0]?.store || "Store"}</span>
             </div>
             <div className="space-y-1.5 max-h-32 overflow-y-auto">
               {items.map((item) => (

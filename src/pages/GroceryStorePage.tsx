@@ -150,11 +150,11 @@ export default function GroceryStorePage() {
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {cart.items.map((item) => (
                     <div key={item.productId} className="flex items-center gap-3 p-2 rounded-xl bg-muted/30">
-                      {item.image && <img src={item.image} alt="" className="h-10 w-10 rounded-lg object-contain bg-white" />}
+                       {item.image && <img src={item.image} alt="" className="h-12 w-12 rounded-lg object-contain bg-white" />}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{item.name}</p>
                         <div className="flex items-center gap-1.5">
-                          <p className="text-xs text-muted-foreground">${item.price.toFixed(2)}</p>
+                          <p className="text-xs text-muted-foreground">${item.price.toFixed(2)} × {item.quantity} = <span className="font-semibold text-foreground">${(item.price * item.quantity).toFixed(2)}</span></p>
                           <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">{item.store}</Badge>
                         </div>
                       </div>
