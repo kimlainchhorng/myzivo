@@ -86,9 +86,15 @@ serve(async (req) => {
       return match ? match[1] : crypto.randomUUID().slice(0, 12);
     };
 
+    // Clean product name by removing trailing price info like "$4.86 3.8 ¢/fl oz"
+    const cleanName = (name: string): string => {
+      if (!name) return "";
+      return name.replace(/\s*\$[\d.,]+.*$/, "").trim();
+    };
+
     const items = rawProducts.map((item: any) => ({
       productId: item.id || item.usItemId || item.product_id || extractId(item.link || ""),
-      name: item.title || item.name || "",
+      name: cleanName(item.title || item.name || ""),
       price: parsePrice(item.price),
       image: item.image || item.thumbnailImage || item.largeFrontImage || "",
       brand: item.brand || item.brandName || "",
