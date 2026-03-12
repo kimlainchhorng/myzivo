@@ -1,15 +1,15 @@
 /**
- * GroceryCheckoutDrawer - 2026 Spatial UI Checkout (v3)
- * True 2-step flow: Step 1 = Delivery Details, Step 2 = Review & Pay
- * Auto-fills address from delivery bar localStorage
+ * GroceryCheckoutDrawer - 2026 Spatial UI Checkout (v4)
+ * 2-step: Delivery Details → Review & Pay
+ * Real-time ETA, substitution preferences, persistent profile
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin, Loader2, X, ShoppingCart, Truck, Shield, User, Phone,
   ChevronDown, Lock, CheckCircle, Package, Clock, Heart,
   CreditCard, Sparkles, Timer, BadgeCheck, ArrowRight, ArrowLeft,
-  MessageSquare, DoorOpen, Star, Gift,
+  MessageSquare, DoorOpen, Star, Gift, RefreshCw, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { GroceryPromoInput } from "@/components/grocery/GroceryPromoBanner";
+import { getLiveEta } from "@/utils/storeStatus";
+import { getStoreConfig, type StoreName, GROCERY_STORES } from "@/config/groceryStores";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -30,7 +32,8 @@ const DELIVERY_FEE = 5.99;
 const SERVICE_FEE = 1.99;
 const TIP_OPTIONS = [0, 2, 3, 5];
 
-/* Load saved delivery address from localStorage */
+type SubstitutionPref = "contact_me" | "best_match" | "refund";
+
 function getSavedAddress(): { address: string; label: string } | null {
   try {
     const raw = localStorage.getItem("zivo_selected_address");
@@ -42,13 +45,12 @@ function getSavedAddress(): { address: string; label: string } | null {
   return null;
 }
 
-/* Load saved user profile */
-function getSavedProfile(): { name: string; phone: string } {
+function getSavedProfile(): { name: string; phone: string; subPref: SubstitutionPref } {
   try {
     const raw = localStorage.getItem("zivo_checkout_profile");
-    if (raw) return JSON.parse(raw);
+    if (raw) return { subPref: "contact_me", ...JSON.parse(raw) };
   } catch {}
-  return { name: "", phone: "" };
+  return { name: "", phone: "", subPref: "contact_me" };
 }
 
 export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: GroceryCheckoutDrawerProps) {
@@ -66,17 +68,29 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [step, setStep] = useState<1 | 2>(1);
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoCode, setPromoCode] = useState("");
+  const [subPref, setSubPref] = useState<SubstitutionPref>(savedProfile.subPref);
 
   const grandTotal = Math.max(0, total + DELIVERY_FEE + SERVICE_FEE + tip - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
 
-  // Save profile for next time
+  // Live ETA
+  const storeName = items[0]?.store || "Walmart";
+  const storeCfg = GROCERY_STORES.find(s => s.name.toLowerCase() === storeName.toLowerCase());
+  const [liveEta, setLiveEta] = useState(storeCfg?.deliveryMin ?? 35);
+  useEffect(() => {
+    const compute = () => setLiveEta(getLiveEta(storeCfg?.deliveryMin ?? 35));
+    compute();
+    const interval = setInterval(compute, 30_000);
+    return () => clearInterval(interval);
+  }, [storeCfg]);
+
+  // Persist profile
   useEffect(() => {
     if (name || phone) {
-      localStorage.setItem("zivo_checkout_profile", JSON.stringify({ name, phone }));
+      localStorage.setItem("zivo_checkout_profile", JSON.stringify({ name, phone, subPref }));
     }
-  }, [name, phone]);
+  }, [name, phone, subPref]);
 
   const goToReview = () => {
     if (!address.trim()) { toast.error("Please enter a delivery address"); return; }
@@ -118,7 +132,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
     }
   };
 
-  // No fake savings — real pricing only
+  const SUB_OPTIONS: { value: SubstitutionPref; label: string; desc: string; icon: typeof RefreshCw }[] = [
+    { value: "contact_me", label: "Contact Me", desc: "Driver will message you", icon: MessageSquare },
+    { value: "best_match", label: "Best Match", desc: "Pick a similar item", icon: RefreshCw },
+    { value: "refund", label: "Refund", desc: "Skip & refund", icon: AlertTriangle },
+  ];
 
   return (
     <motion.div
@@ -168,7 +186,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   {step === 1 ? "Delivery Details" : "Review & Pay"}
                 </h2>
                 <p className="text-[11px] text-muted-foreground">
-                  Step {step} of 2 · {itemCount} items from {items[0]?.store}
+                  Step {step} of 2 · {itemCount} items from {storeName}
                 </p>
               </div>
             </div>
@@ -197,13 +215,18 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.25 }}
               >
-                {/* Estimated delivery banner */}
+                {/* Live ETA banner */}
                 <div className="flex items-center gap-3 p-3 rounded-2xl bg-primary/5 border border-primary/10 mb-4">
                   <div className="p-2 rounded-xl bg-primary/15 shrink-0">
                     <Timer className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-[12px] font-bold text-foreground">Estimated delivery: 35–50 min</p>
+                    <p className="text-[12px] font-bold text-foreground">
+                      Estimated delivery:{" "}
+                      <motion.span key={liveEta} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-primary">
+                        {liveEta}–{liveEta + 15} min
+                      </motion.span>
+                    </p>
                     <p className="text-[10px] text-muted-foreground">A ZIVO driver will shop & deliver your items</p>
                   </div>
                 </div>
@@ -294,6 +317,30 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   rows={2}
                 />
 
+                {/* Substitution preference */}
+                <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
+                  <RefreshCw className="h-3.5 w-3.5 text-primary" />
+                  If an item is unavailable
+                </h3>
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {SUB_OPTIONS.map((opt) => (
+                    <motion.button
+                      key={opt.value}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setSubPref(opt.value)}
+                      className={`p-2.5 rounded-xl border text-center transition-all ${
+                        subPref === opt.value
+                          ? "bg-primary/5 border-primary/25 shadow-sm"
+                          : "bg-muted/10 border-border/15 hover:bg-muted/20"
+                      }`}
+                    >
+                      <opt.icon className={`h-4 w-4 mx-auto mb-1 ${subPref === opt.value ? "text-primary" : "text-muted-foreground/50"}`} />
+                      <p className={`text-[10px] font-bold ${subPref === opt.value ? "text-primary" : "text-foreground/70"}`}>{opt.label}</p>
+                      <p className="text-[8px] text-muted-foreground mt-0.5">{opt.desc}</p>
+                    </motion.button>
+                  ))}
+                </div>
+
                 {/* Item preview */}
                 <div className="rounded-2xl bg-muted/15 border border-border/20 overflow-hidden mb-4">
                   <button
@@ -363,12 +410,20 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   <p className="text-[12px] text-foreground font-medium">{name}</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">{address}</p>
                   {phone && <p className="text-[11px] text-muted-foreground mt-0.5">{phone}</p>}
-                  {leaveAtDoor && (
-                    <div className="flex items-center gap-1.5 mt-2">
-                      <DoorOpen className="h-3 w-3 text-primary" />
-                      <span className="text-[10px] text-primary font-semibold">Leave at door</span>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    {leaveAtDoor && (
+                      <div className="flex items-center gap-1.5">
+                        <DoorOpen className="h-3 w-3 text-primary" />
+                        <span className="text-[10px] text-primary font-semibold">Leave at door</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1.5">
+                      <RefreshCw className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        Substitutions: {SUB_OPTIONS.find(o => o.value === subPref)?.label}
+                      </span>
                     </div>
-                  )}
+                  </div>
                   {deliveryNote && (
                     <div className="flex items-start gap-1.5 mt-1.5">
                       <MessageSquare className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
@@ -383,16 +438,25 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   </button>
                 </div>
 
-                {/* Service info */}
+                {/* Live ETA */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/15 w-fit mb-4"
+                  className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-primary/5 border border-primary/10 mb-4"
                 >
-                  <Sparkles className="h-3 w-3 text-primary" />
-                  <span className="text-[10px] font-semibold text-primary">
-                    In-store prices · No markup
-                  </span>
+                  <Timer className="h-4 w-4 text-primary" />
+                  <div className="flex-1">
+                    <span className="text-[11px] font-bold text-foreground">
+                      Est. delivery:{" "}
+                      <motion.span key={liveEta} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-primary">
+                        {liveEta}–{liveEta + 15} min
+                      </motion.span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10">
+                    <Sparkles className="h-2.5 w-2.5 text-emerald-500" />
+                    <span className="text-[9px] font-bold text-emerald-600">No markup</span>
+                  </div>
                 </motion.div>
 
                 {/* Full order summary */}

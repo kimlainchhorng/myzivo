@@ -1,18 +1,20 @@
 /**
  * GroceryOrderConfirmed - Payment success page after Stripe Checkout
- * Premium design with animated stepper and order summary
+ * Shows real order data, live status, and share/save actions
  */
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   CheckCircle, ShoppingCart, ArrowLeft, Clock, Truck, CreditCard,
-  Package, MapPin, Sparkles, ShoppingBag, ChevronRight, PartyPopper, Shield,
+  Package, MapPin, Sparkles, ShoppingBag, ChevronRight, Shield,
+  Copy, Share2, Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 const STEPS = [
   { icon: CreditCard, label: "Payment Confirmed", desc: "Your payment was processed securely" },
@@ -48,7 +50,6 @@ export default function GroceryOrderConfirmed() {
           .update({ status: "pending" } as any)
           .eq("id", orderId);
 
-        // Fetch order details
         const { data } = await supabase
           .from("shopping_orders")
           .select("store, total_amount, delivery_fee, items, delivery_address, customer_name")
@@ -63,14 +64,32 @@ export default function GroceryOrderConfirmed() {
       }
     };
     confirmOrder();
-
-    // Clear grocery cart
     localStorage.removeItem("zivo-grocery-cart");
   }, [orderId]);
 
+  const copyOrderId = () => {
+    navigator.clipboard.writeText(orderId);
+    toast.success("Order ID copied to clipboard");
+  };
+
+  const shareOrder = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "ZIVO Grocery Order",
+          text: `My grocery order from ${order?.store || "ZIVO"} is on its way!`,
+          url: window.location.href,
+        });
+      } catch {}
+    } else {
+      copyOrderId();
+    }
+  };
+
+  const itemTotal = order?.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden pb-24">
-      {/* Background effects */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-80 w-80 rounded-full bg-emerald-500/8 blur-[80px]" />
         <div className="absolute bottom-1/4 -left-20 h-48 w-48 rounded-full bg-primary/6 blur-[60px]" />
@@ -122,7 +141,10 @@ export default function GroceryOrderConfirmed() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Order ID</p>
-                <p className="text-[14px] font-mono font-bold text-foreground mt-0.5">{orderId.slice(0, 8).toUpperCase()}</p>
+                <button onClick={copyOrderId} className="flex items-center gap-1.5 mt-0.5 group">
+                  <p className="text-[14px] font-mono font-bold text-foreground">{orderId.slice(0, 8).toUpperCase()}</p>
+                  <Copy className="h-3 w-3 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                </button>
                 {order?.store && (
                   <p className="text-[10px] text-muted-foreground mt-0.5">from {order.store}</p>
                 )}
@@ -153,7 +175,7 @@ export default function GroceryOrderConfirmed() {
             className="w-full rounded-2xl bg-card border border-border/20 p-4 mb-6"
           >
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3">
-              {order.items.length} items ordered
+              {itemTotal} items ordered
             </p>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {order.items.slice(0, 6).map((item, i) => (
@@ -243,9 +265,9 @@ export default function GroceryOrderConfirmed() {
             <p className="text-[8px] text-muted-foreground">Stripe</p>
           </div>
           <div className="p-3 rounded-2xl bg-muted/20 border border-border/15 text-center">
-            <Truck className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-            <p className="text-[11px] font-bold">Tracked</p>
-            <p className="text-[8px] text-muted-foreground">Live</p>
+            <Bell className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
+            <p className="text-[11px] font-bold">Notified</p>
+            <p className="text-[8px] text-muted-foreground">Updates</p>
           </div>
         </motion.div>
 
@@ -285,9 +307,8 @@ export default function GroceryOrderConfirmed() {
               <ShoppingCart className="h-4 w-4 mr-1.5" />
               Shop More
             </Button>
-            <Button variant="outline" onClick={() => navigate("/")} className="flex-1 rounded-2xl h-11">
-              <ArrowLeft className="h-4 w-4 mr-1.5" />
-              Home
+            <Button variant="outline" onClick={shareOrder} className="rounded-2xl h-11 px-4">
+              <Share2 className="h-4 w-4" />
             </Button>
           </div>
         </motion.div>
