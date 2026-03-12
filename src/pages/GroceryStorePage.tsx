@@ -291,28 +291,6 @@ export default function GroceryStorePage() {
 
   const status = getStoreStatus(storeCfg.hours);
 
-  const handleSearch = (val: string) => {
-    setQuery(val);
-    setActiveFilter(null);
-    clearTimeout(debounceRef.current);
-    if (val.trim().length < 2) {
-      debounceRef.current = setTimeout(() => search(storeCfg.defaultQuery), 100);
-      return;
-    }
-    debounceRef.current = setTimeout(() => search(val), 500);
-  };
-
-  const handleQuickFilter = (filter: typeof QUICK_FILTERS[0]) => {
-    if (activeFilter === filter.label) {
-      setActiveFilter(null);
-      setQuery("");
-      search(storeCfg.defaultQuery);
-    } else {
-      setActiveFilter(filter.label);
-      setQuery("");
-      search(filter.query);
-    }
-  };
 
   const handleAdd = (p: StoreProduct) => {
     cart.addItem(
