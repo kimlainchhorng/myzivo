@@ -1,13 +1,14 @@
 /**
  * GroceryOrderAgain - Shows previously purchased items for quick reorder
- * Pulls from localStorage order history
+ * Pulls from Supabase shopping_orders + localStorage cache
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { RotateCcw, Plus, Check, Package } from "lucide-react";
 import type { StoreProduct } from "@/hooks/useStoreSearch";
+import { supabase } from "@/integrations/supabase/client";
 
-const HISTORY_KEY = "zivo-grocery-order-history";
+const CACHE_KEY = "zivo-grocery-order-history";
 
 export interface OrderHistoryItem {
   productId: string;
@@ -20,10 +21,10 @@ export interface OrderHistoryItem {
   orderCount: number;
 }
 
-/** Save items to order history after checkout */
+/** Save items to order history after checkout (localStorage + future Supabase sync) */
 export function saveToOrderHistory(items: { productId: string; name: string; price: number; image: string; brand: string; store: string }[]) {
   try {
-    const stored = localStorage.getItem(HISTORY_KEY);
+    const stored = localStorage.getItem(CACHE_KEY);
     const history: OrderHistoryItem[] = stored ? JSON.parse(stored) : [];
     const now = new Date().toISOString();
 
@@ -38,23 +39,10 @@ export function saveToOrderHistory(items: { productId: string; name: string; pri
       }
     });
 
-    // Keep last 50 items, sorted by most recent
     history.sort((a, b) => new Date(b.lastOrdered).getTime() - new Date(a.lastOrdered).getTime());
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
+    localStorage.setItem(CACHE_KEY, JSON.stringify(history.slice(0, 50)));
   } catch {
     // Silently fail
-  }
-}
-
-export function getOrderHistory(store?: string): OrderHistoryItem[] {
-  try {
-    const stored = localStorage.getItem(HISTORY_KEY);
-    if (!stored) return [];
-    const history: OrderHistoryItem[] = JSON.parse(stored);
-    if (store) return history.filter((h) => h.store.toLowerCase() === store.toLowerCase());
-    return history;
-  } catch {
-    return [];
   }
 }
 
@@ -67,14 +55,80 @@ interface GroceryOrderAgainProps {
 export function GroceryOrderAgain({ store, onAdd, cartProductIds }: GroceryOrderAgainProps) {
   const [history, setHistory] = useState<OrderHistoryItem[]>([]);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setHistory(getOrderHistory(store));
+    let cancelled = false;
+
+    async function fetchHistory() {
+      // 1. Try Supabase first for authenticated users
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: orders } = await supabase
+            .from("shopping_orders")
+            .select("items, placed_at")
+            .eq("user_id", user.id)
+            .eq("order_type", "shopping_delivery")
+            .in("status", ["delivered", "completed", "pending", "confirmed", "shopping"])
+            .order("placed_at", { ascending: false })
+            .limit(10);
+
+          if (!cancelled && orders && orders.length > 0) {
+            const itemMap = new Map<string, OrderHistoryItem>();
+            for (const order of orders) {
+              const items = Array.isArray(order.items) ? (order.items as any[]) : [];
+              for (const item of items) {
+                if (!item.productId || !item.name) continue;
+                const itemStore = (item.store || "").toLowerCase();
+                if (itemStore !== store.toLowerCase()) continue;
+
+                if (itemMap.has(item.productId)) {
+                  const existing = itemMap.get(item.productId)!;
+                  existing.orderCount += 1;
+                } else {
+                  itemMap.set(item.productId, {
+                    productId: item.productId,
+                    name: item.name,
+                    price: item.price || 0,
+                    image: item.image || "",
+                    brand: item.brand || "",
+                    store: item.store || store,
+                    lastOrdered: order.placed_at || new Date().toISOString(),
+                    orderCount: 1,
+                  });
+                }
+              }
+            }
+            if (!cancelled) {
+              setHistory(Array.from(itemMap.values()).slice(0, 15));
+              setLoading(false);
+              return;
+            }
+          }
+        }
+      } catch {
+        // Fall through to localStorage
+      }
+
+      // 2. Fallback: localStorage cache
+      if (!cancelled) {
+        try {
+          const stored = localStorage.getItem(CACHE_KEY);
+          if (stored) {
+            const all: OrderHistoryItem[] = JSON.parse(stored);
+            setHistory(all.filter((h) => h.store.toLowerCase() === store.toLowerCase()));
+          }
+        } catch {}
+        setLoading(false);
+      }
+    }
+
+    fetchHistory();
+    return () => { cancelled = true; };
   }, [store]);
 
-  if (history.length === 0) return null;
-
-  const handleAdd = (item: OrderHistoryItem) => {
+  const handleAdd = useCallback((item: OrderHistoryItem) => {
     onAdd({
       productId: item.productId,
       name: item.name,
@@ -87,7 +141,9 @@ export function GroceryOrderAgain({ store, onAdd, cartProductIds }: GroceryOrder
     });
     setAddedIds((prev) => new Set(prev).add(item.productId));
     setTimeout(() => setAddedIds((prev) => { const next = new Set(prev); next.delete(item.productId); return next; }), 800);
-  };
+  }, [onAdd]);
+
+  if (loading || history.length === 0) return null;
 
   return (
     <div className="pt-3 pb-1">
