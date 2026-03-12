@@ -343,10 +343,10 @@ export default function GroceryDeliveryBar() {
                                 <MapPin className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
                                 <div className="min-w-0">
                                   <p className="text-[11px] font-semibold text-foreground truncate">
-                                    {s.street || s.city}
+                                    {s.mainText}
                                   </p>
                                   <p className="text-[10px] text-muted-foreground truncate">
-                                    {[s.city, s.state, s.zip].filter(Boolean).join(", ")}
+                                    {s.display}
                                   </p>
                                 </div>
                               </button>
