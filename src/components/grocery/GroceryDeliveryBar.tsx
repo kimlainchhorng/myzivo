@@ -42,7 +42,7 @@ export default function GroceryDeliveryBar() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-  /** Autocomplete address search via Nominatim */
+  /** Autocomplete address search via Google Maps */
   const searchAddress = useCallback((query: string) => {
     setNewAddress(query);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -54,25 +54,15 @@ export default function GroceryDeliveryBar() {
     debounceRef.current = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=us`,
-          { headers: { "Accept-Language": "en" } }
-        );
-        const data = await res.json();
-        const mapped: AddressSuggestion[] = data.map((item: any) => {
-          const a = item.address || {};
-          const street = [a.house_number, a.road].filter(Boolean).join(" ");
-          const city = a.city || a.town || a.village || a.county || "";
-          const state = a.state || "";
-          const zip = a.postcode || "";
-          return {
-            display: item.display_name,
-            street,
-            city,
-            state,
-            zip,
-          };
+        const { data, error } = await supabase.functions.invoke("maps-autocomplete", {
+          body: { input: query.trim() },
         });
+        if (error) throw error;
+        const mapped: AddressSuggestion[] = (data?.suggestions || []).map((s: any) => ({
+          display: s.description || "",
+          mainText: s.main_text || s.description?.split(",")[0] || "",
+          placeId: s.place_id || "",
+        }));
         setSuggestions(mapped);
         setShowSuggestions(mapped.length > 0);
       } catch {
@@ -84,8 +74,7 @@ export default function GroceryDeliveryBar() {
   }, []);
 
   const selectSuggestion = useCallback((s: AddressSuggestion) => {
-    const full = [s.street, s.city, s.state, s.zip].filter(Boolean).join(", ");
-    setNewAddress(full);
+    setNewAddress(s.display);
     setSuggestions([]);
     setShowSuggestions(false);
   }, []);
