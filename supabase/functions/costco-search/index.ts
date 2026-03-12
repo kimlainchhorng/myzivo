@@ -55,7 +55,7 @@ serve(async (req) => {
     const data = await response.json();
     console.log("[costco-search] Raw response keys:", Object.keys(data));
 
-    const rawProducts = data.products || [];
+    const rawProducts = data.products || data.data?.products || data.data || [];
     console.log("[costco-search] Raw products count:", rawProducts.length);
     if (rawProducts.length > 0) {
       console.log("[costco-search] Sample product keys:", Object.keys(rawProducts[0]).slice(0, 15));
