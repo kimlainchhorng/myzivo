@@ -52,13 +52,21 @@ export default function GroceryPage() {
     toast.success("Added to cart");
   };
 
+  const [showCheckout, setShowCheckout] = useState(false);
+
   const handleCheckout = () => {
     if (cart.itemCount === 0) {
       toast.error("Your cart is empty");
       return;
     }
-    toast.success("Order created! A driver will shop for you.");
-    // TODO: create real shopping_delivery order in DB
+    setShowCart(false);
+    setShowCheckout(true);
+  };
+
+  const handleOrderPlaced = (orderId: string) => {
+    cart.clearCart();
+    setShowCheckout(false);
+    navigate(`/grocery/order-placed?id=${orderId}`);
   };
 
   return (
