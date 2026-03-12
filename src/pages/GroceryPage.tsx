@@ -260,6 +260,14 @@ export default function GroceryPage() {
         )}
       </AnimatePresence>
 
+      <GroceryProductDetail
+        product={selectedProduct}
+        cartItem={selectedProduct ? cart.items.find((c) => c.productId === selectedProduct.productId) : undefined}
+        onClose={() => setSelectedProduct(null)}
+        onAdd={handleAdd}
+        onUpdateQuantity={cart.updateQuantity}
+      />
+
       <ZivoMobileNav />
     </div>
   );
