@@ -48,14 +48,14 @@ export function GroceryProductCard({
       </div>
 
       {/* Info */}
-      <div className="p-3 space-y-1">
+      <div className="p-3 space-y-1.5">
         {product.brand && (
           <p className="text-[10px] text-muted-foreground uppercase tracking-wide truncate">
             {product.brand}
           </p>
         )}
-        <p className="text-xs font-medium line-clamp-2 leading-tight">{product.name}</p>
-        <div className="flex items-center justify-between pt-1">
+        <p className="text-sm font-medium line-clamp-2 leading-snug">{product.name}</p>
+        <div className="flex items-center justify-between pt-0.5">
           <span className="text-sm font-bold text-primary">
             ${typeof product.price === "number" ? product.price.toFixed(2) : product.price}
           </span>
