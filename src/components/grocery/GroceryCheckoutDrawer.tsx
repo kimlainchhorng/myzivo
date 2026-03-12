@@ -417,7 +417,21 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
             ))}
           </motion.div>
 
-          <p className="text-[9px] text-muted-foreground/60 text-center mb-3 leading-relaxed px-4">
+          {/* Promo code */}
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.32 }}
+            className="mb-4"
+          >
+            <GroceryPromoInput
+              onApply={(code, discount) => {
+                setPromoCode(code);
+                setPromoDiscount(discount);
+              }}
+            />
+          </motion.div>
+
             You'll be redirected to Stripe for secure payment. A verified ZIVO driver will shop your items and deliver to your door.
           </p>
         </div>
