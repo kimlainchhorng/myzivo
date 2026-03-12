@@ -70,7 +70,7 @@ export function GroceryProductCard({
       }`}
     >
       {/* Image */}
-      <div className="relative aspect-square bg-gradient-to-br from-muted/10 via-muted/20 to-muted/30 flex items-center justify-center p-4 overflow-hidden">
+      <div className="relative aspect-square bg-gradient-to-br from-muted/10 via-muted/20 to-muted/30 flex items-center justify-center p-4 overflow-hidden cursor-pointer" onClick={() => onSelect?.(product)}>
         {product.image && !imgError ? (
           <>
             {!imgLoaded && (
