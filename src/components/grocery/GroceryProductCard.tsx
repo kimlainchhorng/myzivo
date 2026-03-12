@@ -177,7 +177,7 @@ export function GroceryProductCard({
           </div>
         </div>
 
-        <p className="text-[12px] font-semibold line-clamp-2 leading-[1.35] text-foreground/90 min-h-[32px]">
+        <p className="text-[12px] font-semibold line-clamp-2 leading-[1.35] text-foreground/90 min-h-[32px] cursor-pointer" onClick={() => onSelect?.(product)}>
           {product.name}
         </p>
 
