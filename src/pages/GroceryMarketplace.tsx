@@ -332,25 +332,35 @@ export default function GroceryMarketplace() {
               )}
             </div>
           </div>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => navigate("/grocery/store/walmart")}
-            className="relative p-2.5 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
-            aria-label="Shopping cart"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {cart.itemCount > 0 && (
-              <motion.span
-                key={cart.itemCount}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold min-w-[22px] h-[22px] px-1 shadow-lg shadow-primary/40 ring-2 ring-background"
-              >
-                {cart.itemCount}
-              </motion.span>
-            )}
-          </motion.button>
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate("/grocery/orders")}
+              className="p-2.5 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
+              aria-label="My orders"
+            >
+              <ClipboardList className="h-5 w-5" />
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate("/grocery/store/walmart")}
+              className="relative p-2.5 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
+              aria-label="Shopping cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cart.itemCount > 0 && (
+                <motion.span
+                  key={cart.itemCount}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                  className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold min-w-[22px] h-[22px] px-1 shadow-lg shadow-primary/40 ring-2 ring-background"
+                >
+                  {cart.itemCount}
+                </motion.span>
+              )}
+            </motion.button>
+          </div>
         </div>
 
         {/* Delivery address */}
