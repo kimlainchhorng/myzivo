@@ -162,11 +162,15 @@ serve(async (req) => {
       return "";
     };
 
+    const functionBaseUrl = `${url.origin}/functions/v1/walmart-search`;
+    const toProxyImageUrl = (src: string): string =>
+      src ? `${functionBaseUrl}?img=${encodeURIComponent(src)}` : "";
+
     const items = rawProducts.map((item: any) => ({
       productId: item.id || item.usItemId || item.product_id || extractId(item.link || ""),
       name: cleanName(item.title || item.name || ""),
       price: parsePrice(item.price),
-      image: item.image || item.thumbnailImage || item.largeFrontImage || "",
+      image: toProxyImageUrl(item.image || item.thumbnailImage || item.largeFrontImage || ""),
       brand: extractBrand(item),
       rating: item.rating?.average ?? item.customerRating ?? item.ratings ?? null,
       inStock: true,
