@@ -1,9 +1,12 @@
 /**
- * GroceryCheckoutDrawer - 2026 Spatial UI checkout
+ * GroceryCheckoutDrawer - 2026 Spatial UI checkout (v2)
  */
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { MapPin, Loader2, X, ShoppingCart, Truck, Shield, User, Phone } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  MapPin, Loader2, X, ShoppingCart, Truck, Shield, User, Phone,
+  ChevronDown, ChevronUp, Lock, CheckCircle, Package,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,14 +21,17 @@ interface GroceryCheckoutDrawerProps {
 }
 
 const DELIVERY_FEE = 5.99;
+const SERVICE_FEE = 1.99;
 
 export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: GroceryCheckoutDrawerProps) {
   const [address, setAddress] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showItems, setShowItems] = useState(false);
 
-  const grandTotal = total + DELIVERY_FEE;
+  const grandTotal = total + DELIVERY_FEE + SERVICE_FEE;
+  const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
   const handlePlaceOrder = async () => {
     if (!address.trim()) { toast.error("Please enter a delivery address"); return; }
@@ -71,6 +77,8 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
     }
   };
 
+  const isValid = address.trim().length > 0 && name.trim().length > 0;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -83,57 +91,106 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
-        transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[2rem] border-t border-border/30 max-h-[90vh] overflow-y-auto safe-area-bottom"
+        transition={{ type: "spring", damping: 28, stiffness: 280 }}
+        className="absolute bottom-0 left-0 right-0 bg-background rounded-t-[28px] border-t border-border/20 max-h-[92vh] overflow-y-auto safe-area-bottom"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex justify-center pt-3 pb-1 sticky top-0 z-10">
           <div className="w-10 h-1 rounded-full bg-muted-foreground/15" />
         </div>
 
         <div className="px-5 pb-8">
           {/* Header */}
           <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="text-xl font-bold">Checkout</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">{items.length} items from {items[0]?.store}</p>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Package className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold">Checkout</h2>
+                <p className="text-[11px] text-muted-foreground">{itemCount} items from {items[0]?.store}</p>
+              </div>
             </div>
-            <button onClick={onClose} className="p-2 rounded-2xl hover:bg-muted/60 transition-colors">
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={onClose}
+              className="p-2 rounded-2xl bg-muted/40 hover:bg-muted/60 transition-colors"
+            >
               <X className="h-5 w-5" />
-            </button>
+            </motion.button>
           </div>
 
-          {/* Order Summary */}
-          <div className="rounded-2xl bg-muted/30 border border-border/30 backdrop-blur-sm p-4 mb-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="p-1.5 rounded-lg bg-primary/10">
-                <ShoppingCart className="h-3.5 w-3.5 text-primary" />
-              </div>
-              <span className="text-sm font-semibold">Order Summary</span>
-            </div>
-            <div className="space-y-2 max-h-32 overflow-y-auto">
-              {items.map((item) => (
-                <div key={item.productId} className="flex justify-between text-xs">
-                  <span className="text-muted-foreground truncate flex-1 mr-3">
-                    {item.quantity}× {item.name}
-                  </span>
-                  <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+          {/* Order Summary - Collapsible */}
+          <div className="rounded-[20px] bg-muted/20 border border-border/20 overflow-hidden mb-5">
+            <button
+              onClick={() => setShowItems(!showItems)}
+              className="w-full flex items-center justify-between p-4 hover:bg-muted/10 transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-xl bg-primary/10">
+                  <ShoppingCart className="h-3.5 w-3.5 text-primary" />
                 </div>
-              ))}
-            </div>
-            <div className="border-t border-border/30 mt-3 pt-3 space-y-1.5">
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>${total.toFixed(2)}</span>
+                <span className="text-sm font-semibold">Order Summary</span>
+                <span className="text-[10px] text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded-full font-medium">
+                  {itemCount} items
+                </span>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground flex items-center gap-1.5">
+              {showItems ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+
+            <AnimatePresence>
+              {showItems && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-4 pb-3 space-y-2 max-h-40 overflow-y-auto">
+                    {items.map((item) => (
+                      <div key={item.productId} className="flex items-center gap-2.5 text-xs">
+                        {item.image && (
+                          <img
+                            src={item.image}
+                            alt=""
+                            className="h-8 w-8 rounded-lg object-contain bg-background border border-border/20"
+                            referrerPolicy="no-referrer"
+                          />
+                        )}
+                        <span className="text-muted-foreground truncate flex-1">
+                          {item.quantity}× {item.name}
+                        </span>
+                        <span className="font-semibold shrink-0">${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Totals */}
+            <div className="px-4 pb-4 pt-2 border-t border-border/15 space-y-1.5">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Subtotal</span>
+                <span className="text-foreground">${total.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
                   <Truck className="h-3 w-3" /> Delivery
                 </span>
-                <span>${DELIVERY_FEE.toFixed(2)}</span>
+                <span className="text-foreground">${DELIVERY_FEE.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-base font-bold pt-2 border-t border-border/20 mt-2">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Service fee</span>
+                <span className="text-foreground">${SERVICE_FEE.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-base font-bold pt-2.5 mt-1.5 border-t border-border/15">
                 <span>Total</span>
                 <span className="text-primary">${grandTotal.toFixed(2)}</span>
               </div>
@@ -141,63 +198,81 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
           </div>
 
           {/* Delivery Info */}
-          <div className="space-y-3.5 mb-6">
-            <h3 className="text-sm font-bold">Delivery Details</h3>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block font-medium flex items-center gap-1.5">
-                <User className="h-3 w-3" /> Your Name *
-              </label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Full name"
-                className="rounded-2xl h-11 bg-muted/30 border-border/30 input-focus-glow"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block font-medium flex items-center gap-1.5">
-                <MapPin className="h-3 w-3" /> Delivery Address *
-              </label>
-              <Input
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="123 Main St, City, State"
-                className="rounded-2xl h-11 bg-muted/30 border-border/30 input-focus-glow"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block font-medium flex items-center gap-1.5">
-                <Phone className="h-3 w-3" /> Phone (optional)
-              </label>
-              <Input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="(555) 000-0000"
-                className="rounded-2xl h-11 bg-muted/30 border-border/30 input-focus-glow"
-                type="tel"
-              />
+          <div className="space-y-3 mb-5">
+            <h3 className="text-sm font-bold flex items-center gap-2">
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+              Delivery Details
+            </h3>
+            <div className="space-y-2.5">
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Full name *"
+                  className="pl-10 rounded-2xl h-12 bg-muted/20 border-border/20 text-sm focus:bg-muted/30 transition-colors"
+                />
+              </div>
+              <div className="relative">
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                <Input
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Delivery address *"
+                  className="pl-10 rounded-2xl h-12 bg-muted/20 border-border/20 text-sm focus:bg-muted/30 transition-colors"
+                />
+              </div>
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                <Input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Phone (optional)"
+                  className="pl-10 rounded-2xl h-12 bg-muted/20 border-border/20 text-sm focus:bg-muted/30 transition-colors"
+                  type="tel"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Trust badge */}
-          <div className="flex items-center gap-2 mb-4 p-3 rounded-2xl bg-primary/5 border border-primary/10">
-            <Shield className="h-4 w-4 text-primary shrink-0" />
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Your order is protected. A verified ZIVO driver will shop and deliver your items.
-            </p>
+          {/* Trust badges */}
+          <div className="grid grid-cols-3 gap-2 mb-5">
+            {[
+              { icon: Shield, label: "Protected" },
+              { icon: Lock, label: "Encrypted" },
+              { icon: CheckCircle, label: "Verified" },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} className="flex flex-col items-center gap-1.5 p-2.5 rounded-2xl bg-primary/5 border border-primary/10">
+                <Icon className="h-4 w-4 text-primary" />
+                <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+              </div>
+            ))}
           </div>
+
+          <p className="text-[10px] text-muted-foreground text-center mb-4 leading-relaxed">
+            A verified ZIVO driver will shop your items and deliver to your door. Payment is collected upon delivery.
+          </p>
 
           {/* Place Order */}
-          <Button
-            className="w-full h-13 rounded-2xl text-base font-bold active:scale-[0.97] transition-transform duration-200"
-            disabled={isSubmitting || !address.trim() || !name.trim()}
-            onClick={handlePlaceOrder}
-          >
-            {isSubmitting ? (
-              <Loader2 className="h-5 w-5 animate-spin mr-2" />
-            ) : null}
-            {isSubmitting ? "Placing Order…" : `Place Order · $${grandTotal.toFixed(2)}`}
-          </Button>
+          <motion.div whileTap={isValid && !isSubmitting ? { scale: 0.97 } : {}}>
+            <Button
+              className="w-full h-[52px] rounded-2xl text-[15px] font-bold shadow-lg shadow-primary/25 gap-2"
+              disabled={isSubmitting || !isValid}
+              onClick={handlePlaceOrder}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Placing Order…
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4" />
+                  Place Order · ${grandTotal.toFixed(2)}
+                </>
+              )}
+            </Button>
+          </motion.div>
         </div>
       </motion.div>
     </motion.div>
