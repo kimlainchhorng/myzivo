@@ -50,6 +50,10 @@ const GroceryPage = lazy(() => import("./pages/GroceryPage"));
 const DrivePage = lazy(() => import("./pages/DrivePage"));
 const DriverShoppingList = lazy(() => import("./pages/DriverShoppingList"));
 const DriverOrdersPage = lazy(() => import("./pages/DriverOrdersPage"));
+const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
+const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"));
+const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
+const DriverMapPage = lazy(() => import("./pages/driver/DriverMapPage"));
 const TripsListPage = lazy(() => import("./pages/trips/TripsListPage"));
 const TripDetailPage = lazy(() => import("./pages/trips/TripDetailPage"));
 
@@ -345,6 +349,10 @@ const App = () => (
                 <Route path="/drive" element={<DrivePage />} />
                 <Route path="/driver/orders" element={<DriverOrdersPage />} />
                 <Route path="/driver/shopping/:orderId" element={<DriverShoppingList />} />
+                <Route path="/driver/home" element={<DriverHomePage />} />
+                <Route path="/driver/earnings" element={<DriverEarningsPage />} />
+                <Route path="/driver/performance" element={<DriverPerformancePage />} />
+                <Route path="/driver/map" element={<DriverMapPage />} />
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
