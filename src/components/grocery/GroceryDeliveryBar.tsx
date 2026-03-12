@@ -1,6 +1,6 @@
 /**
  * GroceryDeliveryBar - "Deliver to" address picker for grocery pages
- * Shows saved Home/Work addresses with quick-add flow
+ * Uses Google Maps Places autocomplete via edge functions
  */
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,13 +9,12 @@ import { useDeliveryAddress, type DeliveryAddress } from "@/hooks/useDeliveryAdd
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AddressSuggestion {
   display: string;
-  street: string;
-  city: string;
-  state: string;
-  zip: string;
+  mainText: string;
+  placeId: string;
 }
 
 const LABEL_ICONS: Record<DeliveryAddress["label"], React.ElementType> = {
