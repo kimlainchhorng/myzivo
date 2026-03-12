@@ -9,6 +9,7 @@ import {
   ArrowLeft, Search, ShoppingCart, Plus, Minus, Trash2,
   Loader2, Star, X, ChevronRight, Package, Store,
 } from "lucide-react";
+import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -51,13 +52,21 @@ export default function GroceryPage() {
     toast.success("Added to cart");
   };
 
+  const [showCheckout, setShowCheckout] = useState(false);
+
   const handleCheckout = () => {
     if (cart.itemCount === 0) {
       toast.error("Your cart is empty");
       return;
     }
-    toast.success("Order created! A driver will shop for you.");
-    // TODO: create real shopping_delivery order in DB
+    setShowCart(false);
+    setShowCheckout(true);
+  };
+
+  const handleOrderPlaced = (orderId: string) => {
+    cart.clearCart();
+    setShowCheckout(false);
+    navigate(`/grocery/order-placed?id=${orderId}`);
   };
 
   return (
@@ -299,6 +308,18 @@ export default function GroceryPage() {
           No products found for "{query}"
         </div>
       )}
+
+      {/* Checkout Drawer */}
+      <AnimatePresence>
+        {showCheckout && (
+          <GroceryCheckoutDrawer
+            items={cart.items}
+            total={cart.total}
+            onClose={() => setShowCheckout(false)}
+            onOrderPlaced={handleOrderPlaced}
+          />
+        )}
+      </AnimatePresence>
 
       <ZivoMobileNav />
     </div>
