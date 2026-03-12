@@ -33,6 +33,15 @@ export default function GroceryStorePage() {
   const storeName = storeCfg?.name ?? "Walmart";
   const { products, isLoading, error, search, clearResults } = useStoreSearch(storeName);
   const cart = useGroceryCart();
+  const hasLoadedDefaults = useRef(false);
+
+  // Auto-fetch default products on mount
+  useEffect(() => {
+    if (storeCfg && !hasLoadedDefaults.current) {
+      hasLoadedDefaults.current = true;
+      search(storeCfg.defaultQuery);
+    }
+  }, [storeCfg, search]);
 
   // Fallback if slug doesn't match
   if (!storeCfg) {
@@ -49,7 +58,11 @@ export default function GroceryStorePage() {
   const handleSearch = (val: string) => {
     setQuery(val);
     clearTimeout(debounceRef.current);
-    if (val.trim().length < 2) { clearResults(); return; }
+    if (val.trim().length < 2) {
+      // Clear search → re-fetch defaults
+      debounceRef.current = setTimeout(() => search(storeCfg.defaultQuery), 100);
+      return;
+    }
     debounceRef.current = setTimeout(() => search(val), 500);
   };
 
