@@ -55,6 +55,9 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyDescription: "Search for groceries, household items, and more. A ZIVO driver will shop and deliver to your door.",
     defaultQuery: "grocery essentials",
     category: "grocery",
+    deliveryMin: 35,
+    rating: 4.6,
+    hours: "6am–11pm",
   },
   {
     name: "Costco",
@@ -67,6 +70,9 @@ export const GROCERY_STORES: StoreConfig[] = [
     promo: "$10 off",
     defaultQuery: "bulk groceries",
     category: "grocery",
+    deliveryMin: 50,
+    rating: 4.8,
+    hours: "10am–8:30pm",
   },
   {
     name: "Sam's Club",
@@ -78,6 +84,9 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyDescription: "Shop warehouse prices and bulk deals from Sam's Club. A ZIVO driver delivers right to you.",
     defaultQuery: "snacks drinks",
     category: "grocery",
+    deliveryMin: 45,
+    rating: 4.5,
+    hours: "10am–8pm",
   },
   {
     name: "Target",
@@ -89,6 +98,9 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyDescription: "Find everyday essentials and top brands at Target. A ZIVO driver will shop and deliver to your door.",
     defaultQuery: "grocery essentials",
     category: "grocery",
+    deliveryMin: 40,
+    rating: 4.7,
+    hours: "8am–10pm",
   },
   {
     name: "Walgreens",
@@ -101,6 +113,9 @@ export const GROCERY_STORES: StoreConfig[] = [
     promo: "No markups",
     defaultQuery: "health essentials",
     category: "pharmacy",
+    deliveryMin: 30,
+    rating: 4.3,
+    hours: "7am–10pm",
   },
   {
     name: "Best Buy",
@@ -113,6 +128,9 @@ export const GROCERY_STORES: StoreConfig[] = [
     promo: "No markups",
     defaultQuery: "electronics deals",
     category: "electronics",
+    deliveryMin: 55,
+    rating: 4.4,
+    hours: "10am–9pm",
   },
   {
     name: "Lowe's",
@@ -125,6 +143,9 @@ export const GROCERY_STORES: StoreConfig[] = [
     promo: "$15 off",
     defaultQuery: "tools hardware",
     category: "home",
+    deliveryMin: 60,
+    rating: 4.5,
+    hours: "6am–10pm",
   },
   {
     name: "Petco",
@@ -137,6 +158,9 @@ export const GROCERY_STORES: StoreConfig[] = [
     promo: "$10 off",
     defaultQuery: "pet food",
     category: "pets",
+    deliveryMin: 40,
+    rating: 4.6,
+    hours: "9am–9pm",
   },
   {
     name: "Kroger",
@@ -148,6 +172,9 @@ export const GROCERY_STORES: StoreConfig[] = [
     emptyDescription: "Shop fresh groceries and household staples from Kroger. A ZIVO driver delivers right to you.",
     defaultQuery: "fresh groceries",
     category: "grocery",
+    deliveryMin: 35,
+    rating: 4.5,
+    hours: "6am–12am",
   },
 ];
 
