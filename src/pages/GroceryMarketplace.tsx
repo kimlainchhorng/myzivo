@@ -19,7 +19,7 @@ const container = {
 
 const cardVariant = {
   hidden: { opacity: 0, y: 20, scale: 0.96 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 320, damping: 24 } },
+  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, stiffness: 320, damping: 24 } },
   exit: { opacity: 0, y: -10, scale: 0.96, transition: { duration: 0.15 } },
 };
 
