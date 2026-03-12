@@ -31,7 +31,7 @@ export function GroceryProductCard({
       className="rounded-2xl border border-border/50 bg-card overflow-hidden"
     >
       {/* Image */}
-      <div className="aspect-square bg-white p-3 flex items-center justify-center relative">
+      <div className="aspect-square bg-white p-4 flex items-center justify-center relative">
         {product.image ? (
           <img
             src={product.image}
@@ -40,7 +40,7 @@ export function GroceryProductCard({
             loading="lazy"
           />
         ) : (
-          <Package className="h-10 w-10 text-muted-foreground/30" />
+          <Package className="h-12 w-12 text-muted-foreground/30" />
         )}
         <Badge variant="secondary" className="absolute top-2 left-2 text-[9px] px-1.5 py-0.5">
           {product.store}
