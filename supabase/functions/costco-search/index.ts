@@ -1,6 +1,7 @@
 /**
  * Costco Product Search Edge Function
  * Proxies requests to RapidAPI Real-Time Costco Data endpoint
+ * Includes image proxy for Costco CDN (fixes CSP/hotlink blocking)
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
@@ -18,12 +19,66 @@ serve(async (req) => {
   }
 
   try {
+    const url = new URL(req.url);
+    const imageUrl = url.searchParams.get("img");
+
+    // ── Image proxy mode ──
+    if (imageUrl) {
+      let parsedImageUrl: URL;
+      try {
+        parsedImageUrl = new URL(imageUrl);
+      } catch {
+        return new Response(JSON.stringify({ error: "Invalid image URL" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const host = parsedImageUrl.hostname.toLowerCase();
+      const isAllowed =
+        host === "costco-static.com" ||
+        host.endsWith(".costco-static.com") ||
+        host === "costco.com" ||
+        host.endsWith(".costco.com");
+      if (!isAllowed) {
+        return new Response(JSON.stringify({ error: "Image host not allowed" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const imageResponse = await fetch(parsedImageUrl.toString(), {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+          Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+          Referer: "https://www.costco.com/",
+        },
+      });
+
+      if (!imageResponse.ok) {
+        return new Response(JSON.stringify({ error: "Image fetch failed" }), {
+          status: imageResponse.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(imageResponse.body, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": imageResponse.headers.get("content-type") || "image/jpeg",
+          "Cache-Control": imageResponse.headers.get("cache-control") || "public, max-age=86400",
+        },
+      });
+    }
+
+    // ── Product search mode ──
     const RAPID_API_KEY = Deno.env.get("RAPID_API_KEY");
     if (!RAPID_API_KEY) {
       throw new Error("RAPID_API_KEY is not configured");
     }
 
-    const url = new URL(req.url);
     const query = url.searchParams.get("q");
     const page = url.searchParams.get("page") || "1";
 
@@ -35,8 +90,7 @@ serve(async (req) => {
     }
 
     const apiUrl = `https://${RAPID_API_HOST}/search?query=${encodeURIComponent(query)}&page=${page}&country=us`;
-
-    console.log("[costco-search] Query:", query, "| API URL:", apiUrl);
+    console.log("[costco-search] Query:", query, "| Page:", page);
 
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -53,22 +107,10 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("[costco-search] Raw response keys:", Object.keys(data));
-
     const rawProducts = data.products || data.data?.products || data.data || [];
-    console.log("[costco-search] Raw products count:", rawProducts.length);
-    if (data.data) {
-      console.log("[costco-search] data.data type:", typeof data.data, Array.isArray(data.data) ? "array" : "");
-      if (typeof data.data === "object" && !Array.isArray(data.data)) {
-        console.log("[costco-search] data.data keys:", Object.keys(data.data).slice(0, 10));
-      }
-    }
-    if (rawProducts.length > 0) {
-      console.log("[costco-search] Sample product keys:", Object.keys(rawProducts[0]).slice(0, 15));
-    }
+    console.log("[costco-search] Products found:", rawProducts.length);
 
     const parsePrice = (item: any): number => {
-      // Try various Costco price fields
       const price =
         item.item_location_pricing_salePrice ??
         item.item_location_pricing_listPrice ??
@@ -77,29 +119,30 @@ serve(async (req) => {
         item.maxSalePrice ??
         0;
       if (typeof price === "number") return price;
-      if (typeof price === "string") {
-        const cleaned = price.replace(/[^0-9.]/g, "");
-        return parseFloat(cleaned) || 0;
-      }
+      if (typeof price === "string") return parseFloat(price.replace(/[^0-9.]/g, "")) || 0;
       return 0;
     };
 
-    const decodeHtml = (str: string): string => {
-      return str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
-    };
+    const decodeHtml = (str: string): string =>
+      str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
+
+    // Build proxy URL for images
+    const functionBaseUrl = `${url.origin}/functions/v1/costco-search`;
+    const toProxyImageUrl = (src: string): string =>
+      src ? `${functionBaseUrl}?img=${encodeURIComponent(decodeHtml(src))}` : "";
 
     const items = rawProducts.map((item: any) => ({
       productId: item.item_number || item.group_id || item.id || crypto.randomUUID().slice(0, 12),
       name: item.item_product_name || item.name || item.description || "",
       price: parsePrice(item),
-      image: decodeHtml(item.image || item.item_collateral_primaryimage || item.item_product_primary_image || ""),
+      image: toProxyImageUrl(item.image || item.item_collateral_primaryimage || item.item_product_primary_image || ""),
       brand: (item.Brand_attr && item.Brand_attr[0]) || "",
-      rating: item.item_ratings ?? null,
+      rating: item.item_ratings ? +item.item_ratings.toFixed(1) : null,
       inStock: item.isItemInStock !== false && item.deliveryStatus !== "out of stock",
       store: "Costco",
     }));
 
-    console.log("[costco-search] Mapped items count:", items.length);
+    console.log("[costco-search] Mapped items:", items.length);
 
     return new Response(
       JSON.stringify({ products: items, totalCount: data.total_products || items.length }),
