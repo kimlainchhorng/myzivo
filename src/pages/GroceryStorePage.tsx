@@ -2,7 +2,7 @@
  * GroceryStorePage - Product search for a specific store
  * Reads store slug from URL params, renders search + cart
  */
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -33,6 +33,15 @@ export default function GroceryStorePage() {
   const storeName = storeCfg?.name ?? "Walmart";
   const { products, isLoading, error, search, clearResults } = useStoreSearch(storeName);
   const cart = useGroceryCart();
+  const hasLoadedDefaults = useRef(false);
+
+  // Auto-fetch default products on mount
+  useEffect(() => {
+    if (storeCfg && !hasLoadedDefaults.current) {
+      hasLoadedDefaults.current = true;
+      search(storeCfg.defaultQuery);
+    }
+  }, [storeCfg, search]);
 
   // Fallback if slug doesn't match
   if (!storeCfg) {
@@ -49,7 +58,11 @@ export default function GroceryStorePage() {
   const handleSearch = (val: string) => {
     setQuery(val);
     clearTimeout(debounceRef.current);
-    if (val.trim().length < 2) { clearResults(); return; }
+    if (val.trim().length < 2) {
+      // Clear search → re-fetch defaults
+      debounceRef.current = setTimeout(() => search(storeCfg.defaultQuery), 100);
+      return;
+    }
     debounceRef.current = setTimeout(() => search(val), 500);
   };
 
@@ -106,7 +119,7 @@ export default function GroceryStorePage() {
               className="pl-10 pr-8 rounded-xl bg-muted/50 border-border/50"
             />
             {query && (
-              <button onClick={() => { setQuery(""); clearResults(); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <button onClick={() => { setQuery(""); search(storeCfg.defaultQuery); }} className="absolute right-3 top-1/2 -translate-y-1/2">
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
             )}
@@ -172,25 +185,35 @@ export default function GroceryStorePage() {
         )}
       </AnimatePresence>
 
-      {/* Empty State */}
-      {!query && products.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-          <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-            <Store className="h-8 w-8 text-primary" />
-          </div>
-          <h2 className="text-lg font-bold mb-1">{storeCfg.emptyTitle}</h2>
-          <p className="text-sm text-muted-foreground max-w-xs">{storeCfg.emptyDescription}</p>
-        </div>
-      )}
-
+      {/* Loading skeletons */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="px-4 py-4 grid grid-cols-2 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border/50 bg-card overflow-hidden animate-pulse">
+              <div className="aspect-square bg-muted" />
+              <div className="p-3 space-y-2">
+                <div className="h-2.5 bg-muted rounded w-1/3" />
+                <div className="h-3 bg-muted rounded w-full" />
+                <div className="h-3 bg-muted rounded w-2/3" />
+                <div className="h-8 bg-muted rounded-xl mt-2" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {error && (
+      {/* Error */}
+      {!isLoading && error && (
         <div className="mx-4 p-4 rounded-xl bg-destructive/10 text-destructive text-sm text-center">{error}</div>
+      )}
+
+      {/* Empty — only show if not loading and no products after fetch */}
+      {!isLoading && !error && products.length === 0 && (
+        <div className="text-center py-12 text-sm text-muted-foreground">
+          {query.length >= 2
+            ? `No ${storeName} products found for "${query}"`
+            : "No products available right now"}
+        </div>
       )}
 
       {/* Product Grid */}
@@ -209,11 +232,7 @@ export default function GroceryStorePage() {
         </div>
       )}
 
-      {!isLoading && query.length >= 2 && products.length === 0 && !error && (
-        <div className="text-center py-12 text-sm text-muted-foreground">
-          No {storeName} products found for this query
-        </div>
-      )}
+
 
       <AnimatePresence>
         {showCheckout && (
