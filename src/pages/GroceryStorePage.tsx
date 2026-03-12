@@ -415,7 +415,7 @@ export default function GroceryStorePage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 whileTap={{ scale: 0.8 }}
-                onClick={() => { setQuery(""); search(storeCfg.defaultQuery); setActiveFilter(null); }}
+                onClick={() => { setQuery(""); autoLoadCount.current = 0; search(storeCfg.defaultQuery); setActiveFilter(null); }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full bg-muted/60 hover:bg-muted transition-colors"
               >
                 <X className="h-3 w-3 text-muted-foreground" />
