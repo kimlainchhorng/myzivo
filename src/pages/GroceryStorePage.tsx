@@ -13,6 +13,9 @@ import {
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
 import { GroceryProductCard } from "@/components/grocery/GroceryProductCard";
 import { GroceryProductDetail } from "@/components/grocery/GroceryProductDetail";
+import { GroceryOrderAgain, saveToOrderHistory } from "@/components/grocery/GroceryOrderAgain";
+import { GroceryCategoryBrowser } from "@/components/grocery/GroceryCategoryBrowser";
+import { GroceryDealsSection } from "@/components/grocery/GroceryDealsSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -307,6 +310,10 @@ export default function GroceryStorePage() {
   };
 
   const handleOrderPlaced = (orderId: string) => {
+    // Save items to order history for "Order Again"
+    saveToOrderHistory(cart.items.map((i) => ({
+      productId: i.productId, name: i.name, price: i.price, image: i.image, brand: i.brand, store: i.store,
+    })));
     cart.clearCart();
     setShowCheckout(false);
     navigate(`/grocery/order-placed?id=${orderId}`);
@@ -573,6 +580,24 @@ export default function GroceryStorePage() {
         </motion.div>
       )}
 
+      {/* Order Again */}
+      {!isLoading && !query && (
+        <GroceryOrderAgain
+          store={storeName}
+          onAdd={handleAdd}
+          cartProductIds={new Set(cart.items.map((c) => c.productId))}
+        />
+      )}
+
+      {/* Today's Deals */}
+      {!isLoading && products.length > 5 && (
+        <GroceryDealsSection
+          products={products}
+          onAdd={handleAdd}
+          cartProductIds={new Set(cart.items.map((c) => c.productId))}
+        />
+      )}
+
       {/* Featured horizontal row */}
       {!isLoading && products.length > 3 && (
         <FeaturedProductRow products={products} onAdd={handleAdd} cart={cart} />
@@ -627,6 +652,20 @@ export default function GroceryStorePage() {
             />
           ))}
         </div>
+      )}
+
+      {/* Category Browser - shown when not actively searching */}
+      {!isLoading && !query && !activeFilter && (
+        <GroceryCategoryBrowser
+          store={storeName}
+          onAdd={handleAdd}
+          cartProductIds={new Set(cart.items.map((c) => c.productId))}
+          onBrowse={(q) => {
+            autoLoadCount.current = 0;
+            setQuery("");
+            search(q);
+          }}
+        />
       )}
 
       {/* Load more sentinel */}

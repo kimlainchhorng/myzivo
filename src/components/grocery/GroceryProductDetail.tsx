@@ -13,6 +13,7 @@ import type { StoreProduct } from "@/hooks/useStoreSearch";
 import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { useState, useMemo } from "react";
 import { GROCERY_STORES } from "@/config/groceryStores";
+import { GroceryPriceCompare } from "@/components/grocery/GroceryPriceCompare";
 
 interface GroceryProductDetailProps {
   product: StoreProduct | null;
@@ -317,6 +318,13 @@ export function GroceryProductDetail({
                     </div>
                   ))}
                 </motion.div>
+
+                {/* ── Price Comparison ── */}
+                <GroceryPriceCompare
+                  productName={product.name}
+                  currentStore={product.store}
+                  currentPrice={product.price}
+                />
 
                 {/* ── Expandable Sections ── */}
                 <div className="space-y-0 rounded-2xl border border-border/20 overflow-hidden bg-muted/10">
