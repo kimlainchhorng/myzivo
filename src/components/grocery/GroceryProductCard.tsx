@@ -16,6 +16,7 @@ interface GroceryProductCardProps {
   cartItem?: GroceryCartItem;
   onAdd: (product: StoreProduct) => void;
   onUpdateQuantity: (productId: string, quantity: number) => void;
+  onSelect?: (product: StoreProduct) => void;
 }
 
 const cardVariant = {
