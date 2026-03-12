@@ -272,6 +272,12 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   <span className="text-foreground tabular-nums">${tip.toFixed(2)}</span>
                 </div>
               )}
+              {promoDiscount > 0 && (
+                <div className="flex justify-between text-[12px] text-emerald-600">
+                  <span>Promo discount</span>
+                  <span className="font-semibold">-${promoDiscount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-[15px] font-bold pt-2 mt-1.5 border-t border-border/10">
                 <span>Total</span>
                 <span className="text-primary tabular-nums">${grandTotal.toFixed(2)}</span>
