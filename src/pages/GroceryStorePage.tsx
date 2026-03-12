@@ -414,30 +414,15 @@ export default function GroceryStorePage() {
         {/* Delivery address */}
         <GroceryDeliveryBar />
 
-        {/* Search */}
-        <div className="px-4 pb-2">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-            <Input
-              placeholder={storeCfg.placeholder}
-              value={query}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 pr-9 rounded-2xl bg-muted/30 border-border/20 h-11 text-sm focus:bg-muted/50 transition-colors"
-              aria-label={`Search ${storeName} products`}
-            />
-            {query && (
-              <motion.button
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                whileTap={{ scale: 0.8 }}
-                onClick={() => { setQuery(""); autoLoadCount.current = 0; search(storeCfg.defaultQuery); setActiveFilter(null); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full bg-muted/60 hover:bg-muted transition-colors"
-              >
-                <X className="h-3 w-3 text-muted-foreground" />
-              </motion.button>
-            )}
-          </div>
-        </div>
+        {/* Smart Search */}
+        <GroceryStoreSearch
+          placeholder={storeCfg.placeholder}
+          storeName={storeName}
+          query={query}
+          onSearch={handleSearch}
+          onSubmit={(val) => { autoLoadCount.current = 0; setQuery(val); search(val); }}
+          onClear={() => { setQuery(""); autoLoadCount.current = 0; search(storeCfg.defaultQuery); setActiveFilter(null); }}
+        />
 
         {/* Quick filter chips */}
         <div className="flex gap-1.5 px-4 pb-3 overflow-x-auto scrollbar-hide">
