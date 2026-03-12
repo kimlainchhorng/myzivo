@@ -53,9 +53,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
 
       const { data, error } = await supabase
         .from("shopping_orders")
+        const storeName = items[0]?.store || "Walmart";
+
         .insert({
           user_id: user?.id || null,
-          store: "Walmart",
+          store: storeName,
           order_type: "shopping_delivery",
           status: "pending",
           items: orderItems as any,
