@@ -2,7 +2,7 @@
  * GroceryStorePage - Product search for a specific store
  * Reads store slug from URL params, renders search + cart
  */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
