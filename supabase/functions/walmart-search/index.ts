@@ -25,6 +25,54 @@ serve(async (req) => {
     }
 
     const url = new URL(req.url);
+    const imageUrl = url.searchParams.get("img");
+
+    // Image proxy mode (fixes CSP/hotlink blocking in web app)
+    if (imageUrl) {
+      let parsedImageUrl: URL;
+      try {
+        parsedImageUrl = new URL(imageUrl);
+      } catch {
+        return new Response(JSON.stringify({ error: "Invalid image URL" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const host = parsedImageUrl.hostname.toLowerCase();
+      const isAllowedHost = host === "walmartimages.com" || host.endsWith(".walmartimages.com");
+      if (!isAllowedHost) {
+        return new Response(JSON.stringify({ error: "Image host not allowed" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const imageResponse = await fetch(parsedImageUrl.toString(), {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+          "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+          "Referer": "https://www.walmart.com/",
+        },
+      });
+
+      if (!imageResponse.ok) {
+        return new Response(JSON.stringify({ error: "Image fetch failed" }), {
+          status: imageResponse.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(imageResponse.body, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": imageResponse.headers.get("content-type") || "image/jpeg",
+          "Cache-Control": imageResponse.headers.get("cache-control") || "public, max-age=86400",
+        },
+      });
+    }
+
     const query = url.searchParams.get("q");
     const page = url.searchParams.get("page") || "1";
 
@@ -114,11 +162,15 @@ serve(async (req) => {
       return "";
     };
 
+    const functionBaseUrl = `${url.origin}/functions/v1/walmart-search`;
+    const toProxyImageUrl = (src: string): string =>
+      src ? `${functionBaseUrl}?img=${encodeURIComponent(src)}` : "";
+
     const items = rawProducts.map((item: any) => ({
       productId: item.id || item.usItemId || item.product_id || extractId(item.link || ""),
       name: cleanName(item.title || item.name || ""),
       price: parsePrice(item.price),
-      image: item.image || item.thumbnailImage || item.largeFrontImage || "",
+      image: toProxyImageUrl(item.image || item.thumbnailImage || item.largeFrontImage || ""),
       brand: extractBrand(item),
       rating: item.rating?.average ?? item.customerRating ?? item.ratings ?? null,
       inStock: true,
