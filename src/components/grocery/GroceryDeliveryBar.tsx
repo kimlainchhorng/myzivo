@@ -1,6 +1,7 @@
 /**
  * GroceryDeliveryBar - "Deliver to" address picker for grocery pages
  * Uses Google Maps Places autocomplete via edge functions
+ * Geocodes addresses to store lat/lng for nearby store detection
  */
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,8 +30,13 @@ const LABEL_COLORS: Record<DeliveryAddress["label"], string> = {
   Other: "text-muted-foreground",
 };
 
-export default function GroceryDeliveryBar() {
-  const { addresses, selectedAddress, addAddress, selectAddress, removeAddress } = useDeliveryAddress();
+/** Callback for when address changes (with coordinates) */
+interface GroceryDeliveryBarProps {
+  onAddressChange?: (address: DeliveryAddress | null) => void;
+}
+
+export default function GroceryDeliveryBar({ onAddressChange }: GroceryDeliveryBarProps = {}) {
+  const { addresses, selectedAddress, addAddress, updateAddress, selectAddress, removeAddress } = useDeliveryAddress();
   const [isOpen, setIsOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [newLabel, setNewLabel] = useState<DeliveryAddress["label"]>("Home");
@@ -40,11 +46,40 @@ export default function GroceryDeliveryBar() {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [pendingCoords, setPendingCoords] = useState<{ lat: number; lng: number } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Notify parent when selected address changes
+  useEffect(() => {
+    onAddressChange?.(selectedAddress);
+  }, [selectedAddress, onAddressChange]);
+
+  /** Geocode an address to get lat/lng */
+  const geocodeAddress = useCallback(async (address: string): Promise<{ lat: number; lng: number } | null> => {
+    try {
+      // Use autocomplete + place details as forward geocode
+      const { data } = await supabase.functions.invoke("maps-autocomplete", {
+        body: { input: address },
+      });
+      const firstSuggestion = data?.suggestions?.[0];
+      if (!firstSuggestion?.place_id) return null;
+
+      const { data: details } = await supabase.functions.invoke("maps-place-details", {
+        body: { place_id: firstSuggestion.place_id },
+      });
+      if (details?.lat && details?.lng) {
+        return { lat: details.lat, lng: details.lng };
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, []);
 
   /** Autocomplete address search via Google Maps */
   const searchAddress = useCallback((query: string) => {
     setNewAddress(query);
+    setPendingCoords(null);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (query.trim().length < 3) {
       setSuggestions([]);
@@ -73,10 +108,22 @@ export default function GroceryDeliveryBar() {
     }, 400);
   }, []);
 
-  const selectSuggestion = useCallback((s: AddressSuggestion) => {
+  const selectSuggestion = useCallback(async (s: AddressSuggestion) => {
     setNewAddress(s.display);
     setSuggestions([]);
     setShowSuggestions(false);
+
+    // Get coordinates from place details
+    try {
+      const { data: details } = await supabase.functions.invoke("maps-place-details", {
+        body: { place_id: s.placeId },
+      });
+      if (details?.lat && details?.lng) {
+        setPendingCoords({ lat: details.lat, lng: details.lng });
+      }
+    } catch {
+      // Coordinates optional, proceed without
+    }
   }, []);
 
   // Cleanup debounce
@@ -100,6 +147,7 @@ export default function GroceryDeliveryBar() {
           const address = data?.address || data?.formatted_address || data?.results?.[0]?.formatted_address;
           if (address) {
             setNewAddress(address);
+            setPendingCoords({ lat: latitude, lng: longitude });
             toast.success("Address detected");
           } else {
             toast.error("Could not determine address");
@@ -122,18 +170,41 @@ export default function GroceryDeliveryBar() {
     );
   }, []);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newAddress.trim()) return;
+
+    // If we don't have coordinates yet, try to geocode
+    let coords = pendingCoords;
+    if (!coords) {
+      coords = await geocodeAddress(newAddress.trim());
+    }
+
     addAddress({
       label: newLabel,
       address: newAddress.trim(),
       apt: newApt.trim() || undefined,
       isDefault: addresses.length === 0,
+      lat: coords?.lat,
+      lng: coords?.lng,
     });
     setNewAddress("");
     setNewApt("");
+    setPendingCoords(null);
     setIsAdding(false);
   };
+
+  // Also geocode existing addresses that don't have coordinates
+  useEffect(() => {
+    if (!selectedAddress || (selectedAddress.lat && selectedAddress.lng)) return;
+
+    const backfillCoords = async () => {
+      const coords = await geocodeAddress(selectedAddress.address);
+      if (coords) {
+        updateAddress(selectedAddress.id, { lat: coords.lat, lng: coords.lng });
+      }
+    };
+    backfillCoords();
+  }, [selectedAddress?.id]);
 
   return (
     <div className="relative">
@@ -361,7 +432,7 @@ export default function GroceryDeliveryBar() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => { setIsAdding(false); setNewAddress(""); setNewApt(""); }}
+                        onClick={() => { setIsAdding(false); setNewAddress(""); setNewApt(""); setPendingCoords(null); }}
                         className="flex-1 rounded-xl text-[11px] h-9"
                       >
                         Cancel
