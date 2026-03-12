@@ -395,7 +395,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
         </div>
 
         {/* Sticky CTA */}
-        <div className="shrink-0 px-5 pt-3 border-t border-border/10 bg-background/95 backdrop-blur-md" style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 1.5rem))" }}>
+        <div className="shrink-0 px-5 pt-3 pb-20 border-t border-border/10 bg-background/95 backdrop-blur-md" style={{ paddingBottom: "max(5rem, calc(env(safe-area-inset-bottom, 0px) + 5rem))" }}>
           <motion.div whileTap={isValid && !isSubmitting ? { scale: 0.97 } : {}}>
             <Button
               className="w-full h-[50px] rounded-2xl text-[14px] font-bold shadow-lg shadow-primary/20 gap-2"
