@@ -34456,6 +34456,115 @@ export type Database = {
         }
         Relationships: []
       }
+      shopping_orders: {
+        Row: {
+          accepted_at: string | null
+          cancelled_at: string | null
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          delivered_at: string | null
+          delivery_address: string | null
+          delivery_fee: number
+          delivery_lat: number | null
+          delivery_lng: number | null
+          driver_id: string | null
+          driver_notes: string | null
+          id: string
+          items: Json
+          order_type: string
+          picked_up_at: string | null
+          placed_at: string | null
+          receipt_photo_url: string | null
+          shopping_completed_at: string | null
+          shopping_started_at: string | null
+          status: string
+          store: string
+          total_amount: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivered_at?: string | null
+          delivery_address?: string | null
+          delivery_fee?: number
+          delivery_lat?: number | null
+          delivery_lng?: number | null
+          driver_id?: string | null
+          driver_notes?: string | null
+          id?: string
+          items?: Json
+          order_type?: string
+          picked_up_at?: string | null
+          placed_at?: string | null
+          receipt_photo_url?: string | null
+          shopping_completed_at?: string | null
+          shopping_started_at?: string | null
+          status?: string
+          store?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivered_at?: string | null
+          delivery_address?: string | null
+          delivery_fee?: number
+          delivery_lat?: number | null
+          delivery_lng?: number | null
+          driver_id?: string | null
+          driver_notes?: string | null
+          id?: string
+          items?: Json
+          order_type?: string
+          picked_up_at?: string | null
+          placed_at?: string | null
+          receipt_photo_url?: string | null
+          shopping_completed_at?: string | null
+          shopping_started_at?: string | null
+          status?: string
+          store?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_orders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shopping_orders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shopping_orders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "v_admin_driver_compliance"
+            referencedColumns: ["driver_id"]
+          },
+        ]
+      }
       signup_allowlist: {
         Row: {
           created_at: string | null
