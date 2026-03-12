@@ -40,6 +40,7 @@ export function GroceryProductCard({
   cartItem,
   onAdd,
   onUpdateQuantity,
+  onSelect,
 }: GroceryProductCardProps) {
   const [imgError, setImgError] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
