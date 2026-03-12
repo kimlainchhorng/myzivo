@@ -1,6 +1,6 @@
 /**
- * GroceryPage - Walmart product search & shopping cart
- * Allows customers to search, add items, and create shopping delivery orders
+ * GroceryPage - Multi-store product search & shopping cart
+ * Supports Walmart and Costco via store tabs
  */
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,16 +16,23 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { useWalmartSearch, type WalmartProduct } from "@/hooks/useWalmartSearch";
+import { useStoreSearch, type StoreName, type StoreProduct } from "@/hooks/useStoreSearch";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import logoWalmart from "@/assets/brand-logos/walmart.png";
+import logoCostco from "@/assets/brand-logos/costco.png";
+
+const STORES: { name: StoreName; logo: string }[] = [
+  { name: "Walmart", logo: logoWalmart },
+  { name: "Costco", logo: logoCostco },
+];
 
 export default function GroceryPage() {
   const navigate = useNavigate();
+  const [selectedStore, setSelectedStore] = useState<StoreName>("Walmart");
   const [query, setQuery] = useState("");
   const [showCart, setShowCart] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
-  const { products, isLoading, error, search, clearResults } = useWalmartSearch();
+  const { products, isLoading, error, search, clearResults } = useStoreSearch(selectedStore);
   const cart = useGroceryCart();
 
   const handleSearch = useCallback(
@@ -41,15 +48,24 @@ export default function GroceryPage() {
     [search, clearResults]
   );
 
-  const handleAdd = (p: WalmartProduct) => {
-    cart.addItem({
-      productId: p.productId,
-      name: p.name,
-      price: p.price,
-      image: p.image,
-      brand: p.brand,
-    });
-    toast.success("Added to cart");
+  const handleStoreChange = (store: StoreName) => {
+    setSelectedStore(store);
+    setQuery("");
+    clearResults();
+  };
+
+  const handleAdd = (p: StoreProduct) => {
+    cart.addItem(
+      {
+        productId: p.productId,
+        name: p.name,
+        price: p.price,
+        image: p.image,
+        brand: p.brand,
+      },
+      p.store
+    );
+    toast.success(`Added to cart from ${p.store}`);
   };
 
   const [showCheckout, setShowCheckout] = useState(false);
@@ -69,6 +85,8 @@ export default function GroceryPage() {
     navigate(`/grocery/order-placed?id=${orderId}`);
   };
 
+  const currentStoreLogo = STORES.find((s) => s.name === selectedStore)?.logo || logoWalmart;
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
@@ -78,7 +96,7 @@ export default function GroceryPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <img src={logoWalmart} alt="Walmart" className="h-7 w-7 rounded-lg object-contain" />
+            <img src={currentStoreLogo} alt={selectedStore} className="h-7 w-7 rounded-lg object-contain" />
             <h1 className="text-lg font-bold truncate">Grocery</h1>
           </div>
           <button
@@ -94,12 +112,31 @@ export default function GroceryPage() {
           </button>
         </div>
 
+        {/* Store Tabs */}
+        <div className="flex gap-2 px-4 pb-2">
+          {STORES.map((store) => (
+            <button
+              key={store.name}
+              onClick={() => handleStoreChange(store.name)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
+                selectedStore === store.name
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted"
+              )}
+            >
+              <img src={store.logo} alt={store.name} className="h-5 w-5 rounded object-contain" />
+              {store.name}
+            </button>
+          ))}
+        </div>
+
         {/* Search */}
         <div className="px-4 pb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search Walmart products..."
+              placeholder={`Search ${selectedStore} products...`}
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
               className="pl-10 pr-8 rounded-xl bg-muted/50 border-border/50"
@@ -123,7 +160,7 @@ export default function GroceryPage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="sticky top-[120px] z-20 mx-4 mb-4 bg-card rounded-2xl border border-border shadow-lg overflow-hidden"
+            className="sticky top-[160px] z-20 mx-4 mb-4 bg-card rounded-2xl border border-border shadow-lg overflow-hidden"
           >
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
@@ -146,7 +183,12 @@ export default function GroceryPage() {
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{item.name}</p>
-                        <p className="text-xs text-muted-foreground">${item.price.toFixed(2)}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs text-muted-foreground">${item.price.toFixed(2)}</p>
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">
+                            {item.store}
+                          </Badge>
+                        </div>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
@@ -200,7 +242,7 @@ export default function GroceryPage() {
           <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
             <Store className="h-8 w-8 text-primary" />
           </div>
-          <h2 className="text-lg font-bold mb-1">Search Walmart Products</h2>
+          <h2 className="text-lg font-bold mb-1">Search {selectedStore} Products</h2>
           <p className="text-sm text-muted-foreground max-w-xs">
             Search for groceries, household items, and more. A ZIVO driver will shop and deliver to your door.
           </p>
@@ -224,7 +266,7 @@ export default function GroceryPage() {
       {/* Debug: result count */}
       {!isLoading && query.length >= 2 && products.length > 0 && (
         <div className="mx-4 mt-3 mb-1 px-3 py-1.5 rounded-lg bg-muted/60 text-[11px] text-muted-foreground font-mono">
-          🐛 Debug: {products.length} products returned for "{query}"
+          🐛 Debug: {products.length} products from {selectedStore} for "{query}"
         </div>
       )}
 
@@ -241,7 +283,7 @@ export default function GroceryPage() {
                 transition={{ delay: i * 0.03 }}
                 className="rounded-2xl border border-border/50 bg-card overflow-hidden"
               >
-                <div className="aspect-square bg-white p-3 flex items-center justify-center">
+                <div className="aspect-square bg-white p-3 flex items-center justify-center relative">
                   {product.image ? (
                     <img
                       src={product.image}
@@ -252,6 +294,9 @@ export default function GroceryPage() {
                   ) : (
                     <Package className="h-10 w-10 text-muted-foreground/30" />
                   )}
+                  <Badge variant="secondary" className="absolute top-2 left-2 text-[9px] px-1.5 py-0.5">
+                    {product.store}
+                  </Badge>
                 </div>
                 <div className="p-3 space-y-1">
                   {product.brand && (
@@ -309,11 +354,10 @@ export default function GroceryPage() {
         </div>
       )}
 
-
       {/* No results */}
       {!isLoading && query.length >= 2 && products.length === 0 && !error && (
         <div className="text-center py-12 text-sm text-muted-foreground">
-          No Walmart products found for this query
+          No {selectedStore} products found for this query
         </div>
       )}
 
