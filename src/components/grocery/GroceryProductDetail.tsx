@@ -13,6 +13,7 @@ import type { StoreProduct } from "@/hooks/useStoreSearch";
 import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { useState, useMemo } from "react";
 import { GROCERY_STORES } from "@/config/groceryStores";
+import { GroceryPriceCompare } from "@/components/grocery/GroceryPriceCompare";
 
 interface GroceryProductDetailProps {
   product: StoreProduct | null;
