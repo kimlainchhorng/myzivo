@@ -654,6 +654,20 @@ export default function GroceryStorePage() {
         </div>
       )}
 
+      {/* Category Browser - shown when not actively searching */}
+      {!isLoading && !query && !activeFilter && (
+        <GroceryCategoryBrowser
+          store={storeName}
+          onAdd={handleAdd}
+          cartProductIds={new Set(cart.items.map((c) => c.productId))}
+          onBrowse={(q) => {
+            autoLoadCount.current = 0;
+            setQuery("");
+            search(q);
+          }}
+        />
+      )}
+
       {/* Load more sentinel */}
       <div ref={sentinelRef} className="h-1" />
       {isLoadingMore && (
