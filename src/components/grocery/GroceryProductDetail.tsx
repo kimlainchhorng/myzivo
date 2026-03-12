@@ -273,8 +273,11 @@ export function GroceryProductDetail({
                             <p className="text-sm font-semibold text-foreground">{product.brand || "—"}</p>
                           </div>
                           <div className="p-3 rounded-xl bg-muted/30 border border-border/15">
-                            <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mb-1">Store</p>
-                            <p className="text-sm font-semibold text-foreground">{product.store}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mb-1">Size</p>
+                            <div className="flex items-center gap-1">
+                              <Ruler className="h-3 w-3 text-muted-foreground/50" />
+                              <p className="text-sm font-semibold text-foreground">{sizeInfo || "Standard"}</p>
+                            </div>
                           </div>
                           <div className="p-3 rounded-xl bg-muted/30 border border-border/15">
                             <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mb-1">Rating</p>
@@ -288,6 +291,14 @@ export function GroceryProductDetail({
                             <p className={`text-sm font-semibold ${product.inStock ? "text-emerald-600" : "text-destructive"}`}>
                               {product.inStock ? "In Stock" : "Unavailable"}
                             </p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-muted/30 border border-border/15">
+                            <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mb-1">Store</p>
+                            <p className="text-sm font-semibold text-foreground">{product.store}</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-muted/30 border border-border/15">
+                            <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mb-1">Fulfillment</p>
+                            <p className="text-sm font-semibold text-foreground">Same-Day</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-muted/20 border border-border/10">
