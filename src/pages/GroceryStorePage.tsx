@@ -743,6 +743,14 @@ export default function GroceryStorePage() {
         onSelect={setSelectedProduct}
       />
 
+      <GroceryFilters
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        filters={filters}
+        onApply={setFilters}
+        products={products}
+      />
+
       <ZivoMobileNav />
     </div>
   );
