@@ -1,1 +1,4 @@
 project_id = "slirphzzwcogdbkeicff"
+
+[functions.walmart-search]
+verify_jwt = false
