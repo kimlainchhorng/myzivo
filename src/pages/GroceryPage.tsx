@@ -226,7 +226,7 @@ export default function GroceryPage() {
 
       {/* ── Product Grid ── */}
       {!isLoading && products.length > 0 && (
-        <div className="px-4 py-4 grid grid-cols-2 gap-3">
+        <div className="px-2.5 py-4 grid grid-cols-3 sm:grid-cols-4 gap-2">
           {products.map((product, i) => (
             <GroceryProductCard
               key={product.productId || i}
