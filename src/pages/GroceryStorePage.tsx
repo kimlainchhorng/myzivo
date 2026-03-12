@@ -216,16 +216,25 @@ export default function GroceryStorePage() {
     return () => observer.disconnect();
   }, [hasMore, isLoadingMore, isLoading, loadMore]);
 
+  // Auto-load multiple pages on mount for a fuller grid
+  const autoLoadCount = useRef(0);
   useEffect(() => {
     if (storeCfg && !hasLoadedDefaults.current) {
       hasLoadedDefaults.current = true;
-      // Load initial page, then auto-load 2 more pages for a fuller grid
-      search(storeCfg.defaultQuery).then(() => {
-        setTimeout(() => loadMore(), 800);
-        setTimeout(() => loadMore(), 1800);
-      });
+      search(storeCfg.defaultQuery);
     }
-  }, [storeCfg, search, loadMore]);
+  }, [storeCfg, search]);
+
+  // After initial results arrive, auto-load more pages
+  useEffect(() => {
+    if (!isLoading && products.length > 0 && hasMore && autoLoadCount.current < 4) {
+      const timer = setTimeout(() => {
+        autoLoadCount.current += 1;
+        loadMore();
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, products.length, hasMore, loadMore]);
 
   // Sorted products
   const sortedProducts = useMemo(() => {
