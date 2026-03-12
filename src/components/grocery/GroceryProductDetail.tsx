@@ -77,6 +77,10 @@ export function GroceryProductDetail({
     ? (product.price * cartItem.quantity)
     : (product.price * quantity);
 
+  // Extract size info from product name
+  const sizeMatch = product.name.match(/(\d+[\s-]?(?:oz|fl oz|lb|lbs|ct|count|pk|pack|rolls|sheets|gal|qt|pt|ml|L|kg|g)\.?)/i);
+  const sizeInfo = sizeMatch ? sizeMatch[1] : null;
+
   return (
     <AnimatePresence>
       {product && (
