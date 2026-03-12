@@ -1,17 +1,19 @@
 /**
- * GroceryOrderHistory - Past orders & order tracking
+ * GroceryOrderHistory - Enhanced with real-time updates, rating, and receipt details
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Package, Clock, CheckCircle, Truck, MapPin,
   ChevronRight, ShoppingBag, RotateCcw, Star, Store,
+  Receipt, Phone, MessageSquare, Loader2, RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import { toast } from "sonner";
 
 interface OrderItem {
   productId: string;
@@ -20,6 +22,8 @@ interface OrderItem {
   image?: string;
   quantity: number;
   store: string;
+  status?: string;
+  replacement?: { name: string; price: number };
 }
 
 interface Order {
@@ -32,74 +36,105 @@ interface Order {
   items: OrderItem[];
   placed_at: string;
   customer_name: string;
+  driver_name?: string;
+  driver_phone?: string;
+  receipt_total?: number;
 }
 
-const STATUS_CONFIG: Record<string, { icon: typeof Package; label: string; color: string; bg: string }> = {
-  pending_payment: { icon: Clock, label: "Pending Payment", color: "text-amber-500", bg: "bg-amber-500/10" },
-  pending: { icon: Package, label: "Order Placed", color: "text-primary", bg: "bg-primary/10" },
-  confirmed: { icon: CheckCircle, label: "Confirmed", color: "text-primary", bg: "bg-primary/10" },
-  shopping: { icon: ShoppingBag, label: "Shopping", color: "text-violet-500", bg: "bg-violet-500/10" },
-  picked_up: { icon: Truck, label: "Out for Delivery", color: "text-primary", bg: "bg-primary/10" },
-  delivered: { icon: CheckCircle, label: "Delivered", color: "text-emerald-500", bg: "bg-emerald-500/10" },
-  cancelled: { icon: Package, label: "Cancelled", color: "text-destructive", bg: "bg-destructive/10" },
+const STATUS_CONFIG: Record<string, { icon: typeof Package; label: string; color: string; bg: string; step: number }> = {
+  pending_payment: { icon: Clock, label: "Pending Payment", color: "text-amber-500", bg: "bg-amber-500/10", step: 0 },
+  pending: { icon: Package, label: "Order Placed", color: "text-primary", bg: "bg-primary/10", step: 1 },
+  confirmed: { icon: CheckCircle, label: "Confirmed", color: "text-primary", bg: "bg-primary/10", step: 2 },
+  shopping: { icon: ShoppingBag, label: "Shopping", color: "text-violet-500", bg: "bg-violet-500/10", step: 3 },
+  picked_up: { icon: Truck, label: "Out for Delivery", color: "text-primary", bg: "bg-primary/10", step: 4 },
+  delivered: { icon: CheckCircle, label: "Delivered", color: "text-emerald-500", bg: "bg-emerald-500/10", step: 5 },
+  cancelled: { icon: Package, label: "Cancelled", color: "text-destructive", bg: "bg-destructive/10", step: -1 },
 };
 
+const STEP_LABELS = ["Payment", "Placed", "Confirmed", "Shopping", "Delivery", "Done"];
+
 function OrderStatusTracker({ status }: { status: string }) {
-  const steps = ["pending", "confirmed", "shopping", "picked_up", "delivered"];
-  const currentIdx = steps.indexOf(status);
+  const cfg = STATUS_CONFIG[status];
+  const currentStep = cfg?.step ?? 1;
 
   return (
-    <div className="flex items-center gap-1 mt-3">
-      {steps.map((step, i) => {
-        const isComplete = i <= currentIdx;
-        const isCurrent = i === currentIdx;
-        return (
-          <div key={step} className="flex items-center gap-1 flex-1">
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: isCurrent ? 1.1 : 1 }}
-              className={`h-2 w-2 rounded-full shrink-0 transition-colors ${
-                isComplete ? "bg-primary" : "bg-muted-foreground/20"
-              } ${isCurrent ? "ring-2 ring-primary/30" : ""}`}
-            />
-            {i < steps.length - 1 && (
-              <div className={`h-0.5 flex-1 rounded transition-colors ${
-                i < currentIdx ? "bg-primary" : "bg-muted-foreground/15"
-              }`} />
-            )}
-          </div>
-        );
-      })}
+    <div className="mt-3">
+      <div className="flex items-center gap-0.5">
+        {STEP_LABELS.map((label, i) => {
+          const isComplete = i <= currentStep;
+          const isCurrent = i === currentStep;
+          return (
+            <div key={label} className="flex items-center gap-0.5 flex-1">
+              <motion.div
+                initial={false}
+                animate={{
+                  scale: isCurrent ? 1.2 : 1,
+                  backgroundColor: isComplete ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.15)",
+                }}
+                className={`h-2 w-2 rounded-full shrink-0 ${isCurrent ? "ring-2 ring-primary/30" : ""}`}
+              />
+              {i < STEP_LABELS.length - 1 && (
+                <div className={`h-0.5 flex-1 rounded transition-colors duration-500 ${
+                  i < currentStep ? "bg-primary" : "bg-muted-foreground/10"
+                }`} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex justify-between mt-1">
+        {STEP_LABELS.map((label, i) => (
+          <span key={label} className={`text-[7px] font-semibold ${
+            i <= (cfg?.step ?? 1) ? "text-primary" : "text-muted-foreground/30"
+          }`}>{label}</span>
+        ))}
+      </div>
     </div>
   );
 }
 
 function OrderCard({ order, onReorder }: { order: Order; onReorder: (items: OrderItem[]) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [rating, setRating] = useState<number | null>(null);
   const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
   const StatusIcon = cfg.icon;
   const date = new Date(order.placed_at);
   const isActive = !["delivered", "cancelled"].includes(order.status);
+  const itemCount = order.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
+
+  const handleRate = (stars: number) => {
+    setRating(stars);
+    toast.success(`Rated ${stars} stars — thank you!`);
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
+      layout
       className={`rounded-2xl border overflow-hidden transition-all ${
-        isActive ? "border-primary/20 bg-card shadow-md" : "border-border/20 bg-card/80"
+        isActive
+          ? "border-primary/20 bg-card shadow-md shadow-primary/5"
+          : "border-border/20 bg-card/80"
       }`}
     >
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 text-left"
-      >
+      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 text-left">
         <div className="flex items-start gap-3">
           <div className={`h-10 w-10 rounded-xl ${cfg.bg} flex items-center justify-center shrink-0`}>
             <StatusIcon className={`h-5 w-5 ${cfg.color}`} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <h3 className="text-[13px] font-bold text-foreground">{order.store}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-[13px] font-bold text-foreground">{order.store}</h3>
+                {isActive && (
+                  <motion.span
+                    animate={{ opacity: [1, 0.5, 1] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="h-2 w-2 rounded-full bg-primary"
+                  />
+                )}
+              </div>
               <span className="text-[11px] text-muted-foreground">
                 {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
               </span>
@@ -107,7 +142,7 @@ function OrderCard({ order, onReorder }: { order: Order; onReorder: (items: Orde
             <div className="flex items-center gap-2 mt-0.5">
               <span className={`text-[10px] font-bold ${cfg.color}`}>{cfg.label}</span>
               <span className="text-[10px] text-muted-foreground">
-                · {order.items?.length || 0} items · ${order.total_amount?.toFixed(2)}
+                · {itemCount} items · ${order.total_amount?.toFixed(2)}
               </span>
             </div>
             {isActive && <OrderStatusTracker status={order.status} />}
@@ -125,30 +160,54 @@ function OrderCard({ order, onReorder }: { order: Order; onReorder: (items: Orde
             className="overflow-hidden"
           >
             <div className="px-4 pb-4 space-y-3">
+              {/* Driver info */}
+              {order.driver_name && (
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
+                  <div className="h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center">
+                    <Truck className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[12px] font-bold text-foreground">{order.driver_name}</p>
+                    <p className="text-[10px] text-muted-foreground">Your ZIVO driver</p>
+                  </div>
+                  {order.driver_phone && (
+                    <a
+                      href={`tel:${order.driver_phone}`}
+                      className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+                    >
+                      <Phone className="h-4 w-4 text-primary" />
+                    </a>
+                  )}
+                </div>
+              )}
+
               {/* Items */}
               <div className="space-y-2">
-                {(order.items || []).slice(0, 5).map((item, i) => (
+                {(order.items || []).slice(0, 8).map((item, i) => (
                   <div key={i} className="flex items-center gap-2.5">
                     {item.image && (
-                      <img
-                        src={item.image}
-                        alt=""
-                        className="h-8 w-8 rounded-lg object-contain bg-muted/20 border border-border/15 p-0.5"
-                        referrerPolicy="no-referrer"
-                      />
+                      <img src={item.image} alt="" className="h-9 w-9 rounded-lg object-contain bg-muted/20 border border-border/15 p-0.5" referrerPolicy="no-referrer" />
                     )}
-                    <span className="text-[11px] text-foreground/80 flex-1 truncate">
-                      {item.quantity}× {item.name}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[11px] text-foreground/80 truncate block">
+                        {item.quantity}× {item.name}
+                      </span>
+                      {item.status === "replaced" && item.replacement && (
+                        <span className="text-[9px] text-amber-500 font-medium">
+                          → Replaced: {item.replacement.name}
+                        </span>
+                      )}
+                      {item.status === "unavailable" && (
+                        <span className="text-[9px] text-destructive font-medium">Unavailable — refunded</span>
+                      )}
+                    </div>
                     <span className="text-[11px] font-semibold text-foreground tabular-nums">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ${(item.price * (item.quantity || 1)).toFixed(2)}
                     </span>
                   </div>
                 ))}
-                {(order.items?.length || 0) > 5 && (
-                  <p className="text-[10px] text-muted-foreground pl-10">
-                    +{order.items.length - 5} more items
-                  </p>
+                {(order.items?.length || 0) > 8 && (
+                  <p className="text-[10px] text-muted-foreground pl-10">+{order.items.length - 8} more items</p>
                 )}
               </div>
 
@@ -170,7 +229,45 @@ function OrderCard({ order, onReorder }: { order: Order; onReorder: (items: Orde
                   <span className="text-muted-foreground">Delivery</span>
                   <span className="text-foreground">${order.delivery_fee?.toFixed(2)}</span>
                 </div>
+                {order.receipt_total != null && (
+                  <div className="flex justify-between text-[11px] text-emerald-600">
+                    <span className="flex items-center gap-1"><Receipt className="h-3 w-3" /> Receipt total</span>
+                    <span className="font-semibold">${order.receipt_total.toFixed(2)}</span>
+                  </div>
+                )}
               </div>
+
+              {/* Rate order */}
+              {order.status === "delivered" && (
+                <div className="pt-2">
+                  {rating === null ? (
+                    <div>
+                      <p className="text-[11px] font-bold text-foreground mb-2">Rate your experience</p>
+                      <div className="flex gap-1.5">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <motion.button
+                            key={s}
+                            whileTap={{ scale: 0.8 }}
+                            onClick={() => handleRate(s)}
+                            className="p-2 rounded-xl bg-muted/20 hover:bg-amber-500/10 transition-colors border border-border/15"
+                          >
+                            <Star className="h-5 w-5 text-muted-foreground/30 hover:text-amber-400 hover:fill-amber-400 transition-colors" />
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                      <div className="flex">
+                        {Array.from({ length: rating }).map((_, i) => (
+                          <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                      <span className="text-[11px] font-semibold text-foreground">Thanks for rating!</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Reorder button */}
               {order.status === "delivered" && order.items?.length > 0 && (
@@ -197,27 +294,66 @@ export default function GroceryOrderHistory() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "active" | "past">("all");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchOrders = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+
+    const { data, error } = await supabase
+      .from("shopping_orders")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("order_type", "shopping_delivery")
+      .order("placed_at", { ascending: false })
+      .limit(50);
+
+    if (!error && data) {
+      setOrders(data as unknown as Order[]);
+    }
+    setLoading(false);
+    setRefreshing(false);
+  }, []);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
-
-      const { data, error } = await supabase
-        .from("shopping_orders")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("order_type", "shopping_delivery")
-        .order("placed_at", { ascending: false })
-        .limit(50);
-
-      if (!error && data) {
-        setOrders(data as unknown as Order[]);
-      }
-      setLoading(false);
-    };
     fetchOrders();
+  }, [fetchOrders]);
+
+  // Real-time subscription for active orders
+  useEffect(() => {
+    const channel = supabase
+      .channel("grocery-orders-realtime")
+      .on(
+        "postgres_changes" as any,
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "shopping_orders",
+        },
+        (payload: any) => {
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === payload.new.id ? { ...o, ...payload.new } as Order : o
+            )
+          );
+          // Toast for status changes
+          const newStatus = STATUS_CONFIG[payload.new.status];
+          if (newStatus) {
+            toast.success(`Order ${newStatus.label}`, {
+              description: `Your ${payload.new.store} order status updated`,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchOrders();
+  };
 
   const filtered = orders.filter((o) => {
     if (filter === "active") return !["delivered", "cancelled"].includes(o.status);
@@ -228,7 +364,6 @@ export default function GroceryOrderHistory() {
   const activeCount = orders.filter((o) => !["delivered", "cancelled"].includes(o.status)).length;
 
   const handleReorder = (items: OrderItem[]) => {
-    // Save to localStorage for the store page to pick up
     localStorage.setItem("zivo-reorder-items", JSON.stringify(items));
     const store = items[0]?.store?.toLowerCase() || "walmart";
     navigate(`/grocery/store/${store}`);
@@ -254,9 +389,19 @@ export default function GroceryOrderHistory() {
             <h1 className="text-base font-bold">My Orders</h1>
             <p className="text-[10px] text-muted-foreground">
               {orders.length} order{orders.length !== 1 ? "s" : ""}
-              {activeCount > 0 && ` · ${activeCount} active`}
+              {activeCount > 0 && (
+                <span className="text-primary font-semibold"> · {activeCount} active</span>
+              )}
             </p>
           </div>
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={handleRefresh}
+            className="p-2 rounded-2xl hover:bg-muted/60 transition-colors"
+            aria-label="Refresh"
+          >
+            <RefreshCw className={`h-4 w-4 text-muted-foreground ${refreshing ? "animate-spin" : ""}`} />
+          </motion.button>
         </div>
 
         {/* Tabs */}
@@ -282,11 +427,33 @@ export default function GroceryOrderHistory() {
         </div>
       </div>
 
+      {/* Active orders banner */}
+      {activeCount > 0 && filter !== "past" && !loading && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-4 mt-4 mb-2 p-3 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-3"
+        >
+          <div className="p-2 rounded-xl bg-primary/15">
+            <Truck className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1">
+            <p className="text-[12px] font-bold text-foreground">{activeCount} active order{activeCount !== 1 ? "s" : ""}</p>
+            <p className="text-[10px] text-muted-foreground">Live tracking • Updates in real-time</p>
+          </div>
+          <motion.div
+            animate={{ opacity: [1, 0.4, 1] }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+            className="h-3 w-3 rounded-full bg-primary"
+          />
+        </motion.div>
+      )}
+
       {/* Content */}
-      <div className="px-4 pt-4 space-y-3">
+      <div className="px-4 pt-3 space-y-3">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-2xl" />
+            <Skeleton key={i} className="h-28 rounded-2xl" />
           ))
         ) : filtered.length === 0 ? (
           <motion.div
