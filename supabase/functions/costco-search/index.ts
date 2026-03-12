@@ -1,6 +1,6 @@
 /**
  * Costco Product Search Edge Function
- * Proxies requests to RapidAPI Costco endpoint
+ * Proxies requests to RapidAPI Real-Time Costco Data endpoint
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
@@ -10,7 +10,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const RAPID_API_HOST = "costco-api2.p.rapidapi.com";
+const RAPID_API_HOST = "real-time-costco-data.p.rapidapi.com";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -34,7 +34,7 @@ serve(async (req) => {
       );
     }
 
-    const apiUrl = `https://${RAPID_API_HOST}/search?query=${encodeURIComponent(query)}&page=${page}`;
+    const apiUrl = `https://${RAPID_API_HOST}/search?query=${encodeURIComponent(query)}&page=${page}&country=us`;
 
     console.log("[costco-search] Query:", query, "| API URL:", apiUrl);
 
@@ -55,40 +55,48 @@ serve(async (req) => {
     const data = await response.json();
     console.log("[costco-search] Raw response keys:", Object.keys(data));
 
-    // Normalize: try common response shapes
-    const rawProducts = data.products || data.results || data.items || data.body?.products || [];
+    const rawProducts = data.products || [];
     console.log("[costco-search] Raw products count:", rawProducts.length);
     if (rawProducts.length > 0) {
-      console.log("[costco-search] Sample product:", JSON.stringify(rawProducts[0]).slice(0, 500));
+      console.log("[costco-search] Sample product keys:", Object.keys(rawProducts[0]).slice(0, 15));
     }
 
-    const parsePrice = (p: any): number => {
-      if (typeof p === "number") return p;
-      if (typeof p === "string") {
-        const cleaned = p.replace(/[^0-9.]/g, "");
+    const parsePrice = (item: any): number => {
+      // Try various Costco price fields
+      const price =
+        item.item_location_pricing_salePrice ??
+        item.item_location_pricing_listPrice ??
+        item.item_location_pricing_pricePerUnit_price ??
+        item.minSalePrice ??
+        item.maxSalePrice ??
+        0;
+      if (typeof price === "number") return price;
+      if (typeof price === "string") {
+        const cleaned = price.replace(/[^0-9.]/g, "");
         return parseFloat(cleaned) || 0;
-      }
-      if (p && typeof p === "object") {
-        return parsePrice(p.currentPrice || p.current || p.price || p.value || 0);
       }
       return 0;
     };
 
+    const decodeHtml = (str: string): string => {
+      return str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
+    };
+
     const items = rawProducts.map((item: any) => ({
-      productId: item.id || item.productId || item.product_id || crypto.randomUUID().slice(0, 12),
-      name: item.title || item.name || item.productName || "",
-      price: parsePrice(item.price),
-      image: item.image || item.thumbnail || item.img || item.imageUrl || "",
-      brand: item.brand || item.brandName || "",
-      rating: item.rating?.average ?? item.rating ?? null,
-      inStock: item.inStock !== false,
+      productId: item.item_number || item.group_id || item.id || crypto.randomUUID().slice(0, 12),
+      name: item.item_product_name || item.name || item.description || "",
+      price: parsePrice(item),
+      image: decodeHtml(item.image || item.item_collateral_primaryimage || item.item_product_primary_image || ""),
+      brand: (item.Brand_attr && item.Brand_attr[0]) || "",
+      rating: item.item_ratings ?? null,
+      inStock: item.isItemInStock !== false && item.deliveryStatus !== "out of stock",
       store: "Costco",
     }));
 
     console.log("[costco-search] Mapped items count:", items.length);
 
     return new Response(
-      JSON.stringify({ products: items, totalCount: items.length }),
+      JSON.stringify({ products: items, totalCount: data.total_products || items.length }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
