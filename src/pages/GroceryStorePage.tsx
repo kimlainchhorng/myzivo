@@ -1,13 +1,14 @@
 /**
- * GroceryStorePage - 2026 Spatial UI product search (v3)
- * Quick filters, improved cart with swipe hints, delivery countdown, haptic feedback
+ * GroceryStorePage - 2026 Spatial UI product search (v4)
+ * Added sort toggle, horizontal featured row, refined layout
  */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import {
   ArrowLeft, Search, ShoppingCart, Plus, Minus, Trash2,
-  Loader2, X, Package, Store, Sparkles, Clock, Star, ChevronUp, Filter, Flame,
+  Loader2, X, Package, Store, Sparkles, Clock, Star, ChevronUp, Filter,
+  ArrowUpDown, Grid3X3, LayoutList, TrendingDown,
 } from "lucide-react";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
 import { GroceryProductCard } from "@/components/grocery/GroceryProductCard";
@@ -32,6 +33,8 @@ const QUICK_FILTERS = [
   { label: "🍿 Snacks", query: "snacks chips" },
 ];
 
+type SortMode = "default" | "price-low" | "price-high" | "rating";
+
 /* ─── Swipeable cart item ─── */
 function SwipeableCartItem({
   item,
@@ -49,14 +52,11 @@ function SwipeableCartItem({
   const trashOpacity = useTransform(x, [-80, -30], [1, 0]);
 
   const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.x < -80) {
-      onRemove(item.productId);
-    }
+    if (info.offset.x < -80) onRemove(item.productId);
   };
 
   return (
     <motion.div className="relative overflow-hidden rounded-[16px]" style={{ backgroundColor: bg }}>
-      {/* Delete hint behind */}
       <motion.div
         className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-destructive"
         style={{ opacity: trashOpacity }}
@@ -89,18 +89,77 @@ function SwipeableCartItem({
         </div>
         <div className="flex items-center gap-0.5 shrink-0">
           <motion.button whileTap={{ scale: 0.8 }} onClick={() => onUpdateQuantity(item.productId, item.quantity - 1)} className="p-1.5 rounded-lg hover:bg-muted active:scale-95 transition-all"><Minus className="h-3 w-3" /></motion.button>
-          <motion.span
-            key={item.quantity}
-            initial={{ scale: 1.3 }}
-            animate={{ scale: 1 }}
-            className="text-[11px] font-bold w-4 text-center"
-          >
-            {item.quantity}
-          </motion.span>
+          <motion.span key={item.quantity} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="text-[11px] font-bold w-4 text-center">{item.quantity}</motion.span>
           <motion.button whileTap={{ scale: 0.8 }} onClick={() => onUpdateQuantity(item.productId, item.quantity + 1)} className="p-1.5 rounded-lg hover:bg-muted active:scale-95 transition-all"><Plus className="h-3 w-3" /></motion.button>
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+/* ─── Horizontal featured product ─── */
+function FeaturedProductRow({ products, onAdd, cart }: {
+  products: StoreProduct[];
+  onAdd: (p: StoreProduct) => void;
+  cart: ReturnType<typeof useGroceryCart>;
+}) {
+  if (products.length === 0) return null;
+
+  // Pick top 5 by rating
+  const featured = [...products].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)).slice(0, 5);
+
+  return (
+    <div className="px-4 pt-3 pb-1">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Sparkles className="h-3 w-3 text-primary" />
+        <span className="text-[11px] font-bold text-foreground/70 uppercase tracking-wider">Top Picks</span>
+      </div>
+      <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-1">
+        {featured.map((p, i) => {
+          const inCart = cart.items.find((c) => c.productId === p.productId);
+          return (
+            <motion.div
+              key={p.productId}
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.06, type: "spring", stiffness: 300, damping: 24 }}
+              className="shrink-0 w-[140px] rounded-[18px] border border-border/30 bg-card/80 backdrop-blur-sm overflow-hidden group"
+            >
+              <div className="relative h-[100px] bg-gradient-to-br from-muted/10 to-muted/30 flex items-center justify-center p-3">
+                {p.image ? (
+                  <img src={p.image} alt={p.name} className="h-full w-full object-contain" loading="lazy" referrerPolicy="no-referrer" />
+                ) : (
+                  <Package className="h-8 w-8 text-muted-foreground/15" />
+                )}
+                {p.rating != null && (
+                  <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 px-1 py-0.5 rounded-full bg-background/80 backdrop-blur-sm text-[8px]">
+                    <Star className="h-2 w-2 fill-amber-400 text-amber-400" />
+                    <span className="font-bold">{p.rating}</span>
+                  </div>
+                )}
+              </div>
+              <div className="p-2.5">
+                <p className="text-[10px] font-semibold line-clamp-1 text-foreground/90">{p.name}</p>
+                <div className="flex items-center justify-between mt-1.5">
+                  <span className="text-[14px] font-extrabold text-foreground">${p.price.toFixed(2)}</span>
+                  <motion.button
+                    whileTap={{ scale: 0.85 }}
+                    onClick={() => onAdd(p)}
+                    className={`h-7 w-7 rounded-full flex items-center justify-center transition-all ${
+                      inCart
+                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/30"
+                        : "bg-primary/15 text-primary hover:bg-primary/25"
+                    }`}
+                  >
+                    {inCart ? <span className="text-[10px] font-bold">{inCart.quantity}</span> : <Plus className="h-3.5 w-3.5" />}
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -113,6 +172,8 @@ export default function GroceryStorePage() {
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>("default");
+  const [showSortMenu, setShowSortMenu] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const storeName = storeCfg?.name ?? "Walmart";
@@ -131,12 +192,8 @@ export default function GroceryStorePage() {
     return () => clearInterval(interval);
   }, [storeCfg]);
 
-  // Track recent store visit
-  useEffect(() => {
-    if (slug) addRecentStore(slug);
-  }, [slug]);
+  useEffect(() => { if (slug) addRecentStore(slug); }, [slug]);
 
-  // Infinite scroll
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
@@ -150,13 +207,22 @@ export default function GroceryStorePage() {
     return () => observer.disconnect();
   }, [hasMore, isLoadingMore, isLoading, loadMore]);
 
-  // Auto-fetch
   useEffect(() => {
     if (storeCfg && !hasLoadedDefaults.current) {
       hasLoadedDefaults.current = true;
       search(storeCfg.defaultQuery);
     }
   }, [storeCfg, search]);
+
+  // Sorted products
+  const sortedProducts = useMemo(() => {
+    if (sortMode === "default") return products;
+    const sorted = [...products];
+    if (sortMode === "price-low") sorted.sort((a, b) => a.price - b.price);
+    if (sortMode === "price-high") sorted.sort((a, b) => b.price - a.price);
+    if (sortMode === "rating") sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    return sorted;
+  }, [products, sortMode]);
 
   if (!storeCfg) {
     return (
@@ -212,6 +278,19 @@ export default function GroceryStorePage() {
     cart.clearCart();
     setShowCheckout(false);
     navigate(`/grocery/order-placed?id=${orderId}`);
+  };
+
+  const cycleSortMode = () => {
+    const modes: SortMode[] = ["default", "price-low", "price-high", "rating"];
+    const idx = modes.indexOf(sortMode);
+    setSortMode(modes[(idx + 1) % modes.length]);
+  };
+
+  const sortLabel: Record<SortMode, string> = {
+    default: "Default",
+    "price-low": "Price ↑",
+    "price-high": "Price ↓",
+    rating: "Rating",
   };
 
   return (
@@ -337,7 +416,7 @@ export default function GroceryStorePage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.97 }}
             transition={{ type: "spring" as const, stiffness: 300, damping: 25 }}
-            className="sticky top-[180px] z-20 mx-4 mb-4 bg-card/95 backdrop-blur-xl rounded-[24px] border border-border/40 shadow-2xl overflow-hidden"
+            className="sticky top-[200px] z-20 mx-4 mb-4 bg-card/95 backdrop-blur-xl rounded-[24px] border border-border/40 shadow-2xl overflow-hidden"
           >
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
@@ -349,11 +428,7 @@ export default function GroceryStorePage() {
                   {cart.items.length > 0 && (
                     <button onClick={cart.clearCart} className="text-[11px] text-destructive hover:underline font-medium">Clear</button>
                   )}
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => setShowCart(false)}
-                    className="p-1 rounded-lg hover:bg-muted/60 transition-colors"
-                  >
+                  <motion.button whileTap={{ scale: 0.9 }} onClick={() => setShowCart(false)} className="p-1 rounded-lg hover:bg-muted/60 transition-colors">
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />
                   </motion.button>
                 </div>
@@ -368,13 +443,7 @@ export default function GroceryStorePage() {
                 <>
                   <div className="space-y-1.5 max-h-56 overflow-y-auto scrollbar-hide">
                     {cart.items.map((item, i) => (
-                      <SwipeableCartItem
-                        key={item.productId}
-                        item={item}
-                        index={i}
-                        onUpdateQuantity={cart.updateQuantity}
-                        onRemove={cart.removeItem}
-                      />
+                      <SwipeableCartItem key={item.productId} item={item} index={i} onUpdateQuantity={cart.updateQuantity} onRemove={cart.removeItem} />
                     ))}
                   </div>
                   {cart.items.length > 1 && (
@@ -407,6 +476,18 @@ export default function GroceryStorePage() {
           <div className="flex items-center gap-2 mb-3">
             <Skeleton className="h-3.5 w-3.5 rounded" />
             <Skeleton className="h-3 w-20" />
+          </div>
+          {/* Horizontal skeleton row */}
+          <div className="flex gap-2.5 overflow-hidden mb-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={`h-${i}`} className="shrink-0 w-[140px] rounded-[18px] border border-border/20 overflow-hidden">
+                <Skeleton className="h-[100px]" />
+                <div className="p-2.5 space-y-1.5">
+                  <Skeleton className="h-2.5 w-full" />
+                  <Skeleton className="h-4 w-12" />
+                </div>
+              </div>
+            ))}
           </div>
           <div className="grid grid-cols-2 gap-2.5">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -457,36 +538,49 @@ export default function GroceryStorePage() {
         </motion.div>
       )}
 
-      {/* Result count */}
+      {/* Featured horizontal row */}
+      {!isLoading && products.length > 3 && (
+        <FeaturedProductRow products={products} onAdd={handleAdd} cart={cart} />
+      )}
+
+      {/* Result count + sort */}
       {!isLoading && products.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mx-4 mt-4 mb-2 flex items-center justify-between"
+          className="mx-4 mt-3 mb-2 flex items-center justify-between"
         >
           <div className="flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             <span className="text-xs text-muted-foreground font-medium">
               {products.length} product{products.length !== 1 ? "s" : ""}{query ? ` for "${query}"` : ""}
             </span>
+            {activeFilter && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="flex items-center gap-1 text-[9px] text-primary font-semibold bg-primary/10 px-1.5 py-0.5 rounded-full"
+              >
+                <Filter className="h-2 w-2" />
+                {activeFilter}
+              </motion.span>
+            )}
           </div>
-          {activeFilter && (
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="flex items-center gap-1 text-[10px] text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full"
-            >
-              <Filter className="h-2.5 w-2.5" />
-              {activeFilter}
-            </motion.span>
-          )}
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={cycleSortMode}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-muted/30 border border-border/20 hover:bg-muted/50 transition-colors"
+          >
+            <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+            <span className="text-[10px] font-semibold text-muted-foreground">{sortLabel[sortMode]}</span>
+          </motion.button>
         </motion.div>
       )}
 
       {/* Product Grid */}
-      {!isLoading && products.length > 0 && (
+      {!isLoading && sortedProducts.length > 0 && (
         <div className="px-4 pb-2 grid grid-cols-2 gap-2.5">
-          {products.map((product, i) => (
+          {sortedProducts.map((product, i) => (
             <GroceryProductCard
               key={product.productId || i}
               product={product}
