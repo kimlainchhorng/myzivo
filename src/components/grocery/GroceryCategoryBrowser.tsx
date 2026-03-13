@@ -494,7 +494,7 @@ interface CategorySectionProps {
   index: number;
 }
 
-function CategorySection({ category, store, onAdd, cartProductIds, onBrowse, index }: CategorySectionProps) {
+function CategorySection({ category, store, onAdd, cartProductIds, onBrowse, onSelect, index }: CategorySectionProps) {
   const [products, setProducts] = useState<StoreProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
