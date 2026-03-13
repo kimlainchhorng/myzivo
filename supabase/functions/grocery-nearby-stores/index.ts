@@ -1,14 +1,14 @@
 /**
  * Grocery Nearby Stores - Find real store locations near customer
- * Uses Google Maps Places API to find actual Walmart/Costco/Target/Kroger stores
+ * Uses Google Maps Places API (Text Search) to find actual store locations
  */
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 const STORE_QUERIES: Record<string, string> = {
-  walmart: "Walmart Supercenter",
-  costco: "Costco Wholesale",
-  target: "Target",
-  kroger: "Kroger",
+  walmart: "Walmart",
+  costco: "Costco",
+  target: "Target store",
+  kroger: "Kroger grocery",
 };
 
 Deno.serve(async (req) => {
@@ -34,27 +34,35 @@ Deno.serve(async (req) => {
     const radiusMeters = Math.round((radius_miles || 15) * 1609.34);
     const results: Record<string, any[]> = {};
 
-    // Search for each store type in parallel
+    console.log(`[nearby-stores] Searching near ${lat},${lng} radius=${radiusMeters}m`);
+
+    // Search for each store type in parallel using Text Search API
     const searches = Object.entries(STORE_QUERIES).map(async ([slug, query]) => {
       try {
-        const url = new URL("https://maps.googleapis.com/maps/api/place/nearbysearch/json");
+        // Use textsearch which is more reliable for chain stores
+        const url = new URL("https://maps.googleapis.com/maps/api/place/textsearch/json");
+        url.searchParams.set("query", query);
         url.searchParams.set("location", `${lat},${lng}`);
         url.searchParams.set("radius", String(radiusMeters));
-        url.searchParams.set("keyword", query);
-        url.searchParams.set("type", "store");
         url.searchParams.set("key", GOOGLE_MAPS_KEY);
 
         const resp = await fetch(url.toString());
         if (!resp.ok) {
           console.error(`[nearby-stores] ${slug} API error: ${resp.status}`);
+          results[slug] = [];
           return;
         }
 
         const data = await resp.json();
-        const places = (data.results || []).slice(0, 3); // max 3 locations per chain
+        console.log(`[nearby-stores] ${slug} API status: ${data.status}, results: ${(data.results || []).length}`);
+        
+        if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
+          console.error(`[nearby-stores] ${slug} Google error: ${data.status} - ${data.error_message || "unknown"}`);
+        }
+
+        const places = (data.results || []).slice(0, 5); // max 5 locations per chain
 
         results[slug] = places.map((place: any) => {
-          // Calculate distance using Haversine
           const pLat = place.geometry?.location?.lat;
           const pLng = place.geometry?.location?.lng;
           const distMiles = pLat && pLng ? haversineMiles(lat, lng, pLat, pLng) : null;
@@ -62,7 +70,7 @@ Deno.serve(async (req) => {
           return {
             place_id: place.place_id,
             name: place.name,
-            address: place.vicinity || place.formatted_address || "",
+            address: place.formatted_address || place.vicinity || "",
             lat: pLat,
             lng: pLng,
             distance_miles: distMiles ? Math.round(distMiles * 10) / 10 : null,
