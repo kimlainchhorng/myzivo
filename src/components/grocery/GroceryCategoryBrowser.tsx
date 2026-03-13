@@ -490,6 +490,7 @@ interface CategorySectionProps {
   onAdd: (product: StoreProduct) => void;
   cartProductIds: Set<string>;
   onBrowse: (query: string) => void;
+  onSelect?: (product: StoreProduct) => void;
   index: number;
 }
 
