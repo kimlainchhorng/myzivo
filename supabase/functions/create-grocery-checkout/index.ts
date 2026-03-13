@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
     const rawServiceFee = Math.round(subtotalCents * SERVICE_FEE_PCT / 100);
     const serviceFeeCents = Math.min(SERVICE_FEE_MAX, Math.max(SERVICE_FEE_MIN, rawServiceFee));
 
-    const totalCents = subtotalCents + markupCents + deliveryFeeCents + SERVICE_FEE + tipCents;
+    const totalCents = subtotalCents + markupCents + deliveryFeeCents + serviceFeeCents + tipCents;
 
     // Save order to DB first
     const admin = createClient(supabaseUrl, serviceKey);
