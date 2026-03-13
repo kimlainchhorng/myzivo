@@ -104,6 +104,46 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
     return () => clearInterval(interval);
   }, [storeCfg]);
 
+  // Cleanup address debounce
+  useEffect(() => () => { if (addrDebounceRef.current) clearTimeout(addrDebounceRef.current); }, []);
+
+  // Address autocomplete via Google Maps edge function
+  const searchAddressAutocomplete = useCallback((query: string) => {
+    setAddress(query);
+    if (addrDebounceRef.current) clearTimeout(addrDebounceRef.current);
+    if (query.trim().length < 3) {
+      setAddressSuggestions([]);
+      setShowAddrSuggestions(false);
+      return;
+    }
+    addrDebounceRef.current = setTimeout(async () => {
+      setIsSearchingAddr(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("maps-autocomplete", {
+          body: { input: query.trim() },
+        });
+        if (error) throw error;
+        const mapped = (data?.suggestions || []).map((s: any) => ({
+          display: s.description || "",
+          mainText: s.main_text || s.description?.split(",")[0] || "",
+          placeId: s.place_id || "",
+        }));
+        setAddressSuggestions(mapped);
+        setShowAddrSuggestions(mapped.length > 0);
+      } catch {
+        setAddressSuggestions([]);
+      } finally {
+        setIsSearchingAddr(false);
+      }
+    }, 400);
+  }, []);
+
+  const selectAddressSuggestion = useCallback((s: { display: string }) => {
+    setAddress(s.display);
+    setAddressSuggestions([]);
+    setShowAddrSuggestions(false);
+  }, []);
+
   // Persist profile
   useEffect(() => {
     if (name || phone) {
