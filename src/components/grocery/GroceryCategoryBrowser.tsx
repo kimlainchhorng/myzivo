@@ -14,14 +14,14 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://slirphzzwcogd
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI";
 
 const CATEGORIES = [
-  { emoji: "🥦", label: "Fresh Produce", query: "fresh fruit", gradient: "from-emerald-500/10 to-emerald-400/5" },
-  { emoji: "🥩", label: "Meat & Seafood", query: "chicken beef pork", gradient: "from-rose-500/10 to-rose-400/5" },
-  { emoji: "🥛", label: "Dairy & Eggs", query: "milk cheese eggs", gradient: "from-sky-500/10 to-sky-400/5" },
-  { emoji: "🥤", label: "Beverages", query: "water juice soda", gradient: "from-violet-500/10 to-violet-400/5" },
-  { emoji: "🍿", label: "Snacks", query: "chips snacks", gradient: "from-amber-500/10 to-amber-400/5" },
-  { emoji: "🧊", label: "Frozen Foods", query: "frozen meals", gradient: "from-cyan-500/10 to-cyan-400/5" },
-  { emoji: "🍝", label: "Pantry Staples", query: "pasta rice cereal", gradient: "from-orange-500/10 to-orange-400/5" },
-  { emoji: "🧹", label: "Household", query: "cleaning supplies", gradient: "from-indigo-500/10 to-indigo-400/5" },
+  { emoji: "🥩", label: "Meat & Seafood", query: "meat", gradient: "from-rose-500/10 to-rose-400/5" },
+  { emoji: "🥦", label: "Fresh Produce", query: "vegetables", gradient: "from-emerald-500/10 to-emerald-400/5" },
+  { emoji: "🥛", label: "Dairy & Eggs", query: "dairy", gradient: "from-sky-500/10 to-sky-400/5" },
+  { emoji: "🥤", label: "Beverages", query: "beverages", gradient: "from-violet-500/10 to-violet-400/5" },
+  { emoji: "🍿", label: "Snacks", query: "snacks", gradient: "from-amber-500/10 to-amber-400/5" },
+  { emoji: "🧊", label: "Frozen Foods", query: "frozen", gradient: "from-cyan-500/10 to-cyan-400/5" },
+  { emoji: "🍝", label: "Pantry Staples", query: "pantry", gradient: "from-orange-500/10 to-orange-400/5" },
+  { emoji: "🧹", label: "Household", query: "household", gradient: "from-indigo-500/10 to-indigo-400/5" },
 ];
 
 /* ─── Category skeleton ─── */
