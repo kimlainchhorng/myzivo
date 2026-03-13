@@ -13,11 +13,12 @@ export const COMPANY_INFO = {
   website: "https://hizivo.com",
   stateOfFormation: "Delaware",
   governingLaw: "State of Delaware",
+  lastUpdated: "March 13, 2026",
 };
 
 export const TERMS_OF_SERVICE = {
-  version: "2.0",
-  effectiveDate: "2026-02-03",
+  version: "3.0",
+  effectiveDate: "2026-03-13",
   sections: [
     {
       title: "1. Acceptance of Terms",
