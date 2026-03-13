@@ -23,6 +23,7 @@ import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
 import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
 import { SkipToContent } from "./components/shared/SkipToContent";
+import RoutePrefetcher from "./components/shared/RoutePrefetcher";
 import { GlobalViewportMeta } from "@/components/shared/GlobalViewportMeta";
 import { Loader2 } from "lucide-react";
 import { categorizeError } from "@/lib/supabaseErrors";
@@ -63,6 +64,7 @@ const DrivePage = lazy(() => import("./pages/DrivePage"));
 const DriverShoppingList = lazy(() => import("./pages/DriverShoppingList"));
 const DriverOrdersPage = lazy(() => import("./pages/DriverOrdersPage"));
 const AdminShoppingOrders = lazy(() => import("./pages/admin/AdminShoppingOrders"));
+const AdminAnalyticsDashboard = lazy(() => import("./pages/admin/AdminAnalyticsDashboard"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"));
 const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
@@ -329,6 +331,7 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <PageViewTracker />
+                <RoutePrefetcher />
                 <AuthProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
@@ -387,6 +390,7 @@ const App = () => (
                 <Route path="/driver/map" element={<DriverMapPage />} />
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
                 <Route path="/admin/shopping-orders" element={<AdminShoppingOrders />} />
+                <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalyticsDashboard /></ProtectedRoute>} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
                 <Route path="/insurance" element={<PreserveQueryRedirect to="/travel-insurance" />} />
