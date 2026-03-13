@@ -567,6 +567,37 @@ export default function GroceryOrderHistory() {
         </motion.div>
       )}
 
+      {/* Spending Analytics */}
+      {!loading && stats.totalOrders > 0 && filter !== "active" && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-4 mt-4 mb-1"
+        >
+          <div className="flex items-center gap-1.5 mb-2.5">
+            <TrendingUp className="h-3.5 w-3.5 text-primary" />
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Spending</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="p-3 rounded-2xl bg-primary/5 border border-primary/10 text-center">
+              <DollarSign className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-[14px] font-extrabold text-foreground">${stats.monthlySpent.toFixed(0)}</p>
+              <p className="text-[8px] text-muted-foreground font-medium">This Month</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-muted/20 border border-border/15 text-center">
+              <ShoppingBag className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
+              <p className="text-[14px] font-extrabold text-foreground">{stats.totalOrders}</p>
+              <p className="text-[8px] text-muted-foreground font-medium">Total Orders</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-muted/20 border border-border/15 text-center">
+              <Receipt className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
+              <p className="text-[14px] font-extrabold text-foreground">${stats.avgOrder.toFixed(0)}</p>
+              <p className="text-[8px] text-muted-foreground font-medium">Avg Order</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Content */}
       <div className="px-4 pt-3 space-y-3">
         {loading ? (
