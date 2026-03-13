@@ -49,7 +49,10 @@ Deno.serve(async (req) => {
     const DELIVERY_PER_MIN = 10; // cents
     const DELIVERY_MIN = 399; // cents
     const DELIVERY_MAX = 1499; // cents
-    const SERVICE_FEE = 199; // cents
+    const SERVICE_FEE_PCT = 5; // percentage
+    const SERVICE_FEE_MIN = 250; // cents = $2.50
+    const SERVICE_FEE_MAX = 1000; // cents = $10.00
+    const tipCents = Math.round((tip || 0) * 100);
     const tipCents = Math.round((tip || 0) * 100);
 
     // Estimate distance (~3 miles, ~30 min as fallback)
