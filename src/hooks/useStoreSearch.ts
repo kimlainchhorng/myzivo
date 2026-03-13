@@ -135,7 +135,7 @@ export function useStoreSearch(store: StoreName) {
 
       if (startIdx < keywords.length) {
         // Fetch next batch of keywords
-        const batch = keywords.slice(startIdx, startIdx + 6);
+        const batch = keywords.slice(startIdx, startIdx + 10);
         keywordIndexRef.current = startIdx + batch.length;
 
         const results = await Promise.all(
