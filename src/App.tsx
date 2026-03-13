@@ -359,6 +359,9 @@ const App = () => (
                 <Route path="/grocery/order-placed" element={<GroceryOrderPlaced />} />
                 <Route path="/grocery/order-confirmed" element={<GroceryOrderConfirmed />} />
                 <Route path="/grocery/orders" element={<GroceryOrderHistory />} />
+                <Route path="/grocery/terms" element={<GroceryTerms />} />
+                <Route path="/grocery/returns" element={<GroceryReturns />} />
+                <Route path="/grocery/fees" element={<GroceryFees />} />
                 <Route path="/drive" element={<DrivePage />} />
                 <Route path="/driver/orders" element={<DriverOrdersPage />} />
                 <Route path="/driver/shopping/:orderId" element={<DriverShoppingList />} />
