@@ -788,9 +788,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                       </div>
                       <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
                         <AlertTriangle className="h-3.5 w-3.5 text-primary/60 shrink-0" />
-                        <p className="text-[9px] text-muted-foreground leading-relaxed">
-                          <span className="font-semibold text-foreground/70">Cancellation:</span> Free before driver starts · Fees apply after. <a href="/grocery/fees" className="text-primary/70 underline">View fees</a>
-                        </p>
+                         <p className="text-[9px] text-muted-foreground leading-relaxed">
+                           <span className="font-semibold text-foreground/70">Cancellation:</span> Free before driver assigned · 15–50% after. <a href="/grocery/fees" className="text-primary/70 underline">View fees</a>
+                         </p>
                       </div>
                       <p className="text-[8px] text-muted-foreground/50 text-center px-2">
                         By placing your order, you agree to our <a href="/grocery/terms" className="text-primary/50 underline">Terms</a> and <a href="/privacy" className="text-primary/50 underline">Privacy Policy</a>
