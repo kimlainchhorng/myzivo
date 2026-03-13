@@ -53,7 +53,6 @@ Deno.serve(async (req) => {
     const SERVICE_FEE_MIN = 250; // cents = $2.50
     const SERVICE_FEE_MAX = 1000; // cents = $10.00
     const tipCents = Math.round((tip || 0) * 100);
-    const tipCents = Math.round((tip || 0) * 100);
 
     // Estimate distance (~3 miles, ~30 min as fallback)
     const estMiles = 3;
@@ -66,6 +65,11 @@ Deno.serve(async (req) => {
       (sum: number, item: any) => sum + Math.round(item.price * 100) * item.quantity,
       0
     );
+
+    // Markup: <$50 → 5%, ≥$50 → 3%
+    const subtotalDollars = subtotalCents / 100;
+    const markupPct = subtotalDollars < 50 ? 5 : 3;
+    const markupCents = Math.round(subtotalCents * markupPct / 100);
 
     // Service fee: 5% of subtotal with min $2.50 and max $10.00
     const rawServiceFee = Math.round(subtotalCents * SERVICE_FEE_PCT / 100);
