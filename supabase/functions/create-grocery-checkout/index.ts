@@ -112,12 +112,24 @@ Deno.serve(async (req) => {
       quantity: item.quantity,
     }));
 
+    // Add platform fee (markup)
+    if (markupCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: { name: `Platform Fee (${markupPct}%)` },
+          unit_amount: markupCents,
+        },
+        quantity: 1,
+      });
+    }
+
     // Add delivery fee
     lineItems.push({
       price_data: {
         currency: "usd",
         product_data: { name: "Delivery Fee" },
-        unit_amount: DELIVERY_FEE,
+        unit_amount: deliveryFeeCents,
       },
       quantity: 1,
     });
