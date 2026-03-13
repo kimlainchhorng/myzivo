@@ -57,8 +57,9 @@ export default function GroceryFees() {
   const exampleSubtotal = 45.00;
   const exampleMarkup = calcMarkup(exampleSubtotal);
   const exampleDelivery = 5.99;
+  const exampleServiceFee = calcServiceFee(exampleSubtotal);
   const exampleTip = 3;
-  const exampleTotal = exampleSubtotal + exampleMarkup + exampleDelivery + SERVICE_FEE + exampleTip;
+  const exampleTotal = exampleSubtotal + exampleMarkup + exampleDelivery + exampleServiceFee + exampleTip;
 
   return (
     <div className="min-h-screen bg-background pb-24">
