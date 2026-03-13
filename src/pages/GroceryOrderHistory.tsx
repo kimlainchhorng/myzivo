@@ -1,8 +1,8 @@
 /**
  * GroceryOrderHistory - Real-time order tracking with persistent ratings,
- * receipt viewing, support contact, and working reorder
+ * receipt viewing, spending analytics, support contact, and working reorder
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -10,6 +10,7 @@ import {
   ChevronRight, ShoppingBag, RotateCcw, Star, Store,
   Receipt, Phone, MessageSquare, Loader2, RefreshCw,
   HelpCircle, Download, ExternalLink, Copy, AlertTriangle,
+  TrendingUp, DollarSign, Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,10 +99,11 @@ function OrderStatusTracker({ status }: { status: string }) {
   );
 }
 
-function OrderCard({ order, onReorder, onRate }: {
+function OrderCard({ order, onReorder, onRate, onTrack }: {
   order: Order;
   onReorder: (items: OrderItem[]) => void;
   onRate: (orderId: string, stars: number) => void;
+  onTrack: (orderId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
@@ -328,6 +330,17 @@ function OrderCard({ order, onReorder, onRate }: {
 
               {/* Actions row */}
               <div className="flex gap-2 pt-1">
+                {/* Track active order */}
+                {isActive && (
+                  <Button
+                    size="sm"
+                    className="flex-1 rounded-xl text-[11px] font-bold gap-1.5 h-9"
+                    onClick={() => onTrack(order.id)}
+                  >
+                    <Navigation className="h-3 w-3" />
+                    Track Order
+                  </Button>
+                )}
                 {/* Reorder */}
                 {order.status === "delivered" && order.items?.length > 0 && (
                   <Button
@@ -453,8 +466,26 @@ export default function GroceryOrderHistory() {
     });
     toast.success(`${items.length} items added to cart`);
     const store = items[0]?.store?.toLowerCase() || "walmart";
-    navigate(`/grocery/store/${store}`);
+   navigate(`/grocery/store/${store}`);
   };
+
+  const handleTrack = (orderId: string) => {
+    navigate(`/grocery/track/${orderId}`);
+  };
+
+  // Spending analytics
+  const stats = useMemo(() => {
+    const delivered = orders.filter(o => o.status === "delivered");
+    const totalSpent = delivered.reduce((s, o) => s + (o.total_amount || 0), 0);
+    const avgOrder = delivered.length > 0 ? totalSpent / delivered.length : 0;
+    const thisMonth = delivered.filter(o => {
+      const d = new Date(o.placed_at);
+      const now = new Date();
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    const monthlySpent = thisMonth.reduce((s, o) => s + (o.total_amount || 0), 0);
+    return { totalSpent, avgOrder, totalOrders: delivered.length, monthlySpent, monthlyOrders: thisMonth.length };
+  }, [orders]);
 
   return (
     <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
@@ -536,6 +567,37 @@ export default function GroceryOrderHistory() {
         </motion.div>
       )}
 
+      {/* Spending Analytics */}
+      {!loading && stats.totalOrders > 0 && filter !== "active" && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-4 mt-4 mb-1"
+        >
+          <div className="flex items-center gap-1.5 mb-2.5">
+            <TrendingUp className="h-3.5 w-3.5 text-primary" />
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Spending</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="p-3 rounded-2xl bg-primary/5 border border-primary/10 text-center">
+              <DollarSign className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-[14px] font-extrabold text-foreground">${stats.monthlySpent.toFixed(0)}</p>
+              <p className="text-[8px] text-muted-foreground font-medium">This Month</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-muted/20 border border-border/15 text-center">
+              <ShoppingBag className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
+              <p className="text-[14px] font-extrabold text-foreground">{stats.totalOrders}</p>
+              <p className="text-[8px] text-muted-foreground font-medium">Total Orders</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-muted/20 border border-border/15 text-center">
+              <Receipt className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
+              <p className="text-[14px] font-extrabold text-foreground">${stats.avgOrder.toFixed(0)}</p>
+              <p className="text-[8px] text-muted-foreground font-medium">Avg Order</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Content */}
       <div className="px-4 pt-3 space-y-3">
         {loading ? (
@@ -567,7 +629,7 @@ export default function GroceryOrderHistory() {
           </motion.div>
         ) : (
           filtered.map((order) => (
-            <OrderCard key={order.id} order={order} onReorder={handleReorder} onRate={handleRate} />
+            <OrderCard key={order.id} order={order} onReorder={handleReorder} onRate={handleRate} onTrack={handleTrack} />
           ))
         )}
       </div>
