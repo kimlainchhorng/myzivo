@@ -32,17 +32,7 @@ const itemConfig = {
   car: { icon: Car, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/15" },
 };
 
-// Demo trip for guest/no-data users
-const demoTrip: TripGroup = {
-  destination: "Miami, FL",
-  startDate: new Date(Date.now() + 7 * 86400000).toISOString(),
-  daysUntil: 7,
-  items: [
-    { id: "f1", type: "flight", title: "JFK → MIA", subtitle: "Delta · 3h 10m", date: new Date(Date.now() + 7 * 86400000).toISOString(), status: "confirmed" },
-    { id: "h1", type: "hotel", title: "The Setai Miami Beach", subtitle: "4 nights · Ocean view", date: new Date(Date.now() + 7 * 86400000).toISOString(), status: "confirmed" },
-    { id: "c1", type: "car", title: "Tesla Model 3", subtitle: "4 days · Airport pickup", date: new Date(Date.now() + 7 * 86400000).toISOString(), status: "pending" },
-  ],
-};
+// No demo trip — show empty state for guests
 
 export default function TravelItineraryCard() {
   const { user } = useAuth();
