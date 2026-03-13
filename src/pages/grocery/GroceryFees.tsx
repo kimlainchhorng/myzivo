@@ -39,8 +39,8 @@ const FEE_BREAKDOWN = [
 ];
 
 const PRICE_PROMISES = [
-  { icon: Tag, title: "Transparent Pricing", desc: "All fees — platform markup, delivery, and service — are shown upfront before you place your order." },
-  { icon: ShieldCheck, title: "Price Transparency", desc: "All fees are shown upfront before you place your order. No surprise charges." },
+  { icon: Tag, title: "Transparent Pricing", desc: "All fees — platform, delivery, and service — are itemized before you place your order. No surprise charges." },
+  { icon: ShieldCheck, title: "In-Store Prices", desc: "Product prices match what you'd pay in-store. The platform fee covers shopping, handling, and support." },
   { icon: Percent, title: "Promo Codes Welcome", desc: "Apply promo codes at checkout to reduce delivery or service fees. Check your email for exclusive offers." },
   { icon: Gift, title: "Referral Credits", desc: "Refer friends and earn credits toward free deliveries. Both you and your friend get rewarded." },
 ];

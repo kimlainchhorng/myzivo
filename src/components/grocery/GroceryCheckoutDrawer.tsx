@@ -23,7 +23,7 @@ import { GroceryPromoInput } from "@/components/grocery/GroceryPromoBanner";
 import GroceryInlinePaymentForm from "@/components/grocery/GroceryInlinePaymentForm";
 import { getLiveEta } from "@/utils/storeStatus";
 import { GROCERY_STORES } from "@/config/groceryStores";
-import { SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee } from "@/config/groceryPricing";
+import { SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee, calcMarkup, getMarkupPct } from "@/config/groceryPricing";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
