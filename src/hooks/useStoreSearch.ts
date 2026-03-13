@@ -1,5 +1,7 @@
 /**
- * useStoreSearch - Generic product search hook with pagination
+ * useStoreSearch - Generic product search hook with multi-keyword parallel fetching
+ * The Walmart API returns ~2 products per query, so we split multi-word queries
+ * into individual keyword searches and merge results for density.
  */
 import { useState, useCallback, useRef } from "react";
 import type { StoreName } from "@/config/groceryStores";
@@ -27,12 +29,13 @@ export function useStoreSearch(store: StoreName) {
   const [hasMore, setHasMore] = useState(false);
   const pageRef = useRef(1);
   const lastQueryRef = useRef("");
+  const keywordIndexRef = useRef(0);
+  const allKeywordsRef = useRef<string[]>([]);
 
-  const fetchPage = useCallback(
-    async (query: string, page: number, append: boolean) => {
+  const fetchSingle = useCallback(
+    async (query: string, page: number): Promise<StoreProduct[]> => {
       const cfg = getStoreConfig(store);
       const url = `${SUPABASE_URL}/functions/v1/${cfg.edgeFunction}?q=${encodeURIComponent(query)}&page=${page}`;
-      console.log(`[StoreSearch][${store}] Fetching page ${page}:`, query);
 
       const res = await fetch(url, {
         headers: {
@@ -47,34 +50,26 @@ export function useStoreSearch(store: StoreName) {
       }
 
       const data = await res.json();
-      const mapped: StoreProduct[] = (data.products || []).map((p: any) => ({
-        ...p,
-        store,
-      }));
-
-      console.log(`[StoreSearch][${store}] Page ${page} results:`, mapped.length);
-
-      if (append) {
-        setProducts((prev) => {
-          const existingIds = new Set(prev.map((p) => p.productId));
-          const newItems = mapped.filter((p) => !existingIds.has(p.productId));
-          return [...prev, ...newItems];
-        });
-      } else {
-        // Deduplicate even the first page
-        const seen = new Set<string>();
-        const deduped = mapped.filter((p) => {
-          if (seen.has(p.productId)) return false;
-          seen.add(p.productId);
-          return true;
-        });
-        setProducts(deduped);
-      }
-
-      setHasMore(mapped.length >= 10);
+      return (data.products || []).map((p: any) => ({ ...p, store }));
     },
     [store]
   );
+
+  // Build expanded keyword list from a multi-word query
+  const buildKeywords = (query: string): string[] => {
+    const words = query.split(/\s+/).filter((w) => w.length >= 2);
+    const searches: string[] = [query]; // full query first
+    // Add individual words
+    for (const w of words) {
+      if (!searches.includes(w)) searches.push(w);
+    }
+    // Add 2-word pairs
+    for (let i = 0; i < words.length - 1; i++) {
+      const pair = `${words[i]} ${words[i + 1]}`;
+      if (!searches.includes(pair)) searches.push(pair);
+    }
+    return searches;
+  };
 
   const search = useCallback(
     async (query: string) => {
@@ -84,13 +79,34 @@ export function useStoreSearch(store: StoreName) {
         return;
       }
 
-      pageRef.current = 1;
       lastQueryRef.current = query;
       setIsLoading(true);
       setError(null);
 
       try {
-        await fetchPage(query, 1, false);
+        const keywords = buildKeywords(query);
+        allKeywordsRef.current = keywords;
+        
+        // Fetch first batch of keywords in parallel (up to 8 at a time)
+        const batch = keywords.slice(0, 8);
+        keywordIndexRef.current = batch.length;
+        
+        const results = await Promise.all(
+          batch.map((kw) => fetchSingle(kw, 1).catch(() => [] as StoreProduct[]))
+        );
+
+        const all = results.flat();
+        const seen = new Set<string>();
+        const deduped = all.filter((p) => {
+          const key = p.productId || p.name;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        setProducts(deduped);
+        pageRef.current = 1;
+        setHasMore(keywordIndexRef.current < keywords.length || deduped.length >= 5);
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Search failed";
         setError(msg);
@@ -100,31 +116,63 @@ export function useStoreSearch(store: StoreName) {
         setIsLoading(false);
       }
     },
-    [fetchPage]
+    [fetchSingle]
   );
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !lastQueryRef.current) return;
 
-    const nextPage = pageRef.current + 1;
     setIsLoadingMore(true);
 
     try {
-      await fetchPage(lastQueryRef.current, nextPage, true);
-      pageRef.current = nextPage;
+      const keywords = allKeywordsRef.current;
+      const startIdx = keywordIndexRef.current;
+
+      if (startIdx < keywords.length) {
+        // Fetch next batch of keywords
+        const batch = keywords.slice(startIdx, startIdx + 6);
+        keywordIndexRef.current = startIdx + batch.length;
+
+        const results = await Promise.all(
+          batch.map((kw) => fetchSingle(kw, 1).catch(() => [] as StoreProduct[]))
+        );
+
+        const newItems = results.flat();
+        setProducts((prev) => {
+          const existingIds = new Set(prev.map((p) => p.productId));
+          const unique = newItems.filter((p) => !existingIds.has(p.productId));
+          return [...prev, ...unique];
+        });
+
+        setHasMore(keywordIndexRef.current < keywords.length);
+      } else {
+        // Try paginating the original query
+        pageRef.current += 1;
+        const newItems = await fetchSingle(lastQueryRef.current, pageRef.current);
+        
+        setProducts((prev) => {
+          const existingIds = new Set(prev.map((p) => p.productId));
+          const unique = newItems.filter((p) => !existingIds.has(p.productId));
+          return [...prev, ...unique];
+        });
+
+        setHasMore(newItems.length >= 2);
+      }
     } catch (e) {
       console.error("[StoreSearch] loadMore error:", e);
       setHasMore(false);
     } finally {
       setIsLoadingMore(false);
     }
-  }, [fetchPage, isLoadingMore]);
+  }, [fetchSingle, isLoadingMore]);
 
   const clearResults = useCallback(() => {
     setProducts([]);
     setError(null);
     setHasMore(false);
     pageRef.current = 1;
+    keywordIndexRef.current = 0;
+    allKeywordsRef.current = [];
     lastQueryRef.current = "";
   }, []);
 
