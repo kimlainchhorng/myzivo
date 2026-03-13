@@ -149,6 +149,7 @@ export default function Help() {
         description="Get help with flights, hotels, car rentals, and technical issues. Find answers to common questions about booking travel on ZIVO."
         canonical="https://hizivo.com/help"
       />
+      <FAQStructuredData faqs={faqs.map(f => ({ question: f.q, answer: f.a }))} />
       <Header />
 
       <main className="pt-24 pb-20">
