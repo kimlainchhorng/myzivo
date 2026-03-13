@@ -410,24 +410,24 @@ const App = () => (
                 {/* hotels-dashboard removed */}
 
                 {/* Car Rental */}
-                <Route path="/car-rental" element={<CarRentalLanding />} />
-                <Route path="/car-rental/in-:location" element={<CarRentalLanding />} />
-                <Route path="/rent-car" element={<CarRentalBooking />} />
-                <Route path="/rent-car/results" element={<CarResultsPage />} />
-                <Route path="/rent-car/detail" element={<CarDetailPage />} />
-                <Route path="/rent-car/traveler-info" element={<CarTravelerInfoPage />} />
-                <Route path="/rent-car/checkout" element={<CarCheckoutPage />} />
-                <Route path="/rent-car/confirmation" element={<CarConfirmationPage />} />
-                <Route path="/rent-car/:city" element={<CarRentalLanding />} />
-                <Route path="/cars" element={<Cars />} />
-                <Route path="/cars/search" element={<CarsSearchPage />} />
-                <Route path="/cars/:id" element={<CarsDetailPage />} />
-                <Route path="/how-to-rent" element={<HowToRent />} />
+                <Route path="/car-rental" element={<RouteErrorBoundary section="Cars"><CarRentalLanding /></RouteErrorBoundary>} />
+                <Route path="/car-rental/in-:location" element={<RouteErrorBoundary section="Cars"><CarRentalLanding /></RouteErrorBoundary>} />
+                <Route path="/rent-car" element={<RouteErrorBoundary section="Cars"><CarRentalBooking /></RouteErrorBoundary>} />
+                <Route path="/rent-car/results" element={<RouteErrorBoundary section="Cars"><CarResultsPage /></RouteErrorBoundary>} />
+                <Route path="/rent-car/detail" element={<RouteErrorBoundary section="Cars"><CarDetailPage /></RouteErrorBoundary>} />
+                <Route path="/rent-car/traveler-info" element={<RouteErrorBoundary section="Cars"><CarTravelerInfoPage /></RouteErrorBoundary>} />
+                <Route path="/rent-car/checkout" element={<RouteErrorBoundary section="Cars"><CarCheckoutPage /></RouteErrorBoundary>} />
+                <Route path="/rent-car/confirmation" element={<RouteErrorBoundary section="Cars"><CarConfirmationPage /></RouteErrorBoundary>} />
+                <Route path="/rent-car/:city" element={<RouteErrorBoundary section="Cars"><CarRentalLanding /></RouteErrorBoundary>} />
+                <Route path="/cars" element={<RouteErrorBoundary section="Cars"><Cars /></RouteErrorBoundary>} />
+                <Route path="/cars/search" element={<RouteErrorBoundary section="Cars"><CarsSearchPage /></RouteErrorBoundary>} />
+                <Route path="/cars/:id" element={<RouteErrorBoundary section="Cars"><CarsDetailPage /></RouteErrorBoundary>} />
+                <Route path="/how-to-rent" element={<RouteErrorBoundary section="Cars"><HowToRent /></RouteErrorBoundary>} />
 
                 {/* Travel Checkout */}
-                <Route path="/travel/checkout" element={<TravelCheckoutPage />} />
-                <Route path="/confirmation/:orderNumber" element={<TravelConfirmationPage />} />
-                <Route path="/my-trips/:orderNumber" element={<TravelOrderDetailPage />} />
+                <Route path="/travel/checkout" element={<RouteErrorBoundary section="Checkout"><TravelCheckoutPage /></RouteErrorBoundary>} />
+                <Route path="/confirmation/:orderNumber" element={<RouteErrorBoundary section="Checkout"><TravelConfirmationPage /></RouteErrorBoundary>} />
+                <Route path="/my-trips/:orderNumber" element={<RouteErrorBoundary section="Checkout"><TravelOrderDetailPage /></RouteErrorBoundary>} />
 
                 {/* Extras */}
                 <Route path="/things-to-do" element={<ThingsToDo />} />
