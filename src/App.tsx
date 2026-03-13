@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ZivoPlusProvider } from "@/contexts/ZivoPlusContext";
 import { UTMProvider } from "@/contexts/UTMContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
