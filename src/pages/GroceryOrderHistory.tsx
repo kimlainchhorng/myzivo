@@ -466,8 +466,26 @@ export default function GroceryOrderHistory() {
     });
     toast.success(`${items.length} items added to cart`);
     const store = items[0]?.store?.toLowerCase() || "walmart";
-    navigate(`/grocery/store/${store}`);
+   navigate(`/grocery/store/${store}`);
   };
+
+  const handleTrack = (orderId: string) => {
+    navigate(`/grocery/track/${orderId}`);
+  };
+
+  // Spending analytics
+  const stats = useMemo(() => {
+    const delivered = orders.filter(o => o.status === "delivered");
+    const totalSpent = delivered.reduce((s, o) => s + (o.total_amount || 0), 0);
+    const avgOrder = delivered.length > 0 ? totalSpent / delivered.length : 0;
+    const thisMonth = delivered.filter(o => {
+      const d = new Date(o.placed_at);
+      const now = new Date();
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    const monthlySpent = thisMonth.reduce((s, o) => s + (o.total_amount || 0), 0);
+    return { totalSpent, avgOrder, totalOrders: delivered.length, monthlySpent, monthlyOrders: thisMonth.length };
+  }, [orders]);
 
   return (
     <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
