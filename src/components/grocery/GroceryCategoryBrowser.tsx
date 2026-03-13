@@ -222,7 +222,7 @@ interface GroceryCategoryBrowserProps {
 }
 
 export function GroceryCategoryBrowser({ store, onAdd, cartProductIds, onBrowse }: GroceryCategoryBrowserProps) {
-  const [visibleCount, setVisibleCount] = useState(CATEGORIES.length);
+  const [visibleCount, setVisibleCount] = useState(8);
 
   return (
     <div className="space-y-1 pb-2">
