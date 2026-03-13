@@ -182,10 +182,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
       if (error) throw new Error(error.message || "Checkout failed");
       if (data?.error) throw new Error(data.error);
       if (data?.url) {
-        const popup = window.open(data.url, "_blank", "noopener,noreferrer");
-        if (!popup) {
-          window.location.assign(data.url);
-        }
+        // More reliable on mobile/WebView than popup-based redirects
+        window.location.assign(String(data.url));
+        return;
       } else {
         throw new Error("No checkout URL returned");
       }
