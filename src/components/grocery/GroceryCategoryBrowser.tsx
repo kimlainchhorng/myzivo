@@ -490,10 +490,11 @@ interface CategorySectionProps {
   onAdd: (product: StoreProduct) => void;
   cartProductIds: Set<string>;
   onBrowse: (query: string) => void;
+  onSelect?: (product: StoreProduct) => void;
   index: number;
 }
 
-function CategorySection({ category, store, onAdd, cartProductIds, onBrowse, index }: CategorySectionProps) {
+function CategorySection({ category, store, onAdd, cartProductIds, onBrowse, onSelect, index }: CategorySectionProps) {
   const [products, setProducts] = useState<StoreProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
@@ -621,7 +622,10 @@ function CategorySection({ category, store, onAdd, cartProductIds, onBrowse, ind
                     transition={{ delay: i * 0.02, type: "spring", stiffness: 300, damping: 24 }}
                     className="snap-start shrink-0 w-[130px] rounded-2xl border border-border/30 bg-card overflow-hidden group hover:border-primary/20 hover:shadow-lg transition-all duration-300"
                   >
-                    <div className={`relative h-[90px] bg-gradient-to-br ${category.gradient} flex items-center justify-center p-2.5`}>
+                    <div
+                      className={`relative h-[90px] bg-gradient-to-br ${category.gradient} flex items-center justify-center p-2.5 cursor-pointer`}
+                      onClick={() => onSelect?.(p)}
+                    >
                       {p.image ? (
                         <img
                           src={p.image}
@@ -636,7 +640,7 @@ function CategorySection({ category, store, onAdd, cartProductIds, onBrowse, ind
                       <span className={`absolute top-1.5 left-1.5 h-1.5 w-1.5 rounded-full ${p.inStock ? "bg-emerald-500" : "bg-destructive"}`} />
                     </div>
                     <div className="p-2 space-y-1">
-                      <p className="text-[10px] font-semibold line-clamp-2 text-foreground/90 leading-tight min-h-[24px]">{p.name}</p>
+                      <p className="text-[10px] font-semibold line-clamp-2 text-foreground/90 leading-tight min-h-[24px] cursor-pointer hover:text-primary transition-colors" onClick={() => onSelect?.(p)}>{p.name}</p>
                       <div className="flex items-center justify-between">
                         <span className="text-[13px] font-extrabold text-foreground">${p.price.toFixed(2)}</span>
                         <motion.button
@@ -678,9 +682,10 @@ interface GroceryCategoryBrowserProps {
   onAdd: (product: StoreProduct) => void;
   cartProductIds: Set<string>;
   onBrowse: (query: string) => void;
+  onSelect?: (product: StoreProduct) => void;
 }
 
-export function GroceryCategoryBrowser({ store, onAdd, cartProductIds, onBrowse }: GroceryCategoryBrowserProps) {
+export function GroceryCategoryBrowser({ store, onAdd, cartProductIds, onBrowse, onSelect }: GroceryCategoryBrowserProps) {
   const [visibleCount, setVisibleCount] = useState(15);
   const STEP = 20;
 
@@ -700,6 +705,7 @@ export function GroceryCategoryBrowser({ store, onAdd, cartProductIds, onBrowse 
           onAdd={onAdd}
           cartProductIds={cartProductIds}
           onBrowse={onBrowse}
+          onSelect={onSelect}
           index={i}
         />
       ))}
