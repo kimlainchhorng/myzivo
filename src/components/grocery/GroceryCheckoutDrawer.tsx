@@ -88,7 +88,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   // Distance-based delivery fee (estimate: ~3mi, ETA-based minutes)
   const estimatedMiles = 3;
   const deliveryFee = calcDeliveryFee(estimatedMiles, liveEta);
-  const grandTotal = Math.max(0, total + markup + deliveryFee + SERVICE_FEE + tip + priorityFee - promoDiscount);
+  // Service fee: 5% of subtotal with min/max
+  const serviceFee = calcServiceFee(total);
+  const grandTotal = Math.max(0, total + markup + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
   useEffect(() => {
