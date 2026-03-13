@@ -363,6 +363,7 @@ const App = () => (
                 <Route path="/grocery/order-placed" element={<GroceryOrderPlaced />} />
                 <Route path="/grocery/order-confirmed" element={<GroceryOrderConfirmed />} />
                 <Route path="/grocery/orders" element={<GroceryOrderHistory />} />
+                <Route path="/grocery/track/:orderId" element={<GroceryOrderTracking />} />
                 <Route path="/grocery/terms" element={<GroceryTerms />} />
                 <Route path="/grocery/returns" element={<GroceryReturns />} />
                 <Route path="/grocery/fees" element={<GroceryFees />} />
