@@ -794,6 +794,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                     <Loader2 className="h-4.5 w-4.5 animate-spin" />
                     Redirecting to payment…
                   </>
+                ) : pendingCheckoutUrl ? (
+                  <>
+                    <Lock className="h-4 w-4" />
+                    Continue to Stripe Checkout
+                  </>
                 ) : (
                   <>
                     <CreditCard className="h-4 w-4" />
