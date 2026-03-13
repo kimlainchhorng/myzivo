@@ -4,7 +4,7 @@
 import { motion } from "framer-motion";
 import { Clock, Star, MapPin, Truck, Shield, Zap, Percent, Award } from "lucide-react";
 import type { StoreConfig } from "@/config/groceryStores";
-import { DELIVERY_FEE, formatFee } from "@/config/groceryPricing";
+import { DELIVERY_BASE_FEE, formatFee } from "@/config/groceryPricing";
 
 interface Props {
   store: StoreConfig;

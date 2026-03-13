@@ -6,7 +6,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Truck, Shield, Clock, MapPin, X, Tag, Check, Loader2, Zap, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { DELIVERY_FEE, formatFee } from "@/config/groceryPricing";
+import { DELIVERY_BASE_FEE, formatFee } from "@/config/groceryPricing";
 
 const SERVICE_INFO = [
   {
