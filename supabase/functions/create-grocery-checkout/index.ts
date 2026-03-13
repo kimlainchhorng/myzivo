@@ -136,15 +136,17 @@ Deno.serve(async (req) => {
       quantity: 1,
     });
 
-    // Add service fee
-    lineItems.push({
-      price_data: {
-        currency: "usd",
-        product_data: { name: "Service Fee" },
-        unit_amount: SERVICE_FEE,
-      },
-      quantity: 1,
-    });
+    // Add service fee (percentage-based with min/max)
+    if (serviceFeeCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: { name: `Service Fee (${SERVICE_FEE_PCT}%)` },
+          unit_amount: serviceFeeCents,
+        },
+        quantity: 1,
+      });
+    }
 
     // Add tip if any
     if (tipCents > 0) {

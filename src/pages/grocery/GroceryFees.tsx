@@ -122,7 +122,7 @@ export default function GroceryFees() {
               { label: "Item subtotal (12 items)", value: `$${exampleSubtotal.toFixed(2)}` },
               { label: `Platform fee (${getMarkupPct(exampleSubtotal)}%)`, value: `$${exampleMarkup.toFixed(2)}` },
               { label: "Delivery fee (3.2 mi)", value: `$${exampleDelivery.toFixed(2)}` },
-              { label: "Service fee", value: formatFee(SERVICE_FEE) },
+              { label: `Service fee (${SERVICE_FEE_PCT}%)`, value: `$${exampleServiceFee.toFixed(2)}` },
               { label: "Driver tip", value: `$${exampleTip.toFixed(2)}` },
             ].map((row) => (
               <div key={row.label} className="flex items-center justify-between">

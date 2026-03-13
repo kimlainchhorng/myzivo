@@ -43,20 +43,21 @@ export function calcDeliveryFee(miles: number, minutes: number): number {
 /** Flat fallback when distance is unknown */
 export const DELIVERY_FEE_FALLBACK = 5.99;
 
-/** Service fee in dollars */
-export const SERVICE_FEE = 1.99;
+/** Service fee percentage */
+export const SERVICE_FEE_PCT = 5;
+/** Service fee minimum in dollars */
+export const SERVICE_FEE_MIN = 2.50;
+/** Service fee maximum in dollars */
+export const SERVICE_FEE_MAX = 10.00;
+
+/** Calculate service fee based on subtotal with min/max caps */
+export function calcServiceFee(subtotal: number): number {
+  const raw = Math.round(subtotal * SERVICE_FEE_PCT) / 100;
+  return Math.round(Math.min(SERVICE_FEE_MAX, Math.max(SERVICE_FEE_MIN, raw)) * 100) / 100;
+}
 
 /** Priority delivery surcharge in dollars */
 export const PRIORITY_FEE = 2.99;
-
-/** Free delivery threshold */
-export const FREE_DELIVERY_THRESHOLD = 35;
-
-/** Service fee in cents (for Stripe) */
-export const SERVICE_FEE_CENTS = 199;
-
-/** Priority fee in cents (for Stripe) */
-export const PRIORITY_FEE_CENTS = 299;
 
 /** Default tip options */
 export const TIP_OPTIONS = [0, 2, 3, 5];
