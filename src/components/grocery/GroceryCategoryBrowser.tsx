@@ -682,9 +682,10 @@ interface GroceryCategoryBrowserProps {
   onAdd: (product: StoreProduct) => void;
   cartProductIds: Set<string>;
   onBrowse: (query: string) => void;
+  onSelect?: (product: StoreProduct) => void;
 }
 
-export function GroceryCategoryBrowser({ store, onAdd, cartProductIds, onBrowse }: GroceryCategoryBrowserProps) {
+export function GroceryCategoryBrowser({ store, onAdd, cartProductIds, onBrowse, onSelect }: GroceryCategoryBrowserProps) {
   const [visibleCount, setVisibleCount] = useState(15);
   const STEP = 20;
 
