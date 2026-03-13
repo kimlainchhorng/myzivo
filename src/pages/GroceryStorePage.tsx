@@ -772,7 +772,7 @@ export default function GroceryStorePage() {
 
       {/* Floating cart bar */}
       <AnimatePresence>
-        {cart.itemCount > 0 && !showCart && !showCheckout && (
+        {cart.itemCount > 0 && !showCheckout && (
           <motion.div
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
