@@ -159,7 +159,7 @@ export function AIConciergeTrigger() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && sendMessage(input)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
                   placeholder="Type a message..."
                   className="flex-1 px-4 py-2 bg-muted rounded-full text-sm outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground"
                 />
