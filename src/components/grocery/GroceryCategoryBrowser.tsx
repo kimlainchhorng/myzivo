@@ -303,6 +303,185 @@ const CATEGORIES = [
   { emoji: "🚗", label: "Auto Essentials", query: "windshield fluid motor oil car air freshener", gradient: "from-slate-500/10 to-slate-400/5" },
   { emoji: "🏕️", label: "Outdoor & Camping", query: "flashlight lantern camping supplies cooler", gradient: "from-green-600/10 to-green-500/5" },
   { emoji: "☂️", label: "Umbrellas & Rain Gear", query: "umbrella rain poncho rain boots waterproof", gradient: "from-blue-500/10 to-blue-400/5" },
+  { emoji: "🔧", label: "Auto Tools & Accessories", query: "car jack jumper cables tire gauge tools", gradient: "from-slate-600/10 to-slate-500/5" },
+  { emoji: "🚘", label: "Car Cleaning", query: "car wash soap wax armor all tire cleaner", gradient: "from-blue-400/10 to-blue-300/5" },
+  { emoji: "🪵", label: "Firewood & Charcoal", query: "firewood charcoal fire starter kindling logs", gradient: "from-amber-600/10 to-amber-500/5" },
+
+  // 🌿 Garden & Lawn
+  { emoji: "🌿", label: "Garden Seeds", query: "vegetable seeds flower seeds herb seeds garden", gradient: "from-green-500/10 to-green-400/5" },
+  { emoji: "🌻", label: "Garden Plants & Flowers", query: "flowers potted plant hanging basket garden flowers", gradient: "from-pink-400/10 to-pink-300/5" },
+  { emoji: "🌱", label: "Soil & Mulch", query: "potting soil mulch compost peat moss topsoil", gradient: "from-amber-600/10 to-amber-500/5" },
+  { emoji: "🪴", label: "Planters & Pots", query: "planter pot flower pot hanging planter ceramic", gradient: "from-stone-500/10 to-stone-400/5" },
+  { emoji: "🌾", label: "Lawn Care", query: "grass seed lawn fertilizer weed killer scotts", gradient: "from-green-600/10 to-green-500/5" },
+  { emoji: "🪻", label: "Garden Tools", query: "garden hose shovel rake pruning shears wheelbarrow", gradient: "from-green-400/10 to-green-300/5" },
+  { emoji: "🦟", label: "Insect Repellent", query: "bug spray off insect repellent mosquito citronella", gradient: "from-lime-500/10 to-lime-400/5" },
+  { emoji: "🌳", label: "Tree & Shrub Care", query: "tree fertilizer shrub trimmer hedge plant food", gradient: "from-emerald-600/10 to-emerald-500/5" },
+  { emoji: "💧", label: "Sprinklers & Watering", query: "sprinkler garden hose watering can nozzle drip", gradient: "from-blue-400/10 to-blue-300/5" },
+  { emoji: "🪨", label: "Landscaping & Decor", query: "garden stones stepping stone solar light bird feeder", gradient: "from-stone-400/10 to-stone-300/5" },
+  { emoji: "🧤", label: "Garden Gloves & Gear", query: "gardening gloves knee pad apron sun hat", gradient: "from-green-300/10 to-green-200/5" },
+  { emoji: "🌹", label: "Rose & Perennial", query: "rose bush perennial flower bulbs tulip daffodil", gradient: "from-rose-500/10 to-rose-400/5" },
+  { emoji: "🍅", label: "Vegetable Garden", query: "tomato plant pepper plant herb garden starter kit", gradient: "from-red-400/10 to-red-300/5" },
+
+  // 🪑 Patio & Outdoor Living
+  { emoji: "🪑", label: "Patio Furniture", query: "patio chair table outdoor furniture cushion umbrella", gradient: "from-amber-400/10 to-amber-300/5" },
+  { emoji: "🔥", label: "Grills & BBQ", query: "grill charcoal grill gas grill smoker bbq", gradient: "from-red-500/10 to-red-400/5" },
+  { emoji: "🍖", label: "Grilling Accessories", query: "grill brush tongs spatula grill mat thermometer", gradient: "from-amber-500/10 to-amber-400/5" },
+  { emoji: "🏖️", label: "Outdoor Decor", query: "outdoor string lights solar lantern wind chime", gradient: "from-yellow-400/10 to-yellow-300/5" },
+  { emoji: "🏊", label: "Pool & Water", query: "pool float pool noodle chlorine pool chemicals", gradient: "from-cyan-500/10 to-cyan-400/5" },
+  { emoji: "⛱️", label: "Shade & Canopy", query: "patio umbrella canopy shade sail gazebo", gradient: "from-blue-300/10 to-blue-200/5" },
+
+  // 🏋️ Sports & Fitness
+  { emoji: "⚽", label: "Sports Equipment", query: "basketball football soccer ball baseball bat", gradient: "from-orange-500/10 to-orange-400/5" },
+  { emoji: "🏋️", label: "Exercise Equipment", query: "dumbbells resistance bands yoga mat jump rope", gradient: "from-violet-500/10 to-violet-400/5" },
+  { emoji: "🚴", label: "Cycling & Biking", query: "bike helmet bike lock bicycle pump accessories", gradient: "from-blue-500/10 to-blue-400/5" },
+  { emoji: "🏃", label: "Running & Athletic", query: "running shoes athletic socks water bottle armband", gradient: "from-green-500/10 to-green-400/5" },
+  { emoji: "🎣", label: "Fishing & Hunting", query: "fishing rod tackle box bait lure fishing line", gradient: "from-teal-500/10 to-teal-400/5" },
+  { emoji: "⛳", label: "Golf & Tennis", query: "golf balls tees tennis ball racket grip tape", gradient: "from-green-400/10 to-green-300/5" },
+
+  // 🛏️ Bedding & Bath
+  { emoji: "🛏️", label: "Bedding & Sheets", query: "bed sheets pillow comforter blanket mattress pad", gradient: "from-indigo-400/10 to-indigo-300/5" },
+  { emoji: "🛁", label: "Bath Towels", query: "bath towel hand towel washcloth towel set", gradient: "from-sky-400/10 to-sky-300/5" },
+  { emoji: "🧸", label: "Pillows & Throws", query: "throw pillow decorative pillow throw blanket", gradient: "from-pink-300/10 to-pink-200/5" },
+  { emoji: "🪟", label: "Curtains & Blinds", query: "curtains window blinds shower curtain rod", gradient: "from-slate-400/10 to-slate-300/5" },
+  { emoji: "🧹", label: "Laundry Baskets", query: "laundry basket hamper drying rack ironing board", gradient: "from-blue-300/10 to-blue-200/5" },
+
+  // 🏠 Home Improvement
+  { emoji: "🎨", label: "Paint & Supplies", query: "paint brush roller tape primer spray paint", gradient: "from-violet-500/10 to-violet-400/5" },
+  { emoji: "💡", label: "Smart Home", query: "smart plug smart bulb doorbell camera ring echo", gradient: "from-blue-500/10 to-blue-400/5" },
+  { emoji: "🔌", label: "Electrical", query: "extension cord power strip surge protector outlet", gradient: "from-yellow-500/10 to-yellow-400/5" },
+  { emoji: "🔩", label: "Nuts Bolts & Screws", query: "screws nails bolts anchors wall hooks command", gradient: "from-slate-500/10 to-slate-400/5" },
+  { emoji: "🚪", label: "Locks & Security", query: "door lock padlock deadbolt security camera safe", gradient: "from-slate-600/10 to-slate-500/5" },
+  { emoji: "🪠", label: "Plumbing Supplies", query: "plunger drain cleaner faucet tape pipe", gradient: "from-blue-400/10 to-blue-300/5" },
+  { emoji: "🧰", label: "Tool Sets", query: "tool set drill bit wrench plier socket set", gradient: "from-red-500/10 to-red-400/5" },
+
+  // 📱 Electronics
+  { emoji: "📱", label: "Phone Cases & Screen", query: "phone case screen protector pop socket grip", gradient: "from-slate-500/10 to-slate-400/5" },
+  { emoji: "🔋", label: "Power Banks", query: "portable charger power bank battery pack wireless", gradient: "from-green-500/10 to-green-400/5" },
+  { emoji: "🖥️", label: "Computer Accessories", query: "mouse keyboard mouse pad webcam usb hub", gradient: "from-blue-400/10 to-blue-300/5" },
+  { emoji: "📷", label: "Memory Cards & USB", query: "sd card micro sd usb flash drive memory stick", gradient: "from-slate-400/10 to-slate-300/5" },
+  { emoji: "🎵", label: "Speakers & Audio", query: "bluetooth speaker portable speaker soundbar aux", gradient: "from-violet-400/10 to-violet-300/5" },
+  { emoji: "📺", label: "TV Accessories", query: "tv mount hdmi cable streaming stick remote", gradient: "from-slate-500/10 to-slate-400/5" },
+  { emoji: "🎮", label: "Video Games", query: "playstation xbox nintendo switch games controller", gradient: "from-indigo-500/10 to-indigo-400/5" },
+
+  // 👗 Clothing & Accessories
+  { emoji: "👟", label: "Shoes & Sneakers", query: "sneakers shoes sandals slippers boots flip flops", gradient: "from-slate-400/10 to-slate-300/5" },
+  { emoji: "👖", label: "Jeans & Pants", query: "jeans pants shorts leggings sweatpants joggers", gradient: "from-blue-500/10 to-blue-400/5" },
+  { emoji: "🧥", label: "Jackets & Hoodies", query: "hoodie jacket sweater coat fleece zip up", gradient: "from-slate-500/10 to-slate-400/5" },
+  { emoji: "👒", label: "Hats & Caps", query: "baseball cap beanie sun hat visor trucker hat", gradient: "from-amber-400/10 to-amber-300/5" },
+  { emoji: "🕶️", label: "Sunglasses", query: "sunglasses polarized reading glasses aviator", gradient: "from-slate-500/10 to-slate-400/5" },
+  { emoji: "👜", label: "Bags & Wallets", query: "wallet purse tote bag backpack messenger bag", gradient: "from-amber-500/10 to-amber-400/5" },
+  { emoji: "⌚", label: "Watches & Jewelry", query: "watch bracelet necklace ring earrings jewelry", gradient: "from-yellow-400/10 to-yellow-300/5" },
+  { emoji: "🩱", label: "Swimwear", query: "swimsuit bikini swim trunks board shorts rash guard", gradient: "from-cyan-400/10 to-cyan-300/5" },
+  { emoji: "🧤", label: "Gloves & Scarves", query: "gloves scarf mittens winter accessories earmuffs", gradient: "from-blue-400/10 to-blue-300/5" },
+
+  // 🧸 More Toys & Entertainment
+  { emoji: "🎲", label: "Board Games & Puzzles", query: "monopoly scrabble puzzle chess card games uno", gradient: "from-emerald-400/10 to-emerald-300/5" },
+  { emoji: "🎨", label: "Paint & Draw Sets", query: "paint set watercolor acrylic canvas easel", gradient: "from-purple-400/10 to-purple-300/5" },
+  { emoji: "🧩", label: "Building Sets", query: "lego building blocks mega construx kinex", gradient: "from-red-400/10 to-red-300/5" },
+  { emoji: "🎯", label: "Outdoor Toys", query: "nerf water gun bubble maker frisbee kite", gradient: "from-lime-400/10 to-lime-300/5" },
+  { emoji: "🪀", label: "Dolls & Action Figures", query: "barbie doll action figure marvel disney frozen", gradient: "from-pink-400/10 to-pink-300/5" },
+  { emoji: "🚂", label: "Toy Vehicles", query: "hot wheels matchbox toy truck remote control car", gradient: "from-red-500/10 to-red-400/5" },
+  { emoji: "🎹", label: "Musical Instruments", query: "guitar ukulele keyboard harmonica recorder", gradient: "from-amber-500/10 to-amber-400/5" },
+
+  // 📚 Books & Media
+  { emoji: "📖", label: "Best Selling Books", query: "best seller book novel fiction non fiction", gradient: "from-amber-400/10 to-amber-300/5" },
+  { emoji: "📕", label: "Cookbooks & Recipes", query: "cookbook recipe book baking book food guide", gradient: "from-orange-400/10 to-orange-300/5" },
+  { emoji: "🎬", label: "DVDs & Blu-Ray", query: "dvd bluray movie box set tv series", gradient: "from-slate-500/10 to-slate-400/5" },
+  { emoji: "📓", label: "Journals & Planners", query: "journal planner diary calendar notebook", gradient: "from-teal-400/10 to-teal-300/5" },
+
+  // 🍳 Kitchen & Dining
+  { emoji: "🍳", label: "Cookware & Pans", query: "frying pan pot skillet saucepan wok non stick", gradient: "from-slate-500/10 to-slate-400/5" },
+  { emoji: "🔪", label: "Knives & Cutlery", query: "kitchen knife cutting board knife set chef knife", gradient: "from-slate-600/10 to-slate-500/5" },
+  { emoji: "🫙", label: "Food Storage", query: "tupperware food container glass storage zip bag", gradient: "from-blue-300/10 to-blue-200/5" },
+  { emoji: "☕", label: "Mugs & Glasses", query: "coffee mug tumbler water glass wine glass cup", gradient: "from-amber-400/10 to-amber-300/5" },
+  { emoji: "🍽️", label: "Plates & Bowls", query: "dinner plate bowl dish set dinnerware melamine", gradient: "from-stone-400/10 to-stone-300/5" },
+  { emoji: "🧊", label: "Small Appliances", query: "blender toaster air fryer instant pot crockpot", gradient: "from-red-400/10 to-red-300/5" },
+  { emoji: "🧹", label: "Kitchen Cleaning", query: "dish rack drying mat scrub brush scouring pad", gradient: "from-green-400/10 to-green-300/5" },
+  { emoji: "🧂", label: "Bakeware", query: "baking sheet cookie pan muffin tin cake pan loaf", gradient: "from-amber-500/10 to-amber-400/5" },
+
+  // 🧴 More Personal Care
+  { emoji: "🪮", label: "Hair Brushes & Combs", query: "hair brush comb detangler wide tooth pick", gradient: "from-pink-400/10 to-pink-300/5" },
+  { emoji: "💆", label: "Hair Color & Dye", query: "hair dye color box dye revlon loreal garnier", gradient: "from-violet-500/10 to-violet-400/5" },
+  { emoji: "🧴", label: "Body Lotion & Cream", query: "body lotion cream vaseline jergens aveeno", gradient: "from-pink-300/10 to-pink-200/5" },
+  { emoji: "🪥", label: "Electric Toothbrush", query: "electric toothbrush oral b sonicare replacement head", gradient: "from-sky-400/10 to-sky-300/5" },
+
+  // 🏥 More Health
+  { emoji: "🩺", label: "Diabetes Care", query: "glucose monitor test strips insulin syringes", gradient: "from-blue-500/10 to-blue-400/5" },
+  { emoji: "🦻", label: "Hearing & Ear Care", query: "ear plugs hearing aid batteries ear drops wax removal", gradient: "from-violet-400/10 to-violet-300/5" },
+  { emoji: "🩼", label: "Mobility & Support", query: "walking cane knee brace wrist brace ankle support", gradient: "from-slate-400/10 to-slate-300/5" },
+  { emoji: "🧪", label: "Home Test Kits", query: "covid test pregnancy test drug test thermometer", gradient: "from-teal-400/10 to-teal-300/5" },
+
+  // 🧺 Laundry & Cleaning Deep
+  { emoji: "🧴", label: "Stain Remover", query: "oxiclean shout stain remover spray wash bleach", gradient: "from-blue-400/10 to-blue-300/5" },
+  { emoji: "🧹", label: "Vacuum & Floor Care", query: "vacuum cleaner mop pads swiffer refill dust buster", gradient: "from-violet-400/10 to-violet-300/5" },
+  { emoji: "🪣", label: "Bucket & Cleaning Caddy", query: "bucket mop bucket spray bottle cleaning caddy", gradient: "from-teal-300/10 to-teal-200/5" },
+
+  // 🎒 Travel & Luggage
+  { emoji: "🧳", label: "Luggage & Travel Bags", query: "suitcase luggage carry on duffel bag travel", gradient: "from-slate-500/10 to-slate-400/5" },
+  { emoji: "✈️", label: "Travel Accessories", query: "travel pillow luggage tag eye mask travel size", gradient: "from-blue-400/10 to-blue-300/5" },
+  { emoji: "🧴", label: "Travel Size Toiletries", query: "travel size shampoo toothpaste deodorant mini", gradient: "from-pink-300/10 to-pink-200/5" },
+
+  // 🐾 More Pets
+  { emoji: "🐕‍🦺", label: "Dog Toys", query: "dog toy chew toy rope toy squeaky ball fetch", gradient: "from-amber-400/10 to-amber-300/5" },
+  { emoji: "🐱", label: "Cat Toys & Scratchers", query: "cat toy scratcher cat tree catnip laser pointer", gradient: "from-orange-300/10 to-orange-200/5" },
+  { emoji: "🐦", label: "Bird & Small Pets", query: "bird food hamster cage guinea pig bedding seed", gradient: "from-yellow-400/10 to-yellow-300/5" },
+  { emoji: "🐶", label: "Dog Beds & Crates", query: "dog bed crate kennel blanket pet mat carrier", gradient: "from-amber-500/10 to-amber-400/5" },
+  { emoji: "🧼", label: "Pet Grooming", query: "dog shampoo pet brush nail clipper flea collar", gradient: "from-teal-400/10 to-teal-300/5" },
+
+  // 🎉 More Party & Celebrations
+  { emoji: "🎂", label: "Birthday Party", query: "birthday candles party banner table cover pinata", gradient: "from-pink-500/10 to-pink-400/5" },
+  { emoji: "🎊", label: "Graduation & Events", query: "graduation cap banner decorations party poppers", gradient: "from-blue-500/10 to-blue-400/5" },
+  { emoji: "🍰", label: "Baking Decorating", query: "sprinkles frosting piping bags cake topper fondant", gradient: "from-pink-400/10 to-pink-300/5" },
+
+  // 🧰 More Hardware
+  { emoji: "💡", label: "Outdoor Lighting", query: "solar lights landscape lights flood light motion sensor", gradient: "from-yellow-400/10 to-yellow-300/5" },
+  { emoji: "🔌", label: "Light Switches & Outlets", query: "light switch dimmer outlet cover plate smart switch", gradient: "from-stone-400/10 to-stone-300/5" },
+  { emoji: "🪜", label: "Ladders & Step Stools", query: "step stool ladder folding step small ladder", gradient: "from-slate-500/10 to-slate-400/5" },
+  { emoji: "📏", label: "Measuring & Levels", query: "tape measure level stud finder laser measure", gradient: "from-yellow-500/10 to-yellow-400/5" },
+  { emoji: "🔨", label: "Adhesives & Tape", query: "gorilla glue super glue epoxy duct tape painters tape", gradient: "from-amber-500/10 to-amber-400/5" },
+
+  // 🎨 Crafts & Hobbies
+  { emoji: "🧵", label: "Sewing & Fabric", query: "thread needle fabric scissors sewing kit velcro", gradient: "from-rose-400/10 to-rose-300/5" },
+  { emoji: "🧶", label: "Yarn & Knitting", query: "yarn knitting needles crochet hook pattern wool", gradient: "from-pink-500/10 to-pink-400/5" },
+  { emoji: "📸", label: "Scrapbooking", query: "stickers scrapbook washi tape photo album glitter", gradient: "from-violet-400/10 to-violet-300/5" },
+  { emoji: "🖼️", label: "Frames & Wall Art", query: "picture frame wall art poster canvas print", gradient: "from-amber-400/10 to-amber-300/5" },
+
+  // 🧘 Wellness & Self-Care
+  { emoji: "🧘", label: "Yoga & Meditation", query: "yoga mat yoga block meditation cushion foam roller", gradient: "from-purple-400/10 to-purple-300/5" },
+  { emoji: "🛀", label: "Bath Bombs & Salts", query: "bath bomb epsom salt bubble bath bath oil", gradient: "from-pink-400/10 to-pink-300/5" },
+  { emoji: "🕯️", label: "Aromatherapy", query: "essential oil diffuser lavender eucalyptus peppermint", gradient: "from-green-400/10 to-green-300/5" },
+  { emoji: "💆", label: "Massage & Relief", query: "massage gun roller icy hot biofreeze heating pad", gradient: "from-blue-400/10 to-blue-300/5" },
+
+  // 🍽️ More Food Specialty
+  { emoji: "🍣", label: "Sushi Ingredients", query: "sushi rice nori sheets wasabi pickled ginger", gradient: "from-red-400/10 to-red-300/5" },
+  { emoji: "🫕", label: "Fondue & Dips", query: "fondue cheese dip chocolate fondue bread bowl", gradient: "from-amber-500/10 to-amber-400/5" },
+  { emoji: "🥜", label: "Nut Butters & Tahini", query: "almond butter tahini cashew butter hazelnut spread", gradient: "from-amber-500/10 to-amber-400/5" },
+  { emoji: "🍯", label: "Jam & Preserves", query: "strawberry jam grape jelly marmalade preserves", gradient: "from-red-400/10 to-red-300/5" },
+  { emoji: "🧂", label: "Salt & Specialty Spice", query: "himalayan salt sea salt black pepper garlic salt", gradient: "from-stone-400/10 to-stone-300/5" },
+  { emoji: "🫒", label: "Olive Oil & Vinegar", query: "extra virgin olive oil balsamic vinegar avocado oil", gradient: "from-green-500/10 to-green-400/5" },
+  { emoji: "🌶️", label: "Hot Sauce Collection", query: "tabasco franks cholula valentina tapatio sriracha", gradient: "from-red-600/10 to-red-500/5" },
+  { emoji: "🥫", label: "Tomato Sauce & Paste", query: "tomato sauce tomato paste crushed tomato diced", gradient: "from-red-500/10 to-red-400/5" },
+  { emoji: "🍝", label: "Alfredo & Pesto", query: "alfredo sauce pesto basil sauce white sauce", gradient: "from-green-400/10 to-green-300/5" },
+  { emoji: "🥣", label: "Instant Oatmeal", query: "instant oatmeal quaker oats maple brown sugar apple", gradient: "from-amber-400/10 to-amber-300/5" },
+  { emoji: "🥞", label: "Cereal Bars", query: "cereal bar nature valley kind bar clif bar granola", gradient: "from-green-400/10 to-green-300/5" },
+  { emoji: "🧀", label: "Cream Cheese & Dip", query: "philadelphia cream cheese onion dip french onion", gradient: "from-yellow-300/10 to-yellow-200/5" },
+  { emoji: "🥩", label: "Jerky Variety", query: "beef jerky turkey jerky teriyaki jerky peppered", gradient: "from-rose-500/10 to-rose-400/5" },
+  { emoji: "🍿", label: "Kettle Corn & Caramel", query: "kettle corn caramel popcorn cheese popcorn", gradient: "from-yellow-400/10 to-yellow-300/5" },
+  { emoji: "🫘", label: "Hummus & Dips", query: "hummus sabra tzatziki ranch dip spinach dip", gradient: "from-green-400/10 to-green-300/5" },
+  { emoji: "🧃", label: "Juice Boxes & Pouches", query: "capri sun juice box kids juice pouch kool aid", gradient: "from-orange-400/10 to-orange-300/5" },
+  { emoji: "🥤", label: "Flavored Water", query: "flavored water mio crystal light drink mix", gradient: "from-blue-300/10 to-blue-200/5" },
+  { emoji: "🍦", label: "Ice Cream Cones & Toppings", query: "ice cream cone waffle cone sprinkles hot fudge", gradient: "from-pink-400/10 to-pink-300/5" },
+  { emoji: "🥧", label: "Pie Crust & Filling", query: "pie crust filling cherry apple pumpkin graham", gradient: "from-amber-500/10 to-amber-400/5" },
+  { emoji: "🍬", label: "Gum & Mints", query: "gum mints altoids tic tac orbit trident", gradient: "from-teal-400/10 to-teal-300/5" },
+  { emoji: "🍭", label: "Lollipops & Hard Candy", query: "lollipop jolly rancher lifesavers werther hard candy", gradient: "from-pink-400/10 to-pink-300/5" },
+  { emoji: "🍫", label: "Dark Chocolate", query: "dark chocolate lindt ghirardelli godiva cocoa", gradient: "from-amber-800/10 to-amber-700/5" },
+
+  // 🏡 More Home
+  { emoji: "🧸", label: "Throw Rugs & Mats", query: "area rug bath mat doormat runner rug carpet", gradient: "from-stone-400/10 to-stone-300/5" },
+  { emoji: "🪞", label: "Mirrors & Decor", query: "wall mirror decorative mirror vanity mirror shelf", gradient: "from-slate-400/10 to-slate-300/5" },
+  { emoji: "🧺", label: "Baskets & Bins", query: "storage basket wicker bin fabric cube organizer", gradient: "from-amber-400/10 to-amber-300/5" },
+  { emoji: "🖼️", label: "Wall Hooks & Hangers", query: "wall hooks adhesive hooks coat rack hanger over door", gradient: "from-slate-500/10 to-slate-400/5" },
+  { emoji: "🧴", label: "Room Spray & Deodorizer", query: "room spray febreze plug in air wick odor eliminator", gradient: "from-purple-300/10 to-purple-200/5" },
 ];
 
 interface CategorySectionProps {

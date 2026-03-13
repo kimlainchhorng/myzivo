@@ -248,7 +248,7 @@ export default function GroceryStorePage() {
    // After each page finishes loading, auto-queue the next one (up to 10 rounds for more products)
   useEffect(() => {
     if (autoLoadTimer.current) clearTimeout(autoLoadTimer.current);
-    if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && autoLoadCount.current < 10) {
+    if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && autoLoadCount.current < 25) {
       autoLoadTimer.current = setTimeout(() => {
         autoLoadCount.current += 1;
         loadMore();
