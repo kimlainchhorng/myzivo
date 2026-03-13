@@ -35,10 +35,16 @@ type SubstitutionPref = "contact_me" | "best_match" | "refund";
 
 function getSavedAddress(): { address: string; label: string } | null {
   try {
-    const raw = localStorage.getItem("zivo_selected_address");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return { address: parsed.address || "", label: parsed.label || "" };
+    const selectedId = localStorage.getItem("zivo_selected_address");
+    const addressesRaw = localStorage.getItem("zivo_delivery_addresses");
+    if (addressesRaw) {
+      const addresses = JSON.parse(addressesRaw);
+      if (Array.isArray(addresses) && addresses.length > 0) {
+        const match = selectedId
+          ? addresses.find((a: any) => a.id === selectedId)
+          : addresses.find((a: any) => a.isDefault) || addresses[0];
+        if (match) return { address: match.address || "", label: match.label || "" };
+      }
     }
   } catch {}
   return null;
