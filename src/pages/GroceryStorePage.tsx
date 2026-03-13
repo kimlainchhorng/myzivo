@@ -667,7 +667,7 @@ export default function GroceryStorePage() {
         </div>
       )}
 
-      {/* Category Browser - shown when not actively searching */}
+      {/* Category Browser - shown prominently when not searching */}
       {!isLoading && !query && !activeFilter && (
         <GroceryCategoryBrowser
           store={storeName}

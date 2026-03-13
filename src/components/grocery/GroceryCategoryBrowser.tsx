@@ -196,7 +196,7 @@ interface GroceryCategoryBrowserProps {
 }
 
 export function GroceryCategoryBrowser({ store, onAdd, cartProductIds, onBrowse }: GroceryCategoryBrowserProps) {
-  const [visibleCount, setVisibleCount] = useState(3);
+  const [visibleCount, setVisibleCount] = useState(5);
 
   return (
     <div className="space-y-1 pb-2">
