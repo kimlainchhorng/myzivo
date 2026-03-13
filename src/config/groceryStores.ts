@@ -85,7 +85,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     placeholder: "Search Kroger products…",
     emptyTitle: "Search Kroger Products",
     emptyDescription: "Shop fresh groceries and household staples from Kroger. A ZIVO driver delivers right to you.",
-    defaultQuery: "food snacks drinks chips milk bread",
+    defaultQuery: "chips soda milk bread chicken eggs cheese cookies juice water cereal pizza",
     category: "grocery",
     deliveryMin: 35,
     rating: 4.5,
