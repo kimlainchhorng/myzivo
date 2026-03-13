@@ -71,9 +71,15 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [scheduler, setScheduler] = useState<SchedulerState>(DEFAULT_SCHEDULER);
 
   const priorityFee = getPriorityFee(scheduler.speed);
-  const grandTotal = Math.max(0, total + DELIVERY_FEE + SERVICE_FEE + tip + priorityFee - promoDiscount);
+  // Markup: <$50 → 5%, ≥$50 → 3%
+  const markup = calcMarkup(total);
+  const markupPct = getMarkupPct(total);
+  // Distance-based delivery fee (fallback estimate: ~3mi, ~25min)
+  const estimatedMiles = 3;
+  const estimatedMinutes = liveEta;
+  const deliveryFee = calcDeliveryFee(estimatedMiles, estimatedMinutes);
+  const grandTotal = Math.max(0, total + markup + deliveryFee + SERVICE_FEE + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
-  const isValid = address.trim().length > 0 && name.trim().length > 0;
 
   // Live ETA
   const storeName = items[0]?.store || "Walmart";
