@@ -586,6 +586,25 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                 <p className="text-[9px] text-muted-foreground/60 text-center mb-3 leading-relaxed px-4">
                   You'll be redirected to Stripe for secure payment. A verified ZIVO driver will shop your items and deliver to your door.
                 </p>
+
+                {/* Policy disclosures */}
+                <div className="space-y-1.5 mb-3 px-2">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
+                    <RefreshCw className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                    <p className="text-[9px] text-muted-foreground leading-relaxed">
+                      <span className="font-semibold text-foreground/70">Freshness Guarantee:</span> Report quality issues within 24h for a full refund. <a href="/grocery/returns" className="text-primary/70 underline">Returns policy</a>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
+                    <AlertTriangle className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                    <p className="text-[9px] text-muted-foreground leading-relaxed">
+                      <span className="font-semibold text-foreground/70">Cancellation:</span> Free before driver starts · Fees apply after. <a href="/grocery/fees" className="text-primary/70 underline">View fees</a>
+                    </p>
+                  </div>
+                  <p className="text-[8px] text-muted-foreground/50 text-center px-2">
+                    By placing your order, you agree to our <a href="/grocery/terms" className="text-primary/50 underline">Terms</a> and <a href="/privacy" className="text-primary/50 underline">Privacy Policy</a>
+                  </p>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

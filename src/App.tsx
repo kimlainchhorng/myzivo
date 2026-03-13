@@ -51,6 +51,9 @@ const GroceryStorePage = lazy(() => import("./pages/GroceryStorePage"));
 const GroceryOrderPlaced = lazy(() => import("./pages/grocery/GroceryOrderPlaced"));
 const GroceryOrderConfirmed = lazy(() => import("./pages/grocery/GroceryOrderConfirmed"));
 const GroceryOrderHistory = lazy(() => import("./pages/GroceryOrderHistory"));
+const GroceryTerms = lazy(() => import("./pages/grocery/GroceryTerms"));
+const GroceryReturns = lazy(() => import("./pages/grocery/GroceryReturns"));
+const GroceryFees = lazy(() => import("./pages/grocery/GroceryFees"));
 const DrivePage = lazy(() => import("./pages/DrivePage"));
 const DriverShoppingList = lazy(() => import("./pages/DriverShoppingList"));
 const DriverOrdersPage = lazy(() => import("./pages/DriverOrdersPage"));
@@ -356,6 +359,9 @@ const App = () => (
                 <Route path="/grocery/order-placed" element={<GroceryOrderPlaced />} />
                 <Route path="/grocery/order-confirmed" element={<GroceryOrderConfirmed />} />
                 <Route path="/grocery/orders" element={<GroceryOrderHistory />} />
+                <Route path="/grocery/terms" element={<GroceryTerms />} />
+                <Route path="/grocery/returns" element={<GroceryReturns />} />
+                <Route path="/grocery/fees" element={<GroceryFees />} />
                 <Route path="/drive" element={<DrivePage />} />
                 <Route path="/driver/orders" element={<DriverOrdersPage />} />
                 <Route path="/driver/shopping/:orderId" element={<DriverShoppingList />} />
