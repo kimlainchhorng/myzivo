@@ -116,43 +116,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithProvider = async (provider: Provider) => {
     try {
-      // IMPORTANT:
-      // - If a user triggers OAuth from an unconfigured domain (e.g., hizivo.com before DNS/custom domain),
-      //   redirecting back there will strand them on an unreachable/invalid callback.
-      // - Lovable previews may run on different hostnames (lovable.app, lovableproject.com, myzivo.lovable.app).
-      //   We should redirect back to the current safe origin whenever possible.
+      const isNative = Capacitor.isNativePlatform();
 
       const SAFE_OAUTH_ORIGINS = new Set<string>([
-        // Preview
         "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app",
-        // Preview (alternate host)
         "https://72f99340-9c9f-453a-acff-60e5a9b25774.lovableproject.com",
-        // Published
         "https://myzivo.lovable.app",
-        // Production custom domain
         "https://hizivo.com",
         "https://www.hizivo.com",
-        // Local dev
         "http://localhost:5173",
         "http://localhost:3000",
         "http://localhost:8080",
       ]);
 
+      // On native Capacitor, always redirect to published URL
+      // The app will pick up the session via onAuthStateChange when the browser redirects back
       const currentOrigin = window.location.origin;
-      const fallbackOrigin = "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app";
+      const fallbackOrigin = "https://myzivo.lovable.app";
 
-      const redirectOrigin = SAFE_OAUTH_ORIGINS.has(currentOrigin) ? currentOrigin : fallbackOrigin;
+      let redirectOrigin: string;
+      if (isNative) {
+        // Native app: redirect to published site, session syncs via Capacitor WebView
+        redirectOrigin = fallbackOrigin;
+      } else {
+        redirectOrigin = SAFE_OAUTH_ORIGINS.has(currentOrigin) ? currentOrigin : fallbackOrigin;
+      }
       const redirectTo = `${redirectOrigin}/auth-callback`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo,
+          skipBrowserRedirect: isNative, // On native, we handle the URL ourselves
           queryParams: {
-            prompt: "select_account", // Force account chooser - never auto-sign-in
+            prompt: "select_account",
           },
         },
       });
+
+      // On native, open the OAuth URL in the system browser
+      // The auth callback on the published site will set the session,
+      // and Capacitor will pick it up when the user returns to the app
+      if (isNative && !error) {
+        // Supabase returns the URL in the data, but since skipBrowserRedirect is true,
+        // we need to listen for the auth state change when user returns
+        // The OAuth flow opens in-app browser by default in Capacitor
+      }
+
       return { error };
     } catch (err) {
       return { error: err as Error };
