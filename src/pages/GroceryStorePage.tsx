@@ -21,6 +21,7 @@ import { GroceryFilters, GroceryFilterButton, applyFilters, hasActiveFilters, EM
 import { GroceryPromoBanner } from "@/components/grocery/GroceryPromoBanner";
 import { GroceryStoreHero } from "@/components/grocery/GroceryStoreHero";
 import { GroceryShoppingList } from "@/components/grocery/GroceryShoppingList";
+import { GroceryPolicyFooter } from "@/components/grocery/GroceryPolicyFooter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
