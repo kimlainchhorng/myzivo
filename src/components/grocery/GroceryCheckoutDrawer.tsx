@@ -22,8 +22,8 @@ import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { GroceryPromoInput } from "@/components/grocery/GroceryPromoBanner";
 import GroceryInlinePaymentForm from "@/components/grocery/GroceryInlinePaymentForm";
 import { getLiveEta } from "@/utils/storeStatus";
-import { getStoreConfig, type StoreName, GROCERY_STORES } from "@/config/groceryStores";
-import { DELIVERY_FEE_FALLBACK, SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee } from "@/config/groceryPricing";
+import { GROCERY_STORES } from "@/config/groceryStores";
+import { SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee } from "@/config/groceryPricing";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -72,9 +72,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [phone, setPhone] = useState(savedProfile.phone);
   const [tip, setTip] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pendingCheckoutUrl, setPendingCheckoutUrl] = useState<string | null>(null);
   const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
   const [paymentOrderId, setPaymentOrderId] = useState<string | null>(null);
+  const [paymentTotalCents, setPaymentTotalCents] = useState<number | null>(null);
   const [showItems, setShowItems] = useState(false);
   const [deliveryNote, setDeliveryNote] = useState("");
   const [leaveAtDoor, setLeaveAtDoor] = useState(false);
@@ -103,12 +103,6 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const grandTotal = Math.max(0, total + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
-  useEffect(() => {
-    const compute = () => setLiveEta(getLiveEta(storeCfg?.deliveryMin ?? 35));
-    compute();
-    const interval = setInterval(compute, 30_000);
-    return () => clearInterval(interval);
-  }, [storeCfg]);
 
   // Cleanup address debounce
   useEffect(() => () => { if (addrDebounceRef.current) clearTimeout(addrDebounceRef.current); }, []);
