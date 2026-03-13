@@ -161,6 +161,18 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
     setStep(2);
   };
 
+  const handleContinueToStripe = useCallback(() => {
+    if (!pendingCheckoutUrl) return;
+
+    const popup = window.open(pendingCheckoutUrl, "_blank", "noopener,noreferrer");
+    if (!popup) {
+      toast.error("Popup blocked. Please allow popups, then tap again.");
+      return;
+    }
+
+    setPendingCheckoutUrl(null);
+  }, [pendingCheckoutUrl]);
+
   const handleStripeCheckout = async () => {
     let isEmbedded = false;
     try {
@@ -169,11 +181,14 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
       isEmbedded = true;
     }
 
-    // In embedded previews/webviews, try pre-opening a tab during user gesture.
-    // If blocked, continue with same-tab redirect instead of failing early.
-    const checkoutWindow = isEmbedded ? window.open("about:blank", "_blank") : null;
+    // Pre-open tab during click gesture for iframe/webview reliability.
+    const checkoutWindow = isEmbedded
+      ? window.open("about:blank", "_blank", "noopener,noreferrer")
+      : null;
 
+    setPendingCheckoutUrl(null);
     setIsSubmitting(true);
+
     try {
       const orderItems = items.map((i) => ({
         productId: i.productId, name: i.name, price: i.price,
@@ -198,9 +213,16 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
 
         if (checkoutWindow && !checkoutWindow.closed) {
           checkoutWindow.location.replace(checkoutUrl);
-        } else {
-          window.location.assign(checkoutUrl);
+          return;
         }
+
+        if (isEmbedded) {
+          setPendingCheckoutUrl(checkoutUrl);
+          toast.info("Tap once more to open secure Stripe checkout.");
+          return;
+        }
+
+        window.location.assign(checkoutUrl);
         return;
       }
 
