@@ -1,9 +1,101 @@
-/** Error reporting stub */
+/**
+ * Global Error Reporting & Monitoring
+ * Captures unhandled errors and rejections, logs them to Supabase for admin review.
+ */
+import { supabase } from "@/integrations/supabase/client";
+
+interface ErrorReport {
+  type: "error" | "rejection" | "network";
+  message: string;
+  stack?: string;
+  url: string;
+  timestamp: string;
+  userAgent: string;
+  sessionId: string;
+}
+
+let sessionId = "";
+
+function getSessionId(): string {
+  if (!sessionId) {
+    sessionId =
+      sessionStorage.getItem("zivo_error_session") ||
+      crypto.randomUUID();
+    sessionStorage.setItem("zivo_error_session", sessionId);
+  }
+  return sessionId;
+}
+
+const recentErrors = new Set<string>();
+const MAX_RECENT = 50;
+
+function isDuplicate(key: string): boolean {
+  if (recentErrors.has(key)) return true;
+  recentErrors.add(key);
+  if (recentErrors.size > MAX_RECENT) {
+    const first = recentErrors.values().next().value;
+    if (first) recentErrors.delete(first);
+  }
+  return false;
+}
+
+async function reportError(report: ErrorReport): Promise<void> {
+  const dedupeKey = `${report.type}:${report.message}`;
+  if (isDuplicate(dedupeKey)) return;
+
+  // Log locally
+  console.error(`[ErrorMonitor] ${report.type}: ${report.message}`);
+
+  // Attempt to log to Supabase analytics_events table
+  try {
+    await supabase.from("analytics_events").insert({
+      event_name: "client_error",
+      session_id: report.sessionId,
+      page: report.url,
+      meta: {
+        type: report.type,
+        message: report.message.slice(0, 500),
+        stack: report.stack?.slice(0, 1000),
+        user_agent: report.userAgent,
+      },
+    });
+  } catch {
+    // Silently fail - don't create error loops
+  }
+}
+
 export function setupGlobalErrorHandlers(): void {
   window.addEventListener("unhandledrejection", (event) => {
-    console.error("[Unhandled Rejection]", event.reason);
+    const message =
+      event.reason instanceof Error
+        ? event.reason.message
+        : String(event.reason);
+    const stack =
+      event.reason instanceof Error ? event.reason.stack : undefined;
+
+    reportError({
+      type: "rejection",
+      message,
+      stack,
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      sessionId: getSessionId(),
+    });
   });
+
   window.addEventListener("error", (event) => {
-    console.error("[Uncaught Error]", event.error ?? event.message);
+    const message = event.error?.message || event.message || "Unknown error";
+    const stack = event.error?.stack;
+
+    reportError({
+      type: "error",
+      message,
+      stack,
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      sessionId: getSessionId(),
+    });
   });
 }
