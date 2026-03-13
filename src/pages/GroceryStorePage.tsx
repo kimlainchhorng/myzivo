@@ -22,6 +22,8 @@ import { GroceryPromoBanner } from "@/components/grocery/GroceryPromoBanner";
 import { GroceryStoreHero } from "@/components/grocery/GroceryStoreHero";
 import { GroceryShoppingList } from "@/components/grocery/GroceryShoppingList";
 import { GroceryPolicyFooter } from "@/components/grocery/GroceryPolicyFooter";
+import { GroceryLoyaltyBanner, GroceryMemberDeals } from "@/components/grocery/GroceryLoyaltyBanner";
+import { GroceryOrderTracker } from "@/components/grocery/GroceryOrderTracker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
