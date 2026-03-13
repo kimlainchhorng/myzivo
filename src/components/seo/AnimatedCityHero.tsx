@@ -104,6 +104,7 @@ export default function AnimatedCityHero({
              repeatType: "reverse"
            }}
           loading="eager"
+          fetchPriority="high"
         />
       )}
       
