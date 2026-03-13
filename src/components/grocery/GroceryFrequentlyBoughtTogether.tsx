@@ -106,7 +106,7 @@ export function GroceryFrequentlyBoughtTogether({
               >
                 <div className="aspect-square bg-gradient-to-br from-muted/5 to-muted/15 flex items-center justify-center p-2 relative">
                   {prod.image ? (
-                    <img src={prod.image} alt="" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+                    <img src={prod.image} alt={prod.name} className="h-full w-full object-contain" loading="lazy" referrerPolicy="no-referrer" />
                   ) : (
                     <Package className="h-6 w-6 text-muted-foreground/10" />
                   )}
