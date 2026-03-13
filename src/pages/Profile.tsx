@@ -115,16 +115,14 @@ const Profile = () => {
 
   const quickLinks = [
     { icon: ShoppingBag, label: "My Orders", href: "/grocery/orders", description: "Order history & tracking" },
-    { icon: TrendingUp, label: "Spending", href: "/account/spending", description: "View spending history" },
+    { icon: Wallet, label: "Wallet", href: "/wallet", description: "Balance & transactions" },
     { icon: Sparkles, label: "Loyalty", href: "/account/loyalty", description: "Points & tier perks" },
-    { icon: Trophy, label: "Achievements", href: "/account/achievements", description: "Badges & rewards" },
-    { icon: Globe, label: "Language & Currency", href: "/account/preferences", description: "Display preferences" },
     { icon: Gift, label: "Gift Cards", href: "/account/gift-cards", description: "Buy, send, or redeem" },
-    { icon: CreditCard, label: "Payment Methods", href: "/wallet", description: "Manage cards & wallets" },
+    { icon: CreditCard, label: "Payment Methods", href: "/payment-methods", description: "Manage cards & wallets" },
     { icon: MapPin, label: "Saved Addresses", href: "/account/addresses", description: "Delivery addresses" },
     { icon: Bell, label: "Notifications", href: "/notifications", description: "Preferences & alerts" },
     { icon: Lock, label: "Security", href: "/account/security", description: "Password & 2FA" },
-    { icon: Settings, label: "Settings", href: "/account/preferences", description: "App preferences" },
+    { icon: Globe, label: "Preferences", href: "/account/preferences", description: "Language & settings" },
   ];
 
   return (
