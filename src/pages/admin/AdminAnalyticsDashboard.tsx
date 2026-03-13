@@ -83,7 +83,7 @@ export default function AdminAnalyticsDashboard() {
       const day = b.created_at.slice(0, 10);
       if (!byDay[day]) byDay[day] = { date: day, bookings: 0, revenue: 0 };
       byDay[day].bookings++;
-      if (b.status === "confirmed") byDay[day].revenue += Number(b.total_amount) || 0;
+      if (b.status === "confirmed") byDay[day].revenue += Number(b.total) || 0;
     });
     return Object.values(byDay).sort((a, b) => a.date.localeCompare(b.date));
   }, [bookingStats]);
