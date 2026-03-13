@@ -404,9 +404,9 @@ const App = () => (
                 <Route path="/checkout" element={<RouteErrorBoundary section="Checkout"><EmbeddedCheckout /></RouteErrorBoundary>} />
 
                 {/* Hotels */}
-                <Route path="/hotels" element={<HotelsPage />} />
-                <Route path="/hotels/:city" element={<HotelCityLandingPage />} />
-                <Route path="/hotels/in-:city" element={<HotelsPage />} />
+                <Route path="/hotels" element={<RouteErrorBoundary section="Hotels"><HotelsPage /></RouteErrorBoundary>} />
+                <Route path="/hotels/:city" element={<RouteErrorBoundary section="Hotels"><HotelCityLandingPage /></RouteErrorBoundary>} />
+                <Route path="/hotels/in-:city" element={<RouteErrorBoundary section="Hotels"><HotelsPage /></RouteErrorBoundary>} />
                 {/* hotels-dashboard removed */}
 
                 {/* Car Rental */}
