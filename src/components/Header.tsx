@@ -133,8 +133,8 @@ const Header = () => {
                         <Car className="w-4 h-4 mr-2 text-rides" />
                         Become a Driver
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/restaurant")} className="cursor-pointer rounded-xl py-2.5 font-medium">
-                        Restaurant Dashboard
+                      <DropdownMenuItem onClick={() => navigate("/eats")} className="cursor-pointer rounded-xl py-2.5 font-medium">
+                        Restaurant Partner
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="my-2" />
                       <DropdownMenuItem onClick={() => navigate("/help")} className="cursor-pointer rounded-xl py-2.5 font-medium">

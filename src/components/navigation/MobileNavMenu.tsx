@@ -169,7 +169,7 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
                     Profile Settings
                   </button>
                   <button
-                    onClick={() => handleNavigate("/dashboard")}
+                    onClick={() => handleNavigate("/app")}
                     className="w-full text-left py-2 text-foreground font-medium"
                   >
                     My Dashboard
