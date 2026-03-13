@@ -137,8 +137,10 @@ serve(async (req) => {
     // Clean product name: remove trailing size+price junk
     const cleanName = (name: string): string => {
       if (!name) return "";
+      // Remove leading badges like "Best seller", "Overall pick", "Popular pick"
+      let cleaned = name.replace(/^(Best seller|Overall pick|Popular pick|Rollback|Clearance)\s+/i, "");
       // Remove everything from the first $ onward (price + unit price)
-      let cleaned = name.replace(/\s*\$[\d.,]+.*$/, "");
+      cleaned = cleaned.replace(/\s*\$[\d.,]+.*$/, "");
       // Remove unit-price patterns like "3.8 ¢/fl oz" or "2.5¢/oz"
       cleaned = cleaned.replace(/\s*[\d.]+\s*¢\/[a-z\s]+$/i, "");
       // Remove trailing quantity patterns like "128 fl oz", "64 oz", "1 Gallon", "12 ct", "2 pk", "16.9 fl oz" etc.

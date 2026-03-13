@@ -34,16 +34,16 @@ import { addRecentStore } from "@/components/grocery/GroceryRecentStores";
 import GroceryDeliveryBar from "@/components/grocery/GroceryDeliveryBar";
 
 const QUICK_FILTERS = [
-  { label: "🔥 Popular", query: "popular items" },
-  { label: "🥛 Dairy", query: "dairy milk cheese yogurt" },
-  { label: "🍞 Bakery", query: "bread bakery rolls" },
-  { label: "🥩 Meat", query: "meat chicken beef pork" },
-  { label: "🥤 Drinks", query: "drinks beverages water juice soda" },
-  { label: "🧹 Cleaning", query: "cleaning supplies soap detergent" },
-  { label: "🍿 Snacks", query: "snacks chips crackers cookies" },
-  { label: "🥦 Produce", query: "fresh fruits vegetables organic" },
-  { label: "🧊 Frozen", query: "frozen meals pizza ice cream" },
-  { label: "🍝 Pantry", query: "pasta rice cereal canned" },
+  { label: "🔥 Popular", query: "best sellers grocery" },
+  { label: "🥛 Dairy", query: "milk cheese eggs" },
+  { label: "🍞 Bakery", query: "bread" },
+  { label: "🥩 Meat", query: "chicken beef pork" },
+  { label: "🥦 Produce", query: "fresh fruit" },
+  { label: "🥤 Drinks", query: "water juice" },
+  { label: "🧹 Cleaning", query: "cleaning supplies" },
+  { label: "🍿 Snacks", query: "chips snacks" },
+  { label: "🧊 Frozen", query: "frozen meals" },
+  { label: "🍝 Pantry", query: "pasta rice cereal" },
 ];
 
 type SortMode = "default" | "price-low" | "price-high" | "rating";
@@ -599,6 +599,20 @@ export default function GroceryStorePage() {
         />
       )}
 
+      {/* Category Browser - browse Meat, Produce, Dairy etc. */}
+      {!isLoading && !query && !activeFilter && (
+        <GroceryCategoryBrowser
+          store={storeName}
+          onAdd={handleAdd}
+          cartProductIds={new Set(cart.items.map((c) => c.productId))}
+          onBrowse={(q) => {
+            autoLoadCount.current = 0;
+            setQuery("");
+            search(q);
+          }}
+        />
+      )}
+
       {/* Today's Deals */}
       {!isLoading && products.length > 5 && (
         <GroceryDealsSection
@@ -665,20 +679,6 @@ export default function GroceryStorePage() {
             />
           ))}
         </div>
-      )}
-
-      {/* Category Browser - shown when not actively searching */}
-      {!isLoading && !query && !activeFilter && (
-        <GroceryCategoryBrowser
-          store={storeName}
-          onAdd={handleAdd}
-          cartProductIds={new Set(cart.items.map((c) => c.productId))}
-          onBrowse={(q) => {
-            autoLoadCount.current = 0;
-            setQuery("");
-            search(q);
-          }}
-        />
       )}
 
       {/* Load more sentinel */}
