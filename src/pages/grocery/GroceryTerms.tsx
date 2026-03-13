@@ -1,16 +1,17 @@
 /**
- * Grocery Terms of Service — Instacart-style policy page
+ * Grocery Terms of Service — legally aligned policy page
  */
-import { ArrowLeft, FileText, ShieldCheck, Truck, Clock, AlertTriangle, Scale, Ban } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowLeft, FileText, ShieldCheck, Truck, Clock, AlertTriangle, Scale, Ban, Gavel, Globe } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import { DELIVERY_MIN_FEE, DELIVERY_MAX_FEE, SERVICE_FEE_PCT, SERVICE_FEE_MIN, SERVICE_FEE_MAX, MARKUP_THRESHOLD, formatFee } from "@/config/groceryPricing";
 
 const sections = [
   {
     icon: FileText,
     title: "Agreement to Terms",
-    content: `By placing an order through the ZIVO Grocery marketplace, you agree to these Terms of Service. ZIVO connects you with a personal shopper (driver) who will visit the selected store, purchase the items you've requested, and deliver them to your specified address. ZIVO is not a retailer and does not sell or manufacture any products.`,
+    content: `By placing an order through the ZIVO Grocery marketplace, you agree to these Terms of Service. ZIVO connects you with a personal shopper (driver) who will visit the selected store, purchase the items you've requested, and deliver them to your specified address. ZIVO is not a retailer and does not sell or manufacture any products. ZIVO acts solely as a technology platform facilitating the transaction between you and independent contractors.`,
   },
   {
     icon: Truck,
@@ -20,42 +21,71 @@ const sections = [
   {
     icon: Scale,
     title: "Pricing & Fees",
-    content: `• Delivery Fee: $5.99 per order\n• Service Fee: $1.99 per order\n• Driver Tip: Optional, 100% goes to your driver\n• Item Prices: Based on real-time store data; final price may vary slightly from estimates\n• No hidden markups on product prices — you pay what the store charges\n• Promotional codes may reduce fees; terms apply per promotion`,
+    content: `• Delivery Fee: Distance-based pricing from ${formatFee(DELIVERY_MIN_FEE)} to ${formatFee(DELIVERY_MAX_FEE)}, based on distance and estimated time
+• Service Fee: ${SERVICE_FEE_PCT}% of order subtotal (min ${formatFee(SERVICE_FEE_MIN)}, max ${formatFee(SERVICE_FEE_MAX)})
+• Platform Fee: 5% on orders under $${MARKUP_THRESHOLD}, 3% on orders $${MARKUP_THRESHOLD}+
+• Driver Tip: Optional, 100% goes to your driver — ZIVO never takes a cut
+• Item Prices: Based on real-time store data; final price may vary slightly from estimates
+• All fees are itemized and shown before you confirm your order
+• Promotional codes may reduce fees; terms apply per promotion
+
+For full pricing details, see our Pricing & Fees page.`,
   },
   {
     icon: ShieldCheck,
     title: "Quality Guarantee",
-    content: `We stand behind the quality of your delivery. If items arrive damaged, spoiled, or are incorrect, you may request a refund or credit for those items within 24 hours of delivery. Photo evidence may be required for quality claims. Our team reviews each request and typically resolves issues within 1–2 business days.`,
+    content: `We stand behind the quality of your delivery. If items arrive damaged, spoiled, or are incorrect, you may request a refund or credit for those items within 24 hours of delivery. Photo evidence is required for all quality claims. Our team reviews each request and typically resolves issues within 1–2 business days. ZIVO reserves the right to deny claims that appear fraudulent or excessive.`,
   },
   {
     icon: Clock,
     title: "Delivery Times & Availability",
-    content: `Delivery times are estimates based on driver availability, store hours, and order complexity. While we aim for same-day delivery, times may vary during peak hours, holidays, or severe weather. ZIVO is not responsible for delays caused by store inventory changes, traffic, or circumstances beyond our control.`,
+    content: `Delivery times are estimates based on driver availability, store hours, and order complexity. While we aim for timely delivery, times may vary during peak hours, holidays, or severe weather. ZIVO is not responsible for delays caused by store inventory changes, traffic, or circumstances beyond our control. Delivery is currently available in select U.S. markets.`,
   },
   {
     icon: AlertTriangle,
     title: "Substitutions & Out-of-Stock Items",
-    content: `If an item is out of stock, your driver or our system will follow your substitution preference:\n• Contact Me: Driver contacts you for approval before substituting\n• Best Match: Driver selects a similar item at a comparable price\n• Refund: You receive a refund for the unavailable item\n\nYou can set your default substitution preference during checkout.`,
+    content: `If an item is out of stock, your driver or our system will follow your substitution preference:
+• Contact Me: Driver contacts you for approval before substituting
+• Best Match: Driver selects a similar item at a comparable price
+• Refund: You receive a refund for the unavailable item
+
+You can set your default substitution preference during checkout. Substituted items at a higher price require your approval unless you selected "Best Match."`,
   },
   {
     icon: Ban,
     title: "Order Cancellation",
-    content: `You may cancel an order free of charge before a driver begins shopping. Once shopping has started, a cancellation fee may apply:\n• Before driver assigned: No fee\n• Driver assigned but not started: 15% of order subtotal\n• Driver actively shopping: 25% of order subtotal\n• Items purchased and en-route: 50% of order subtotal\n\nCancellation fees help compensate drivers for their time and effort.`,
+    content: `You may cancel an order free of charge before a driver is assigned. Once a driver is assigned, cancellation fees apply as a percentage of the order subtotal (excluding fees and tip):
+• Before driver assigned: No fee
+• Driver assigned but not started: 15%
+• Driver actively shopping: 25%
+• Items purchased and en-route: 50%
+
+Cancellation fees compensate drivers for their time and effort. ZIVO reserves the right to waive fees at its sole discretion.`,
   },
   {
     icon: FileText,
     title: "Account & Eligibility",
-    content: `You must be 18 years or older to use the ZIVO Grocery service. You are responsible for maintaining the security of your account credentials. Orders containing age-restricted items (alcohol, tobacco) require valid ID verification upon delivery. ZIVO reserves the right to refuse or cancel orders that violate these terms.`,
+    content: `You must be 18 years or older to use the ZIVO Grocery service. You are responsible for maintaining the security of your account credentials and all activity under your account. Orders containing age-restricted items (alcohol, tobacco where permitted) require valid government-issued ID verification upon delivery. ZIVO reserves the right to refuse or cancel orders that violate these terms or applicable law.`,
   },
   {
     icon: Scale,
     title: "Limitation of Liability",
-    content: `ZIVO acts as a marketplace platform connecting customers with independent drivers. We are not responsible for the quality, safety, or legality of products purchased from retail stores. Our liability is limited to the fees charged by ZIVO (delivery and service fees). Product liability rests with the original manufacturer and retailer.`,
+    content: `ZIVO acts as a marketplace platform connecting customers with independent drivers. We are not responsible for the quality, safety, or legality of products purchased from retail stores. To the maximum extent permitted by law, ZIVO's aggregate liability for any claims arising from or related to the service shall not exceed the total fees (delivery + service + platform fees) you paid for the specific order giving rise to the claim. Product liability rests with the original manufacturer and retailer.`,
+  },
+  {
+    icon: Gavel,
+    title: "Dispute Resolution",
+    content: `Any dispute arising from these Terms or the ZIVO Grocery service shall first be addressed through our customer support at support@hizivo.com. If unresolved within 30 days, disputes shall be resolved through binding arbitration administered under the rules of the American Arbitration Association (AAA), except that either party may seek injunctive relief in a court of competent jurisdiction. You agree to waive any right to participate in a class action lawsuit or class-wide arbitration.`,
+  },
+  {
+    icon: Globe,
+    title: "Governing Law",
+    content: `These Terms are governed by and construed in accordance with the laws of the State of Delaware, United States, without regard to conflict of law principles. ZIVO's failure to enforce any provision shall not constitute a waiver of that provision.`,
   },
   {
     icon: FileText,
     title: "Changes to Terms",
-    content: `ZIVO may update these Terms of Service at any time. Continued use of the grocery delivery service after changes constitutes acceptance of the updated terms. Material changes will be communicated via email or in-app notification. Last updated: March 2026.`,
+    content: `ZIVO may update these Terms of Service at any time. Continued use of the grocery delivery service after changes constitutes acceptance of the updated terms. Material changes will be communicated via email or in-app notification at least 7 days before taking effect. Last updated: March 2026.`,
   },
 ];
 
@@ -77,7 +107,9 @@ export default function GroceryTerms() {
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-2xl bg-primary/5 border border-primary/15">
           <p className="text-[13px] text-foreground/80 leading-relaxed">
-            These terms govern your use of the ZIVO Grocery delivery marketplace. By using this service, you agree to the following terms and conditions.
+            These terms govern your use of the ZIVO Grocery delivery marketplace. By using this service, you agree to the following terms and conditions. Please also review our{" "}
+            <Link to="/privacy" className="text-primary underline">Privacy Policy</Link> and{" "}
+            <Link to="/grocery/fees" className="text-primary underline">Pricing & Fees</Link>.
           </p>
         </motion.div>
 
@@ -101,8 +133,11 @@ export default function GroceryTerms() {
           </motion.div>
         ))}
 
-        <div className="text-center pt-4">
+        <div className="text-center pt-4 space-y-2">
           <p className="text-[11px] text-muted-foreground">Questions? Contact <span className="text-primary font-semibold">support@hizivo.com</span></p>
+          <p className="text-[9px] text-muted-foreground/50">
+            See also: <Link to="/terms" className="text-primary/60 underline">General Terms</Link> · <Link to="/privacy" className="text-primary/60 underline">Privacy Policy</Link> · <Link to="/grocery/fees" className="text-primary/60 underline">Pricing & Fees</Link> · <Link to="/grocery/returns" className="text-primary/60 underline">Returns Policy</Link>
+          </p>
         </div>
       </div>
       <ZivoMobileNav />

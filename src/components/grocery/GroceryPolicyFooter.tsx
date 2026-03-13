@@ -4,7 +4,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ShieldCheck, Truck, RotateCcw, DollarSign, FileText, Scale, Clock, Heart } from "lucide-react";
-import { DELIVERY_BASE_FEE, SERVICE_FEE_PCT, formatFee } from "@/config/groceryPricing";
+import { DELIVERY_MIN_FEE, SERVICE_FEE_PCT, formatFee } from "@/config/groceryPricing";
 
 const TRUST_BADGES = [
   { icon: DollarSign, label: "Low Fees", desc: "Transparent pricing" },
@@ -14,7 +14,7 @@ const TRUST_BADGES = [
 ];
 
 const POLICY_LINKS = [
-  { to: "/grocery/fees", icon: DollarSign, label: "Pricing & Fees", desc: `Delivery from ${formatFee(DELIVERY_BASE_FEE)} · Service ${SERVICE_FEE_PCT}% · Distance-based` },
+  { to: "/grocery/fees", icon: DollarSign, label: "Pricing & Fees", desc: `Delivery from ${formatFee(DELIVERY_MIN_FEE)} · Service ${SERVICE_FEE_PCT}% · All fees shown upfront` },
   { to: "/grocery/returns", icon: RotateCcw, label: "Returns & Refunds", desc: "Freshness guarantee · Report issues within 24h" },
   { to: "/grocery/terms", icon: FileText, label: "Terms of Service", desc: "How it works · Cancellation · Substitutions" },
 ];
