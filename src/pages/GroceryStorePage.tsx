@@ -64,6 +64,16 @@ const QUICK_FILTERS = [
   { label: "🍳 Kitchen", query: "frying pan knife cutting board blender" },
   { label: "🛏️ Bedding", query: "sheets pillow blanket comforter towels" },
   { label: "🔧 Tools", query: "hammer screwdriver drill tape measure wrench" },
+  { label: "🧽 Cleaning", query: "lysol wipes bleach mop sponge broom" },
+  { label: "🍬 Candy", query: "chocolate gummy bears skittles candy bar" },
+  { label: "🧊 Ice Cream", query: "ice cream popsicle frozen yogurt gelato" },
+  { label: "🌮 Mexican", query: "tortilla salsa taco shells queso" },
+  { label: "🍜 Asian", query: "ramen soy sauce rice noodles teriyaki" },
+  { label: "🧀 Deli", query: "deli meat ham turkey salami cheese sliced" },
+  { label: "🎂 Baking", query: "flour sugar baking soda vanilla frosting" },
+  { label: "🍷 Beverages", query: "wine beer seltzer sparkling water mixer" },
+  { label: "🥜 Organic", query: "organic granola almond milk quinoa kale" },
+  { label: "🧃 Kids", query: "juice box lunchables fruit snacks goldfish" },
 ];
 
 type SortMode = "default" | "price-low" | "price-high" | "rating";
