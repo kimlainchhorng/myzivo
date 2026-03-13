@@ -14,6 +14,7 @@ import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
+import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import LiveChatWidget from "./components/shared/LiveChatWidget";
