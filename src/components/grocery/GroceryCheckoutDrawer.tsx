@@ -22,8 +22,8 @@ import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { GroceryPromoInput } from "@/components/grocery/GroceryPromoBanner";
 import GroceryInlinePaymentForm from "@/components/grocery/GroceryInlinePaymentForm";
 import { getLiveEta } from "@/utils/storeStatus";
-import { getStoreConfig, type StoreName, GROCERY_STORES } from "@/config/groceryStores";
-import { DELIVERY_FEE_FALLBACK, SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee } from "@/config/groceryPricing";
+import { GROCERY_STORES } from "@/config/groceryStores";
+import { SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee } from "@/config/groceryPricing";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -72,9 +72,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [phone, setPhone] = useState(savedProfile.phone);
   const [tip, setTip] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pendingCheckoutUrl, setPendingCheckoutUrl] = useState<string | null>(null);
   const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
   const [paymentOrderId, setPaymentOrderId] = useState<string | null>(null);
+  const [paymentTotalCents, setPaymentTotalCents] = useState<number | null>(null);
   const [showItems, setShowItems] = useState(false);
   const [deliveryNote, setDeliveryNote] = useState("");
   const [leaveAtDoor, setLeaveAtDoor] = useState(false);
@@ -103,12 +103,6 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const grandTotal = Math.max(0, total + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
-  useEffect(() => {
-    const compute = () => setLiveEta(getLiveEta(storeCfg?.deliveryMin ?? 35));
-    compute();
-    const interval = setInterval(compute, 30_000);
-    return () => clearInterval(interval);
-  }, [storeCfg]);
 
   // Cleanup address debounce
   useEffect(() => () => { if (addrDebounceRef.current) clearTimeout(addrDebounceRef.current); }, []);
@@ -157,47 +151,39 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
     }
   }, [name, phone, subPref]);
 
+  const resetInlinePayment = useCallback(() => {
+    setPaymentClientSecret(null);
+    setPaymentOrderId(null);
+    setPaymentTotalCents(null);
+  }, []);
+
   const goToReview = () => {
     if (!address.trim()) { toast.error("Please enter a delivery address"); return; }
     if (!name.trim()) { toast.error("Please enter your name"); return; }
     setStep(2);
   };
 
-  const handleContinueToStripe = useCallback(() => {
-    if (!pendingCheckoutUrl) return;
+  const handleBackToDetails = useCallback(() => {
+    resetInlinePayment();
+    setStep(1);
+  }, [resetInlinePayment]);
 
-    const popup = window.open(pendingCheckoutUrl, "_blank", "noopener,noreferrer");
-    if (!popup) {
-      toast.error("Popup blocked. Please allow popups, then tap again.");
-      return;
-    }
-
-    setPendingCheckoutUrl(null);
-  }, [pendingCheckoutUrl]);
-
-  const handleStripeCheckout = async () => {
-    let isEmbedded = false;
-    try {
-      isEmbedded = window.self !== window.top;
-    } catch {
-      isEmbedded = true;
-    }
-
-    // Pre-open tab during click gesture for iframe/webview reliability.
-    const checkoutWindow = isEmbedded
-      ? window.open("about:blank", "_blank", "noopener,noreferrer")
-      : null;
-
-    setPendingCheckoutUrl(null);
+  const handleCreateInlinePayment = async () => {
     setIsSubmitting(true);
+    resetInlinePayment();
 
     try {
       const orderItems = items.map((i) => ({
-        productId: i.productId, name: i.name, price: i.price,
-        image: i.image, brand: i.brand, quantity: i.quantity, store: i.store,
+        productId: i.productId,
+        name: i.name,
+        price: i.price,
+        image: i.image,
+        brand: i.brand,
+        quantity: i.quantity,
+        store: i.store,
       }));
 
-      const { data, error } = await supabase.functions.invoke("create-grocery-checkout", {
+      const { data, error } = await supabase.functions.invoke("create-grocery-payment-intent", {
         body: {
           items: orderItems,
           delivery_address: address.trim(),
@@ -205,38 +191,56 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
           customer_phone: phone.trim() || null,
           tip,
           store: items[0]?.store || "Unknown",
+          priority_fee: priorityFee,
+          promo_discount: promoDiscount,
         },
       });
 
-      if (error) throw new Error(error.message || "Checkout failed");
+      if (error) throw new Error(error.message || "Failed to initialize secure card checkout");
       if (data?.error) throw new Error(data.error);
-      if (data?.url) {
-        const checkoutUrl = String(data.url);
-
-        if (checkoutWindow && !checkoutWindow.closed) {
-          checkoutWindow.location.replace(checkoutUrl);
-          return;
-        }
-
-        if (isEmbedded) {
-          setPendingCheckoutUrl(checkoutUrl);
-          toast.info("Tap once more to open secure Stripe checkout.");
-          return;
-        }
-
-        window.location.assign(checkoutUrl);
-        return;
+      if (!data?.ok || !data?.client_secret || !data?.order_id) {
+        throw new Error("Unable to start card checkout");
       }
 
-      throw new Error("No checkout URL returned");
+      setPaymentClientSecret(String(data.client_secret));
+      setPaymentOrderId(String(data.order_id));
+      setPaymentTotalCents(Number(data.total_cents || Math.round(grandTotal * 100)));
     } catch (err: any) {
-      if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
-      console.error("Checkout error:", err);
-      toast.error(err.message || "Failed to start checkout");
+      console.error("Payment init error:", err);
+      toast.error(err.message || "Failed to initialize payment");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const handleInlinePaymentSuccess = useCallback(async (paymentIntentId: string) => {
+    if (!paymentOrderId) {
+      toast.error("Missing order reference. Please try again.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("confirm-grocery-payment", {
+        body: {
+          order_id: paymentOrderId,
+          payment_intent_id: paymentIntentId,
+        },
+      });
+
+      if (error) throw new Error(error.message || "Failed to confirm payment");
+      if (data?.error) throw new Error(data.error);
+
+      const earnedPoints = addLoyaltyPoints(grandTotal);
+      toast.success(earnedPoints > 0 ? `Payment successful • +${earnedPoints} loyalty points` : "Payment successful");
+      onOrderPlaced(paymentOrderId);
+    } catch (err: any) {
+      console.error("Payment confirm error:", err);
+      toast.error(err.message || "Payment completed but confirmation failed. Please contact support.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [grandTotal, onOrderPlaced, paymentOrderId]);
 
   const SUB_OPTIONS: { value: SubstitutionPref; label: string; desc: string; icon: typeof RefreshCw }[] = [
     { value: "contact_me", label: "Contact Me", desc: "Driver will message you", icon: MessageSquare },
@@ -273,7 +277,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
               {step === 2 && (
                 <motion.button
                   whileTap={{ scale: 0.85 }}
-                  onClick={() => setStep(1)}
+                  onClick={handleBackToDetails}
                   className="p-1.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -577,7 +581,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                     </div>
                   )}
                   <button
-                    onClick={() => setStep(1)}
+                    onClick={handleBackToDetails}
                     className="text-[10px] text-primary font-semibold mt-2 hover:underline"
                   >
                     Edit details
@@ -696,76 +700,92 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   </div>
                 </div>
 
-                {/* Tip selection */}
-                <div className="mb-4">
-                  <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
-                    <Heart className="h-3.5 w-3.5 text-pink-500" />
-                    Driver Tip
-                  </h3>
-                  <div className="flex gap-2">
-                    {TIP_OPTIONS.map((amount) => (
-                      <motion.button
-                        key={amount}
-                        whileTap={{ scale: 0.92 }}
-                        onClick={() => setTip(amount)}
-                        className={`flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200 ${
-                          tip === amount
-                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
-                            : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
-                        }`}
-                      >
-                        {amount === 0 ? "None" : `$${amount}`}
-                      </motion.button>
-                    ))}
+                {paymentClientSecret ? (
+                  <div className="rounded-2xl bg-muted/10 border border-border/20 p-3.5 mb-3">
+                    <p className="text-[10px] text-muted-foreground mb-3 text-center">
+                      Complete card payment below without leaving this checkout.
+                    </p>
+                    <GroceryInlinePaymentForm
+                      clientSecret={paymentClientSecret}
+                      totalCents={paymentTotalCents ?? Math.round(grandTotal * 100)}
+                      onCancel={resetInlinePayment}
+                      onSuccess={handleInlinePaymentSuccess}
+                    />
                   </div>
-                </div>
-
-                {/* Promo code */}
-                <div className="mb-4">
-                  <GroceryPromoInput
-                    onApply={(code, discount) => {
-                      setPromoCode(code);
-                      setPromoDiscount(discount);
-                    }}
-                  />
-                </div>
-
-                {/* Trust badges */}
-                <div className="flex items-center justify-center gap-4 py-3 mb-3">
-                  {[
-                    { icon: Shield, label: "Protected" },
-                    { icon: Lock, label: "Encrypted" },
-                    { icon: BadgeCheck, label: "Verified" },
-                  ].map(({ icon: Icon, label }) => (
-                    <div key={label} className="flex items-center gap-1.5">
-                      <Icon className="h-3 w-3 text-primary/70" />
-                      <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+                ) : (
+                  <>
+                    {/* Tip selection */}
+                    <div className="mb-4">
+                      <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
+                        <Heart className="h-3.5 w-3.5 text-pink-500" />
+                        Driver Tip
+                      </h3>
+                      <div className="flex gap-2">
+                        {TIP_OPTIONS.map((amount) => (
+                          <motion.button
+                            key={amount}
+                            whileTap={{ scale: 0.92 }}
+                            onClick={() => setTip(amount)}
+                            className={`flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200 ${
+                              tip === amount
+                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                            }`}
+                          >
+                            {amount === 0 ? "None" : `$${amount}`}
+                          </motion.button>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
 
-                <p className="text-[9px] text-muted-foreground/60 text-center mb-3 leading-relaxed px-4">
-                  You'll be redirected to Stripe for secure payment. A verified ZIVO driver will shop your items and deliver to your door.
-                </p>
+                    {/* Promo code */}
+                    <div className="mb-4">
+                      <GroceryPromoInput
+                        onApply={(code, discount) => {
+                          setPromoCode(code);
+                          setPromoDiscount(discount);
+                        }}
+                      />
+                    </div>
 
-                {/* Policy disclosures */}
-                <div className="space-y-1.5 mb-3 px-2">
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
-                    <RefreshCw className="h-3.5 w-3.5 text-primary/60 shrink-0" />
-                    <p className="text-[9px] text-muted-foreground leading-relaxed">
-                      <span className="font-semibold text-foreground/70">Freshness Guarantee:</span> Report quality issues within 24h for a full refund. <a href="/grocery/returns" className="text-primary/70 underline">Returns policy</a>
+                    {/* Trust badges */}
+                    <div className="flex items-center justify-center gap-4 py-3 mb-3">
+                      {[
+                        { icon: Shield, label: "Protected" },
+                        { icon: Lock, label: "Encrypted" },
+                        { icon: BadgeCheck, label: "Verified" },
+                      ].map(({ icon: Icon, label }) => (
+                        <div key={label} className="flex items-center gap-1.5">
+                          <Icon className="h-3 w-3 text-primary/70" />
+                          <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <p className="text-[9px] text-muted-foreground/60 text-center mb-3 leading-relaxed px-4">
+                      Your card is processed inline by Stripe. A verified ZIVO driver will shop your items and deliver to your door.
                     </p>
-                  </div>
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
-                    <AlertTriangle className="h-3.5 w-3.5 text-primary/60 shrink-0" />
-                    <p className="text-[9px] text-muted-foreground leading-relaxed">
-                      <span className="font-semibold text-foreground/70">Cancellation:</span> Free before driver starts · Fees apply after. <a href="/grocery/fees" className="text-primary/70 underline">View fees</a>
-                    </p>
-                  </div>
-                  <p className="text-[8px] text-muted-foreground/50 text-center px-2">
-                    By placing your order, you agree to our <a href="/grocery/terms" className="text-primary/50 underline">Terms</a> and <a href="/privacy" className="text-primary/50 underline">Privacy Policy</a>
-                  </p>
-                </div>
+
+                    {/* Policy disclosures */}
+                    <div className="space-y-1.5 mb-3 px-2">
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
+                        <RefreshCw className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                        <p className="text-[9px] text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground/70">Freshness Guarantee:</span> Report quality issues within 24h for a full refund. <a href="/grocery/returns" className="text-primary/70 underline">Returns policy</a>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
+                        <AlertTriangle className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                        <p className="text-[9px] text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground/70">Cancellation:</span> Free before driver starts · Fees apply after. <a href="/grocery/fees" className="text-primary/70 underline">View fees</a>
+                        </p>
+                      </div>
+                      <p className="text-[8px] text-muted-foreground/50 text-center px-2">
+                        By placing your order, you agree to our <a href="/grocery/terms" className="text-primary/50 underline">Terms</a> and <a href="/privacy" className="text-primary/50 underline">Privacy Policy</a>
+                      </p>
+                    </div>
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -784,22 +804,21 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </motion.div>
+          ) : paymentClientSecret ? (
+            <div className="flex items-center justify-center text-[10px] text-muted-foreground py-1">
+              Enter your card details above to complete checkout.
+            </div>
           ) : (
             <motion.div whileTap={!isSubmitting ? { scale: 0.97 } : {}}>
               <Button
                 className="w-full h-[50px] rounded-2xl text-[14px] font-bold shadow-lg shadow-primary/20 gap-2"
                 disabled={isSubmitting}
-                onClick={pendingCheckoutUrl ? handleContinueToStripe : handleStripeCheckout}
+                onClick={handleCreateInlinePayment}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4.5 w-4.5 animate-spin" />
-                    Redirecting to payment…
-                  </>
-                ) : pendingCheckoutUrl ? (
-                  <>
-                    <Lock className="h-4 w-4" />
-                    Continue to Stripe Checkout
+                    Preparing secure payment…
                   </>
                 ) : (
                   <>
