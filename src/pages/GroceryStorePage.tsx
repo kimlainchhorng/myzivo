@@ -452,18 +452,38 @@ export default function GroceryStorePage() {
         </div>
       </div>
 
-      {/* Category Browser - always visible on landing */}
-      {!isLoading && !query && !activeFilter && (
+      {/* Category Browser - always visible on landing (hidden when browsing a category) */}
+      {!isLoading && !query && !activeFilter && !browseQuery && (
         <GroceryCategoryBrowser
           store={storeName}
           onAdd={handleAdd}
           cartProductIds={new Set(cart.items.map((c) => c.productId))}
           onBrowse={(q) => {
             autoLoadCount.current = 0;
+            setBrowseQuery(q);
             setQuery("");
             search(q);
           }}
         />
+      )}
+
+      {/* Back to categories button when browsing */}
+      {browseQuery && !query && (
+        <div className="px-4 pt-3 pb-1">
+          <motion.button
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => {
+              setBrowseQuery(null);
+              autoLoadCount.current = 0;
+              search(storeCfg!.defaultQuery);
+            }}
+            className="flex items-center gap-1.5 text-[12px] font-semibold text-primary hover:underline"
+          >
+            ← Back to categories
+          </motion.button>
+        </div>
       )}
 
       {/* Cart Drawer */}
