@@ -115,7 +115,7 @@ const Header = () => {
                       <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer rounded-xl py-2.5 font-medium">
                         Profile Settings
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/dashboard")} className="cursor-pointer rounded-xl py-2.5 font-medium">
+                      <DropdownMenuItem onClick={() => navigate("/app")} className="cursor-pointer rounded-xl py-2.5 font-medium">
                         My Dashboard
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/trips")} className="cursor-pointer rounded-xl py-2.5 font-medium">
