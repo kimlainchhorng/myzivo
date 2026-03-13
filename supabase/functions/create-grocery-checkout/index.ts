@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
         order_type: "shopping_delivery",
         status: "pending_payment",
         items: items,
-        total_amount: (subtotalCents + markupCents) / 100,
+        total_amount: subtotalCents / 100,
         delivery_fee: deliveryFeeCents / 100,
         delivery_address,
         customer_name,
