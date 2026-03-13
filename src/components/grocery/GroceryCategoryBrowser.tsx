@@ -14,14 +14,16 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://slirphzzwcogd
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI";
 
 const CATEGORIES = [
-  { emoji: "🥩", label: "Meat & Seafood", query: "meat", gradient: "from-rose-500/10 to-rose-400/5" },
-  { emoji: "🥦", label: "Fresh Produce", query: "vegetables", gradient: "from-emerald-500/10 to-emerald-400/5" },
-  { emoji: "🥛", label: "Dairy & Eggs", query: "dairy", gradient: "from-sky-500/10 to-sky-400/5" },
-  { emoji: "🥤", label: "Beverages", query: "beverages", gradient: "from-violet-500/10 to-violet-400/5" },
-  { emoji: "🍿", label: "Snacks", query: "snacks", gradient: "from-amber-500/10 to-amber-400/5" },
-  { emoji: "🧊", label: "Frozen Foods", query: "frozen", gradient: "from-cyan-500/10 to-cyan-400/5" },
-  { emoji: "🍝", label: "Pantry Staples", query: "pantry", gradient: "from-orange-500/10 to-orange-400/5" },
-  { emoji: "🧹", label: "Household", query: "household", gradient: "from-indigo-500/10 to-indigo-400/5" },
+  { emoji: "🥩", label: "Meat & Seafood", query: "fresh meat chicken beef", gradient: "from-rose-500/10 to-rose-400/5" },
+  { emoji: "🥦", label: "Fresh Produce", query: "fresh fruits vegetables", gradient: "from-emerald-500/10 to-emerald-400/5" },
+  { emoji: "🥛", label: "Dairy & Eggs", query: "milk eggs cheese yogurt", gradient: "from-sky-500/10 to-sky-400/5" },
+  { emoji: "🍞", label: "Bakery & Bread", query: "bread bakery rolls", gradient: "from-amber-500/10 to-amber-400/5" },
+  { emoji: "🥤", label: "Beverages", query: "water juice soda drinks", gradient: "from-violet-500/10 to-violet-400/5" },
+  { emoji: "🍿", label: "Snacks", query: "chips cookies crackers", gradient: "from-yellow-500/10 to-yellow-400/5" },
+  { emoji: "🧊", label: "Frozen Foods", query: "frozen pizza ice cream", gradient: "from-cyan-500/10 to-cyan-400/5" },
+  { emoji: "🍝", label: "Pantry Staples", query: "rice pasta cereal canned", gradient: "from-orange-500/10 to-orange-400/5" },
+  { emoji: "🧹", label: "Household", query: "paper towels detergent soap", gradient: "from-indigo-500/10 to-indigo-400/5" },
+  { emoji: "🍼", label: "Baby & Kids", query: "baby food diapers formula", gradient: "from-pink-500/10 to-pink-400/5" },
 ];
 
 /* ─── Category skeleton ─── */

@@ -34,16 +34,16 @@ import { addRecentStore } from "@/components/grocery/GroceryRecentStores";
 import GroceryDeliveryBar from "@/components/grocery/GroceryDeliveryBar";
 
 const QUICK_FILTERS = [
-  { label: "🔥 Popular", query: "groceries" },
-  { label: "🥩 Meat", query: "meat" },
-  { label: "🥦 Produce", query: "vegetables" },
-  { label: "🥛 Dairy", query: "dairy" },
-  { label: "🍞 Bakery", query: "bread" },
-  { label: "🥤 Drinks", query: "beverages" },
-  { label: "🍿 Snacks", query: "snacks" },
-  { label: "🧊 Frozen", query: "frozen" },
-  { label: "🍝 Pantry", query: "pantry" },
-  { label: "🧹 Cleaning", query: "household" },
+  { label: "🔥 Popular", query: "grocery essentials" },
+  { label: "🥩 Meat", query: "fresh meat chicken beef" },
+  { label: "🥦 Produce", query: "fresh fruits vegetables" },
+  { label: "🥛 Dairy", query: "milk eggs cheese yogurt" },
+  { label: "🍞 Bakery", query: "bread bakery rolls" },
+  { label: "🥤 Drinks", query: "water juice soda drinks" },
+  { label: "🍿 Snacks", query: "chips cookies crackers" },
+  { label: "🧊 Frozen", query: "frozen pizza ice cream" },
+  { label: "🍝 Pantry", query: "rice pasta cereal canned" },
+  { label: "🧹 Cleaning", query: "paper towels detergent soap" },
 ];
 
 type SortMode = "default" | "price-low" | "price-high" | "rating";
