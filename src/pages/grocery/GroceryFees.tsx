@@ -5,7 +5,7 @@ import { ArrowLeft, DollarSign, Truck, Sparkles, Heart, ShieldCheck, Tag, Percen
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { DELIVERY_BASE_FEE, DELIVERY_PER_MILE, DELIVERY_PER_MIN, DELIVERY_MIN_FEE, DELIVERY_MAX_FEE, SERVICE_FEE, TIP_OPTIONS, formatFee, calcMarkup, getMarkupPct, MARKUP_THRESHOLD } from "@/config/groceryPricing";
+import { DELIVERY_BASE_FEE, DELIVERY_PER_MILE, DELIVERY_PER_MIN, DELIVERY_MIN_FEE, DELIVERY_MAX_FEE, SERVICE_FEE_PCT, SERVICE_FEE_MIN, SERVICE_FEE_MAX, TIP_OPTIONS, formatFee, calcMarkup, getMarkupPct, MARKUP_THRESHOLD, calcServiceFee } from "@/config/groceryPricing";
 
 const FEE_BREAKDOWN = [
   {
@@ -18,9 +18,9 @@ const FEE_BREAKDOWN = [
   {
     icon: Sparkles,
     label: "Service Fee",
-    amount: formatFee(SERVICE_FEE),
-    description: "Supports the ZIVO platform — including real-time inventory search, order management, customer support, and payment processing.",
-    note: "This fee helps us operate and improve the service for you.",
+    amount: `${SERVICE_FEE_PCT}%`,
+    description: `Service fee applied to every order: ${SERVICE_FEE_PCT}% of order subtotal, with a minimum of ${formatFee(SERVICE_FEE_MIN)} and maximum of ${formatFee(SERVICE_FEE_MAX)}. This supports platform operations, customer support, and payment processing.`,
+    note: "Helps us maintain and improve the service.",
   },
   {
     icon: Heart,
@@ -57,8 +57,9 @@ export default function GroceryFees() {
   const exampleSubtotal = 45.00;
   const exampleMarkup = calcMarkup(exampleSubtotal);
   const exampleDelivery = 5.99;
+  const exampleServiceFee = calcServiceFee(exampleSubtotal);
   const exampleTip = 3;
-  const exampleTotal = exampleSubtotal + exampleMarkup + exampleDelivery + SERVICE_FEE + exampleTip;
+  const exampleTotal = exampleSubtotal + exampleMarkup + exampleDelivery + exampleServiceFee + exampleTip;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -121,7 +122,7 @@ export default function GroceryFees() {
               { label: "Item subtotal (12 items)", value: `$${exampleSubtotal.toFixed(2)}` },
               { label: `Platform fee (${getMarkupPct(exampleSubtotal)}%)`, value: `$${exampleMarkup.toFixed(2)}` },
               { label: "Delivery fee (3.2 mi)", value: `$${exampleDelivery.toFixed(2)}` },
-              { label: "Service fee", value: formatFee(SERVICE_FEE) },
+              { label: `Service fee (${SERVICE_FEE_PCT}%)`, value: `$${exampleServiceFee.toFixed(2)}` },
               { label: "Driver tip", value: `$${exampleTip.toFixed(2)}` },
             ].map((row) => (
               <div key={row.label} className="flex items-center justify-between">

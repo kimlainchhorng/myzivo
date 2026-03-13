@@ -22,7 +22,7 @@ import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { GroceryPromoInput } from "@/components/grocery/GroceryPromoBanner";
 import { getLiveEta } from "@/utils/storeStatus";
 import { getStoreConfig, type StoreName, GROCERY_STORES } from "@/config/groceryStores";
-import { DELIVERY_FEE_FALLBACK, SERVICE_FEE, TIP_OPTIONS, calcMarkup, getMarkupPct, calcDeliveryFee } from "@/config/groceryPricing";
+import { DELIVERY_FEE_FALLBACK, SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcMarkup, getMarkupPct, calcDeliveryFee } from "@/config/groceryPricing";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -88,7 +88,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   // Distance-based delivery fee (estimate: ~3mi, ETA-based minutes)
   const estimatedMiles = 3;
   const deliveryFee = calcDeliveryFee(estimatedMiles, liveEta);
-  const grandTotal = Math.max(0, total + markup + deliveryFee + SERVICE_FEE + tip + priorityFee - promoDiscount);
+  // Service fee: 5% of subtotal with min/max
+  const serviceFee = calcServiceFee(total);
+  const grandTotal = Math.max(0, total + markup + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
   useEffect(() => {
@@ -542,8 +544,8 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                       <span className="text-foreground tabular-nums">${markup.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] text-muted-foreground">
-                      <span>Service fee</span>
-                      <span className="text-foreground tabular-nums">${SERVICE_FEE.toFixed(2)}</span>
+                      <span>Service fee ({SERVICE_FEE_PCT}%)</span>
+                      <span className="text-foreground tabular-nums">${serviceFee.toFixed(2)}</span>
                     </div>
                     {priorityFee > 0 && (
                       <div className="flex justify-between text-[12px] text-muted-foreground">

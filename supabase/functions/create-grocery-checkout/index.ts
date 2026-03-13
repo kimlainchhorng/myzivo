@@ -49,7 +49,10 @@ Deno.serve(async (req) => {
     const DELIVERY_PER_MIN = 10; // cents
     const DELIVERY_MIN = 399; // cents
     const DELIVERY_MAX = 1499; // cents
-    const SERVICE_FEE = 199; // cents
+    const SERVICE_FEE_PCT = 5; // percentage
+    const SERVICE_FEE_MIN = 250; // cents = $2.50
+    const SERVICE_FEE_MAX = 1000; // cents = $10.00
+    const tipCents = Math.round((tip || 0) * 100);
     const tipCents = Math.round((tip || 0) * 100);
 
     // Estimate distance (~3 miles, ~30 min as fallback)
@@ -64,12 +67,11 @@ Deno.serve(async (req) => {
       0
     );
 
-    // Markup: <$50 → 5%, ≥$50 → 3%
-    const subtotalDollars = subtotalCents / 100;
-    const markupPct = subtotalDollars < 50 ? 5 : 3;
-    const markupCents = Math.round(subtotalCents * markupPct / 100);
+    // Service fee: 5% of subtotal with min $2.50 and max $10.00
+    const rawServiceFee = Math.round(subtotalCents * SERVICE_FEE_PCT / 100);
+    const serviceFeeCents = Math.min(SERVICE_FEE_MAX, Math.max(SERVICE_FEE_MIN, rawServiceFee));
 
-    const totalCents = subtotalCents + markupCents + deliveryFeeCents + SERVICE_FEE + tipCents;
+    const totalCents = subtotalCents + markupCents + deliveryFeeCents + serviceFeeCents + tipCents;
 
     // Save order to DB first
     const admin = createClient(supabaseUrl, serviceKey);
@@ -134,15 +136,17 @@ Deno.serve(async (req) => {
       quantity: 1,
     });
 
-    // Add service fee
-    lineItems.push({
-      price_data: {
-        currency: "usd",
-        product_data: { name: "Service Fee" },
-        unit_amount: SERVICE_FEE,
-      },
-      quantity: 1,
-    });
+    // Add service fee (percentage-based with min/max)
+    if (serviceFeeCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: { name: `Service Fee (${SERVICE_FEE_PCT}%)` },
+          unit_amount: serviceFeeCents,
+        },
+        quantity: 1,
+      });
+    }
 
     // Add tip if any
     if (tipCents > 0) {
