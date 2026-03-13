@@ -76,21 +76,28 @@ const Profile = () => {
   });
 
   const handleAvatarClick = () => {
+    // On native Capacitor, only allow photo library (not camera) to avoid crash
+    // when camera permissions aren't granted or camera is unavailable
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    try {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setAvatarPreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setAvatarPreview(ev.target?.result as string);
+      };
+      reader.readAsDataURL(file);
 
-    await uploadAvatar.mutateAsync(file);
-    setAvatarPreview(null);
+      await uploadAvatar.mutateAsync(file);
+      setAvatarPreview(null);
+    } catch (err) {
+      console.error("Avatar upload failed:", err);
+      setAvatarPreview(null);
+    }
   };
 
   const onSubmit = async (data: ProfileFormData) => {
