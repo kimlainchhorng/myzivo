@@ -34,10 +34,8 @@ const PrivacyPolicy = () => {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Compliance Badges */}
         <div className="flex flex-wrap gap-2 mb-6">
-          <Badge variant="outline" className="border-primary text-primary">GDPR Compliant</Badge>
           <Badge variant="outline" className="border-primary text-primary">CCPA Compliant</Badge>
-          <Badge variant="outline" className="border-primary text-primary">SOC 2 Type II</Badge>
-          <Badge variant="outline" className="border-primary text-primary">ISO 27001</Badge>
+          <Badge variant="outline" className="border-primary text-primary">Privacy by Design</Badge>
         </div>
 
         {/* Introduction */}

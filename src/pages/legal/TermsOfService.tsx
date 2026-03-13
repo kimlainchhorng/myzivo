@@ -6,8 +6,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ADVANCED_LEGAL_CLAUSES, COMPANY_INFO } from "@/config/legalContent";
 
 const TermsOfService = () => {
-  const lastUpdated = "January 26, 2026";
-  const companyName = "ZIVO Technologies Inc.";
+  const lastUpdated = "March 13, 2026";
+  const companyName = "ZIVO LLC";
 
   return (
     <div className="min-h-screen bg-background">
