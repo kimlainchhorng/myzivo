@@ -192,6 +192,7 @@ export default function GroceryStorePage() {
   const storeCfg = getStoreBySlug(slug || "walmart");
 
   const [query, setQuery] = useState("");
+  const [browseQuery, setBrowseQuery] = useState<string | null>(null);
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -260,6 +261,7 @@ export default function GroceryStorePage() {
   const handleSearch = (val: string) => {
     setQuery(val);
     setActiveFilter(null);
+    setBrowseQuery(null);
     autoLoadCount.current = 0;
     clearTimeout(debounceRef.current);
     if (val.trim().length < 2) {
@@ -271,6 +273,7 @@ export default function GroceryStorePage() {
 
   const handleQuickFilter = (filter: typeof QUICK_FILTERS[0]) => {
     autoLoadCount.current = 0;
+    setBrowseQuery(null);
     if (activeFilter === filter.label) {
       setActiveFilter(null);
       setQuery("");
@@ -426,8 +429,8 @@ export default function GroceryStorePage() {
           storeName={storeName}
           query={query}
           onSearch={handleSearch}
-          onSubmit={(val) => { autoLoadCount.current = 0; setQuery(val); search(val); }}
-          onClear={() => { setQuery(""); autoLoadCount.current = 0; search(storeCfg.defaultQuery); setActiveFilter(null); }}
+          onSubmit={(val) => { autoLoadCount.current = 0; setBrowseQuery(null); setQuery(val); search(val); }}
+          onClear={() => { setQuery(""); setBrowseQuery(null); autoLoadCount.current = 0; search(storeCfg.defaultQuery); setActiveFilter(null); }}
         />
 
         {/* Quick filter chips */}
@@ -449,18 +452,38 @@ export default function GroceryStorePage() {
         </div>
       </div>
 
-      {/* Category Browser - always visible on landing */}
-      {!isLoading && !query && !activeFilter && (
+      {/* Category Browser - always visible on landing (hidden when browsing a category) */}
+      {!isLoading && !query && !activeFilter && !browseQuery && (
         <GroceryCategoryBrowser
           store={storeName}
           onAdd={handleAdd}
           cartProductIds={new Set(cart.items.map((c) => c.productId))}
           onBrowse={(q) => {
             autoLoadCount.current = 0;
+            setBrowseQuery(q);
             setQuery("");
             search(q);
           }}
         />
+      )}
+
+      {/* Back to categories button when browsing */}
+      {browseQuery && !query && (
+        <div className="px-4 pt-3 pb-1">
+          <motion.button
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => {
+              setBrowseQuery(null);
+              autoLoadCount.current = 0;
+              search(storeCfg!.defaultQuery);
+            }}
+            className="flex items-center gap-1.5 text-[12px] font-semibold text-primary hover:underline"
+          >
+            ← Back to categories
+          </motion.button>
+        </div>
       )}
 
       {/* Cart Drawer */}
