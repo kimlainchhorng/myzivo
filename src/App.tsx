@@ -55,6 +55,7 @@ const GroceryOrderHistory = lazy(() => import("./pages/GroceryOrderHistory"));
 const GroceryTerms = lazy(() => import("./pages/grocery/GroceryTerms"));
 const GroceryReturns = lazy(() => import("./pages/grocery/GroceryReturns"));
 const GroceryFees = lazy(() => import("./pages/grocery/GroceryFees"));
+const ZivoPlusPage = lazy(() => import("./pages/ZivoPlusPage"));
 const DrivePage = lazy(() => import("./pages/DrivePage"));
 const DriverShoppingList = lazy(() => import("./pages/DriverShoppingList"));
 const DriverOrdersPage = lazy(() => import("./pages/DriverOrdersPage"));
