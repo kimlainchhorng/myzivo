@@ -295,7 +295,7 @@ export default function GroceryOrderConfirmed() {
           className="flex flex-col gap-2.5 w-full"
         >
           <Button
-            onClick={() => navigate("/grocery/orders")}
+            onClick={() => navigate(`/grocery/track/${orderId}`)}
             className="w-full rounded-2xl h-12 font-bold gap-2"
           >
             <MapPin className="h-4 w-4" />

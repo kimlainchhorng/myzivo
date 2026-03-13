@@ -97,7 +97,7 @@ export function GroceryOrderTracker({ store }: { store: string }) {
               <div className="flex items-center gap-1.5 shrink-0">
                 <motion.button
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => navigate(`/grocery/order-placed?id=${order.id}`)}
+                  onClick={() => navigate(`/grocery/track/${order.id}`)}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-primary/10 text-primary text-[10px] font-bold hover:bg-primary/20 transition-colors"
                 >
                   Track
