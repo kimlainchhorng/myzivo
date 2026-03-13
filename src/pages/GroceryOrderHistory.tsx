@@ -1,8 +1,8 @@
 /**
  * GroceryOrderHistory - Real-time order tracking with persistent ratings,
- * receipt viewing, support contact, and working reorder
+ * receipt viewing, spending analytics, support contact, and working reorder
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -10,6 +10,7 @@ import {
   ChevronRight, ShoppingBag, RotateCcw, Star, Store,
   Receipt, Phone, MessageSquare, Loader2, RefreshCw,
   HelpCircle, Download, ExternalLink, Copy, AlertTriangle,
+  TrendingUp, DollarSign, Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
