@@ -219,8 +219,9 @@ export default function GroceryMarketplace() {
     if (!currentAddress?.lat || !currentAddress?.lng) return GROCERY_STORES;
     // If still loading, show all
     if (isLoadingStores) return GROCERY_STORES;
-    // Only show stores with nearby locations
-    return GROCERY_STORES.filter((s) => nearbyBySlug[s.slug]);
+    // Filter to nearby stores, but fallback to all if none found
+    const nearby = GROCERY_STORES.filter((s) => nearbyBySlug[s.slug]);
+    return nearby.length > 0 ? nearby : GROCERY_STORES;
   }, [currentAddress, isLoadingStores, nearbyBySlug]);
 
   // Live ETAs — use distance-based if available
