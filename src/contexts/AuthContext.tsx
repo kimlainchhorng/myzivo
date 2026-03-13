@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { User, Session, Provider } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { setupActivityTracking, clearSessionArtifacts } from "@/lib/security/sessionSecurity";
+import { Capacitor } from "@capacitor/core";
 
 type AuthContextType = {
   user: User | null;
