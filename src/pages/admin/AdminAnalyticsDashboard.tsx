@@ -66,7 +66,7 @@ export default function AdminAnalyticsDashboard() {
     const confirmed = bookingStats.filter((b) => b.status === "confirmed").length;
     const revenue = bookingStats
       .filter((b) => b.status === "confirmed")
-      .reduce((sum, b) => sum + (Number(b.total_amount) || 0), 0);
+      .reduce((sum, b) => sum + (Number(b.total) || 0), 0);
     const byService: Record<string, number> = {};
     bookingStats.forEach((b) => {
       const key = b.service_type || "other";
