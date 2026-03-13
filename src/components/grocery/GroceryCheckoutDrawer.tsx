@@ -78,9 +78,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [deliveryNote, setDeliveryNote] = useState("");
   const [leaveAtDoor, setLeaveAtDoor] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
+  const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoCode, setPromoCode] = useState("");
   const [subPref, setSubPref] = useState<SubstitutionPref>(savedProfile.subPref);
-  const [scheduler, setScheduler] = useState<SchedulerState>(DEFAULT_SCHEDULER);
 
   // Live ETA
   const storeName = items[0]?.store || "Walmart";
