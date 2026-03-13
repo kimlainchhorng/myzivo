@@ -11,6 +11,8 @@ import {
   CreditCard, Sparkles, Timer, BadgeCheck, ArrowRight, ArrowLeft,
   MessageSquare, DoorOpen, Star, Gift, RefreshCw, AlertTriangle,
 } from "lucide-react";
+import { GroceryDeliveryScheduler, DEFAULT_SCHEDULER, getPriorityFee, type SchedulerState } from "@/components/grocery/GroceryDeliveryScheduler";
+import { addLoyaltyPoints } from "@/components/grocery/GroceryLoyaltyBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,8 +68,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoCode, setPromoCode] = useState("");
   const [subPref, setSubPref] = useState<SubstitutionPref>(savedProfile.subPref);
+  const [scheduler, setScheduler] = useState<SchedulerState>(DEFAULT_SCHEDULER);
 
-  const grandTotal = Math.max(0, total + DELIVERY_FEE + SERVICE_FEE + tip - promoDiscount);
+  const priorityFee = getPriorityFee(scheduler.speed);
+  const grandTotal = Math.max(0, total + DELIVERY_FEE + SERVICE_FEE + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
 
@@ -338,6 +342,15 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   ))}
                 </div>
 
+                {/* Delivery scheduling & gift options */}
+                <GroceryDeliveryScheduler
+                  state={scheduler}
+                  onChange={setScheduler}
+                  baseEta={liveEta}
+                />
+
+                <div className="mt-4" />
+
                 {/* Item preview */}
                 <div className="rounded-2xl bg-muted/15 border border-border/20 overflow-hidden mb-4">
                   <button
@@ -516,6 +529,18 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                       <span>Service fee</span>
                       <span className="text-foreground tabular-nums">${SERVICE_FEE.toFixed(2)}</span>
                     </div>
+                    {priorityFee > 0 && (
+                      <div className="flex justify-between text-[12px] text-muted-foreground">
+                        <span className="flex items-center gap-1.5">⚡ Priority</span>
+                        <span className="text-foreground tabular-nums">${priorityFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {scheduler.isGift && (
+                      <div className="flex justify-between text-[12px] text-pink-500">
+                        <span className="flex items-center gap-1.5">🎁 Gift order</span>
+                        <span className="font-medium">Free</span>
+                      </div>
+                    )}
                     {tip > 0 && (
                       <div className="flex justify-between text-[12px] text-muted-foreground">
                         <span className="flex items-center gap-1.5"><Heart className="h-3 w-3 text-pink-500" /> Driver tip</span>
