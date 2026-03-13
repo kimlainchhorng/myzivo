@@ -92,15 +92,12 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   }, [storeCfg]);
 
   const priorityFee = getPriorityFee(scheduler.speed);
-  // Markup: <$50 → 5%, ≥$50 → 3%
-  const markup = calcMarkup(total);
-  const markupPct = getMarkupPct(total);
   // Distance-based delivery fee (estimate: ~3mi, ETA-based minutes)
   const estimatedMiles = 3;
   const deliveryFee = calcDeliveryFee(estimatedMiles, liveEta);
   // Service fee: 5% of subtotal with min/max
   const serviceFee = calcServiceFee(total);
-  const grandTotal = Math.max(0, total + markup + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
+  const grandTotal = Math.max(0, total + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
   useEffect(() => {
