@@ -666,6 +666,17 @@ export default function GroceryStorePage() {
         </div>
       )}
 
+      {/* Store info & extras - below products */}
+      <GroceryStoreHero store={storeCfg} liveEta={liveEta} isOpen={status.isOpen} />
+      <GroceryPromoBanner />
+      <GroceryShoppingList
+        onSearchItem={(text) => {
+          autoLoadCount.current = 0;
+          setQuery(text);
+          search(text);
+        }}
+      />
+
       {/* Load more sentinel */}
       <div ref={sentinelRef} className="h-1" />
       {isLoadingMore && (
