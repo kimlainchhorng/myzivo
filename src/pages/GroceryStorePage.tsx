@@ -775,7 +775,7 @@ export default function GroceryStorePage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring" as const, stiffness: 300, damping: 25 }}
-            className="fixed bottom-20 left-4 right-4 z-20"
+            className="fixed bottom-24 left-4 right-4 z-30"
           >
             <motion.button
               whileTap={{ scale: 0.97 }}
