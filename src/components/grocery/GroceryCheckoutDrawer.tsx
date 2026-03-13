@@ -151,47 +151,39 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
     }
   }, [name, phone, subPref]);
 
+  const resetInlinePayment = useCallback(() => {
+    setPaymentClientSecret(null);
+    setPaymentOrderId(null);
+    setPaymentTotalCents(null);
+  }, []);
+
   const goToReview = () => {
     if (!address.trim()) { toast.error("Please enter a delivery address"); return; }
     if (!name.trim()) { toast.error("Please enter your name"); return; }
     setStep(2);
   };
 
-  const handleContinueToStripe = useCallback(() => {
-    if (!pendingCheckoutUrl) return;
+  const handleBackToDetails = useCallback(() => {
+    resetInlinePayment();
+    setStep(1);
+  }, [resetInlinePayment]);
 
-    const popup = window.open(pendingCheckoutUrl, "_blank", "noopener,noreferrer");
-    if (!popup) {
-      toast.error("Popup blocked. Please allow popups, then tap again.");
-      return;
-    }
-
-    setPendingCheckoutUrl(null);
-  }, [pendingCheckoutUrl]);
-
-  const handleStripeCheckout = async () => {
-    let isEmbedded = false;
-    try {
-      isEmbedded = window.self !== window.top;
-    } catch {
-      isEmbedded = true;
-    }
-
-    // Pre-open tab during click gesture for iframe/webview reliability.
-    const checkoutWindow = isEmbedded
-      ? window.open("about:blank", "_blank", "noopener,noreferrer")
-      : null;
-
-    setPendingCheckoutUrl(null);
+  const handleCreateInlinePayment = async () => {
     setIsSubmitting(true);
+    resetInlinePayment();
 
     try {
       const orderItems = items.map((i) => ({
-        productId: i.productId, name: i.name, price: i.price,
-        image: i.image, brand: i.brand, quantity: i.quantity, store: i.store,
+        productId: i.productId,
+        name: i.name,
+        price: i.price,
+        image: i.image,
+        brand: i.brand,
+        quantity: i.quantity,
+        store: i.store,
       }));
 
-      const { data, error } = await supabase.functions.invoke("create-grocery-checkout", {
+      const { data, error } = await supabase.functions.invoke("create-grocery-payment-intent", {
         body: {
           items: orderItems,
           delivery_address: address.trim(),
@@ -199,38 +191,56 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
           customer_phone: phone.trim() || null,
           tip,
           store: items[0]?.store || "Unknown",
+          priority_fee: priorityFee,
+          promo_discount: promoDiscount,
         },
       });
 
-      if (error) throw new Error(error.message || "Checkout failed");
+      if (error) throw new Error(error.message || "Failed to initialize secure card checkout");
       if (data?.error) throw new Error(data.error);
-      if (data?.url) {
-        const checkoutUrl = String(data.url);
-
-        if (checkoutWindow && !checkoutWindow.closed) {
-          checkoutWindow.location.replace(checkoutUrl);
-          return;
-        }
-
-        if (isEmbedded) {
-          setPendingCheckoutUrl(checkoutUrl);
-          toast.info("Tap once more to open secure Stripe checkout.");
-          return;
-        }
-
-        window.location.assign(checkoutUrl);
-        return;
+      if (!data?.ok || !data?.client_secret || !data?.order_id) {
+        throw new Error("Unable to start card checkout");
       }
 
-      throw new Error("No checkout URL returned");
+      setPaymentClientSecret(String(data.client_secret));
+      setPaymentOrderId(String(data.order_id));
+      setPaymentTotalCents(Number(data.total_cents || Math.round(grandTotal * 100)));
     } catch (err: any) {
-      if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
-      console.error("Checkout error:", err);
-      toast.error(err.message || "Failed to start checkout");
+      console.error("Payment init error:", err);
+      toast.error(err.message || "Failed to initialize payment");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const handleInlinePaymentSuccess = useCallback(async (paymentIntentId: string) => {
+    if (!paymentOrderId) {
+      toast.error("Missing order reference. Please try again.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("confirm-grocery-payment", {
+        body: {
+          order_id: paymentOrderId,
+          payment_intent_id: paymentIntentId,
+        },
+      });
+
+      if (error) throw new Error(error.message || "Failed to confirm payment");
+      if (data?.error) throw new Error(data.error);
+
+      const earnedPoints = addLoyaltyPoints(grandTotal);
+      toast.success(earnedPoints > 0 ? `Payment successful • +${earnedPoints} loyalty points` : "Payment successful");
+      onOrderPlaced(paymentOrderId);
+    } catch (err: any) {
+      console.error("Payment confirm error:", err);
+      toast.error(err.message || "Payment completed but confirmation failed. Please contact support.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [grandTotal, onOrderPlaced, paymentOrderId]);
 
   const SUB_OPTIONS: { value: SubstitutionPref; label: string; desc: string; icon: typeof RefreshCw }[] = [
     { value: "contact_me", label: "Contact Me", desc: "Driver will message you", icon: MessageSquare },
