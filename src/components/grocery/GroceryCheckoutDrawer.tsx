@@ -581,7 +581,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                     </div>
                   )}
                   <button
-                    onClick={() => setStep(1)}
+                    onClick={handleBackToDetails}
                     className="text-[10px] text-primary font-semibold mt-2 hover:underline"
                   >
                     Edit details
