@@ -428,8 +428,9 @@ export default function GroceryStorePage() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => setShowCart(!showCart)}
-            className="relative p-2.5 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
+            className="relative p-3 -mr-1 rounded-2xl bg-muted/30 hover:bg-muted/50 active:bg-muted/70 transition-colors duration-200 min-w-[48px] min-h-[48px] flex items-center justify-center z-10 touch-manipulation cursor-pointer"
             aria-label="Shopping cart"
+            style={{ WebkitTapHighlightColor: "transparent" }}
           >
             <ShoppingCart className="h-5 w-5" />
             {cart.itemCount > 0 && (
@@ -438,7 +439,7 @@ export default function GroceryStorePage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold min-w-[22px] h-[22px] px-1 shadow-lg shadow-primary/40 ring-2 ring-background"
+                className="absolute -top-1 -right-1 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold min-w-[22px] h-[22px] px-1 shadow-lg shadow-primary/40 ring-2 ring-background pointer-events-none"
               >
                 {cart.itemCount}
               </motion.span>
@@ -774,7 +775,7 @@ export default function GroceryStorePage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring" as const, stiffness: 300, damping: 25 }}
-            className="fixed bottom-20 left-4 right-4 z-20"
+            className="fixed bottom-24 left-4 right-4 z-30"
           >
             <motion.button
               whileTap={{ scale: 0.97 }}
