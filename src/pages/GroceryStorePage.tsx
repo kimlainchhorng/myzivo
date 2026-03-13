@@ -598,20 +598,6 @@ export default function GroceryStorePage() {
         />
       )}
 
-      {/* Category Browser - browse Meat, Produce, Dairy etc. */}
-      {!isLoading && !query && !activeFilter && (
-        <GroceryCategoryBrowser
-          store={storeName}
-          onAdd={handleAdd}
-          cartProductIds={new Set(cart.items.map((c) => c.productId))}
-          onBrowse={(q) => {
-            autoLoadCount.current = 0;
-            setQuery("");
-            search(q);
-          }}
-        />
-      )}
-
       {/* Today's Deals */}
       {!isLoading && products.length > 5 && (
         <GroceryDealsSection
