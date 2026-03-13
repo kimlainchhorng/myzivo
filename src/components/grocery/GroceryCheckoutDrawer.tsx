@@ -68,8 +68,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoCode, setPromoCode] = useState("");
   const [subPref, setSubPref] = useState<SubstitutionPref>(savedProfile.subPref);
+  const [scheduler, setScheduler] = useState<SchedulerState>(DEFAULT_SCHEDULER);
 
-  const grandTotal = Math.max(0, total + DELIVERY_FEE + SERVICE_FEE + tip - promoDiscount);
+  const priorityFee = getPriorityFee(scheduler.speed);
+  const grandTotal = Math.max(0, total + DELIVERY_FEE + SERVICE_FEE + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
 
