@@ -534,7 +534,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                               className="flex items-center gap-2.5 text-xs"
                             >
                               {item.image && (
-                                <img src={item.image} alt="" className="h-9 w-9 rounded-xl object-contain bg-background border border-border/15 p-0.5" referrerPolicy="no-referrer" />
+                                <img src={item.image} alt={item.name} className="h-9 w-9 rounded-xl object-contain bg-background border border-border/15 p-0.5" loading="lazy" referrerPolicy="no-referrer" />
                               )}
                               <span className="text-muted-foreground truncate flex-1">{item.quantity}× {item.name}</span>
                               <span className="font-semibold shrink-0 tabular-nums">${(item.price * item.quantity).toFixed(2)}</span>
