@@ -717,6 +717,7 @@ export default function GroceryStorePage() {
           search(text);
         }}
       />
+      <GroceryPolicyFooter />
 
       {/* Load more sentinel */}
       <div ref={sentinelRef} className="h-1" />
