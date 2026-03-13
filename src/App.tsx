@@ -14,6 +14,7 @@ import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
+import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import LiveChatWidget from "./components/shared/LiveChatWidget";
@@ -383,50 +384,50 @@ const App = () => (
                 <Route path="/insurance" element={<PreserveQueryRedirect to="/travel-insurance" />} />
 
                 {/* Flights */}
-                <Route path="/flights" element={<FlightLanding />} />
-                <Route path="/flights/from-:fromCity" element={<FlightLanding />} />
-                <Route path="/flights/to-:toCity" element={<FlightLanding />} />
-                <Route path="/flights/to/:citySlug" element={<FlightToCity />} />
-                <Route path="/flights/cities/:citySlug" element={<FlightCityPage />} />
-                <Route path="/flights/:origin-to-:destination" element={<FlightRoutePage />} />
-                <Route path="/flights/:route" element={<FlightLanding />} />
-                <Route path="/flights/results" element={<FlightResults />} />
-                <Route path="/flights/live" element={<FlightLive />} />
-                <Route path="/flights/details/:id" element={<FlightDetails />} />
-                <Route path="/flights/traveler" element={<FlightTravelerInfo />} />
-                <Route path="/flights/traveler-info" element={<FlightTravelerInfo />} />
-                <Route path="/flights/checkout" element={<FlightCheckout />} />
-                <Route path="/flights/confirmation/:bookingId" element={<FlightConfirmation />} />
+                <Route path="/flights" element={<RouteErrorBoundary section="Flights"><FlightLanding /></RouteErrorBoundary>} />
+                <Route path="/flights/from-:fromCity" element={<RouteErrorBoundary section="Flights"><FlightLanding /></RouteErrorBoundary>} />
+                <Route path="/flights/to-:toCity" element={<RouteErrorBoundary section="Flights"><FlightLanding /></RouteErrorBoundary>} />
+                <Route path="/flights/to/:citySlug" element={<RouteErrorBoundary section="Flights"><FlightToCity /></RouteErrorBoundary>} />
+                <Route path="/flights/cities/:citySlug" element={<RouteErrorBoundary section="Flights"><FlightCityPage /></RouteErrorBoundary>} />
+                <Route path="/flights/:origin-to-:destination" element={<RouteErrorBoundary section="Flights"><FlightRoutePage /></RouteErrorBoundary>} />
+                <Route path="/flights/:route" element={<RouteErrorBoundary section="Flights"><FlightLanding /></RouteErrorBoundary>} />
+                <Route path="/flights/results" element={<RouteErrorBoundary section="Flights"><FlightResults /></RouteErrorBoundary>} />
+                <Route path="/flights/live" element={<RouteErrorBoundary section="Flights"><FlightLive /></RouteErrorBoundary>} />
+                <Route path="/flights/details/:id" element={<RouteErrorBoundary section="Flights"><FlightDetails /></RouteErrorBoundary>} />
+                <Route path="/flights/traveler" element={<RouteErrorBoundary section="Flights"><FlightTravelerInfo /></RouteErrorBoundary>} />
+                <Route path="/flights/traveler-info" element={<RouteErrorBoundary section="Flights"><FlightTravelerInfo /></RouteErrorBoundary>} />
+                <Route path="/flights/checkout" element={<RouteErrorBoundary section="Flights"><FlightCheckout /></RouteErrorBoundary>} />
+                <Route path="/flights/confirmation/:bookingId" element={<RouteErrorBoundary section="Flights"><FlightConfirmation /></RouteErrorBoundary>} />
                 {/* flights-dashboard removed */}
-                <Route path="/airports/:iata" element={<AirportPage />} />
-                <Route path="/booking/duffel-checkout" element={<DuffelCheckout />} />
-                <Route path="/checkout" element={<EmbeddedCheckout />} />
+                <Route path="/airports/:iata" element={<RouteErrorBoundary section="Flights"><AirportPage /></RouteErrorBoundary>} />
+                <Route path="/booking/duffel-checkout" element={<RouteErrorBoundary section="Checkout"><DuffelCheckout /></RouteErrorBoundary>} />
+                <Route path="/checkout" element={<RouteErrorBoundary section="Checkout"><EmbeddedCheckout /></RouteErrorBoundary>} />
 
                 {/* Hotels */}
-                <Route path="/hotels" element={<HotelsPage />} />
-                <Route path="/hotels/:city" element={<HotelCityLandingPage />} />
-                <Route path="/hotels/in-:city" element={<HotelsPage />} />
+                <Route path="/hotels" element={<RouteErrorBoundary section="Hotels"><HotelsPage /></RouteErrorBoundary>} />
+                <Route path="/hotels/:city" element={<RouteErrorBoundary section="Hotels"><HotelCityLandingPage /></RouteErrorBoundary>} />
+                <Route path="/hotels/in-:city" element={<RouteErrorBoundary section="Hotels"><HotelsPage /></RouteErrorBoundary>} />
                 {/* hotels-dashboard removed */}
 
                 {/* Car Rental */}
-                <Route path="/car-rental" element={<CarRentalLanding />} />
-                <Route path="/car-rental/in-:location" element={<CarRentalLanding />} />
-                <Route path="/rent-car" element={<CarRentalBooking />} />
-                <Route path="/rent-car/results" element={<CarResultsPage />} />
-                <Route path="/rent-car/detail" element={<CarDetailPage />} />
-                <Route path="/rent-car/traveler-info" element={<CarTravelerInfoPage />} />
-                <Route path="/rent-car/checkout" element={<CarCheckoutPage />} />
-                <Route path="/rent-car/confirmation" element={<CarConfirmationPage />} />
-                <Route path="/rent-car/:city" element={<CarRentalLanding />} />
-                <Route path="/cars" element={<Cars />} />
-                <Route path="/cars/search" element={<CarsSearchPage />} />
-                <Route path="/cars/:id" element={<CarsDetailPage />} />
-                <Route path="/how-to-rent" element={<HowToRent />} />
+                <Route path="/car-rental" element={<RouteErrorBoundary section="Cars"><CarRentalLanding /></RouteErrorBoundary>} />
+                <Route path="/car-rental/in-:location" element={<RouteErrorBoundary section="Cars"><CarRentalLanding /></RouteErrorBoundary>} />
+                <Route path="/rent-car" element={<RouteErrorBoundary section="Cars"><CarRentalBooking /></RouteErrorBoundary>} />
+                <Route path="/rent-car/results" element={<RouteErrorBoundary section="Cars"><CarResultsPage /></RouteErrorBoundary>} />
+                <Route path="/rent-car/detail" element={<RouteErrorBoundary section="Cars"><CarDetailPage /></RouteErrorBoundary>} />
+                <Route path="/rent-car/traveler-info" element={<RouteErrorBoundary section="Cars"><CarTravelerInfoPage /></RouteErrorBoundary>} />
+                <Route path="/rent-car/checkout" element={<RouteErrorBoundary section="Cars"><CarCheckoutPage /></RouteErrorBoundary>} />
+                <Route path="/rent-car/confirmation" element={<RouteErrorBoundary section="Cars"><CarConfirmationPage /></RouteErrorBoundary>} />
+                <Route path="/rent-car/:city" element={<RouteErrorBoundary section="Cars"><CarRentalLanding /></RouteErrorBoundary>} />
+                <Route path="/cars" element={<RouteErrorBoundary section="Cars"><Cars /></RouteErrorBoundary>} />
+                <Route path="/cars/search" element={<RouteErrorBoundary section="Cars"><CarsSearchPage /></RouteErrorBoundary>} />
+                <Route path="/cars/:id" element={<RouteErrorBoundary section="Cars"><CarsDetailPage /></RouteErrorBoundary>} />
+                <Route path="/how-to-rent" element={<RouteErrorBoundary section="Cars"><HowToRent /></RouteErrorBoundary>} />
 
                 {/* Travel Checkout */}
-                <Route path="/travel/checkout" element={<TravelCheckoutPage />} />
-                <Route path="/confirmation/:orderNumber" element={<TravelConfirmationPage />} />
-                <Route path="/my-trips/:orderNumber" element={<TravelOrderDetailPage />} />
+                <Route path="/travel/checkout" element={<RouteErrorBoundary section="Checkout"><TravelCheckoutPage /></RouteErrorBoundary>} />
+                <Route path="/confirmation/:orderNumber" element={<RouteErrorBoundary section="Checkout"><TravelConfirmationPage /></RouteErrorBoundary>} />
+                <Route path="/my-trips/:orderNumber" element={<RouteErrorBoundary section="Checkout"><TravelOrderDetailPage /></RouteErrorBoundary>} />
 
                 {/* Extras */}
                 <Route path="/things-to-do" element={<ThingsToDo />} />

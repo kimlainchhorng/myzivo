@@ -287,7 +287,7 @@ export default function HotelsPage() {
         {/* Hero Section */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0">
-            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&h=600&fit=crop&q=80&fm=webp" alt="Luxury hotel lobby" className="w-full h-full object-cover" loading="eager" />
+            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&h=600&fit=crop&q=80&fm=webp" alt="Luxury hotel lobby" className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
             <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-amber-950/50 to-background" />
           </div>
 
