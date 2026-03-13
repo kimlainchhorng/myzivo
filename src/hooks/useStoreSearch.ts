@@ -68,6 +68,11 @@ export function useStoreSearch(store: StoreName) {
       const pair = `${words[i]} ${words[i + 1]}`;
       if (!searches.includes(pair)) searches.push(pair);
     }
+    // Add 3-word combos for even more variety
+    for (let i = 0; i < words.length - 2; i++) {
+      const triple = `${words[i]} ${words[i + 1]} ${words[i + 2]}`;
+      if (!searches.includes(triple)) searches.push(triple);
+    }
     return searches;
   };
 
@@ -87,8 +92,8 @@ export function useStoreSearch(store: StoreName) {
         const keywords = buildKeywords(query);
         allKeywordsRef.current = keywords;
         
-        // Fetch first batch of keywords in parallel (up to 8 at a time)
-        const batch = keywords.slice(0, 8);
+        // Fetch first batch of keywords in parallel (up to 12 at a time)
+        const batch = keywords.slice(0, 12);
         keywordIndexRef.current = batch.length;
         
         const results = await Promise.all(
@@ -130,7 +135,7 @@ export function useStoreSearch(store: StoreName) {
 
       if (startIdx < keywords.length) {
         // Fetch next batch of keywords
-        const batch = keywords.slice(startIdx, startIdx + 6);
+        const batch = keywords.slice(startIdx, startIdx + 10);
         keywordIndexRef.current = startIdx + batch.length;
 
         const results = await Promise.all(
