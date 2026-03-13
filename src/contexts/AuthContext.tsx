@@ -129,40 +129,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         "http://localhost:8080",
       ]);
 
-      // On native Capacitor, always redirect to published URL
-      // The app will pick up the session via onAuthStateChange when the browser redirects back
       const currentOrigin = window.location.origin;
-      const fallbackOrigin = "https://myzivo.lovable.app";
+      // On native, redirect to published URL (the Capacitor WebView will handle it)
+      const fallbackOrigin = isNative
+        ? "https://myzivo.lovable.app"
+        : "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app";
 
-      let redirectOrigin: string;
-      if (isNative) {
-        // Native app: redirect to published site, session syncs via Capacitor WebView
-        redirectOrigin = fallbackOrigin;
-      } else {
-        redirectOrigin = SAFE_OAUTH_ORIGINS.has(currentOrigin) ? currentOrigin : fallbackOrigin;
-      }
+      const redirectOrigin = SAFE_OAUTH_ORIGINS.has(currentOrigin) ? currentOrigin : fallbackOrigin;
       const redirectTo = `${redirectOrigin}/auth-callback`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo,
-          skipBrowserRedirect: isNative, // On native, we handle the URL ourselves
           queryParams: {
             prompt: "select_account",
           },
         },
       });
-
-      // On native, open the OAuth URL in the system browser
-      // The auth callback on the published site will set the session,
-      // and Capacitor will pick it up when the user returns to the app
-      if (isNative && !error) {
-        // Supabase returns the URL in the data, but since skipBrowserRedirect is true,
-        // we need to listen for the auth state change when user returns
-        // The OAuth flow opens in-app browser by default in Capacitor
-      }
-
       return { error };
     } catch (err) {
       return { error: err as Error };
