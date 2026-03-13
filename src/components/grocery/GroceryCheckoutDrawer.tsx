@@ -557,7 +557,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   </div>
                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10">
                     <Sparkles className="h-2.5 w-2.5 text-primary" />
-                    <span className="text-[9px] font-bold text-primary">{markupPct}% fee</span>
+                    <span className="text-[9px] font-bold text-primary">{SERVICE_FEE_PCT}% fee</span>
                   </div>
                 </motion.div>
 
