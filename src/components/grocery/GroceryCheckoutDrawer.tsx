@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { GroceryPromoInput } from "@/components/grocery/GroceryPromoBanner";
+import GroceryInlinePaymentForm from "@/components/grocery/GroceryInlinePaymentForm";
 import { getLiveEta } from "@/utils/storeStatus";
 import { getStoreConfig, type StoreName, GROCERY_STORES } from "@/config/groceryStores";
 import { DELIVERY_FEE_FALLBACK, SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee } from "@/config/groceryPricing";
@@ -72,6 +73,8 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [tip, setTip] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingCheckoutUrl, setPendingCheckoutUrl] = useState<string | null>(null);
+  const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
+  const [paymentOrderId, setPaymentOrderId] = useState<string | null>(null);
   const [showItems, setShowItems] = useState(false);
   const [deliveryNote, setDeliveryNote] = useState("");
   const [leaveAtDoor, setLeaveAtDoor] = useState(false);
@@ -80,7 +83,6 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [promoCode, setPromoCode] = useState("");
   const [subPref, setSubPref] = useState<SubstitutionPref>(savedProfile.subPref);
   const [scheduler, setScheduler] = useState<SchedulerState>(DEFAULT_SCHEDULER);
-
   // Live ETA
   const storeName = items[0]?.store || "Walmart";
   const storeCfg = GROCERY_STORES.find(s => s.name.toLowerCase() === storeName.toLowerCase());
