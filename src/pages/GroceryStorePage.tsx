@@ -192,6 +192,7 @@ export default function GroceryStorePage() {
   const storeCfg = getStoreBySlug(slug || "walmart");
 
   const [query, setQuery] = useState("");
+  const [browseQuery, setBrowseQuery] = useState<string | null>(null);
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
