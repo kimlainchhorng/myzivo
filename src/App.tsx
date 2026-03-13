@@ -462,7 +462,8 @@ const App = () => (
                 <Route path="/account/addresses" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
                 <Route path="/account/saved-places" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
                 <Route path="/account/favorites" element={<ProtectedRoute><AccountFavoritesPage /></ProtectedRoute>} />
-                {/* removed: spending, business, verification, trust */}
+                <Route path="/account/loyalty" element={<ProtectedRoute><LoyaltyPage /></ProtectedRoute>} />
+                <Route path="/account/preferences" element={<ProtectedRoute><PreferencesPage /></ProtectedRoute>} />
                 <Route path="/account/promos" element={<ProtectedRoute><PromosPage /></ProtectedRoute>} />
                 <Route path="/account/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
 
