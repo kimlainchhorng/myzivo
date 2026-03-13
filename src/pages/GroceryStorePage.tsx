@@ -48,6 +48,19 @@ const QUICK_FILTERS = [
   { label: "🥫 Canned", query: "campbell soup canned beans corn tuna" },
   { label: "🧹 Household", query: "paper towels toilet paper detergent soap" },
   { label: "🐶 Pets", query: "dog food cat food pet treats litter" },
+  { label: "🌿 Garden", query: "garden seeds soil plants flowers pots" },
+  { label: "🪑 Patio", query: "patio furniture outdoor chair cushion umbrella" },
+  { label: "🔥 Grilling", query: "grill charcoal smoker bbq tongs spatula" },
+  { label: "🏋️ Sports", query: "basketball football dumbbells yoga mat" },
+  { label: "🧴 Beauty", query: "shampoo makeup lotion sunscreen skincare" },
+  { label: "💊 Health", query: "vitamins tylenol advil cold medicine allergy" },
+  { label: "👶 Baby", query: "diapers formula baby food wipes bottles" },
+  { label: "🎮 Electronics", query: "charger headphones speaker phone case" },
+  { label: "👕 Clothing", query: "t-shirt socks underwear jeans shoes" },
+  { label: "🧸 Toys", query: "lego barbie hot wheels board games puzzles" },
+  { label: "🍳 Kitchen", query: "frying pan knife cutting board blender" },
+  { label: "🛏️ Bedding", query: "sheets pillow blanket comforter towels" },
+  { label: "🔧 Tools", query: "hammer screwdriver drill tape measure wrench" },
 ];
 
 type SortMode = "default" | "price-low" | "price-high" | "rating";
@@ -248,7 +261,7 @@ export default function GroceryStorePage() {
    // After each page finishes loading, auto-queue the next one (up to 10 rounds for more products)
   useEffect(() => {
     if (autoLoadTimer.current) clearTimeout(autoLoadTimer.current);
-    if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && autoLoadCount.current < 10) {
+    if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && autoLoadCount.current < 25) {
       autoLoadTimer.current = setTimeout(() => {
         autoLoadCount.current += 1;
         loadMore();
