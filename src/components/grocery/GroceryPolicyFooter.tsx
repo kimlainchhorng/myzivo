@@ -14,7 +14,7 @@ const TRUST_BADGES = [
 ];
 
 const POLICY_LINKS = [
-  { to: "/grocery/fees", icon: DollarSign, label: "Pricing & Fees", desc: `Delivery from ${formatFee(DELIVERY_BASE_FEE)} · Service ${SERVICE_FEE_PCT}% · Distance-based` },
+  { to: "/grocery/fees", icon: DollarSign, label: "Pricing & Fees", desc: `Delivery from ${formatFee(DELIVERY_MIN_FEE)} · Service ${SERVICE_FEE_PCT}% · All fees shown upfront` },
   { to: "/grocery/returns", icon: RotateCcw, label: "Returns & Refunds", desc: "Freshness guarantee · Report issues within 24h" },
   { to: "/grocery/terms", icon: FileText, label: "Terms of Service", desc: "How it works · Cancellation · Substitutions" },
 ];
