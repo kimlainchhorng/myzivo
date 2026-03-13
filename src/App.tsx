@@ -310,6 +310,12 @@ function BrandThemeApplicator() {
   return null;
 }
 
+/** Auto-tracks page views on route change */
+function PageViewTracker() {
+  usePageViewTracker();
+  return null;
+}
+
 const App = () => (
   <ErrorBoundary>
     <HelmetProvider>
