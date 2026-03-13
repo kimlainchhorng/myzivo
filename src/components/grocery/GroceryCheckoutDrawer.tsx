@@ -529,6 +529,18 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                       <span>Service fee</span>
                       <span className="text-foreground tabular-nums">${SERVICE_FEE.toFixed(2)}</span>
                     </div>
+                    {priorityFee > 0 && (
+                      <div className="flex justify-between text-[12px] text-muted-foreground">
+                        <span className="flex items-center gap-1.5">⚡ Priority</span>
+                        <span className="text-foreground tabular-nums">${priorityFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {scheduler.isGift && (
+                      <div className="flex justify-between text-[12px] text-pink-500">
+                        <span className="flex items-center gap-1.5">🎁 Gift order</span>
+                        <span className="font-medium">Free</span>
+                      </div>
+                    )}
                     {tip > 0 && (
                       <div className="flex justify-between text-[12px] text-muted-foreground">
                         <span className="flex items-center gap-1.5"><Heart className="h-3 w-3 text-pink-500" /> Driver tip</span>
