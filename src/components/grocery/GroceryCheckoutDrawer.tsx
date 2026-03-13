@@ -72,6 +72,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [phone, setPhone] = useState(savedProfile.phone);
   const [tip, setTip] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingCheckoutUrl, setPendingCheckoutUrl] = useState<string | null>(null);
   const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
   const [paymentOrderId, setPaymentOrderId] = useState<string | null>(null);
   const [showItems, setShowItems] = useState(false);
