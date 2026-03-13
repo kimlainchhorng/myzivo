@@ -261,6 +261,7 @@ export default function GroceryStorePage() {
   const handleSearch = (val: string) => {
     setQuery(val);
     setActiveFilter(null);
+    setBrowseQuery(null);
     autoLoadCount.current = 0;
     clearTimeout(debounceRef.current);
     if (val.trim().length < 2) {
