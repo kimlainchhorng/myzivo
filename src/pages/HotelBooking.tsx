@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import HotelResultsSkeleton from "@/components/hotel/HotelResultsSkeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -266,9 +267,12 @@ const HotelBooking = () => {
             className="container mx-auto px-4 py-8"
           >
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <Loader2 className="w-10 h-10 animate-spin text-amber-500 mb-4" />
-                <p className="text-muted-foreground">Searching hotels in {destination}...</p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">Searching hotels in {destination}...</span>
+                </div>
+                <HotelResultsSkeleton count={6} />
               </div>
             ) : results.length > 0 ? (
               <>
