@@ -67,10 +67,9 @@ Deno.serve(async (req) => {
       0
     );
 
-    // Markup: <$50 → 5%, ≥$50 → 3%
-    const subtotalDollars = subtotalCents / 100;
-    const markupPct = subtotalDollars < 50 ? 5 : 3;
-    const markupCents = Math.round(subtotalCents * markupPct / 100);
+    // Service fee: 5% of subtotal with min $2.50 and max $10.00
+    const rawServiceFee = Math.round(subtotalCents * SERVICE_FEE_PCT / 100);
+    const serviceFeeCents = Math.min(SERVICE_FEE_MAX, Math.max(SERVICE_FEE_MIN, rawServiceFee));
 
     const totalCents = subtotalCents + markupCents + deliveryFeeCents + SERVICE_FEE + tipCents;
 
