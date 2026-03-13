@@ -34,16 +34,16 @@ import { addRecentStore } from "@/components/grocery/GroceryRecentStores";
 import GroceryDeliveryBar from "@/components/grocery/GroceryDeliveryBar";
 
 const QUICK_FILTERS = [
-  { label: "🔥 Popular", query: "best sellers grocery" },
-  { label: "🥛 Dairy", query: "milk cheese eggs" },
+  { label: "🔥 Popular", query: "groceries" },
+  { label: "🥩 Meat", query: "meat" },
+  { label: "🥦 Produce", query: "vegetables" },
+  { label: "🥛 Dairy", query: "dairy" },
   { label: "🍞 Bakery", query: "bread" },
-  { label: "🥩 Meat", query: "chicken beef pork" },
-  { label: "🥦 Produce", query: "fresh fruit" },
-  { label: "🥤 Drinks", query: "water juice" },
-  { label: "🧹 Cleaning", query: "cleaning supplies" },
-  { label: "🍿 Snacks", query: "chips snacks" },
-  { label: "🧊 Frozen", query: "frozen meals" },
-  { label: "🍝 Pantry", query: "pasta rice cereal" },
+  { label: "🥤 Drinks", query: "beverages" },
+  { label: "🍿 Snacks", query: "snacks" },
+  { label: "🧊 Frozen", query: "frozen" },
+  { label: "🍝 Pantry", query: "pantry" },
+  { label: "🧹 Cleaning", query: "household" },
 ];
 
 type SortMode = "default" | "price-low" | "price-high" | "rating";
@@ -445,20 +445,19 @@ export default function GroceryStorePage() {
         </div>
       </div>
 
-      {/* Store Hero Card */}
-      <GroceryStoreHero store={storeCfg} liveEta={liveEta} isOpen={status.isOpen} />
-
-      {/* Promo Banner */}
-      <GroceryPromoBanner />
-
-      {/* Shopping List */}
-      <GroceryShoppingList
-        onSearchItem={(text) => {
-          autoLoadCount.current = 0;
-          setQuery(text);
-          search(text);
-        }}
-      />
+      {/* Category Browser - always visible on landing */}
+      {!isLoading && !query && !activeFilter && (
+        <GroceryCategoryBrowser
+          store={storeName}
+          onAdd={handleAdd}
+          cartProductIds={new Set(cart.items.map((c) => c.productId))}
+          onBrowse={(q) => {
+            autoLoadCount.current = 0;
+            setQuery("");
+            search(q);
+          }}
+        />
+      )}
 
       {/* Cart Drawer */}
       <AnimatePresence>
@@ -599,20 +598,6 @@ export default function GroceryStorePage() {
         />
       )}
 
-      {/* Category Browser - browse Meat, Produce, Dairy etc. */}
-      {!isLoading && !query && !activeFilter && (
-        <GroceryCategoryBrowser
-          store={storeName}
-          onAdd={handleAdd}
-          cartProductIds={new Set(cart.items.map((c) => c.productId))}
-          onBrowse={(q) => {
-            autoLoadCount.current = 0;
-            setQuery("");
-            search(q);
-          }}
-        />
-      )}
-
       {/* Today's Deals */}
       {!isLoading && products.length > 5 && (
         <GroceryDealsSection
@@ -680,6 +665,17 @@ export default function GroceryStorePage() {
           ))}
         </div>
       )}
+
+      {/* Store info & extras - below products */}
+      <GroceryStoreHero store={storeCfg} liveEta={liveEta} isOpen={status.isOpen} />
+      <GroceryPromoBanner />
+      <GroceryShoppingList
+        onSearchItem={(text) => {
+          autoLoadCount.current = 0;
+          setQuery(text);
+          search(text);
+        }}
+      />
 
       {/* Load more sentinel */}
       <div ref={sentinelRef} className="h-1" />
