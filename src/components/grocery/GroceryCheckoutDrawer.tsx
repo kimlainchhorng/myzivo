@@ -11,6 +11,8 @@ import {
   CreditCard, Sparkles, Timer, BadgeCheck, ArrowRight, ArrowLeft,
   MessageSquare, DoorOpen, Star, Gift, RefreshCw, AlertTriangle,
 } from "lucide-react";
+import { GroceryDeliveryScheduler, DEFAULT_SCHEDULER, getPriorityFee, type SchedulerState } from "@/components/grocery/GroceryDeliveryScheduler";
+import { addLoyaltyPoints } from "@/components/grocery/GroceryLoyaltyBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
