@@ -320,6 +320,7 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <AuthProvider>
+                  <ZivoPlusProvider>
                   <CustomerCityProvider>
                     <CurrencyProvider>
                       <UTMProvider>
