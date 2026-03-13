@@ -342,6 +342,15 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   ))}
                 </div>
 
+                {/* Delivery scheduling & gift options */}
+                <GroceryDeliveryScheduler
+                  state={scheduler}
+                  onChange={setScheduler}
+                  baseEta={liveEta}
+                />
+
+                <div className="mt-4" />
+
                 {/* Item preview */}
                 <div className="rounded-2xl bg-muted/15 border border-border/20 overflow-hidden mb-4">
                   <button
