@@ -324,35 +324,44 @@
   }
 
   .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    --_safe-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: var(--_safe-bottom) !important;
+  }
+
+  @media (max-width: 480px) {
+    @supports (-webkit-touch-callout: none) {
+      .safe-area-bottom {
+        --_safe-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+      }
+    }
   }
 
   .safe-area-bottom.pb-2,
   .safe-area-bottom.py-2,
   .safe-area-bottom.p-2 {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem) !important;
+    padding-bottom: calc(var(--_safe-bottom) + 0.5rem) !important;
   }
 
   .safe-area-bottom.pb-3,
   .safe-area-bottom.py-3,
   .safe-area-bottom.p-3 {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem) !important;
+    padding-bottom: calc(var(--_safe-bottom) + 0.75rem) !important;
   }
 
   .safe-area-bottom.pb-4,
   .safe-area-bottom.py-4,
   .safe-area-bottom.p-4 {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem) !important;
+    padding-bottom: calc(var(--_safe-bottom) + 1rem) !important;
   }
 
   .safe-area-bottom.pb-6,
   .safe-area-bottom.py-6,
   .safe-area-bottom.p-6 {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem) !important;
+    padding-bottom: calc(var(--_safe-bottom) + 1.5rem) !important;
   }
 
   .safe-area-bottom.pb-20 {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem) !important;
+    padding-bottom: calc(var(--_safe-bottom) + 5rem) !important;
   }
 
   /* Enhanced safe area with fallback for bottom nav */
