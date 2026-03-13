@@ -622,7 +622,10 @@ function CategorySection({ category, store, onAdd, cartProductIds, onBrowse, onS
                     transition={{ delay: i * 0.02, type: "spring", stiffness: 300, damping: 24 }}
                     className="snap-start shrink-0 w-[130px] rounded-2xl border border-border/30 bg-card overflow-hidden group hover:border-primary/20 hover:shadow-lg transition-all duration-300"
                   >
-                    <div className={`relative h-[90px] bg-gradient-to-br ${category.gradient} flex items-center justify-center p-2.5`}>
+                    <div
+                      className={`relative h-[90px] bg-gradient-to-br ${category.gradient} flex items-center justify-center p-2.5 cursor-pointer`}
+                      onClick={() => onSelect?.(p)}
+                    >
                       {p.image ? (
                         <img
                           src={p.image}
