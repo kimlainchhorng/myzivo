@@ -273,6 +273,7 @@ export default function GroceryStorePage() {
 
   const handleQuickFilter = (filter: typeof QUICK_FILTERS[0]) => {
     autoLoadCount.current = 0;
+    setBrowseQuery(null);
     if (activeFilter === filter.label) {
       setActiveFilter(null);
       setQuery("");
