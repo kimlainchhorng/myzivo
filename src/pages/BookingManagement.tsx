@@ -1,10 +1,12 @@
 /**
  * Booking Management Page
- * User-facing page to view and manage individual bookings
+ * Fetches real booking data from travel_orders table
  */
 
-import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -35,6 +37,7 @@ import {
   ExternalLink,
   Info,
   Shield,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -59,26 +62,6 @@ interface BookingDetails {
   baggagePolicy: string;
   refundEligibility: string;
 }
-
-// Mock booking data (would be fetched from API)
-const mockBooking: BookingDetails = {
-  bookingRef: "ZV-ABC123",
-  airlineCode: "DL1234",
-  status: "issued",
-  flightNumber: "DL1234",
-  airline: "Delta Air Lines",
-  origin: "New York (JFK)",
-  destination: "Los Angeles (LAX)",
-  departureDate: "February 10, 2024",
-  passengers: 2,
-  cabinClass: "Economy",
-  providerPhone: "1-800-221-1212",
-  providerEmail: "support@delta.com",
-  changePolicy: "Changes permitted for $75 fee up to 24 hours before departure",
-  cancelPolicy: "Refundable with $50 fee if cancelled 24+ hours before departure",
-  baggagePolicy: "1 carry-on bag included. Checked bags from $35",
-  refundEligibility: "Eligible for refund minus cancellation fee",
-};
 
 const statusConfig: Record<TicketStatus, { label: string; icon: typeof CheckCircle2; color: string; bg: string }> = {
   issued: {
@@ -109,7 +92,76 @@ const statusConfig: Record<TicketStatus, { label: string; icon: typeof CheckCirc
 
 const BookingManagement = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
-  const [booking] = useState<BookingDetails>(mockBooking);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const { data: booking, isLoading } = useQuery({
+    queryKey: ["booking-management", bookingId, user?.id],
+    queryFn: async (): Promise<BookingDetails | null> => {
+      if (!user?.id || !bookingId) return null;
+
+      const { data } = await supabase
+        .from("travel_orders")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("order_number", bookingId)
+        .maybeSingle();
+
+      if (!data) return null;
+
+      const meta = (data.metadata as any) || {};
+      const statusMap: Record<string, TicketStatus> = {
+        confirmed: "issued",
+        pending: "pending",
+        cancelled: "cancelled",
+      };
+
+      return {
+        bookingRef: data.order_number || bookingId,
+        airlineCode: meta.airline_code || meta.flightNumber || "—",
+        status: statusMap[data.status || "pending"] || "pending",
+        flightNumber: meta.flightNumber || "—",
+        airline: meta.airline || "Travel Partner",
+        origin: meta.origin || "—",
+        destination: meta.destination || "—",
+        departureDate: data.check_in ? new Date(data.check_in).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "—",
+        passengers: meta.passengers || 1,
+        cabinClass: meta.cabin_class || "Economy",
+        providerPhone: meta.provider_phone || "Contact via partner website",
+        providerEmail: meta.provider_email || "support@partner.com",
+        changePolicy: meta.change_policy || "Please check the partner's website for change and modification policies.",
+        cancelPolicy: meta.cancel_policy || "Please check the partner's website for cancellation policies.",
+        baggagePolicy: meta.baggage_policy || "Please check the partner's website for baggage allowance details.",
+        refundEligibility: meta.refund_policy || "Refund eligibility is governed by the travel partner's rules.",
+      };
+    },
+    enabled: !!user?.id && !!bookingId,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-20">
+          <div className="container mx-auto px-4 max-w-3xl text-center">
+            <Info className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h1 className="text-2xl font-bold mb-2">Booking Not Found</h1>
+            <p className="text-muted-foreground mb-6">We couldn't find a booking with reference "{bookingId}".</p>
+            <Button onClick={() => navigate("/my-trips")}>View My Trips</Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const status = statusConfig[booking.status];
   const StatusIcon = status.icon;
