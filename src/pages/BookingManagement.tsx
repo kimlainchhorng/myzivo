@@ -100,16 +100,20 @@ const BookingManagement = () => {
     queryFn: async (): Promise<BookingDetails | null> => {
       if (!user?.id || !bookingId) return null;
 
-      const { data } = await supabase
+      // Fetch order + items
+      const { data: order } = await supabase
         .from("travel_orders")
-        .select("*")
+        .select("*, travel_order_items(*)")
         .eq("user_id", user.id)
         .eq("order_number", bookingId)
         .maybeSingle();
 
-      if (!data) return null;
+      if (!order) return null;
 
-      const meta = (data.metadata as any) || {};
+      const items = (order as any).travel_order_items || [];
+      const flightItem = items.find((i: any) => i.type === "flight") || items[0];
+      const meta = (flightItem?.meta as any) || {};
+
       const statusMap: Record<string, TicketStatus> = {
         confirmed: "issued",
         pending: "pending",
@@ -117,20 +121,22 @@ const BookingManagement = () => {
       };
 
       return {
-        bookingRef: data.order_number || bookingId,
+        bookingRef: order.order_number || bookingId,
         airlineCode: meta.airline_code || meta.flightNumber || "—",
-        status: statusMap[data.status || "pending"] || "pending",
+        status: statusMap[order.status || "pending"] || "pending",
         flightNumber: meta.flightNumber || "—",
-        airline: meta.airline || "Travel Partner",
-        origin: meta.origin || "—",
-        destination: meta.destination || "—",
-        departureDate: data.check_in ? new Date(data.check_in).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "—",
-        passengers: meta.passengers || 1,
+        airline: meta.airline || order.provider || "Travel Partner",
+        origin: meta.origin || flightItem?.title?.split("→")?.[0]?.trim() || "—",
+        destination: meta.destination || flightItem?.title?.split("→")?.[1]?.trim() || "—",
+        departureDate: flightItem?.start_date
+          ? new Date(flightItem.start_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+          : "—",
+        passengers: flightItem?.adults || 1,
         cabinClass: meta.cabin_class || "Economy",
         providerPhone: meta.provider_phone || "Contact via partner website",
         providerEmail: meta.provider_email || "support@partner.com",
-        changePolicy: meta.change_policy || "Please check the partner's website for change and modification policies.",
-        cancelPolicy: meta.cancel_policy || "Please check the partner's website for cancellation policies.",
+        changePolicy: flightItem?.cancellation_policy || "Please check the partner's website for change and modification policies.",
+        cancelPolicy: flightItem?.cancellation_policy || "Please check the partner's website for cancellation policies.",
         baggagePolicy: meta.baggage_policy || "Please check the partner's website for baggage allowance details.",
         refundEligibility: meta.refund_policy || "Refund eligibility is governed by the travel partner's rules.",
       };
