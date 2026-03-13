@@ -22,7 +22,7 @@ import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { GroceryPromoInput } from "@/components/grocery/GroceryPromoBanner";
 import { getLiveEta } from "@/utils/storeStatus";
 import { getStoreConfig, type StoreName, GROCERY_STORES } from "@/config/groceryStores";
-import { DELIVERY_FEE, SERVICE_FEE, TIP_OPTIONS } from "@/config/groceryPricing";
+import { DELIVERY_FEE_FALLBACK, SERVICE_FEE, TIP_OPTIONS, calcMarkup, getMarkupPct, calcDeliveryFee } from "@/config/groceryPricing";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -70,15 +70,27 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [subPref, setSubPref] = useState<SubstitutionPref>(savedProfile.subPref);
   const [scheduler, setScheduler] = useState<SchedulerState>(DEFAULT_SCHEDULER);
 
-  const priorityFee = getPriorityFee(scheduler.speed);
-  const grandTotal = Math.max(0, total + DELIVERY_FEE + SERVICE_FEE + tip + priorityFee - promoDiscount);
-  const itemCount = items.reduce((s, i) => s + i.quantity, 0);
-  const isValid = address.trim().length > 0 && name.trim().length > 0;
-
   // Live ETA
   const storeName = items[0]?.store || "Walmart";
   const storeCfg = GROCERY_STORES.find(s => s.name.toLowerCase() === storeName.toLowerCase());
   const [liveEta, setLiveEta] = useState(storeCfg?.deliveryMin ?? 35);
+  useEffect(() => {
+    const compute = () => setLiveEta(getLiveEta(storeCfg?.deliveryMin ?? 35));
+    compute();
+    const interval = setInterval(compute, 30_000);
+    return () => clearInterval(interval);
+  }, [storeCfg]);
+
+  const priorityFee = getPriorityFee(scheduler.speed);
+  // Markup: <$50 → 5%, ≥$50 → 3%
+  const markup = calcMarkup(total);
+  const markupPct = getMarkupPct(total);
+  // Distance-based delivery fee (estimate: ~3mi, ETA-based minutes)
+  const estimatedMiles = 3;
+  const deliveryFee = calcDeliveryFee(estimatedMiles, liveEta);
+  const grandTotal = Math.max(0, total + markup + deliveryFee + SERVICE_FEE + tip + priorityFee - promoDiscount);
+  const itemCount = items.reduce((s, i) => s + i.quantity, 0);
+  const isValid = address.trim().length > 0 && name.trim().length > 0;
   useEffect(() => {
     const compute = () => setLiveEta(getLiveEta(storeCfg?.deliveryMin ?? 35));
     compute();
@@ -463,9 +475,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                       </motion.span>
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10">
-                    <Sparkles className="h-2.5 w-2.5 text-emerald-500" />
-                    <span className="text-[9px] font-bold text-emerald-600">No markup</span>
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10">
+                    <Sparkles className="h-2.5 w-2.5 text-primary" />
+                    <span className="text-[9px] font-bold text-primary">{markupPct}% fee</span>
                   </div>
                 </motion.div>
 
@@ -522,8 +534,12 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                       <span className="text-foreground tabular-nums">${total.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] text-muted-foreground">
-                      <span className="flex items-center gap-1.5"><Truck className="h-3 w-3" /> Delivery</span>
-                      <span className="text-foreground tabular-nums">${DELIVERY_FEE.toFixed(2)}</span>
+                      <span className="flex items-center gap-1.5"><Truck className="h-3 w-3" /> Delivery (~{estimatedMiles}mi)</span>
+                      <span className="text-foreground tabular-nums">${deliveryFee.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-[12px] text-muted-foreground">
+                      <span className="flex items-center gap-1.5">📦 Platform fee ({markupPct}%)</span>
+                      <span className="text-foreground tabular-nums">${markup.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] text-muted-foreground">
                       <span>Service fee</span>

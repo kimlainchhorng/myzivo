@@ -5,14 +5,14 @@ import { ArrowLeft, DollarSign, Truck, Sparkles, Heart, ShieldCheck, Tag, Percen
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { DELIVERY_FEE, SERVICE_FEE, TIP_OPTIONS, formatFee } from "@/config/groceryPricing";
+import { DELIVERY_BASE_FEE, DELIVERY_PER_MILE, DELIVERY_PER_MIN, DELIVERY_MIN_FEE, DELIVERY_MAX_FEE, SERVICE_FEE, TIP_OPTIONS, formatFee, calcMarkup, getMarkupPct, MARKUP_THRESHOLD } from "@/config/groceryPricing";
 
 const FEE_BREAKDOWN = [
   {
     icon: Truck,
     label: "Delivery Fee",
-    amount: formatFee(DELIVERY_FEE),
-    description: "Covers driver compensation for shopping your order, vehicle costs, and delivery logistics. This fee goes directly toward ensuring your driver is fairly paid.",
+    amount: `From ${formatFee(DELIVERY_MIN_FEE)}`,
+    description: `Distance-based pricing: ${formatFee(DELIVERY_BASE_FEE)} base + ${formatFee(DELIVERY_PER_MILE)}/mile + ${formatFee(DELIVERY_PER_MIN)}/min. Covers driver compensation, vehicle costs, and delivery logistics. Capped at ${formatFee(DELIVERY_MAX_FEE)}.`,
     note: "May be reduced with ZIVO+ membership or promotional offers.",
   },
   {
@@ -29,10 +29,17 @@ const FEE_BREAKDOWN = [
     description: `Your tip goes 100% to your driver — ZIVO never takes a cut. Suggested amounts: ${TIP_OPTIONS.filter(t => t > 0).map(t => `$${t}`).join(', ')}. You can also enter a custom amount.`,
     note: "Tips are optional but appreciated. Your driver shops, waits in line, and delivers to your door.",
   },
+  {
+    icon: Percent,
+    label: "Platform Fee",
+    amount: "3–5%",
+    description: `A small percentage is added to your subtotal: 5% on orders under $${MARKUP_THRESHOLD}, 3% on orders $${MARKUP_THRESHOLD}+. This helps sustain the marketplace.`,
+    note: "Clearly shown in your order breakdown before checkout.",
+  },
 ];
 
 const PRICE_PROMISES = [
-  { icon: Tag, title: "No Hidden Markups", desc: "Product prices match what the store charges. We don't inflate item prices — you pay the real shelf price." },
+  { icon: Tag, title: "Transparent Pricing", desc: "All fees — platform markup, delivery, and service — are shown upfront before you place your order." },
   { icon: ShieldCheck, title: "Price Transparency", desc: "All fees are shown upfront before you place your order. No surprise charges." },
   { icon: Percent, title: "Promo Codes Welcome", desc: "Apply promo codes at checkout to reduce delivery or service fees. Check your email for exclusive offers." },
   { icon: Gift, title: "Referral Credits", desc: "Refer friends and earn credits toward free deliveries. Both you and your friend get rewarded." },
@@ -48,8 +55,10 @@ const CANCEL_FEES = [
 export default function GroceryFees() {
   const navigate = useNavigate();
   const exampleSubtotal = 45.00;
+  const exampleMarkup = calcMarkup(exampleSubtotal);
+  const exampleDelivery = 5.99;
   const exampleTip = 3;
-  const exampleTotal = exampleSubtotal + DELIVERY_FEE + SERVICE_FEE + exampleTip;
+  const exampleTotal = exampleSubtotal + exampleMarkup + exampleDelivery + SERVICE_FEE + exampleTip;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -110,7 +119,8 @@ export default function GroceryFees() {
           <div className="p-4 space-y-2.5">
             {[
               { label: "Item subtotal (12 items)", value: `$${exampleSubtotal.toFixed(2)}` },
-              { label: "Delivery fee", value: formatFee(DELIVERY_FEE) },
+              { label: `Platform fee (${getMarkupPct(exampleSubtotal)}%)`, value: `$${exampleMarkup.toFixed(2)}` },
+              { label: "Delivery fee (3.2 mi)", value: `$${exampleDelivery.toFixed(2)}` },
               { label: "Service fee", value: formatFee(SERVICE_FEE) },
               { label: "Driver tip", value: `$${exampleTip.toFixed(2)}` },
             ].map((row) => (

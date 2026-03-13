@@ -44,16 +44,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    const DELIVERY_FEE = 599; // cents
+    const DELIVERY_BASE = 299; // cents
+    const DELIVERY_PER_MILE = 60; // cents
+    const DELIVERY_PER_MIN = 10; // cents
+    const DELIVERY_MIN = 399; // cents
+    const DELIVERY_MAX = 1499; // cents
     const SERVICE_FEE = 199; // cents
     const tipCents = Math.round((tip || 0) * 100);
+
+    // Estimate distance (~3 miles, ~30 min as fallback)
+    const estMiles = 3;
+    const estMinutes = 30;
+    const rawDelivery = DELIVERY_BASE + estMiles * DELIVERY_PER_MILE + estMinutes * DELIVERY_PER_MIN;
+    const deliveryFeeCents = Math.min(DELIVERY_MAX, Math.max(DELIVERY_MIN, rawDelivery));
 
     // Calculate subtotal in cents
     const subtotalCents = items.reduce(
       (sum: number, item: any) => sum + Math.round(item.price * 100) * item.quantity,
       0
     );
-    const totalCents = subtotalCents + DELIVERY_FEE + SERVICE_FEE + tipCents;
+
+    // Markup: <$50 → 5%, ≥$50 → 3%
+    const subtotalDollars = subtotalCents / 100;
+    const markupPct = subtotalDollars < 50 ? 5 : 3;
+    const markupCents = Math.round(subtotalCents * markupPct / 100);
+
+    const totalCents = subtotalCents + markupCents + deliveryFeeCents + SERVICE_FEE + tipCents;
 
     // Save order to DB first
     const admin = createClient(supabaseUrl, serviceKey);
@@ -65,8 +81,8 @@ Deno.serve(async (req) => {
         order_type: "shopping_delivery",
         status: "pending_payment",
         items: items,
-        total_amount: subtotalCents / 100,
-        delivery_fee: DELIVERY_FEE / 100,
+        total_amount: (subtotalCents + markupCents) / 100,
+        delivery_fee: deliveryFeeCents / 100,
         delivery_address,
         customer_name,
         customer_phone: customer_phone || null,
@@ -96,12 +112,24 @@ Deno.serve(async (req) => {
       quantity: item.quantity,
     }));
 
+    // Add platform fee (markup)
+    if (markupCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: { name: `Platform Fee (${markupPct}%)` },
+          unit_amount: markupCents,
+        },
+        quantity: 1,
+      });
+    }
+
     // Add delivery fee
     lineItems.push({
       price_data: {
         currency: "usd",
         product_data: { name: "Delivery Fee" },
-        unit_amount: DELIVERY_FEE,
+        unit_amount: deliveryFeeCents,
       },
       quantity: 1,
     });
