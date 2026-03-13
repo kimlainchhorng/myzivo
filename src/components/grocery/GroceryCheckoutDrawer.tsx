@@ -3,7 +3,7 @@
  * 2-step: Delivery Details → Review & Pay
  * Real-time ETA, substitution preferences, persistent profile
  */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin, Loader2, X, ShoppingCart, Truck, Shield, User, Phone,
