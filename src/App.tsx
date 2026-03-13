@@ -500,7 +500,7 @@ const App = () => (
                 <Route path="/security" element={<Security />} />
                 <Route path="/ai-trip-planner" element={<AITripPlanner />} />
                 <Route path="/multi-city-builder" element={<MultiCityBuilder />} />
-                <Route path="/zivo-plus" element={<ZivoPlus />} />
+                {/* /zivo-plus defined above */}
                 <Route path="/vision" element={<Vision />} />
                 <Route path="/press" element={<Press />} />
                 <Route path="/for-customers" element={<ForCustomers />} />
