@@ -61,7 +61,14 @@ export function useStoreSearch(store: StoreName) {
           return [...prev, ...newItems];
         });
       } else {
-        setProducts(mapped);
+        // Deduplicate even the first page
+        const seen = new Set<string>();
+        const deduped = mapped.filter((p) => {
+          if (seen.has(p.productId)) return false;
+          seen.add(p.productId);
+          return true;
+        });
+        setProducts(deduped);
       }
 
       setHasMore(mapped.length >= 10);
