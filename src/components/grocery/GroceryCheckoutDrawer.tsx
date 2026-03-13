@@ -277,7 +277,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
               {step === 2 && (
                 <motion.button
                   whileTap={{ scale: 0.85 }}
-                  onClick={() => setStep(1)}
+                  onClick={handleBackToDetails}
                   className="p-1.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
