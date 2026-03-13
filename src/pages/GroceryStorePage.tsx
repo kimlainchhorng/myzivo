@@ -633,10 +633,29 @@ export default function GroceryStorePage() {
         </motion.div>
       )}
 
+      {/* Active order tracker */}
+      {!isLoading && (
+        <GroceryOrderTracker store={storeName} />
+      )}
+
+      {/* Loyalty banner */}
+      {!isLoading && (
+        <GroceryLoyaltyBanner cartTotal={cart.total > 0 ? cart.total : undefined} />
+      )}
+
       {/* Order Again */}
       {!isLoading && !query && (
         <GroceryOrderAgain
           store={storeName}
+          onAdd={handleAdd}
+          cartProductIds={new Set(cart.items.map((c) => c.productId))}
+        />
+      )}
+
+      {/* Member Deals */}
+      {!isLoading && products.length > 8 && (
+        <GroceryMemberDeals
+          products={products}
           onAdd={handleAdd}
           cartProductIds={new Set(cart.items.map((c) => c.productId))}
         />
