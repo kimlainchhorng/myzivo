@@ -427,8 +427,11 @@ export default function GroceryStorePage() {
           </div>
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={() => setShowCart(!showCart)}
-            className="relative p-3 -mr-1 rounded-2xl bg-muted/30 hover:bg-muted/50 active:bg-muted/70 transition-colors duration-200 min-w-[48px] min-h-[48px] flex items-center justify-center z-10 touch-manipulation cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowCart((prev) => !prev);
+            }}
+            className="relative p-3 -mr-1 rounded-2xl bg-muted/30 hover:bg-muted/50 active:bg-muted/70 transition-colors duration-200 min-w-[48px] min-h-[48px] flex items-center justify-center z-40 touch-manipulation cursor-pointer"
             aria-label="Shopping cart"
             style={{ WebkitTapHighlightColor: "transparent" }}
           >
@@ -522,7 +525,7 @@ export default function GroceryStorePage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.97 }}
             transition={{ type: "spring" as const, stiffness: 300, damping: 25 }}
-            className="sticky top-[200px] z-20 mx-4 mb-4 bg-card/95 backdrop-blur-xl rounded-[24px] border border-border/40 shadow-2xl overflow-hidden"
+            className="sticky top-[200px] z-40 mx-4 mb-4 bg-card/95 backdrop-blur-xl rounded-[24px] border border-border/40 shadow-2xl overflow-hidden"
           >
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
@@ -769,7 +772,7 @@ export default function GroceryStorePage() {
 
       {/* Floating cart bar */}
       <AnimatePresence>
-        {cart.itemCount > 0 && !showCart && !showCheckout && (
+        {cart.itemCount > 0 && !showCheckout && (
           <motion.div
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
