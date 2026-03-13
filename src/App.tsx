@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect } from "react";
+import { usePageViewTracker } from "@/hooks/usePageViewTracker";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -309,6 +310,12 @@ function BrandThemeApplicator() {
   return null;
 }
 
+/** Auto-tracks page views on route change */
+function PageViewTracker() {
+  usePageViewTracker();
+  return null;
+}
+
 const App = () => (
   <ErrorBoundary>
     <HelmetProvider>
@@ -321,6 +328,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
+                <PageViewTracker />
                 <AuthProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
