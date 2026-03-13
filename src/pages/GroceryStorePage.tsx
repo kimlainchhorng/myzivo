@@ -477,6 +477,7 @@ export default function GroceryStorePage() {
             setQuery("");
             search(q);
           }}
+          onSelect={setSelectedProduct}
         />
       )}
 
