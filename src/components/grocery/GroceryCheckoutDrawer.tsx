@@ -806,7 +806,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
             </motion.div>
           ) : paymentClientSecret ? (
             <div className="flex items-center justify-center text-[10px] text-muted-foreground py-1">
-              Enter your card details above to complete checkout.
+              Enter card details or Apple Pay above to complete checkout.
             </div>
           ) : (
             <motion.div whileTap={!isSubmitting ? { scale: 0.97 } : {}}>
