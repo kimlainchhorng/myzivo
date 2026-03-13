@@ -804,22 +804,21 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </motion.div>
+          ) : paymentClientSecret ? (
+            <div className="flex items-center justify-center text-[10px] text-muted-foreground py-1">
+              Enter your card details above to complete checkout.
+            </div>
           ) : (
             <motion.div whileTap={!isSubmitting ? { scale: 0.97 } : {}}>
               <Button
                 className="w-full h-[50px] rounded-2xl text-[14px] font-bold shadow-lg shadow-primary/20 gap-2"
                 disabled={isSubmitting}
-                onClick={pendingCheckoutUrl ? handleContinueToStripe : handleStripeCheckout}
+                onClick={handleCreateInlinePayment}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4.5 w-4.5 animate-spin" />
-                    Redirecting to payment…
-                  </>
-                ) : pendingCheckoutUrl ? (
-                  <>
-                    <Lock className="h-4 w-4" />
-                    Continue to Stripe Checkout
+                    Preparing secure payment…
                   </>
                 ) : (
                   <>
