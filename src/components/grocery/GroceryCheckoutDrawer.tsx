@@ -700,76 +700,92 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   </div>
                 </div>
 
-                {/* Tip selection */}
-                <div className="mb-4">
-                  <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
-                    <Heart className="h-3.5 w-3.5 text-pink-500" />
-                    Driver Tip
-                  </h3>
-                  <div className="flex gap-2">
-                    {TIP_OPTIONS.map((amount) => (
-                      <motion.button
-                        key={amount}
-                        whileTap={{ scale: 0.92 }}
-                        onClick={() => setTip(amount)}
-                        className={`flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200 ${
-                          tip === amount
-                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
-                            : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
-                        }`}
-                      >
-                        {amount === 0 ? "None" : `$${amount}`}
-                      </motion.button>
-                    ))}
+                {paymentClientSecret ? (
+                  <div className="rounded-2xl bg-muted/10 border border-border/20 p-3.5 mb-3">
+                    <p className="text-[10px] text-muted-foreground mb-3 text-center">
+                      Complete card payment below without leaving this checkout.
+                    </p>
+                    <GroceryInlinePaymentForm
+                      clientSecret={paymentClientSecret}
+                      totalCents={paymentTotalCents ?? Math.round(grandTotal * 100)}
+                      onCancel={resetInlinePayment}
+                      onSuccess={handleInlinePaymentSuccess}
+                    />
                   </div>
-                </div>
-
-                {/* Promo code */}
-                <div className="mb-4">
-                  <GroceryPromoInput
-                    onApply={(code, discount) => {
-                      setPromoCode(code);
-                      setPromoDiscount(discount);
-                    }}
-                  />
-                </div>
-
-                {/* Trust badges */}
-                <div className="flex items-center justify-center gap-4 py-3 mb-3">
-                  {[
-                    { icon: Shield, label: "Protected" },
-                    { icon: Lock, label: "Encrypted" },
-                    { icon: BadgeCheck, label: "Verified" },
-                  ].map(({ icon: Icon, label }) => (
-                    <div key={label} className="flex items-center gap-1.5">
-                      <Icon className="h-3 w-3 text-primary/70" />
-                      <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+                ) : (
+                  <>
+                    {/* Tip selection */}
+                    <div className="mb-4">
+                      <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
+                        <Heart className="h-3.5 w-3.5 text-pink-500" />
+                        Driver Tip
+                      </h3>
+                      <div className="flex gap-2">
+                        {TIP_OPTIONS.map((amount) => (
+                          <motion.button
+                            key={amount}
+                            whileTap={{ scale: 0.92 }}
+                            onClick={() => setTip(amount)}
+                            className={`flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200 ${
+                              tip === amount
+                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                            }`}
+                          >
+                            {amount === 0 ? "None" : `$${amount}`}
+                          </motion.button>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
 
-                <p className="text-[9px] text-muted-foreground/60 text-center mb-3 leading-relaxed px-4">
-                  You'll be redirected to Stripe for secure payment. A verified ZIVO driver will shop your items and deliver to your door.
-                </p>
+                    {/* Promo code */}
+                    <div className="mb-4">
+                      <GroceryPromoInput
+                        onApply={(code, discount) => {
+                          setPromoCode(code);
+                          setPromoDiscount(discount);
+                        }}
+                      />
+                    </div>
 
-                {/* Policy disclosures */}
-                <div className="space-y-1.5 mb-3 px-2">
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
-                    <RefreshCw className="h-3.5 w-3.5 text-primary/60 shrink-0" />
-                    <p className="text-[9px] text-muted-foreground leading-relaxed">
-                      <span className="font-semibold text-foreground/70">Freshness Guarantee:</span> Report quality issues within 24h for a full refund. <a href="/grocery/returns" className="text-primary/70 underline">Returns policy</a>
+                    {/* Trust badges */}
+                    <div className="flex items-center justify-center gap-4 py-3 mb-3">
+                      {[
+                        { icon: Shield, label: "Protected" },
+                        { icon: Lock, label: "Encrypted" },
+                        { icon: BadgeCheck, label: "Verified" },
+                      ].map(({ icon: Icon, label }) => (
+                        <div key={label} className="flex items-center gap-1.5">
+                          <Icon className="h-3 w-3 text-primary/70" />
+                          <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <p className="text-[9px] text-muted-foreground/60 text-center mb-3 leading-relaxed px-4">
+                      Your card is processed inline by Stripe. A verified ZIVO driver will shop your items and deliver to your door.
                     </p>
-                  </div>
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
-                    <AlertTriangle className="h-3.5 w-3.5 text-primary/60 shrink-0" />
-                    <p className="text-[9px] text-muted-foreground leading-relaxed">
-                      <span className="font-semibold text-foreground/70">Cancellation:</span> Free before driver starts · Fees apply after. <a href="/grocery/fees" className="text-primary/70 underline">View fees</a>
-                    </p>
-                  </div>
-                  <p className="text-[8px] text-muted-foreground/50 text-center px-2">
-                    By placing your order, you agree to our <a href="/grocery/terms" className="text-primary/50 underline">Terms</a> and <a href="/privacy" className="text-primary/50 underline">Privacy Policy</a>
-                  </p>
-                </div>
+
+                    {/* Policy disclosures */}
+                    <div className="space-y-1.5 mb-3 px-2">
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
+                        <RefreshCw className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                        <p className="text-[9px] text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground/70">Freshness Guarantee:</span> Report quality issues within 24h for a full refund. <a href="/grocery/returns" className="text-primary/70 underline">Returns policy</a>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
+                        <AlertTriangle className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                        <p className="text-[9px] text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground/70">Cancellation:</span> Free before driver starts · Fees apply after. <a href="/grocery/fees" className="text-primary/70 underline">View fees</a>
+                        </p>
+                      </div>
+                      <p className="text-[8px] text-muted-foreground/50 text-center px-2">
+                        By placing your order, you agree to our <a href="/grocery/terms" className="text-primary/50 underline">Terms</a> and <a href="/privacy" className="text-primary/50 underline">Privacy Policy</a>
+                      </p>
+                    </div>
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
