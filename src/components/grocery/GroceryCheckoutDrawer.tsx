@@ -3,7 +3,7 @@
  * 2-step: Delivery Details → Review & Pay
  * Real-time ETA, substitution preferences, persistent profile
  */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin, Loader2, X, ShoppingCart, Truck, Shield, User, Phone,
@@ -57,6 +57,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const savedProfile = getSavedProfile();
 
   const [address, setAddress] = useState(savedAddr?.address || "");
+  const [addressSuggestions, setAddressSuggestions] = useState<{ display: string; mainText: string; placeId: string }[]>([]);
+  const [showAddrSuggestions, setShowAddrSuggestions] = useState(false);
+  const [isSearchingAddr, setIsSearchingAddr] = useState(false);
+  const addrDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const [name, setName] = useState(savedProfile.name);
   const [phone, setPhone] = useState(savedProfile.phone);
   const [tip, setTip] = useState(3);
@@ -99,6 +103,46 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
     const interval = setInterval(compute, 30_000);
     return () => clearInterval(interval);
   }, [storeCfg]);
+
+  // Cleanup address debounce
+  useEffect(() => () => { if (addrDebounceRef.current) clearTimeout(addrDebounceRef.current); }, []);
+
+  // Address autocomplete via Google Maps edge function
+  const searchAddressAutocomplete = useCallback((query: string) => {
+    setAddress(query);
+    if (addrDebounceRef.current) clearTimeout(addrDebounceRef.current);
+    if (query.trim().length < 3) {
+      setAddressSuggestions([]);
+      setShowAddrSuggestions(false);
+      return;
+    }
+    addrDebounceRef.current = setTimeout(async () => {
+      setIsSearchingAddr(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("maps-autocomplete", {
+          body: { input: query.trim() },
+        });
+        if (error) throw error;
+        const mapped = (data?.suggestions || []).map((s: any) => ({
+          display: s.description || "",
+          mainText: s.main_text || s.description?.split(",")[0] || "",
+          placeId: s.place_id || "",
+        }));
+        setAddressSuggestions(mapped);
+        setShowAddrSuggestions(mapped.length > 0);
+      } catch {
+        setAddressSuggestions([]);
+      } finally {
+        setIsSearchingAddr(false);
+      }
+    }, 400);
+  }, []);
+
+  const selectAddressSuggestion = useCallback((s: { display: string }) => {
+    setAddress(s.display);
+    setAddressSuggestions([]);
+    setShowAddrSuggestions(false);
+  }, []);
 
   // Persist profile
   useEffect(() => {
@@ -293,13 +337,44 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   Delivery Address
                 </h3>
                 <div className="relative mb-4">
-                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
+                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 z-10" />
                   <Input
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Delivery address *"
+                    onChange={(e) => searchAddressAutocomplete(e.target.value)}
+                    onFocus={() => addressSuggestions.length > 0 && setShowAddrSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowAddrSuggestions(false), 200)}
+                    placeholder="Search delivery address *"
                     className="pl-10 rounded-xl h-11 bg-muted/15 border-border/15 text-[13px] focus:bg-muted/25 transition-colors"
                   />
+                  {isSearchingAddr && (
+                    <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-primary animate-spin" />
+                  )}
+                  {/* Autocomplete suggestions */}
+                  <AnimatePresence>
+                    {showAddrSuggestions && addressSuggestions.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        className="absolute left-0 right-0 top-full mt-1 z-50 bg-background border border-border/30 rounded-xl shadow-xl overflow-hidden max-h-[180px] overflow-y-auto"
+                      >
+                        {addressSuggestions.map((s, i) => (
+                          <button
+                            key={i}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => selectAddressSuggestion(s)}
+                            className="w-full flex items-start gap-2.5 px-3 py-2.5 hover:bg-muted/30 transition-colors text-left border-b border-border/10 last:border-0"
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-semibold text-foreground truncate">{s.mainText}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{s.display}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Delivery preferences */}
