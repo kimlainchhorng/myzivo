@@ -31,7 +31,7 @@ const ESCALATION_CATEGORIES = [
   { value: "other", label: "Other" },
 ];
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-support-chat`;
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL || "https://slirphzzwcogdbkeicff.supabase.co"}/functions/v1/ai-support-chat`;
 
 const LiveChatWidget = () => {
   const location = useLocation();
