@@ -640,7 +640,7 @@ function CategorySection({ category, store, onAdd, cartProductIds, onBrowse, onS
                       <span className={`absolute top-1.5 left-1.5 h-1.5 w-1.5 rounded-full ${p.inStock ? "bg-emerald-500" : "bg-destructive"}`} />
                     </div>
                     <div className="p-2 space-y-1">
-                      <p className="text-[10px] font-semibold line-clamp-2 text-foreground/90 leading-tight min-h-[24px]">{p.name}</p>
+                      <p className="text-[10px] font-semibold line-clamp-2 text-foreground/90 leading-tight min-h-[24px] cursor-pointer hover:text-primary transition-colors" onClick={() => onSelect?.(p)}>{p.name}</p>
                       <div className="flex items-center justify-between">
                         <span className="text-[13px] font-extrabold text-foreground">${p.price.toFixed(2)}</span>
                         <motion.button
