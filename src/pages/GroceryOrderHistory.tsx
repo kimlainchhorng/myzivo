@@ -329,6 +329,17 @@ function OrderCard({ order, onReorder, onRate }: {
 
               {/* Actions row */}
               <div className="flex gap-2 pt-1">
+                {/* Track active order */}
+                {isActive && (
+                  <Button
+                    size="sm"
+                    className="flex-1 rounded-xl text-[11px] font-bold gap-1.5 h-9"
+                    onClick={() => onTrack(order.id)}
+                  >
+                    <Navigation className="h-3 w-3" />
+                    Track Order
+                  </Button>
+                )}
                 {/* Reorder */}
                 {order.status === "delivered" && order.items?.length > 0 && (
                   <Button
