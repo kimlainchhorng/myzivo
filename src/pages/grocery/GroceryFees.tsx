@@ -18,9 +18,9 @@ const FEE_BREAKDOWN = [
   {
     icon: Sparkles,
     label: "Service Fee",
-    amount: formatFee(SERVICE_FEE),
-    description: "Supports the ZIVO platform — including real-time inventory search, order management, customer support, and payment processing.",
-    note: "This fee helps us operate and improve the service for you.",
+    amount: `${SERVICE_FEE_PCT}%`,
+    description: `Service fee applied to every order: ${SERVICE_FEE_PCT}% of order subtotal, with a minimum of ${formatFee(SERVICE_FEE_MIN)} and maximum of ${formatFee(SERVICE_FEE_MAX)}. This supports platform operations, customer support, and payment processing.`,
+    note: "Helps us maintain and improve the service.",
   },
   {
     icon: Heart,
