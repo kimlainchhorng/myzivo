@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { User, Session, Provider } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { setupActivityTracking, clearSessionArtifacts } from "@/lib/security/sessionSecurity";
+import { Capacitor } from "@capacitor/core";
 
 type AuthContextType = {
   user: User | null;
@@ -115,30 +116,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithProvider = async (provider: Provider) => {
     try {
-      // IMPORTANT:
-      // - If a user triggers OAuth from an unconfigured domain (e.g., hizivo.com before DNS/custom domain),
-      //   redirecting back there will strand them on an unreachable/invalid callback.
-      // - Lovable previews may run on different hostnames (lovable.app, lovableproject.com, myzivo.lovable.app).
-      //   We should redirect back to the current safe origin whenever possible.
+      const isNative = Capacitor.isNativePlatform();
 
       const SAFE_OAUTH_ORIGINS = new Set<string>([
-        // Preview
         "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app",
-        // Preview (alternate host)
         "https://72f99340-9c9f-453a-acff-60e5a9b25774.lovableproject.com",
-        // Published
         "https://myzivo.lovable.app",
-        // Production custom domain
         "https://hizivo.com",
         "https://www.hizivo.com",
-        // Local dev
         "http://localhost:5173",
         "http://localhost:3000",
         "http://localhost:8080",
       ]);
 
       const currentOrigin = window.location.origin;
-      const fallbackOrigin = "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app";
+      // On native, redirect to published URL (the Capacitor WebView will handle it)
+      const fallbackOrigin = isNative
+        ? "https://myzivo.lovable.app"
+        : "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app";
 
       const redirectOrigin = SAFE_OAUTH_ORIGINS.has(currentOrigin) ? currentOrigin : fallbackOrigin;
       const redirectTo = `${redirectOrigin}/auth-callback`;
@@ -148,7 +143,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         options: {
           redirectTo,
           queryParams: {
-            prompt: "select_account", // Force account chooser - never auto-sign-in
+            prompt: "select_account",
           },
         },
       });
