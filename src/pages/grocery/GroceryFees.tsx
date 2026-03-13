@@ -77,9 +77,9 @@ export default function GroceryFees() {
         {/* Hero */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="p-5 rounded-2xl bg-gradient-to-br from-primary/5 to-primary/[0.02] border border-primary/15 text-center space-y-2">
           <Zap className="h-6 w-6 text-primary mx-auto" />
-          <h2 className="text-[16px] font-bold text-foreground">In-Store Prices. No Markup.</h2>
+          <h2 className="text-[16px] font-bold text-foreground">Transparent, Upfront Pricing</h2>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
-            ZIVO never marks up product prices. You pay the same price as shopping in-store, plus a small delivery and service fee.
+            All fees — platform, delivery, and service — are clearly shown before you pay. No hidden charges, ever.
           </p>
         </motion.div>
 
