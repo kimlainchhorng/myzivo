@@ -34,16 +34,16 @@ import { addRecentStore } from "@/components/grocery/GroceryRecentStores";
 import GroceryDeliveryBar from "@/components/grocery/GroceryDeliveryBar";
 
 const QUICK_FILTERS = [
-  { label: "🔥 Popular", query: "best sellers grocery" },
-  { label: "🥛 Dairy", query: "milk cheese eggs" },
+  { label: "🔥 Popular", query: "groceries" },
+  { label: "🥩 Meat", query: "meat" },
+  { label: "🥦 Produce", query: "vegetables" },
+  { label: "🥛 Dairy", query: "dairy" },
   { label: "🍞 Bakery", query: "bread" },
-  { label: "🥩 Meat", query: "chicken beef pork" },
-  { label: "🥦 Produce", query: "fresh fruit" },
-  { label: "🥤 Drinks", query: "water juice" },
-  { label: "🧹 Cleaning", query: "cleaning supplies" },
-  { label: "🍿 Snacks", query: "chips snacks" },
-  { label: "🧊 Frozen", query: "frozen meals" },
-  { label: "🍝 Pantry", query: "pasta rice cereal" },
+  { label: "🥤 Drinks", query: "beverages" },
+  { label: "🍿 Snacks", query: "snacks" },
+  { label: "🧊 Frozen", query: "frozen" },
+  { label: "🍝 Pantry", query: "pantry" },
+  { label: "🧹 Cleaning", query: "household" },
 ];
 
 type SortMode = "default" | "price-low" | "price-high" | "rating";
