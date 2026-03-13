@@ -32,17 +32,7 @@ const itemConfig = {
   car: { icon: Car, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/15" },
 };
 
-// Demo trip for guest/no-data users
-const demoTrip: TripGroup = {
-  destination: "Miami, FL",
-  startDate: new Date(Date.now() + 7 * 86400000).toISOString(),
-  daysUntil: 7,
-  items: [
-    { id: "f1", type: "flight", title: "JFK → MIA", subtitle: "Delta · 3h 10m", date: new Date(Date.now() + 7 * 86400000).toISOString(), status: "confirmed" },
-    { id: "h1", type: "hotel", title: "The Setai Miami Beach", subtitle: "4 nights · Ocean view", date: new Date(Date.now() + 7 * 86400000).toISOString(), status: "confirmed" },
-    { id: "c1", type: "car", title: "Tesla Model 3", subtitle: "4 days · Airport pickup", date: new Date(Date.now() + 7 * 86400000).toISOString(), status: "pending" },
-  ],
-};
+// No demo trip — show empty state for guests
 
 export default function TravelItineraryCard() {
   const { user } = useAuth();
@@ -89,7 +79,36 @@ export default function TravelItineraryCard() {
     staleTime: 60000,
   });
 
-  const trip = tripData || demoTrip;
+  const trip = tripData;
+
+  // No trip data — show CTA to book
+  if (!trip) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl bg-gradient-to-br from-sky-500/8 via-amber-500/4 to-emerald-500/6 border border-sky-500/12 p-5 relative overflow-hidden shadow-sm"
+      >
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500/20 to-sky-500/10 flex items-center justify-center shadow-inner">
+            <Luggage className="w-4 h-4 text-sky-500" />
+          </div>
+          <div>
+            <span className="text-sm font-bold text-foreground">No Upcoming Trips</span>
+            <p className="text-[10px] text-muted-foreground">Plan your next adventure</p>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate("/flights")}
+          className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-sky-500 py-2.5 rounded-xl bg-sky-500/5 border border-sky-500/15 touch-manipulation active:scale-[0.98] transition-all"
+        >
+          <Plane className="w-3.5 h-3.5" />
+          Search Flights
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

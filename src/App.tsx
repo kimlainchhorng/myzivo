@@ -354,7 +354,7 @@ const App = () => (
                 <Route path="/food" element={<PreserveQueryRedirect to="/eats" />} />
                 <Route path="/move" element={<PreserveQueryRedirect to="/rides" />} />
                 <Route path="/search" element={<PreserveQueryRedirect to="/flights" />} />
-                <Route path="/my-trips" element={<PreserveQueryRedirect to="/trips" />} />
+                <Route path="/my-trips-legacy" element={<PreserveQueryRedirect to="/trips" />} />
                 <Route path="/account" element={<PreserveQueryRedirect to="/profile" />} />
                 <Route path="/alerts" element={<PreserveQueryRedirect to="/notifications" />} />
                 <Route path="/delivery" element={<DeliveryPage />} />
@@ -500,7 +500,7 @@ const App = () => (
                 <Route path="/security" element={<Security />} />
                 <Route path="/ai-trip-planner" element={<AITripPlanner />} />
                 <Route path="/multi-city-builder" element={<MultiCityBuilder />} />
-                <Route path="/zivo-plus" element={<ZivoPlus />} />
+                {/* /zivo-plus defined above */}
                 <Route path="/vision" element={<Vision />} />
                 <Route path="/press" element={<Press />} />
                 <Route path="/for-customers" element={<ForCustomers />} />

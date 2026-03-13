@@ -20,12 +20,7 @@ interface PriceAlert {
   searchUrl: string;
 }
 
-// Fallback demo data for engagement
-const demoAlerts: PriceAlert[] = [
-  { id: "d1", type: "flight", route: "NYC → Miami", oldPrice: 189, newPrice: 129, dropPercent: 32, searchUrl: "/flights?from=JFK&to=MIA" },
-  { id: "d2", type: "hotel", route: "Las Vegas · 3 nights", oldPrice: 299, newPrice: 219, dropPercent: 27, searchUrl: "/hotels?city=las-vegas" },
-  { id: "d3", type: "flight", route: "LAX → Cancún", oldPrice: 349, newPrice: 249, dropPercent: 29, searchUrl: "/flights?from=LAX&to=CUN" },
-];
+// No fake demo alerts — only real data
 
 export default function PriceAlertsWidget() {
   const { user } = useAuth();
@@ -68,7 +63,10 @@ export default function PriceAlertsWidget() {
     staleTime: 60000,
   });
 
-  const alerts = realAlerts?.length ? realAlerts : demoAlerts;
+  const alerts = realAlerts || [];
+
+  // No alerts — hide widget
+  if (!alerts.length) return null;
 
   return (
     <div>

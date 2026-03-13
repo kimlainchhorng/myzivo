@@ -29,13 +29,7 @@ const typeConfig = {
   hotel: { icon: Hotel, color: "text-amber-500", bg: "bg-amber-500/10", accent: "amber", vehicleImage: null },
 };
 
-// Demo data
-const demoItems: ReorderItem[] = [
-  { id: "r1", type: "ride", title: "Home → Downtown", subtitle: "Economy · 4.2 mi", price: "$14.50", timeAgo: "2 days ago", rating: 4.9, rebookUrl: "/rides" },
-  { id: "r2", type: "food", title: "Sakura Sushi", subtitle: "Dragon Roll, Miso Soup", price: "$32.50", timeAgo: "3 days ago", rating: 4.8, rebookUrl: "/eats" },
-  { id: "r3", type: "ride", title: "Airport Transfer", subtitle: "Premium · 18 mi", price: "$38.00", timeAgo: "1 week ago", rating: 5.0, rebookUrl: "/rides" },
-  { id: "r4", type: "food", title: "Pizza Palace", subtitle: "Margherita, Garlic Bread", price: "$24.99", timeAgo: "5 days ago", rating: 4.7, rebookUrl: "/eats" },
-];
+// No demo data — only real bookings
 
 export default function QuickReorderCarousel() {
   const { user } = useAuth();
@@ -99,7 +93,10 @@ export default function QuickReorderCarousel() {
     staleTime: 60000,
   });
 
-  const items = recentBookings?.length ? recentBookings : demoItems;
+  const items = recentBookings || [];
+
+  // No data — hide widget entirely
+  if (!items.length) return null;
 
   return (
     <div>
