@@ -21,7 +21,6 @@ import {
   CreditCard,
   Bell,
   Lock,
-  Plane,
   Gift,
   Wallet,
   Store,
@@ -29,26 +28,11 @@ import {
   Users,
   TrendingUp,
   Trophy,
-  Globe
+  Globe,
+  Crown,
+  MapPin,
+  ShoppingBag,
 } from "lucide-react";
-import { StatusTiersDashboard } from "@/components/flight/StatusTiersDashboard";
-import ReferralCenter from "@/components/flight/ReferralCenter";
-import GiftCardsCredits from "@/components/flight/GiftCardsCredits";
-import FlightLoyaltyIntegration from "@/components/flight/FlightLoyaltyIntegration";
-import PayLater from "@/components/flight/PayLater";
-import FlightBookings from "@/components/flight/FlightBookings";
-import ZivoMilesProgram from "@/components/flight/ZivoMilesProgram";
-import TravelAlerts from "@/components/flight/TravelAlerts";
-import MyTripsDashboard from "@/components/flight/MyTripsDashboard";
-import PriceAlertsDashboard from "@/components/flight/PriceAlertsDashboard";
-import ItineraryBuilder from "@/components/flight/ItineraryBuilder";
-import TravelDocuments from "@/components/flight/TravelDocuments";
-import AirlinePartnersHub from "@/components/flight/AirlinePartnersHub";
-import TripSharing from "@/components/flight/TripSharing";
-import TravelCompanionFinder from "@/components/flight/TravelCompanionFinder";
-import FlightTracker from "@/components/flight/FlightTracker";
-import FlightPriceAlert from "@/components/flight/FlightPriceAlert";
-import GroundTransportBooking from "@/components/flight/GroundTransportBooking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -59,11 +43,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
 import { useAffiliateAttribution } from "@/hooks/useAffiliateAttribution";
+import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
+import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 
 const profileSchema = z.object({
-  full_name: z.string().min(2, "Name must be at least 2 characters").optional().or(z.literal("")),
-  phone: z.string().optional().or(z.literal("")),
+  full_name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters").optional().or(z.literal("")),
+  phone: z.string().trim().max(20, "Phone number too long").optional().or(z.literal("")),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -74,6 +60,7 @@ const Profile = () => {
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
   const affiliateAttribution = useAffiliateAttribution();
+  const { isPlus, plan } = useZivoPlus();
   const updateProfile = useUpdateUserProfile();
   const uploadAvatar = useUploadAvatar();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,14 +86,12 @@ const Profile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Show preview immediately
     const reader = new FileReader();
     reader.onload = (e) => {
       setAvatarPreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
 
-    // Upload file
     await uploadAvatar.mutateAsync(file);
     setAvatarPreview(null);
   };
@@ -129,26 +114,23 @@ const Profile = () => {
   };
 
   const quickLinks = [
+    { icon: ShoppingBag, label: "My Orders", href: "/grocery/orders", description: "Order history & tracking" },
     { icon: TrendingUp, label: "Spending", href: "/account/spending", description: "View spending history" },
     { icon: Sparkles, label: "Loyalty", href: "/account/loyalty", description: "Points & tier perks" },
     { icon: Trophy, label: "Achievements", href: "/account/achievements", description: "Badges & rewards" },
-    { icon: Sparkles, label: "Activity", href: "/account/activity", description: "Your personal stats" },
     { icon: Globe, label: "Language & Currency", href: "/account/preferences", description: "Display preferences" },
     { icon: Gift, label: "Gift Cards", href: "/account/gift-cards", description: "Buy, send, or redeem" },
-    { icon: User, label: "Saved Travelers", href: "#travelers", description: "Manage traveler profiles" },
     { icon: CreditCard, label: "Payment Methods", href: "/wallet", description: "Manage cards & wallets" },
-    { icon: Bell, label: "Notifications", href: "/dashboard", description: "Preferences & alerts" },
-    { icon: Lock, label: "Security", href: "/dashboard", description: "Password & 2FA" },
-    { icon: Settings, label: "Settings", href: "/dashboard", description: "App preferences" },
+    { icon: MapPin, label: "Saved Addresses", href: "/account/addresses", description: "Delivery addresses" },
+    { icon: Bell, label: "Notifications", href: "/notifications", description: "Preferences & alerts" },
+    { icon: Lock, label: "Security", href: "/account/security", description: "Password & 2FA" },
+    { icon: Settings, label: "Settings", href: "/account/preferences", description: "App preferences" },
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden pb-20 safe-area-top safe-area-bottom">
+    <div className="min-h-screen bg-background relative overflow-hidden pb-24 safe-area-top safe-area-bottom">
       <SEOHead title="Profile Settings – ZIVO" description="Manage your ZIVO account, profile, and travel preferences." noIndex={true} />
-      {/* Background effects - simplified for mobile */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50" />
-      <div className="pointer-events-none absolute top-1/4 right-0 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-0 w-[150px] sm:w-[200px] h-[150px] sm:h-[200px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
 
       <div className="relative z-10 container max-w-lg mx-auto px-4 pt-4 pb-8">
         {/* Header */}
@@ -156,15 +138,15 @@ const Profile = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/")}
+            onClick={() => navigate(-1)}
             className="rounded-xl hover:bg-muted/50 -ml-2 touch-manipulation active:scale-95"
             aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold">Profile Settings</h1>
-            <p className="text-muted-foreground text-xs sm:text-sm">Manage your account information</p>
+            <h1 className="font-display text-xl font-bold">Profile Settings</h1>
+            <p className="text-muted-foreground text-xs">Manage your account information</p>
           </div>
         </div>
 
@@ -173,27 +155,27 @@ const Profile = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="space-y-5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Profile Card */}
             <Card className="relative border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/5 to-teal-500/5" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
               <CardHeader className="text-center pb-2 relative">
                 <div className="flex justify-center mb-4">
                   <div className="relative group">
-                    <div className="absolute -inset-2 bg-gradient-to-r from-primary to-teal-400 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity" />
-                    <Avatar className="relative h-24 w-24 sm:h-28 sm:w-28 ring-4 ring-background shadow-2xl">
+                    <div className="absolute -inset-2 bg-gradient-to-r from-primary to-primary/60 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity" />
+                    <Avatar className="relative h-24 w-24 ring-4 ring-background shadow-2xl">
                       <AvatarImage 
                         src={avatarPreview || profile?.avatar_url || undefined} 
                         alt="Profile"
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-primary to-teal-400 text-primary-foreground text-2xl sm:text-3xl font-bold">
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-2xl font-bold">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
                     <button
                       onClick={handleAvatarClick}
                       disabled={uploadAvatar.isPending}
-                      className="absolute bottom-0 right-0 p-2 sm:p-2.5 bg-gradient-to-br from-primary to-teal-400 text-primary-foreground rounded-full shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 touch-manipulation active:scale-95"
+                      className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 touch-manipulation active:scale-95"
                     >
                       {uploadAvatar.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -210,20 +192,28 @@ const Profile = () => {
                     />
                   </div>
                 </div>
-                <CardTitle className="flex items-center justify-center gap-2 text-xl sm:text-2xl">
-                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <CardTitle className="flex items-center justify-center gap-2 text-xl">
+                  <Sparkles className="h-4 w-4 text-primary" />
                   {profile?.full_name || "Set your name"}
                 </CardTitle>
-                <CardDescription className="text-sm sm:text-base">{user?.email}</CardDescription>
-                <Badge className="mt-3 bg-gradient-to-r from-primary/20 to-teal-400/20 text-primary border-primary/30 font-semibold">
-                  <Star className="w-3 h-3 mr-1 fill-primary" />
-                  {profile?.status || "Active"} Member
-                </Badge>
+                <CardDescription className="text-sm">{user?.email}</CardDescription>
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <Badge className="bg-primary/10 text-primary border-primary/20 font-semibold">
+                    <Star className="w-3 h-3 mr-1 fill-primary" />
+                    {profile?.status || "Active"} Member
+                  </Badge>
+                  {isPlus && (
+                    <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-500 border-amber-500/30 font-semibold">
+                      <Crown className="w-3 h-3 mr-1" />
+                      ZIVO+ {plan === "annual" ? "Annual" : "Monthly"}
+                    </Badge>
+                  )}
+                </div>
               </CardHeader>
 
               <CardContent className="pt-6 relative">
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                     <FormField
                       control={form.control}
                       name="full_name"
@@ -284,7 +274,7 @@ const Profile = () => {
 
                     <Button
                       type="submit"
-                      className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-primary-foreground shadow-lg shadow-primary/30 hover:opacity-90 touch-manipulation active:scale-[0.98]"
+                      className="w-full h-12 text-base font-bold rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 touch-manipulation active:scale-[0.98]"
                       disabled={updateProfile.isPending || !form.formState.isDirty}
                     >
                       {updateProfile.isPending ? (
@@ -304,7 +294,7 @@ const Profile = () => {
                       <Button
                         type="button"
                         variant="outline"
-                        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl touch-manipulation active:scale-[0.98]"
+                        className="w-full h-12 text-base font-semibold rounded-xl touch-manipulation active:scale-[0.98]"
                         onClick={async () => {
                           await signOut();
                           navigate("/");
@@ -317,7 +307,7 @@ const Profile = () => {
                         <Button
                           type="button"
                           variant="outline"
-                          className="flex-1 h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl touch-manipulation active:scale-[0.98]"
+                          className="flex-1 h-12 text-base font-semibold rounded-xl touch-manipulation active:scale-[0.98]"
                           onClick={() => navigate("/login")}
                         >
                           Log in
@@ -325,7 +315,7 @@ const Profile = () => {
                         <Button
                           type="button"
                           variant="hero"
-                          className="flex-1 h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl touch-manipulation active:scale-[0.98]"
+                          className="flex-1 h-12 text-base font-semibold rounded-xl touch-manipulation active:scale-[0.98]"
                           onClick={() => navigate("/signup")}
                         >
                           Sign up
@@ -337,22 +327,22 @@ const Profile = () => {
               </CardContent>
             </Card>
 
-            {/* Quick Links */}
+            {/* Quick Access Links */}
             <div>
-              <h3 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4">Quick Access</h3>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <h3 className="font-display font-bold text-base mb-3">Quick Access</h3>
+              <div className="grid grid-cols-2 gap-2.5">
                 {quickLinks.map((link) => (
                   <Link key={link.label} to={link.href}>
-                    <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all cursor-pointer group overflow-hidden touch-manipulation active:scale-[0.98]">
-                      <CardContent className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <link.icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    <Card className="border-0 bg-card/80 shadow-md hover:shadow-lg transition-all cursor-pointer group overflow-hidden touch-manipulation active:scale-[0.98]">
+                      <CardContent className="p-3 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+                          <link.icon className="w-5 h-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm sm:text-base truncate">{link.label}</p>
-                          <p className="text-xs text-muted-foreground truncate">{link.description}</p>
+                          <p className="font-semibold text-[13px] truncate">{link.label}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{link.description}</p>
                         </div>
-                        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
+                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                       </CardContent>
                     </Card>
                   </Link>
@@ -360,7 +350,29 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Merchant Dashboard Link - only shown if user has merchant role */}
+            {/* ZIVO+ Membership */}
+            {!isPlus && (
+              <Link to="/zivo-plus">
+                <Card className="relative border-0 bg-gradient-to-br from-amber-500/10 to-orange-500/10 shadow-xl overflow-hidden hover:shadow-2xl transition-all cursor-pointer group touch-manipulation active:scale-[0.98]">
+                  <CardContent className="p-4 relative">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                          <Crown className="w-5 h-5 text-primary-foreground" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">Upgrade to ZIVO+</p>
+                          <p className="text-xs text-muted-foreground">No service fees, priority delivery</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-amber-500 transition-colors" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            )}
+
+            {/* Merchant Dashboard Link */}
             {merchantData?.isMerchant && (
               <a 
                 href={MERCHANT_APP_URL} 
@@ -369,25 +381,22 @@ const Profile = () => {
                 className="block"
               >
                 <Card className="relative border-0 bg-gradient-to-br from-orange-500/10 to-amber-500/10 shadow-xl overflow-hidden hover:shadow-2xl transition-all cursor-pointer group touch-manipulation active:scale-[0.98]">
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-orange-500/5 to-amber-500/5" />
-                  <CardContent className="p-4 sm:p-5 relative">
+                  <CardContent className="p-4 relative">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
-                          <Store className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                          <Store className="w-5 h-5 text-primary-foreground" />
                         </div>
                         <div>
-                          <p className="font-semibold text-sm sm:text-base">Merchant Dashboard</p>
-                          <p className="text-xs sm:text-sm text-muted-foreground">
-                            Manage your restaurant & orders
-                          </p>
+                          <p className="font-semibold text-sm">Merchant Dashboard</p>
+                          <p className="text-xs text-muted-foreground">Manage your restaurant & orders</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge className="bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-500 border-orange-500/30 font-semibold px-2 sm:px-3 py-1 text-xs">
+                        <Badge className="bg-orange-500/15 text-orange-500 border-orange-500/20 font-semibold text-xs">
                           Partner
                         </Badge>
-                        <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-orange-500 transition-colors" />
+                        <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-orange-500 transition-colors" />
                       </div>
                     </div>
                   </CardContent>
@@ -396,41 +405,39 @@ const Profile = () => {
             )}
 
             {/* Account Status */}
-            <Card className="relative border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5" />
-              <CardContent className="p-4 sm:p-5 relative">
+            <Card className="relative border-0 bg-card/80 shadow-xl overflow-hidden">
+              <CardContent className="p-4 relative">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                      <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-emerald-500" />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm sm:text-base">Account Status</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5">
-                        <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      <p className="font-semibold text-sm">Account Status</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <Clock className="w-3 h-3" />
                         Member since {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "recently"}
                       </p>
                     </div>
                   </div>
-                  <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-500 border-emerald-500/30 font-semibold px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm">
+                  <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-semibold text-xs">
                     Active
                   </Badge>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Partner Attribution Card - shown if user was referred by affiliate */}
+            {/* Partner Attribution */}
             {affiliateAttribution.hasAffiliateAttribution && (
-              <Card className="relative border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-500/5 to-purple-500/5" />
-                <CardContent className="p-4 sm:p-5 relative">
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
-                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
+              <Card className="relative border-0 bg-card/80 shadow-xl overflow-hidden">
+                <CardContent className="p-4 relative">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-violet-500" />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm sm:text-base">Referred by Partner</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
+                      <p className="font-semibold text-sm">Referred by Partner</p>
+                      <p className="text-xs text-muted-foreground">
                         You joined through {affiliateAttribution.partnerName}
                       </p>
                     </div>
@@ -438,149 +445,22 @@ const Profile = () => {
                 </CardContent>
               </Card>
             )}
-            <div>
-              <h3 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
-                <Plane className="w-4 h-4 text-primary" />
-                ZIVO Miles Status
-              </h3>
-              <StatusTiersDashboard />
-            </div>
 
-            {/* Gift Cards & Credits */}
-            <div>
-              <h3 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-primary" />
-                Gift Cards & Credits
-              </h3>
-              <GiftCardsCredits />
-            </div>
-
-            {/* Referral Center */}
-            <div>
-              <h3 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
-                <Gift className="w-4 h-4 text-primary" />
-                Refer & Earn
-              </h3>
-              <ReferralCenter />
-            </div>
-
-            {/* Frequent Flyer Programs */}
-            <div>
-              <h3 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
-                <Star className="w-4 h-4 text-primary" />
-                Frequent Flyer Programs
-              </h3>
-              <FlightLoyaltyIntegration />
-            </div>
-
-            {/* Pay Later */}
-            <div>
-              <h3 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
-                <Wallet className="w-4 h-4 text-primary" />
-                Pay Later Options
-              </h3>
-              <PayLater totalAmount={599} />
-            </div>
-
-            {/* My Bookings */}
-            <div>
-              <FlightBookings />
-            </div>
-
-            {/* ZIVO Miles Program */}
-            <div>
-              <ZivoMilesProgram />
-            </div>
-
-            {/* Travel Alerts */}
-            <div>
-              <TravelAlerts />
-            </div>
-
-            {/* My Trips */}
-            <div>
-              <MyTripsDashboard />
-            </div>
-
-            {/* Price Alerts */}
-            <div>
-              <PriceAlertsDashboard />
-            </div>
-
-            {/* Itinerary Builder */}
-            <div>
-              <ItineraryBuilder tripName="My Trip" />
-            </div>
-
-            {/* Travel Documents */}
-            <div>
-              <TravelDocuments />
-            </div>
-
-            {/* Airline Partners */}
-            <div>
-              <AirlinePartnersHub />
-            </div>
-
-            {/* Trip Sharing */}
-            <div>
-              <TripSharing tripId="my-trips" tripName="My Trip" />
-            </div>
-
-            {/* Travel Companion Finder */}
-            <div>
-              <TravelCompanionFinder
-                flightNumber="ZV-1234"
-                currentSeat="15A"
-                departureDate={new Date()}
-                route={{ from: "LAX", to: "JFK" }}
-              />
-            </div>
-
-            {/* Flight Tracker */}
-            <div>
-              <FlightTracker
-                flightNumber="ZV-1234"
-                airline="ZIVO Airways"
-                departure={{
-                  code: "LAX",
-                  city: "Los Angeles",
-                  time: "08:00",
-                  date: new Date(),
-                  terminal: "T4",
-                  gate: "B12",
-                }}
-                arrival={{
-                  code: "JFK",
-                  city: "New York",
-                  time: "16:30",
-                  date: new Date(),
-                }}
-                duration="5h 30m"
-                aircraft="Boeing 787-9 Dreamliner"
-              />
-            </div>
-
-            {/* Flight Price Alerts */}
-            <div>
-              <FlightPriceAlert
-                route={{ from: "Los Angeles", fromCode: "LAX", to: "New York", toCode: "JFK" }}
-                currentPrice={299}
-                historicalLow={249}
-              />
-            </div>
-
-            {/* Ground Transport */}
-            <div>
-              <GroundTransportBooking
-                arrivalAirport="JFK"
-                arrivalTime={new Date()}
-                destination="New York"
-              />
+            {/* Delete Account */}
+            <div className="pt-2">
+              <Button
+                variant="ghost"
+                className="w-full text-destructive/60 hover:text-destructive hover:bg-destructive/5 text-xs font-medium rounded-xl"
+                onClick={() => navigate("/profile/delete-account")}
+              >
+                Delete Account
+              </Button>
             </div>
           </div>
         )}
       </div>
+
+      <ZivoMobileNav />
     </div>
   );
 };
