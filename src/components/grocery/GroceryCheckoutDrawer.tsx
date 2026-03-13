@@ -700,6 +700,18 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   </div>
                 </div>
 
+                {/* Promo code — always visible on step 2 */}
+                {!paymentClientSecret && (
+                  <div className="mb-4">
+                    <GroceryPromoInput
+                      onApply={(code, discount) => {
+                        setPromoCode(code);
+                        setPromoDiscount(discount);
+                      }}
+                    />
+                  </div>
+                )}
+
                 {paymentClientSecret ? (
                   <div className="rounded-2xl bg-muted/10 border border-border/20 p-3.5 mb-3">
                     <p className="text-[10px] text-muted-foreground mb-3 text-center">
@@ -736,16 +748,6 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                           </motion.button>
                         ))}
                       </div>
-                    </div>
-
-                    {/* Promo code */}
-                    <div className="mb-4">
-                      <GroceryPromoInput
-                        onApply={(code, discount) => {
-                          setPromoCode(code);
-                          setPromoDiscount(discount);
-                        }}
-                      />
                     </div>
 
                     {/* Trust badges */}
