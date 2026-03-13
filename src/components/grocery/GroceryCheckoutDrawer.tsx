@@ -590,7 +590,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                 {/* Policy disclosures */}
                 <div className="space-y-1.5 mb-3 px-2">
                   <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
-                    <RotateCcwIcon className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                    <RefreshCw className="h-3.5 w-3.5 text-primary/60 shrink-0" />
                     <p className="text-[9px] text-muted-foreground leading-relaxed">
                       <span className="font-semibold text-foreground/70">Freshness Guarantee:</span> Report quality issues within 24h for a full refund. <a href="/grocery/returns" className="text-primary/70 underline">Returns policy</a>
                     </p>
