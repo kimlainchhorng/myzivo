@@ -52,6 +52,7 @@ const GroceryStorePage = lazy(() => import("./pages/GroceryStorePage"));
 const GroceryOrderPlaced = lazy(() => import("./pages/grocery/GroceryOrderPlaced"));
 const GroceryOrderConfirmed = lazy(() => import("./pages/grocery/GroceryOrderConfirmed"));
 const GroceryOrderHistory = lazy(() => import("./pages/GroceryOrderHistory"));
+const GroceryOrderTracking = lazy(() => import("./pages/grocery/GroceryOrderTracking"));
 const GroceryTerms = lazy(() => import("./pages/grocery/GroceryTerms"));
 const GroceryReturns = lazy(() => import("./pages/grocery/GroceryReturns"));
 const GroceryFees = lazy(() => import("./pages/grocery/GroceryFees"));
@@ -362,6 +363,7 @@ const App = () => (
                 <Route path="/grocery/order-placed" element={<GroceryOrderPlaced />} />
                 <Route path="/grocery/order-confirmed" element={<GroceryOrderConfirmed />} />
                 <Route path="/grocery/orders" element={<GroceryOrderHistory />} />
+                <Route path="/grocery/track/:orderId" element={<GroceryOrderTracking />} />
                 <Route path="/grocery/terms" element={<GroceryTerms />} />
                 <Route path="/grocery/returns" element={<GroceryReturns />} />
                 <Route path="/grocery/fees" element={<GroceryFees />} />
