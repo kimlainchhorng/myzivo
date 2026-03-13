@@ -676,8 +676,18 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                       <span className="text-foreground tabular-nums">${deliveryFee.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] text-muted-foreground">
-                      <span>Service fee ({SERVICE_FEE_PCT}%)</span>
-                      <span className="text-foreground tabular-nums">${serviceFee.toFixed(2)}</span>
+                      <span className="flex items-center gap-1.5">
+                        Service fee ({SERVICE_FEE_PCT}%)
+                        {isPlus && <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-amber-500/15 text-amber-600">ZIVO+</span>}
+                      </span>
+                      {isPlus ? (
+                        <span className="text-amber-600 font-bold line-through-none">
+                          <span className="line-through text-muted-foreground/50 mr-1">${calcServiceFee(total).toFixed(2)}</span>
+                          $0.00
+                        </span>
+                      ) : (
+                        <span className="text-foreground tabular-nums">${serviceFee.toFixed(2)}</span>
+                      )}
                     </div>
                     {priorityFee > 0 && (
                       <div className="flex justify-between text-[12px] text-muted-foreground">
