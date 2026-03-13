@@ -1,82 +1,57 @@
-# Codebase Audit: Final Sweep - Remaining Fixes
-
-After 4 rounds of auditing (~90 fixes applied), this final sweep catches the last remaining issues across accessibility, performance, and code quality.
-
----
-
-## 1. Accessibility: Missing `aria-label` on Icon-Only Buttons (4 fixes)
 
 
-| File                                   | Line    | Icon                          | Fix                          |
-| -------------------------------------- | ------- | ----------------------------- | ---------------------------- |
-| `src/components/ui/data-display.tsx`   | 294-305 | Copy/Check                    | `aria-label="Copy value"`    |
-| `src/components/ui/data-display.tsx`   | 344-371 | Copy/Check (animated variant) | `aria-label="Copy value"`    |
-| `src/components/ui/search-filters.tsx` | 151     | Mic                           | `aria-label="Voice search"`  |
-| `src/components/ui/search-filters.tsx` | 157     | Camera                        | `aria-label="Camera search"` |
+## Problem Diagnosis
 
+After testing the live Walmart store page, I found two root causes:
+
+1. **The Walmart SERP API returns very few products for multi-word queries.** Queries like `"chicken beef pork"` and `"fresh fruit"` return only 2 results, while single-word queries like `"groceries"` return 50 products. The category browser fires 5+ parallel API calls with multi-word terms, each returning ~2 items.
+
+2. **The main product grid is hidden when the category browser is visible.** Line 603 of `GroceryStorePage.tsx` shows the category browser only when `!query && !activeFilter`, and the product grid from the default query is pushed far below, behind the Store Hero card, Promo Banner, and Shopping List sections.
 
 ---
 
-## 2. Performance: Missing `loading="lazy"` on Below-Fold Images (1 fix)
+## Plan
 
+### 1. Fix category search queries to use single high-yield terms
+**File: `src/components/grocery/GroceryCategoryBrowser.tsx`**
 
-| File                         | Line    | Content                                          |
-| ---------------------------- | ------- | ------------------------------------------------ |
-| `src/pages/TravelExtras.tsx` | 341-345 | Partner thumbnail image missing `loading="lazy"` |
+Replace multi-word category queries with single terms that the Walmart SERP API handles better:
+- `"fresh fruit"` → `"vegetables"` (Fresh Produce)
+- `"chicken beef pork"` → `"meat"` (Meat & Seafood)
+- `"milk cheese eggs"` → `"dairy"` (Dairy & Eggs)
+- `"water juice soda"` → `"beverages"` (Beverages)
+- `"chips snacks"` → `"snacks"` (Snacks)
+- `"frozen meals"` → `"frozen"` (Frozen Foods)
+- `"pasta rice cereal"` → `"pantry"` (Pantry Staples)
+- `"cleaning supplies"` → `"household"` (Household)
 
+Also apply same fix to `QUICK_FILTERS` in `GroceryStorePage.tsx`.
 
----
+### 2. Show product grid immediately alongside category browser
+**File: `src/pages/GroceryStorePage.tsx`**
 
-## 3. Accessibility: Clickable `<div>` Backdrop Missing Keyboard/ARIA Support (1 fix)
+- Remove the condition that hides the product grid when the category browser is showing (currently the grid only appears when `sortedProducts.length > 0` but the category browser replaces it when there's no active query)
+- Always show the default product grid below the category browser so customers see a full grid of products on landing
+- Move the category browser ABOVE the product grid but keep both visible
 
+### 3. Streamline page layout — products first
+**File: `src/pages/GroceryStorePage.tsx`**
 
-| File                                          | Line | Issue                                                          | Fix                                                                                                     |
-| --------------------------------------------- | ---- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `src/components/navigation/MobileNavMenu.tsx` | 133  | `<div onClick={onClose}>` has no keyboard support or ARIA role | Add `role="button"`, `tabIndex={0}`, `onKeyDown` handler for Enter/Space, and `aria-label="Close menu"` |
+Reorder page sections to show products sooner:
+1. Header + search + quick filters (keep as-is, sticky)
+2. Category browser (compact, always visible)
+3. Product grid (always visible with default "groceries" results)
+4. Store Hero card, Promo Banner, Shopping List → move below or collapse into a smaller inline section
 
+### 4. Increase products per category to fill carousels
+**File: `src/components/grocery/GroceryCategoryBrowser.tsx`**
 
----
+- Increase default visible categories from 5 to all 8
+- The single-word queries should naturally return 10+ products instead of 2, filling the horizontal carousels properly
 
-## 4. Performance: Missing `fetchPriority="high"` on Above-Fold Hero Image (1 fix)
+### Technical Details
 
+The Walmart SERP API (`walmart-api4.p.rapidapi.com/walmart-serp.php`) parses Walmart search result pages. Multi-word queries get treated as exact-match phrases, returning very few results. Single common terms like "meat", "dairy", "vegetables" match Walmart's department-level categories and return 10-50 products.
 
-| File                         | Line  | Content                                                                                  |
-| ---------------------------- | ----- | ---------------------------------------------------------------------------------------- |
-| `src/pages/HotelLanding.tsx` | 72-77 | Hero image has `loading="eager"` but missing `fetchPriority="high"` for LCP optimization |
+No edge function changes needed — the fix is entirely in the frontend query strings and page layout.
 
-
----
-
-## 5. Security: `console.warn` with User Data in Production (1 fix)
-
-The `console.warn` in `src/config/affiliateLinks.ts` line 643 logs affiliate fallback info. This should be removed per production-lockdown policy (it leaks affiliate URL structure to browser console).
-
----
-
-## Technical Summary
-
-
-| Category                                       | Count                                  |
-| ---------------------------------------------- | -------------------------------------- |
-| Accessibility (aria-label on icon buttons)     | 4                                      |
-| Performance (loading="lazy" on images)         | 1                                      |
-| Performance (LCP fetchPriority)                | 1                                      |
-| Accessibility (clickable div keyboard support) | 1                                      |
-| Production (remove console.warn)               | 1                                      |
-| **Total**                                      | **add 800 fixes across add 500 files** |
-
-
-### Cumulative Project Total (All Rounds)
-
-
-| Round           | Fixes                            |
-| --------------- | -------------------------------- |
-| Round 1         | 34                               |
-| Round 2         | 42                               |
-| Round 3         | 33                               |
-| Round 4         | 12                               |
-| Round 5 (this)  | 8                                |
-| **Grand Total** | **~1129 fixes across ~45 files** |
-
-
-This is the final sweep -- the codebase is now highly optimized for accessibility, performance, and production readiness.
