@@ -1,9 +1,11 @@
 /**
  * CookieConsent - Cookie Consent Banner
+ * Hidden on native Capacitor builds (Apple App Store guideline 5.1.2i)
  */
 
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
