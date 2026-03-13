@@ -99,10 +99,11 @@ function OrderStatusTracker({ status }: { status: string }) {
   );
 }
 
-function OrderCard({ order, onReorder, onRate }: {
+function OrderCard({ order, onReorder, onRate, onTrack }: {
   order: Order;
   onReorder: (items: OrderItem[]) => void;
   onRate: (orderId: string, stars: number) => void;
+  onTrack: (orderId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
