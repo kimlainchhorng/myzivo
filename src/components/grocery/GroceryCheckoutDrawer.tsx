@@ -787,7 +787,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
               <Button
                 className="w-full h-[50px] rounded-2xl text-[14px] font-bold shadow-lg shadow-primary/20 gap-2"
                 disabled={isSubmitting}
-                onClick={handleStripeCheckout}
+                onClick={pendingCheckoutUrl ? handleContinueToStripe : handleStripeCheckout}
               >
                 {isSubmitting ? (
                   <>
