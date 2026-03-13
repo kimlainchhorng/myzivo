@@ -525,7 +525,7 @@ export default function GroceryStorePage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.97 }}
             transition={{ type: "spring" as const, stiffness: 300, damping: 25 }}
-            className="sticky top-[200px] z-40 mx-4 mb-4 bg-card/95 backdrop-blur-xl rounded-[24px] border border-border/40 shadow-2xl overflow-hidden"
+            className="fixed top-16 left-4 right-4 z-50 bg-card/95 backdrop-blur-xl rounded-[24px] border border-border/40 shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto"
           >
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
