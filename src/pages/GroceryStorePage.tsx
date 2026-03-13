@@ -303,16 +303,6 @@ export default function GroceryStorePage() {
   }
 
   const status = getStoreStatus(storeCfg.hours);
-      {/* Store info & extras - below products */}
-      <GroceryStoreHero store={storeCfg} liveEta={liveEta} isOpen={status.isOpen} />
-      <GroceryPromoBanner />
-      <GroceryShoppingList
-        onSearchItem={(text) => {
-          autoLoadCount.current = 0;
-          setQuery(text);
-          search(text);
-        }}
-      />
 
 
   const handleAdd = (p: StoreProduct) => {
