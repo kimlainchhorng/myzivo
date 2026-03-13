@@ -429,8 +429,8 @@ export default function GroceryStorePage() {
           storeName={storeName}
           query={query}
           onSearch={handleSearch}
-          onSubmit={(val) => { autoLoadCount.current = 0; setQuery(val); search(val); }}
-          onClear={() => { setQuery(""); autoLoadCount.current = 0; search(storeCfg.defaultQuery); setActiveFilter(null); }}
+          onSubmit={(val) => { autoLoadCount.current = 0; setBrowseQuery(null); setQuery(val); search(val); }}
+          onClear={() => { setQuery(""); setBrowseQuery(null); autoLoadCount.current = 0; search(storeCfg.defaultQuery); setActiveFilter(null); }}
         />
 
         {/* Quick filter chips */}
