@@ -328,6 +328,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
+                <PageViewTracker />
                 <AuthProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
