@@ -598,7 +598,7 @@ export default function GroceryOrderHistory() {
           </motion.div>
         ) : (
           filtered.map((order) => (
-            <OrderCard key={order.id} order={order} onReorder={handleReorder} onRate={handleRate} />
+            <OrderCard key={order.id} order={order} onReorder={handleReorder} onRate={handleRate} onTrack={handleTrack} />
           ))
         )}
       </div>
