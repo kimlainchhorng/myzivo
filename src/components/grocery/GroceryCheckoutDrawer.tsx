@@ -168,12 +168,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
       isEmbedded = true;
     }
 
-    // In embedded preview/webviews, pre-open a tab during user gesture to avoid popup blocking.
-    const checkoutWindow = isEmbedded ? window.open("", "_blank", "noopener,noreferrer") : null;
-    if (isEmbedded && !checkoutWindow) {
-      toast.error("Please allow pop-ups to continue to secure payment");
-      return;
-    }
+    // In embedded previews/webviews, try pre-opening a tab during user gesture.
+    // If blocked, continue with same-tab redirect instead of failing early.
+    const checkoutWindow = isEmbedded ? window.open("about:blank", "_blank") : null;
 
     setIsSubmitting(true);
     try {
