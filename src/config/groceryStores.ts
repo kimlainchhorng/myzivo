@@ -43,7 +43,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     placeholder: "Search Walmart products…",
     emptyTitle: "Search Walmart Products",
     emptyDescription: "Search for groceries, household items, and more. A ZIVO driver will shop and deliver to your door.",
-    defaultQuery: "chips soda milk bread chicken eggs cheese cookies juice water cereal pizza snacks candy ice cream coffee frozen vegetables beef bacon shrimp garden tools patio furniture",
+    defaultQuery: "chips soda milk bread chicken eggs cheese cookies juice water cereal pizza snacks candy ice cream coffee frozen vegetables beef bacon shrimp garden tools patio furniture toys shoes clothes detergent soap vitamins diapers dog food cat food batteries toothpaste shampoo paper towels yogurt butter rice pasta sauce",
     category: "grocery",
     deliveryMin: 35,
     rating: 4.6,
