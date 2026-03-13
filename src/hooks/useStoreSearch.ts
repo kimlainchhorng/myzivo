@@ -92,8 +92,8 @@ export function useStoreSearch(store: StoreName) {
         const keywords = buildKeywords(query);
         allKeywordsRef.current = keywords;
         
-        // Fetch first batch of keywords in parallel (up to 8 at a time)
-        const batch = keywords.slice(0, 8);
+        // Fetch first batch of keywords in parallel (up to 12 at a time)
+        const batch = keywords.slice(0, 12);
         keywordIndexRef.current = batch.length;
         
         const results = await Promise.all(
