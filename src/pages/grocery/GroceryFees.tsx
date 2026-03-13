@@ -5,7 +5,7 @@ import { ArrowLeft, DollarSign, Truck, Sparkles, Heart, ShieldCheck, Tag, Percen
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { DELIVERY_BASE_FEE, DELIVERY_PER_MILE, DELIVERY_PER_MIN, DELIVERY_MIN_FEE, DELIVERY_MAX_FEE, SERVICE_FEE, TIP_OPTIONS, formatFee, calcMarkup, getMarkupPct, MARKUP_THRESHOLD } from "@/config/groceryPricing";
+import { DELIVERY_BASE_FEE, DELIVERY_PER_MILE, DELIVERY_PER_MIN, DELIVERY_MIN_FEE, DELIVERY_MAX_FEE, SERVICE_FEE_PCT, SERVICE_FEE_MIN, SERVICE_FEE_MAX, TIP_OPTIONS, formatFee, calcMarkup, getMarkupPct, MARKUP_THRESHOLD, calcServiceFee } from "@/config/groceryPricing";
 
 const FEE_BREAKDOWN = [
   {
