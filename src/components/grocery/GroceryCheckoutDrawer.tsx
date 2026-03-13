@@ -22,7 +22,7 @@ import type { GroceryCartItem } from "@/hooks/useGroceryCart";
 import { GroceryPromoInput } from "@/components/grocery/GroceryPromoBanner";
 import { getLiveEta } from "@/utils/storeStatus";
 import { getStoreConfig, type StoreName, GROCERY_STORES } from "@/config/groceryStores";
-import { DELIVERY_FEE_FALLBACK, SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcMarkup, getMarkupPct, calcDeliveryFee } from "@/config/groceryPricing";
+import { DELIVERY_FEE_FALLBACK, SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee } from "@/config/groceryPricing";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -35,10 +35,16 @@ type SubstitutionPref = "contact_me" | "best_match" | "refund";
 
 function getSavedAddress(): { address: string; label: string } | null {
   try {
-    const raw = localStorage.getItem("zivo_selected_address");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return { address: parsed.address || "", label: parsed.label || "" };
+    const selectedId = localStorage.getItem("zivo_selected_address");
+    const addressesRaw = localStorage.getItem("zivo_delivery_addresses");
+    if (addressesRaw) {
+      const addresses = JSON.parse(addressesRaw);
+      if (Array.isArray(addresses) && addresses.length > 0) {
+        const match = selectedId
+          ? addresses.find((a: any) => a.id === selectedId)
+          : addresses.find((a: any) => a.isDefault) || addresses[0];
+        if (match) return { address: match.address || "", label: match.label || "" };
+      }
     }
   } catch {}
   return null;
@@ -86,15 +92,12 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   }, [storeCfg]);
 
   const priorityFee = getPriorityFee(scheduler.speed);
-  // Markup: <$50 → 5%, ≥$50 → 3%
-  const markup = calcMarkup(total);
-  const markupPct = getMarkupPct(total);
   // Distance-based delivery fee (estimate: ~3mi, ETA-based minutes)
   const estimatedMiles = 3;
   const deliveryFee = calcDeliveryFee(estimatedMiles, liveEta);
   // Service fee: 5% of subtotal with min/max
   const serviceFee = calcServiceFee(total);
-  const grandTotal = Math.max(0, total + markup + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
+  const grandTotal = Math.max(0, total + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
   useEffect(() => {
@@ -554,7 +557,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                   </div>
                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10">
                     <Sparkles className="h-2.5 w-2.5 text-primary" />
-                    <span className="text-[9px] font-bold text-primary">{markupPct}% fee</span>
+                    <span className="text-[9px] font-bold text-primary">{SERVICE_FEE_PCT}% fee</span>
                   </div>
                 </motion.div>
 
@@ -613,10 +616,6 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                     <div className="flex justify-between text-[12px] text-muted-foreground">
                       <span className="flex items-center gap-1.5"><Truck className="h-3 w-3" /> Delivery (~{estimatedMiles}mi)</span>
                       <span className="text-foreground tabular-nums">${deliveryFee.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-[12px] text-muted-foreground">
-                      <span className="flex items-center gap-1.5">📦 Platform fee ({markupPct}%)</span>
-                      <span className="text-foreground tabular-nums">${markup.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] text-muted-foreground">
                       <span>Service fee ({SERVICE_FEE_PCT}%)</span>
