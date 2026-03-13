@@ -6,7 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 
 const PrivacyPolicy = () => {
-  const lastUpdated = "January 26, 2026";
+  const lastUpdated = "March 13, 2026";
   const companyName = "ZIVO Technologies Inc.";
 
   return (
