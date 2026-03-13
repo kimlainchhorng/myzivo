@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 
 const PrivacyPolicy = () => {
   const lastUpdated = "March 13, 2026";
-  const companyName = "ZIVO Technologies Inc.";
+  const companyName = "ZIVO LLC";
 
   return (
     <div className="min-h-screen bg-background">
