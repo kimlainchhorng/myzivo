@@ -701,16 +701,19 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                 </div>
 
                 {/* Promo code — always visible on step 2 */}
-                {!paymentClientSecret && (
-                  <div className="mb-4">
-                    <GroceryPromoInput
-                      onApply={(code, discount) => {
-                        setPromoCode(code);
-                        setPromoDiscount(discount);
-                      }}
-                    />
-                  </div>
-                )}
+                <div className="mb-4">
+                  <GroceryPromoInput
+                    onApply={(code, discount) => {
+                      setPromoCode(code);
+                      setPromoDiscount(discount);
+
+                      if (paymentClientSecret) {
+                        resetInlinePayment();
+                        toast.success("Promo applied. Total updated — tap Pay again.");
+                      }
+                    }}
+                  />
+                </div>
 
                 {paymentClientSecret ? (
                   <div className="rounded-2xl bg-muted/10 border border-border/20 p-3.5 mb-3">
