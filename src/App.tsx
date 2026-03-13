@@ -52,6 +52,7 @@ const GroceryStorePage = lazy(() => import("./pages/GroceryStorePage"));
 const GroceryOrderPlaced = lazy(() => import("./pages/grocery/GroceryOrderPlaced"));
 const GroceryOrderConfirmed = lazy(() => import("./pages/grocery/GroceryOrderConfirmed"));
 const GroceryOrderHistory = lazy(() => import("./pages/GroceryOrderHistory"));
+const GroceryOrderTracking = lazy(() => import("./pages/grocery/GroceryOrderTracking"));
 const GroceryTerms = lazy(() => import("./pages/grocery/GroceryTerms"));
 const GroceryReturns = lazy(() => import("./pages/grocery/GroceryReturns"));
 const GroceryFees = lazy(() => import("./pages/grocery/GroceryFees"));
