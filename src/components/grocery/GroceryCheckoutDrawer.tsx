@@ -161,6 +161,20 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   };
 
   const handleStripeCheckout = async () => {
+    let isEmbedded = false;
+    try {
+      isEmbedded = window.self !== window.top;
+    } catch {
+      isEmbedded = true;
+    }
+
+    // In embedded preview/webviews, pre-open a tab during user gesture to avoid popup blocking.
+    const checkoutWindow = isEmbedded ? window.open("", "_blank", "noopener,noreferrer") : null;
+    if (isEmbedded && !checkoutWindow) {
+      toast.error("Please allow pop-ups to continue to secure payment");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const orderItems = items.map((i) => ({
@@ -182,13 +196,19 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
       if (error) throw new Error(error.message || "Checkout failed");
       if (data?.error) throw new Error(data.error);
       if (data?.url) {
-        // More reliable on mobile/WebView than popup-based redirects
-        window.location.assign(String(data.url));
+        const checkoutUrl = String(data.url);
+
+        if (checkoutWindow && !checkoutWindow.closed) {
+          checkoutWindow.location.replace(checkoutUrl);
+        } else {
+          window.location.assign(checkoutUrl);
+        }
         return;
-      } else {
-        throw new Error("No checkout URL returned");
       }
+
+      throw new Error("No checkout URL returned");
     } catch (err: any) {
+      if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
       console.error("Checkout error:", err);
       toast.error(err.message || "Failed to start checkout");
     } finally {
