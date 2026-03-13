@@ -665,6 +665,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                       <span className="text-foreground tabular-nums">${total.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] text-muted-foreground">
+                      <span>Platform fee ({markupPct}%)</span>
+                      <span className="text-foreground tabular-nums">${platformMarkup.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-[12px] text-muted-foreground">
                       <span className="flex items-center gap-1.5"><Truck className="h-3 w-3" /> Delivery (~{estimatedMiles}mi)</span>
                       <span className="text-foreground tabular-nums">${deliveryFee.toFixed(2)}</span>
                     </div>
