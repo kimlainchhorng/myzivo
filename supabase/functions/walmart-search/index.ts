@@ -215,7 +215,8 @@ serve(async (req) => {
       return "";
     };
 
-    const functionBaseUrl = `${url.origin}/functions/v1/walmart-search`;
+    // Always use HTTPS to avoid mixed-content blocking in browsers
+    const functionBaseUrl = `${url.origin.replace('http://', 'https://')}/functions/v1/walmart-search`;
     const toProxyImageUrl = (src: string): string =>
       src ? `${functionBaseUrl}?img=${encodeURIComponent(src)}` : "";
 
