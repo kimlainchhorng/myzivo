@@ -274,7 +274,7 @@ export default function DriverShopPage() {
       const url = isIos
         ? `maps://maps.apple.com/?daddr=${encoded}`
         : `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
-      window.open(url, "_blank");
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -586,7 +586,7 @@ export default function DriverShopPage() {
                   const url = isIos
                     ? `maps://maps.apple.com/?daddr=${encoded}`
                     : `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
-                  window.open(url, "_blank");
+                  window.open(url, "_blank", "noopener,noreferrer");
                 }}
               >
                 <Navigation className="h-4 w-4 mr-2" />
