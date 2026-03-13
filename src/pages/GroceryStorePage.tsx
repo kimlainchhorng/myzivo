@@ -445,20 +445,19 @@ export default function GroceryStorePage() {
         </div>
       </div>
 
-      {/* Store Hero Card */}
-      <GroceryStoreHero store={storeCfg} liveEta={liveEta} isOpen={status.isOpen} />
-
-      {/* Promo Banner */}
-      <GroceryPromoBanner />
-
-      {/* Shopping List */}
-      <GroceryShoppingList
-        onSearchItem={(text) => {
-          autoLoadCount.current = 0;
-          setQuery(text);
-          search(text);
-        }}
-      />
+      {/* Category Browser - always visible on landing */}
+      {!isLoading && !query && !activeFilter && (
+        <GroceryCategoryBrowser
+          store={storeName}
+          onAdd={handleAdd}
+          cartProductIds={new Set(cart.items.map((c) => c.productId))}
+          onBrowse={(q) => {
+            autoLoadCount.current = 0;
+            setQuery("");
+            search(q);
+          }}
+        />
+      )}
 
       {/* Cart Drawer */}
       <AnimatePresence>
