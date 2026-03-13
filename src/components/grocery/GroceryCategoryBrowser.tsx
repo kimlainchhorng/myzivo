@@ -69,14 +69,24 @@ function CategorySection({ category, store, onAdd, cartProductIds, onBrowse, ind
     fetched.current = true;
 
     const cfg = getStoreConfig(store);
-    const url = `${SUPABASE_URL}/functions/v1/${cfg.edgeFunction}?q=${encodeURIComponent(category.query)}&page=1`;
+    const baseUrl = `${SUPABASE_URL}/functions/v1/${cfg.edgeFunction}`;
+    const headers = { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY };
 
-    fetch(url, {
-      headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY },
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        const items: StoreProduct[] = (data.products || []).slice(0, 10).map((p: any) => ({ ...p, store }));
+    // Fetch page 1 and page 2 in parallel for more products
+    Promise.all([
+      fetch(`${baseUrl}?q=${encodeURIComponent(category.query)}&page=1`, { headers }).then((r) => r.json()).catch(() => ({ products: [] })),
+      fetch(`${baseUrl}?q=${encodeURIComponent(category.query)}&page=2`, { headers }).then((r) => r.json()).catch(() => ({ products: [] })),
+    ])
+      .then(([data1, data2]) => {
+        const all = [...(data1.products || []), ...(data2.products || [])];
+        // Deduplicate by productId
+        const seen = new Set<string>();
+        const unique = all.filter((p: any) => {
+          if (seen.has(p.productId)) return false;
+          seen.add(p.productId);
+          return true;
+        });
+        const items: StoreProduct[] = unique.slice(0, 20).map((p: any) => ({ ...p, store }));
         setProducts(items);
       })
       .catch(() => {})
