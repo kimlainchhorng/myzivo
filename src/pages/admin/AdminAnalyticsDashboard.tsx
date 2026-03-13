@@ -33,7 +33,7 @@ export default function AdminAnalyticsDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("travel_orders")
-        .select("id, service_type, status, total_amount, currency, created_at")
+        .select("id, provider, status, total, currency, created_at")
         .gte("created_at", since)
         .order("created_at", { ascending: true });
       if (error) throw error;
