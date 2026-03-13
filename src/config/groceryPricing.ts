@@ -62,11 +62,12 @@ export const PRIORITY_FEE = 2.99;
 /** Default tip options */
 export const TIP_OPTIONS = [0, 2, 3, 5];
 
-/** Cancellation fee schedule */
+/** Cancellation fee schedule (percentage of order subtotal, excluding fees & tip) */
 export const CANCELLATION_FEES = {
-  beforeShopping: 0,
-  duringShopping: 5.00,
-  duringDelivery: 10.00,
+  beforeDriverAssigned: 0,      // Free
+  driverAssignedNotStarted: 15, // 15%
+  driverActivelyShopping: 25,   // 25%
+  itemsPurchasedEnRoute: 50,    // 50%
 };
 
 /** Format fee for display */

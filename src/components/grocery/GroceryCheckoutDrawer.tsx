@@ -23,7 +23,7 @@ import { GroceryPromoInput } from "@/components/grocery/GroceryPromoBanner";
 import GroceryInlinePaymentForm from "@/components/grocery/GroceryInlinePaymentForm";
 import { getLiveEta } from "@/utils/storeStatus";
 import { GROCERY_STORES } from "@/config/groceryStores";
-import { SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee } from "@/config/groceryPricing";
+import { SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee, calcMarkup, getMarkupPct } from "@/config/groceryPricing";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -98,9 +98,12 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   // Distance-based delivery fee (estimate: ~3mi, ETA-based minutes)
   const estimatedMiles = 3;
   const deliveryFee = calcDeliveryFee(estimatedMiles, liveEta);
+  // Platform markup: 3-5% of subtotal
+  const platformMarkup = calcMarkup(total);
+  const markupPct = getMarkupPct(total);
   // Service fee: 5% of subtotal with min/max
   const serviceFee = calcServiceFee(total);
-  const grandTotal = Math.max(0, total + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
+  const grandTotal = Math.max(0, total + platformMarkup + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
 
@@ -662,6 +665,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                       <span className="text-foreground tabular-nums">${total.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] text-muted-foreground">
+                      <span>Platform fee ({markupPct}%)</span>
+                      <span className="text-foreground tabular-nums">${platformMarkup.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-[12px] text-muted-foreground">
                       <span className="flex items-center gap-1.5"><Truck className="h-3 w-3" /> Delivery (~{estimatedMiles}mi)</span>
                       <span className="text-foreground tabular-nums">${deliveryFee.toFixed(2)}</span>
                     </div>
@@ -781,9 +788,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                       </div>
                       <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
                         <AlertTriangle className="h-3.5 w-3.5 text-primary/60 shrink-0" />
-                        <p className="text-[9px] text-muted-foreground leading-relaxed">
-                          <span className="font-semibold text-foreground/70">Cancellation:</span> Free before driver starts · Fees apply after. <a href="/grocery/fees" className="text-primary/70 underline">View fees</a>
-                        </p>
+                         <p className="text-[9px] text-muted-foreground leading-relaxed">
+                           <span className="font-semibold text-foreground/70">Cancellation:</span> Free before driver assigned · 15–50% after. <a href="/grocery/fees" className="text-primary/70 underline">View fees</a>
+                         </p>
                       </div>
                       <p className="text-[8px] text-muted-foreground/50 text-center px-2">
                         By placing your order, you agree to our <a href="/grocery/terms" className="text-primary/50 underline">Terms</a> and <a href="/privacy" className="text-primary/50 underline">Privacy Policy</a>

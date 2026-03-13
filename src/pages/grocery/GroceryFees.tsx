@@ -39,8 +39,8 @@ const FEE_BREAKDOWN = [
 ];
 
 const PRICE_PROMISES = [
-  { icon: Tag, title: "Transparent Pricing", desc: "All fees — platform markup, delivery, and service — are shown upfront before you place your order." },
-  { icon: ShieldCheck, title: "Price Transparency", desc: "All fees are shown upfront before you place your order. No surprise charges." },
+  { icon: Tag, title: "Transparent Pricing", desc: "All fees — platform, delivery, and service — are itemized before you place your order. No surprise charges." },
+  { icon: ShieldCheck, title: "In-Store Prices", desc: "Product prices match what you'd pay in-store. The platform fee covers shopping, handling, and support." },
   { icon: Percent, title: "Promo Codes Welcome", desc: "Apply promo codes at checkout to reduce delivery or service fees. Check your email for exclusive offers." },
   { icon: Gift, title: "Referral Credits", desc: "Refer friends and earn credits toward free deliveries. Both you and your friend get rewarded." },
 ];
@@ -77,9 +77,9 @@ export default function GroceryFees() {
         {/* Hero */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="p-5 rounded-2xl bg-gradient-to-br from-primary/5 to-primary/[0.02] border border-primary/15 text-center space-y-2">
           <Zap className="h-6 w-6 text-primary mx-auto" />
-          <h2 className="text-[16px] font-bold text-foreground">In-Store Prices. No Markup.</h2>
+          <h2 className="text-[16px] font-bold text-foreground">Transparent, Upfront Pricing</h2>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
-            ZIVO never marks up product prices. You pay the same price as shopping in-store, plus a small delivery and service fee.
+            All fees — platform, delivery, and service — are clearly shown before you pay. No hidden charges, ever.
           </p>
         </motion.div>
 
