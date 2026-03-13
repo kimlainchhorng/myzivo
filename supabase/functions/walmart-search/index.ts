@@ -83,11 +83,11 @@ serve(async (req) => {
       );
     }
 
-    // Build the correct walmart-serp.php URL — affinityOverride=store_led prioritizes in-store items
-    const walmartUrl = `https://www.walmart.com/search?q=${encodeURIComponent(query)}&page=${page}&affinityOverride=store_led`;
+    // Use simple search URL without affinityOverride to maximize product count
+    const walmartUrl = `https://www.walmart.com/search?q=${encodeURIComponent(query)}&page=${page}`;
     const apiUrl = `https://${RAPID_API_HOST}/walmart-serp.php?url=${encodeURIComponent(walmartUrl)}`;
 
-    console.log("[walmart-search] Query:", query, "| API URL:", apiUrl);
+    console.log("[walmart-search] Query:", query, "| Page:", page);
 
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -104,17 +104,65 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("[walmart-search] Raw response keys:", Object.keys(data));
-    console.log("[walmart-search] Body keys:", data.body ? Object.keys(data.body) : "no body");
 
-    // Response shape: { body: { products: [{ title, image, link, price: { currentPrice, originalPrice } }] } }
-    const rawProducts = data.body?.products || data.products || [];
-    console.log("[walmart-search] Raw products count:", rawProducts.length);
-    if (rawProducts.length > 0) {
-      console.log("[walmart-search] Sample product:", JSON.stringify(rawProducts[0]).slice(0, 500));
+    // Debug: log structure
+    const bodyProducts = data.body?.products || [];
+    const topProducts = data.products || [];
+    const searchResult = data.body?.searchResult?.items || [];
+    const itemStacks = data.body?.searchResult?.itemStacks || [];
+    
+    console.log("[walmart-search] body.products:", bodyProducts.length,
+      "| top.products:", topProducts.length,
+      "| searchResult.items:", searchResult.length,
+      "| itemStacks:", itemStacks.length,
+      "| productsCount:", data.body?.productsCount);
+    
+    // Try multiple paths to find products
+    let rawProducts: any[] = [];
+    
+    // Path 1: body.products (most common)
+    if (bodyProducts.length > 0) {
+      rawProducts = bodyProducts;
+    }
+    // Path 2: top-level products
+    else if (topProducts.length > 0) {
+      rawProducts = topProducts;
+    }
+    // Path 3: searchResult items
+    else if (searchResult.length > 0) {
+      rawProducts = searchResult;
+    }
+    // Path 4: itemStacks (newer API format)
+    else if (itemStacks.length > 0) {
+      for (const stack of itemStacks) {
+        if (stack.items && Array.isArray(stack.items)) {
+          rawProducts.push(...stack.items);
+        }
+      }
     }
 
-    // Parse price string like "$3.48" or "3.48" to number
+    // Path 5: try to find any array in body that looks like products
+    if (rawProducts.length === 0 && data.body) {
+      for (const key of Object.keys(data.body)) {
+        const val = data.body[key];
+        if (Array.isArray(val) && val.length > 2 && val[0]?.title) {
+          console.log("[walmart-search] Found products in body." + key);
+          rawProducts = val;
+          break;
+        }
+      }
+    }
+
+    console.log("[walmart-search] Final raw products count:", rawProducts.length);
+    if (rawProducts.length > 0) {
+      console.log("[walmart-search] Sample keys:", Object.keys(rawProducts[0]).join(","));
+      console.log("[walmart-search] Sample:", JSON.stringify(rawProducts[0]).slice(0, 600));
+    } else {
+      // Log entire body structure for debugging
+      console.log("[walmart-search] Full body structure:", JSON.stringify(data.body || data).slice(0, 2000));
+    }
+
+    // Parse price from various formats
     const parsePrice = (p: any): number => {
       if (typeof p === "number") return p;
       if (typeof p === "string") {
@@ -122,37 +170,40 @@ serve(async (req) => {
         return parseFloat(cleaned) || 0;
       }
       if (p && typeof p === "object") {
-        return parsePrice(p.currentPrice || p.current || p.price || 0);
+        return parsePrice(p.currentPrice || p.current || p.price || p.priceString || 0);
       }
       return 0;
     };
 
-    // Extract product ID from link like "/ip/Product-Name/12345"
+    // Try to extract price from title string (e.g., "Product Name $3.48 ...")
+    const extractPriceFromTitle = (title: string): number => {
+      const match = title.match(/\$(\d+(?:\.\d{1,2})?)/);
+      return match ? parseFloat(match[1]) : 0;
+    };
+
+    // Extract product ID from link
     const extractId = (link: string): string => {
       if (!link) return crypto.randomUUID().slice(0, 12);
       const match = link.match(/\/(\d{5,})/);
       return match ? match[1] : crypto.randomUUID().slice(0, 12);
     };
 
-    // Clean product name: remove trailing size+price junk
+    // Clean product name
     const cleanName = (name: string): string => {
       if (!name) return "";
-      // Remove leading badges like "Best seller", "Overall pick", "Popular pick"
-      let cleaned = name.replace(/^(Best seller|Overall pick|Popular pick|Rollback|Clearance)\s+/i, "");
-      // Remove everything from the first $ onward (price + unit price)
+      let cleaned = name.replace(/^(Best seller|Overall pick|Popular pick|Rollback|Clearance|Sponsored)\s+/i, "");
+      // Remove everything from the first $ onward
       cleaned = cleaned.replace(/\s*\$[\d.,]+.*$/, "");
-      // Remove unit-price patterns like "3.8 ¢/fl oz" or "2.5¢/oz"
+      // Remove unit-price patterns
       cleaned = cleaned.replace(/\s*[\d.]+\s*¢\/[a-z\s]+$/i, "");
-      // Remove trailing quantity patterns like "128 fl oz", "64 oz", "1 Gallon", "12 ct", "2 pk", "16.9 fl oz" etc.
+      // Remove trailing quantity patterns
       cleaned = cleaned.replace(/\s*,?\s*\d+(\.\d+)?\s*(fl\s*oz|oz|gal|gallon|ct|count|pk|pack|lb|lbs|ml|l|kg|g|pt|qt|each)\s*$/i, "");
-      // Fix concatenated size like "Gallon128" → "Gallon"
       cleaned = cleaned.replace(/([a-zA-Z])(\d{2,})\s*$/, "$1");
-      // Remove trailing commas, dashes, pipes
       cleaned = cleaned.replace(/[\s,\-|]+$/, "").trim();
       return cleaned;
     };
 
-    // Extract brand: use API brand field, or first segment before comma in title
+    // Extract brand
     const extractBrand = (item: any): string => {
       if (item.brand) return item.brand;
       if (item.brandName) return item.brandName;
@@ -168,24 +219,39 @@ serve(async (req) => {
     const toProxyImageUrl = (src: string): string =>
       src ? `${functionBaseUrl}?img=${encodeURIComponent(src)}` : "";
 
-    const items = rawProducts.map((item: any) => ({
-      productId: item.id || item.usItemId || item.product_id || extractId(item.link || ""),
-      name: cleanName(item.title || item.name || ""),
-      price: parsePrice(item.price),
-      image: toProxyImageUrl(item.image || item.thumbnailImage || item.largeFrontImage || ""),
-      brand: extractBrand(item),
-      rating: item.rating?.average ?? item.customerRating ?? item.ratings ?? null,
-      inStock: true,
-      store: "Walmart",
-    }));
+    const items = rawProducts.map((item: any) => {
+      const title = item.title || item.name || "";
+      let price = parsePrice(item.price);
+      // Fallback: extract price from title if price field is missing/zero
+      if (price === 0) {
+        price = extractPriceFromTitle(title);
+      }
+      // Also try priceInfo, salesPrice, currentPrice fields
+      if (price === 0 && item.priceInfo) {
+        price = parsePrice(item.priceInfo.currentPrice || item.priceInfo.linePrice || item.priceInfo);
+      }
+      if (price === 0 && item.salesPrice) price = parsePrice(item.salesPrice);
+      if (price === 0 && item.currentPrice) price = parsePrice(item.currentPrice);
 
-    console.log("[walmart-search] Mapped items count:", items.length);
-    if (items.length > 0) {
-      console.log("[walmart-search] Sample mapped:", JSON.stringify(items[0]));
-    }
+      return {
+        productId: item.id || item.usItemId || item.product_id || extractId(item.link || item.canonicalUrl || ""),
+        name: cleanName(title),
+        price,
+        image: toProxyImageUrl(item.image || item.thumbnailImage || item.largeFrontImage || item.imageUrl || ""),
+        brand: extractBrand(item),
+        rating: item.rating?.average ?? item.customerRating ?? item.ratings ?? item.averageRating ?? null,
+        inStock: true,
+        store: "Walmart",
+      };
+    });
+
+    // Filter out items with no name or zero price
+    const validItems = items.filter((i: any) => i.name.length > 2 && i.price > 0);
+
+    console.log("[walmart-search] Valid items:", validItems.length, "of", items.length, "total");
 
     return new Response(
-      JSON.stringify({ products: items, totalCount: data.body?.totalCount || items.length }),
+      JSON.stringify({ products: validItems, totalCount: data.body?.productsCount || validItems.length }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
