@@ -182,6 +182,7 @@ const Profile = () => {
                       ref={fileInputRef}
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
+                      capture={undefined}
                       onChange={handleFileChange}
                       className="hidden"
                     />

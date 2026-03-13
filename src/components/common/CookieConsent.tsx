@@ -32,6 +32,9 @@ const CookieConsent = () => {
   });
 
   useEffect(() => {
+    // Never show cookie consent in native iOS/Android apps (App Store guideline 5.1.2i)
+    if (Capacitor.isNativePlatform()) return;
+
     const consent = localStorage.getItem("zivo-cookie-consent");
     if (!consent) {
       // Show banner after a short delay
