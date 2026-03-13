@@ -705,6 +705,7 @@ export function GroceryCategoryBrowser({ store, onAdd, cartProductIds, onBrowse,
           onAdd={onAdd}
           cartProductIds={cartProductIds}
           onBrowse={onBrowse}
+          onSelect={onSelect}
           index={i}
         />
       ))}
