@@ -240,14 +240,14 @@ export default function GroceryStorePage() {
     }
   }, [storeCfg, search]);
 
-  // After each page finishes loading, auto-queue the next one (up to 5 extra pages)
+  // After each page finishes loading, auto-queue the next one (up to 20 extra pages for 1000+ products)
   useEffect(() => {
     if (autoLoadTimer.current) clearTimeout(autoLoadTimer.current);
-    if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && autoLoadCount.current < 5) {
+    if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && autoLoadCount.current < 20) {
       autoLoadTimer.current = setTimeout(() => {
         autoLoadCount.current += 1;
         loadMore();
-      }, 400);
+      }, 300);
     }
     return () => { if (autoLoadTimer.current) clearTimeout(autoLoadTimer.current); };
   }, [isLoading, isLoadingMore, products.length, hasMore, loadMore]);
