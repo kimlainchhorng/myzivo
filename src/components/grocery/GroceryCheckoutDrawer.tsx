@@ -75,7 +75,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
   const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
   const [paymentOrderId, setPaymentOrderId] = useState<string | null>(null);
   const [showItems, setShowItems] = useState(false);
-  const [leaveAtDoor, setLeaveAtDoor] = useState(false);
+  const [deliveryNote, setDeliveryNote] = useState("");
   const [step, setStep] = useState<1 | 2>(1);
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoCode, setPromoCode] = useState("");
