@@ -31,7 +31,7 @@ const ESCALATION_CATEGORIES = [
   { value: "other", label: "Other" },
 ];
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-support-chat`;
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL || "https://slirphzzwcogdbkeicff.supabase.co"}/functions/v1/ai-support-chat`;
 
 const LiveChatWidget = () => {
   const location = useLocation();
@@ -91,7 +91,7 @@ const LiveChatWidget = () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI"}`,
       },
       body: JSON.stringify({ messages: apiMessages }),
       signal: controller.signal,
