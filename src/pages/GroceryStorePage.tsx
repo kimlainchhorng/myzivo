@@ -34,20 +34,20 @@ import { addRecentStore } from "@/components/grocery/GroceryRecentStores";
 import GroceryDeliveryBar from "@/components/grocery/GroceryDeliveryBar";
 
 const QUICK_FILTERS = [
-  { label: "🔥 Popular", query: "grocery essentials" },
-  { label: "🥩 Meat", query: "fresh meat chicken beef" },
-  { label: "🥦 Produce", query: "fresh fruits vegetables" },
-  { label: "🥛 Dairy", query: "milk eggs cheese yogurt" },
-  { label: "🍞 Bakery", query: "bread bakery rolls" },
-  { label: "🥤 Drinks", query: "coca cola pepsi sprite soda" },
-  { label: "🧃 Juice", query: "orange juice apple juice water" },
-  { label: "☕ Coffee", query: "coffee creamer tea" },
-  { label: "🍿 Snacks", query: "chips cookies crackers" },
-  { label: "🧊 Frozen", query: "frozen pizza ice cream" },
-  { label: "🍝 Pasta", query: "pasta rice noodles" },
-  { label: "🥫 Canned", query: "canned soup beans" },
-  { label: "🧹 Household", query: "paper towels detergent soap" },
-  { label: "🐶 Pets", query: "dog food cat food pet treats" },
+  { label: "🔥 Popular", query: "snacks drinks chips cookies soda" },
+  { label: "🥩 Meat", query: "chicken beef pork steak ground meat" },
+  { label: "🥦 Produce", query: "apples bananas lettuce tomatoes oranges" },
+  { label: "🥛 Dairy", query: "milk eggs cheese yogurt butter" },
+  { label: "🍞 Bakery", query: "bread rolls bagels muffins donuts" },
+  { label: "🥤 Drinks", query: "coca cola pepsi sprite water juice" },
+  { label: "🧃 Juice", query: "orange juice apple juice cranberry lemonade" },
+  { label: "☕ Coffee", query: "folgers coffee keurig pods creamer" },
+  { label: "🍿 Snacks", query: "doritos lays oreo goldfish crackers" },
+  { label: "🧊 Frozen", query: "frozen pizza ice cream chicken nuggets" },
+  { label: "🍝 Pasta", query: "spaghetti pasta sauce penne noodles" },
+  { label: "🥫 Canned", query: "campbell soup canned beans corn tuna" },
+  { label: "🧹 Household", query: "paper towels toilet paper detergent soap" },
+  { label: "🐶 Pets", query: "dog food cat food pet treats litter" },
 ];
 
 type SortMode = "default" | "price-low" | "price-high" | "rating";
