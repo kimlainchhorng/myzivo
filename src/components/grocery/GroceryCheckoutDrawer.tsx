@@ -95,15 +95,17 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
     return () => clearInterval(interval);
   }, [storeCfg]);
 
-  const priorityFee = getPriorityFee(scheduler.speed);
+  const { isPlus } = useZivoPlus();
+
+  const priorityFee = isPlus ? 0 : getPriorityFee(scheduler.speed); // ZIVO+ gets free priority
   // Distance-based delivery fee (estimate: ~3mi, ETA-based minutes)
   const estimatedMiles = 3;
   const deliveryFee = calcDeliveryFee(estimatedMiles, liveEta);
   // Platform markup: 3-5% of subtotal
   const platformMarkup = calcMarkup(total);
   const markupPct = getMarkupPct(total);
-  // Service fee: 5% of subtotal with min/max
-  const serviceFee = calcServiceFee(total);
+  // Service fee: waived for ZIVO+ members
+  const serviceFee = isPlus ? 0 : calcServiceFee(total);
   const grandTotal = Math.max(0, total + platformMarkup + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
