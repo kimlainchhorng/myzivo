@@ -592,6 +592,7 @@ const App = () => (
           <LiveChatWidget />
           <SpatialCursor />
           <BrandThemeApplicator />
+        </ZivoPlusProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
