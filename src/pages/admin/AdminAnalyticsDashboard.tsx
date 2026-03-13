@@ -69,7 +69,7 @@ export default function AdminAnalyticsDashboard() {
       .reduce((sum, b) => sum + (Number(b.total) || 0), 0);
     const byService: Record<string, number> = {};
     bookingStats.forEach((b) => {
-      const key = b.service_type || "other";
+      const key = b.provider || "other";
       byService[key] = (byService[key] || 0) + 1;
     });
     return { total, confirmed, revenue, byService };
