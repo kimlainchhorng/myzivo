@@ -427,8 +427,11 @@ export default function GroceryStorePage() {
           </div>
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={() => setShowCart(!showCart)}
-            className="relative p-3 -mr-1 rounded-2xl bg-muted/30 hover:bg-muted/50 active:bg-muted/70 transition-colors duration-200 min-w-[48px] min-h-[48px] flex items-center justify-center z-10 touch-manipulation cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowCart((prev) => !prev);
+            }}
+            className="relative p-3 -mr-1 rounded-2xl bg-muted/30 hover:bg-muted/50 active:bg-muted/70 transition-colors duration-200 min-w-[48px] min-h-[48px] flex items-center justify-center z-40 touch-manipulation cursor-pointer"
             aria-label="Shopping cart"
             style={{ WebkitTapHighlightColor: "transparent" }}
           >
