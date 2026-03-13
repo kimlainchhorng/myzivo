@@ -63,7 +63,10 @@ export default function PriceAlertsWidget() {
     staleTime: 60000,
   });
 
-  const alerts = realAlerts?.length ? realAlerts : demoAlerts;
+  const alerts = realAlerts || [];
+
+  // No alerts — hide widget
+  if (!alerts.length) return null;
 
   return (
     <div>

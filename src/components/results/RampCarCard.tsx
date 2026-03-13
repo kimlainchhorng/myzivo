@@ -76,7 +76,7 @@ export function RampCarCard({ car, onViewDeal, className }: RampCarCardProps) {
   const { formatted: dailyPrice } = getDisplay(car.pricePerDay, "USD");
   const { formatted: totalPriceFormatted } = getDisplay(car.totalPrice, "USD");
 
-  // Determine if theft protection is available (mock logic)
+  // Determine if theft protection is available from car data
   const hasTheftProtection = car.theftProtection || car.features.some(f => 
     f.toLowerCase().includes("theft") || f.toLowerCase().includes("protection")
   );

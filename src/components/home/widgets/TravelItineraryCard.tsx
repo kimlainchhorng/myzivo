@@ -79,7 +79,36 @@ export default function TravelItineraryCard() {
     staleTime: 60000,
   });
 
-  const trip = tripData || demoTrip;
+  const trip = tripData;
+
+  // No trip data — show CTA to book
+  if (!trip) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl bg-gradient-to-br from-sky-500/8 via-amber-500/4 to-emerald-500/6 border border-sky-500/12 p-5 relative overflow-hidden shadow-sm"
+      >
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500/20 to-sky-500/10 flex items-center justify-center shadow-inner">
+            <Luggage className="w-4 h-4 text-sky-500" />
+          </div>
+          <div>
+            <span className="text-sm font-bold text-foreground">No Upcoming Trips</span>
+            <p className="text-[10px] text-muted-foreground">Plan your next adventure</p>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate("/flights")}
+          className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-sky-500 py-2.5 rounded-xl bg-sky-500/5 border border-sky-500/15 touch-manipulation active:scale-[0.98] transition-all"
+        >
+          <Plane className="w-3.5 h-3.5" />
+          Search Flights
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

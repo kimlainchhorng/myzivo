@@ -93,7 +93,10 @@ export default function QuickReorderCarousel() {
     staleTime: 60000,
   });
 
-  const items = recentBookings?.length ? recentBookings : demoItems;
+  const items = recentBookings || [];
+
+  // No data — hide widget entirely
+  if (!items.length) return null;
 
   return (
     <div>

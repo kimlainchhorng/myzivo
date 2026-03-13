@@ -27,14 +27,12 @@ interface GroupRidePlannerProps {
   onClose?: () => void;
 }
 
-const mockMembers: GroupMember[] = [
-  { id: "1", name: "You", initials: "You", status: "joined", location: "123 Main St", pickupVote: 1, eta: 0 },
-  { id: "2", name: "Alex K.", initials: "AK", status: "joined", location: "456 Oak Ave", pickupVote: 2, eta: 3 },
-  { id: "3", name: "Sara M.", initials: "SM", status: "pending", location: "789 Elm Blvd" },
+const initialMembers: GroupMember[] = [
+  { id: "1", name: "You", initials: "You", status: "joined", pickupVote: 1, eta: 0 },
 ];
 
 export default function GroupRidePlanner({ onStartRide, onClose }: GroupRidePlannerProps) {
-  const [members, setMembers] = useState(mockMembers);
+  const [members, setMembers] = useState(initialMembers);
   const [showInvite, setShowInvite] = useState(false);
   const [inviteName, setInviteName] = useState("");
   const [destination, setDestination] = useState("Downtown Convention Center");
