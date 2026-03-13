@@ -342,18 +342,33 @@ function CategorySection({ category, store, onAdd, cartProductIds, onBrowse, ind
     const baseUrl = `${SUPABASE_URL}/functions/v1/${cfg.edgeFunction}`;
     const headers = { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY };
 
-    // Fetch 3 pages in parallel for maximum product density
-    Promise.all([
-      fetch(`${baseUrl}?q=${encodeURIComponent(category.query)}&page=1`, { headers }).then((r) => r.json()).catch(() => ({ products: [] })),
-      fetch(`${baseUrl}?q=${encodeURIComponent(category.query)}&page=2`, { headers }).then((r) => r.json()).catch(() => ({ products: [] })),
-      fetch(`${baseUrl}?q=${encodeURIComponent(category.query)}&page=3`, { headers }).then((r) => r.json()).catch(() => ({ products: [] })),
-    ])
-      .then(([data1, data2, data3]) => {
-        const all = [...(data1.products || []), ...(data2.products || []), ...(data3.products || [])];
+    // API returns ~2 products per query, so split into individual keyword searches
+    const keywords = category.query.split(/\s+/).filter((w) => w.length >= 2);
+    // Also search the full query and 2-word combos for variety
+    const searches: string[] = [category.query];
+    for (const kw of keywords) {
+      if (!searches.includes(kw)) searches.push(kw);
+    }
+    // Add 2-word pairs for better matching
+    for (let i = 0; i < keywords.length - 1; i++) {
+      const pair = `${keywords[i]} ${keywords[i + 1]}`;
+      if (!searches.includes(pair)) searches.push(pair);
+    }
+
+    // Fetch all in parallel (each returns ~2 items, so 10 searches = ~20 items)
+    const fetchOne = (q: string) =>
+      fetch(`${baseUrl}?q=${encodeURIComponent(q)}&page=1`, { headers })
+        .then((r) => r.json())
+        .catch(() => ({ products: [] }));
+
+    Promise.all(searches.slice(0, 12).map(fetchOne))
+      .then((results) => {
+        const all = results.flatMap((r) => r.products || []);
         const seen = new Set<string>();
         const unique = all.filter((p: any) => {
-          if (seen.has(p.productId)) return false;
-          seen.add(p.productId);
+          const key = p.productId || p.name;
+          if (seen.has(key)) return false;
+          seen.add(key);
           return true;
         });
         const items: StoreProduct[] = unique.slice(0, 30).map((p: any) => ({ ...p, store }));
