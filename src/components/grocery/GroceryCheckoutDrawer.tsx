@@ -544,8 +544,8 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                       <span className="text-foreground tabular-nums">${markup.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] text-muted-foreground">
-                      <span>Service fee</span>
-                      <span className="text-foreground tabular-nums">${SERVICE_FEE.toFixed(2)}</span>
+                      <span>Service fee ({SERVICE_FEE_PCT}%)</span>
+                      <span className="text-foreground tabular-nums">${serviceFee.toFixed(2)}</span>
                     </div>
                     {priorityFee > 0 && (
                       <div className="flex justify-between text-[12px] text-muted-foreground">
