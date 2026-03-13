@@ -68,6 +68,11 @@ export function useStoreSearch(store: StoreName) {
       const pair = `${words[i]} ${words[i + 1]}`;
       if (!searches.includes(pair)) searches.push(pair);
     }
+    // Add 3-word combos for even more variety
+    for (let i = 0; i < words.length - 2; i++) {
+      const triple = `${words[i]} ${words[i + 1]} ${words[i + 2]}`;
+      if (!searches.includes(triple)) searches.push(triple);
+    }
     return searches;
   };
 
