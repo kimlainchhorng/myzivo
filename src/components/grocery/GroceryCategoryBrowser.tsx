@@ -18,12 +18,26 @@ const CATEGORIES = [
   { emoji: "🥦", label: "Fresh Produce", query: "fresh fruits vegetables", gradient: "from-emerald-500/10 to-emerald-400/5" },
   { emoji: "🥛", label: "Dairy & Eggs", query: "milk eggs cheese yogurt", gradient: "from-sky-500/10 to-sky-400/5" },
   { emoji: "🍞", label: "Bakery & Bread", query: "bread bakery rolls", gradient: "from-amber-500/10 to-amber-400/5" },
-  { emoji: "🥤", label: "Beverages", query: "water juice soda drinks", gradient: "from-violet-500/10 to-violet-400/5" },
-  { emoji: "🍿", label: "Snacks", query: "chips cookies crackers", gradient: "from-yellow-500/10 to-yellow-400/5" },
+  { emoji: "🥤", label: "Drinks & Soda", query: "coca cola pepsi sprite soda", gradient: "from-red-500/10 to-red-400/5" },
+  { emoji: "🧃", label: "Juice & Water", query: "orange juice apple juice water", gradient: "from-orange-500/10 to-orange-400/5" },
+  { emoji: "☕", label: "Coffee & Tea", query: "coffee creamer tea", gradient: "from-amber-700/10 to-amber-600/5" },
+  { emoji: "🍺", label: "Beer & Wine", query: "beer wine spirits", gradient: "from-yellow-600/10 to-yellow-500/5" },
+  { emoji: "🍿", label: "Snacks & Chips", query: "chips cookies crackers", gradient: "from-yellow-500/10 to-yellow-400/5" },
+  { emoji: "🍬", label: "Candy & Sweets", query: "candy chocolate gummy", gradient: "from-pink-400/10 to-pink-300/5" },
   { emoji: "🧊", label: "Frozen Foods", query: "frozen pizza ice cream", gradient: "from-cyan-500/10 to-cyan-400/5" },
-  { emoji: "🍝", label: "Pantry Staples", query: "rice pasta cereal canned", gradient: "from-orange-500/10 to-orange-400/5" },
+  { emoji: "🍝", label: "Pasta & Rice", query: "pasta rice noodles", gradient: "from-orange-500/10 to-orange-400/5" },
+  { emoji: "🥫", label: "Canned Goods", query: "canned soup beans vegetables", gradient: "from-red-400/10 to-red-300/5" },
+  { emoji: "🥜", label: "Nuts & Seeds", query: "peanuts almonds seeds trail mix", gradient: "from-amber-500/10 to-amber-400/5" },
+  { emoji: "🌮", label: "International", query: "mexican asian indian food", gradient: "from-lime-500/10 to-lime-400/5" },
+  { emoji: "🥣", label: "Breakfast", query: "cereal oatmeal pancake syrup", gradient: "from-sky-400/10 to-sky-300/5" },
+  { emoji: "🧈", label: "Condiments", query: "ketchup mustard mayo sauce", gradient: "from-red-500/10 to-red-400/5" },
+  { emoji: "🧴", label: "Personal Care", query: "shampoo toothpaste deodorant", gradient: "from-teal-500/10 to-teal-400/5" },
   { emoji: "🧹", label: "Household", query: "paper towels detergent soap", gradient: "from-indigo-500/10 to-indigo-400/5" },
   { emoji: "🍼", label: "Baby & Kids", query: "baby food diapers formula", gradient: "from-pink-500/10 to-pink-400/5" },
+  { emoji: "🐶", label: "Pet Supplies", query: "dog food cat food pet treats", gradient: "from-stone-500/10 to-stone-400/5" },
+  { emoji: "💊", label: "Health & Vitamins", query: "vitamins medicine pain relief", gradient: "from-emerald-400/10 to-emerald-300/5" },
+  { emoji: "🧻", label: "Paper & Plastic", query: "toilet paper plates cups bags", gradient: "from-slate-500/10 to-slate-400/5" },
+  { emoji: "🌸", label: "Flowers & Garden", query: "flowers plants garden soil", gradient: "from-fuchsia-500/10 to-fuchsia-400/5" },
 ];
 
 /* ─── Category skeleton ─── */
@@ -208,7 +222,7 @@ interface GroceryCategoryBrowserProps {
 }
 
 export function GroceryCategoryBrowser({ store, onAdd, cartProductIds, onBrowse }: GroceryCategoryBrowserProps) {
-  const [visibleCount, setVisibleCount] = useState(CATEGORIES.length);
+  const [visibleCount, setVisibleCount] = useState(8);
 
   return (
     <div className="space-y-1 pb-2">

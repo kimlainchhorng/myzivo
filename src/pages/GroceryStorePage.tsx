@@ -39,11 +39,15 @@ const QUICK_FILTERS = [
   { label: "🥦 Produce", query: "fresh fruits vegetables" },
   { label: "🥛 Dairy", query: "milk eggs cheese yogurt" },
   { label: "🍞 Bakery", query: "bread bakery rolls" },
-  { label: "🥤 Drinks", query: "water juice soda drinks" },
+  { label: "🥤 Drinks", query: "coca cola pepsi sprite soda" },
+  { label: "🧃 Juice", query: "orange juice apple juice water" },
+  { label: "☕ Coffee", query: "coffee creamer tea" },
   { label: "🍿 Snacks", query: "chips cookies crackers" },
   { label: "🧊 Frozen", query: "frozen pizza ice cream" },
-  { label: "🍝 Pantry", query: "rice pasta cereal canned" },
-  { label: "🧹 Cleaning", query: "paper towels detergent soap" },
+  { label: "🍝 Pasta", query: "pasta rice noodles" },
+  { label: "🥫 Canned", query: "canned soup beans" },
+  { label: "🧹 Household", query: "paper towels detergent soap" },
+  { label: "🐶 Pets", query: "dog food cat food pet treats" },
 ];
 
 type SortMode = "default" | "price-low" | "price-high" | "rating";
@@ -240,14 +244,14 @@ export default function GroceryStorePage() {
     }
   }, [storeCfg, search]);
 
-  // After each page finishes loading, auto-queue the next one (up to 5 extra pages)
+  // After each page finishes loading, auto-queue the next one (up to 20 extra pages for 1000+ products)
   useEffect(() => {
     if (autoLoadTimer.current) clearTimeout(autoLoadTimer.current);
-    if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && autoLoadCount.current < 5) {
+    if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && autoLoadCount.current < 20) {
       autoLoadTimer.current = setTimeout(() => {
         autoLoadCount.current += 1;
         loadMore();
-      }, 400);
+      }, 300);
     }
     return () => { if (autoLoadTimer.current) clearTimeout(autoLoadTimer.current); };
   }, [isLoading, isLoadingMore, products.length, hasMore, loadMore]);
