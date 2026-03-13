@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ZivoPlusProvider } from "@/contexts/ZivoPlusContext";
 import { UTMProvider } from "@/contexts/UTMContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
@@ -54,6 +55,7 @@ const GroceryOrderHistory = lazy(() => import("./pages/GroceryOrderHistory"));
 const GroceryTerms = lazy(() => import("./pages/grocery/GroceryTerms"));
 const GroceryReturns = lazy(() => import("./pages/grocery/GroceryReturns"));
 const GroceryFees = lazy(() => import("./pages/grocery/GroceryFees"));
+const ZivoPlusPage = lazy(() => import("./pages/ZivoPlusPage"));
 const DrivePage = lazy(() => import("./pages/DrivePage"));
 const DriverShoppingList = lazy(() => import("./pages/DriverShoppingList"));
 const DriverOrdersPage = lazy(() => import("./pages/DriverOrdersPage"));
@@ -318,6 +320,7 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <AuthProvider>
+                  <ZivoPlusProvider>
                   <CustomerCityProvider>
                     <CurrencyProvider>
                       <UTMProvider>
@@ -362,6 +365,7 @@ const App = () => (
                 <Route path="/grocery/terms" element={<GroceryTerms />} />
                 <Route path="/grocery/returns" element={<GroceryReturns />} />
                 <Route path="/grocery/fees" element={<GroceryFees />} />
+                <Route path="/zivo-plus" element={<ZivoPlusPage />} />
                 <Route path="/drive" element={<DrivePage />} />
                 <Route path="/driver/orders" element={<DriverOrdersPage />} />
                 <Route path="/driver/shopping/:orderId" element={<DriverShoppingList />} />
@@ -589,6 +593,7 @@ const App = () => (
           <LiveChatWidget />
           <SpatialCursor />
           <BrandThemeApplicator />
+        </ZivoPlusProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

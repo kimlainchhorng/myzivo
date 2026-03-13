@@ -24,6 +24,7 @@ import GroceryInlinePaymentForm from "@/components/grocery/GroceryInlinePaymentF
 import { getLiveEta } from "@/utils/storeStatus";
 import { GROCERY_STORES } from "@/config/groceryStores";
 import { SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee, calcMarkup, getMarkupPct } from "@/config/groceryPricing";
+import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -94,15 +95,17 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
     return () => clearInterval(interval);
   }, [storeCfg]);
 
-  const priorityFee = getPriorityFee(scheduler.speed);
+  const { isPlus } = useZivoPlus();
+
+  const priorityFee = isPlus ? 0 : getPriorityFee(scheduler.speed); // ZIVO+ gets free priority
   // Distance-based delivery fee (estimate: ~3mi, ETA-based minutes)
   const estimatedMiles = 3;
   const deliveryFee = calcDeliveryFee(estimatedMiles, liveEta);
   // Platform markup: 3-5% of subtotal
   const platformMarkup = calcMarkup(total);
   const markupPct = getMarkupPct(total);
-  // Service fee: 5% of subtotal with min/max
-  const serviceFee = calcServiceFee(total);
+  // Service fee: waived for ZIVO+ members
+  const serviceFee = isPlus ? 0 : calcServiceFee(total);
   const grandTotal = Math.max(0, total + platformMarkup + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
@@ -673,8 +676,18 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                       <span className="text-foreground tabular-nums">${deliveryFee.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] text-muted-foreground">
-                      <span>Service fee ({SERVICE_FEE_PCT}%)</span>
-                      <span className="text-foreground tabular-nums">${serviceFee.toFixed(2)}</span>
+                      <span className="flex items-center gap-1.5">
+                        Service fee ({SERVICE_FEE_PCT}%)
+                        {isPlus && <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-amber-500/15 text-amber-600">ZIVO+</span>}
+                      </span>
+                      {isPlus ? (
+                        <span className="text-amber-600 font-bold line-through-none">
+                          <span className="line-through text-muted-foreground/50 mr-1">${calcServiceFee(total).toFixed(2)}</span>
+                          $0.00
+                        </span>
+                      ) : (
+                        <span className="text-foreground tabular-nums">${serviceFee.toFixed(2)}</span>
+                      )}
                     </div>
                     {priorityFee > 0 && (
                       <div className="flex justify-between text-[12px] text-muted-foreground">
