@@ -94,7 +94,7 @@ export function GroceryStoreHero({ store, liveEta, isOpen }: Props) {
           {[
             { icon: Clock, label: `${liveEta} min`, sub: "Delivery", color: "text-primary", bg: "bg-primary/5" },
             { icon: Star, label: `${store.rating}`, sub: "Rating", color: "text-amber-500", bg: "bg-amber-500/5" },
-            { icon: Truck, label: formatFee(DELIVERY_FEE), sub: "Delivery fee", color: "text-primary", bg: "bg-primary/5" },
+            { icon: Truck, label: `From ${formatFee(DELIVERY_BASE_FEE)}`, sub: "Delivery fee", color: "text-primary", bg: "bg-primary/5" },
           ].map((stat, i) => (
             <motion.div
               key={stat.sub}

@@ -42,8 +42,8 @@ const SERVICE_INFO = [
   {
     id: "delivery",
     icon: Truck,
-    title: `${formatFee(DELIVERY_FEE)} Flat Delivery`,
-    desc: "No surge, no hidden fees",
+    title: `From ${formatFee(DELIVERY_BASE_FEE)} Delivery`,
+    desc: "Distance-based, no hidden fees",
     bg: "bg-gradient-to-br from-violet-500 to-purple-600",
     iconBg: "bg-white/20",
     textColor: "text-white",
