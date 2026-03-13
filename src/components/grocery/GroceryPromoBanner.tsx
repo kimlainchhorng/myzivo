@@ -1,18 +1,54 @@
 /**
- * GroceryPromoBanner - Real service info banners (no fake promos)
+ * GroceryPromoBanner - Bold, eye-catching service info banners
  * GroceryPromoInput - Validates promo codes via Supabase RPC
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Truck, Shield, Clock, MapPin, X, Tag, Check, Loader2 } from "lucide-react";
+import { Truck, Shield, Clock, MapPin, X, Tag, Check, Loader2, Zap, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { DELIVERY_FEE, formatFee } from "@/config/groceryPricing";
 
 const SERVICE_INFO = [
-  { id: "same-day", icon: Clock, title: "Same-Day Delivery", desc: "Order by 3pm for same-day", gradient: "from-primary/12 via-primary/8 to-primary/4", accent: "text-primary" },
-  { id: "in-store", icon: MapPin, title: "In-Store Prices", desc: "No markup on products", gradient: "from-emerald-500/12 via-emerald-400/8 to-emerald-300/4", accent: "text-emerald-600" },
-  { id: "quality", icon: Shield, title: "Quality Guarantee", desc: "Fresh items or your money back", gradient: "from-amber-500/12 via-amber-400/8 to-amber-300/4", accent: "text-amber-600" },
-  { id: "delivery", icon: Truck, title: `${formatFee(DELIVERY_FEE)} Delivery`, desc: "Flat rate, no hidden fees", gradient: "from-violet-500/12 via-violet-400/8 to-violet-300/4", accent: "text-violet-600" },
+  {
+    id: "same-day",
+    icon: Zap,
+    title: "Same-Day Delivery",
+    desc: "Order by 3 PM, get it today",
+    bg: "bg-gradient-to-br from-primary to-primary/80",
+    iconBg: "bg-primary-foreground/20",
+    textColor: "text-primary-foreground",
+    descColor: "text-primary-foreground/80",
+  },
+  {
+    id: "in-store",
+    icon: MapPin,
+    title: "In-Store Prices",
+    desc: "Zero markup on any item",
+    bg: "bg-gradient-to-br from-emerald-500 to-emerald-600",
+    iconBg: "bg-white/20",
+    textColor: "text-white",
+    descColor: "text-white/80",
+  },
+  {
+    id: "quality",
+    icon: Shield,
+    title: "Freshness Guaranteed",
+    desc: "Not fresh? Full refund",
+    bg: "bg-gradient-to-br from-amber-400 to-orange-500",
+    iconBg: "bg-white/20",
+    textColor: "text-white",
+    descColor: "text-white/80",
+  },
+  {
+    id: "delivery",
+    icon: Truck,
+    title: `${formatFee(DELIVERY_FEE)} Flat Delivery`,
+    desc: "No surge, no hidden fees",
+    bg: "bg-gradient-to-br from-violet-500 to-purple-600",
+    iconBg: "bg-white/20",
+    textColor: "text-white",
+    descColor: "text-white/80",
+  },
 ];
 
 export function GroceryPromoBanner() {
@@ -33,9 +69,9 @@ export function GroceryPromoBanner() {
   if (visible.length === 0) return null;
 
   return (
-    <div className="px-4 pt-2 pb-1">
+    <div className="px-4 pt-3 pb-2">
       <div
-        className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory"
+        className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1"
         style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
       >
         <AnimatePresence mode="popLayout">
@@ -43,26 +79,30 @@ export function GroceryPromoBanner() {
             <motion.div
               key={info.id}
               layout
-              initial={{ opacity: 0, scale: 0.92, x: 20 }}
-              animate={{ opacity: 1, scale: 1, x: 0 }}
-              exit={{ opacity: 0, scale: 0.9, x: -20 }}
-              transition={{ delay: i * 0.06, type: "spring", stiffness: 300, damping: 24 }}
-              className={`snap-start shrink-0 w-[210px] rounded-2xl bg-gradient-to-br ${info.gradient} border border-border/20 p-3.5 relative group overflow-hidden`}
+              initial={{ opacity: 0, scale: 0.9, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, x: -30 }}
+              transition={{ delay: i * 0.08, type: "spring", stiffness: 300, damping: 22 }}
+              className={`snap-start shrink-0 w-[200px] rounded-2xl ${info.bg} p-4 relative group overflow-hidden shadow-lg`}
             >
-              <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-background/10 blur-lg pointer-events-none" />
+              {/* Decorative circles */}
+              <div className="absolute -top-6 -right-6 h-20 w-20 rounded-full bg-white/10 blur-sm pointer-events-none" />
+              <div className="absolute -bottom-4 -left-4 h-14 w-14 rounded-full bg-white/5 blur-sm pointer-events-none" />
+
               <button
                 onClick={() => handleDismiss(info.id)}
-                className="absolute top-2 right-2 p-1 rounded-full bg-background/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-background/60"
+                className="absolute top-2.5 right-2.5 p-1 rounded-full bg-black/15 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-black/25"
               >
-                <X className="h-2.5 w-2.5 text-muted-foreground" />
+                <X className="h-2.5 w-2.5 text-white/80" />
               </button>
-              <div className="flex items-start gap-2.5 relative">
-                <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-background/50 backdrop-blur-sm border border-border/20 shrink-0">
-                  <info.icon className={`h-4 w-4 ${info.accent}`} />
+
+              <div className="relative flex flex-col gap-2.5">
+                <div className={`flex items-center justify-center h-10 w-10 rounded-xl ${info.iconBg} backdrop-blur-sm`}>
+                  <info.icon className={`h-5 w-5 ${info.textColor}`} />
                 </div>
                 <div>
-                  <p className="text-[12px] font-bold text-foreground leading-tight">{info.title}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{info.desc}</p>
+                  <p className={`text-[13px] font-extrabold ${info.textColor} leading-tight`}>{info.title}</p>
+                  <p className={`text-[11px] ${info.descColor} mt-0.5 font-medium`}>{info.desc}</p>
                 </div>
               </div>
             </motion.div>

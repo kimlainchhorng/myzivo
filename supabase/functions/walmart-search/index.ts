@@ -84,7 +84,7 @@ serve(async (req) => {
     }
 
     // Build the correct walmart-serp.php URL — affinityOverride=store_led prioritizes in-store items
-    const walmartUrl = `https://www.walmart.com/search?q=${encodeURIComponent(query)}&page=${page}&affinityOverride=store_led&facet=fulfillment_method_in_store`;
+    const walmartUrl = `https://www.walmart.com/search?q=${encodeURIComponent(query)}&page=${page}&affinityOverride=store_led`;
     const apiUrl = `https://${RAPID_API_HOST}/walmart-serp.php?url=${encodeURIComponent(walmartUrl)}`;
 
     console.log("[walmart-search] Query:", query, "| API URL:", apiUrl);
