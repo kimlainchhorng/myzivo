@@ -531,13 +531,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     [savedLocations]
   );
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const nearbyCenter = pickup ?? userLocation;
-  const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(nearbyCenter?.lat ?? null, nearbyCenter?.lng ?? null);
 
   const [viewStep, setViewStep] = useState<ViewStep>("search");
   const [activeTab, setActiveTab] = useState<RideTab>("book");
-   const [pickup, setPickup] = useState<PlaceData | null>(null);
+  const [pickup, setPickup] = useState<PlaceData | null>(null);
   const [destination, setDestination] = useState<PlaceData | null>(null);
+
+  const nearbyCenter = pickup ?? userLocation;
+  const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(nearbyCenter?.lat ?? null, nearbyCenter?.lng ?? null);
   const [pickupDisplay, setPickupDisplay] = useState("");
   const [destinationDisplay, setDestinationDisplay] = useState("");
 
