@@ -2599,7 +2599,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 leading-snug">
-                      {etaTime(v.etaMin)} · {v.desc}
+                      {etaTime(v.etaMin)} · {getVehicleDesc(v.id, v.desc, currentLanguage === "km")}
                     </p>
                   </div>
 
