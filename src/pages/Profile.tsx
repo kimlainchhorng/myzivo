@@ -285,12 +285,12 @@ const Profile = () => {
                       {updateProfile.isPending ? (
                         <>
                           <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                          Saving...
+                          {t("profile.saving")}
                         </>
                       ) : (
                         <>
                           <Save className="h-5 w-5 mr-2" />
-                          Save Changes
+                          {t("profile.save")}
                         </>
                       )}
                     </Button>
