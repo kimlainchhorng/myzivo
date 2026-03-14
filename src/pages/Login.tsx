@@ -51,7 +51,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const { currentLanguage, changeLanguage } = useI18n();
+  const { currentLanguage, changeLanguage, t } = useI18n();
   const LANGS = [
     { code: "en", label: "English", flag: "🇺🇸" },
     { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
@@ -277,7 +277,7 @@ const Login = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-muted-foreground mt-1 text-xs sm:text-sm"
             >
-              {isLogin ? "Welcome back, Traveler" : "Get Started Free — No credit card needed"}
+              {isLogin ? t("auth.welcome_back") : t("auth.get_started")}
             </motion.p>
           </div>
 
@@ -291,7 +291,7 @@ const Login = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Email</FormLabel>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.email")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -315,12 +315,12 @@ const Login = () => {
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center justify-between">
-                        <FormLabel className="text-muted-foreground text-sm font-medium">Password</FormLabel>
+                        <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.password")}</FormLabel>
                         <Link
                           to="/forgot-password"
                           className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
                         >
-                          Forgot?
+                          {t("auth.forgot")}
                         </Link>
                       </div>
                       <FormControl>
@@ -349,7 +349,7 @@ const Login = () => {
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <>
-                      Sign In
+                      {t("auth.sign_in")}
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </>
                   )}
@@ -364,7 +364,7 @@ const Login = () => {
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Full Name</FormLabel>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.full_name")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -386,7 +386,7 @@ const Login = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Email</FormLabel>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.email")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -409,7 +409,7 @@ const Login = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Password</FormLabel>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.password")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -432,7 +432,7 @@ const Login = () => {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Confirm Password</FormLabel>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.confirm_password")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -459,7 +459,7 @@ const Login = () => {
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <>
-                      Create Account
+                      {t("auth.create_account")}
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </>
                   )}
@@ -475,7 +475,7 @@ const Login = () => {
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-4 text-muted-foreground">Or continue with</span>
+              <span className="bg-card px-4 text-muted-foreground">{t("auth.or_continue")}</span>
             </div>
           </div>
 
@@ -524,12 +524,12 @@ const Login = () => {
           <div className="flex items-center justify-center gap-4 mt-3 text-muted-foreground text-[10px]">
             <div className="flex items-center gap-1">
               <Shield className="w-3 h-3" />
-              <span>256-bit encrypted</span>
+              <span>{t("auth.encrypted")}</span>
             </div>
             <div className="w-px h-3 bg-border" />
             <div className="flex items-center gap-1">
               <Mail className="w-3 h-3" />
-              <span>No spam, ever</span>
+              <span>{t("auth.no_spam")}</span>
             </div>
           </div>
 
@@ -540,9 +540,9 @@ const Login = () => {
               onClick={toggleMode}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              {isLogin ? t("auth.no_account") + " " : t("auth.have_account") + " "}
               <span className="text-primary font-semibold">
-                {isLogin ? "Sign Up" : "Log In"}
+                {isLogin ? t("auth.sign_up") : t("auth.log_in")}
               </span>
             </button>
           </div>
@@ -550,14 +550,14 @@ const Login = () => {
 
         <div className="flex flex-col items-center gap-2 mt-3 shrink-0">
           <p className="text-center text-xs text-muted-foreground">
-            {isLogin ? "Protected by enterprise-grade security" : "By signing up, you agree to our Terms of Service"}
+            {isLogin ? t("auth.protected") : t("auth.terms_agree")}
           </p>
           <button
             onClick={() => navigate("/")}
             className="flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
           >
             <Home className="h-4 w-4" />
-            Go to Home
+            {t("auth.go_home")}
           </button>
         </div>
       </div>
