@@ -96,8 +96,8 @@ export default function TravelItineraryCard() {
             <Luggage className="w-4 h-4 text-sky-500" />
           </div>
           <div>
-            <span className="text-sm font-bold text-foreground">No Upcoming Trips</span>
-            <p className="text-[10px] text-muted-foreground">Plan your next adventure</p>
+            <span className="text-sm font-bold text-foreground">{t("home.no_trips")}</span>
+            <p className="text-[10px] text-muted-foreground">{t("home.plan_adventure")}</p>
           </div>
         </div>
         <button
