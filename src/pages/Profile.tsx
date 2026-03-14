@@ -366,8 +366,8 @@ const Profile = () => {
                           <Crown className="w-5 h-5 text-primary-foreground" />
                         </div>
                         <div>
-                          <p className="font-semibold text-sm">Upgrade to ZIVO+</p>
-                          <p className="text-xs text-muted-foreground">No service fees, priority delivery</p>
+                         <p className="font-semibold text-sm">{t("profile.upgrade_plus")}</p>
+                          <p className="text-xs text-muted-foreground">{t("profile.upgrade_desc")}</p>
                         </div>
                       </div>
                       <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-amber-500 transition-colors" />
