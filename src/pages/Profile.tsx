@@ -393,8 +393,8 @@ const Profile = () => {
                           <Store className="w-5 h-5 text-primary-foreground" />
                         </div>
                         <div>
-                          <p className="font-semibold text-sm">Merchant Dashboard</p>
-                          <p className="text-xs text-muted-foreground">Manage your restaurant & orders</p>
+                          <p className="font-semibold text-sm">{t("profile.merchant_dashboard")}</p>
+                          <p className="text-xs text-muted-foreground">{t("profile.merchant_desc")}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
