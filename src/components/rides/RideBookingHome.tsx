@@ -81,6 +81,8 @@ function perDistRate(perMile: number, useKm: boolean): number {
 
 /** USD → KHR exchange rate */
 const USD_TO_KHR = 4062.5;
+const US_DEFAULT_CENTER = { lat: 40.7128, lng: -73.9857 };
+const CAMBODIA_DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
 
 /** Format price in KHR */
 function toKHR(usd: number): string {
@@ -487,6 +489,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     { code: "en", label: "English", flag: "🇺🇸" },
     { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
   ];
+  const fallbackPickupCenter = currentLanguage === "km" ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER;
 
   // Recent ride destinations from Supabase
   const [recentDestinations, setRecentDestinations] = useState<{ id: string; address: string; lat: number; lng: number; time: string }[]>([]);
@@ -678,17 +681,29 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
-  // Fetch user location on mount — fallback to Cambodia center if language is km
+  // Keep map region aligned to selected language mode
   useEffect(() => {
+    let cancelled = false;
+
+    if (currentLanguage === "km") {
+      setUserLocation(CAMBODIA_DEFAULT_CENTER);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     getCurrentLocation()
-      .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
+      .then((loc) => {
+        if (!cancelled) setUserLocation({ lat: loc.lat, lng: loc.lng });
+      })
       .catch(() => {
-        // Fallback: Cambodia (Phnom Penh) when language is km, otherwise no fallback
-        if (currentLanguage === "km") {
-          setUserLocation({ lat: 11.5564, lng: 104.9282 });
-        }
+        if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
       });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentLanguage, getCurrentLocation]);
 
   // Fetch real nearby drivers and poll every 10s
   useEffect(() => {
@@ -873,10 +888,15 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [viewStep, destination, liveDriverLocation, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
+    if (currentLanguage === "km") {
+      setUserLocation(CAMBODIA_DEFAULT_CENTER);
+      return;
+    }
+
     getCurrentLocation()
       .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
       .catch(() => toast.error("Could not get your location"));
-  }, [getCurrentLocation]);
+  }, [currentLanguage, getCurrentLocation]);
 
   /** When user drags map in search view, reverse geocode center → pickup */
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
@@ -931,6 +951,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
   const useKm = useMemo(() => isInCambodia(pickup?.address, pickup?.lat) || currentLanguage === "km", [pickup?.address, pickup?.lat, currentLanguage]);
   const rideCountry = useKm ? "kh" : undefined;
+  const locationModeKey = rideCountry ?? "global";
 
   const currentVehicle = vehicleOptions.find((v) => v.id === selectedVehicle) ?? vehicleOptions[0];
   const currentPrice = routeData
@@ -1040,7 +1061,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     if (!pickupData) {
       pickupData = userLocation
         ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
-        : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
+        : { address: "Current Location", lat: fallbackPickupCenter.lat, lng: fallbackPickupCenter.lng };
     }
 
     // Block same-location trips unless there are intermediate stops (round trip)
@@ -1121,7 +1142,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         setViewStep("route-preview");
       });
     }
-  }, [pickup, userLocation, isSameLocation]);
+  }, [pickup, userLocation, isSameLocation, fallbackPickupCenter]);
 
   /* ─── Multi-stop management ─── */
   const MAX_STOPS = 1;
@@ -1173,7 +1194,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setPickupDisplay("Current Location");
     const pickupData = userLocation
       ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
-      : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
+      : { address: "Current Location", lat: fallbackPickupCenter.lat, lng: fallbackPickupCenter.lng };
     setPickup(pickupData);
     fetchRoute(pickupData, { address, lat, lng });
   };
@@ -1532,6 +1553,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="flex-1 relative z-0 min-h-0">
             <div className="absolute inset-0">
               <MapSection
+                key={`home-map-${locationModeKey}`}
                 compact
                 pickupCoords={null}
                 dropoffCoords={null}
@@ -1604,7 +1626,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     setPickupDisplay(t("ride.current_location"));
                     const pickupData = userLocation
                       ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
-                      : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
+                      : { address: "Current Location", lat: fallbackPickupCenter.lat, lng: fallbackPickupCenter.lng };
                     setPickup(pickupData);
                     const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
                     fetchRoute(pickupData, dest, wp);
@@ -1643,6 +1665,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           }}
         >
           <MapSection
+            key={`active-map-${locationModeKey}`}
             compact
             pickupCoords={pickup}
             dropoffCoords={["route-preview", "ride-options", "confirm-ride", "searching", "pickup-confirm", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep) ? destination : null}
@@ -1674,6 +1697,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             }}
           >
             <MapSection
+              key={`search-map-${locationModeKey}`}
               compact
               pickupCoords={null}
               dropoffCoords={destination}

@@ -102,7 +102,15 @@ export function AddressAutocomplete({
     } finally {
       setIsLoading(false);
     }
-  }, [proximity]);
+  }, [proximity, country]);
+
+  // Reset stale suggestions when country filter changes
+  useEffect(() => {
+    setSuggestions([]);
+    setIsOpen(false);
+    setSelectedIndex(-1);
+    setError(null);
+  }, [country]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
