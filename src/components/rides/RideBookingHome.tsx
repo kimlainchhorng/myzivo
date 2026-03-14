@@ -2569,8 +2569,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               )}
               {!routeData && (
                 <div className="text-right">
-                  <p className="text-lg font-black text-foreground">${currentPrice.toFixed(2)}</p>
-                  {useKm && <p className="text-[10px] text-muted-foreground">{toKHR(currentPrice)}</p>}
+                  {useKm ? (
+                    <>
+                      <p className="text-lg font-black text-foreground">{toKHR(currentPrice)}</p>
+                      <p className="text-[11px] text-muted-foreground">${currentPrice.toFixed(2)}</p>
+                    </>
+                  ) : (
+                    <p className="text-lg font-black text-foreground">${currentPrice.toFixed(2)}</p>
+                  )}
                 </div>
               )}
             </div>
