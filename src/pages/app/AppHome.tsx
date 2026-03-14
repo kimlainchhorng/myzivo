@@ -567,7 +567,7 @@ const AppHome = () => {
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-inner">
                       <Crown className="w-4.5 h-4.5 text-primary" />
                     </div>
-                    <span className="text-sm font-bold text-foreground">My Rewards</span>
+                    <span className="text-sm font-bold text-foreground">{t("home.my_rewards")}</span>
                   </div>
                   <Badge variant="outline" className={`text-[10px] font-bold ${tierConfig.color} ${tierConfig.borderColor} shadow-sm`}>
                     {tierConfig.icon} {tierConfig.displayName}
