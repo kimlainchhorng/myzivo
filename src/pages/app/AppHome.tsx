@@ -433,7 +433,7 @@ const AppHome = () => {
             {/* Popular Restaurants */}
             {recommended.length > 0 && (
               <div className="mb-6">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">Restaurants</p>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.restaurants")}</p>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                   {recommended.slice(0, 5).map((r) => (
                     <RestaurantCard key={r.id} restaurant={r} onNavigate={() => navigate(`/eats/restaurant/${r.id}`)} />
