@@ -262,7 +262,7 @@ const Profile = () => {
                         <FormItem>
                           <FormLabel className="flex items-center gap-2 font-semibold">
                             <Phone className="h-4 w-4 text-primary" />
-                            Phone Number
+                            {t("profile.phone")}
                           </FormLabel>
                           <FormControl>
                             <Input
