@@ -1610,7 +1610,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
                 size="lg"
               >
-                {isReversingGeocode ? "Locating..." : destinationDisplay ? "Choose a ride" : "Search destination"}
+                {isReversingGeocode ? t("ride.locating") : destinationDisplay ? t("ride.choose_ride") : t("ride.search_destination")}
               </Button>
             </div>
             </div>
