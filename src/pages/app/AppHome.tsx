@@ -763,7 +763,7 @@ const AppHome = () => {
                     •••• {defaultCard.last4}
                   </span>
                   <Badge variant="outline" className="text-[8px] ml-auto border-primary/20 text-primary bg-primary/5 font-bold">
-                    Default
+                     {t("home.default")}
                   </Badge>
                 </div>
               )}
