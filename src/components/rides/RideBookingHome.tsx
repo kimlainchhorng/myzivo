@@ -1697,6 +1697,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             }}
           >
             <MapSection
+              key={`search-map-${locationModeKey}`}
               compact
               pickupCoords={null}
               dropoffCoords={destination}
