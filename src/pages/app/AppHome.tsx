@@ -471,7 +471,7 @@ const AppHome = () => {
                           <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
                           <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
                             <Plane className="w-2.5 h-2.5" />
-                            from {popularDestPrices[key]}
+                            {t("home.from")} {popularDestPrices[key]}
                           </div>
                         </div>
                       </div>
