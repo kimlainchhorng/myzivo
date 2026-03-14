@@ -52,9 +52,15 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
+const LANGS = [
+  { code: "en", label: "English", flag: "🇺🇸" },
+  { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
+];
+
 const Profile = () => {
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, currentLanguage, changeLanguage } = useI18n();
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const { user, signOut } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
@@ -138,19 +144,50 @@ const Profile = () => {
 
       <div className="relative z-10 container max-w-lg mx-auto px-4 pt-4 pb-8">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="rounded-xl hover:bg-muted/50 -ml-2 touch-manipulation active:scale-95"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="font-display text-xl font-bold">{t("profile.title")}</h1>
-            <p className="text-muted-foreground text-xs">{t("profile.subtitle")}</p>
+        <div className="flex items-center justify-between mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="rounded-xl hover:bg-muted/50 -ml-2 touch-manipulation active:scale-95"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="font-display text-xl font-bold">{t("profile.title")}</h1>
+              <p className="text-muted-foreground text-xs">{t("profile.subtitle")}</p>
+            </div>
+          </div>
+          {/* Language Switcher */}
+          <div className="relative">
+            <button
+              onClick={() => setShowLangMenu(!showLangMenu)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-muted/50 hover:bg-muted transition-colors touch-manipulation active:scale-95"
+            >
+              <Globe className="w-4 h-4 text-muted-foreground" />
+              <span className="text-xs font-medium">{LANGS.find(l => l.code === currentLanguage)?.flag}</span>
+            </button>
+            {showLangMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
+                <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden min-w-[140px]">
+                  {LANGS.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => { changeLanguage(lang.code); setShowLangMenu(false); }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors ${
+                        currentLanguage === lang.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted"
+                      }`}
+                    >
+                      <span>{lang.flag}</span>
+                      <span>{lang.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
