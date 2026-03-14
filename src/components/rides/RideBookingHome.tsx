@@ -2279,7 +2279,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </div>
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div>
-                      <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Pickup</p>
+                      <p className="text-[10px] text-muted-foreground leading-none mb-0.5">{t("ride.pickup")}</p>
                       <p className="text-sm font-semibold text-foreground leading-tight whitespace-normal break-words">{pickup?.address || pickupDisplay}</p>
                     </div>
                     {stops.map((stop, idx) => (
@@ -2308,7 +2308,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       </div>
                     ))}
                     <div>
-                      <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Destination</p>
+                      <p className="text-[10px] text-muted-foreground leading-none mb-0.5">{t("ride.destination")}</p>
                       <p className="text-sm font-semibold text-foreground leading-tight whitespace-normal break-words">{destination?.address || destinationDisplay}</p>
                     </div>
                   </div>
@@ -2320,22 +2320,22 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     <Timer className="w-3.5 h-3.5 text-primary shrink-0" />
                     <div>
                       <p className="text-sm font-bold text-foreground leading-none">{routeData.duration_minutes} min</p>
-                      <p className="text-[9px] text-muted-foreground">Trip time</p>
+                      <p className="text-[9px] text-muted-foreground">{t("ride.trip_time")}</p>
                     </div>
                   </div>
                   <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
                     <Route className="w-3.5 h-3.5 text-primary shrink-0" />
                     <div>
                       <p className="text-sm font-bold text-foreground leading-none">{formatDist(routeData.distance_miles, useKm)}</p>
-                      <p className="text-[9px] text-muted-foreground">Distance</p>
+                      <p className="text-[9px] text-muted-foreground">{t("ride.distance")}</p>
                     </div>
                   </div>
                   {routeData.traffic_level && (
                     <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
                       <Car className="w-3.5 h-3.5 text-primary shrink-0" />
                       <div>
-                        <p className="text-sm font-bold text-foreground leading-none capitalize">{routeData.traffic_level}</p>
-                        <p className="text-[9px] text-muted-foreground">Traffic</p>
+                        <p className="text-sm font-bold text-foreground leading-none capitalize">{t(`ride.${routeData.traffic_level.toLowerCase()}`) !== `ride.${routeData.traffic_level.toLowerCase()}` ? t(`ride.${routeData.traffic_level.toLowerCase()}`) : routeData.traffic_level}</p>
+                        <p className="text-[9px] text-muted-foreground">{t("ride.traffic")}</p>
                       </div>
                     </div>
                   )}
