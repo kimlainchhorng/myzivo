@@ -459,11 +459,11 @@ const Profile = () => {
                       <Shield className="w-5 h-5 text-emerald-500" />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm">Account Status</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <Clock className="w-3 h-3" />
-                        Member since {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "recently"}
-                      </p>
+                       <p className="font-semibold text-sm">{t("profile.account_status")}</p>
+                       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                         <Clock className="w-3 h-3" />
+                         {t("profile.member_since")} {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "recently"}
+                       </p>
                     </div>
                   </div>
                   <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-semibold text-xs">
