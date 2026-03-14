@@ -166,6 +166,19 @@ const AppHome = () => {
   const { user } = useAuth();
   const { t } = useI18n();
   useDeviceIntegrityCheck();
+
+  const promos = [
+    { title: t("home.promo_first_ride"), subtitle: t("home.promo_first_ride_sub"), gradient: "from-emerald-500 to-teal-600", icon: Car, cta: t("home.promo_claim") },
+    { title: t("home.promo_free_delivery"), subtitle: t("home.promo_free_delivery_sub"), gradient: "from-orange-500 to-amber-600", icon: Package, cta: t("home.promo_order_now") },
+    { title: t("home.promo_flights_deal"), subtitle: t("home.promo_flights_deal_sub"), gradient: "from-sky-500 to-blue-600", icon: Plane, cta: t("home.promo_explore") },
+    { title: t("home.promo_hotel_sale"), subtitle: t("home.promo_hotel_sale_sub"), gradient: "from-violet-500 to-purple-600", icon: BedDouble, cta: t("home.promo_book_now") },
+  ];
+
+  const trendingRides = [
+    { name: t("home.airport_transfer"), eta: "~15 min", price: "$22-35", icon: Plane, popular: true },
+    { name: t("home.downtown"), eta: "~8 min", price: "$12-18", icon: Navigation, popular: false },
+    { name: t("home.beach"), eta: "~20 min", price: "$18-28", icon: TrendingUp, popular: false },
+  ];
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeHomeTab, setActiveHomeTab] = useState<"rides" | "eats" | "flights" | "hotels">("rides");
 
