@@ -865,7 +865,7 @@ const AppHome = () => {
                     size="sm"
                     className="flex-1 h-11 rounded-xl font-bold shadow-md shadow-primary/20"
                   >
-                    Sign Up Free
+                    {t("home.sign_up_free")}
                   </Button>
                   <Button
                     onClick={() => navigate("/login")}
