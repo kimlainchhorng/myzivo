@@ -681,17 +681,29 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
-  // Fetch user location on mount — fallback to Cambodia center if language is km
+  // Keep map region aligned to selected language mode
   useEffect(() => {
+    let cancelled = false;
+
+    if (currentLanguage === "km") {
+      setUserLocation(CAMBODIA_DEFAULT_CENTER);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     getCurrentLocation()
-      .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
+      .then((loc) => {
+        if (!cancelled) setUserLocation({ lat: loc.lat, lng: loc.lng });
+      })
       .catch(() => {
-        // Fallback: Cambodia (Phnom Penh) when language is km, otherwise no fallback
-        if (currentLanguage === "km") {
-          setUserLocation({ lat: 11.5564, lng: 104.9282 });
-        }
+        if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
       });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentLanguage, getCurrentLocation]);
 
   // Fetch real nearby drivers and poll every 10s
   useEffect(() => {
