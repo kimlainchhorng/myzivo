@@ -335,9 +335,9 @@ export default function ServicesPage() {
             {catIdx === 0 && (
               <PromoBanner
                 image={zivoDeliveryBanner}
-                alt="Deliver with ZIVO"
-                title="Deliver with ZIVO"
-                subtitle="Earn on your schedule"
+                alt={t("services.banner.deliver_alt")}
+                title={t("services.banner.deliver_title")}
+                subtitle={t("services.banner.deliver_subtitle")}
                 href="/drive"
                 delay={0.2}
                 navigate={navigate}
