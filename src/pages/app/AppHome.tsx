@@ -743,7 +743,7 @@ const AppHome = () => {
                   <span className="text-sm font-bold text-foreground">{t("home.wallet")}</span>
                 </div>
                 <button onClick={() => navigate("/wallet")} className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5 hover:gap-1.5 transition-all">
-                  Manage <ChevronRight className="w-3 h-3" />
+                   Manage <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
               <div className="flex items-end gap-2 mb-3 relative z-10">
