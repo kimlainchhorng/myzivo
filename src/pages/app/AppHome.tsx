@@ -464,7 +464,7 @@ const AppHome = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                         {i < 2 && (
                           <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
-                            <span className="text-[8px] font-bold text-primary-foreground uppercase tracking-wider">Trending</span>
+                            <span className="text-[8px] font-bold text-primary-foreground uppercase tracking-wider">{t("home.trending")}</span>
                           </div>
                         )}
                         <div className="absolute bottom-3 left-3 right-3">
