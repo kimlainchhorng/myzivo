@@ -652,7 +652,7 @@ const AppHome = () => {
                     <p className="font-bold text-foreground text-lg">{totalInvited}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Earned</span>
+                    <span className="text-muted-foreground">{t("home.earned")}</span>
                     <p className="font-bold text-foreground text-lg">{totalEarned.toLocaleString()} pts</p>
                   </div>
                 </div>
