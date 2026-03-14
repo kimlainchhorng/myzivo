@@ -8,10 +8,11 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useI18n } from "@/hooks/useI18n";
 
 interface NavTab {
   id: string;
-  label: string;
+  labelKey: string;
   icon: typeof Home;
   path: string;
   badge?: number;
@@ -22,13 +23,14 @@ const ZivoMobileNav = () => {
   const location = useLocation();
   const { activeAlertsCount } = usePriceAlerts();
   const { impact } = useHaptics();
+  const { t } = useI18n();
 
   const tabs: NavTab[] = [
-    { id: "home", label: "Home", icon: Home, path: "/" },
-    { id: "search", label: "Search", icon: Search, path: "/flights" },
-    { id: "trips", label: "Trips", icon: Briefcase, path: "/my-trips" },
-    { id: "alerts", label: "Alerts", icon: Bell, path: "/notifications", badge: activeAlertsCount },
-    { id: "account", label: "Account", icon: User, path: "/profile" },
+    { id: "home", labelKey: "nav.home", icon: Home, path: "/" },
+    { id: "search", labelKey: "nav.search", icon: Search, path: "/flights" },
+    { id: "trips", labelKey: "nav.trips", icon: Briefcase, path: "/my-trips" },
+    { id: "alerts", labelKey: "nav.alerts", icon: Bell, path: "/notifications", badge: activeAlertsCount },
+    { id: "account", labelKey: "nav.account", icon: User, path: "/profile" },
   ];
 
   const getActiveTab = () => {
