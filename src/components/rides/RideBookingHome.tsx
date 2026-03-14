@@ -380,7 +380,7 @@ function VehicleRow({
           </div>
         </div>
         <div className="flex items-center gap-1.5 mt-0.5">
-          <span className="text-xs text-muted-foreground">{etaStr} · {vehicle.desc}</span>
+          <span className="text-xs text-muted-foreground">{etaStr} · {getVehicleDesc(vehicle.id, vehicle.desc, isCambodia)}</span>
         </div>
       </div>
       <div className="text-right shrink-0 flex flex-col items-end gap-0.5">
