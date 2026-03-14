@@ -428,7 +428,7 @@ const AppHome = () => {
 
           {/* ─── POPULAR NEAR YOU ─── */}
           <div>
-            <SectionHeader icon={TrendingUp} iconColor="text-emerald-500" title="Popular Near You" badge="Hot" onSeeAll={() => navigate("/eats")} />
+            <SectionHeader icon={TrendingUp} iconColor="text-emerald-500" title={t("home.popular_near")} badge="Hot" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/eats")} />
 
             {/* Popular Restaurants */}
             {recommended.length > 0 && (
