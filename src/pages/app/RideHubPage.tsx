@@ -66,6 +66,7 @@ import RideBookingHome from "@/components/rides/RideBookingHome";
 import ZivoReserve from "@/components/rides/ZivoReserve";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useI18n } from "@/hooks/useI18n";
 
 const tabs = [
   { id: "book", label: "Book", icon: Zap },
