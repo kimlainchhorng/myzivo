@@ -1436,13 +1436,45 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <h1 className="flex-1 text-center font-black text-lg tracking-tight">
             <span className="text-primary">Zivo</span> Ride
           </h1>
-          <button
-            onClick={() => navigate("/notifications")}
-            className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
-            aria-label="Notifications"
-          >
-            <Bell className="w-5 h-5 text-muted-foreground" />
-          </button>
+          <div className="flex items-center gap-1 -mr-2">
+            <div className="relative">
+              <button
+                onClick={() => setShowLangMenu(!showLangMenu)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+                aria-label="Change language"
+              >
+                <Globe className="w-5 h-5 text-muted-foreground" />
+              </button>
+              {showLangMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
+                  <div className="absolute right-0 top-11 z-50 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[140px] animate-in fade-in slide-in-from-top-2 duration-150">
+                    {LANGS.map(l => (
+                      <button
+                        key={l.code}
+                        onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
+                        className={cn(
+                          "w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors",
+                          currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted"
+                        )}
+                      >
+                        <span className="text-base">{l.flag}</span>
+                        <span>{l.label}</span>
+                        {currentLanguage === l.code && <CheckCircle className="w-3.5 h-3.5 ml-auto" />}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            <button
+              onClick={() => navigate("/notifications")}
+              className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+              aria-label="Notifications"
+            >
+              <Bell className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -1461,13 +1493,45 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <h1 className="flex-1 text-center font-black text-lg tracking-tight">
               <span className="text-primary">Zivo</span> Ride
             </h1>
-            <button
-              onClick={() => navigate("/notifications")}
-              className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
-              aria-label="Notifications"
-            >
-              <Bell className="w-5 h-5 text-muted-foreground" />
-            </button>
+            <div className="flex items-center gap-1 -mr-2">
+              <div className="relative">
+                <button
+                  onClick={() => setShowLangMenu(!showLangMenu)}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+                  aria-label="Change language"
+                >
+                  <Globe className="w-5 h-5 text-muted-foreground" />
+                </button>
+                {showLangMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
+                    <div className="absolute right-0 top-11 z-50 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[140px] animate-in fade-in slide-in-from-top-2 duration-150">
+                      {LANGS.map(l => (
+                        <button
+                          key={l.code}
+                          onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
+                          className={cn(
+                            "w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors",
+                            currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted"
+                          )}
+                        >
+                          <span className="text-base">{l.flag}</span>
+                          <span>{l.label}</span>
+                          {currentLanguage === l.code && <CheckCircle className="w-3.5 h-3.5 ml-auto" />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={() => navigate("/notifications")}
+                className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+                aria-label="Notifications"
+              >
+                <Bell className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
           </div>
 
           {/* Map + bottom sheet container */}
