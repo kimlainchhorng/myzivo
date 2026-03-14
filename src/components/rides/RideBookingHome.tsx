@@ -445,6 +445,22 @@ function getVehicleName(vehicleId: string, originalName: string, isCambodia: boo
   return originalName;
 }
 
+/** Get vehicle description based on region */
+function getVehicleDesc(vehicleId: string, originalDesc: string, isCambodia: boolean): string {
+  if (isCambodia && CAMBODIA_VEHICLE_DESCS[vehicleId]) {
+    return CAMBODIA_VEHICLE_DESCS[vehicleId];
+  }
+  return originalDesc;
+}
+
+/** Get vehicle capacity based on region */
+function getVehicleCapacity(vehicleId: string, originalCapacity: number, isCambodia: boolean): number {
+  if (isCambodia && CAMBODIA_VEHICLE_CAPACITY[vehicleId]) {
+    return CAMBODIA_VEHICLE_CAPACITY[vehicleId];
+  }
+  return originalCapacity;
+}
+
 const etaTime = (minutesFromNow: number) =>
   new Date(Date.now() + minutesFromNow * 60000)
     .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
