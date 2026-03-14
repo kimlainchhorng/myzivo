@@ -2357,7 +2357,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
                     <Plus className="w-3 h-3" />
                   </div>
-                  Add Stop
+                  {t("ride.add_stop")}
                 </button>
               </div>
             </div>
@@ -2368,14 +2368,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 {isLoadingRoute ? (
                   <div className="flex items-center justify-center py-3">
                     <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    <span className="ml-2 text-sm text-muted-foreground">Calculating route...</span>
+                    <span className="ml-2 text-sm text-muted-foreground">{t("ride.calculating_route")}</span>
                   </div>
                 ) : (
                   <Button
                     className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
                     onClick={() => setViewStep("ride-options")}
                   >
-                    Choose a ride
+                    {t("ride.choose_ride")}
                   </Button>
                 )}
               </div>
@@ -2390,12 +2390,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   exit={{ opacity: 0 }}
                   className="flex-1 overflow-hidden flex flex-col items-center justify-center px-4 border-t border-border/15"
                 >
-                  <p className="text-sm text-muted-foreground mb-4">Browse available rides</p>
+                  <p className="text-sm text-muted-foreground mb-4">{t("ride.browse_available_rides")}</p>
                   <Button
                     className="w-full h-12 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90"
                     onClick={() => setViewStep("ride-options")}
                   >
-                    See ride options
+                    {t("ride.see_ride_options")}
                   </Button>
                 </motion.div>
               )}
@@ -2411,7 +2411,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           style={{ top: HEADER_HEIGHT }}
         >
           <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
-            <h2 className="text-xl font-black text-foreground tracking-tight">Choose a ride</h2>
+            <h2 className="text-xl font-black text-foreground tracking-tight">{t("ride.choose_ride")}</h2>
             {/* Promo badge — only when promo is actually applied */}
             {appliedPromo && (
               <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25">
