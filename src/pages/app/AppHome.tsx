@@ -750,7 +750,7 @@ const AppHome = () => {
                 <p className="text-4xl font-bold text-foreground">
                   ${balanceDollars.toFixed(2)}
                 </p>
-                <span className="text-xs text-muted-foreground mb-1.5 font-medium">balance</span>
+                <span className="text-xs text-muted-foreground mb-1.5 font-medium">{t("home.balance")}</span>
               </div>
               {defaultCard && (
                 <div className="flex items-center gap-2 p-2.5 rounded-xl bg-card/40 border border-border/30 relative z-10">
