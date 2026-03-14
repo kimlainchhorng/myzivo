@@ -58,6 +58,9 @@ export default function LiveTripTracker({
   const [driverSpeed, setDriverSpeed] = useState(0);
   const [distanceLeft, setDistanceLeft] = useState(1.2);
 
+  // Cambodia detection for km/mi display
+  const isCambodia = pickupLat >= 9.5 && pickupLat <= 14.7;
+
   const pickup = { lat: pickupLat, lng: pickupLng };
   const dropoff = { lat: dropoffLat, lng: dropoffLng };
 
