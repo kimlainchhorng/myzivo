@@ -492,6 +492,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const { user } = useAuth();
   const { getCurrentLocation } = useCurrentLocation();
   const { data: savedLocations = [] } = useSavedLocations(user?.id);
+  const { currentLanguage, changeLanguage } = useI18n();
+  const [showLangMenu, setShowLangMenu] = useState(false);
+
+  const LANGS = [
+    { code: "en", label: "English", flag: "🇺🇸" },
+    { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
+  ];
 
   // Recent ride destinations from Supabase
   const [recentDestinations, setRecentDestinations] = useState<{ id: string; address: string; lat: number; lng: number; time: string }[]>([]);
