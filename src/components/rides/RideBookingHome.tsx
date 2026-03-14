@@ -682,23 +682,18 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
-  // Keep map region aligned to selected language mode
+  // Keep map region aligned to selected language mode (GPS first, localized fallback)
   useEffect(() => {
     let cancelled = false;
-
-    if (currentLanguage === "km") {
-      setUserLocation(CAMBODIA_DEFAULT_CENTER);
-      return () => {
-        cancelled = true;
-      };
-    }
 
     getCurrentLocation()
       .then((loc) => {
         if (!cancelled) setUserLocation({ lat: loc.lat, lng: loc.lng });
       })
       .catch(() => {
-        if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
+        if (!cancelled) {
+          setUserLocation(currentLanguage === "km" ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER);
+        }
       });
 
     return () => {
