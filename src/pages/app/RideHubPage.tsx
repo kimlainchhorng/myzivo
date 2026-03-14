@@ -149,7 +149,7 @@ export default function RideHubPage() {
 
   return (
     <AppLayout
-      title="Zivo Ride"
+      title={t("ride.title")}
       showBack
       onBack={() => navigate("/")}
       fixedHeight={isFullScreen}
