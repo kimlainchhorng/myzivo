@@ -85,10 +85,10 @@ function toKHR(usd: number): string {
   return `${Math.round(usd * USD_TO_KHR).toLocaleString()} ៛`;
 }
 
-/** Dual price display: $X.XX (X,XXX ៛) */
+/** Dual price display: KHR primary, USD secondary for Cambodia */
 function dualPrice(usd: number, showKhr: boolean): string {
   if (!showKhr) return `$${usd.toFixed(2)}`;
-  return `$${usd.toFixed(2)} (${toKHR(usd)})`;
+  return `${toKHR(usd)} ($${usd.toFixed(2)})`;
 }
 
 /** Distance value for display */
