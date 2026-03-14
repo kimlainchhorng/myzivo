@@ -700,7 +700,7 @@ const AppHome = () => {
                   <div className="flex items-center gap-2">
                     {upcomingBookings.length > 1 && (
                       <Badge variant="outline" className="text-[10px] text-primary border-primary/20 bg-primary/5 font-bold">
-                        +{upcomingBookings.length - 1} more
+                        +{upcomingBookings.length - 1} {t("home.more_count")}
                       </Badge>
                     )}
                     <button onClick={() => navigate("/scheduled")} className="text-[10px] text-primary font-bold">
