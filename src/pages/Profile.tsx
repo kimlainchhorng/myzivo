@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useI18n } from "@/hooks/useI18n";
 import SEOHead from "@/components/SEOHead";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
