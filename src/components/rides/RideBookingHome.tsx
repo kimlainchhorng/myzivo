@@ -1075,11 +1075,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     if (!pickupData) {
       const coords = userLocation ?? fallbackPickupCenter;
       pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
-      // Reverse geocode to get real address
-      reverseGeocode(coords.lat, coords.lng).then(addr => {
-        setPickupDisplay(addr);
-        setPickup(prev => prev ? { ...prev, address: addr } : prev);
-      }).catch(() => {});
+      resolvePickupAddress(coords);
     }
 
     // Block same-location trips unless there are intermediate stops (round trip)
