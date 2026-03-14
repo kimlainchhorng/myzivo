@@ -53,6 +53,35 @@ interface RouteData {
   traffic_level?: string;
 }
 
+/** Detect if user is in Cambodia based on pickup address or coordinates */
+function isInCambodia(address?: string, lat?: number): boolean {
+  if (address && /cambodia|កម្ពុជា|phnom\s*penh|siem\s*reap|battambang|sihanoukville/i.test(address)) return true;
+  // Cambodia lat range: ~9.5 to ~14.7
+  if (lat && lat >= 9.5 && lat <= 14.7) return true;
+  return false;
+}
+
+/** Format distance: km for Cambodia, mi for others */
+function formatDist(miles: number, useKm: boolean): string {
+  if (useKm) return `${(miles * 1.60934).toFixed(1)} km`;
+  return `${miles} mi`;
+}
+
+/** Format per-unit label */
+function distUnit(useKm: boolean): string {
+  return useKm ? "km" : "mi";
+}
+
+/** Convert per-mile rate to per-km for display */
+function perDistRate(perMile: number, useKm: boolean): number {
+  return useKm ? perMile / 1.60934 : perMile;
+}
+
+/** Distance value for display */
+function distValue(miles: number, useKm: boolean): number {
+  return useKm ? Number((miles * 1.60934).toFixed(1)) : miles;
+}
+
 type ViewStep =
   | "home"
   | "search"
@@ -879,6 +908,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
+  const useKm = useMemo(() => isInCambodia(pickup?.address, pickup?.lat), [pickup?.address, pickup?.lat]);
 
   const currentVehicle = vehicleOptions.find((v) => v.id === selectedVehicle) ?? vehicleOptions[0];
   const currentPrice = routeData
@@ -2149,7 +2179,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
                     <Route className="w-3.5 h-3.5 text-primary shrink-0" />
                     <div>
-                      <p className="text-sm font-bold text-foreground leading-none">{routeData.distance_miles} mi</p>
+                      <p className="text-sm font-bold text-foreground leading-none">{formatDist(routeData.distance_miles, useKm)}</p>
                       <p className="text-[9px] text-muted-foreground">Distance</p>
                     </div>
                   </div>
@@ -2463,7 +2493,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     <span className="text-foreground">${currentVehicle.basePrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Distance ({routeData.distance_miles} mi × ${currentVehicle.pricePerMile.toFixed(2)})</span>
+                    <span className="text-muted-foreground">Distance ({formatDist(routeData.distance_miles, useKm)} × ${perDistRate(currentVehicle.pricePerMile, useKm).toFixed(2)}/{distUnit(useKm)})</span>
                     <span className="text-foreground">${(routeData.distance_miles * currentVehicle.pricePerMile).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
@@ -2503,7 +2533,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 </div>
                 <div className="flex-1 flex items-center justify-center gap-1 rounded-md bg-card border border-border/20 px-1.5 py-1.5">
                   <Route className="w-3 h-3 text-primary" />
-                  <span className="text-[12px] font-bold text-foreground">{routeData.distance_miles} mi</span>
+                  <span className="text-[12px] font-bold text-foreground">{formatDist(routeData.distance_miles, useKm)}</span>
                 </div>
                 {routeData.traffic_level && (
                   <div className="flex-1 flex items-center justify-center gap-1 rounded-md bg-card border border-border/20 px-1.5 py-1.5">
@@ -2809,7 +2839,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Distance</span>
-                    <span className="text-foreground">{routeData.distance_miles} mi</span>
+                    <span className="text-foreground">{formatDist(routeData.distance_miles, useKm)}</span>
                   </div>
                 </>
               )}
