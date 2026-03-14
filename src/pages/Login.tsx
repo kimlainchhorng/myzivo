@@ -7,11 +7,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
+import { useI18n } from "@/hooks/useI18n";
+import { cn } from "@/lib/utils";
 
 // Login schema
 const loginSchema = z.object({
