@@ -1195,12 +1195,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const handleSavedPlace = (address: string, lat: number, lng: number) => {
     setDestinationDisplay(address);
     setDestination({ address, lat, lng });
-    setPickupDisplay("Current Location");
-    const pickupData = userLocation
-      ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
-      : { address: "Current Location", lat: fallbackPickupCenter.lat, lng: fallbackPickupCenter.lng };
+    const coords = userLocation ?? fallbackPickupCenter;
+    const pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
+    setPickupDisplay(t("ride.current_location"));
     setPickup(pickupData);
     fetchRoute(pickupData, { address, lat, lng });
+    // Reverse geocode to get real address
+    reverseGeocode(coords.lat, coords.lng).then(addr => {
+      setPickupDisplay(addr);
+      setPickup(prev => prev ? { ...prev, address: addr } : prev);
+    }).catch(() => {});
   };
 
   /* ─── Fetch route (for initial route + confirm search) ─── */
