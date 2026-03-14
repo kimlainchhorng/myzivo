@@ -409,7 +409,7 @@ const Login = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Password</FormLabel>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.password")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
