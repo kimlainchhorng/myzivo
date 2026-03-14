@@ -2144,9 +2144,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     Finding route...
                   </span>
                 ) : destination ? (
-                  "Choose a ride"
+                  t("ride.choose_ride")
                 ) : (
-                  "Search destination"
+                  t("ride.search_destination")
                 )}
               </Button>
             </div>
