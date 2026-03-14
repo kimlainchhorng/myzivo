@@ -417,7 +417,7 @@ const AppHome = () => {
           {/* ─── RECENT ACTIVITY ─── */}
           {user && activityItems.length > 0 && (
             <div>
-              <SectionHeader icon={Clock} iconColor="text-primary" title="Recent Activity" onSeeAll={() => navigate("/trips")} />
+              <SectionHeader icon={Clock} iconColor="text-primary" title={t("home.recent_activity")} actionLabel={t("home.see_all")} onSeeAll={() => navigate("/trips")} />
               <ActivityTimeline
                 items={activityItems}
                 maxHeight="280px"
