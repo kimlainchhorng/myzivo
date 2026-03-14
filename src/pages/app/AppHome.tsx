@@ -5,6 +5,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "@/hooks/useI18n";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -55,19 +56,7 @@ import zivoShoppingIcon from "@/assets/zivo-shopping.png";
 
 // ─── Saved Places Icon Map ───
 // ─── Dynamic search placeholder by tab ───
-function getSearchPlaceholder(tab: string): string {
-  if (tab === "rides") return "Book a Ride";
-  if (tab === "eats") {
-    const hour = new Date().getHours();
-    if (hour >= 6 && hour < 11) return "Breakfast time";
-    if (hour >= 11 && hour < 17) return "Lunch time";
-    if (hour >= 17 && hour < 22) return "Dinner time";
-    return "Late Night time";
-  }
-  if (tab === "flights") return "Search Flights";
-  if (tab === "hotels") return "Search Hotels";
-  return "Where to?";
-}
+// Search placeholder is now handled inside the component with t()
 
 const savedPlaceIconMap: Record<string, LucideIcon> = {
   home: Home,
@@ -77,20 +66,8 @@ const savedPlaceIconMap: Record<string, LucideIcon> = {
 };
 
 // ─── Top service tabs (Uber-style) ───
-const homeTabs = [
-  { id: "rides", label: "Rides", icon: null, image: zivoRideIcon },
-  { id: "eats", label: "Eats", icon: null, image: zivoEatsIcon },
-  { id: "flights", label: "Flights", icon: null, image: zivoFlightsIcon },
-  { id: "hotels", label: "Hotels", icon: null, image: zivoHotelsIcon },
-] as const;
-
-// ─── Suggestions row (service shortcuts) ───
-const suggestions = [
-  { label: "Ride", icon: null, image: zivoRideIcon, href: "/rides", badge: "10% Off", badgeVariant: "discount" as const },
-  { label: "Reserve", icon: null, image: zivoReserveIcon, href: "/rides?tab=reserve", badge: "Promo", badgeVariant: "promo" as const },
-  { label: "Rental Cars", icon: null, image: zivoRentalCarIcon, href: "/rent-car", badge: "Promo", badgeVariant: "promo" as const },
-  { label: "Shopping", icon: null, image: zivoShoppingIcon, href: "/rides", badge: null, badgeVariant: null },
-];
+// These are now built inside the component with t() for translation
+// See homeTabs and suggestions inside AppHome component
 
 // ─── Restaurant Card (Premium) ───
 const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant; onNavigate: () => void }) => (
@@ -127,7 +104,7 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
 );
 
 // ─── Section Header (Premium) ───
-const SectionHeader = ({ icon: Icon, iconColor, title, badge, onSeeAll }: { icon: LucideIcon; iconColor: string; title: string; badge?: string; onSeeAll: () => void }) => (
+const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSeeAll }: { icon: LucideIcon; iconColor: string; title: string; badge?: string; actionLabel?: string; onSeeAll: () => void }) => (
   <div className="flex items-center justify-between mb-4">
     <h2 className="text-sm font-bold text-foreground flex items-center gap-2.5">
       <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-muted/80 to-muted/40 flex items-center justify-center shadow-sm">
@@ -141,7 +118,7 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, onSeeAll }: { icon
       )}
     </h2>
     <button onClick={onSeeAll} className="text-xs text-primary font-bold touch-manipulation active:scale-95 min-w-[44px] min-h-[32px] flex items-center gap-0.5 hover:gap-1.5 transition-all">
-      See all
+      {actionLabel || "See all"}
       <ChevronRight className="w-3.5 h-3.5" />
     </button>
   </div>
@@ -196,9 +173,38 @@ const getQuickEstimate = () => {
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useI18n();
   useDeviceIntegrityCheck();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeHomeTab, setActiveHomeTab] = useState<"rides" | "eats" | "flights" | "hotels">("rides");
+
+  const homeTabs = [
+    { id: "rides", label: t("home.rides"), icon: null, image: zivoRideIcon },
+    { id: "eats", label: t("home.eats"), icon: null, image: zivoEatsIcon },
+    { id: "flights", label: t("home.flights"), icon: null, image: zivoFlightsIcon },
+    { id: "hotels", label: t("home.hotels"), icon: null, image: zivoHotelsIcon },
+  ] as const;
+
+  const suggestions = [
+    { label: t("home.ride"), icon: null, image: zivoRideIcon, href: "/rides", badge: "10% Off", badgeVariant: "discount" as const },
+    { label: t("home.reserve"), icon: null, image: zivoReserveIcon, href: "/rides?tab=reserve", badge: "Promo", badgeVariant: "promo" as const },
+    { label: t("home.rental_cars"), icon: null, image: zivoRentalCarIcon, href: "/rent-car", badge: "Promo", badgeVariant: "promo" as const },
+    { label: t("home.shopping"), icon: null, image: zivoShoppingIcon, href: "/rides", badge: null, badgeVariant: null },
+  ];
+
+  function getSearchPlaceholder(tab: string): string {
+    if (tab === "rides") return t("home.book_ride");
+    if (tab === "eats") {
+      const hour = new Date().getHours();
+      if (hour >= 6 && hour < 11) return t("home.breakfast");
+      if (hour >= 11 && hour < 17) return t("home.lunch");
+      if (hour >= 17 && hour < 22) return t("home.dinner");
+      return t("home.late_night");
+    }
+    if (tab === "flights") return t("home.search_flights");
+    if (tab === "hotels") return t("home.search_hotels");
+    return t("home.where_to");
+  }
   const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
   const { data: deals = [] } = useRecommendedDeals("all", 6);
@@ -234,9 +240,9 @@ const AppHome = () => {
 
   const greeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return t("home.good_morning");
+    if (hour < 17) return t("home.good_afternoon");
+    return t("home.good_evening");
   };
 
   const userName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || "Traveler";
@@ -309,7 +315,7 @@ const AppHome = () => {
           {/* Suggestions Section */}
           <div className="pb-5">
             <div className="flex items-center justify-between mb-3 px-5">
-              <h2 className="text-base font-bold text-foreground">More Services</h2>
+              <h2 className="text-base font-bold text-foreground">{t("home.more_services")}</h2>
               <button onClick={() => navigate("/services")} className="w-8 h-8 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
                 <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>
@@ -375,7 +381,7 @@ const AppHome = () => {
           {/* ─── ORDER AGAIN ─── */}
           {user && orderAgain.length > 0 && (
             <div>
-              <SectionHeader icon={History} iconColor="text-orange-500" title="Order Again" badge="Quick" onSeeAll={() => navigate("/eats")} />
+              <SectionHeader icon={History} iconColor="text-orange-500" title={t("home.order_again")} badge="Quick" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/eats")} />
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {orderAgain.map((r) => (
                   <motion.button
@@ -411,7 +417,7 @@ const AppHome = () => {
           {/* ─── RECENT ACTIVITY ─── */}
           {user && activityItems.length > 0 && (
             <div>
-              <SectionHeader icon={Clock} iconColor="text-primary" title="Recent Activity" onSeeAll={() => navigate("/trips")} />
+              <SectionHeader icon={Clock} iconColor="text-primary" title={t("home.recent_activity")} actionLabel={t("home.see_all")} onSeeAll={() => navigate("/trips")} />
               <ActivityTimeline
                 items={activityItems}
                 maxHeight="280px"
@@ -422,12 +428,12 @@ const AppHome = () => {
 
           {/* ─── POPULAR NEAR YOU ─── */}
           <div>
-            <SectionHeader icon={TrendingUp} iconColor="text-emerald-500" title="Popular Near You" badge="Hot" onSeeAll={() => navigate("/eats")} />
+            <SectionHeader icon={TrendingUp} iconColor="text-emerald-500" title={t("home.popular_near")} badge="Hot" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/eats")} />
 
             {/* Popular Restaurants */}
             {recommended.length > 0 && (
               <div className="mb-6">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">Restaurants</p>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.restaurants")}</p>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                   {recommended.slice(0, 5).map((r) => (
                     <RestaurantCard key={r.id} restaurant={r} onNavigate={() => navigate(`/eats/restaurant/${r.id}`)} />
@@ -438,7 +444,7 @@ const AppHome = () => {
 
             {/* Popular Destinations */}
             <div className="mb-6">
-              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">Destinations</p>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.destinations")}</p>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {popularDestKeys.map((key, i) => {
                   const dest = destinationPhotos[key];
@@ -473,7 +479,7 @@ const AppHome = () => {
 
             {/* Trending Rides */}
             <div>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">Trending Rides</p>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.trending_rides")}</p>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {trendingRides.map((ride) => (
                   <motion.button
@@ -561,7 +567,7 @@ const AppHome = () => {
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-inner">
                       <Crown className="w-4.5 h-4.5 text-primary" />
                     </div>
-                    <span className="text-sm font-bold text-foreground">My Rewards</span>
+                    <span className="text-sm font-bold text-foreground">{t("home.my_rewards")}</span>
                   </div>
                   <Badge variant="outline" className={`text-[10px] font-bold ${tierConfig.color} ${tierConfig.borderColor} shadow-sm`}>
                     {tierConfig.icon} {tierConfig.displayName}
@@ -593,7 +599,7 @@ const AppHome = () => {
                   size="sm"
                 >
                   <Gift className="w-4 h-4 mr-2" />
-                  Redeem Points
+                  {t("home.redeem_points")}
                   <ArrowRight className="w-4 h-4 ml-auto" />
                 </Button>
               </motion.div>
@@ -618,7 +624,7 @@ const AppHome = () => {
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/20 to-violet-500/10 flex items-center justify-center shadow-inner">
                       <Users className="w-4.5 h-4.5 text-violet-500" />
                     </div>
-                    <span className="text-sm font-bold text-foreground">Invite Friends</span>
+                    <span className="text-sm font-bold text-foreground">{t("home.invite_friends")}</span>
                   </div>
                   <button onClick={() => navigate("/account/referrals")} className="text-[10px] text-violet-500 font-bold flex items-center gap-0.5 hover:gap-1.5 transition-all">
                     Details <ChevronRight className="w-3 h-3" />
@@ -654,7 +660,7 @@ const AppHome = () => {
                   className="w-full border-violet-500/25 text-violet-600 hover:bg-violet-500/10 rounded-xl h-12 font-bold relative z-10 shadow-sm"
                 >
                   <Share2 className="w-4 h-4 mr-2" />
-                  Share & Earn
+                  {t("home.share_earn")}
                 </Button>
               </motion.div>
             );
@@ -685,7 +691,7 @@ const AppHome = () => {
                     <div className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center shadow-inner">
                       <Clock className="w-4 h-4 text-primary" />
                     </div>
-                    <span className="text-sm font-bold text-foreground">Scheduled</span>
+                    <span className="text-sm font-bold text-foreground">{t("home.scheduled")}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {upcomingBookings.length > 1 && (
@@ -694,7 +700,7 @@ const AppHome = () => {
                       </Badge>
                     )}
                     <button onClick={() => navigate("/scheduled")} className="text-[10px] text-primary font-bold">
-                      View All
+                      {t("home.view_all")}
                     </button>
                   </div>
                 </div>
@@ -734,17 +740,17 @@ const AppHome = () => {
                   <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 flex items-center justify-center shadow-inner">
                     <Wallet className="w-4.5 h-4.5 text-emerald-500" />
                   </div>
-                  <span className="text-sm font-bold text-foreground">Wallet</span>
+                  <span className="text-sm font-bold text-foreground">{t("home.wallet")}</span>
                 </div>
                 <button onClick={() => navigate("/wallet")} className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5 hover:gap-1.5 transition-all">
-                  Manage <ChevronRight className="w-3 h-3" />
+                   Manage <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
               <div className="flex items-end gap-2 mb-3 relative z-10">
                 <p className="text-4xl font-bold text-foreground">
                   ${balanceDollars.toFixed(2)}
                 </p>
-                <span className="text-xs text-muted-foreground mb-1.5 font-medium">balance</span>
+                <span className="text-xs text-muted-foreground mb-1.5 font-medium">{t("home.balance")}</span>
               </div>
               {defaultCard && (
                 <div className="flex items-center gap-2 p-2.5 rounded-xl bg-card/40 border border-border/30 relative z-10">
@@ -765,7 +771,7 @@ const AppHome = () => {
                   className="w-full rounded-xl h-11 font-bold border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10 relative z-10"
                 >
                   <Plus className="w-4 h-4 mr-1.5" />
-                  Add Payment Method
+                  {t("home.add_payment")}
                 </Button>
               )}
             </motion.div>
@@ -774,12 +780,12 @@ const AppHome = () => {
           {/* ─── WAVE 5: Smart Home Widgets ─── */}
           <div className="space-y-3">
             <h2 className="text-xs font-bold text-muted-foreground flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-primary" /> SMART INSIGHTS
+              <Sparkles className="w-3.5 h-3.5 text-primary" /> {t("home.smart_insights")}
             </h2>
 
             {/* Weekly Spending */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl bg-card border border-border/40 p-4">
-              <p className="text-xs font-bold text-foreground mb-3">This Week's Spending</p>
+              <p className="text-xs font-bold text-foreground mb-3">{t("home.weekly_spending")}</p>
               <div className="flex items-end gap-1.5 h-14">
                 {[32, 18, 45, 12, 28, 52, 8].map((val, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
@@ -814,7 +820,7 @@ const AppHome = () => {
 
             {/* Nearby Attractions */}
             <div className="rounded-2xl bg-card border border-border/40 p-4">
-              <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-violet-500" /> Nearby Attractions</p>
+              <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-violet-500" /> {t("home.nearby_attractions")}</p>
               <div className="space-y-2">
                 {[
                   { name: "Central Park", distance: "0.5 mi", rating: 4.8, type: "Park" },
@@ -831,7 +837,7 @@ const AppHome = () => {
 
             {/* Smart Suggestions */}
             <div className="rounded-2xl bg-sky-500/5 border border-sky-500/20 p-4">
-              <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 text-sky-500" /> Smart Suggestions</p>
+              <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 text-sky-500" /> {t("home.smart_suggestions")}</p>
               <div className="space-y-1.5">
                 <p className="text-[11px] text-muted-foreground">💡 Flights to Miami are 23% cheaper next Tuesday</p>
                 <p className="text-[11px] text-muted-foreground">🏨 Hotel prices drop 15% for mid-week stays</p>
@@ -849,9 +855,9 @@ const AppHome = () => {
             >
               <div className="absolute -top-10 -right-10 w-28 h-28 bg-primary/10 rounded-full blur-3xl" />
               <div className="relative z-10">
-                <h3 className="text-base font-bold text-foreground mb-1">Join ZIVO — it's free</h3>
+                <h3 className="text-base font-bold text-foreground mb-1">{t("home.join_free")}</h3>
                 <p className="text-xs text-muted-foreground mb-4">
-                  Earn rewards, save trips, get price alerts, and access exclusive deals.
+                  {t("home.join_desc")}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -859,7 +865,7 @@ const AppHome = () => {
                     size="sm"
                     className="flex-1 h-11 rounded-xl font-bold shadow-md shadow-primary/20"
                   >
-                    Sign Up Free
+                    {t("home.sign_up_free")}
                   </Button>
                   <Button
                     onClick={() => navigate("/login")}
@@ -867,7 +873,7 @@ const AppHome = () => {
                     size="sm"
                     className="h-11 px-5 rounded-xl font-medium"
                   >
-                    Log In
+                    {t("home.log_in")}
                   </Button>
                 </div>
               </div>
@@ -878,15 +884,15 @@ const AppHome = () => {
           <div className="flex items-center justify-center gap-6 py-4">
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
               <Shield className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-medium">Secure</span>
+              <span className="text-[10px] font-medium">{t("home.secure")}</span>
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
               <Globe className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-medium">500K+ travelers</span>
+              <span className="text-[10px] font-medium">{t("home.travelers")}</span>
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
               <Star className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-medium">4.8 rating</span>
+              <span className="text-[10px] font-medium">{t("home.rating")}</span>
             </div>
           </div>
         </div>
