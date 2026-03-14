@@ -1665,6 +1665,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           }}
         >
           <MapSection
+            key={`active-map-${locationModeKey}`}
             compact
             pickupCoords={pickup}
             dropoffCoords={["route-preview", "ride-options", "confirm-ride", "searching", "pickup-confirm", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep) ? destination : null}
