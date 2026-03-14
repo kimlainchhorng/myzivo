@@ -2421,9 +2421,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                           <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
                           ${price.toFixed(2)}
                         </span>
+                        {useKm && <span className="text-[10px] text-muted-foreground">{toKHR(price)}</span>}
                       </>
                     ) : (
-                      <span className="text-[15px] font-bold text-foreground">${price.toFixed(2)}</span>
+                      <>
+                        <span className="text-[15px] font-bold text-foreground">${price.toFixed(2)}</span>
+                        {useKm && <span className="text-[10px] text-muted-foreground">{toKHR(price)}</span>}
+                      </>
                     )}
                     {isSelected && (
                       <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
