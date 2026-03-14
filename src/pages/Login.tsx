@@ -7,11 +7,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
+import { useI18n } from "@/hooks/useI18n";
+import { cn } from "@/lib/utils";
 
 // Login schema
 const loginSchema = z.object({
@@ -48,6 +50,12 @@ const Login = () => {
   }, [searchParams]);
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const { currentLanguage, changeLanguage } = useI18n();
+  const LANGS = [
+    { code: "en", label: "English", flag: "🇺🇸" },
+    { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
+  ];
   const { signIn, signUp, signInWithProvider } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -226,7 +234,40 @@ const Login = () => {
           className="bg-card/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl shadow-black/[0.08] p-5 sm:p-6 flex-1 min-h-0 overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="text-center mb-4">
+          <div className="text-center mb-4 relative">
+            {/* Language toggle - top right */}
+            <div className="absolute right-0 top-0">
+              <div className="relative">
+                <button
+                  onClick={() => setShowLangMenu(!showLangMenu)}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all active:scale-90 touch-manipulation"
+                  aria-label="Change language"
+                >
+                  <Globe className="w-4 h-4 text-muted-foreground" />
+                </button>
+                {showLangMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
+                    <div className="absolute right-0 top-10 z-50 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[130px] animate-in fade-in slide-in-from-top-2 duration-150">
+                      {LANGS.map(l => (
+                        <button
+                          key={l.code}
+                          onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors",
+                            currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted"
+                          )}
+                        >
+                          <span className="text-sm">{l.flag}</span>
+                          <span>{l.label}</span>
+                          {currentLanguage === l.code && <CheckCircle className="w-3.5 h-3.5 ml-auto" />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               ZIVO ID
             </h1>
