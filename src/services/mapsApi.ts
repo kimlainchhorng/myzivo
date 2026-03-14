@@ -47,14 +47,17 @@ export interface RouteLeg {
 
 export async function getAutocompleteSuggestions(
   input: string,
-  proximity?: { lat: number; lng: number }
+  proximity?: { lat: number; lng: number },
+  country?: string
 ): Promise<PlaceSuggestion[]> {
   if (!input || input.trim().length < 2) return [];
 
   try {
-    const { data, error } = await supabase.functions.invoke("maps-autocomplete", {
-      body: { input: input.trim(), proximity },
-    });
+    const body: Record<string, unknown> = { input: input.trim() };
+    if (proximity) body.proximity = proximity;
+    if (country) body.country = country;
+
+    const { data, error } = await supabase.functions.invoke("maps-autocomplete", { body });
     if (error || !data?.ok) return [];
     return data.suggestions ?? [];
   } catch {
