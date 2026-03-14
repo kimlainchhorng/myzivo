@@ -458,7 +458,7 @@ const Profile = () => {
                 className="w-full text-destructive/60 hover:text-destructive hover:bg-destructive/5 text-xs font-medium rounded-xl"
                 onClick={() => navigate("/profile/delete-account")}
               >
-                Delete Account
+                {t("profile.delete_account")}
               </Button>
             </div>
           </div>
