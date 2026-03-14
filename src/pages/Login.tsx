@@ -524,7 +524,7 @@ const Login = () => {
           <div className="flex items-center justify-center gap-4 mt-3 text-muted-foreground text-[10px]">
             <div className="flex items-center gap-1">
               <Shield className="w-3 h-3" />
-              <span>256-bit encrypted</span>
+              <span>{t("auth.encrypted")}</span>
             </div>
             <div className="w-px h-3 bg-border" />
             <div className="flex items-center gap-1">
