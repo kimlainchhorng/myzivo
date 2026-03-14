@@ -131,11 +131,11 @@ export default function LiveTripTracker({
     <div className="absolute bottom-3 left-3 right-3 z-20 flex gap-2">
       <div className="bg-card/90 backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-border/30 text-center">
         <p className="text-[9px] text-muted-foreground">Speed</p>
-        <p className="text-xs font-bold text-foreground">{driverSpeed} mph</p>
+        <p className="text-xs font-bold text-foreground">{isCambodia ? Math.round(driverSpeed * 1.60934) : driverSpeed} {isCambodia ? "km/h" : "mph"}</p>
       </div>
       <div className="bg-card/90 backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-border/30 text-center">
         <p className="text-[9px] text-muted-foreground">Distance</p>
-        <p className="text-xs font-bold text-foreground">{distanceLeft.toFixed(1)} mi</p>
+        <p className="text-xs font-bold text-foreground">{isCambodia ? (distanceLeft * 1.60934).toFixed(1) : distanceLeft.toFixed(1)} {isCambodia ? "km" : "mi"}</p>
       </div>
     </div>
   );
