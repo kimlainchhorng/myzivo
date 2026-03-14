@@ -129,11 +129,7 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
 // Promos and trending rides are built inside the component for translation
 
 // ─── Trending Rides (static) ───
-const trendingRides = [
-  { name: "Airport Transfer", eta: "~15 min", price: "$22-35", icon: Plane, popular: true },
-  { name: "Downtown", eta: "~8 min", price: "$12-18", icon: Navigation, popular: false },
-  { name: "Beach", eta: "~20 min", price: "$18-28", icon: TrendingUp, popular: false },
-];
+// trendingRides built inside component for translation
 
 // ─── Popular Destinations (subset) ───
 const popularDestKeys = ["miami", "las-vegas", "new-york", "cancun", "los-angeles"] as const;
