@@ -459,7 +459,7 @@ const Login = () => {
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <>
-                      Create Account
+                      {t("auth.create_account")}
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </>
                   )}
