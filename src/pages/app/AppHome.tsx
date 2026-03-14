@@ -233,7 +233,24 @@ const AppHome = () => {
   const { getDefault } = useLocalPaymentMethods();
   const defaultCard = getDefault();
 
-  const estimate = getQuickEstimate();
+  const estimate = (() => {
+    const hour = new Date().getHours();
+    const isPeak = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);
+    if (isKH) {
+      return {
+        pickupEta: isPeak ? "~៨ នាទី" : "~៤ នាទី",
+        priceRange: isPeak ? "៛61,000-៛89,000" : "៛49,000-៛73,000",
+        label: isPeak ? t("home.peak_hours") : t("home.normal"),
+        surge: isPeak,
+      };
+    }
+    return {
+      pickupEta: isPeak ? "~8 min" : "~4 min",
+      priceRange: isPeak ? "$15-22" : "$12-18",
+      label: isPeak ? t("home.peak_hours") : t("home.normal"),
+      surge: isPeak,
+    };
+  })();
   const { items: activityItems, hasActiveItems } = useCustomerActivityFeed();
 
   // Promo carousel
