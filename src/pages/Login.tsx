@@ -364,7 +364,7 @@ const Login = () => {
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Full Name</FormLabel>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.full_name")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
