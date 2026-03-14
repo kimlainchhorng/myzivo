@@ -41,6 +41,7 @@ export function AddressAutocomplete({
   proximity,
   disabled = false,
   className,
+  country,
 }: AddressAutocompleteProps) {
   const [inputValue, setInputValue] = useState(value);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
