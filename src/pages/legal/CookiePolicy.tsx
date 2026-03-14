@@ -68,7 +68,7 @@ const CookiePolicy = () => {
   };
 
   const acceptAll = () => {
-    const allEnabled = { essential: true, functional: true, analytics: true, marketing: true };
+    const allEnabled = { essential: true, functional: true, analytics: true };
     setPreferences(allEnabled);
     localStorage.setItem("cookie_preferences", JSON.stringify(allEnabled));
     toast.success("All cookies accepted");
