@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useI18n } from "@/hooks/useI18n";
 import SEOHead from "@/components/SEOHead";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -53,6 +54,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { user, signOut } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
@@ -118,15 +120,15 @@ const Profile = () => {
   };
 
   const quickLinks = [
-    { icon: ShoppingBag, label: "My Orders", href: "/grocery/orders", description: "Order history & tracking" },
-    { icon: Wallet, label: "Wallet", href: "/wallet", description: "Balance & transactions" },
-    { icon: Sparkles, label: "Loyalty", href: "/account/loyalty", description: "Points & tier perks" },
-    { icon: Gift, label: "Gift Cards", href: "/account/gift-cards", description: "Buy, send, or redeem" },
-    { icon: CreditCard, label: "Payment Methods", href: "/payment-methods", description: "Manage cards & wallets" },
-    { icon: MapPin, label: "Saved Addresses", href: "/account/addresses", description: "Delivery addresses" },
-    { icon: Bell, label: "Notifications", href: "/notifications", description: "Preferences & alerts" },
-    { icon: Lock, label: "Security", href: "/account/security", description: "Password & 2FA" },
-    { icon: Globe, label: "Preferences", href: "/account/preferences", description: "Language & settings" },
+    { icon: ShoppingBag, label: t("profile.my_orders"), href: "/grocery/orders", description: t("profile.orders_desc") },
+    { icon: Wallet, label: t("profile.wallet"), href: "/wallet", description: t("profile.wallet_desc") },
+    { icon: Sparkles, label: t("profile.loyalty"), href: "/account/loyalty", description: t("profile.loyalty_desc") },
+    { icon: Gift, label: t("profile.gift_cards"), href: "/account/gift-cards", description: t("profile.gift_cards_desc") },
+    { icon: CreditCard, label: t("profile.payment_methods"), href: "/payment-methods", description: t("profile.payment_desc") },
+    { icon: MapPin, label: t("profile.saved_addresses"), href: "/account/addresses", description: t("profile.addresses_desc") },
+    { icon: Bell, label: t("profile.notifications"), href: "/notifications", description: t("profile.notifications_desc") },
+    { icon: Lock, label: t("profile.security"), href: "/account/security", description: t("profile.security_desc") },
+    { icon: Globe, label: t("profile.preferences"), href: "/account/preferences", description: t("profile.preferences_desc") },
   ];
 
   return (
@@ -147,8 +149,8 @@ const Profile = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="font-display text-xl font-bold">Profile Settings</h1>
-            <p className="text-muted-foreground text-xs">Manage your account information</p>
+            <h1 className="font-display text-xl font-bold">{t("profile.title")}</h1>
+            <p className="text-muted-foreground text-xs">{t("profile.subtitle")}</p>
           </div>
         </div>
 
@@ -197,13 +199,13 @@ const Profile = () => {
                 </div>
                 <CardTitle className="flex items-center justify-center gap-2 text-xl">
                   <Sparkles className="h-4 w-4 text-primary" />
-                  {profile?.full_name || "Set your name"}
+                  {profile?.full_name || t("profile.set_name")}
                 </CardTitle>
                 <CardDescription className="text-sm">{user?.email}</CardDescription>
                 <div className="flex items-center justify-center gap-2 mt-3">
                   <Badge className="bg-primary/10 text-primary border-primary/20 font-semibold">
                     <Star className="w-3 h-3 mr-1 fill-primary" />
-                    {profile?.status || "Active"} Member
+                    {profile?.status || t("profile.active_member")}
                   </Badge>
                   {isPlus && (
                     <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-500 border-amber-500/30 font-semibold">
@@ -224,11 +226,11 @@ const Profile = () => {
                         <FormItem>
                           <FormLabel className="flex items-center gap-2 font-semibold">
                             <User className="h-4 w-4 text-primary" />
-                            Full Name
+                            {t("profile.full_name")}
                           </FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter your full name"
+                              placeholder={t("profile.full_name_placeholder")}
                               className="h-12 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50"
                               {...field}
                             />
@@ -241,7 +243,7 @@ const Profile = () => {
                     <div className="space-y-2">
                       <label className="flex items-center gap-2 text-sm font-semibold">
                         <Mail className="h-4 w-4 text-primary" />
-                        Email
+                        {t("profile.email")}
                       </label>
                       <Input
                         value={user?.email || ""}
@@ -249,7 +251,7 @@ const Profile = () => {
                         className="h-12 rounded-xl bg-muted/50 border-border/50 text-muted-foreground"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Email cannot be changed here
+                        {t("profile.email_note")}
                       </p>
                     </div>
 
@@ -260,11 +262,11 @@ const Profile = () => {
                         <FormItem>
                           <FormLabel className="flex items-center gap-2 font-semibold">
                             <Phone className="h-4 w-4 text-primary" />
-                            Phone Number
+                            {t("profile.phone")}
                           </FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter your phone number"
+                              placeholder={t("profile.phone_placeholder")}
                               type="tel"
                               className="h-12 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50"
                               {...field}
@@ -283,12 +285,12 @@ const Profile = () => {
                       {updateProfile.isPending ? (
                         <>
                           <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                          Saving...
+                          {t("profile.saving")}
                         </>
                       ) : (
                         <>
                           <Save className="h-5 w-5 mr-2" />
-                          Save Changes
+                          {t("profile.save")}
                         </>
                       )}
                     </Button>
@@ -303,7 +305,7 @@ const Profile = () => {
                           navigate("/");
                         }}
                       >
-                        Sign out
+                        {t("profile.sign_out")}
                       </Button>
                     ) : (
                       <div className="flex gap-3">
@@ -313,7 +315,7 @@ const Profile = () => {
                           className="flex-1 h-12 text-base font-semibold rounded-xl touch-manipulation active:scale-[0.98]"
                           onClick={() => navigate("/login")}
                         >
-                          Log in
+                          {t("profile.log_in")}
                         </Button>
                         <Button
                           type="button"
@@ -321,7 +323,7 @@ const Profile = () => {
                           className="flex-1 h-12 text-base font-semibold rounded-xl touch-manipulation active:scale-[0.98]"
                           onClick={() => navigate("/signup")}
                         >
-                          Sign up
+                          {t("profile.sign_up")}
                         </Button>
                       </div>
                     )}
@@ -332,7 +334,7 @@ const Profile = () => {
 
             {/* Quick Access Links */}
             <div>
-              <h3 className="font-display font-bold text-base mb-3">Quick Access</h3>
+              <h3 className="font-display font-bold text-base mb-3">{t("profile.quick_access")}</h3>
               <div className="grid grid-cols-2 gap-2.5">
                 {quickLinks.map((link) => (
                   <Link key={link.label} to={link.href}>
@@ -364,8 +366,8 @@ const Profile = () => {
                           <Crown className="w-5 h-5 text-primary-foreground" />
                         </div>
                         <div>
-                          <p className="font-semibold text-sm">Upgrade to ZIVO+</p>
-                          <p className="text-xs text-muted-foreground">No service fees, priority delivery</p>
+                         <p className="font-semibold text-sm">{t("profile.upgrade_plus")}</p>
+                          <p className="text-xs text-muted-foreground">{t("profile.upgrade_desc")}</p>
                         </div>
                       </div>
                       <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-amber-500 transition-colors" />
@@ -391,8 +393,8 @@ const Profile = () => {
                           <Store className="w-5 h-5 text-primary-foreground" />
                         </div>
                         <div>
-                          <p className="font-semibold text-sm">Merchant Dashboard</p>
-                          <p className="text-xs text-muted-foreground">Manage your restaurant & orders</p>
+                          <p className="font-semibold text-sm">{t("profile.merchant_dashboard")}</p>
+                          <p className="text-xs text-muted-foreground">{t("profile.merchant_desc")}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -456,7 +458,7 @@ const Profile = () => {
                 className="w-full text-destructive/60 hover:text-destructive hover:bg-destructive/5 text-xs font-medium rounded-xl"
                 onClick={() => navigate("/profile/delete-account")}
               >
-                Delete Account
+                {t("profile.delete_account")}
               </Button>
             </div>
           </div>
