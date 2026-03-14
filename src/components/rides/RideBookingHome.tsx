@@ -81,6 +81,8 @@ function perDistRate(perMile: number, useKm: boolean): number {
 
 /** USD → KHR exchange rate */
 const USD_TO_KHR = 4062.5;
+const US_DEFAULT_CENTER = { lat: 40.7128, lng: -73.9857 };
+const CAMBODIA_DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
 
 /** Format price in KHR */
 function toKHR(usd: number): string {
