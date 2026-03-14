@@ -315,7 +315,7 @@ const AppHome = () => {
           {/* Suggestions Section */}
           <div className="pb-5">
             <div className="flex items-center justify-between mb-3 px-5">
-              <h2 className="text-base font-bold text-foreground">More Services</h2>
+              <h2 className="text-base font-bold text-foreground">{t("home.more_services")}</h2>
               <button onClick={() => navigate("/services")} className="w-8 h-8 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
                 <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>
