@@ -315,12 +315,12 @@ const Login = () => {
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center justify-between">
-                        <FormLabel className="text-muted-foreground text-sm font-medium">Password</FormLabel>
+                        <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.password")}</FormLabel>
                         <Link
                           to="/forgot-password"
                           className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
                         >
-                          Forgot?
+                          {t("auth.forgot")}
                         </Link>
                       </div>
                       <FormControl>
