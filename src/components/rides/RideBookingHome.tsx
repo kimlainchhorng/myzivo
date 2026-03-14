@@ -2493,7 +2493,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     <span className="text-foreground">${currentVehicle.basePrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Distance ({routeData.distance_miles} mi × ${currentVehicle.pricePerMile.toFixed(2)})</span>
+                    <span className="text-muted-foreground">Distance ({formatDist(routeData.distance_miles, useKm)} × ${perDistRate(currentVehicle.pricePerMile, useKm).toFixed(2)}/{distUnit(useKm)})</span>
                     <span className="text-foreground">${(routeData.distance_miles * currentVehicle.pricePerMile).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
