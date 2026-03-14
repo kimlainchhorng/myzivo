@@ -143,19 +143,7 @@ const DEFAULT_VEHICLE_OPTIONS = [
   { id: "wheelchair", category: "accessible", name: "ZIVO Wheel Chair", desc: "Wheelchair accessible vehicle", etaMin: 8, pricePerMile: 1.80, basePrice: 4.00, perMinute: 0.35, bookingFee: 2.50, minimumFare: 8.00, capacity: 3, icon: Accessibility, carSeat: false, surgeMultiplier: 1.0 },
 ];
 
-const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
-  { id: "book", label: "Book", icon: Car },
-  { id: "reserve", label: "Reserve", icon: CalendarClock },
-  { id: "map", label: "Map", icon: Map },
-  { id: "history", label: "History", icon: History },
-];
-
-const homeServices = [
-  { id: "ride", label: "Ride", icon: Car },
-  { id: "delivery", label: "Delivery", icon: Package },
-  { id: "flights", label: "Flights", icon: Plane },
-  { id: "hotels", label: "Hotels", icon: Hotel },
-];
+// rideTabs and homeServices built inside component for translation
 
 /* ─── Price calculator ─── */
 function calcPrice(vehicle: typeof DEFAULT_VEHICLE_OPTIONS[0], distanceMiles: number, durationMinutes = 0, surge = 1.0): number {
