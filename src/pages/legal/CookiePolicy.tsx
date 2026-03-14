@@ -193,10 +193,16 @@ const CookiePolicy = () => {
                   <CheckCircle2 className="w-4 h-4 text-green-500 mt-1 shrink-0" />
                   Analyze traffic and performance to improve our services
                 </li>
-                <li className="flex items-start gap-3 text-foreground">
-                  <CheckCircle2 className="w-4 h-4 text-green-500 mt-1 shrink-0" />
-                  Support marketing attribution (with your consent)
-                </li>
+              </ul>
+              <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <div className="flex items-start gap-2">
+                  <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <p className="text-sm text-muted-foreground">
+                    <strong>No tracking or advertising cookies:</strong> ZIVO does not use cookies to track users 
+                    across other apps or websites, and does not use cookies for advertising or ad targeting purposes.
+                  </p>
+                </div>
+              </div>
               </ul>
             </div>
           </section>
