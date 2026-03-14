@@ -2833,7 +2833,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="flex-1 min-h-0 overflow-hidden">
               <RidePaymentSection
                 price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
-                vehicleName={currentVehicle.name}
+                vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")}
                 isSubmitting={isSubmitting}
                 onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
                 onAuthorizeWithNewCard={() => handleRequestRide()}
