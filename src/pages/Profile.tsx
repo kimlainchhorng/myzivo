@@ -482,9 +482,9 @@ const Profile = () => {
                       <Users className="w-5 h-5 text-violet-500" />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm">Referred by Partner</p>
-                      <p className="text-xs text-muted-foreground">
-                        You joined through {affiliateAttribution.partnerName}
+                       <p className="font-semibold text-sm">{t("profile.referred_by")}</p>
+                       <p className="text-xs text-muted-foreground">
+                         {t("profile.joined_through")} {affiliateAttribution.partnerName}
                       </p>
                     </div>
                   </div>
