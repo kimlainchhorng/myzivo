@@ -803,7 +803,7 @@ const AppHome = () => {
               </div>
               <div className="flex items-end gap-2 mb-3 relative z-10">
                 <p className="text-4xl font-bold text-foreground">
-                  ${balanceDollars.toFixed(2)}
+                  {isKH ? `៛${(balanceDollars * 4062.5).toLocaleString("en-US", { maximumFractionDigits: 0 })}` : `$${balanceDollars.toFixed(2)}`}
                 </p>
                 <span className="text-xs text-muted-foreground mb-1.5 font-medium">{t("home.balance")}</span>
               </div>
