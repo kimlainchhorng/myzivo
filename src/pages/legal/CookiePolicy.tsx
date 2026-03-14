@@ -37,13 +37,6 @@ const cookieCategories = [
     required: false,
     examples: ["Page views", "Navigation patterns", "Performance metrics"],
   },
-  {
-    id: "marketing",
-    title: "Marketing Cookies",
-    description: "Used to deliver relevant ads and measure campaign effectiveness.",
-    required: false,
-    examples: ["Ad targeting", "Campaign attribution", "Remarketing"],
-  },
 ];
 
 const CookiePolicy = () => {
