@@ -1553,6 +1553,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="flex-1 relative z-0 min-h-0">
             <div className="absolute inset-0">
               <MapSection
+                key={`home-map-${locationModeKey}`}
                 compact
                 pickupCoords={null}
                 dropoffCoords={null}
