@@ -873,7 +873,7 @@ const AppHome = () => {
                     size="sm"
                     className="h-11 px-5 rounded-xl font-medium"
                   >
-                    Log In
+                    {t("home.log_in")}
                   </Button>
                 </div>
               </div>
