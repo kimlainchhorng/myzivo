@@ -873,11 +873,7 @@ const AppHome = () => {
             <div className="rounded-2xl bg-card border border-border/40 p-4">
               <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-violet-500" /> {t("home.nearby_attractions")}</p>
               <div className="space-y-2">
-                {[
-                  { name: "Central Park", distance: "0.5 mi", rating: 4.8, type: "Park" },
-                  { name: "Museum of Art", distance: "1.2 mi", rating: 4.9, type: "Museum" },
-                  { name: "Broadway District", distance: "0.8 mi", rating: 4.7, type: "Entertainment" },
-                ].map(a => (
+                {(isKH ? cambodiaAttractions : usAttractions).map(a => (
                   <div key={a.name} className="flex items-center gap-2 p-2 rounded-xl hover:bg-muted/30 transition-colors">
                     <div className="flex-1"><p className="text-xs font-bold text-foreground">{a.name}</p><p className="text-[10px] text-muted-foreground">{a.distance} · {a.type}</p></div>
                     <span className="text-[10px] font-bold text-amber-500">★ {a.rating}</span>
