@@ -16,7 +16,6 @@ interface CookiePreferences {
   essential: boolean;
   functional: boolean;
   analytics: boolean;
-  advertising: boolean;
 }
 
 const CookieConsent = () => {
