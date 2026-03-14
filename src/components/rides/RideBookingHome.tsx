@@ -2552,9 +2552,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <div className="flex justify-between border-t border-border/15 pt-1 mt-0.5">
                     <span className="font-bold text-foreground text-[13px]">Total</span>
                     <div className="text-right">
-                      <span className="font-bold text-foreground text-[15px]">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
-                      {useKm && (
-                        <p className="text-[10px] text-muted-foreground font-medium">{toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)}</p>
+                      {useKm ? (
+                        <>
+                          <p className="font-bold text-foreground text-[15px]">{toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)}</p>
+                          <p className="text-[10px] text-muted-foreground">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</p>
+                        </>
+                      ) : (
+                        <span className="font-bold text-foreground text-[15px]">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
                       )}
                     </div>
                   </div>
