@@ -888,10 +888,15 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [viewStep, destination, liveDriverLocation, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
+    if (currentLanguage === "km") {
+      setUserLocation(CAMBODIA_DEFAULT_CENTER);
+      return;
+    }
+
     getCurrentLocation()
       .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
       .catch(() => toast.error("Could not get your location"));
-  }, [getCurrentLocation]);
+  }, [currentLanguage, getCurrentLocation]);
 
   /** When user drags map in search view, reverse geocode center → pickup */
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
