@@ -846,7 +846,7 @@ const AppHome = () => {
                   <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
                     <motion.div initial={{ height: 0 }} animate={{ height: `${(val / 60) * 100}%` }} transition={{ duration: 0.6, delay: i * 0.08 }}
                       className={`w-full rounded-t ${i === new Date().getDay() ? "bg-primary" : "bg-primary/20"}`} />
-                    <span className="text-[8px] text-muted-foreground">{["S","M","T","W","T","F","S"][i]}</span>
+                    <span className="text-[8px] text-muted-foreground">{isKH ? ["អា","ច","អ","ព","ព្រ","សុ","ស"][i] : ["S","M","T","W","T","F","S"][i]}</span>
                   </div>
                 ))}
               </div>
