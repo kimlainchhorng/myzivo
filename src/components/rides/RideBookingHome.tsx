@@ -310,9 +310,14 @@ function VehicleRow({
             </span>
           )}
           {vehicle.id === "share" && (
-            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
-              <Users className="w-3 h-3" />
-              SAVE
+            <span className={cn(
+              "flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold",
+              isCambodia
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+            )}>
+              {isCambodia ? <Zap className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+              {isCambodia ? "EV" : "SAVE"}
             </span>
           )}
           {vehicle.id === "comfort" && (
@@ -371,11 +376,11 @@ function VehicleRow({
           )}
           <div className="flex items-center gap-0.5 text-muted-foreground">
             <User className="w-3 h-3" />
-            <span className="text-xs">{vehicle.capacity}</span>
+            <span className="text-xs">{getVehicleCapacity(vehicle.id, vehicle.capacity, isCambodia)}</span>
           </div>
         </div>
         <div className="flex items-center gap-1.5 mt-0.5">
-          <span className="text-xs text-muted-foreground">{etaStr} · {vehicle.desc}</span>
+          <span className="text-xs text-muted-foreground">{etaStr} · {getVehicleDesc(vehicle.id, vehicle.desc, isCambodia)}</span>
         </div>
       </div>
       <div className="text-right shrink-0 flex flex-col items-end gap-0.5">
@@ -420,6 +425,14 @@ const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
   "economy": "ZIVO Tuk Tuk",
   "share": "ZIVO EV Tuk Tuk",
 };
+const CAMBODIA_VEHICLE_DESCS: Record<string, string> = {
+  "economy": "Affordable everyday rides",
+  "share": "Electric, zero-emission rides",
+};
+const CAMBODIA_VEHICLE_CAPACITY: Record<string, number> = {
+  "economy": 3,
+  "share": 3,
+};
 
 /** Get vehicle image based on region */
 function getVehicleImage(vehicleId: string, isCambodia: boolean): string {
@@ -435,6 +448,22 @@ function getVehicleName(vehicleId: string, originalName: string, isCambodia: boo
     return CAMBODIA_VEHICLE_NAMES[vehicleId];
   }
   return originalName;
+}
+
+/** Get vehicle description based on region */
+function getVehicleDesc(vehicleId: string, originalDesc: string, isCambodia: boolean): string {
+  if (isCambodia && CAMBODIA_VEHICLE_DESCS[vehicleId]) {
+    return CAMBODIA_VEHICLE_DESCS[vehicleId];
+  }
+  return originalDesc;
+}
+
+/** Get vehicle capacity based on region */
+function getVehicleCapacity(vehicleId: string, originalCapacity: number, isCambodia: boolean): number {
+  if (isCambodia && CAMBODIA_VEHICLE_CAPACITY[vehicleId]) {
+    return CAMBODIA_VEHICLE_CAPACITY[vehicleId];
+  }
+  return originalCapacity;
 }
 
 const etaTime = (minutesFromNow: number) =>
@@ -2560,7 +2589,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       )}
                       <div className="flex items-center gap-0.5 text-muted-foreground/60">
                         <User className="w-3 h-3" />
-                        <span className="text-[11px]">{v.capacity}</span>
+                        <span className="text-[11px]">{getVehicleCapacity(v.id, v.capacity, currentLanguage === "km")}</span>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 leading-snug">
@@ -2627,7 +2656,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 active:scale-[0.97] transition-all duration-200"
               onClick={() => { setPaymentStep("idle"); setViewStep("confirm-ride"); }}
             >
-              Confirm {currentVehicle.name} · {useKm ? `${toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)} ($${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)})` : `$${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}`}
+              Confirm {getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} · {useKm ? `${toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)} ($${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)})` : `$${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}`}
             </Button>
           </div>
         </div>
@@ -2671,8 +2700,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <img src={getVehicleImage(selectedVehicle, currentLanguage === "km")} alt={getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-foreground leading-tight">{currentVehicle.name} · {currentVehicle.capacity} seats</p>
-                  <p className="text-[10px] text-muted-foreground">{currentVehicle.etaMin} min away · {currentVehicle.desc}</p>
+                  <p className="text-[13px] font-bold text-foreground leading-tight">{getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} · {getVehicleCapacity(selectedVehicle, currentVehicle.capacity, currentLanguage === "km")} seats</p>
+                  <p className="text-[10px] text-muted-foreground">{currentVehicle.etaMin} min away · {getVehicleDesc(selectedVehicle, currentVehicle.desc, currentLanguage === "km")}</p>
                 </div>
               </div>
 
@@ -2804,7 +2833,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="flex-1 min-h-0 overflow-hidden">
               <RidePaymentSection
                 price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
-                vehicleName={currentVehicle.name}
+                vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")}
                 isSubmitting={isSubmitting}
                 onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
                 onAuthorizeWithNewCard={() => handleRequestRide()}
@@ -3059,7 +3088,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Vehicle</span>
-                <span className="text-foreground">{currentVehicle.name}</span>
+                <span className="text-foreground">{getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")}</span>
               </div>
               {routeData && (
                 <>
