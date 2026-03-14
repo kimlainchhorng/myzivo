@@ -494,7 +494,7 @@ const AppHome = () => {
                   >
                     {ride.popular && (
                       <div className="absolute top-0 right-0">
-                        <div className="bg-primary/90 text-[7px] font-bold text-primary-foreground px-2 py-0.5 rounded-bl-lg">POPULAR</div>
+                        <div className="bg-primary/90 text-[7px] font-bold text-primary-foreground px-2 py-0.5 rounded-bl-lg">{t("home.popular")}</div>
                       </div>
                     )}
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/8 flex items-center justify-center mb-3 border border-primary/10 shadow-inner group-hover:scale-105 transition-transform">
