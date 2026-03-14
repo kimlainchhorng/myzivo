@@ -176,6 +176,8 @@ const badgeStyles = {
 /* ── Page ── */
 export default function ServicesPage() {
   const navigate = useNavigate();
+  const { t } = useI18n();
+  const serviceCategories = getServiceCategories(t);
   const [runningLabel, setRunningLabel] = useState<string | null>(null);
 
   const handleServiceClick = (service: ServiceItem) => {
