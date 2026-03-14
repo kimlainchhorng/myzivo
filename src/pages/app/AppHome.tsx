@@ -118,7 +118,7 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
       )}
     </h2>
     <button onClick={onSeeAll} className="text-xs text-primary font-bold touch-manipulation active:scale-95 min-w-[44px] min-h-[32px] flex items-center gap-0.5 hover:gap-1.5 transition-all">
-      {actionLabel || "See all"}
+      {actionLabel}
       <ChevronRight className="w-3.5 h-3.5" />
     </button>
   </div>
@@ -132,8 +132,8 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
 // trendingRides built inside component for translation
 
 // ─── Popular Destinations (subset) ───
-const popularDestKeys = ["miami", "las-vegas", "new-york", "cancun", "los-angeles"] as const;
-const popularDestPrices: Record<string, string> = {
+const popularDestKeysUS = ["miami", "las-vegas", "new-york", "cancun", "los-angeles"] as const;
+const popularDestPricesUS: Record<string, string> = {
   miami: "$89",
   "las-vegas": "$79",
   "new-york": "$99",
@@ -141,30 +141,36 @@ const popularDestPrices: Record<string, string> = {
   "los-angeles": "$69",
 };
 
-// ─── Recently viewed type config ───
-const typeConfig: Record<string, { icon: LucideIcon; color: string }> = {
-  hotel: { icon: Hotel, color: "bg-amber-500" },
-  flight: { icon: Plane, color: "bg-sky-500" },
-  car: { icon: Car, color: "bg-emerald-500" },
-  restaurant: { icon: Utensils, color: "bg-orange-500" },
-};
+// Cambodia destinations
+const cambodiaDestinations = [
+  { key: "siem-reap", city: "Siem Reap", price: "៛32,000", src: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&q=80&w=400", alt: "Angkor Wat" },
+  { key: "sihanoukville", city: "Sihanoukville", price: "៛45,000", src: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&q=80&w=400", alt: "Sihanoukville Beach" },
+  { key: "kampot", city: "Kampot", price: "៛28,000", src: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=400", alt: "Kampot River" },
+  { key: "battambang", city: "Battambang", price: "៛35,000", src: "https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&q=80&w=400", alt: "Battambang" },
+  { key: "kep", city: "Kep", price: "៛25,000", src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=400", alt: "Kep Beach" },
+];
 
-// ─── Smart ETA logic ───
-const getQuickEstimate = () => {
-  const hour = new Date().getHours();
-  const isPeak = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);
-  return {
-    pickupEta: isPeak ? "~8 min" : "~4 min",
-    priceRange: isPeak ? "$15-22" : "$12-18",
-    label: isPeak ? "Peak" : "Normal",
-    surge: isPeak,
-  };
-};
+// Cambodia nearby attractions
+const cambodiaAttractions = [
+  { name: "វត្តភ្នំ", nameEn: "Wat Phnom", distance: "0.8 km", rating: 4.7, type: "វត្តអារាម" },
+  { name: "ផ្សារកណ្តាល", nameEn: "Central Market", distance: "1.2 km", rating: 4.6, type: "ផ្សារ" },
+  { name: "វាំងភ្នំពេញ", nameEn: "Royal Palace", distance: "1.5 km", rating: 4.9, type: "ប្រវត្តិសាស្ត្រ" },
+];
+
+// US nearby attractions
+const usAttractions = [
+  { name: "Central Park", distance: "0.5 mi", rating: 4.8, type: "Park" },
+  { name: "Museum of Art", distance: "1.2 mi", rating: 4.9, type: "Museum" },
+  { name: "Broadway District", distance: "0.8 mi", rating: 4.7, type: "Entertainment" },
+];
+
+// ─── Recently viewed type config ───
 
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, currentLanguage } = useI18n();
+  const isKH = currentLanguage === "km";
   useDeviceIntegrityCheck();
 
   const promos = [
@@ -174,7 +180,11 @@ const AppHome = () => {
     { title: t("home.promo_hotel_sale"), subtitle: t("home.promo_hotel_sale_sub"), gradient: "from-violet-500 to-purple-600", icon: BedDouble, cta: t("home.promo_book_now") },
   ];
 
-  const trendingRides = [
+  const trendingRides = isKH ? [
+    { name: t("home.airport_transfer"), eta: "~១៥ នាទី", price: "៛89,000-៛142,000", icon: Plane, popular: true },
+    { name: t("home.downtown"), eta: "~៨ នាទី", price: "៛49,000-៛73,000", icon: Navigation, popular: false },
+    { name: t("home.beach"), eta: "~២០ នាទី", price: "៛73,000-៛114,000", icon: TrendingUp, popular: false },
+  ] : [
     { name: t("home.airport_transfer"), eta: "~15 min", price: "$22-35", icon: Plane, popular: true },
     { name: t("home.downtown"), eta: "~8 min", price: "$12-18", icon: Navigation, popular: false },
     { name: t("home.beach"), eta: "~20 min", price: "$18-28", icon: TrendingUp, popular: false },
@@ -227,7 +237,24 @@ const AppHome = () => {
   const { getDefault } = useLocalPaymentMethods();
   const defaultCard = getDefault();
 
-  const estimate = getQuickEstimate();
+  const estimate = (() => {
+    const hour = new Date().getHours();
+    const isPeak = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);
+    if (isKH) {
+      return {
+        pickupEta: isPeak ? "~៨ នាទី" : "~៤ នាទី",
+        priceRange: isPeak ? "៛61,000-៛89,000" : "៛49,000-៛73,000",
+        label: isPeak ? t("home.peak_hours") : t("home.normal"),
+        surge: isPeak,
+      };
+    }
+    return {
+      pickupEta: isPeak ? "~8 min" : "~4 min",
+      priceRange: isPeak ? "$15-22" : "$12-18",
+      label: isPeak ? t("home.peak_hours") : t("home.normal"),
+      surge: isPeak,
+    };
+  })();
   const { items: activityItems, hasActiveItems } = useCustomerActivityFeed();
 
   // Promo carousel
@@ -450,7 +477,31 @@ const AppHome = () => {
             <div className="mb-6">
               <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.destinations")}</p>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {popularDestKeys.map((key, i) => {
+                {isKH ? cambodiaDestinations.map((dest, i) => (
+                  <motion.button
+                    key={dest.key}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => navigate(`/search?tab=flights&to=${dest.city}`)}
+                    className="shrink-0 w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative"
+                  >
+                    <div className="relative h-[120px] overflow-hidden">
+                      <img src={dest.src} alt={dest.alt} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      {i < 2 && (
+                        <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
+                          <span className="text-[8px] font-bold text-primary-foreground uppercase tracking-wider">{t("home.trending")}</span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
+                        <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
+                          <Plane className="w-2.5 h-2.5" />
+                          {t("home.from")} {dest.price}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.button>
+                )) : popularDestKeysUS.map((key, i) => {
                   const dest = destinationPhotos[key];
                   return (
                     <motion.button
@@ -471,7 +522,7 @@ const AppHome = () => {
                           <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
                           <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
                             <Plane className="w-2.5 h-2.5" />
-                            {t("home.from")} {popularDestPrices[key]}
+                            {t("home.from")} {popularDestPricesUS[key]}
                           </div>
                         </div>
                       </div>
@@ -752,7 +803,7 @@ const AppHome = () => {
               </div>
               <div className="flex items-end gap-2 mb-3 relative z-10">
                 <p className="text-4xl font-bold text-foreground">
-                  ${balanceDollars.toFixed(2)}
+                  {isKH ? `៛${(balanceDollars * 4062.5).toLocaleString("en-US", { maximumFractionDigits: 0 })}` : `$${balanceDollars.toFixed(2)}`}
                 </p>
                 <span className="text-xs text-muted-foreground mb-1.5 font-medium">{t("home.balance")}</span>
               </div>
@@ -795,12 +846,12 @@ const AppHome = () => {
                   <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
                     <motion.div initial={{ height: 0 }} animate={{ height: `${(val / 60) * 100}%` }} transition={{ duration: 0.6, delay: i * 0.08 }}
                       className={`w-full rounded-t ${i === new Date().getDay() ? "bg-primary" : "bg-primary/20"}`} />
-                    <span className="text-[8px] text-muted-foreground">{["S","M","T","W","T","F","S"][i]}</span>
+                    <span className="text-[8px] text-muted-foreground">{isKH ? ["អា","ច","អ","ព","ព្រ","សុ","ស"][i] : ["S","M","T","W","T","F","S"][i]}</span>
                   </div>
                 ))}
               </div>
               <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
-                <span>{t("home.total")}: <b className="text-foreground">$195</b></span>
+                <span>{t("home.total")}: <b className="text-foreground">{isKH ? "៛793,000" : "$195"}</b></span>
                 <span className="text-emerald-500">↓ 12% {t("home.vs_last_week")}</span>
               </div>
             </motion.div>
@@ -826,11 +877,7 @@ const AppHome = () => {
             <div className="rounded-2xl bg-card border border-border/40 p-4">
               <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-violet-500" /> {t("home.nearby_attractions")}</p>
               <div className="space-y-2">
-                {[
-                  { name: "Central Park", distance: "0.5 mi", rating: 4.8, type: "Park" },
-                  { name: "Museum of Art", distance: "1.2 mi", rating: 4.9, type: "Museum" },
-                  { name: "Broadway District", distance: "0.8 mi", rating: 4.7, type: "Entertainment" },
-                ].map(a => (
+                {(isKH ? cambodiaAttractions : usAttractions).map(a => (
                   <div key={a.name} className="flex items-center gap-2 p-2 rounded-xl hover:bg-muted/30 transition-colors">
                     <div className="flex-1"><p className="text-xs font-bold text-foreground">{a.name}</p><p className="text-[10px] text-muted-foreground">{a.distance} · {a.type}</p></div>
                     <span className="text-[10px] font-bold text-amber-500">★ {a.rating}</span>
