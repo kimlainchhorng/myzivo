@@ -444,7 +444,7 @@ const AppHome = () => {
 
             {/* Popular Destinations */}
             <div className="mb-6">
-              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">Destinations</p>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.destinations")}</p>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {popularDestKeys.map((key, i) => {
                   const dest = destinationPhotos[key];
