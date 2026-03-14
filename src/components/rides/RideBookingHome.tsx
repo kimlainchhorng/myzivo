@@ -2839,7 +2839,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Distance</span>
-                    <span className="text-foreground">{routeData.distance_miles} mi</span>
+                    <span className="text-foreground">{formatDist(routeData.distance_miles, useKm)}</span>
                   </div>
                 </>
               )}
