@@ -210,7 +210,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
+    <div className="h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 px-4 safe-area-top safe-area-bottom relative overflow-hidden">
       <SEOHead title={isLogin ? "Sign In – ZIVO" : "Create Account – ZIVO"} description="Sign in or create your ZIVO account to search flights, hotels, and car rentals." noIndex={true} />
       {/* Animated gradient background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -218,32 +218,33 @@ const Login = () => {
         <div className="absolute -bottom-1/3 -right-1/4 w-[60%] h-[60%] bg-gradient-to-tl from-[hsl(var(--flights))/0.1] to-transparent rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '1.5s' }} />
         <div className="absolute top-1/3 right-1/4 w-[30%] h-[30%] bg-gradient-to-bl from-[hsl(var(--hotels))/0.08] to-transparent rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '3s' }} />
       </div>
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-md relative z-10 flex flex-col max-h-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-card/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl shadow-black/[0.08] p-6 sm:p-8"
+          className="bg-card/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl shadow-black/[0.08] p-5 sm:p-6 flex-1 min-h-0 overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+          <div className="text-center mb-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               ZIVO ID
             </h1>
             <motion.p 
               key={isLogin ? "login" : "signup"}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-muted-foreground mt-2 text-sm sm:text-base"
+              className="text-muted-foreground mt-1 text-xs sm:text-sm"
             >
               {isLogin ? "Welcome back, Traveler" : "Get Started Free — No credit card needed"}
             </motion.p>
           </div>
 
           {/* Forms */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
           {isLogin ? (
             <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-3">
                 <FormField
                   control={loginForm.control}
                   name="email"
@@ -300,7 +301,7 @@ const Login = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-6 touch-manipulation active:scale-[0.98] transition-all" 
+                  className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-4 touch-manipulation active:scale-[0.98] transition-all" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -316,7 +317,7 @@ const Login = () => {
             </Form>
           ) : (
             <Form {...signupForm}>
-              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-3">
+              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-2.5">
                 <FormField
                   control={signupForm.control}
                   name="fullName"
@@ -410,7 +411,7 @@ const Login = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-4 touch-manipulation active:scale-[0.98] transition-all" 
+                  className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-3 touch-manipulation active:scale-[0.98] transition-all" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -425,9 +426,10 @@ const Login = () => {
               </form>
             </Form>
           )}
+          </div>{/* end scrollable forms wrapper */}
 
           {/* Divider */}
-          <div className="relative my-6">
+          <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-border" />
             </div>
@@ -442,7 +444,7 @@ const Login = () => {
               type="button"
               onClick={() => handleSocialLogin('google')}
               disabled={socialLoading !== null}
-              className="h-12 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50"
+              className="h-11 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50 text-sm"
             >
               {socialLoading === 'google' ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -462,7 +464,7 @@ const Login = () => {
               type="button"
               onClick={() => handleSocialLogin('apple')}
               disabled={socialLoading !== null}
-              className="h-12 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50"
+              className="h-11 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50 text-sm"
             >
               {socialLoading === 'apple' ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -478,7 +480,7 @@ const Login = () => {
           </div>
 
           {/* Trust badges */}
-          <div className="flex items-center justify-center gap-4 mt-4 text-muted-foreground text-[10px]">
+          <div className="flex items-center justify-center gap-4 mt-3 text-muted-foreground text-[10px]">
             <div className="flex items-center gap-1">
               <Shield className="w-3 h-3" />
               <span>256-bit encrypted</span>
@@ -491,7 +493,7 @@ const Login = () => {
           </div>
 
           {/* Toggle Mode */}
-          <div className="text-center mt-6">
+          <div className="text-center mt-3">
             <button
               type="button"
               onClick={toggleMode}
@@ -505,18 +507,18 @@ const Login = () => {
           </div>
         </motion.div>
 
-        <p className="mt-4 sm:mt-6 text-center text-xs text-muted-foreground">
-          {isLogin ? "Protected by enterprise-grade security" : "By signing up, you agree to our Terms of Service"}
-        </p>
-
-        {/* Go to Home */}
-        <button
-          onClick={() => navigate("/")}
-          className="mt-4 w-full flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
-        >
-          <Home className="h-4 w-4" />
-          Go to Home
-        </button>
+        <div className="flex flex-col items-center gap-2 mt-3 shrink-0">
+          <p className="text-center text-xs text-muted-foreground">
+            {isLogin ? "Protected by enterprise-grade security" : "By signing up, you agree to our Terms of Service"}
+          </p>
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+          >
+            <Home className="h-4 w-4" />
+            Go to Home
+          </button>
+        </div>
       </div>
     </div>
   );
