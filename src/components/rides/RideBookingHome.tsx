@@ -2042,9 +2042,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                         <div className="flex items-center justify-between mb-2.5 px-5">
                           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                             <CatIcon className="w-3.5 h-3.5 text-primary/60" />
-                            {cat.label}
+                            {cat.type === "restaurant" ? t("ride.restaurants") : cat.type === "shop" ? t("ride.shops_grocery") : t("ride.gas_stations")}
                           </p>
-                          <span className="text-[10px] text-muted-foreground/40">{cat.places.length} nearby</span>
+                          <span className="text-[10px] text-muted-foreground/40">{cat.places.length} {t("ride.nearby")}</span>
                         </div>
                         <div
                           className="flex gap-2.5 overflow-x-auto overflow-y-hidden px-5 pb-2 snap-x snap-mandatory touch-pan-x"
