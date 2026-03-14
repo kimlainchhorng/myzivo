@@ -180,7 +180,11 @@ const AppHome = () => {
     { title: t("home.promo_hotel_sale"), subtitle: t("home.promo_hotel_sale_sub"), gradient: "from-violet-500 to-purple-600", icon: BedDouble, cta: t("home.promo_book_now") },
   ];
 
-  const trendingRides = [
+  const trendingRides = isKH ? [
+    { name: t("home.airport_transfer"), eta: "~១៥ នាទី", price: "៛89,000-៛142,000", icon: Plane, popular: true },
+    { name: t("home.downtown"), eta: "~៨ នាទី", price: "៛49,000-៛73,000", icon: Navigation, popular: false },
+    { name: t("home.beach"), eta: "~២០ នាទី", price: "៛73,000-៛114,000", icon: TrendingUp, popular: false },
+  ] : [
     { name: t("home.airport_transfer"), eta: "~15 min", price: "$22-35", icon: Plane, popular: true },
     { name: t("home.downtown"), eta: "~8 min", price: "$12-18", icon: Navigation, popular: false },
     { name: t("home.beach"), eta: "~20 min", price: "$18-28", icon: TrendingUp, popular: false },
