@@ -2717,6 +2717,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 onPaymentSuccess={handlePaymentSuccess}
                 paymentFailed={paymentStep === "failed"}
                 onClearError={() => setPaymentStep("idle")}
+                isCambodia={useKm}
               />
             </div>
           </div>

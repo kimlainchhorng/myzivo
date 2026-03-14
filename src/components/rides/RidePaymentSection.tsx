@@ -1,8 +1,9 @@
 /**
  * RidePaymentSection — Saved cards, add new card, Apple Pay for ride checkout
+ * Cambodia: Cash, QR Payment, Card only
  */
 import { useState, useEffect, useCallback } from "react";
-import { CreditCard, Plus, Trash2, Check, Shield, ChevronRight, Smartphone, LogIn, UserPlus } from "lucide-react";
+import { CreditCard, Plus, Trash2, Check, Shield, ChevronRight, Smartphone, LogIn, UserPlus, Banknote, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
@@ -31,14 +32,8 @@ interface RidePaymentSectionProps {
   onPaymentSuccess: () => void;
   paymentFailed: boolean;
   onClearError?: () => void;
+  isCambodia?: boolean;
 }
-
-const BRAND_ICONS: Record<string, string> = {
-  visa: "💳",
-  mastercard: "💳",
-  amex: "💳",
-  discover: "💳",
-};
 
 const BRAND_LABELS: Record<string, string> = {
   visa: "Visa",
@@ -46,6 +41,122 @@ const BRAND_LABELS: Record<string, string> = {
   amex: "Amex",
   discover: "Discover",
 };
+
+type CambodiaPaymentMethod = "cash" | "qr" | "card";
+
+/* ─── Cambodia Payment Methods ─── */
+function CambodiaPaymentSelector({
+  price,
+  vehicleName,
+  isSubmitting,
+  onConfirm,
+}: {
+  price: number;
+  vehicleName: string;
+  isSubmitting: boolean;
+  onConfirm: (method: CambodiaPaymentMethod) => void;
+}) {
+  const [selected, setSelected] = useState<CambodiaPaymentMethod>("cash");
+
+  const methods = [
+    {
+      id: "cash" as CambodiaPaymentMethod,
+      label: "សាច់ប្រាក់ (Cash)",
+      desc: "Pay driver in cash after ride",
+      icon: Banknote,
+      iconColor: "text-emerald-500",
+      bgColor: "bg-emerald-500/10",
+    },
+    {
+      id: "qr" as CambodiaPaymentMethod,
+      label: "QR Payment",
+      desc: "ABA, ACLEDA, Wing, TrueMoney",
+      icon: QrCode,
+      iconColor: "text-blue-500",
+      bgColor: "bg-blue-500/10",
+    },
+    {
+      id: "card" as CambodiaPaymentMethod,
+      label: "Card Payment",
+      desc: "Visa, Mastercard, UnionPay",
+      icon: CreditCard,
+      iconColor: "text-amber-500",
+      bgColor: "bg-amber-500/10",
+    },
+  ];
+
+  return (
+    <div className="flex flex-col h-full">
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider shrink-0 mb-2">
+        វិធីបង់ប្រាក់ / Payment
+      </p>
+
+      <div className="space-y-2 flex-1">
+        {methods.map((m) => {
+          const Icon = m.icon;
+          const isSelected = selected === m.id;
+          return (
+            <button
+              key={m.id}
+              onClick={() => setSelected(m.id)}
+              className={cn(
+                "w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border transition-all text-left",
+                isSelected
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                  : "border-border/30 hover:border-border/60"
+              )}
+            >
+              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", m.bgColor)}>
+                <Icon className={cn("w-5 h-5", m.iconColor)} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground">{m.label}</p>
+                <p className="text-[11px] text-muted-foreground">{m.desc}</p>
+              </div>
+              {isSelected ? (
+                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                  <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                </div>
+              ) : (
+                <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/30 shrink-0" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Confirm button */}
+      <div className="-mx-5 px-5 pt-3 pb-2 bg-background sticky bottom-0">
+        <Button
+          className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-xl shadow-foreground/15 gap-2 active:scale-[0.97] transition-all duration-200"
+          onClick={() => onConfirm(selected)}
+          disabled={isSubmitting}
+        >
+          <Shield className="w-5 h-5" />
+          {isSubmitting ? (
+            <span className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+              កំពុងដំណើរការ...
+            </span>
+          ) : selected === "cash" ? (
+            `បញ្ជាក់ · $${price.toFixed(2)} · ${vehicleName}`
+          ) : selected === "qr" ? (
+            `បង់តាម QR · $${price.toFixed(2)} · ${vehicleName}`
+          ) : (
+            `បង់តាមកាត · $${price.toFixed(2)} · ${vehicleName}`
+          )}
+        </Button>
+        <p className="text-[10px] text-muted-foreground text-center mt-2">
+          {selected === "cash"
+            ? "បង់សាច់ប្រាក់ដល់អ្នកបើកបរ · Pay cash to driver after ride"
+            : selected === "qr"
+            ? "ស្កែន QR code ពេលអ្នកបើកបរមកដល់ · Scan QR when driver arrives"
+            : "កាតនឹងត្រូវបានគិតប្រាក់បន្ទាប់ពីជិះ · Card charged after ride"}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 /* ─── Inline Stripe form for adding new card ─── */
 function AddCardForm({ onSuccess, onCancel, setupClientSecret }: {
@@ -69,7 +180,6 @@ function AddCardForm({ onSuccess, onCancel, setupClientSecret }: {
     setError(null);
 
     try {
-      // Submit the elements form first
       const { error: submitError } = await elements.submit();
       if (submitError) {
         setError(submitError.message || "Please check your card details");
@@ -196,6 +306,7 @@ export default function RidePaymentSection({
   onPaymentSuccess,
   paymentFailed,
   onClearError,
+  isCambodia = false,
 }: RidePaymentSectionProps) {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -237,8 +348,13 @@ export default function RidePaymentSection({
   }, [user, onClearError]);
 
   useEffect(() => {
-    loadCards();
-  }, [loadCards]);
+    // For Cambodia, skip loading Stripe cards unless card method is chosen
+    if (!isCambodia) {
+      loadCards();
+    } else {
+      setLoadingCards(false);
+    }
+  }, [loadCards, isCambodia]);
 
   // If auth is still loading, show a spinner
   if (authLoading) {
@@ -291,18 +407,40 @@ export default function RidePaymentSection({
     );
   }
 
+  /* ═══════ CAMBODIA PAYMENT ═══════ */
+  if (isCambodia) {
+    return (
+      <CambodiaPaymentSelector
+        price={price}
+        vehicleName={vehicleName}
+        isSubmitting={isSubmitting}
+        onConfirm={(method) => {
+          if (method === "cash") {
+            // For cash, just confirm the ride without Stripe
+            toast.success("Ride confirmed! Pay cash to your driver.");
+            onPaymentSuccess();
+          } else if (method === "qr") {
+            toast.success("Ride confirmed! QR code will be shown when driver arrives.");
+            onPaymentSuccess();
+          } else {
+            // Card — use existing Stripe flow
+            onAuthorizeWithNewCard();
+          }
+        }}
+      />
+    );
+  }
+
   // Start add card flow
   const handleAddCard = async () => {
     setAddingCard(true);
     try {
-      // Refresh session before calling edge function to ensure valid token
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
         toast.error("Session expired. Please sign in again.");
         navigate("/login");
         return;
       }
-      // If token is close to expiry, refresh it
       const expiresAt = sessionData.session.expires_at;
       if (expiresAt && expiresAt * 1000 - Date.now() < 60000) {
         await supabase.auth.refreshSession();
@@ -313,16 +451,12 @@ export default function RidePaymentSection({
       });
       console.log("[RidePayment] create_setup_intent response:", JSON.stringify(resp));
       
-      // supabase.functions.invoke returns { data, error }
-      // On non-2xx, error is a FunctionsHttpError and data may still contain the body
       const data = resp.data;
       const error = resp.error;
       
       if (error) {
-        // Try to extract message from the error
         let errMsg = "Failed to start card setup";
         if (typeof error === 'object' && error !== null) {
-          // FunctionsHttpError has a context property with the response
           try {
             const errorBody = typeof error.message === 'string' ? error.message : String(error);
             errMsg = errorBody || errMsg;
@@ -429,7 +563,7 @@ export default function RidePaymentSection({
     <div className="space-y-3">
       <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Payment</p>
 
-      {/* Saved cards — only show card list when cards exist */}
+      {/* Saved cards */}
       {loadingCards ? (
         <div className="rounded-2xl bg-card border border-border/20 p-4 flex items-center justify-center">
           <div className="w-5 h-5 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
@@ -512,11 +646,10 @@ export default function RidePaymentSection({
         </>
       ) : null}
 
-      {/* Authorize button — full bleed */}
+      {/* Authorize button */}
       <div className="-mx-5 px-5 pt-3 pb-2 bg-background sticky bottom-0">
         {!loadingCards && savedCards.length === 0 && !selectedCardId ? (
           <>
-            {/* No card saved — prompt to add one */}
             <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 mb-3 text-center space-y-2">
               <CreditCard className="w-8 h-8 text-primary mx-auto" />
               <p className="text-sm font-bold text-foreground">Add a card to continue</p>
