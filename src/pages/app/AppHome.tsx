@@ -635,7 +635,7 @@ const AppHome = () => {
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4 relative z-10">
-                  Earn <span className="font-bold text-violet-500">{REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()} pts</span> for every friend who books
+                  Earn <span className="font-bold text-violet-500">{REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()} pts</span> {t("home.earn_per_referral")}
                 </p>
 
                 {referralCode?.code && (
