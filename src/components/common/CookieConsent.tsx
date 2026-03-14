@@ -49,7 +49,7 @@ const CookieConsent = () => {
   };
 
   const handleRejectAll = () => {
-    const essentialOnly = { essential: true, functional: false, analytics: false, advertising: false };
+    const essentialOnly = { essential: true, functional: false, analytics: false };
     localStorage.setItem("zivo-cookie-consent", JSON.stringify(essentialOnly));
     localStorage.setItem("zivo-cookie-consent-date", new Date().toISOString());
     setIsVisible(false);
