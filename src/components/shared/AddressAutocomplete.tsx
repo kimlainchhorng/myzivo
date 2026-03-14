@@ -102,7 +102,7 @@ export function AddressAutocomplete({
     } finally {
       setIsLoading(false);
     }
-  }, [proximity]);
+  }, [proximity, country]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;

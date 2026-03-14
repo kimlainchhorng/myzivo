@@ -1625,7 +1625,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     setPickupDisplay(t("ride.current_location"));
                     const pickupData = userLocation
                       ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
-                      : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
+                      : { address: "Current Location", lat: fallbackPickupCenter.lat, lng: fallbackPickupCenter.lng };
                     setPickup(pickupData);
                     const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
                     fetchRoute(pickupData, dest, wp);
