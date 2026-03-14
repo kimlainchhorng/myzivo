@@ -529,7 +529,7 @@ const Login = () => {
             <div className="w-px h-3 bg-border" />
             <div className="flex items-center gap-1">
               <Mail className="w-3 h-3" />
-              <span>No spam, ever</span>
+              <span>{t("auth.no_spam")}</span>
             </div>
           </div>
 
