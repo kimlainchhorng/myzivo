@@ -1811,11 +1811,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                         </button>
                       </div>
                     ))}
-                    <AddressAutocomplete
+                     <AddressAutocomplete
                       placeholder="Where to?"
                       value={destinationDisplay}
                       onSelect={handleDestinationSelect}
                       proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
+                      country={rideCountry}
                       className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
                     />
                   </div>
