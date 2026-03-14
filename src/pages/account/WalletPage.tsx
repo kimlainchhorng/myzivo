@@ -80,7 +80,6 @@ export default function WalletPage() {
     .reduce((sum, c) => sum + Number(c.amount), 0);
 
   // Dynamic tips based on real data
-  const { getNextTierProgress } = useLoyaltyPoints();
   const tierProgress = getNextTierProgress();
 
   const tips: { icon: React.ReactNode; text: string }[] = [];
