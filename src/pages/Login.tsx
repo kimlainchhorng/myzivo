@@ -301,7 +301,7 @@ const Login = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-6 touch-manipulation active:scale-[0.98] transition-all" 
+                  className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-4 touch-manipulation active:scale-[0.98] transition-all" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
