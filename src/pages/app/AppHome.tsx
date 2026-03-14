@@ -66,20 +66,8 @@ const savedPlaceIconMap: Record<string, LucideIcon> = {
 };
 
 // ─── Top service tabs (Uber-style) ───
-const homeTabs = [
-  { id: "rides", label: "Rides", icon: null, image: zivoRideIcon },
-  { id: "eats", label: "Eats", icon: null, image: zivoEatsIcon },
-  { id: "flights", label: "Flights", icon: null, image: zivoFlightsIcon },
-  { id: "hotels", label: "Hotels", icon: null, image: zivoHotelsIcon },
-] as const;
-
-// ─── Suggestions row (service shortcuts) ───
-const suggestions = [
-  { label: "Ride", icon: null, image: zivoRideIcon, href: "/rides", badge: "10% Off", badgeVariant: "discount" as const },
-  { label: "Reserve", icon: null, image: zivoReserveIcon, href: "/rides?tab=reserve", badge: "Promo", badgeVariant: "promo" as const },
-  { label: "Rental Cars", icon: null, image: zivoRentalCarIcon, href: "/rent-car", badge: "Promo", badgeVariant: "promo" as const },
-  { label: "Shopping", icon: null, image: zivoShoppingIcon, href: "/rides", badge: null, badgeVariant: null },
-];
+// These are now built inside the component with t() for translation
+// See homeTabs and suggestions inside AppHome component
 
 // ─── Restaurant Card (Premium) ───
 const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant; onNavigate: () => void }) => (
