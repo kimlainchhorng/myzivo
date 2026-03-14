@@ -3097,6 +3097,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             placeholder="Edit pickup location"
             value={pickupDisplay}
             onSelect={handlePickupSelect}
+            country={rideCountry}
             className="mb-3"
           />
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
