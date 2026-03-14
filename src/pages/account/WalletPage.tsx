@@ -59,7 +59,7 @@ export default function WalletPage() {
   const { data: savingsGoals = [], isLoading: goalsLoading } = useSavingsGoals();
   const createGoal = useCreateSavingsGoal();
   const deleteGoal = useDeleteSavingsGoal();
-  const { points, isLoading: pointsLoading } = useLoyaltyPoints();
+  const { points, isLoading: pointsLoading, getNextTierProgress } = useLoyaltyPoints();
 
   const totalSpent = summary?.totalSpent ?? 0;
   const txCount = summary?.transactionCount ?? 0;
