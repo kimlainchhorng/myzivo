@@ -27,7 +27,6 @@ const CookieConsent = () => {
     essential: true,
     functional: true,
     analytics: false,
-    advertising: false,
   });
 
   useEffect(() => {
