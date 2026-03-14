@@ -409,6 +409,30 @@ const VEHICLE_IMAGES: Record<string, string> = {
   "wheelchair": "/vehicles/wheelchair-car-v2.png",
 };
 
+/* Cambodia-specific overrides */
+const CAMBODIA_VEHICLE_IMAGES: Record<string, string> = {
+  "economy": "/vehicles/cambodia-tuktuk.png",
+};
+const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
+  "economy": "ZIVO Tuk Tuk",
+};
+
+/** Get vehicle image based on region */
+function getVehicleImage(vehicleId: string, isCambodia: boolean): string {
+  if (isCambodia && CAMBODIA_VEHICLE_IMAGES[vehicleId]) {
+    return CAMBODIA_VEHICLE_IMAGES[vehicleId];
+  }
+  return VEHICLE_IMAGES[vehicleId] ?? "/vehicles/economy-car.svg";
+}
+
+/** Get vehicle display name based on region */
+function getVehicleName(vehicleId: string, originalName: string, isCambodia: boolean): string {
+  if (isCambodia && CAMBODIA_VEHICLE_NAMES[vehicleId]) {
+    return CAMBODIA_VEHICLE_NAMES[vehicleId];
+  }
+  return originalName;
+}
+
 const etaTime = (minutesFromNow: number) =>
   new Date(Date.now() + minutesFromNow * 60000)
     .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
