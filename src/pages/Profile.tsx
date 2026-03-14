@@ -323,7 +323,7 @@ const Profile = () => {
                           className="flex-1 h-12 text-base font-semibold rounded-xl touch-manipulation active:scale-[0.98]"
                           onClick={() => navigate("/signup")}
                         >
-                          Sign up
+                          {t("profile.sign_up")}
                         </Button>
                       </div>
                     )}
