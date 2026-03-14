@@ -2533,7 +2533,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 </div>
                 <div className="flex-1 flex items-center justify-center gap-1 rounded-md bg-card border border-border/20 px-1.5 py-1.5">
                   <Route className="w-3 h-3 text-primary" />
-                  <span className="text-[12px] font-bold text-foreground">{routeData.distance_miles} mi</span>
+                  <span className="text-[12px] font-bold text-foreground">{formatDist(routeData.distance_miles, useKm)}</span>
                 </div>
                 {routeData.traffic_level && (
                   <div className="flex-1 flex items-center justify-center gap-1 rounded-md bg-card border border-border/20 px-1.5 py-1.5">
