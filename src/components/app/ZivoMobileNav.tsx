@@ -85,7 +85,7 @@ const ZivoMobileNav = () => {
                 "flex flex-col items-center justify-center flex-1 gap-1.5 transition-colors duration-200 touch-manipulation active:scale-90 relative min-w-[48px] min-h-[48px]",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
-              aria-label={tab.label}
+              aria-label={t(tab.labelKey)}
               aria-current={isActive ? "page" : undefined}
             >
               <div className="relative flex items-center justify-center">
