@@ -381,7 +381,7 @@ const AppHome = () => {
           {/* ─── ORDER AGAIN ─── */}
           {user && orderAgain.length > 0 && (
             <div>
-              <SectionHeader icon={History} iconColor="text-orange-500" title="Order Again" badge="Quick" onSeeAll={() => navigate("/eats")} />
+              <SectionHeader icon={History} iconColor="text-orange-500" title={t("home.order_again")} badge="Quick" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/eats")} />
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {orderAgain.map((r) => (
                   <motion.button
