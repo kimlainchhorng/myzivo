@@ -56,19 +56,7 @@ import zivoShoppingIcon from "@/assets/zivo-shopping.png";
 
 // ─── Saved Places Icon Map ───
 // ─── Dynamic search placeholder by tab ───
-function getSearchPlaceholder(tab: string): string {
-  if (tab === "rides") return "Book a Ride";
-  if (tab === "eats") {
-    const hour = new Date().getHours();
-    if (hour >= 6 && hour < 11) return "Breakfast time";
-    if (hour >= 11 && hour < 17) return "Lunch time";
-    if (hour >= 17 && hour < 22) return "Dinner time";
-    return "Late Night time";
-  }
-  if (tab === "flights") return "Search Flights";
-  if (tab === "hotels") return "Search Hotels";
-  return "Where to?";
-}
+// Search placeholder is now handled inside the component with t()
 
 const savedPlaceIconMap: Record<string, LucideIcon> = {
   home: Home,
