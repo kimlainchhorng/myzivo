@@ -120,15 +120,15 @@ const Profile = () => {
   };
 
   const quickLinks = [
-    { icon: ShoppingBag, label: "My Orders", href: "/grocery/orders", description: "Order history & tracking" },
-    { icon: Wallet, label: "Wallet", href: "/wallet", description: "Balance & transactions" },
-    { icon: Sparkles, label: "Loyalty", href: "/account/loyalty", description: "Points & tier perks" },
-    { icon: Gift, label: "Gift Cards", href: "/account/gift-cards", description: "Buy, send, or redeem" },
-    { icon: CreditCard, label: "Payment Methods", href: "/payment-methods", description: "Manage cards & wallets" },
-    { icon: MapPin, label: "Saved Addresses", href: "/account/addresses", description: "Delivery addresses" },
-    { icon: Bell, label: "Notifications", href: "/notifications", description: "Preferences & alerts" },
-    { icon: Lock, label: "Security", href: "/account/security", description: "Password & 2FA" },
-    { icon: Globe, label: "Preferences", href: "/account/preferences", description: "Language & settings" },
+    { icon: ShoppingBag, label: t("profile.my_orders"), href: "/grocery/orders", description: t("profile.orders_desc") },
+    { icon: Wallet, label: t("profile.wallet"), href: "/wallet", description: t("profile.wallet_desc") },
+    { icon: Sparkles, label: t("profile.loyalty"), href: "/account/loyalty", description: t("profile.loyalty_desc") },
+    { icon: Gift, label: t("profile.gift_cards"), href: "/account/gift-cards", description: t("profile.gift_cards_desc") },
+    { icon: CreditCard, label: t("profile.payment_methods"), href: "/payment-methods", description: t("profile.payment_desc") },
+    { icon: MapPin, label: t("profile.saved_addresses"), href: "/account/addresses", description: t("profile.addresses_desc") },
+    { icon: Bell, label: t("profile.notifications"), href: "/notifications", description: t("profile.notifications_desc") },
+    { icon: Lock, label: t("profile.security"), href: "/account/security", description: t("profile.security_desc") },
+    { icon: Globe, label: t("profile.preferences"), href: "/account/preferences", description: t("profile.preferences_desc") },
   ];
 
   return (
