@@ -225,9 +225,9 @@ export default function ServicesPage() {
           transition={{ delay: 0.05, duration: 0.4 }}
         >
           <h1 className="text-[28px] font-black text-foreground mt-3 tracking-tight">
-            Everything ZIVO
+            {t("services.title")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">All services, one place</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{t("services.subtitle")}</p>
         </motion.div>
       </div>
 
