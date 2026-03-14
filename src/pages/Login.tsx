@@ -210,7 +210,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
+    <div className="h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 px-4 safe-area-top safe-area-bottom relative overflow-hidden">
       <SEOHead title={isLogin ? "Sign In – ZIVO" : "Create Account – ZIVO"} description="Sign in or create your ZIVO account to search flights, hotels, and car rentals." noIndex={true} />
       {/* Animated gradient background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -218,12 +218,12 @@ const Login = () => {
         <div className="absolute -bottom-1/3 -right-1/4 w-[60%] h-[60%] bg-gradient-to-tl from-[hsl(var(--flights))/0.1] to-transparent rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '1.5s' }} />
         <div className="absolute top-1/3 right-1/4 w-[30%] h-[30%] bg-gradient-to-bl from-[hsl(var(--hotels))/0.08] to-transparent rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '3s' }} />
       </div>
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-md relative z-10 flex flex-col max-h-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-card/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl shadow-black/[0.08] p-6 sm:p-8"
+          className="bg-card/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl shadow-black/[0.08] p-5 sm:p-6 flex-1 min-h-0 overflow-hidden flex flex-col"
         >
           {/* Header */}
           <div className="text-center mb-6 sm:mb-8">
