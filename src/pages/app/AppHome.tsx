@@ -599,7 +599,7 @@ const AppHome = () => {
                   size="sm"
                 >
                   <Gift className="w-4 h-4 mr-2" />
-                  Redeem Points
+                  {t("home.redeem_points")}
                   <ArrowRight className="w-4 h-4 ml-auto" />
                 </Button>
               </motion.div>
