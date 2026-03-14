@@ -489,6 +489,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     { code: "en", label: "English", flag: "🇺🇸" },
     { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
   ];
+  const fallbackPickupCenter = currentLanguage === "km" ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER;
 
   // Recent ride destinations from Supabase
   const [recentDestinations, setRecentDestinations] = useState<{ id: string; address: string; lat: number; lng: number; time: string }[]>([]);
