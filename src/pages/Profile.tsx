@@ -243,7 +243,7 @@ const Profile = () => {
                     <div className="space-y-2">
                       <label className="flex items-center gap-2 text-sm font-semibold">
                         <Mail className="h-4 w-4 text-primary" />
-                        Email
+                        {t("profile.email")}
                       </label>
                       <Input
                         value={user?.email || ""}
