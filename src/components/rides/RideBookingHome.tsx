@@ -1142,7 +1142,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         setViewStep("route-preview");
       });
     }
-  }, [pickup, userLocation, isSameLocation]);
+  }, [pickup, userLocation, isSameLocation, fallbackPickupCenter]);
 
   /* ─── Multi-stop management ─── */
   const MAX_STOPS = 1;
