@@ -31,6 +31,7 @@ interface AddressAutocompleteProps {
   proximity?: { lat: number; lng: number };
   disabled?: boolean;
   className?: string;
+  country?: string;
 }
 
 export function AddressAutocomplete({
@@ -40,6 +41,7 @@ export function AddressAutocomplete({
   proximity,
   disabled = false,
   className,
+  country,
 }: AddressAutocompleteProps) {
   const [inputValue, setInputValue] = useState(value);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -79,7 +81,7 @@ export function AddressAutocomplete({
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("maps-autocomplete", {
-        body: { input, proximity },
+        body: { input, proximity, country },
       });
 
       if (fnError) throw fnError;

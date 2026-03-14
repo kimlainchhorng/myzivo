@@ -678,11 +678,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
-  // Fetch user location on mount
+  // Fetch user location on mount — fallback to Cambodia center if language is km
   useEffect(() => {
     getCurrentLocation()
       .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
-      .catch(() => {});
+      .catch(() => {
+        // Fallback: Cambodia (Phnom Penh) when language is km, otherwise no fallback
+        if (currentLanguage === "km") {
+          setUserLocation({ lat: 11.5564, lng: 104.9282 });
+        }
+      });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch real nearby drivers and poll every 10s
@@ -924,7 +929,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
-  const useKm = useMemo(() => isInCambodia(pickup?.address, pickup?.lat), [pickup?.address, pickup?.lat]);
+  const useKm = useMemo(() => isInCambodia(pickup?.address, pickup?.lat) || currentLanguage === "km", [pickup?.address, pickup?.lat, currentLanguage]);
+  const rideCountry = useKm ? "kh" : undefined;
 
   const currentVehicle = vehicleOptions.find((v) => v.id === selectedVehicle) ?? vehicleOptions[0];
   const currentPrice = routeData
@@ -1779,20 +1785,22 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   </div>
                   <div className="flex-1 space-y-2">
-                    <AddressAutocomplete
+                     <AddressAutocomplete
                       placeholder="Pickup location"
                       value={pickupDisplay}
                       onSelect={handlePickupSelect}
+                      country={rideCountry}
                       className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
                     />
                     {/* Stop inputs */}
                     {stops.map((stop, idx) => (
                       <div key={stop.id} className="relative">
-                        <AddressAutocomplete
+                         <AddressAutocomplete
                           placeholder={`Stop ${idx + 1}`}
                           value={stop.display}
                           onSelect={(place) => handleStopSelect(stop.id, place)}
                           proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
+                          country={rideCountry}
                           className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0 [&_input]:pr-8"
                         />
                         <button
@@ -1803,11 +1811,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                         </button>
                       </div>
                     ))}
-                    <AddressAutocomplete
+                     <AddressAutocomplete
                       placeholder="Where to?"
                       value={destinationDisplay}
                       onSelect={handleDestinationSelect}
                       proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
+                      country={rideCountry}
                       className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
                     />
                   </div>
@@ -2223,11 +2232,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                           <p className="text-xs font-medium text-foreground truncate leading-tight">{stop.place.address}</p>
                         ) : (
                           <div className="relative">
-                            <AddressAutocomplete
+                             <AddressAutocomplete
                               placeholder={`Enter stop ${idx + 1} address`}
                               value={stop.display}
                               onSelect={(place) => handleStopSelect(stop.id, place)}
                               proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
+                              country={rideCountry}
                               className="[&_input]:h-8 [&_input]:rounded-lg [&_input]:text-xs [&_input]:font-medium [&_input]:bg-muted/30 [&_input]:border-border/30 [&_input]:px-2"
                             />
                             <button
@@ -3087,6 +3097,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             placeholder="Edit pickup location"
             value={pickupDisplay}
             onSelect={handlePickupSelect}
+            country={rideCountry}
             className="mb-3"
           />
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
