@@ -295,8 +295,8 @@ function VehicleRow({
     >
       <div className="w-[72px] shrink-0 flex items-center justify-center">
         <img
-          src={VEHICLE_IMAGES[vehicle.id] ?? "/vehicles/economy-car.svg"}
-          alt={vehicle.name}
+          src={getVehicleImage(vehicle.id, isCambodia)}
+          alt={getVehicleName(vehicle.id, vehicle.name, isCambodia)}
           className="w-[72px] h-[44px] object-contain"
         />
       </div>
