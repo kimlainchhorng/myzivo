@@ -40,11 +40,20 @@ const cookieCategories = [
 ];
 
 const CookiePolicy = () => {
+  const navigate = useNavigate();
+  const isNative = Capacitor.isNativePlatform();
+
+  // On native apps, redirect to home — cookies are not used for tracking
+  useEffect(() => {
+    if (isNative) {
+      navigate("/", { replace: true });
+    }
+  }, [isNative, navigate]);
+
   const [preferences, setPreferences] = useState<Record<string, boolean>>({
     essential: true,
     functional: true,
     analytics: true,
-    marketing: false,
   });
 
   const handlePreferenceChange = (category: string, enabled: boolean) => {
