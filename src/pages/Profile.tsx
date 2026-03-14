@@ -205,7 +205,7 @@ const Profile = () => {
                 <div className="flex items-center justify-center gap-2 mt-3">
                   <Badge className="bg-primary/10 text-primary border-primary/20 font-semibold">
                     <Star className="w-3 h-3 mr-1 fill-primary" />
-                    {profile?.status || "Active"} Member
+                    {profile?.status || t("profile.active_member")}
                   </Badge>
                   {isPlus && (
                     <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-500 border-amber-500/30 font-semibold">
