@@ -30,19 +30,19 @@ import zivoShoppingCartIcon from "@/assets/service-shopping.png";
 
 /* ── Types ── */
 interface ServiceItem {
-  labelKey: string;
+  label: string;
   href: string;
   icon?: React.ComponentType<{ className?: string }>;
   image?: string;
-  badgeKey?: string;
+  badge?: string;
   badgeVariant?: "discount" | "promo" | "new" | "coming_soon";
   animClass?: string;
   comingSoon?: boolean;
 }
 
 interface ServiceCategory {
-  titleKey: string;
-  subtitleKey?: string;
+  title: string;
+  subtitle?: string;
   services: ServiceItem[];
 }
 
