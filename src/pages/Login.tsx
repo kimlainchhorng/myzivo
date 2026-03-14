@@ -550,7 +550,7 @@ const Login = () => {
 
         <div className="flex flex-col items-center gap-2 mt-3 shrink-0">
           <p className="text-center text-xs text-muted-foreground">
-            {isLogin ? "Protected by enterprise-grade security" : "By signing up, you agree to our Terms of Service"}
+            {isLogin ? t("auth.protected") : t("auth.terms_agree")}
           </p>
           <button
             onClick={() => navigate("/")}
