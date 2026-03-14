@@ -226,7 +226,7 @@ const Profile = () => {
                         <FormItem>
                           <FormLabel className="flex items-center gap-2 font-semibold">
                             <User className="h-4 w-4 text-primary" />
-                            Full Name
+                            {t("profile.full_name")}
                           </FormLabel>
                           <FormControl>
                             <Input
