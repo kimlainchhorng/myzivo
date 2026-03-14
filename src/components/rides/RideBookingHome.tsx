@@ -1567,8 +1567,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="px-5 pt-1 pb-24">
               {/* Title */}
               <div className="text-center mb-3">
-                <h2 className="text-lg font-black text-foreground tracking-tight">Set your destination</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Drag map to move pin</p>
+                <h2 className="text-lg font-black text-foreground tracking-tight">{t("ride.set_destination")}</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("ride.drag_map_move_pin")}</p>
               </div>
 
               {/* Destination input */}
@@ -1580,7 +1580,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <span className="text-[10px] font-black text-primary-foreground leading-none">Z</span>
                 </div>
                 <span className="flex-1 text-left text-sm font-medium truncate" style={{ color: destinationDisplay ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
-                  {destinationDisplay || "Book a Ride"}
+                  {destinationDisplay || t("ride.book_a_ride")}
                 </span>
                 <Navigation className="w-4 h-4 text-primary/60 shrink-0" />
               </button>
@@ -1595,7 +1595,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   if (center && destinationDisplay) {
                     const dest: PlaceData = { address: destinationDisplay, lat: center.lat, lng: center.lng };
                     setDestination(dest);
-                    setPickupDisplay("Current Location");
+                    setPickupDisplay(t("ride.current_location"));
                     const pickupData = userLocation
                       ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
                       : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
