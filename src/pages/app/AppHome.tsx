@@ -800,7 +800,7 @@ const AppHome = () => {
                 ))}
               </div>
               <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
-                <span>Total: <b className="text-foreground">$195</b></span>
+                <span>{t("home.total")}: <b className="text-foreground">$195</b></span>
                 <span className="text-emerald-500">↓ 12% vs last week</span>
               </div>
             </motion.div>
