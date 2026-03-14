@@ -3,6 +3,7 @@ import { User, Session, Provider } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { setupActivityTracking, clearSessionArtifacts } from "@/lib/security/sessionSecurity";
 import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 
 type AuthContextType = {
   user: User | null;
