@@ -226,15 +226,15 @@ const Login = () => {
           className="bg-card/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl shadow-black/[0.08] p-5 sm:p-6 flex-1 min-h-0 overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+          <div className="text-center mb-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               ZIVO ID
             </h1>
             <motion.p 
               key={isLogin ? "login" : "signup"}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-muted-foreground mt-2 text-sm sm:text-base"
+              className="text-muted-foreground mt-1 text-xs sm:text-sm"
             >
               {isLogin ? "Welcome back, Traveler" : "Get Started Free — No credit card needed"}
             </motion.p>
