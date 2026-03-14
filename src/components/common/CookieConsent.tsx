@@ -80,12 +80,6 @@ const CookieConsent = () => {
       description: "Help us understand how you use our services.",
       required: false,
     },
-    {
-      key: "advertising" as keyof CookiePreferences,
-      title: "Advertising Cookies",
-      description: "Used for personalized ads and marketing.",
-      required: false,
-    },
   ];
 
   return (

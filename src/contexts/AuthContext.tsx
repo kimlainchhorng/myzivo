@@ -139,6 +139,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const redirectOrigin = SAFE_OAUTH_ORIGINS.has(currentOrigin) ? currentOrigin : fallbackOrigin;
       const redirectTo = `${redirectOrigin}/auth-callback`;
 
+      if (isNative) {
+        // On native, use skipBrowserRedirect so we get the URL back
+        // then open it in an in-app browser (not Safari)
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo,
+            skipBrowserRedirect: true,
+            queryParams: {
+              prompt: "select_account",
+            },
+          },
+        });
+        if (error) return { error };
+        if (data?.url) {
+          await Browser.open({ url: data.url, windowName: "_self" });
+        }
+        return { error: null };
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
