@@ -771,7 +771,7 @@ const AppHome = () => {
                   className="w-full rounded-xl h-11 font-bold border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10 relative z-10"
                 >
                   <Plus className="w-4 h-4 mr-1.5" />
-                  Add Payment Method
+                  {t("home.add_payment")}
                 </Button>
               )}
             </motion.div>
