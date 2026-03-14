@@ -884,15 +884,33 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [viewStep, destination, liveDriverLocation, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
-    if (currentLanguage === "km") {
-      setUserLocation(CAMBODIA_DEFAULT_CENTER);
-      return;
-    }
-
     getCurrentLocation()
       .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
-      .catch(() => toast.error("Could not get your location"));
+      .catch(() => {
+        setUserLocation(currentLanguage === "km" ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER);
+        toast.error("Could not get your location");
+      });
   }, [currentLanguage, getCurrentLocation]);
+
+  const resolvePickupAddress = useCallback((coords: { lat: number; lng: number }) => {
+    reverseGeocode(coords.lat, coords.lng)
+      .then((addr) => {
+        setPickup((prev) => {
+          if (!prev) return prev;
+          const sameCoords = Math.abs(prev.lat - coords.lat) < 0.00001 && Math.abs(prev.lng - coords.lng) < 0.00001;
+          return sameCoords ? { ...prev, address: addr } : prev;
+        });
+        setPickupDisplay(addr);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!pickup) return;
+    const currentLocationLabel = t("ride.current_location");
+    if (pickup.address !== currentLocationLabel && pickup.address !== "Current Location") return;
+    resolvePickupAddress({ lat: pickup.lat, lng: pickup.lng });
+  }, [pickup?.address, pickup?.lat, pickup?.lng, resolvePickupAddress, t]);
 
   /** When user drags map in search view, reverse geocode center → pickup */
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
