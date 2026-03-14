@@ -648,7 +648,7 @@ const AppHome = () => {
 
                 <div className="flex gap-8 mb-5 text-xs relative z-10">
                   <div>
-                    <span className="text-muted-foreground">Invited</span>
+                    <span className="text-muted-foreground">{t("home.invited")}</span>
                     <p className="font-bold text-foreground text-lg">{totalInvited}</p>
                   </div>
                   <div>
