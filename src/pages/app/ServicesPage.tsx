@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import { useI18n } from "@/hooks/useI18n";
 import zivoRideIcon from "@/assets/zivo-ride-icon.png";
 import zivoEatsIcon from "@/assets/zivo-eats-icon.png";
 import zivoFlightsIcon from "@/assets/zivo-flights-icon.png";
