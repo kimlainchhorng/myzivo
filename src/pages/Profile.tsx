@@ -440,7 +440,7 @@ const Profile = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className="bg-orange-500/15 text-orange-500 border-orange-500/20 font-semibold text-xs">
-                          Partner
+                         {t("profile.partner")}
                         </Badge>
                         <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-orange-500 transition-colors" />
                       </div>
