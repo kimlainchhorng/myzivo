@@ -1210,11 +1210,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setPickupDisplay(t("ride.current_location"));
     setPickup(pickupData);
     fetchRoute(pickupData, { address, lat, lng });
-    // Reverse geocode to get real address
-    reverseGeocode(coords.lat, coords.lng).then(addr => {
-      setPickupDisplay(addr);
-      setPickup(prev => prev ? { ...prev, address: addr } : prev);
-    }).catch(() => {});
+    resolvePickupAddress(coords);
   };
 
   /* ─── Fetch route (for initial route + confirm search) ─── */
