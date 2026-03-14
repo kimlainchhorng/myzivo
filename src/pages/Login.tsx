@@ -241,9 +241,10 @@ const Login = () => {
           </div>
 
           {/* Forms */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
           {isLogin ? (
             <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-3">
                 <FormField
                   control={loginForm.control}
                   name="email"
