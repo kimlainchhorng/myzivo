@@ -265,6 +265,7 @@ function VehicleRow({
   price,
   originalPrice,
   surgeActive,
+  isCambodia = false,
 }: {
   vehicle: (typeof DEFAULT_VEHICLE_OPTIONS)[0];
   selected: boolean;
@@ -272,6 +273,7 @@ function VehicleRow({
   price: number;
   originalPrice?: number;
   surgeActive?: boolean;
+  isCambodia?: boolean;
 }) {
   const etaDate = new Date(Date.now() + vehicle.etaMin * 60000);
   const etaHour = etaDate.getHours();
