@@ -426,9 +426,10 @@ const Login = () => {
               </form>
             </Form>
           )}
+          </div>{/* end scrollable forms wrapper */}
 
           {/* Divider */}
-          <div className="relative my-6">
+          <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-border" />
             </div>
@@ -443,7 +444,7 @@ const Login = () => {
               type="button"
               onClick={() => handleSocialLogin('google')}
               disabled={socialLoading !== null}
-              className="h-12 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50"
+              className="h-11 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50 text-sm"
             >
               {socialLoading === 'google' ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -463,7 +464,7 @@ const Login = () => {
               type="button"
               onClick={() => handleSocialLogin('apple')}
               disabled={socialLoading !== null}
-              className="h-12 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50"
+              className="h-11 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50 text-sm"
             >
               {socialLoading === 'apple' ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -479,7 +480,7 @@ const Login = () => {
           </div>
 
           {/* Trust badges */}
-          <div className="flex items-center justify-center gap-4 mt-4 text-muted-foreground text-[10px]">
+          <div className="flex items-center justify-center gap-4 mt-3 text-muted-foreground text-[10px]">
             <div className="flex items-center gap-1">
               <Shield className="w-3 h-3" />
               <span>256-bit encrypted</span>
@@ -492,7 +493,7 @@ const Login = () => {
           </div>
 
           {/* Toggle Mode */}
-          <div className="text-center mt-6">
+          <div className="text-center mt-3">
             <button
               type="button"
               onClick={toggleMode}
@@ -506,18 +507,18 @@ const Login = () => {
           </div>
         </motion.div>
 
-        <p className="mt-4 sm:mt-6 text-center text-xs text-muted-foreground">
-          {isLogin ? "Protected by enterprise-grade security" : "By signing up, you agree to our Terms of Service"}
-        </p>
-
-        {/* Go to Home */}
-        <button
-          onClick={() => navigate("/")}
-          className="mt-4 w-full flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
-        >
-          <Home className="h-4 w-4" />
-          Go to Home
-        </button>
+        <div className="flex flex-col items-center gap-2 mt-3 shrink-0">
+          <p className="text-center text-xs text-muted-foreground">
+            {isLogin ? "Protected by enterprise-grade security" : "By signing up, you agree to our Terms of Service"}
+          </p>
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+          >
+            <Home className="h-4 w-4" />
+            Go to Home
+          </button>
+        </div>
       </div>
     </div>
   );
