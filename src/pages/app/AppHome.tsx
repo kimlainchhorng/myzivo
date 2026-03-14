@@ -104,7 +104,7 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
 );
 
 // ─── Section Header (Premium) ───
-const SectionHeader = ({ icon: Icon, iconColor, title, badge, onSeeAll }: { icon: LucideIcon; iconColor: string; title: string; badge?: string; onSeeAll: () => void }) => (
+const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSeeAll }: { icon: LucideIcon; iconColor: string; title: string; badge?: string; actionLabel?: string; onSeeAll: () => void }) => (
   <div className="flex items-center justify-between mb-4">
     <h2 className="text-sm font-bold text-foreground flex items-center gap-2.5">
       <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-muted/80 to-muted/40 flex items-center justify-center shadow-sm">
@@ -118,7 +118,7 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, onSeeAll }: { icon
       )}
     </h2>
     <button onClick={onSeeAll} className="text-xs text-primary font-bold touch-manipulation active:scale-95 min-w-[44px] min-h-[32px] flex items-center gap-0.5 hover:gap-1.5 transition-all">
-      See all
+      {actionLabel || "See all"}
       <ChevronRight className="w-3.5 h-3.5" />
     </button>
   </div>
