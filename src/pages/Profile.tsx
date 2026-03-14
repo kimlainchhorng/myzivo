@@ -440,7 +440,7 @@ const Profile = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className="bg-orange-500/15 text-orange-500 border-orange-500/20 font-semibold text-xs">
-                          Partner
+                         {t("profile.partner")}
                         </Badge>
                         <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-orange-500 transition-colors" />
                       </div>
@@ -459,15 +459,15 @@ const Profile = () => {
                       <Shield className="w-5 h-5 text-emerald-500" />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm">Account Status</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <Clock className="w-3 h-3" />
-                        Member since {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "recently"}
-                      </p>
+                       <p className="font-semibold text-sm">{t("profile.account_status")}</p>
+                       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                         <Clock className="w-3 h-3" />
+                         {t("profile.member_since")} {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "recently"}
+                       </p>
                     </div>
                   </div>
                   <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-semibold text-xs">
-                    Active
+                    {t("profile.active")}
                   </Badge>
                 </div>
               </CardContent>
@@ -482,9 +482,9 @@ const Profile = () => {
                       <Users className="w-5 h-5 text-violet-500" />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm">Referred by Partner</p>
-                      <p className="text-xs text-muted-foreground">
-                        You joined through {affiliateAttribution.partnerName}
+                       <p className="font-semibold text-sm">{t("profile.referred_by")}</p>
+                       <p className="text-xs text-muted-foreground">
+                         {t("profile.joined_through")} {affiliateAttribution.partnerName}
                       </p>
                     </div>
                   </div>

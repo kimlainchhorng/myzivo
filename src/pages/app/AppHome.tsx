@@ -126,19 +126,10 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
 
 
 // ─── Promo banners ───
-const promos = [
-  { title: "50% off first ride", subtitle: "Use code ZIVO50", gradient: "from-emerald-500 to-teal-600", icon: Car, cta: "Claim Now" },
-  { title: "Free delivery", subtitle: "On orders over $25", gradient: "from-orange-500 to-amber-600", icon: Package, cta: "Order Now" },
-  { title: "Flight deals from $49", subtitle: "Book by this weekend", gradient: "from-sky-500 to-blue-600", icon: Plane, cta: "Explore" },
-  { title: "Hotel flash sale", subtitle: "Up to 60% off", gradient: "from-violet-500 to-purple-600", icon: BedDouble, cta: "Book Now" },
-];
+// Promos and trending rides are built inside the component for translation
 
 // ─── Trending Rides (static) ───
-const trendingRides = [
-  { name: "Airport Transfer", eta: "~15 min", price: "$22-35", icon: Plane, popular: true },
-  { name: "Downtown", eta: "~8 min", price: "$12-18", icon: Navigation, popular: false },
-  { name: "Beach", eta: "~20 min", price: "$18-28", icon: TrendingUp, popular: false },
-];
+// trendingRides built inside component for translation
 
 // ─── Popular Destinations (subset) ───
 const popularDestKeys = ["miami", "las-vegas", "new-york", "cancun", "los-angeles"] as const;
@@ -165,7 +156,7 @@ const getQuickEstimate = () => {
   return {
     pickupEta: isPeak ? "~8 min" : "~4 min",
     priceRange: isPeak ? "$15-22" : "$12-18",
-    label: isPeak ? "Peak hours" : "Normal",
+    label: isPeak ? "Peak" : "Normal",
     surge: isPeak,
   };
 };
@@ -175,6 +166,19 @@ const AppHome = () => {
   const { user } = useAuth();
   const { t } = useI18n();
   useDeviceIntegrityCheck();
+
+  const promos = [
+    { title: t("home.promo_first_ride"), subtitle: t("home.promo_first_ride_sub"), gradient: "from-emerald-500 to-teal-600", icon: Car, cta: t("home.promo_claim") },
+    { title: t("home.promo_free_delivery"), subtitle: t("home.promo_free_delivery_sub"), gradient: "from-orange-500 to-amber-600", icon: Package, cta: t("home.promo_order_now") },
+    { title: t("home.promo_flights_deal"), subtitle: t("home.promo_flights_deal_sub"), gradient: "from-sky-500 to-blue-600", icon: Plane, cta: t("home.promo_explore") },
+    { title: t("home.promo_hotel_sale"), subtitle: t("home.promo_hotel_sale_sub"), gradient: "from-violet-500 to-purple-600", icon: BedDouble, cta: t("home.promo_book_now") },
+  ];
+
+  const trendingRides = [
+    { name: t("home.airport_transfer"), eta: "~15 min", price: "$22-35", icon: Plane, popular: true },
+    { name: t("home.downtown"), eta: "~8 min", price: "$12-18", icon: Navigation, popular: false },
+    { name: t("home.beach"), eta: "~20 min", price: "$18-28", icon: TrendingUp, popular: false },
+  ];
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeHomeTab, setActiveHomeTab] = useState<"rides" | "eats" | "flights" | "hotels">("rides");
 
@@ -399,7 +403,7 @@ const AppHome = () => {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                       <div className="absolute bottom-2 right-2 bg-orange-500/90 backdrop-blur-sm rounded-full px-2.5 py-0.5 shadow-sm">
-                        <span className="text-[9px] font-bold text-primary-foreground flex items-center gap-0.5"><Zap className="w-2.5 h-2.5" /> Reorder</span>
+                        <span className="text-[9px] font-bold text-primary-foreground flex items-center gap-0.5"><Zap className="w-2.5 h-2.5" /> {t("home.reorder")}</span>
                       </div>
                     </div>
                     <div className="p-3">
@@ -460,14 +464,14 @@ const AppHome = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                         {i < 2 && (
                           <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
-                            <span className="text-[8px] font-bold text-primary-foreground uppercase tracking-wider">Trending</span>
+                            <span className="text-[8px] font-bold text-primary-foreground uppercase tracking-wider">{t("home.trending")}</span>
                           </div>
                         )}
                         <div className="absolute bottom-3 left-3 right-3">
                           <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
                           <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
                             <Plane className="w-2.5 h-2.5" />
-                            from {popularDestPrices[key]}
+                            {t("home.from")} {popularDestPrices[key]}
                           </div>
                         </div>
                       </div>
@@ -490,7 +494,7 @@ const AppHome = () => {
                   >
                     {ride.popular && (
                       <div className="absolute top-0 right-0">
-                        <div className="bg-primary/90 text-[7px] font-bold text-primary-foreground px-2 py-0.5 rounded-bl-lg">POPULAR</div>
+                        <div className="bg-primary/90 text-[7px] font-bold text-primary-foreground px-2 py-0.5 rounded-bl-lg">{t("home.popular")}</div>
                       </div>
                     )}
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/8 flex items-center justify-center mb-3 border border-primary/10 shadow-inner group-hover:scale-105 transition-transform">
@@ -627,11 +631,11 @@ const AppHome = () => {
                     <span className="text-sm font-bold text-foreground">{t("home.invite_friends")}</span>
                   </div>
                   <button onClick={() => navigate("/account/referrals")} className="text-[10px] text-violet-500 font-bold flex items-center gap-0.5 hover:gap-1.5 transition-all">
-                    Details <ChevronRight className="w-3 h-3" />
+                    {t("home.details")} <ChevronRight className="w-3 h-3" />
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4 relative z-10">
-                  Earn <span className="font-bold text-violet-500">{REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()} pts</span> for every friend who books
+                  Earn <span className="font-bold text-violet-500">{REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()} pts</span> {t("home.earn_per_referral")}
                 </p>
 
                 {referralCode?.code && (
@@ -644,11 +648,11 @@ const AppHome = () => {
 
                 <div className="flex gap-8 mb-5 text-xs relative z-10">
                   <div>
-                    <span className="text-muted-foreground">Invited</span>
+                    <span className="text-muted-foreground">{t("home.invited")}</span>
                     <p className="font-bold text-foreground text-lg">{totalInvited}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Earned</span>
+                    <span className="text-muted-foreground">{t("home.earned")}</span>
                     <p className="font-bold text-foreground text-lg">{totalEarned.toLocaleString()} pts</p>
                   </div>
                 </div>
@@ -696,7 +700,7 @@ const AppHome = () => {
                   <div className="flex items-center gap-2">
                     {upcomingBookings.length > 1 && (
                       <Badge variant="outline" className="text-[10px] text-primary border-primary/20 bg-primary/5 font-bold">
-                        +{upcomingBookings.length - 1} more
+                        +{upcomingBookings.length - 1} {t("home.more_count")}
                       </Badge>
                     )}
                     <button onClick={() => navigate("/scheduled")} className="text-[10px] text-primary font-bold">
@@ -743,7 +747,7 @@ const AppHome = () => {
                   <span className="text-sm font-bold text-foreground">{t("home.wallet")}</span>
                 </div>
                 <button onClick={() => navigate("/wallet")} className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5 hover:gap-1.5 transition-all">
-                   Manage <ChevronRight className="w-3 h-3" />
+                   {t("home.manage")} <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
               <div className="flex items-end gap-2 mb-3 relative z-10">
@@ -759,7 +763,7 @@ const AppHome = () => {
                     •••• {defaultCard.last4}
                   </span>
                   <Badge variant="outline" className="text-[8px] ml-auto border-primary/20 text-primary bg-primary/5 font-bold">
-                    Default
+                     {t("home.default")}
                   </Badge>
                 </div>
               )}
@@ -796,8 +800,8 @@ const AppHome = () => {
                 ))}
               </div>
               <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
-                <span>Total: <b className="text-foreground">$195</b></span>
-                <span className="text-emerald-500">↓ 12% vs last week</span>
+                <span>{t("home.total")}: <b className="text-foreground">$195</b></span>
+                <span className="text-emerald-500">↓ 12% {t("home.vs_last_week")}</span>
               </div>
             </motion.div>
 
@@ -808,12 +812,12 @@ const AppHome = () => {
                   <Flame className="w-6 h-6 text-amber-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground">7-Day Booking Streak! 🔥</p>
-                  <p className="text-[10px] text-muted-foreground">Keep it going for bonus ZIVO points</p>
+                   <p className="text-xs font-bold text-foreground">{t("home.booking_streak")}</p>
+                   <p className="text-[10px] text-muted-foreground">{t("home.streak_desc")}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-lg font-bold text-amber-500">7</p>
-                  <p className="text-[8px] text-muted-foreground">days</p>
+                  <p className="text-[8px] text-muted-foreground">{t("home.days")}</p>
                 </div>
               </div>
             </div>
@@ -839,9 +843,9 @@ const AppHome = () => {
             <div className="rounded-2xl bg-sky-500/5 border border-sky-500/20 p-4">
               <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 text-sky-500" /> {t("home.smart_suggestions")}</p>
               <div className="space-y-1.5">
-                <p className="text-[11px] text-muted-foreground">💡 Flights to Miami are 23% cheaper next Tuesday</p>
-                <p className="text-[11px] text-muted-foreground">🏨 Hotel prices drop 15% for mid-week stays</p>
-                <p className="text-[11px] text-muted-foreground">🚗 Book rental cars 3 weeks ahead to save $40+</p>
+                 <p className="text-[11px] text-muted-foreground">💡 {t("home.flights_cheaper")}</p>
+                 <p className="text-[11px] text-muted-foreground">🏨 {t("home.hotel_midweek")}</p>
+                 <p className="text-[11px] text-muted-foreground">🚗 {t("home.car_ahead")}</p>
               </div>
             </div>
           </div>
