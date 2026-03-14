@@ -277,7 +277,7 @@ const Login = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-muted-foreground mt-1 text-xs sm:text-sm"
             >
-              {isLogin ? "Welcome back, Traveler" : "Get Started Free — No credit card needed"}
+              {isLogin ? t("auth.welcome_back") : t("auth.get_started")}
             </motion.p>
           </div>
 
