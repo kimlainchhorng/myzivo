@@ -892,7 +892,7 @@ const AppHome = () => {
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
               <Star className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-medium">4.8 rating</span>
+              <span className="text-[10px] font-medium">{t("home.rating")}</span>
             </div>
           </div>
         </div>
