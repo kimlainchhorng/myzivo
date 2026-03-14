@@ -546,6 +546,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     const addr = pickup.address.toLowerCase();
     if (addr.includes("new orleans")) return "New Orleans";
     if (addr.includes("baton rouge")) return "Baton Rouge";
+    if (addr.includes("phnom penh")) return "Phnom Penh";
+    if (addr.includes("siem reap")) return "Siem Reap";
+    if (addr.includes("sihanoukville")) return "Sihanoukville";
+    if (addr.includes("battambang")) return "Battambang";
+    if (addr.includes("cambodia") || addr.includes("កម្ពុជា")) return "Phnom Penh";
     return undefined; // falls back to "default" pricing
   }, [pickup?.address]);
 
