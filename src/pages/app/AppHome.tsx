@@ -812,8 +812,8 @@ const AppHome = () => {
                   <Flame className="w-6 h-6 text-amber-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground">7-Day Booking Streak! 🔥</p>
-                  <p className="text-[10px] text-muted-foreground">Keep it going for bonus ZIVO points</p>
+                   <p className="text-xs font-bold text-foreground">{t("home.booking_streak")}</p>
+                   <p className="text-[10px] text-muted-foreground">{t("home.streak_desc")}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-lg font-bold text-amber-500">7</p>
