@@ -820,7 +820,7 @@ const AppHome = () => {
 
             {/* Nearby Attractions */}
             <div className="rounded-2xl bg-card border border-border/40 p-4">
-              <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-violet-500" /> Nearby Attractions</p>
+              <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-violet-500" /> {t("home.nearby_attractions")}</p>
               <div className="space-y-2">
                 {[
                   { name: "Central Park", distance: "0.5 mi", rating: 4.8, type: "Park" },
