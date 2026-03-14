@@ -2700,7 +2700,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <img src={getVehicleImage(selectedVehicle, currentLanguage === "km")} alt={getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-foreground leading-tight">{currentVehicle.name} · {getVehicleCapacity(selectedVehicle, currentVehicle.capacity, currentLanguage === "km")} seats</p>
+                  <p className="text-[13px] font-bold text-foreground leading-tight">{getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} · {getVehicleCapacity(selectedVehicle, currentVehicle.capacity, currentLanguage === "km")} seats</p>
                   <p className="text-[10px] text-muted-foreground">{currentVehicle.etaMin} min away · {getVehicleDesc(selectedVehicle, currentVehicle.desc, currentLanguage === "km")}</p>
                 </div>
               </div>
