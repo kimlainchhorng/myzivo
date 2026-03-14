@@ -678,11 +678,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
-  // Fetch user location on mount
+  // Fetch user location on mount — fallback to Cambodia center if language is km
   useEffect(() => {
     getCurrentLocation()
       .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
-      .catch(() => {});
+      .catch(() => {
+        // Fallback: Cambodia (Phnom Penh) when language is km, otherwise no fallback
+        if (currentLanguage === "km") {
+          setUserLocation({ lat: 11.5564, lng: 104.9282 });
+        }
+      });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch real nearby drivers and poll every 10s
