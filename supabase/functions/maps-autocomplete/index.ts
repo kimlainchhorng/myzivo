@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { input, proximity } = await req.json();
+    const { input, proximity, country } = await req.json();
 
     if (!input || typeof input !== "string" || input.trim().length < 2 || input.length > 200) {
       return new Response(JSON.stringify({ error: "Input must be 2-200 characters" }), {
@@ -130,11 +130,18 @@ Deno.serve(async (req) => {
       queryInputs.push(...unique);
     }
 
+    // Determine country restriction — support US + KH (Cambodia)
+    const countryParam = country?.toLowerCase() === "kh" ? "country:kh" : 
+                         country?.toLowerCase() === "all" ? "" : "country:us|country:kh";
+
     const fetchPredictions = async (query: string) => {
       let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
         `?input=${encodeURIComponent(query)}` +
-        `&components=country:us` +
         `&key=${encodeURIComponent(key)}`;
+
+      if (countryParam) {
+        url += `&components=${countryParam}`;
+      }
 
       if (proximity?.lat && proximity?.lng) {
         url += `&location=${proximity.lat},${proximity.lng}&radius=80000`;
