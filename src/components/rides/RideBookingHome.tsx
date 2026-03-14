@@ -2666,7 +2666,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
               <div className="flex items-center gap-2.5 mb-1.5">
                 <div className="w-[50px] h-[36px] flex items-center justify-center shrink-0 bg-muted/10 rounded-md">
-                  <img src={VEHICLE_IMAGES[selectedVehicle] || VEHICLE_IMAGES["economy"]} alt={currentVehicle.name} className="w-full h-full object-contain" />
+                  <img src={getVehicleImage(selectedVehicle, currentLanguage === "km")} alt={getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-bold text-foreground leading-tight">{currentVehicle.name} · {currentVehicle.capacity} seats</p>
