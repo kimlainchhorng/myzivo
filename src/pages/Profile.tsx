@@ -467,7 +467,7 @@ const Profile = () => {
                     </div>
                   </div>
                   <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-semibold text-xs">
-                    Active
+                    {t("profile.active")}
                   </Badge>
                 </div>
               </CardContent>
