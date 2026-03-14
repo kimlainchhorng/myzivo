@@ -884,7 +884,7 @@ const AppHome = () => {
           <div className="flex items-center justify-center gap-6 py-4">
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
               <Shield className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-medium">Secure</span>
+              <span className="text-[10px] font-medium">{t("home.secure")}</span>
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
               <Globe className="w-3.5 h-3.5" />
