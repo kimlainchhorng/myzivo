@@ -52,9 +52,15 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
+const LANGS = [
+  { code: "en", label: "English", flag: "🇺🇸" },
+  { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
+];
+
 const Profile = () => {
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, currentLanguage, changeLanguage } = useI18n();
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const { user, signOut } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
