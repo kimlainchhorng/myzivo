@@ -77,6 +77,20 @@ function perDistRate(perMile: number, useKm: boolean): number {
   return useKm ? perMile / 1.60934 : perMile;
 }
 
+/** USD → KHR exchange rate */
+const USD_TO_KHR = 4062.5;
+
+/** Format price in KHR */
+function toKHR(usd: number): string {
+  return `${Math.round(usd * USD_TO_KHR).toLocaleString()} ៛`;
+}
+
+/** Dual price display: $X.XX (X,XXX ៛) */
+function dualPrice(usd: number, showKhr: boolean): string {
+  if (!showKhr) return `$${usd.toFixed(2)}`;
+  return `$${usd.toFixed(2)} (${toKHR(usd)})`;
+}
+
 /** Distance value for display */
 function distValue(miles: number, useKm: boolean): number {
   return useKm ? Number((miles * 1.60934).toFixed(1)) : miles;
