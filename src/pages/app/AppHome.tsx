@@ -156,7 +156,7 @@ const getQuickEstimate = () => {
   return {
     pickupEta: isPeak ? "~8 min" : "~4 min",
     priceRange: isPeak ? "$15-22" : "$12-18",
-    label: isPeak ? "Peak hours" : "Normal",
+    label: isPeak ? "Peak" : "Normal",
     surge: isPeak,
   };
 };
