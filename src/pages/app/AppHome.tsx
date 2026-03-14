@@ -700,7 +700,7 @@ const AppHome = () => {
                       </Badge>
                     )}
                     <button onClick={() => navigate("/scheduled")} className="text-[10px] text-primary font-bold">
-                      View All
+                      {t("home.view_all")}
                     </button>
                   </div>
                 </div>
