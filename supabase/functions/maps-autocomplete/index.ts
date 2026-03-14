@@ -130,11 +130,18 @@ Deno.serve(async (req) => {
       queryInputs.push(...unique);
     }
 
+    // Determine country restriction — support US + KH (Cambodia)
+    const countryParam = country?.toLowerCase() === "kh" ? "country:kh" : 
+                         country?.toLowerCase() === "all" ? "" : "country:us|country:kh";
+
     const fetchPredictions = async (query: string) => {
       let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
         `?input=${encodeURIComponent(query)}` +
-        `&components=country:us` +
         `&key=${encodeURIComponent(key)}`;
+
+      if (countryParam) {
+        url += `&components=${countryParam}`;
+      }
 
       if (proximity?.lat && proximity?.lng) {
         url += `&location=${proximity.lat},${proximity.lng}&radius=80000`;
