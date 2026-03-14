@@ -624,7 +624,7 @@ const AppHome = () => {
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/20 to-violet-500/10 flex items-center justify-center shadow-inner">
                       <Users className="w-4.5 h-4.5 text-violet-500" />
                     </div>
-                    <span className="text-sm font-bold text-foreground">Invite Friends</span>
+                    <span className="text-sm font-bold text-foreground">{t("home.invite_friends")}</span>
                   </div>
                   <button onClick={() => navigate("/account/referrals")} className="text-[10px] text-violet-500 font-bold flex items-center gap-0.5 hover:gap-1.5 transition-all">
                     Details <ChevronRight className="w-3 h-3" />
