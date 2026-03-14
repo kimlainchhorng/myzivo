@@ -132,8 +132,8 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
 // trendingRides built inside component for translation
 
 // ─── Popular Destinations (subset) ───
-const popularDestKeys = ["miami", "las-vegas", "new-york", "cancun", "los-angeles"] as const;
-const popularDestPrices: Record<string, string> = {
+const popularDestKeysUS = ["miami", "las-vegas", "new-york", "cancun", "los-angeles"] as const;
+const popularDestPricesUS: Record<string, string> = {
   miami: "$89",
   "las-vegas": "$79",
   "new-york": "$99",
@@ -141,25 +141,30 @@ const popularDestPrices: Record<string, string> = {
   "los-angeles": "$69",
 };
 
-// ─── Recently viewed type config ───
-const typeConfig: Record<string, { icon: LucideIcon; color: string }> = {
-  hotel: { icon: Hotel, color: "bg-amber-500" },
-  flight: { icon: Plane, color: "bg-sky-500" },
-  car: { icon: Car, color: "bg-emerald-500" },
-  restaurant: { icon: Utensils, color: "bg-orange-500" },
-};
+// Cambodia destinations
+const cambodiaDestinations = [
+  { key: "siem-reap", city: "Siem Reap", price: "៛32,000", src: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&q=80&w=400", alt: "Angkor Wat" },
+  { key: "sihanoukville", city: "Sihanoukville", price: "៛45,000", src: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&q=80&w=400", alt: "Sihanoukville Beach" },
+  { key: "kampot", city: "Kampot", price: "៛28,000", src: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=400", alt: "Kampot River" },
+  { key: "battambang", city: "Battambang", price: "៛35,000", src: "https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&q=80&w=400", alt: "Battambang" },
+  { key: "kep", city: "Kep", price: "៛25,000", src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=400", alt: "Kep Beach" },
+];
 
-// ─── Smart ETA logic ───
-const getQuickEstimate = () => {
-  const hour = new Date().getHours();
-  const isPeak = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);
-  return {
-    pickupEta: isPeak ? "~8 min" : "~4 min",
-    priceRange: isPeak ? "$15-22" : "$12-18",
-    label: isPeak ? "Peak" : "Normal",
-    surge: isPeak,
-  };
-};
+// Cambodia nearby attractions
+const cambodiaAttractions = [
+  { name: "វត្តភ្នំ", nameEn: "Wat Phnom", distance: "0.8 km", rating: 4.7, type: "វត្តអារាម" },
+  { name: "ផ្សារកណ្តាល", nameEn: "Central Market", distance: "1.2 km", rating: 4.6, type: "ផ្សារ" },
+  { name: "វាំងភ្នំពេញ", nameEn: "Royal Palace", distance: "1.5 km", rating: 4.9, type: "ប្រវត្តិសាស្ត្រ" },
+];
+
+// US nearby attractions
+const usAttractions = [
+  { name: "Central Park", distance: "0.5 mi", rating: 4.8, type: "Park" },
+  { name: "Museum of Art", distance: "1.2 mi", rating: 4.9, type: "Museum" },
+  { name: "Broadway District", distance: "0.8 mi", rating: 4.7, type: "Entertainment" },
+];
+
+// ─── Recently viewed type config ───
 
 const AppHome = () => {
   const navigate = useNavigate();
