@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { input, proximity } = await req.json();
+    const { input, proximity, country } = await req.json();
 
     if (!input || typeof input !== "string" || input.trim().length < 2 || input.length > 200) {
       return new Response(JSON.stringify({ error: "Input must be 2-200 characters" }), {
