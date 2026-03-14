@@ -855,9 +855,9 @@ const AppHome = () => {
             >
               <div className="absolute -top-10 -right-10 w-28 h-28 bg-primary/10 rounded-full blur-3xl" />
               <div className="relative z-10">
-                <h3 className="text-base font-bold text-foreground mb-1">Join ZIVO — it's free</h3>
+                <h3 className="text-base font-bold text-foreground mb-1">{t("home.join_free")}</h3>
                 <p className="text-xs text-muted-foreground mb-4">
-                  Earn rewards, save trips, get price alerts, and access exclusive deals.
+                  {t("home.join_desc")}
                 </p>
                 <div className="flex gap-2">
                   <Button
