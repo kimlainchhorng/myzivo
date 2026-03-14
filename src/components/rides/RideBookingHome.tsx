@@ -683,23 +683,30 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
-  // Keep map region aligned to selected language mode (GPS first, localized fallback)
+  // Keep map region aligned to selected language mode
   useEffect(() => {
     let cancelled = false;
+
+    if (currentLanguage === "km") {
+      // Force Cambodia center when Khmer is selected
+      setUserLocation(CAMBODIA_DEFAULT_CENTER);
+      setPickup(null);
+      setPickupDisplay("");
+      setDestination(null);
+      setDestinationDisplay("");
+      pickupManuallySet.current = false;
+      return () => { cancelled = true; };
+    }
 
     getCurrentLocation()
       .then((loc) => {
         if (!cancelled) setUserLocation({ lat: loc.lat, lng: loc.lng });
       })
       .catch(() => {
-        if (!cancelled) {
-          setUserLocation(currentLanguage === "km" ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER);
-        }
+        if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
       });
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [currentLanguage, getCurrentLocation]);
 
   // Fetch real nearby drivers and poll every 10s
@@ -885,12 +892,23 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [viewStep, destination, liveDriverLocation, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
+    if (currentLanguage === "km") {
+      // In Cambodia mode, use GPS but fall back to Phnom Penh
+      getCurrentLocation()
+        .then((loc) => {
+          // Only use GPS if actually in Cambodia region
+          if (loc.lat >= 9.5 && loc.lat <= 14.7) {
+            setUserLocation({ lat: loc.lat, lng: loc.lng });
+          } else {
+            setUserLocation(CAMBODIA_DEFAULT_CENTER);
+          }
+        })
+        .catch(() => setUserLocation(CAMBODIA_DEFAULT_CENTER));
+      return;
+    }
     getCurrentLocation()
       .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
-      .catch(() => {
-        setUserLocation(currentLanguage === "km" ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER);
-        toast.error("Could not get your location");
-      });
+      .catch(() => toast.error("Could not get your location"));
   }, [currentLanguage, getCurrentLocation]);
 
   const resolvePickupAddress = useCallback((coords: { lat: number; lng: number }) => {
