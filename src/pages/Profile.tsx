@@ -149,8 +149,8 @@ const Profile = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="font-display text-xl font-bold">Profile Settings</h1>
-            <p className="text-muted-foreground text-xs">Manage your account information</p>
+            <h1 className="font-display text-xl font-bold">{t("profile.title")}</h1>
+            <p className="text-muted-foreground text-xs">{t("profile.subtitle")}</p>
           </div>
         </div>
 
