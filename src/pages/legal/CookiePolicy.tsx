@@ -255,7 +255,6 @@ const CookiePolicy = () => {
               <p className="text-sm text-muted-foreground mt-4">
                 None of these third-party services are used for cross-app or cross-site tracking.
               </p>
-              </div>
             </div>
           </section>
 
