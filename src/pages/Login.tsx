@@ -51,7 +51,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const { currentLanguage, changeLanguage } = useI18n();
+  const { currentLanguage, changeLanguage, t } = useI18n();
   const LANGS = [
     { code: "en", label: "English", flag: "🇺🇸" },
     { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
