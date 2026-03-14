@@ -182,8 +182,8 @@ export default function ServicesPage() {
 
   const handleServiceClick = (service: ServiceItem) => {
     if (service.comingSoon) {
-      toast(`${service.label} is coming soon!`, {
-        description: "We're working hard to bring this to you. Stay tuned!",
+      toast(`${service.label} ${t("services.toast.coming_soon_title")}`, {
+        description: t("services.toast.coming_soon_desc"),
       });
       return;
     }
