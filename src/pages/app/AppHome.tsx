@@ -118,7 +118,7 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
       )}
     </h2>
     <button onClick={onSeeAll} className="text-xs text-primary font-bold touch-manipulation active:scale-95 min-w-[44px] min-h-[32px] flex items-center gap-0.5 hover:gap-1.5 transition-all">
-      {actionLabel || "See all"}
+      {actionLabel}
       <ChevronRight className="w-3.5 h-3.5" />
     </button>
   </div>
