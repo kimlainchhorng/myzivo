@@ -53,6 +53,35 @@ interface RouteData {
   traffic_level?: string;
 }
 
+/** Detect if user is in Cambodia based on pickup address or coordinates */
+function isInCambodia(address?: string, lat?: number): boolean {
+  if (address && /cambodia|កម្ពុជា|phnom\s*penh|siem\s*reap|battambang|sihanoukville/i.test(address)) return true;
+  // Cambodia lat range: ~9.5 to ~14.7
+  if (lat && lat >= 9.5 && lat <= 14.7) return true;
+  return false;
+}
+
+/** Format distance: km for Cambodia, mi for others */
+function formatDist(miles: number, useKm: boolean): string {
+  if (useKm) return `${(miles * 1.60934).toFixed(1)} km`;
+  return `${miles} mi`;
+}
+
+/** Format per-unit label */
+function distUnit(useKm: boolean): string {
+  return useKm ? "km" : "mi";
+}
+
+/** Convert per-mile rate to per-km for display */
+function perDistRate(perMile: number, useKm: boolean): number {
+  return useKm ? perMile / 1.60934 : perMile;
+}
+
+/** Distance value for display */
+function distValue(miles: number, useKm: boolean): number {
+  return useKm ? Number((miles * 1.60934).toFixed(1)) : miles;
+}
+
 type ViewStep =
   | "home"
   | "search"
