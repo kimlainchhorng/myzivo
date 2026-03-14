@@ -67,7 +67,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "ride.premium": "Premium",
     "ride.elite": "Elite",
     "ride.shared": "Shared",
-    "ride.choose_ride": "Choose a ride",
     "ride.search_destination": "Search destination",
     "ride.locating": "Locating...",
     "ride.finding_driver": "Finding driver...",
