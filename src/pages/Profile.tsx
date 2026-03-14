@@ -334,7 +334,7 @@ const Profile = () => {
 
             {/* Quick Access Links */}
             <div>
-              <h3 className="font-display font-bold text-base mb-3">Quick Access</h3>
+              <h3 className="font-display font-bold text-base mb-3">{t("profile.quick_access")}</h3>
               <div className="grid grid-cols-2 gap-2.5">
                 {quickLinks.map((link) => (
                   <Link key={link.label} to={link.href}>
