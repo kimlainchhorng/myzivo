@@ -557,7 +557,7 @@ const Login = () => {
             className="flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
           >
             <Home className="h-4 w-4" />
-            Go to Home
+            {t("auth.go_home")}
           </button>
         </div>
       </div>
