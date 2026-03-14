@@ -173,9 +173,38 @@ const getQuickEstimate = () => {
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useI18n();
   useDeviceIntegrityCheck();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeHomeTab, setActiveHomeTab] = useState<"rides" | "eats" | "flights" | "hotels">("rides");
+
+  const homeTabs = [
+    { id: "rides", label: t("home.rides"), icon: null, image: zivoRideIcon },
+    { id: "eats", label: t("home.eats"), icon: null, image: zivoEatsIcon },
+    { id: "flights", label: t("home.flights"), icon: null, image: zivoFlightsIcon },
+    { id: "hotels", label: t("home.hotels"), icon: null, image: zivoHotelsIcon },
+  ] as const;
+
+  const suggestions = [
+    { label: t("home.ride"), icon: null, image: zivoRideIcon, href: "/rides", badge: "10% Off", badgeVariant: "discount" as const },
+    { label: t("home.reserve"), icon: null, image: zivoReserveIcon, href: "/rides?tab=reserve", badge: "Promo", badgeVariant: "promo" as const },
+    { label: t("home.rental_cars"), icon: null, image: zivoRentalCarIcon, href: "/rent-car", badge: "Promo", badgeVariant: "promo" as const },
+    { label: t("home.shopping"), icon: null, image: zivoShoppingIcon, href: "/rides", badge: null, badgeVariant: null },
+  ];
+
+  function getSearchPlaceholder(tab: string): string {
+    if (tab === "rides") return t("home.book_ride");
+    if (tab === "eats") {
+      const hour = new Date().getHours();
+      if (hour >= 6 && hour < 11) return t("home.breakfast");
+      if (hour >= 11 && hour < 17) return t("home.lunch");
+      if (hour >= 17 && hour < 22) return t("home.dinner");
+      return t("home.late_night");
+    }
+    if (tab === "flights") return t("home.search_flights");
+    if (tab === "hotels") return t("home.search_hotels");
+    return t("home.where_to");
+  }
   const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
   const { data: deals = [] } = useRecommendedDeals("all", 6);
