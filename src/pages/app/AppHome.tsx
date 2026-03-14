@@ -843,9 +843,9 @@ const AppHome = () => {
             <div className="rounded-2xl bg-sky-500/5 border border-sky-500/20 p-4">
               <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 text-sky-500" /> {t("home.smart_suggestions")}</p>
               <div className="space-y-1.5">
-                <p className="text-[11px] text-muted-foreground">💡 Flights to Miami are 23% cheaper next Tuesday</p>
-                <p className="text-[11px] text-muted-foreground">🏨 Hotel prices drop 15% for mid-week stays</p>
-                <p className="text-[11px] text-muted-foreground">🚗 Book rental cars 3 weeks ahead to save $40+</p>
+                 <p className="text-[11px] text-muted-foreground">💡 {t("home.flights_cheaper")}</p>
+                 <p className="text-[11px] text-muted-foreground">🏨 {t("home.hotel_midweek")}</p>
+                 <p className="text-[11px] text-muted-foreground">🚗 {t("home.car_ahead")}</p>
               </div>
             </div>
           </div>
