@@ -203,7 +203,6 @@ const CookiePolicy = () => {
                   </p>
                 </div>
               </div>
-              </ul>
             </div>
           </section>
 
