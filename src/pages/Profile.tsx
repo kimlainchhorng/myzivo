@@ -53,8 +53,8 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 const LANGS = [
-  { code: "en", label: "English", flag: "🇺🇸" },
-  { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
+  { code: "en", label: "English", flag: "🇺🇸", country: "United States" },
+  { code: "km", label: "ខ្មែរ", flag: "🇰🇭", country: "Cambodia" },
 ];
 
 const Profile = () => {
