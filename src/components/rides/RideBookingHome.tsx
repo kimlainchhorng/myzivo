@@ -143,19 +143,7 @@ const DEFAULT_VEHICLE_OPTIONS = [
   { id: "wheelchair", category: "accessible", name: "ZIVO Wheel Chair", desc: "Wheelchair accessible vehicle", etaMin: 8, pricePerMile: 1.80, basePrice: 4.00, perMinute: 0.35, bookingFee: 2.50, minimumFare: 8.00, capacity: 3, icon: Accessibility, carSeat: false, surgeMultiplier: 1.0 },
 ];
 
-const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
-  { id: "book", label: "Book", icon: Car },
-  { id: "reserve", label: "Reserve", icon: CalendarClock },
-  { id: "map", label: "Map", icon: Map },
-  { id: "history", label: "History", icon: History },
-];
-
-const homeServices = [
-  { id: "ride", label: "Ride", icon: Car },
-  { id: "delivery", label: "Delivery", icon: Package },
-  { id: "flights", label: "Flights", icon: Plane },
-  { id: "hotels", label: "Hotels", icon: Hotel },
-];
+// rideTabs and homeServices built inside component for translation
 
 /* ─── Price calculator ─── */
 function calcPrice(vehicle: typeof DEFAULT_VEHICLE_OPTIONS[0], distanceMiles: number, durationMinutes = 0, surge = 1.0): number {
@@ -492,7 +480,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const { user } = useAuth();
   const { getCurrentLocation } = useCurrentLocation();
   const { data: savedLocations = [] } = useSavedLocations(user?.id);
-  const { currentLanguage, changeLanguage } = useI18n();
+  const { currentLanguage, changeLanguage, t } = useI18n();
   const [showLangMenu, setShowLangMenu] = useState(false);
 
   const LANGS = [
@@ -1622,7 +1610,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
                 size="lg"
               >
-                {isReversingGeocode ? "Locating..." : destinationDisplay ? "Choose a ride" : "Search destination"}
+                {isReversingGeocode ? t("ride.locating") : destinationDisplay ? t("ride.choose_ride") : t("ride.search_destination")}
               </Button>
             </div>
             </div>
@@ -2156,9 +2144,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     Finding route...
                   </span>
                 ) : destination ? (
-                  "Choose a ride"
+                  t("ride.choose_ride")
                 ) : (
-                  "Search destination"
+                  t("ride.search_destination")
                 )}
               </Button>
             </div>
