@@ -2232,11 +2232,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                           <p className="text-xs font-medium text-foreground truncate leading-tight">{stop.place.address}</p>
                         ) : (
                           <div className="relative">
-                            <AddressAutocomplete
+                             <AddressAutocomplete
                               placeholder={`Enter stop ${idx + 1} address`}
                               value={stop.display}
                               onSelect={(place) => handleStopSelect(stop.id, place)}
                               proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
+                              country={rideCountry}
                               className="[&_input]:h-8 [&_input]:rounded-lg [&_input]:text-xs [&_input]:font-medium [&_input]:bg-muted/30 [&_input]:border-border/30 [&_input]:px-2"
                             />
                             <button
