@@ -2413,21 +2413,32 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </div>
 
                   {/* Right: Price + check */}
-                  <div className="shrink-0 text-right flex flex-col items-end gap-1">
+                  <div className="shrink-0 text-right flex flex-col items-end gap-0.5">
                     {isDiscount && originalPrice ? (
                       <>
-                        <span className="text-[11px] text-muted-foreground line-through">${originalPrice.toFixed(2)}</span>
-                        <span className="text-[15px] font-bold text-primary flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
-                          ${price.toFixed(2)}
-                        </span>
-                        {useKm && <span className="text-[10px] text-muted-foreground">{toKHR(price)}</span>}
+                        {useKm ? (
+                          <>
+                            <span className="text-[11px] text-muted-foreground line-through">{toKHR(originalPrice)}</span>
+                            <span className="text-[15px] font-bold text-primary">{toKHR(price)}</span>
+                            <span className="text-[11px] text-muted-foreground">${price.toFixed(2)}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-[11px] text-muted-foreground line-through">${originalPrice.toFixed(2)}</span>
+                            <span className="text-[15px] font-bold text-primary flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
+                              ${price.toFixed(2)}
+                            </span>
+                          </>
+                        )}
+                      </>
+                    ) : useKm ? (
+                      <>
+                        <span className="text-[15px] font-bold text-foreground">{toKHR(price)}</span>
+                        <span className="text-[11px] text-muted-foreground">${price.toFixed(2)}</span>
                       </>
                     ) : (
-                      <>
-                        <span className="text-[15px] font-bold text-foreground">${price.toFixed(2)}</span>
-                        {useKm && <span className="text-[10px] text-muted-foreground">{toKHR(price)}</span>}
-                      </>
+                      <span className="text-[15px] font-bold text-foreground">${price.toFixed(2)}</span>
                     )}
                     {isSelected && (
                       <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
