@@ -50,6 +50,12 @@ const Login = () => {
   }, [searchParams]);
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const { currentLanguage, changeLanguage } = useI18n();
+  const LANGS = [
+    { code: "en", label: "English", flag: "🇺🇸" },
+    { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
+  ];
   const { signIn, signUp, signInWithProvider } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
