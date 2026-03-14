@@ -888,7 +888,7 @@ const AppHome = () => {
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
               <Globe className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-medium">500K+ travelers</span>
+              <span className="text-[10px] font-medium">{t("home.travelers")}</span>
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
               <Star className="w-3.5 h-3.5" />
