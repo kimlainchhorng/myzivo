@@ -127,7 +127,7 @@ const ZivoMobileNav = () => {
                 "text-[11px] leading-none transition-all duration-200",
                 isActive ? "font-semibold text-primary" : "font-medium text-muted-foreground"
               )}>
-                {tab.label}
+                {t(tab.labelKey)}
               </span>
             </button>
           );
