@@ -128,7 +128,7 @@ export default function TravelItineraryCard() {
             <Luggage className="w-4 h-4 text-sky-500" />
           </div>
           <div>
-            <span className="text-sm font-bold text-foreground">Upcoming Trip</span>
+            <span className="text-sm font-bold text-foreground">{t("home.upcoming_trip")}</span>
             <p className="text-[10px] text-muted-foreground flex items-center gap-1">
               <MapPin className="w-2.5 h-2.5" /> {trip.destination}
             </p>
