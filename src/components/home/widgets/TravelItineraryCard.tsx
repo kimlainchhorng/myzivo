@@ -105,7 +105,7 @@ export default function TravelItineraryCard() {
           className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-sky-500 py-2.5 rounded-xl bg-sky-500/5 border border-sky-500/15 touch-manipulation active:scale-[0.98] transition-all"
         >
           <Plane className="w-3.5 h-3.5" />
-          Search Flights
+          {t("home.search_flights")}
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </motion.div>
