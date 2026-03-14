@@ -31,6 +31,7 @@ interface AddressAutocompleteProps {
   proximity?: { lat: number; lng: number };
   disabled?: boolean;
   className?: string;
+  country?: string;
 }
 
 export function AddressAutocomplete({
