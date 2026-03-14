@@ -266,7 +266,7 @@ const Profile = () => {
                           </FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter your phone number"
+                              placeholder={t("profile.phone_placeholder")}
                               type="tel"
                               className="h-12 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50"
                               {...field}
