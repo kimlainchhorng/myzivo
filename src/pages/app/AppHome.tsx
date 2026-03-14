@@ -126,12 +126,7 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
 
 
 // ─── Promo banners ───
-const promos = [
-  { title: "50% off first ride", subtitle: "Use code ZIVO50", gradient: "from-emerald-500 to-teal-600", icon: Car, cta: "Claim Now" },
-  { title: "Free delivery", subtitle: "On orders over $25", gradient: "from-orange-500 to-amber-600", icon: Package, cta: "Order Now" },
-  { title: "Flight deals from $49", subtitle: "Book by this weekend", gradient: "from-sky-500 to-blue-600", icon: Plane, cta: "Explore" },
-  { title: "Hotel flash sale", subtitle: "Up to 60% off", gradient: "from-violet-500 to-purple-600", icon: BedDouble, cta: "Book Now" },
-];
+// Promos and trending rides are built inside the component for translation
 
 // ─── Trending Rides (static) ───
 const trendingRides = [
