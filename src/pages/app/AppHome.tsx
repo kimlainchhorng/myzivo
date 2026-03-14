@@ -691,7 +691,7 @@ const AppHome = () => {
                     <div className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center shadow-inner">
                       <Clock className="w-4 h-4 text-primary" />
                     </div>
-                    <span className="text-sm font-bold text-foreground">Scheduled</span>
+                    <span className="text-sm font-bold text-foreground">{t("home.scheduled")}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {upcomingBookings.length > 1 && (
