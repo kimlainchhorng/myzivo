@@ -540,9 +540,9 @@ const Login = () => {
               onClick={toggleMode}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              {isLogin ? t("auth.no_account") + " " : t("auth.have_account") + " "}
               <span className="text-primary font-semibold">
-                {isLogin ? "Sign Up" : "Log In"}
+                {isLogin ? t("auth.sign_up") : t("auth.log_in")}
               </span>
             </button>
           </div>
