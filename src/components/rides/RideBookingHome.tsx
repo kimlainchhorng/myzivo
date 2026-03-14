@@ -420,6 +420,14 @@ const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
   "economy": "ZIVO Tuk Tuk",
   "share": "ZIVO EV Tuk Tuk",
 };
+const CAMBODIA_VEHICLE_DESCS: Record<string, string> = {
+  "economy": "Affordable everyday rides",
+  "share": "Electric, zero-emission rides",
+};
+const CAMBODIA_VEHICLE_CAPACITY: Record<string, number> = {
+  "economy": 3,
+  "share": 3,
+};
 
 /** Get vehicle image based on region */
 function getVehicleImage(vehicleId: string, isCambodia: boolean): string {
