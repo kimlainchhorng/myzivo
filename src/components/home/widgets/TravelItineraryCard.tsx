@@ -2,6 +2,7 @@
  * TravelItineraryCard - Upcoming trips timeline with flight, hotel, car in one card
  */
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "@/hooks/useI18n";
 import { motion } from "framer-motion";
 import { Plane, Hotel, Car, Calendar, MapPin, ChevronRight, Luggage } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
