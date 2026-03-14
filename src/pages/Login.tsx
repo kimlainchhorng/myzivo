@@ -317,7 +317,7 @@ const Login = () => {
             </Form>
           ) : (
             <Form {...signupForm}>
-              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-3">
+              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-2.5">
                 <FormField
                   control={signupForm.control}
                   name="fullName"
