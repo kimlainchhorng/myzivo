@@ -1641,11 +1641,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     const pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
                     setPickupDisplay(t("ride.current_location"));
                     setPickup(pickupData);
-                    // Reverse geocode to get real address
-                    reverseGeocode(coords.lat, coords.lng).then(addr => {
-                      setPickupDisplay(addr);
-                      setPickup(prev => prev ? { ...prev, address: addr } : prev);
-                    }).catch(() => {});
+                    resolvePickupAddress(coords);
                     const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
                     fetchRoute(pickupData, dest, wp);
                   } else {
