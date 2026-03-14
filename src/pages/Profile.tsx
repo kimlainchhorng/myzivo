@@ -230,7 +230,7 @@ const Profile = () => {
                           </FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter your full name"
+                              placeholder={t("profile.full_name_placeholder")}
                               className="h-12 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50"
                               {...field}
                             />
