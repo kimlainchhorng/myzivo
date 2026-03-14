@@ -1194,7 +1194,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setPickupDisplay("Current Location");
     const pickupData = userLocation
       ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
-      : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
+      : { address: "Current Location", lat: fallbackPickupCenter.lat, lng: fallbackPickupCenter.lng };
     setPickup(pickupData);
     fetchRoute(pickupData, { address, lat, lng });
   };
