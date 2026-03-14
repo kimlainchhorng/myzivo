@@ -660,7 +660,7 @@ const AppHome = () => {
                   className="w-full border-violet-500/25 text-violet-600 hover:bg-violet-500/10 rounded-xl h-12 font-bold relative z-10 shadow-sm"
                 >
                   <Share2 className="w-4 h-4 mr-2" />
-                  Share & Earn
+                  {t("home.share_earn")}
                 </Button>
               </motion.div>
             );
