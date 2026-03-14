@@ -251,7 +251,7 @@ const Profile = () => {
                         className="h-12 rounded-xl bg-muted/50 border-border/50 text-muted-foreground"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Email cannot be changed here
+                        {t("profile.email_note")}
                       </p>
                     </div>
 
