@@ -246,13 +246,16 @@ const CookiePolicy = () => {
                   { name: "Google Analytics", purpose: "Usage analytics" },
                   { name: "Stripe", purpose: "Payment processing" },
                   { name: "Supabase", purpose: "Authentication" },
-                  { name: "Marketing platforms", purpose: "Ad measurement" },
                 ].map((item) => (
                   <div key={item.name} className="p-3 rounded-lg bg-muted/50 text-sm">
                     <p className="font-medium">{item.name}</p>
                     <p className="text-muted-foreground">{item.purpose}</p>
                   </div>
                 ))}
+              </div>
+              <p className="text-sm text-muted-foreground mt-4">
+                None of these third-party services are used for cross-app or cross-site tracking.
+              </p>
               </div>
             </div>
           </section>
