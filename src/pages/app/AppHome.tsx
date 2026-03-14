@@ -169,7 +169,8 @@ const usAttractions = [
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, currentLanguage } = useI18n();
+  const isKH = currentLanguage === "km";
   useDeviceIntegrityCheck();
 
   const promos = [
