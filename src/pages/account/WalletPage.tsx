@@ -80,6 +80,9 @@ export default function WalletPage() {
     .reduce((sum, c) => sum + Number(c.amount), 0);
 
   // Dynamic tips based on real data
+  const { getNextTierProgress } = useLoyaltyPoints();
+  const tierProgress = getNextTierProgress();
+
   const tips: { icon: React.ReactNode; text: string }[] = [];
   const expiringCredit = walletCredits.find(
     (c) => c.expires_at && new Date(c.expires_at) > new Date() &&
@@ -92,8 +95,6 @@ export default function WalletPage() {
       text: `Use your $${Number(expiringCredit.amount).toFixed(0)} cashback before it expires on ${expDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
     });
   }
-  const { getNextTierProgress } = useLoyaltyPoints();
-  const tierProgress = getNextTierProgress();
   if (tierProgress.pointsNeeded > 0) {
     tips.push({
       icon: <span>🔥</span>,
