@@ -167,12 +167,13 @@ const Profile = () => {
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-muted/50 hover:bg-muted transition-colors touch-manipulation active:scale-95"
             >
               <Globe className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs font-medium">{LANGS.find(l => l.code === currentLanguage)?.flag}</span>
+              <span className="text-base leading-none">{LANGS.find(l => l.code === currentLanguage)?.flag}</span>
+              <span className="text-xs font-medium text-muted-foreground">{LANGS.find(l => l.code === currentLanguage)?.country}</span>
             </button>
             {showLangMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden min-w-[140px]">
+                <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden min-w-[160px]">
                   {LANGS.map((lang) => (
                     <button
                       key={lang.code}
@@ -181,8 +182,11 @@ const Profile = () => {
                         currentLanguage === lang.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted"
                       }`}
                     >
-                      <span>{lang.flag}</span>
-                      <span>{lang.label}</span>
+                      <span className="text-base">{lang.flag}</span>
+                      <div className="text-left">
+                        <p className="text-sm">{lang.label}</p>
+                        <p className="text-[10px] text-muted-foreground">{lang.country}</p>
+                      </div>
                     </button>
                   ))}
                 </div>
