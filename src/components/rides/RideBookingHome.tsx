@@ -77,6 +77,20 @@ function perDistRate(perMile: number, useKm: boolean): number {
   return useKm ? perMile / 1.60934 : perMile;
 }
 
+/** USD → KHR exchange rate */
+const USD_TO_KHR = 4062.5;
+
+/** Format price in KHR */
+function toKHR(usd: number): string {
+  return `${Math.round(usd * USD_TO_KHR).toLocaleString()} ៛`;
+}
+
+/** Dual price display: $X.XX (X,XXX ៛) */
+function dualPrice(usd: number, showKhr: boolean): string {
+  if (!showKhr) return `$${usd.toFixed(2)}`;
+  return `$${usd.toFixed(2)} (${toKHR(usd)})`;
+}
+
 /** Distance value for display */
 function distValue(miles: number, useKm: boolean): number {
   return useKm ? Number((miles * 1.60934).toFixed(1)) : miles;
@@ -532,6 +546,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     const addr = pickup.address.toLowerCase();
     if (addr.includes("new orleans")) return "New Orleans";
     if (addr.includes("baton rouge")) return "Baton Rouge";
+    if (addr.includes("phnom penh")) return "Phnom Penh";
+    if (addr.includes("siem reap")) return "Siem Reap";
+    if (addr.includes("sihanoukville")) return "Sihanoukville";
+    if (addr.includes("battambang")) return "Battambang";
+    if (addr.includes("cambodia") || addr.includes("កម្ពុជា")) return "Phnom Penh";
     return undefined; // falls back to "default" pricing
   }, [pickup?.address]);
 
@@ -2402,9 +2421,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                           <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
                           ${price.toFixed(2)}
                         </span>
+                        {useKm && <span className="text-[10px] text-muted-foreground">{toKHR(price)}</span>}
                       </>
                     ) : (
-                      <span className="text-[15px] font-bold text-foreground">${price.toFixed(2)}</span>
+                      <>
+                        <span className="text-[15px] font-bold text-foreground">${price.toFixed(2)}</span>
+                        {useKm && <span className="text-[10px] text-muted-foreground">{toKHR(price)}</span>}
+                      </>
                     )}
                     {isSelected && (
                       <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
@@ -2437,7 +2460,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 active:scale-[0.97] transition-all duration-200"
               onClick={() => { setPaymentStep("idle"); setViewStep("confirm-ride"); }}
             >
-              Confirm {currentVehicle.name} · ${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}
+              Confirm {currentVehicle.name} · ${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}{useKm ? ` (${toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)})` : ""}
             </Button>
           </div>
         </div>
@@ -2490,29 +2513,39 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <div className="border-t border-border/15 pt-1.5 space-y-0.5 text-[12px]">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Base fare</span>
-                    <span className="text-foreground">${currentVehicle.basePrice.toFixed(2)}</span>
+                    <span className="text-foreground">{dualPrice(currentVehicle.basePrice, useKm)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Distance ({formatDist(routeData.distance_miles, useKm)} × ${perDistRate(currentVehicle.pricePerMile, useKm).toFixed(2)}/{distUnit(useKm)})</span>
-                    <span className="text-foreground">${(routeData.distance_miles * currentVehicle.pricePerMile).toFixed(2)}</span>
+                    <span className="text-foreground">{dualPrice(routeData.distance_miles * currentVehicle.pricePerMile, useKm)}</span>
                   </div>
+                  {useKm && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground/70 text-[10px]">Rate: {toKHR(perDistRate(currentVehicle.pricePerMile, useKm))}/km</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Time ({routeData.duration_minutes} min × ${currentVehicle.perMinute.toFixed(2)})</span>
-                    <span className="text-foreground">${(routeData.duration_minutes * currentVehicle.perMinute).toFixed(2)}</span>
+                    <span className="text-foreground">{dualPrice(routeData.duration_minutes * currentVehicle.perMinute, useKm)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Booking fee</span>
-                    <span className="text-foreground">${currentVehicle.bookingFee.toFixed(2)}</span>
+                    <span className="text-foreground">{dualPrice(currentVehicle.bookingFee, useKm)}</span>
                   </div>
                   {appliedPromo && promoDiscount > 0 && (
                     <div className="flex justify-between text-primary">
                       <span className="font-medium">Promo ({appliedPromo.code})</span>
-                      <span className="font-medium">-${promoDiscount.toFixed(2)}</span>
+                      <span className="font-medium">-{dualPrice(promoDiscount, useKm)}</span>
                     </div>
                   )}
                   <div className="flex justify-between border-t border-border/15 pt-1 mt-0.5">
                     <span className="font-bold text-foreground text-[13px]">Total</span>
-                    <span className="font-bold text-foreground text-[15px]">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
+                    <div className="text-right">
+                      <span className="font-bold text-foreground text-[15px]">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
+                      {useKm && (
+                        <p className="text-[10px] text-muted-foreground font-medium">{toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)}</p>
+                      )}
+                    </div>
                   </div>
                   {currentPrice <= currentVehicle.minimumFare && (
                     <p className="text-[9px] text-muted-foreground/60 text-right">Minimum fare applied</p>
@@ -2520,7 +2553,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 </div>
               )}
               {!routeData && (
-                <p className="text-lg font-black text-foreground text-right">${currentPrice.toFixed(2)}</p>
+                <div className="text-right">
+                  <p className="text-lg font-black text-foreground">${currentPrice.toFixed(2)}</p>
+                  {useKm && <p className="text-[10px] text-muted-foreground">{toKHR(currentPrice)}</p>}
+                </div>
               )}
             </div>
 
