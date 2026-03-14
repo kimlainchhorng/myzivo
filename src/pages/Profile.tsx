@@ -305,7 +305,7 @@ const Profile = () => {
                           navigate("/");
                         }}
                       >
-                        Sign out
+                        {t("profile.sign_out")}
                       </Button>
                     ) : (
                       <div className="flex gap-3">
