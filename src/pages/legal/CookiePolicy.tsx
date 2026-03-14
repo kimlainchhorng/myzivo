@@ -75,7 +75,7 @@ const CookiePolicy = () => {
   };
 
   const rejectOptional = () => {
-    const minimalCookies = { essential: true, functional: false, analytics: false, marketing: false };
+    const minimalCookies = { essential: true, functional: false, analytics: false };
     setPreferences(minimalCookies);
     localStorage.setItem("cookie_preferences", JSON.stringify(minimalCookies));
     toast.success("Optional cookies rejected");
