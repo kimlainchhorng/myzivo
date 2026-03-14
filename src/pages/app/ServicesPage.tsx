@@ -235,10 +235,10 @@ export default function ServicesPage() {
       <div className="px-5 pt-3 relative z-10">
         <PromoBanner
           image={zivoReserveBanner}
-          alt="ZIVO Reserve - Premium Airport Rides"
-          label="ZIVO Reserve"
-          title="Premium Airport Rides"
-          subtitle="VIP pickup · Meet & greet · Luxury fleet"
+          alt={t("services.banner.reserve_alt")}
+          label={t("services.banner.reserve_label")}
+          title={t("services.banner.reserve_title")}
+          subtitle={t("services.banner.reserve_subtitle")}
           href="/rides?tab=reserve"
           delay={0.1}
           navigate={navigate}
