@@ -479,7 +479,7 @@ const AppHome = () => {
 
             {/* Trending Rides */}
             <div>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">Trending Rides</p>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.trending_rides")}</p>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {trendingRides.map((ride) => (
                   <motion.button
