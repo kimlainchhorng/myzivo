@@ -785,7 +785,7 @@ const AppHome = () => {
 
             {/* Weekly Spending */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl bg-card border border-border/40 p-4">
-              <p className="text-xs font-bold text-foreground mb-3">This Week's Spending</p>
+              <p className="text-xs font-bold text-foreground mb-3">{t("home.weekly_spending")}</p>
               <div className="flex items-end gap-1.5 h-14">
                 {[32, 18, 45, 12, 28, 52, 8].map((val, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
