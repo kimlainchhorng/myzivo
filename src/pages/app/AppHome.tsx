@@ -740,7 +740,7 @@ const AppHome = () => {
                   <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 flex items-center justify-center shadow-inner">
                     <Wallet className="w-4.5 h-4.5 text-emerald-500" />
                   </div>
-                  <span className="text-sm font-bold text-foreground">Wallet</span>
+                  <span className="text-sm font-bold text-foreground">{t("home.wallet")}</span>
                 </div>
                 <button onClick={() => navigate("/wallet")} className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5 hover:gap-1.5 transition-all">
                   Manage <ChevronRight className="w-3 h-3" />
