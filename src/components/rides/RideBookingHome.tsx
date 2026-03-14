@@ -1785,10 +1785,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   </div>
                   <div className="flex-1 space-y-2">
-                    <AddressAutocomplete
+                     <AddressAutocomplete
                       placeholder="Pickup location"
                       value={pickupDisplay}
                       onSelect={handlePickupSelect}
+                      country={rideCountry}
                       className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
                     />
                     {/* Stop inputs */}
