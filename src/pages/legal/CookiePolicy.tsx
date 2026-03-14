@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Cookie, Mail, Shield, Settings, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
