@@ -531,12 +531,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     [savedLocations]
   );
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(userLocation?.lat ?? null, userLocation?.lng ?? null);
 
   const [viewStep, setViewStep] = useState<ViewStep>("search");
   const [activeTab, setActiveTab] = useState<RideTab>("book");
-   const [pickup, setPickup] = useState<PlaceData | null>(null);
+  const [pickup, setPickup] = useState<PlaceData | null>(null);
   const [destination, setDestination] = useState<PlaceData | null>(null);
+
+  const nearbyCenter = pickup ?? userLocation;
+  const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(nearbyCenter?.lat ?? null, nearbyCenter?.lng ?? null);
   const [pickupDisplay, setPickupDisplay] = useState("");
   const [destinationDisplay, setDestinationDisplay] = useState("");
 
@@ -681,23 +683,18 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
-  // Keep map region aligned to selected language mode
+  // Keep map region aligned to selected language mode (GPS first, localized fallback)
   useEffect(() => {
     let cancelled = false;
-
-    if (currentLanguage === "km") {
-      setUserLocation(CAMBODIA_DEFAULT_CENTER);
-      return () => {
-        cancelled = true;
-      };
-    }
 
     getCurrentLocation()
       .then((loc) => {
         if (!cancelled) setUserLocation({ lat: loc.lat, lng: loc.lng });
       })
       .catch(() => {
-        if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
+        if (!cancelled) {
+          setUserLocation(currentLanguage === "km" ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER);
+        }
       });
 
     return () => {
@@ -888,15 +885,33 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [viewStep, destination, liveDriverLocation, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
-    if (currentLanguage === "km") {
-      setUserLocation(CAMBODIA_DEFAULT_CENTER);
-      return;
-    }
-
     getCurrentLocation()
       .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
-      .catch(() => toast.error("Could not get your location"));
+      .catch(() => {
+        setUserLocation(currentLanguage === "km" ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER);
+        toast.error("Could not get your location");
+      });
   }, [currentLanguage, getCurrentLocation]);
+
+  const resolvePickupAddress = useCallback((coords: { lat: number; lng: number }) => {
+    reverseGeocode(coords.lat, coords.lng)
+      .then((addr) => {
+        setPickup((prev) => {
+          if (!prev) return prev;
+          const sameCoords = Math.abs(prev.lat - coords.lat) < 0.00001 && Math.abs(prev.lng - coords.lng) < 0.00001;
+          return sameCoords ? { ...prev, address: addr } : prev;
+        });
+        setPickupDisplay(addr);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!pickup) return;
+    const currentLocationLabel = t("ride.current_location");
+    if (pickup.address !== currentLocationLabel && pickup.address !== "Current Location") return;
+    resolvePickupAddress({ lat: pickup.lat, lng: pickup.lng });
+  }, [pickup?.address, pickup?.lat, pickup?.lng, resolvePickupAddress, t]);
 
   /** When user drags map in search view, reverse geocode center → pickup */
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
@@ -1061,11 +1076,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     if (!pickupData) {
       const coords = userLocation ?? fallbackPickupCenter;
       pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
-      // Reverse geocode to get real address
-      reverseGeocode(coords.lat, coords.lng).then(addr => {
-        setPickupDisplay(addr);
-        setPickup(prev => prev ? { ...prev, address: addr } : prev);
-      }).catch(() => {});
+      resolvePickupAddress(coords);
     }
 
     // Block same-location trips unless there are intermediate stops (round trip)
@@ -1200,11 +1211,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setPickupDisplay(t("ride.current_location"));
     setPickup(pickupData);
     fetchRoute(pickupData, { address, lat, lng });
-    // Reverse geocode to get real address
-    reverseGeocode(coords.lat, coords.lng).then(addr => {
-      setPickupDisplay(addr);
-      setPickup(prev => prev ? { ...prev, address: addr } : prev);
-    }).catch(() => {});
+    resolvePickupAddress(coords);
   };
 
   /* ─── Fetch route (for initial route + confirm search) ─── */
@@ -1635,11 +1642,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     const pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
                     setPickupDisplay(t("ride.current_location"));
                     setPickup(pickupData);
-                    // Reverse geocode to get real address
-                    reverseGeocode(coords.lat, coords.lng).then(addr => {
-                      setPickupDisplay(addr);
-                      setPickup(prev => prev ? { ...prev, address: addr } : prev);
-                    }).catch(() => {});
+                    resolvePickupAddress(coords);
                     const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
                     fetchRoute(pickupData, dest, wp);
                   } else {
