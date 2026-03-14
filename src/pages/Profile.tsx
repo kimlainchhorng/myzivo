@@ -199,7 +199,7 @@ const Profile = () => {
                 </div>
                 <CardTitle className="flex items-center justify-center gap-2 text-xl">
                   <Sparkles className="h-4 w-4 text-primary" />
-                  {profile?.full_name || "Set your name"}
+                  {profile?.full_name || t("profile.set_name")}
                 </CardTitle>
                 <CardDescription className="text-sm">{user?.email}</CardDescription>
                 <div className="flex items-center justify-center gap-2 mt-3">
