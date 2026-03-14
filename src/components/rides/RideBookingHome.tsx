@@ -376,7 +376,7 @@ function VehicleRow({
           )}
           <div className="flex items-center gap-0.5 text-muted-foreground">
             <User className="w-3 h-3" />
-            <span className="text-xs">{vehicle.capacity}</span>
+            <span className="text-xs">{getVehicleCapacity(vehicle.id, vehicle.capacity, isCambodia)}</span>
           </div>
         </div>
         <div className="flex items-center gap-1.5 mt-0.5">
