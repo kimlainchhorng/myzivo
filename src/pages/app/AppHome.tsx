@@ -240,9 +240,9 @@ const AppHome = () => {
 
   const greeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return t("home.good_morning");
+    if (hour < 17) return t("home.good_afternoon");
+    return t("home.good_evening");
   };
 
   const userName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || "Traveler";
