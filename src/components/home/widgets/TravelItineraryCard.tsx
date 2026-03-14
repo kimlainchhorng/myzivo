@@ -38,6 +38,7 @@ const itemConfig = {
 export default function TravelItineraryCard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const { data: tripData } = useQuery({
     queryKey: ["home-itinerary", user?.id],
