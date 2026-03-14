@@ -310,9 +310,14 @@ function VehicleRow({
             </span>
           )}
           {vehicle.id === "share" && (
-            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
-              <Users className="w-3 h-3" />
-              SAVE
+            <span className={cn(
+              "flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold",
+              isCambodia
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+            )}>
+              {isCambodia ? <Zap className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+              {isCambodia ? "EV" : "SAVE"}
             </span>
           )}
           {vehicle.id === "comfort" && (
