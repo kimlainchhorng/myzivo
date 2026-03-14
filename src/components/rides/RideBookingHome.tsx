@@ -265,6 +265,7 @@ function VehicleRow({
   price,
   originalPrice,
   surgeActive,
+  isCambodia = false,
 }: {
   vehicle: (typeof DEFAULT_VEHICLE_OPTIONS)[0];
   selected: boolean;
@@ -272,6 +273,7 @@ function VehicleRow({
   price: number;
   originalPrice?: number;
   surgeActive?: boolean;
+  isCambodia?: boolean;
 }) {
   const etaDate = new Date(Date.now() + vehicle.etaMin * 60000);
   const etaHour = etaDate.getHours();
@@ -293,14 +295,14 @@ function VehicleRow({
     >
       <div className="w-[72px] shrink-0 flex items-center justify-center">
         <img
-          src={VEHICLE_IMAGES[vehicle.id] ?? "/vehicles/economy-car.svg"}
-          alt={vehicle.name}
+          src={getVehicleImage(vehicle.id, isCambodia)}
+          alt={getVehicleName(vehicle.id, vehicle.name, isCambodia)}
           className="w-[72px] h-[44px] object-contain"
         />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-sm font-bold text-foreground">{vehicle.name}</span>
+          <span className="text-sm font-bold text-foreground">{getVehicleName(vehicle.id, vehicle.name, isCambodia)}</span>
           {vehicle.id === "economy" && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
               <TrendingDown className="w-3 h-3" />
@@ -408,6 +410,30 @@ const VEHICLE_IMAGES: Record<string, string> = {
   "pet":       "/vehicles/pet-car-v2.png",
   "wheelchair": "/vehicles/wheelchair-car-v2.png",
 };
+
+/* Cambodia-specific overrides */
+const CAMBODIA_VEHICLE_IMAGES: Record<string, string> = {
+  "economy": "/vehicles/cambodia-tuktuk.png",
+};
+const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
+  "economy": "ZIVO Tuk Tuk",
+};
+
+/** Get vehicle image based on region */
+function getVehicleImage(vehicleId: string, isCambodia: boolean): string {
+  if (isCambodia && CAMBODIA_VEHICLE_IMAGES[vehicleId]) {
+    return CAMBODIA_VEHICLE_IMAGES[vehicleId];
+  }
+  return VEHICLE_IMAGES[vehicleId] ?? "/vehicles/economy-car.svg";
+}
+
+/** Get vehicle display name based on region */
+function getVehicleName(vehicleId: string, originalName: string, isCambodia: boolean): string {
+  if (isCambodia && CAMBODIA_VEHICLE_NAMES[vehicleId]) {
+    return CAMBODIA_VEHICLE_NAMES[vehicleId];
+  }
+  return originalName;
+}
 
 const etaTime = (minutesFromNow: number) =>
   new Date(Date.now() + minutesFromNow * 60000)
@@ -2470,8 +2496,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   {/* Vehicle image */}
                   <div className="w-[68px] shrink-0 flex items-center justify-center">
                     <img
-                      src={VEHICLE_IMAGES[v.id] ?? "/vehicles/economy-car.svg"}
-                      alt={v.name}
+                      src={getVehicleImage(v.id, currentLanguage === "km")}
+                      alt={getVehicleName(v.id, v.name, currentLanguage === "km")}
                       className={cn("w-[68px] h-auto transition-transform duration-200", isSelected && "scale-105")}
                     />
                   </div>
@@ -2479,7 +2505,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   {/* Center: Name + meta */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={cn("text-[14px] font-bold", isSelected ? "text-foreground" : "text-foreground")}>{v.name}</span>
+                      <span className={cn("text-[14px] font-bold", isSelected ? "text-foreground" : "text-foreground")}>{getVehicleName(v.id, v.name, currentLanguage === "km")}</span>
                       {v.id === "economy" && (
                         <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
                           <TrendingDown className="w-3 h-3" />LOW
@@ -2640,7 +2666,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
               <div className="flex items-center gap-2.5 mb-1.5">
                 <div className="w-[50px] h-[36px] flex items-center justify-center shrink-0 bg-muted/10 rounded-md">
-                  <img src={VEHICLE_IMAGES[selectedVehicle] || VEHICLE_IMAGES["economy"]} alt={currentVehicle.name} className="w-full h-full object-contain" />
+                  <img src={getVehicleImage(selectedVehicle, currentLanguage === "km")} alt={getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-bold text-foreground leading-tight">{currentVehicle.name} · {currentVehicle.capacity} seats</p>
