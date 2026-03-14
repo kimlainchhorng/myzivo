@@ -817,7 +817,7 @@ const AppHome = () => {
                 </div>
                 <div className="text-center">
                   <p className="text-lg font-bold text-amber-500">7</p>
-                  <p className="text-[8px] text-muted-foreground">days</p>
+                  <p className="text-[8px] text-muted-foreground">{t("home.days")}</p>
                 </div>
               </div>
             </div>
