@@ -1893,7 +1893,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <div className="w-5 h-5 rounded-full bg-muted/30 flex items-center justify-center">
                     <Plus className="w-3 h-3" />
                   </div>
-                  Add Stop
+                  {t("ride.add_stop")}
                 </button>
                 <button
                   onClick={() => { setShowSchedule(!showSchedule); setShowPickupOther(false); }}
