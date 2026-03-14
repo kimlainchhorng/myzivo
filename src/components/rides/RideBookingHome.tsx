@@ -480,7 +480,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const { user } = useAuth();
   const { getCurrentLocation } = useCurrentLocation();
   const { data: savedLocations = [] } = useSavedLocations(user?.id);
-  const { currentLanguage, changeLanguage } = useI18n();
+  const { currentLanguage, changeLanguage, t } = useI18n();
   const [showLangMenu, setShowLangMenu] = useState(false);
 
   const LANGS = [
