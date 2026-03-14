@@ -683,23 +683,30 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
-  // Keep map region aligned to selected language mode (GPS first, localized fallback)
+  // Keep map region aligned to selected language mode
   useEffect(() => {
     let cancelled = false;
+
+    if (currentLanguage === "km") {
+      // Force Cambodia center when Khmer is selected
+      setUserLocation(CAMBODIA_DEFAULT_CENTER);
+      setPickup(null);
+      setPickupDisplay("");
+      setDestination(null);
+      setDestinationDisplay("");
+      pickupManuallySet.current = false;
+      return () => { cancelled = true; };
+    }
 
     getCurrentLocation()
       .then((loc) => {
         if (!cancelled) setUserLocation({ lat: loc.lat, lng: loc.lng });
       })
       .catch(() => {
-        if (!cancelled) {
-          setUserLocation(currentLanguage === "km" ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER);
-        }
+        if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
       });
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [currentLanguage, getCurrentLocation]);
 
   // Fetch real nearby drivers and poll every 10s
