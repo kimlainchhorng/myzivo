@@ -302,7 +302,7 @@ function VehicleRow({
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-sm font-bold text-foreground">{vehicle.name}</span>
+          <span className="text-sm font-bold text-foreground">{getVehicleName(vehicle.id, vehicle.name, isCambodia)}</span>
           {vehicle.id === "economy" && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
               <TrendingDown className="w-3 h-3" />
