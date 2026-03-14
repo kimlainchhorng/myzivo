@@ -348,10 +348,10 @@ export default function ServicesPage() {
             {catIdx === 1 && (
               <PromoBanner
                 image={zivoTravelBanner}
-                alt="Plan your trip with ZIVO"
-                label="Plan Your Trip"
-                title="Your Next Adventure Awaits"
-                subtitle="Flights · Hotels · Cars · All in one place"
+                alt={t("services.banner.trip_alt")}
+                label={t("services.banner.trip_label")}
+                title={t("services.banner.trip_title")}
+                subtitle={t("services.banner.trip_subtitle")}
                 href="/flights"
                 delay={0.25}
                 navigate={navigate}
