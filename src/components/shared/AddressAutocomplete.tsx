@@ -81,7 +81,7 @@ export function AddressAutocomplete({
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("maps-autocomplete", {
-        body: { input, proximity },
+        body: { input, proximity, country },
       });
 
       if (fnError) throw fnError;
