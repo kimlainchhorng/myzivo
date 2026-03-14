@@ -414,9 +414,11 @@ const VEHICLE_IMAGES: Record<string, string> = {
 /* Cambodia-specific overrides */
 const CAMBODIA_VEHICLE_IMAGES: Record<string, string> = {
   "economy": "/vehicles/zivo-tuktuk.png",
+  "share": "/vehicles/zivo-ev-tuktuk.png",
 };
 const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
   "economy": "ZIVO Tuk Tuk",
+  "share": "ZIVO EV Tuk Tuk",
 };
 
 /** Get vehicle image based on region */
