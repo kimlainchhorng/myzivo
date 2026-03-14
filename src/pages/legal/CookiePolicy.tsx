@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { ArrowLeft, Cookie, Mail, Shield, Settings, CheckCircle2, AlertTriangle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Cookie, Mail, Shield, Settings, CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -35,21 +36,23 @@ const cookieCategories = [
     required: false,
     examples: ["Page views", "Navigation patterns", "Performance metrics"],
   },
-  {
-    id: "marketing",
-    title: "Marketing Cookies",
-    description: "Used to deliver relevant ads and measure campaign effectiveness.",
-    required: false,
-    examples: ["Ad targeting", "Campaign attribution", "Remarketing"],
-  },
 ];
 
 const CookiePolicy = () => {
+  const navigate = useNavigate();
+  const isNative = Capacitor.isNativePlatform();
+
+  // On native apps, redirect to home — cookies are not used for tracking
+  useEffect(() => {
+    if (isNative) {
+      navigate("/", { replace: true });
+    }
+  }, [isNative, navigate]);
+
   const [preferences, setPreferences] = useState<Record<string, boolean>>({
     essential: true,
     functional: true,
     analytics: true,
-    marketing: false,
   });
 
   const handlePreferenceChange = (category: string, enabled: boolean) => {
@@ -64,14 +67,14 @@ const CookiePolicy = () => {
   };
 
   const acceptAll = () => {
-    const allEnabled = { essential: true, functional: true, analytics: true, marketing: true };
+    const allEnabled = { essential: true, functional: true, analytics: true };
     setPreferences(allEnabled);
     localStorage.setItem("cookie_preferences", JSON.stringify(allEnabled));
     toast.success("All cookies accepted");
   };
 
   const rejectOptional = () => {
-    const minimalCookies = { essential: true, functional: false, analytics: false, marketing: false };
+    const minimalCookies = { essential: true, functional: false, analytics: false };
     setPreferences(minimalCookies);
     localStorage.setItem("cookie_preferences", JSON.stringify(minimalCookies));
     toast.success("Optional cookies rejected");
@@ -189,11 +192,16 @@ const CookiePolicy = () => {
                   <CheckCircle2 className="w-4 h-4 text-green-500 mt-1 shrink-0" />
                   Analyze traffic and performance to improve our services
                 </li>
-                <li className="flex items-start gap-3 text-foreground">
-                  <CheckCircle2 className="w-4 h-4 text-green-500 mt-1 shrink-0" />
-                  Support marketing attribution (with your consent)
-                </li>
               </ul>
+              <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <div className="flex items-start gap-2">
+                  <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <p className="text-sm text-muted-foreground">
+                    <strong>No tracking or advertising cookies:</strong> ZIVO does not use cookies to track users 
+                    across other apps or websites, and does not use cookies for advertising or ad targeting purposes.
+                  </p>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -236,7 +244,6 @@ const CookiePolicy = () => {
                   { name: "Google Analytics", purpose: "Usage analytics" },
                   { name: "Stripe", purpose: "Payment processing" },
                   { name: "Supabase", purpose: "Authentication" },
-                  { name: "Marketing platforms", purpose: "Ad measurement" },
                 ].map((item) => (
                   <div key={item.name} className="p-3 rounded-lg bg-muted/50 text-sm">
                     <p className="font-medium">{item.name}</p>
@@ -244,6 +251,9 @@ const CookiePolicy = () => {
                   </div>
                 ))}
               </div>
+              <p className="text-sm text-muted-foreground mt-4">
+                None of these third-party services are used for cross-app or cross-site tracking.
+              </p>
             </div>
           </section>
 

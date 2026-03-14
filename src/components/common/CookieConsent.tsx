@@ -16,7 +16,6 @@ interface CookiePreferences {
   essential: boolean;
   functional: boolean;
   analytics: boolean;
-  advertising: boolean;
 }
 
 const CookieConsent = () => {
@@ -28,7 +27,6 @@ const CookieConsent = () => {
     essential: true,
     functional: true,
     analytics: false,
-    advertising: false,
   });
 
   useEffect(() => {
@@ -44,14 +42,14 @@ const CookieConsent = () => {
   }, []);
 
   const handleAcceptAll = () => {
-    const allAccepted = { essential: true, functional: true, analytics: true, advertising: true };
+    const allAccepted = { essential: true, functional: true, analytics: true };
     localStorage.setItem("zivo-cookie-consent", JSON.stringify(allAccepted));
     localStorage.setItem("zivo-cookie-consent-date", new Date().toISOString());
     setIsVisible(false);
   };
 
   const handleRejectAll = () => {
-    const essentialOnly = { essential: true, functional: false, analytics: false, advertising: false };
+    const essentialOnly = { essential: true, functional: false, analytics: false };
     localStorage.setItem("zivo-cookie-consent", JSON.stringify(essentialOnly));
     localStorage.setItem("zivo-cookie-consent-date", new Date().toISOString());
     setIsVisible(false);
@@ -80,12 +78,6 @@ const CookieConsent = () => {
       key: "analytics" as keyof CookiePreferences,
       title: "Analytics Cookies",
       description: "Help us understand how you use our services.",
-      required: false,
-    },
-    {
-      key: "advertising" as keyof CookiePreferences,
-      title: "Advertising Cookies",
-      description: "Used for personalized ads and marketing.",
       required: false,
     },
   ];
