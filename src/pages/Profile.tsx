@@ -56,6 +56,12 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 const LANGS = [
   { code: "en", label: "English", flag: "🇺🇸" },
   { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
+  { code: "zh", label: "中文", flag: "🇨🇳" },
+  { code: "ko", label: "한국어", flag: "🇰🇷" },
+  { code: "ja", label: "日本語", flag: "🇯🇵" },
+  { code: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
+  { code: "th", label: "ไทย", flag: "🇹🇭" },
+  { code: "es", label: "Español", flag: "🇪🇸" },
 ];
 
 const Profile = () => {
@@ -163,6 +169,27 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Language / Translation Selector */}
+        <div className="mb-4 animate-in fade-in slide-in-from-top-3 duration-300">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            {LANGS.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => changeLanguage(lang.code)}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold transition-all touch-manipulation active:scale-95 whitespace-nowrap shrink-0 ${
+                  currentLanguage === lang.code
+                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                    : "bg-muted/50 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>{lang.flag}</span>
+                <span>{lang.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Country / Location Selector */}
         <div className="flex items-center justify-center gap-2 mb-5 animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="flex items-center bg-muted/50 rounded-2xl p-1 gap-1">
@@ -244,26 +271,6 @@ const Profile = () => {
                   )}
                 </div>
 
-                {/* Language / Translation Toggle */}
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  <div className="flex items-center bg-muted/40 rounded-xl p-0.5 gap-0.5">
-                    {LANGS.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => changeLanguage(lang.code)}
-                        className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all touch-manipulation active:scale-95 ${
-                          currentLanguage === lang.code
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        <Globe className="w-3.5 h-3.5" />
-                        <span>{lang.flag}</span>
-                        <span>{lang.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </CardHeader>
 
               <CardContent className="pt-6 relative">
