@@ -2756,7 +2756,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("ride.distance")} ({formatDist(routeData.distance_miles, useKm)} × ${perDistRate(currentVehicle.pricePerMile, useKm).toFixed(2)}/{distUnit(useKm)})</span>
+                    <span className="text-muted-foreground">{t("ride.distance")} ({formatDist(routeData.distance_miles, useKm)} × {useKm ? `${toKHR(perDistRate(currentVehicle.pricePerMile, useKm))}` : `$${perDistRate(currentVehicle.pricePerMile, useKm).toFixed(2)}`}/{distUnit(useKm)})</span>
                     <span className="text-foreground">{dualPrice(routeData.distance_miles * currentVehicle.pricePerMile, useKm)}</span>
                   </div>
                   {useKm && (
