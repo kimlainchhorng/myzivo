@@ -2950,7 +2950,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <p className="font-bold text-foreground">{assignedDriver.name}</p>
                 <div className="flex items-center gap-1">
                   <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                  <span className="text-sm text-muted-foreground">{assignedDriver.rating} · {assignedDriver.trips.toLocaleString()} trips</span>
+                  <span className="text-sm text-muted-foreground">{assignedDriver.rating} · {assignedDriver.trips.toLocaleString()} {t("ride.trips")}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">{assignedDriver.vehicle}</p>
                 <p className="text-xs font-mono font-bold text-foreground">{assignedDriver.plate}</p>
