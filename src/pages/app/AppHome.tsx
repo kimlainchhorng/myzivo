@@ -391,6 +391,16 @@ const AppHome = () => {
             </div>
           </div>
 
+          {/* Promo Banner */}
+          <div className="px-5 pb-3">
+            <img
+              src={zivoPromoBanner}
+              alt="ZIVO - All Services in One Place"
+              className="w-full rounded-2xl shadow-sm"
+              loading="lazy"
+            />
+          </div>
+
           {/* Subtle section divider */}
           <div className="h-2 bg-muted/30" />
         </div>
