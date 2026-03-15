@@ -2688,7 +2688,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 </div>
                 <div className="flex-1 min-w-0 space-y-1.5">
                   <div>
-                    <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Pickup</p>
+                    <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">{t("ride.pickup")}</p>
                     <p className="text-[12px] font-bold text-foreground leading-tight line-clamp-1">{pickup?.address || pickupDisplay}</p>
                   </div>
                   <div>
