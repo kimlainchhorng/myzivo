@@ -2556,8 +2556,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   {/* Vehicle image */}
                   <div className="w-[68px] shrink-0 flex items-center justify-center">
                     <img
-                      src={getVehicleImage(v.id, currentLanguage === "km")}
-                      alt={getVehicleName(v.id, v.name, currentLanguage === "km")}
+                      src={getVehicleImage(v.id, isCambodiaCountry)}
+                      alt={getVehicleName(v.id, v.name, isCambodiaCountry)}
                       className={cn("w-[68px] h-auto transition-transform duration-200", isSelected && "scale-105")}
                     />
                   </div>
