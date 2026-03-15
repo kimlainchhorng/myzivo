@@ -2425,6 +2425,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       </div>
                     </div>
                   )}
+                  <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-primary/10 border border-primary/20 px-2 py-1.5">
+                    <DollarSign className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-primary leading-none">{useKm ? dualPrice(currentPrice, true) : `$${currentPrice.toFixed(2)}`}</p>
+                      <p className="text-[9px] text-muted-foreground">{t("ride.est")}</p>
+                    </div>
+                  </div>
                 </div>
               )}
 
