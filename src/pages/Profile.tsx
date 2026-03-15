@@ -60,7 +60,7 @@ const LANGS = [
 const Profile = () => {
   const navigate = useNavigate();
   const { t, currentLanguage, changeLanguage } = useI18n();
-  const [showLangMenu, setShowLangMenu] = useState(false);
+  
   const { user, signOut } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
