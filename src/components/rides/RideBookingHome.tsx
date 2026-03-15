@@ -3231,7 +3231,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 )}
               >
                 {tip !== null && ![5, 10, 20, 50].some(p => Math.abs(tip - Math.round(currentPrice * p) / 100) < 0.01)
-                  ? `$${tip.toFixed(2)}`
+                  ? dualPrice(tip, useKm)
                   : "Custom"}
               </button>
             </div>
