@@ -169,6 +169,27 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Language / Translation Selector */}
+        <div className="mb-4 animate-in fade-in slide-in-from-top-3 duration-300">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            {LANGS.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => changeLanguage(lang.code)}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold transition-all touch-manipulation active:scale-95 whitespace-nowrap shrink-0 ${
+                  currentLanguage === lang.code
+                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                    : "bg-muted/50 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>{lang.flag}</span>
+                <span>{lang.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Country / Location Selector */}
         <div className="flex items-center justify-center gap-2 mb-5 animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="flex items-center bg-muted/50 rounded-2xl p-1 gap-1">
