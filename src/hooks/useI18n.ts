@@ -107,6 +107,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "ride.promo": "Promo",
     "ride.enter_code": "ENTER CODE",
     "ride.apply": "Apply",
+    "ride.min_unit": "min",
     "ride.traffic_light": "Light",
     "ride.traffic_moderate": "Moderate",
     "ride.traffic_heavy": "Heavy",
