@@ -2996,7 +2996,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
           <h3 className="text-base font-bold text-foreground mb-2">
-            Driver arriving in {driverEta > 0 ? `${driverEta} min` : "now"}
+            {t("ride.driver_arriving_in")} {driverEta > 0 ? `${driverEta} ${t("ride.min_unit")}` : t("ride.now")}
           </h3>
 
           <div className="flex items-center gap-2 mb-3 text-sm">
