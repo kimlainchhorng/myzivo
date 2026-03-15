@@ -2,7 +2,7 @@
  * DriverEnRouteTracker - Real-time driver tracking with live location from Supabase
  * Subscribes to driver_locations table for live lat/lng updates
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Car, Phone, MessageSquare, Share2, Shield, Star, Navigation, Clock, MapPin, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DriverInfo {
   name: string;
