@@ -1543,7 +1543,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
     setShowCancelModal(false);
     if (fee > 0) {
-      toast.error(`Ride cancelled — $${fee.toFixed(2)} cancellation fee applied`);
+      toast.error(`Ride cancelled — ${useKm ? dualPrice(fee, true) : `$${fee.toFixed(2)}`} cancellation fee applied`);
     } else {
       toast.info("Ride cancelled — no fee charged");
     }
@@ -3145,15 +3145,15 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     )}
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Distance</span>
-                      <span className="text-foreground">${(routeData.distance_miles * currentVehicle.pricePerMile).toFixed(2)}</span>
+                      <span className="text-foreground">{dualPrice(routeData.distance_miles * currentVehicle.pricePerMile, useKm)}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Time</span>
-                      <span className="text-foreground">${(routeData.duration_minutes * currentVehicle.perMinute).toFixed(2)}</span>
+                      <span className="text-foreground">{dualPrice(routeData.duration_minutes * currentVehicle.perMinute, useKm)}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Booking fee</span>
-                      <span className="text-foreground">${currentVehicle.bookingFee.toFixed(2)}</span>
+                      <span className="text-foreground">{dualPrice(currentVehicle.bookingFee, useKm)}</span>
                     </div>
                   </div>
                 </>
@@ -3161,12 +3161,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               {appliedPromo && promoDiscount > 0 && (
                 <div className="flex justify-between text-primary">
                   <span className="font-medium">Discount ({appliedPromo.code})</span>
-                  <span className="font-medium">-${promoDiscount.toFixed(2)}</span>
+                  <span className="font-medium">-{dualPrice(promoDiscount, useKm)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t border-border/20 pt-2">
                 <span className="font-bold text-foreground">Amount charged</span>
-                <span className="font-bold text-foreground">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
+                <span className="font-bold text-foreground">{dualPrice(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice, useKm)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment</span>
@@ -3211,7 +3211,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     )}
                   >
                     <span className="text-sm font-bold block">{pct}%</span>
-                    <span className="text-[10px] opacity-70">${tipAmount.toFixed(2)}</span>
+                    <span className="text-[10px] opacity-70">{dualPrice(tipAmount, useKm)}</span>
                   </button>
                 );
               })}
@@ -3231,7 +3231,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 )}
               >
                 {tip !== null && ![5, 10, 20, 50].some(p => Math.abs(tip - Math.round(currentPrice * p) / 100) < 0.01)
-                  ? `$${tip.toFixed(2)}`
+                  ? dualPrice(tip, useKm)
                   : "Custom"}
               </button>
             </div>
