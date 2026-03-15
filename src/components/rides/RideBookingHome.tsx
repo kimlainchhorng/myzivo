@@ -2184,7 +2184,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                               <p className="text-[11px] font-bold text-foreground text-center leading-tight truncate w-full">{place.name}</p>
                               <p className="text-[8px] text-muted-foreground/50 text-center leading-snug mt-0.5 truncate w-full">{place.address}</p>
                               <p className="text-[9px] text-muted-foreground mt-1.5">{useKm ? `${(parseFloat(place.distanceMi) * 1.60934).toFixed(1)} km` : `${place.distanceMi} mi`} · {place.timeMin} min</p>
-                              <p className="text-[13px] font-extrabold text-primary mt-1">{useKm ? toKHR(parseFloat(place.priceEst.replace(/[^0-9.]/g, ""))) : place.priceEst}</p>
+                              <p className="text-[13px] font-extrabold text-primary mt-1">{useKm ? dualPrice(parseFloat(place.priceEst.replace(/[^0-9.]/g, "")), true) : place.priceEst}</p>
                               <p className="text-[8px] text-muted-foreground/40">{t("ride.est")}</p>
                             </button>
                           ))}
