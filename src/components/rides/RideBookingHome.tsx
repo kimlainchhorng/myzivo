@@ -632,7 +632,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Merge DB pricing into vehicle options (admin rates override defaults)
   const vehicleOptions = useMemo(() => {
-    const isCambodia = currentLanguage === "km";
+    const isCambodia = isCambodiaCountry;
     let options = DEFAULT_VEHICLE_OPTIONS;
     if (cityPricingMap && Object.keys(cityPricingMap).length > 0) {
       options = DEFAULT_VEHICLE_OPTIONS.map((v) => {
