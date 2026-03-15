@@ -1705,6 +1705,42 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </MapSection>
             </div>
 
+  /* ─── Auto-refresh route data every 30s for live traffic updates ─── */
+  useEffect(() => {
+    if (viewStep !== "route-preview" && viewStep !== "ride-options") return;
+    if (!pickup?.lat || !destination?.lat) return;
+
+    const refresh = async () => {
+      try {
+        const wp = stopsRef.current
+          .filter(s => s.place && s.place.lat && s.place.lng)
+          .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+        const { data, error } = await supabase.functions.invoke("maps-route", {
+          body: {
+            origin_lat: pickup.lat,
+            origin_lng: pickup.lng,
+            dest_lat: destination.lat,
+            dest_lng: destination.lng,
+            waypoints: wp.length > 0 ? wp : undefined,
+          },
+        });
+        if (!error && data?.ok) {
+          setRouteData(prev => ({
+            ...prev!,
+            duration_minutes: data.duration_minutes,
+            duration_in_traffic_minutes: data.duration_in_traffic_minutes ?? null,
+            traffic_level: data.traffic_level,
+            distance_miles: data.distance_miles,
+            polyline: data.polyline ?? prev?.polyline ?? null,
+          }));
+        }
+      } catch {}
+    };
+
+    const interval = setInterval(refresh, 30000);
+    return () => clearInterval(interval);
+  }, [viewStep, pickup?.lat, pickup?.lng, destination?.lat, destination?.lng]);
+
 
             <div
               className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
