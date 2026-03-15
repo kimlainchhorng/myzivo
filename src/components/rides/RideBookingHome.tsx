@@ -3161,7 +3161,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               {appliedPromo && promoDiscount > 0 && (
                 <div className="flex justify-between text-primary">
                   <span className="font-medium">Discount ({appliedPromo.code})</span>
-                  <span className="font-medium">-${promoDiscount.toFixed(2)}</span>
+                  <span className="font-medium">-{dualPrice(promoDiscount, useKm)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t border-border/20 pt-2">
