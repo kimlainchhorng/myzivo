@@ -426,8 +426,11 @@ const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
   "share": "ZIVO EV Tuk Tuk",
 };
 const CAMBODIA_VEHICLE_DESCS: Record<string, string> = {
-  "economy": "Affordable everyday rides",
-  "share": "Electric, zero-emission rides",
+  "economy": "ការធ្វើដំណើរប្រចាំថ្ងៃតម្លៃសមរម្យ",
+  "share": "អគ្គិសនី សូន្យការបំភាយ",
+  "comfort": "អ្នកបើកបរល្អបំផុត កន្លែងដាក់ជើងទូលាយ",
+  "ev": "អគ្គិសនី សូន្យការបំភាយ",
+  "xl": "កន្លែងបន្ថែមសម្រាប់ក្រុម",
 };
 const CAMBODIA_VEHICLE_CAPACITY: Record<string, number> = {
   "economy": 3,
