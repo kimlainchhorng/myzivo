@@ -2675,7 +2675,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         >
           <div className="px-4 pt-3 pb-0.5 shrink-0 flex items-center gap-3">
             <button
-              onClick={() => setViewStep("select-vehicle")}
+              onClick={() => setViewStep("ride-options")}
               className="w-8 h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0"
               aria-label="Go back"
             >
