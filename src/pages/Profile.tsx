@@ -28,6 +28,7 @@ import {
   ExternalLink,
   Users,
   Globe,
+  ChevronDown,
   Crown,
   MapPin,
   ShoppingBag,
