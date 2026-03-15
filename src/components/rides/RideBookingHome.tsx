@@ -2404,31 +2404,63 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 </div>
 
               {routeData && (
-                <div className="flex items-center gap-1.5">
-                  <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <div className="flex-1 min-w-[70px] flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
                     <Timer className="w-3.5 h-3.5 text-primary shrink-0" />
                     <div>
-                      <p className="text-sm font-bold text-foreground leading-none">{routeData.duration_minutes} min</p>
+                      <p className="text-sm font-bold text-foreground leading-none">
+                        {routeData.duration_in_traffic_minutes
+                          ? `${routeData.duration_in_traffic_minutes} min`
+                          : `${routeData.duration_minutes} min`}
+                      </p>
+                      {routeData.duration_in_traffic_minutes && routeData.duration_in_traffic_minutes !== routeData.duration_minutes && (
+                        <p className="text-[8px] text-muted-foreground/60 line-through">{routeData.duration_minutes} min</p>
+                      )}
                       <p className="text-[9px] text-muted-foreground">{t("ride.trip_time")}</p>
                     </div>
                   </div>
-                  <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
+                  <div className="flex-1 min-w-[70px] flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
                     <Route className="w-3.5 h-3.5 text-primary shrink-0" />
                     <div>
                       <p className="text-sm font-bold text-foreground leading-none">{formatDist(routeData.distance_miles, useKm)}</p>
                       <p className="text-[9px] text-muted-foreground">{t("ride.distance")}</p>
                     </div>
                   </div>
-                  {routeData.traffic_level && (
-                    <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
-                      <Car className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <div>
-                        <p className="text-sm font-bold text-foreground leading-none capitalize">{t(`ride.${routeData.traffic_level.toLowerCase()}`) !== `ride.${routeData.traffic_level.toLowerCase()}` ? t(`ride.${routeData.traffic_level.toLowerCase()}`) : routeData.traffic_level}</p>
-                        <p className="text-[9px] text-muted-foreground">{t("ride.traffic")}</p>
-                      </div>
+                  <div className={cn(
+                    "flex-1 min-w-[70px] flex items-center gap-1.5 rounded-lg border px-2 py-1.5",
+                    routeData.traffic_level === "heavy"
+                      ? "bg-destructive/10 border-destructive/20"
+                      : routeData.traffic_level === "moderate"
+                        ? "bg-amber-500/10 border-amber-500/20"
+                        : "bg-emerald-500/10 border-emerald-500/20"
+                  )}>
+                    <Car className={cn(
+                      "w-3.5 h-3.5 shrink-0",
+                      routeData.traffic_level === "heavy"
+                        ? "text-destructive"
+                        : routeData.traffic_level === "moderate"
+                          ? "text-amber-500"
+                          : "text-emerald-500"
+                    )} />
+                    <div>
+                      <p className={cn(
+                        "text-sm font-bold leading-none capitalize",
+                        routeData.traffic_level === "heavy"
+                          ? "text-destructive"
+                          : routeData.traffic_level === "moderate"
+                            ? "text-amber-500"
+                            : "text-emerald-500"
+                      )}>
+                        {routeData.traffic_level
+                          ? (t(`ride.${routeData.traffic_level.toLowerCase()}`) !== `ride.${routeData.traffic_level.toLowerCase()}`
+                            ? t(`ride.${routeData.traffic_level.toLowerCase()}`)
+                            : routeData.traffic_level)
+                          : t("ride.light") !== "ride.light" ? t("ride.light") : "Light"}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground">{t("ride.traffic")}</p>
                     </div>
-                  )}
-                  <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-primary/10 border border-primary/20 px-2 py-1.5">
+                  </div>
+                  <div className="flex-1 min-w-[70px] flex items-center gap-1.5 rounded-lg bg-primary/10 border border-primary/20 px-2 py-1.5">
                     <Tag className="w-3.5 h-3.5 text-primary shrink-0" />
                     <div>
                       <p className="text-sm font-bold text-primary leading-none">{useKm ? dualPrice(currentPrice, true) : `$${currentPrice.toFixed(2)}`}</p>
