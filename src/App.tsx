@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect } from "react";
 import { usePageViewTracker } from "@/hooks/usePageViewTracker";
+import { useGeoDetect } from "@/hooks/useGeoDetect";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
