@@ -8,8 +8,12 @@ const _listeners = new Set<() => void>();
 function setGlobalLang(code: string) {
   _lang = code;
   localStorage.setItem("zivo_lang", code);
+  document.documentElement.setAttribute("lang", code);
   _listeners.forEach((l) => l());
 }
+
+// Set initial lang attribute
+document.documentElement.setAttribute("lang", _lang);
 
 function subscribe(cb: () => void) {
   _listeners.add(cb);
