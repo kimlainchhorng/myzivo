@@ -910,7 +910,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       // If no real driver found, show "no drivers available" and stay searching briefly
       if (!driverData) {
-        toast.error("No drivers available nearby. Expanding search...");
+        toast.error(t("ride.no_drivers_nearby"));
         // Retry once after brief delay
         await new Promise(r => setTimeout(r, 3000));
         if (cancelled) return;
