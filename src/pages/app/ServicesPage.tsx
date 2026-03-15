@@ -176,8 +176,8 @@ const badgeStyles = {
 /* ── Page ── */
 export default function ServicesPage() {
   const navigate = useNavigate();
-  const { t, currentLanguage } = useI18n();
-  const isCambodia = currentLanguage === "km";
+  const { t } = useI18n();
+  const { isCambodia } = useCountry();
   const serviceCategories = getServiceCategories(t, isCambodia);
   const [runningLabel, setRunningLabel] = useState<string | null>(null);
 
