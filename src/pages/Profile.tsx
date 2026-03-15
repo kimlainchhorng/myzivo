@@ -255,6 +255,24 @@ const Profile = () => {
                     </Badge>
                   )}
                 </div>
+
+                {/* Language Toggle */}
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  {LANGS.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => changeLanguage(lang.code)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all touch-manipulation active:scale-95 ${
+                        currentLanguage === lang.code
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <span className="text-base">{lang.flag}</span>
+                      <span>{lang.label}</span>
+                    </button>
+                  ))}
+                </div>
               </CardHeader>
 
               <CardContent className="pt-6 relative">
