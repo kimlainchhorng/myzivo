@@ -2820,7 +2820,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     disabled={!promoInput.trim() || promoValidating}
                     onClick={handleApplyPromo}
                   >
-                    {promoValidating ? <Loader2 className="w-3 h-3 animate-spin" /> : "Apply"}
+                    {promoValidating ? <Loader2 className="w-3 h-3 animate-spin" /> : t("ride.apply")}
                   </Button>
                 )}
               </div>
