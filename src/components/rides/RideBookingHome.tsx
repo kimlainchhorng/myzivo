@@ -2723,7 +2723,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </div>
                   {useKm && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground/70 text-[10px]">Rate: {toKHR(perDistRate(currentVehicle.pricePerMile, useKm))}/km</span>
+                      <span className="text-muted-foreground/70 text-[10px]">{t("ride.rate")}: {toKHR(perDistRate(currentVehicle.pricePerMile, useKm))}/km</span>
                     </div>
                   )}
                   <div className="flex justify-between">
