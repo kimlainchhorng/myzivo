@@ -773,7 +773,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   useEffect(() => {
     let cancelled = false;
 
-    if (currentLanguage === "km") {
+    if (isCambodiaCountry) {
       // Force Cambodia center when Khmer is selected
       setUserLocation(CAMBODIA_DEFAULT_CENTER);
       setPickup(null);
