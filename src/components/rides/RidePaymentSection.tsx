@@ -13,6 +13,15 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+const USD_TO_KHR = 4062.5;
+function toKHR(usd: number): string {
+  return `${Math.round(usd * USD_TO_KHR).toLocaleString()} ៛`;
+}
+function dualPrice(usd: number, isCambodia: boolean): string {
+  if (!isCambodia) return `$${usd.toFixed(2)}`;
+  return `${toKHR(usd)} ($${usd.toFixed(2)})`;
+}
+
 interface SavedCard {
   id: string;
   brand: string;
@@ -139,11 +148,11 @@ function CambodiaPaymentSelector({
               កំពុងដំណើរការ...
             </span>
           ) : selected === "cash" ? (
-            `បញ្ជាក់ · $${price.toFixed(2)} · ${vehicleName}`
+            `បញ្ជាក់ · ${dualPrice(price, true)} · ${vehicleName}`
           ) : selected === "qr" ? (
-            `បង់តាម QR · $${price.toFixed(2)} · ${vehicleName}`
+            `បង់តាម QR · ${dualPrice(price, true)} · ${vehicleName}`
           ) : (
-            `បង់តាមកាត · $${price.toFixed(2)} · ${vehicleName}`
+            `បង់តាមកាត · ${dualPrice(price, true)} · ${vehicleName}`
           )}
         </Button>
         <p className="text-[10px] text-muted-foreground text-center mt-2">
