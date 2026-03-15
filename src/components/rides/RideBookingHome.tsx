@@ -2565,7 +2565,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   {/* Center: Name + meta */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={cn("text-[14px] font-bold", isSelected ? "text-foreground" : "text-foreground")}>{getVehicleName(v.id, v.name, currentLanguage === "km")}</span>
+                      <span className={cn("text-[14px] font-bold", isSelected ? "text-foreground" : "text-foreground")}>{getVehicleName(v.id, v.name, isCambodiaCountry)}</span>
                       {v.id === "economy" && (
                         <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
                           <TrendingDown className="w-3 h-3" />LOW
