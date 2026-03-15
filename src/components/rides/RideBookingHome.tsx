@@ -437,6 +437,11 @@ const CAMBODIA_VEHICLE_CAPACITY: Record<string, number> = {
   "share": 3,
 };
 const CAMBODIA_BOOKING_FEE = 0.13;
+const CAMBODIA_PER_KM_KHR = 1550; // KHR per km
+const CAMBODIA_PER_MIN_KHR = 50;  // KHR per minute
+const KHR_RATE = 4062.5;
+const CAMBODIA_PER_MILE_USD = (CAMBODIA_PER_KM_KHR / KHR_RATE) * 1.60934; // convert per-km KHR → per-mile USD
+const CAMBODIA_PER_MIN_USD = CAMBODIA_PER_MIN_KHR / KHR_RATE;
 
 /** Get vehicle image based on region */
 function getVehicleImage(vehicleId: string, isCambodia: boolean): string {
@@ -639,7 +644,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       });
     }
     if (isCambodia) {
-      options = options.map((v) => ({ ...v, bookingFee: CAMBODIA_BOOKING_FEE }));
+      options = options.map((v) => ({
+        ...v,
+        bookingFee: CAMBODIA_BOOKING_FEE,
+        pricePerMile: CAMBODIA_PER_MILE_USD,
+        perMinute: CAMBODIA_PER_MIN_USD,
+      }));
     }
     return options;
   }, [cityPricingMap, currentLanguage]);
