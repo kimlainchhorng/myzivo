@@ -60,7 +60,7 @@ const LANGS = [
 const Profile = () => {
   const navigate = useNavigate();
   const { t, currentLanguage, changeLanguage } = useI18n();
-  const [showLangMenu, setShowLangMenu] = useState(false);
+  
   const { user, signOut } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
@@ -144,7 +144,7 @@ const Profile = () => {
 
       <div className="relative z-10 container max-w-lg mx-auto px-4 pt-4 pb-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="flex items-center justify-between mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -160,38 +160,25 @@ const Profile = () => {
               <p className="text-muted-foreground text-xs">{t("profile.subtitle")}</p>
             </div>
           </div>
-          {/* Language Switcher */}
-          <div className="relative">
-            <button
-              onClick={() => setShowLangMenu(!showLangMenu)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-muted/50 hover:bg-muted transition-colors touch-manipulation active:scale-95"
-            >
-              <Globe className="w-4 h-4 text-muted-foreground" />
-              <span className="text-base leading-none">{LANGS.find(l => l.code === currentLanguage)?.flag}</span>
-              <span className="text-xs font-medium text-muted-foreground">{LANGS.find(l => l.code === currentLanguage)?.country}</span>
-            </button>
-            {showLangMenu && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden min-w-[160px]">
-                  {LANGS.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => { changeLanguage(lang.code); setShowLangMenu(false); }}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors ${
-                        currentLanguage === lang.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted"
-                      }`}
-                    >
-                      <span className="text-base">{lang.flag}</span>
-                      <div className="text-left">
-                        <p className="text-sm">{lang.label}</p>
-                        <p className="text-[10px] text-muted-foreground">{lang.country}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+        </div>
+
+        {/* Country / Language Selector */}
+        <div className="flex items-center justify-center gap-2 mb-5 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center bg-muted/50 rounded-2xl p-1 gap-1">
+            {LANGS.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => changeLanguage(lang.code)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all touch-manipulation active:scale-95 ${
+                  currentLanguage === lang.code
+                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span className="text-base">{lang.flag}</span>
+                <span>{lang.country}</span>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -256,23 +243,6 @@ const Profile = () => {
                   )}
                 </div>
 
-                {/* Language Toggle */}
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  {LANGS.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => changeLanguage(lang.code)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all touch-manipulation active:scale-95 ${
-                        currentLanguage === lang.code
-                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
-                      }`}
-                    >
-                      <span className="text-base">{lang.flag}</span>
-                      <span>{lang.label}</span>
-                    </button>
-                  ))}
-                </div>
               </CardHeader>
 
               <CardContent className="pt-6 relative">
