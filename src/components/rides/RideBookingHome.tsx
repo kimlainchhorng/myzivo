@@ -2798,7 +2798,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <Tag className="w-3 h-3 text-primary shrink-0" />
                 <span className="text-[12px] font-bold text-foreground shrink-0">{t("ride.promo")}</span>
                 <Input
-                  placeholder="ENTER CODE"
+                  placeholder={t("ride.enter_code")}
                   value={promoInput}
                   onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
                   className="flex-1 h-8 font-mono text-[11px] uppercase tracking-wider"
