@@ -2624,11 +2624,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       )}
                       <div className="flex items-center gap-0.5 text-muted-foreground/60">
                         <User className="w-3 h-3" />
-                        <span className="text-[11px]">{getVehicleCapacity(v.id, v.capacity, currentLanguage === "km")}</span>
+                        <span className="text-[11px]">{getVehicleCapacity(v.id, v.capacity, isCambodiaCountry)}</span>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 leading-snug">
-                      {etaTime(v.etaMin)} · {getVehicleDesc(v.id, v.desc, currentLanguage === "km")}
+                      {etaTime(v.etaMin)} · {getVehicleDesc(v.id, v.desc, isCambodiaCountry)}
                     </p>
                   </div>
 
