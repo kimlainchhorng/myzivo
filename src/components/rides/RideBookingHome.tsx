@@ -910,7 +910,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       // If no real driver found, show "no drivers available" and stay searching briefly
       if (!driverData) {
-        toast.error("No drivers available nearby. Expanding search...");
+        toast.error(t("ride.no_drivers_nearby"));
         // Retry once after brief delay
         await new Promise(r => setTimeout(r, 3000));
         if (cancelled) return;
@@ -2910,12 +2910,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               ))}
             </div>
 
-            <h3 className="text-lg font-bold text-foreground mb-1">Finding your driver…</h3>
-            <p className="text-sm text-muted-foreground mb-1">Searching nearby drivers</p>
+            <h3 className="text-lg font-bold text-foreground mb-1">{t("ride.finding_your_driver")}</h3>
+            <p className="text-sm text-muted-foreground mb-1">{t("ride.searching_nearby_drivers")}</p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-              <span>Drivers nearby: {nearbyDriverCount}</span>
+              <span>{t("ride.drivers_nearby")}: {nearbyDriverCount}</span>
               <span>·</span>
-              <span>Estimated pickup: {currentVehicle.etaMin} min</span>
+              <span>{t("ride.estimated_pickup")}: {currentVehicle.etaMin} {t("ride.min_unit")}</span>
             </div>
 
             <Button
@@ -2924,7 +2924,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               className="text-destructive hover:text-destructive/80"
               onClick={handleCancelRide}
             >
-              Cancel ride
+              {t("ride.cancel_ride")}
             </Button>
           </div>
         </div>
@@ -2938,8 +2938,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         >
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
-          <h3 className="text-base font-bold text-foreground text-center mb-0.5">Meet your driver at pickup</h3>
-          <p className="text-xs text-muted-foreground text-center mb-3">Driver arriving in {assignedDriver.etaMin} minutes.</p>
+          <h3 className="text-base font-bold text-foreground text-center mb-0.5">{t("ride.meet_driver_at_pickup")}</h3>
+          <p className="text-xs text-muted-foreground text-center mb-3">{t("ride.driver_arriving_in_minutes").replace("{minutes}", String(assignedDriver.etaMin))}</p>
 
           <div className="border-t border-border/15 pt-3">
             <div className="flex items-center gap-3 mb-3">
@@ -2950,7 +2950,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <p className="font-bold text-foreground">{assignedDriver.name}</p>
                 <div className="flex items-center gap-1">
                   <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                  <span className="text-sm text-muted-foreground">{assignedDriver.rating} · {assignedDriver.trips.toLocaleString()} trips</span>
+                  <span className="text-sm text-muted-foreground">{assignedDriver.rating} · {assignedDriver.trips.toLocaleString()} {t("ride.trips")}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">{assignedDriver.vehicle}</p>
                 <p className="text-xs font-mono font-bold text-foreground">{assignedDriver.plate}</p>
@@ -2965,7 +2965,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={() => toast.info("Opening chat...")}
             >
               <MessageSquare className="w-4 h-4" />
-              Message
+              {t("ride.message")}
             </Button>
             <Button
               variant="outline"
@@ -2973,7 +2973,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={() => toast.info("Calling driver...")}
             >
               <Phone className="w-4 h-4" />
-              Call
+              {t("ride.call")}
             </Button>
             <Button
               variant="outline"
@@ -2981,7 +2981,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={handleCancelRide}
             >
               <X className="w-4 h-4" />
-              Cancel
+              {t("ride.cancel")}
             </Button>
           </div>
         </div>
@@ -2996,7 +2996,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
           <h3 className="text-base font-bold text-foreground mb-2">
-            Driver arriving in {driverEta > 0 ? `${driverEta} min` : "now"}
+            {t("ride.driver_arriving_in")} {driverEta > 0 ? `${driverEta} ${t("ride.min_unit")}` : t("ride.now")}
           </h3>
 
           <div className="flex items-center gap-2 mb-3 text-sm">
@@ -3015,7 +3015,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={() => toast.info("Opening chat...")}
             >
               <MessageSquare className="w-4 h-4" />
-              Message
+              {t("ride.message")}
             </Button>
             <Button
               variant="outline"
@@ -3023,7 +3023,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={() => toast.info("Calling driver...")}
             >
               <Phone className="w-4 h-4" />
-              Call
+              {t("ride.call")}
             </Button>
             <Button
               variant="outline"
@@ -3031,7 +3031,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={handleCancelRide}
             >
               <X className="w-4 h-4" />
-              Cancel
+              {t("ride.cancel")}
             </Button>
           </div>
         </div>
@@ -3045,9 +3045,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         >
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
-          <h3 className="text-base font-bold text-foreground mb-0.5">Heading to destination</h3>
+          <h3 className="text-base font-bold text-foreground mb-0.5">{t("ride.heading_to_destination")}</h3>
           {routeData && (
-            <p className="text-xs text-muted-foreground mb-2">ETA: {routeData.duration_minutes} min</p>
+            <p className="text-xs text-muted-foreground mb-2">{t("ride.eta")}: {routeData.duration_minutes} {t("ride.min_unit")}</p>
           )}
 
           <div className="flex items-center gap-2 mb-3 text-sm">
@@ -3288,6 +3288,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         }
         bookedPassengers={1}
         driverWaitMinutes={0}
+        t={t}
       />
 
     </div>
