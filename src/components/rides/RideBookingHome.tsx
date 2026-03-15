@@ -2673,7 +2673,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         <div
           className="absolute inset-0 z-40 bg-background flex flex-col overflow-hidden"
         >
-          <div className="px-4 pt-3 pb-0.5 shrink-0">
+          <div className="px-4 pt-3 pb-0.5 shrink-0 flex items-center gap-3">
+            <button
+              onClick={() => setViewStep("select-vehicle")}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-4 h-4 text-foreground" />
+            </button>
             <h2 className="text-lg font-black text-foreground tracking-tight">{t("ride.confirm_your_ride")}</h2>
           </div>
 
