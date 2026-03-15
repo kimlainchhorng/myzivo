@@ -2714,7 +2714,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               {routeData && (
                 <div className="border-t border-border/15 pt-1.5 space-y-0.5 text-[12px]">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Base fare</span>
+                    <span className="text-muted-foreground">{t("ride.base_fare")}</span>
                     <span className="text-foreground">{dualPrice(currentVehicle.basePrice, useKm)}</span>
                   </div>
                   <div className="flex justify-between">
