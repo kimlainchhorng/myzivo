@@ -2674,7 +2674,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           className="absolute inset-0 z-40 bg-background flex flex-col overflow-hidden"
         >
           <div className="px-4 pt-3 pb-0.5 shrink-0">
-            <h2 className="text-lg font-black text-foreground tracking-tight">Confirm your ride</h2>
+            <h2 className="text-lg font-black text-foreground tracking-tight">{t("ride.confirm_your_ride")}</h2>
           </div>
 
           <div className="px-4 flex-1 flex flex-col gap-1.5 overflow-hidden min-h-0">
