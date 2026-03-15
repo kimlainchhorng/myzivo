@@ -48,7 +48,7 @@ interface ServiceCategory {
 }
 
 /* ── Data ── */
-const getServiceCategories = (t: (key: string) => string): ServiceCategory[] => [
+const getServiceCategories = (t: (key: string) => string, isCambodia = false): ServiceCategory[] => [
   {
     title: t("services.category.ride"),
     subtitle: t("services.category.ride_sub"),
