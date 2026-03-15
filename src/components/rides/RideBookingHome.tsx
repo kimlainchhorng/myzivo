@@ -3145,15 +3145,15 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     )}
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Distance</span>
-                      <span className="text-foreground">${(routeData.distance_miles * currentVehicle.pricePerMile).toFixed(2)}</span>
+                      <span className="text-foreground">{dualPrice(routeData.distance_miles * currentVehicle.pricePerMile, useKm)}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Time</span>
-                      <span className="text-foreground">${(routeData.duration_minutes * currentVehicle.perMinute).toFixed(2)}</span>
+                      <span className="text-foreground">{dualPrice(routeData.duration_minutes * currentVehicle.perMinute, useKm)}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Booking fee</span>
-                      <span className="text-foreground">${currentVehicle.bookingFee.toFixed(2)}</span>
+                      <span className="text-foreground">{dualPrice(currentVehicle.bookingFee, useKm)}</span>
                     </div>
                   </div>
                 </>
