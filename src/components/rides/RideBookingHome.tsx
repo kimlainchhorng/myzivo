@@ -3132,7 +3132,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Vehicle</span>
-                <span className="text-foreground">{getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")}</span>
+                <span className="text-foreground">{getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}</span>
               </div>
               {routeData && (
                 <>
