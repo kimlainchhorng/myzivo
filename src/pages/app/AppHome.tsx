@@ -54,6 +54,7 @@ import zivoHotelsIcon from "@/assets/zivo-hotels-icon.png";
 import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
 import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
 import zivoShoppingIcon from "@/assets/zivo-shopping.png";
+import zivoPromoBanner from "@/assets/zivo-promo-banner.png";
 
 // ─── Saved Places Icon Map ───
 // ─── Dynamic search placeholder by tab ───
