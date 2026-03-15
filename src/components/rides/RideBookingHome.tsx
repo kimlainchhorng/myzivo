@@ -436,6 +436,7 @@ const CAMBODIA_VEHICLE_CAPACITY: Record<string, number> = {
   "economy": 3,
   "share": 3,
 };
+const CAMBODIA_BOOKING_FEE = 0.13;
 
 /** Get vehicle image based on region */
 function getVehicleImage(vehicleId: string, isCambodia: boolean): string {
