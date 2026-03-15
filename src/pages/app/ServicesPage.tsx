@@ -66,7 +66,7 @@ const getServiceCategories = (t: (key: string) => string, isCambodia = false): S
     subtitle: t("services.category.food_sub"),
     services: [
       { label: t("services.food"), href: "/eats", image: zivoEatsIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
-      { label: t("services.grocery"), href: "/grocery", image: zivoShoppingIcon, animClass: "animate-food-wiggle" },
+      { label: t("services.grocery"), href: "/grocery", image: zivoShoppingIcon, animClass: "animate-food-wiggle", ...(isCambodia ? { badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon" as const, comingSoon: true } : {}) },
       { label: t("services.alcohol"), href: "/eats", image: zivoAlcoholIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
       { label: t("services.pharmacy"), href: "/eats", image: zivoPharmacyIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
       { label: t("services.shopping"), href: "/rides", image: zivoShoppingCartIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
