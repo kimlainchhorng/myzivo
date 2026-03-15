@@ -646,6 +646,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     if (isCambodia) {
       options = options.map((v) => ({
         ...v,
+        basePrice: 0,
         bookingFee: CAMBODIA_BOOKING_FEE,
         pricePerMile: CAMBODIA_PER_MILE_USD,
         perMinute: CAMBODIA_PER_MIN_USD,
@@ -2741,10 +2742,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
               {routeData && (
                 <div className="border-t border-border/15 pt-1.5 space-y-0.5 text-[12px]">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("ride.base_fare")}</span>
-                    <span className="text-foreground">{dualPrice(currentVehicle.basePrice, useKm)}</span>
-                  </div>
+                  {currentVehicle.basePrice > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t("ride.base_fare")}</span>
+                      <span className="text-foreground">{dualPrice(currentVehicle.basePrice, useKm)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("ride.distance")} ({formatDist(routeData.distance_miles, useKm)} × ${perDistRate(currentVehicle.pricePerMile, useKm).toFixed(2)}/{distUnit(useKm)})</span>
                     <span className="text-foreground">{dualPrice(routeData.distance_miles * currentVehicle.pricePerMile, useKm)}</span>
