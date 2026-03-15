@@ -2973,7 +2973,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={() => toast.info("Calling driver...")}
             >
               <Phone className="w-4 h-4" />
-              Call
+              {t("ride.call")}
             </Button>
             <Button
               variant="outline"
