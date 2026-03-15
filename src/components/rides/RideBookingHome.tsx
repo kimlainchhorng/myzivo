@@ -536,7 +536,7 @@ function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
         disabled={!stripe || processing || isSubmitting}
       >
         <Shield className="w-5 h-5" />
-        {processing ? "Authorizing..." : `Authorize $${price.toFixed(2)} · ${vehicleName}`}
+        {processing ? "Authorizing..." : `Authorize ${dualPrice(price, false)} · ${vehicleName}`}
       </Button>
       <p className="text-[10px] text-muted-foreground text-center">
         Your card will be pre-authorized. Final charge applied after ride completion.
