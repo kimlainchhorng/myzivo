@@ -2731,7 +2731,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     <span className="text-foreground">{dualPrice(routeData.duration_minutes * currentVehicle.perMinute, useKm)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Booking fee</span>
+                    <span className="text-muted-foreground">{t("ride.booking_fee")}</span>
                     <span className="text-foreground">{dualPrice(currentVehicle.bookingFee, useKm)}</span>
                   </div>
                   {appliedPromo && promoDiscount > 0 && (
