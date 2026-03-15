@@ -1543,7 +1543,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
     setShowCancelModal(false);
     if (fee > 0) {
-      toast.error(`Ride cancelled — $${fee.toFixed(2)} cancellation fee applied`);
+      toast.error(`Ride cancelled — ${useKm ? dualPrice(fee, true) : `$${fee.toFixed(2)}`} cancellation fee applied`);
     } else {
       toast.info("Ride cancelled — no fee charged");
     }
