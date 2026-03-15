@@ -2796,7 +2796,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
               <div className="flex items-center gap-2">
                 <Tag className="w-3 h-3 text-primary shrink-0" />
-                <span className="text-[12px] font-bold text-foreground shrink-0">Promo</span>
+                <span className="text-[12px] font-bold text-foreground shrink-0">{t("ride.promo")}</span>
                 <Input
                   placeholder="ENTER CODE"
                   value={promoInput}
