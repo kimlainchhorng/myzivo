@@ -2965,7 +2965,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={() => toast.info("Opening chat...")}
             >
               <MessageSquare className="w-4 h-4" />
-              Message
+              {t("ride.message")}
             </Button>
             <Button
               variant="outline"
