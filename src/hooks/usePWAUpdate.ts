@@ -71,7 +71,14 @@ export function usePWAUpdate(): PWAUpdateState {
 
   const updateSW = useCallback((reloadPage = true) => {
     if (updateSWRef.current) {
-      updateSWRef.current(reloadPage);
+      // Apply the SW update without letting vite-plugin-pwa reload —
+      // a normal window.location.reload() keeps Capacitor inside its WebView,
+      // whereas the plugin's built-in reload can open Safari.
+      updateSWRef.current(false).then(() => {
+        if (reloadPage) {
+          window.location.reload();
+        }
+      });
     }
   }, []);
 
