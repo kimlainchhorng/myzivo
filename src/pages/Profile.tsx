@@ -271,26 +271,6 @@ const Profile = () => {
                   )}
                 </div>
 
-                {/* Language / Translation Toggle */}
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  <div className="flex items-center bg-muted/40 rounded-xl p-0.5 gap-0.5">
-                    {LANGS.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => changeLanguage(lang.code)}
-                        className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all touch-manipulation active:scale-95 ${
-                          currentLanguage === lang.code
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        <Globe className="w-3.5 h-3.5" />
-                        <span>{lang.flag}</span>
-                        <span>{lang.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </CardHeader>
 
               <CardContent className="pt-6 relative">
