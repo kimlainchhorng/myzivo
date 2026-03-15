@@ -38,7 +38,8 @@ export function usePWAUpdate(): PWAUpdateState {
             if (registration?.waiting) {
               console.debug('[PWA] Waiting service worker found, applying update');
               setNeedRefresh(true);
-              updateFn(true);
+              // Don't auto-reload here — let the user trigger it via the UI
+              // to avoid opening Safari in Capacitor
               return;
             }
 
