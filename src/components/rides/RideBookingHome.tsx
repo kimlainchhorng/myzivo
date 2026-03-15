@@ -2574,12 +2574,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       {v.id === "share" && (
                         <span className={cn(
                           "flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold",
-                          currentLanguage === "km"
+                          isCambodiaCountry
                             ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                             : "bg-primary/10 text-primary"
                         )}>
-                          {currentLanguage === "km" ? <Zap className="w-3 h-3" /> : <Users className="w-3 h-3" />}
-                          {currentLanguage === "km" ? "EV" : "SAVE"}
+                          {isCambodiaCountry ? <Zap className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+                          {isCambodiaCountry ? "EV" : "SAVE"}
                         </span>
                       )}
                       {v.id === "comfort" && (
