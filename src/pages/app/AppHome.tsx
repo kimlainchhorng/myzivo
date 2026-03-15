@@ -170,7 +170,7 @@ const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t, currentLanguage } = useI18n();
-  const isKH = currentLanguage === "km";
+  const { isCambodia: isKH } = useCountry();
   useDeviceIntegrityCheck();
 
   const promos = [
