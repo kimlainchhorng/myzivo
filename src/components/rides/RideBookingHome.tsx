@@ -3015,7 +3015,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={() => toast.info("Opening chat...")}
             >
               <MessageSquare className="w-4 h-4" />
-              Message
+              {t("ride.message")}
             </Button>
             <Button
               variant="outline"
@@ -3023,7 +3023,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={() => toast.info("Calling driver...")}
             >
               <Phone className="w-4 h-4" />
-              Call
+              {t("ride.call")}
             </Button>
             <Button
               variant="outline"
@@ -3031,7 +3031,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={handleCancelRide}
             >
               <X className="w-4 h-4" />
-              Cancel
+              {t("ride.cancel")}
             </Button>
           </div>
         </div>
