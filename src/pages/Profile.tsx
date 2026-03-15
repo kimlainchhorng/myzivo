@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
+import { useCountry } from "@/hooks/useCountry";
 import SEOHead from "@/components/SEOHead";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -53,14 +54,14 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 const LANGS = [
-  { code: "en", label: "English", flag: "🇺🇸", country: "United States" },
-  { code: "km", label: "ខ្មែរ", flag: "🇰🇭", country: "Cambodia" },
+  { code: "en", label: "English", flag: "🇺🇸" },
+  { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
 ];
 
 const Profile = () => {
   const navigate = useNavigate();
   const { t, currentLanguage, changeLanguage } = useI18n();
-  
+  const { country, setCountry, countries } = useCountry();
   const { user, signOut } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
@@ -162,21 +163,21 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Country / Language Selector */}
+        {/* Country / Location Selector */}
         <div className="flex items-center justify-center gap-2 mb-5 animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="flex items-center bg-muted/50 rounded-2xl p-1 gap-1">
-            {LANGS.map((lang) => (
+            {countries.map((c) => (
               <button
-                key={lang.code}
-                onClick={() => changeLanguage(lang.code)}
+                key={c.code}
+                onClick={() => setCountry(c.code)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all touch-manipulation active:scale-95 ${
-                  currentLanguage === lang.code
+                  country === c.code
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <span className="text-base">{lang.flag}</span>
-                <span>{lang.country}</span>
+                <span className="text-base">{c.flag}</span>
+                <span>{c.name}</span>
               </button>
             ))}
           </div>
@@ -243,6 +244,26 @@ const Profile = () => {
                   )}
                 </div>
 
+                {/* Language / Translation Toggle */}
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <div className="flex items-center bg-muted/40 rounded-xl p-0.5 gap-0.5">
+                    {LANGS.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => changeLanguage(lang.code)}
+                        className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all touch-manipulation active:scale-95 ${
+                          currentLanguage === lang.code
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Globe className="w-3.5 h-3.5" />
+                        <span>{lang.flag}</span>
+                        <span>{lang.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </CardHeader>
 
               <CardContent className="pt-6 relative">

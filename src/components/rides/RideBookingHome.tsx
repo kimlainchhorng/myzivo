@@ -40,6 +40,7 @@ import PlaceLogo from "@/components/rides/PlaceLogo";
 import { useCityPricing } from "@/hooks/useCityPricing";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
 import { useI18n } from "@/hooks/useI18n";
+import { useCountry } from "@/hooks/useCountry";
 
 /* ─── Types ─── */
 interface PlaceData {
@@ -553,11 +554,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const { currentLanguage, changeLanguage, t } = useI18n();
   const [showLangMenu, setShowLangMenu] = useState(false);
 
+  const { isCambodia: isCambodiaCountry } = useCountry();
+
   const LANGS = [
     { code: "en", label: "English", flag: "🇺🇸" },
     { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
   ];
-  const fallbackPickupCenter = currentLanguage === "km" ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER;
+  const fallbackPickupCenter = isCambodiaCountry ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER;
 
   // Recent ride destinations from Supabase
   const [recentDestinations, setRecentDestinations] = useState<{ id: string; address: string; lat: number; lng: number; time: string }[]>([]);
@@ -629,7 +632,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Merge DB pricing into vehicle options (admin rates override defaults)
   const vehicleOptions = useMemo(() => {
-    const isCambodia = currentLanguage === "km";
+    const isCambodia = isCambodiaCountry;
     let options = DEFAULT_VEHICLE_OPTIONS;
     if (cityPricingMap && Object.keys(cityPricingMap).length > 0) {
       options = DEFAULT_VEHICLE_OPTIONS.map((v) => {
@@ -770,7 +773,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   useEffect(() => {
     let cancelled = false;
 
-    if (currentLanguage === "km") {
+    if (isCambodiaCountry) {
       // Force Cambodia center when Khmer is selected
       setUserLocation(CAMBODIA_DEFAULT_CENTER);
       setPickup(null);
@@ -975,7 +978,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [viewStep, destination, liveDriverLocation, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
-    if (currentLanguage === "km") {
+    if (isCambodiaCountry) {
       // In Cambodia mode, use GPS but fall back to Phnom Penh
       getCurrentLocation()
         .then((loc) => {
@@ -1065,7 +1068,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
-  const useKm = useMemo(() => isInCambodia(pickup?.address, pickup?.lat) || currentLanguage === "km", [pickup?.address, pickup?.lat, currentLanguage]);
+  const useKm = useMemo(() => isInCambodia(pickup?.address, pickup?.lat) || isCambodiaCountry, [pickup?.address, pickup?.lat, isCambodiaCountry]);
   const rideCountry = useKm ? "kh" : undefined;
   const locationModeKey = rideCountry ?? "global";
 
@@ -2553,8 +2556,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   {/* Vehicle image */}
                   <div className="w-[68px] shrink-0 flex items-center justify-center">
                     <img
-                      src={getVehicleImage(v.id, currentLanguage === "km")}
-                      alt={getVehicleName(v.id, v.name, currentLanguage === "km")}
+                      src={getVehicleImage(v.id, isCambodiaCountry)}
+                      alt={getVehicleName(v.id, v.name, isCambodiaCountry)}
                       className={cn("w-[68px] h-auto transition-transform duration-200", isSelected && "scale-105")}
                     />
                   </div>
@@ -2562,7 +2565,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   {/* Center: Name + meta */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={cn("text-[14px] font-bold", isSelected ? "text-foreground" : "text-foreground")}>{getVehicleName(v.id, v.name, currentLanguage === "km")}</span>
+                      <span className={cn("text-[14px] font-bold", isSelected ? "text-foreground" : "text-foreground")}>{getVehicleName(v.id, v.name, isCambodiaCountry)}</span>
                       {v.id === "economy" && (
                         <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
                           <TrendingDown className="w-3 h-3" />LOW
@@ -2571,12 +2574,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       {v.id === "share" && (
                         <span className={cn(
                           "flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold",
-                          currentLanguage === "km"
+                          isCambodiaCountry
                             ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                             : "bg-primary/10 text-primary"
                         )}>
-                          {currentLanguage === "km" ? <Zap className="w-3 h-3" /> : <Users className="w-3 h-3" />}
-                          {currentLanguage === "km" ? "EV" : "SAVE"}
+                          {isCambodiaCountry ? <Zap className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+                          {isCambodiaCountry ? "EV" : "SAVE"}
                         </span>
                       )}
                       {v.id === "comfort" && (
@@ -2621,11 +2624,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       )}
                       <div className="flex items-center gap-0.5 text-muted-foreground/60">
                         <User className="w-3 h-3" />
-                        <span className="text-[11px]">{getVehicleCapacity(v.id, v.capacity, currentLanguage === "km")}</span>
+                        <span className="text-[11px]">{getVehicleCapacity(v.id, v.capacity, isCambodiaCountry)}</span>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 leading-snug">
-                      {etaTime(v.etaMin)} · {getVehicleDesc(v.id, v.desc, currentLanguage === "km")}
+                      {etaTime(v.etaMin)} · {getVehicleDesc(v.id, v.desc, isCambodiaCountry)}
                     </p>
                   </div>
 
@@ -2688,7 +2691,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 active:scale-[0.97] transition-all duration-200"
               onClick={() => { setPaymentStep("idle"); setViewStep("confirm-ride"); }}
             >
-              {t("ride.confirm")} {getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} · {useKm ? `${toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)} ($${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)})` : `$${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}`}
+              {t("ride.confirm")} {getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)} · {useKm ? `${toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)} ($${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)})` : `$${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}`}
             </Button>
           </div>
         </div>
@@ -2736,11 +2739,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
               <div className="flex items-center gap-2.5 mb-1.5">
                 <div className="w-[50px] h-[36px] flex items-center justify-center shrink-0 bg-muted/10 rounded-md">
-                  <img src={getVehicleImage(selectedVehicle, currentLanguage === "km")} alt={getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} className="w-full h-full object-contain" />
+                  <img src={getVehicleImage(selectedVehicle, isCambodiaCountry)} alt={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-foreground leading-tight">{getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} · {getVehicleCapacity(selectedVehicle, currentVehicle.capacity, currentLanguage === "km")} {t("ride.seats")}</p>
-                  <p className="text-[10px] text-muted-foreground">{currentVehicle.etaMin} {t("ride.min_away")} · {getVehicleDesc(selectedVehicle, currentVehicle.desc, currentLanguage === "km")}</p>
+                  <p className="text-[13px] font-bold text-foreground leading-tight">{getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)} · {getVehicleCapacity(selectedVehicle, currentVehicle.capacity, isCambodiaCountry)} {t("ride.seats")}</p>
+                  <p className="text-[10px] text-muted-foreground">{currentVehicle.etaMin} {t("ride.min_away")} · {getVehicleDesc(selectedVehicle, currentVehicle.desc, isCambodiaCountry)}</p>
                 </div>
               </div>
 
@@ -2874,7 +2877,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="flex-1 min-h-0 overflow-hidden">
               <RidePaymentSection
                 price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
-                vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")}
+                vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}
                 isSubmitting={isSubmitting}
                 onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
                 onAuthorizeWithNewCard={() => handleRequestRide()}
@@ -3129,7 +3132,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Vehicle</span>
-                <span className="text-foreground">{getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")}</span>
+                <span className="text-foreground">{getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}</span>
               </div>
               {routeData && (
                 <>

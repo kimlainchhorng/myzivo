@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
+import { useCountry } from "@/hooks/useCountry";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -170,7 +171,7 @@ const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t, currentLanguage } = useI18n();
-  const isKH = currentLanguage === "km";
+  const { isCambodia: isKH } = useCountry();
   useDeviceIntegrityCheck();
 
   const promos = [

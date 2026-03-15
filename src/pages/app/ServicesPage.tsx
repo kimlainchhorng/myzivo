@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useI18n } from "@/hooks/useI18n";
+import { useCountry } from "@/hooks/useCountry";
 import zivoRideIcon from "@/assets/zivo-ride-icon.png";
 import zivoEatsIcon from "@/assets/zivo-eats-icon.png";
 import zivoFlightsIcon from "@/assets/zivo-flights-icon.png";
@@ -176,8 +177,8 @@ const badgeStyles = {
 /* ── Page ── */
 export default function ServicesPage() {
   const navigate = useNavigate();
-  const { t, currentLanguage } = useI18n();
-  const isCambodia = currentLanguage === "km";
+  const { t } = useI18n();
+  const { isCambodia } = useCountry();
   const serviceCategories = getServiceCategories(t, isCambodia);
   const [runningLabel, setRunningLabel] = useState<string | null>(null);
 
