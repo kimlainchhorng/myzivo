@@ -2494,7 +2494,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     : "bg-card border border-border/30 text-muted-foreground hover:text-foreground hover:border-border/60"
                 )}
               >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {t(`ride.${cat}`)}
               </button>
             ))}
           </div>
