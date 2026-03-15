@@ -1350,6 +1350,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         setRouteData({
           distance_miles: data.distance_miles,
           duration_minutes: data.duration_minutes,
+          duration_in_traffic_minutes: data.duration_in_traffic_minutes ?? null,
           polyline: data.polyline,
           traffic_level: data.traffic_level,
         });
