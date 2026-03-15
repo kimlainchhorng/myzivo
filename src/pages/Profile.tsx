@@ -163,21 +163,21 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Country / Language Selector */}
+        {/* Country / Location Selector */}
         <div className="flex items-center justify-center gap-2 mb-5 animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="flex items-center bg-muted/50 rounded-2xl p-1 gap-1">
-            {LANGS.map((lang) => (
+            {countries.map((c) => (
               <button
-                key={lang.code}
-                onClick={() => changeLanguage(lang.code)}
+                key={c.code}
+                onClick={() => setCountry(c.code)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all touch-manipulation active:scale-95 ${
-                  currentLanguage === lang.code
+                  country === c.code
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <span className="text-base">{lang.flag}</span>
-                <span>{lang.country}</span>
+                <span className="text-base">{c.flag}</span>
+                <span>{c.name}</span>
               </button>
             ))}
           </div>
