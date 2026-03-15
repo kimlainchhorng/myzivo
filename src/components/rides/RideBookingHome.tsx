@@ -436,6 +436,7 @@ const CAMBODIA_VEHICLE_CAPACITY: Record<string, number> = {
   "economy": 3,
   "share": 3,
 };
+const CAMBODIA_BOOKING_FEE = 0.13;
 
 /** Get vehicle image based on region */
 function getVehicleImage(vehicleId: string, isCambodia: boolean): string {
@@ -621,20 +622,27 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Merge DB pricing into vehicle options (admin rates override defaults)
   const vehicleOptions = useMemo(() => {
-    if (!cityPricingMap || Object.keys(cityPricingMap).length === 0) return DEFAULT_VEHICLE_OPTIONS;
-    return DEFAULT_VEHICLE_OPTIONS.map((v) => {
-      const dbPricing = cityPricingMap[v.id];
-      if (!dbPricing) return v;
-      return {
-        ...v,
-        basePrice: dbPricing.base_fare ?? v.basePrice,
-        pricePerMile: dbPricing.per_mile ?? v.pricePerMile,
-        perMinute: dbPricing.per_minute ?? v.perMinute,
-        bookingFee: dbPricing.booking_fee ?? v.bookingFee,
-        minimumFare: dbPricing.minimum_fare ?? v.minimumFare,
-      };
-    });
-  }, [cityPricingMap]);
+    const isCambodia = currentLanguage === "km";
+    let options = DEFAULT_VEHICLE_OPTIONS;
+    if (cityPricingMap && Object.keys(cityPricingMap).length > 0) {
+      options = DEFAULT_VEHICLE_OPTIONS.map((v) => {
+        const dbPricing = cityPricingMap[v.id];
+        if (!dbPricing) return v;
+        return {
+          ...v,
+          basePrice: dbPricing.base_fare ?? v.basePrice,
+          pricePerMile: dbPricing.per_mile ?? v.pricePerMile,
+          perMinute: dbPricing.per_minute ?? v.perMinute,
+          bookingFee: dbPricing.booking_fee ?? v.bookingFee,
+          minimumFare: dbPricing.minimum_fare ?? v.minimumFare,
+        };
+      });
+    }
+    if (isCambodia) {
+      options = options.map((v) => ({ ...v, bookingFee: CAMBODIA_BOOKING_FEE }));
+    }
+    return options;
+  }, [cityPricingMap, currentLanguage]);
   const [stops, setStops] = useState<{ id: string; place: PlaceData | null; display: string }[]>([]);
   const stopsRef = useRef(stops);
   stopsRef.current = stops;
