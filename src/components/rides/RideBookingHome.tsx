@@ -978,7 +978,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [viewStep, destination, liveDriverLocation, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
-    if (currentLanguage === "km") {
+    if (isCambodiaCountry) {
       // In Cambodia mode, use GPS but fall back to Phnom Penh
       getCurrentLocation()
         .then((loc) => {
