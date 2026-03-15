@@ -52,6 +52,7 @@ interface PlaceData {
 interface RouteData {
   distance_miles: number;
   duration_minutes: number;
+  duration_in_traffic_minutes?: number | null;
   polyline: string | null;
   traffic_level?: string;
 }
