@@ -2910,12 +2910,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               ))}
             </div>
 
-            <h3 className="text-lg font-bold text-foreground mb-1">Finding your driver…</h3>
-            <p className="text-sm text-muted-foreground mb-1">Searching nearby drivers</p>
+            <h3 className="text-lg font-bold text-foreground mb-1">{t("ride.finding_your_driver")}</h3>
+            <p className="text-sm text-muted-foreground mb-1">{t("ride.searching_nearby_drivers")}</p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-              <span>Drivers nearby: {nearbyDriverCount}</span>
+              <span>{t("ride.drivers_nearby")}: {nearbyDriverCount}</span>
               <span>·</span>
-              <span>Estimated pickup: {currentVehicle.etaMin} min</span>
+              <span>{t("ride.estimated_pickup")}: {currentVehicle.etaMin} {t("ride.min_unit")}</span>
             </div>
 
             <Button
@@ -2924,7 +2924,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               className="text-destructive hover:text-destructive/80"
               onClick={handleCancelRide}
             >
-              Cancel ride
+              {t("ride.cancel_ride")}
             </Button>
           </div>
         </div>
