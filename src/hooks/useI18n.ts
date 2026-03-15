@@ -13,7 +13,16 @@ function setGlobalLang(code: string) {
 
 function subscribe(cb: () => void) {
   _listeners.add(cb);
-  return () => { _listeners.delete(cb); };
+  // Also listen for cross-component geo-detect events
+  const handler = () => {
+    _lang = localStorage.getItem("zivo_lang") || "en";
+    cb();
+  };
+  window.addEventListener("zivo-lang-change", handler);
+  return () => {
+    _listeners.delete(cb);
+    window.removeEventListener("zivo-lang-change", handler);
+  };
 }
 
 function getSnapshot() { return _lang; }
