@@ -650,6 +650,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         bookingFee: CAMBODIA_BOOKING_FEE,
         pricePerMile: CAMBODIA_PER_MILE_USD,
         perMinute: CAMBODIA_PER_MIN_USD,
+        minimumFare: 0.25,
       }));
     }
     return options;
@@ -3130,10 +3131,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               {routeData && (
                 <>
                   <div className="border-t border-border/15 pt-2 mt-1 space-y-1.5">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Base fare</span>
-                      <span className="text-foreground">${currentVehicle.basePrice.toFixed(2)}</span>
-                    </div>
+                    {currentVehicle.basePrice > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">{t("ride.base_fare")}</span>
+                        <span className="text-foreground">{dualPrice(currentVehicle.basePrice, useKm)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Distance</span>
                       <span className="text-foreground">${(routeData.distance_miles * currentVehicle.pricePerMile).toFixed(2)}</span>
