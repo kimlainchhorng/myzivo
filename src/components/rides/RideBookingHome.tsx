@@ -2410,11 +2410,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     <div>
                       <p className="text-sm font-bold text-foreground leading-none">
                         {routeData.duration_in_traffic_minutes
-                          ? `${routeData.duration_in_traffic_minutes} min`
-                          : `${routeData.duration_minutes} min`}
+                          ? `${routeData.duration_in_traffic_minutes} ${t("ride.min_unit")}`
+                          : `${routeData.duration_minutes} ${t("ride.min_unit")}`}
                       </p>
                       {routeData.duration_in_traffic_minutes && routeData.duration_in_traffic_minutes !== routeData.duration_minutes && (
-                        <p className="text-[8px] text-muted-foreground/60 line-through">{routeData.duration_minutes} min</p>
+                        <p className="text-[8px] text-muted-foreground/60 line-through">{routeData.duration_minutes} {t("ride.min_unit")}</p>
                       )}
                       <p className="text-[9px] text-muted-foreground">{t("ride.trip_time")}</p>
                     </div>
