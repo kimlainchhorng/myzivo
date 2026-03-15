@@ -386,12 +386,12 @@ function VehicleRow({
       </div>
       <div className="text-right shrink-0 flex flex-col items-end gap-0.5">
         {surgeActive && originalPrice && (
-          <span className="line-through text-muted-foreground text-xs">${originalPrice.toFixed(2)}</span>
+          <span className="line-through text-muted-foreground text-xs">{isCambodia ? dualPrice(originalPrice, true) : `$${originalPrice.toFixed(2)}`}</span>
         )}
         {isDiscount ? (
-          <span className="text-sm font-bold text-green-600">🟢 ${price.toFixed(2)}</span>
+          <span className="text-sm font-bold text-green-600">🟢 {isCambodia ? dualPrice(price, true) : `$${price.toFixed(2)}`}</span>
         ) : (
-          <span className="text-sm font-bold text-foreground">${price.toFixed(2)}</span>
+          <span className="text-sm font-bold text-foreground">{isCambodia ? dualPrice(price, true) : `$${price.toFixed(2)}`}</span>
         )}
         {selected && (
           <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center mt-0.5" aria-label="Selected">
