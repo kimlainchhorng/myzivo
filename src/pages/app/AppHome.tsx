@@ -395,17 +395,14 @@ const AppHome = () => {
         {/* ─── MAIN CONTENT ─── */}
         <div className="px-5 space-y-8">
 
+          {/* ─── TRAVEL ITINERARY CARD ─── */}
+          <TravelItineraryCard />
+
           {/* ─── LIVE TRIP TRACKER ─── */}
           <LiveTripTracker />
 
-
-
-
           {/* ─── QUICK REORDER CAROUSEL ─── */}
           <QuickReorderCarousel />
-
-          {/* ─── TRAVEL ITINERARY CARD ─── */}
-          <TravelItineraryCard />
 
           {/* ─── PRICE ALERTS WIDGET ─── */}
           <PriceAlertsWidget />
