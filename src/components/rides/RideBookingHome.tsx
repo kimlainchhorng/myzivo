@@ -3045,9 +3045,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         >
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
-          <h3 className="text-base font-bold text-foreground mb-0.5">Heading to destination</h3>
+          <h3 className="text-base font-bold text-foreground mb-0.5">{t("ride.heading_to_destination")}</h3>
           {routeData && (
-            <p className="text-xs text-muted-foreground mb-2">ETA: {routeData.duration_minutes} min</p>
+            <p className="text-xs text-muted-foreground mb-2">{t("ride.eta")}: {routeData.duration_minutes} {t("ride.min_unit")}</p>
           )}
 
           <div className="flex items-center gap-2 mb-3 text-sm">
