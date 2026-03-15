@@ -344,10 +344,8 @@ const AppHome = () => {
             </motion.button>
           </div>
 
-          {/* ─── TRAVEL ITINERARY CARD ─── */}
-          <div className="px-5 pb-2">
-            <TravelItineraryCard />
-          </div>
+
+
 
           {/* Suggestions Section */}
           <div className="pb-5">
