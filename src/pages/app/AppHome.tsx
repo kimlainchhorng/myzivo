@@ -344,6 +344,11 @@ const AppHome = () => {
             </motion.button>
           </div>
 
+          {/* ─── TRAVEL ITINERARY CARD ─── */}
+          <div className="px-5 pb-2">
+            <TravelItineraryCard />
+          </div>
+
           {/* Suggestions Section */}
           <div className="pb-5">
             <div className="flex items-center justify-between mb-3 px-5">
@@ -394,9 +399,6 @@ const AppHome = () => {
 
         {/* ─── MAIN CONTENT ─── */}
         <div className="px-5 space-y-8">
-
-          {/* ─── TRAVEL ITINERARY CARD ─── */}
-          <TravelItineraryCard />
 
           {/* ─── LIVE TRIP TRACKER ─── */}
           <LiveTripTracker />
