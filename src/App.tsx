@@ -319,6 +319,12 @@ function PageViewTracker() {
   return null;
 }
 
+/** Auto-detect country & language from IP on first visit */
+function GeoDetector() {
+  useGeoDetect();
+  return null;
+}
+
 const App = () => (
   <ErrorBoundary>
     <HelmetProvider>
