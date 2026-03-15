@@ -3211,7 +3211,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     )}
                   >
                     <span className="text-sm font-bold block">{pct}%</span>
-                    <span className="text-[10px] opacity-70">${tipAmount.toFixed(2)}</span>
+                    <span className="text-[10px] opacity-70">{dualPrice(tipAmount, useKm)}</span>
                   </button>
                 );
               })}
