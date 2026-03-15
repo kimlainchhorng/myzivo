@@ -2741,7 +2741,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   )}
                   <div className="flex justify-between border-t border-border/15 pt-1 mt-0.5">
-                    <span className="font-bold text-foreground text-[13px]">Total</span>
+                    <span className="font-bold text-foreground text-[13px]">{t("ride.total")}</span>
                     <div className="text-right">
                       {useKm ? (
                         <>
