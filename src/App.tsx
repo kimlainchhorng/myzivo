@@ -614,7 +614,7 @@ const App = () => (
           <PWAUpdatePrompt />
           <PWAInstallBanner />
           <ScrollToTopButton />
-          <LiveChatWidget />
+          {/* LiveChatWidget removed */}
           <SpatialCursor />
           <BrandThemeApplicator />
         </ZivoPlusProvider>
