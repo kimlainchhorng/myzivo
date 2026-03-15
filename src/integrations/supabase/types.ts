@@ -13308,6 +13308,7 @@ export type Database = {
           city_id: string | null
           completion_rate: number | null
           compliance_status: string | null
+          country: string | null
           created_at: string
           current_lat: number | null
           current_lng: number | null
@@ -13409,6 +13410,7 @@ export type Database = {
           city_id?: string | null
           completion_rate?: number | null
           compliance_status?: string | null
+          country?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -13510,6 +13512,7 @@ export type Database = {
           city_id?: string | null
           completion_rate?: number | null
           compliance_status?: string | null
+          country?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
