@@ -13,6 +13,15 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+const USD_TO_KHR = 4062.5;
+function toKHR(usd: number): string {
+  return `${Math.round(usd * USD_TO_KHR).toLocaleString()} ៛`;
+}
+function dualPrice(usd: number, isCambodia: boolean): string {
+  if (!isCambodia) return `$${usd.toFixed(2)}`;
+  return `${toKHR(usd)} ($${usd.toFixed(2)})`;
+}
+
 interface SavedCard {
   id: string;
   brand: string;
