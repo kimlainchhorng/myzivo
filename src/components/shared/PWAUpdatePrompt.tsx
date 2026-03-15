@@ -9,26 +9,27 @@ import { RefreshCw, X } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 
 export function PWAUpdatePrompt() {
+  const isNative = Capacitor.isNativePlatform();
   const { needRefresh, updateSW } = usePWAUpdate();
   const autoUpdateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (needRefresh) {
-      // Auto-update after 10 seconds
-      autoUpdateTimer.current = setTimeout(() => {
-        updateSW(true);
-      }, 10_000);
-    }
+    // Never auto-update on native Capacitor — it would open Safari
+    if (isNative || !needRefresh) return;
+
+    // Auto-update after 10 seconds on web/PWA only
+    autoUpdateTimer.current = setTimeout(() => {
+      updateSW(true);
+    }, 10_000);
 
     return () => {
       if (autoUpdateTimer.current) {
         clearTimeout(autoUpdateTimer.current);
       }
     };
-  }, [needRefresh, updateSW]);
+  }, [needRefresh, updateSW, isNative]);
 
-  // Don't show PWA update prompt inside native Capacitor app
-  if (!needRefresh || Capacitor.isNativePlatform()) return null;
+  if (!needRefresh || isNative) return null;
 
   const handleUpdate = () => {
     if (autoUpdateTimer.current) clearTimeout(autoUpdateTimer.current);
