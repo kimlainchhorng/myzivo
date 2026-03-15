@@ -338,6 +338,7 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <PageViewTracker />
+                <GeoDetector />
                 <RoutePrefetcher />
                 <AuthProvider>
                   <ZivoPlusProvider>

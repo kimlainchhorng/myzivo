@@ -29,8 +29,12 @@ function getSnapshot(): CountryCode {
 
 function subscribe(listener: () => void) {
   listeners.push(listener);
+  // Also listen for cross-component geo-detect events
+  const handler = () => listener();
+  window.addEventListener("zivo-country-change", handler);
   return () => {
     listeners = listeners.filter((l) => l !== listener);
+    window.removeEventListener("zivo-country-change", handler);
   };
 }
 
