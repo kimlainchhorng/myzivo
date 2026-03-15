@@ -3166,7 +3166,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               )}
               <div className="flex justify-between border-t border-border/20 pt-2">
                 <span className="font-bold text-foreground">Amount charged</span>
-                <span className="font-bold text-foreground">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
+                <span className="font-bold text-foreground">{dualPrice(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice, useKm)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment</span>
