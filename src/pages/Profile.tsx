@@ -56,6 +56,12 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 const LANGS = [
   { code: "en", label: "English", flag: "🇺🇸" },
   { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
+  { code: "zh", label: "中文", flag: "🇨🇳" },
+  { code: "ko", label: "한국어", flag: "🇰🇷" },
+  { code: "ja", label: "日本語", flag: "🇯🇵" },
+  { code: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
+  { code: "th", label: "ไทย", flag: "🇹🇭" },
+  { code: "es", label: "Español", flag: "🇪🇸" },
 ];
 
 const Profile = () => {
