@@ -2754,7 +2754,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   </div>
                   {currentPrice <= currentVehicle.minimumFare && (
-                    <p className="text-[9px] text-muted-foreground/60 text-right">Minimum fare applied</p>
+                    <p className="text-[9px] text-muted-foreground/60 text-right">{t("ride.minimum_fare_applied")}</p>
                   )}
                 </div>
               )}
