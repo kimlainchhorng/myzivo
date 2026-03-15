@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { setupActivityTracking, clearSessionArtifacts } from "@/lib/security/sessionSecurity";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
-import { SignInWithApple } from "@capacitor-community/apple-sign-in";
+import { AppleSignIn, SignInScope } from "@capawesome/capacitor-apple-sign-in";
 
 type AuthContextType = {
   user: User | null;
@@ -138,10 +138,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .map((b) => b.toString(16).padStart(2, "0"))
           .join("");
 
-        const result = await SignInWithApple.authorize({
-          clientId: "com.hizovo.app",
-          redirectURI: "https://myzivo.lovable.app",
-          scopes: "email name",
+        const result = await AppleSignIn.signIn({
+          scopes: [SignInScope.Email, SignInScope.FullName],
           nonce: hashedNonce,
         });
 
@@ -150,7 +148,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // against the nonce claim in the Apple-issued JWT.
         const { error } = await supabase.auth.signInWithIdToken({
           provider: "apple",
-          token: result.response.identityToken,
+          token: result.idToken,
           nonce: rawNonce,
         });
         return { error };
