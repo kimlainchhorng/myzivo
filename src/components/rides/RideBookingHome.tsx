@@ -1068,7 +1068,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
-  const useKm = useMemo(() => isInCambodia(pickup?.address, pickup?.lat) || isCambodiaCountry, [pickup?.address, pickup?.lat, isCambodiaCountry]);
+  const useKm = useMemo(() => isInCambodia(pickup?.address, pickup?.lat) || isCambodiaCountry || currentLanguage === "km", [pickup?.address, pickup?.lat, isCambodiaCountry, currentLanguage]);
   const rideCountry = useKm ? "kh" : undefined;
   const locationModeKey = rideCountry ?? "global";
 
