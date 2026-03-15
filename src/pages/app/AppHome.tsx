@@ -125,7 +125,6 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
     </button>
   </div>
 );
-import zivoPromoBanner from "@/assets/zivo-promo-banner.png";
 
 // ─── Promo banners ───
 // Promos and trending rides are built inside the component for translation
