@@ -650,6 +650,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         bookingFee: CAMBODIA_BOOKING_FEE,
         pricePerMile: CAMBODIA_PER_MILE_USD,
         perMinute: CAMBODIA_PER_MIN_USD,
+        minimumFare: 0.25,
       }));
     }
     return options;
