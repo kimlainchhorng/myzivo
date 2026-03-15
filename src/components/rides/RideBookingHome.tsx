@@ -2727,7 +2727,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Time ({routeData.duration_minutes} min × ${currentVehicle.perMinute.toFixed(2)})</span>
+                    <span className="text-muted-foreground">{t("ride.trip_time")} ({routeData.duration_minutes} min × ${currentVehicle.perMinute.toFixed(2)})</span>
                     <span className="text-foreground">{dualPrice(routeData.duration_minutes * currentVehicle.perMinute, useKm)}</span>
                   </div>
                   <div className="flex justify-between">
