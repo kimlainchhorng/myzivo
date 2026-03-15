@@ -622,20 +622,27 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Merge DB pricing into vehicle options (admin rates override defaults)
   const vehicleOptions = useMemo(() => {
-    if (!cityPricingMap || Object.keys(cityPricingMap).length === 0) return DEFAULT_VEHICLE_OPTIONS;
-    return DEFAULT_VEHICLE_OPTIONS.map((v) => {
-      const dbPricing = cityPricingMap[v.id];
-      if (!dbPricing) return v;
-      return {
-        ...v,
-        basePrice: dbPricing.base_fare ?? v.basePrice,
-        pricePerMile: dbPricing.per_mile ?? v.pricePerMile,
-        perMinute: dbPricing.per_minute ?? v.perMinute,
-        bookingFee: dbPricing.booking_fee ?? v.bookingFee,
-        minimumFare: dbPricing.minimum_fare ?? v.minimumFare,
-      };
-    });
-  }, [cityPricingMap]);
+    const isCambodia = currentLanguage === "km";
+    let options = DEFAULT_VEHICLE_OPTIONS;
+    if (cityPricingMap && Object.keys(cityPricingMap).length > 0) {
+      options = DEFAULT_VEHICLE_OPTIONS.map((v) => {
+        const dbPricing = cityPricingMap[v.id];
+        if (!dbPricing) return v;
+        return {
+          ...v,
+          basePrice: dbPricing.base_fare ?? v.basePrice,
+          pricePerMile: dbPricing.per_mile ?? v.pricePerMile,
+          perMinute: dbPricing.per_minute ?? v.perMinute,
+          bookingFee: dbPricing.booking_fee ?? v.bookingFee,
+          minimumFare: dbPricing.minimum_fare ?? v.minimumFare,
+        };
+      });
+    }
+    if (isCambodia) {
+      options = options.map((v) => ({ ...v, bookingFee: CAMBODIA_BOOKING_FEE }));
+    }
+    return options;
+  }, [cityPricingMap, currentLanguage]);
   const [stops, setStops] = useState<{ id: string; place: PlaceData | null; display: string }[]>([]);
   const stopsRef = useRef(stops);
   stopsRef.current = stops;
