@@ -426,8 +426,11 @@ const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
   "share": "ZIVO EV Tuk Tuk",
 };
 const CAMBODIA_VEHICLE_DESCS: Record<string, string> = {
-  "economy": "Affordable everyday rides",
-  "share": "Electric, zero-emission rides",
+  "economy": "ការធ្វើដំណើរប្រចាំថ្ងៃតម្លៃសមរម្យ",
+  "share": "អគ្គិសនី សូន្យការបំភាយ",
+  "comfort": "អ្នកបើកបរល្អបំផុត កន្លែងដាក់ជើងទូលាយ",
+  "ev": "អគ្គិសនី សូន្យការបំភាយ",
+  "xl": "កន្លែងបន្ថែមសម្រាប់ក្រុម",
 };
 const CAMBODIA_VEHICLE_CAPACITY: Record<string, number> = {
   "economy": 3,
@@ -2491,7 +2494,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     : "bg-card border border-border/30 text-muted-foreground hover:text-foreground hover:border-border/60"
                 )}
               >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {t(`ride.${cat}`)}
               </button>
             ))}
           </div>
@@ -2651,7 +2654,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               <div className="w-10 h-10 rounded-xl bg-muted/20 border border-border/20 flex items-center justify-center">
                 <CreditCard className="w-[18px] h-[18px] text-muted-foreground" />
               </div>
-              <span className="flex-1 text-[14px] text-foreground font-semibold text-left">Payment method</span>
+              <span className="flex-1 text-[14px] text-foreground font-semibold text-left">{t("ride.payment_method")}</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
             </button>
           </div>
@@ -2662,7 +2665,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 active:scale-[0.97] transition-all duration-200"
               onClick={() => { setPaymentStep("idle"); setViewStep("confirm-ride"); }}
             >
-              Confirm {getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} · {useKm ? `${toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)} ($${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)})` : `$${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}`}
+              {t("ride.confirm")} {getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} · {useKm ? `${toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)} ($${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)})` : `$${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}`}
             </Button>
           </div>
         </div>
