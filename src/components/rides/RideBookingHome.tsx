@@ -3288,6 +3288,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         }
         bookedPassengers={1}
         driverWaitMinutes={0}
+        t={t}
       />
 
     </div>
