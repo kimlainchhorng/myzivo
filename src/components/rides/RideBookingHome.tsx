@@ -2938,8 +2938,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         >
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
-          <h3 className="text-base font-bold text-foreground text-center mb-0.5">Meet your driver at pickup</h3>
-          <p className="text-xs text-muted-foreground text-center mb-3">Driver arriving in {assignedDriver.etaMin} minutes.</p>
+          <h3 className="text-base font-bold text-foreground text-center mb-0.5">{t("ride.meet_driver_at_pickup")}</h3>
+          <p className="text-xs text-muted-foreground text-center mb-3">{t("ride.driver_arriving_in_minutes").replace("{minutes}", String(assignedDriver.etaMin))}</p>
 
           <div className="border-t border-border/15 pt-3">
             <div className="flex items-center gap-3 mb-3">
