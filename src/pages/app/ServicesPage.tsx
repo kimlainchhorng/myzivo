@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import { useI18n } from "@/hooks/useI18n";
+import { useCountry } from "@/hooks/useCountry";
 import zivoRideIcon from "@/assets/zivo-ride-icon.png";
 import zivoEatsIcon from "@/assets/zivo-eats-icon.png";
 import zivoFlightsIcon from "@/assets/zivo-flights-icon.png";
@@ -47,52 +49,52 @@ interface ServiceCategory {
 }
 
 /* ── Data ── */
-const serviceCategories: ServiceCategory[] = [
+const getServiceCategories = (t: (key: string) => string, isCambodia = false): ServiceCategory[] => [
   {
-    title: "Your ride, your way",
-    subtitle: "Get moving in minutes",
+    title: t("services.category.ride"),
+    subtitle: t("services.category.ride_sub"),
     services: [
-      { label: "Ride", href: "/rides", image: zivoRideIcon, badge: "10% Off", badgeVariant: "discount", animClass: "animate-car-run" },
-      { label: "Package", href: "/delivery", image: zivoPackageIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
-      { label: "Travel", href: "/flights", image: zivoFlightsIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-plane-fly" },
-      { label: "Reserve", href: "/rides?tab=reserve", image: zivoReserveIcon, badge: "Promo", badgeVariant: "promo", animClass: "animate-car-run" },
-      { label: "Rental Cars", href: "/rent-car", image: zivoRentalCarIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-car-run" },
-      { label: "Group Ride", href: "/rides", image: zivoGroupRideIcon, animClass: "animate-car-run" },
+      { label: t("services.ride"), href: "/rides", image: zivoRideIcon, badge: t("services.badge.off_10"), badgeVariant: "discount", animClass: "animate-car-run" },
+      { label: t("services.package"), href: "/delivery", image: zivoPackageIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
+      { label: t("services.travel"), href: "/flights", image: zivoFlightsIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-plane-fly" },
+      { label: t("services.reserve"), href: "/rides?tab=reserve", image: zivoReserveIcon, badge: t("services.badge.promo"), badgeVariant: "promo", animClass: "animate-car-run" },
+      { label: t("services.rental_cars"), href: "/rent-car", image: zivoRentalCarIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-car-run" },
+      { label: t("services.group_ride"), href: "/rides", image: zivoGroupRideIcon, animClass: "animate-car-run" },
     ],
   },
   {
-    title: "Food & more, fast",
-    subtitle: "Delivered to your door",
+    title: t("services.category.food"),
+    subtitle: t("services.category.food_sub"),
     services: [
-      { label: "Food", href: "/eats", image: zivoEatsIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
-      { label: "Grocery", href: "/grocery", image: zivoShoppingIcon, animClass: "animate-food-wiggle" },
-      { label: "Alcohol", href: "/eats", image: zivoAlcoholIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
-      { label: "Pharmacy", href: "/eats", image: zivoPharmacyIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
-      { label: "Shopping", href: "/rides", image: zivoShoppingCartIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
+      { label: t("services.food"), href: "/eats", image: zivoEatsIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
+      { label: t("services.grocery"), href: "/grocery", image: zivoShoppingIcon, animClass: "animate-food-wiggle", ...(isCambodia ? { badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon" as const, comingSoon: true } : {}) },
+      { label: t("services.alcohol"), href: "/eats", image: zivoAlcoholIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
+      { label: t("services.pharmacy"), href: "/eats", image: zivoPharmacyIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
+      { label: t("services.shopping"), href: "/rides", image: zivoShoppingCartIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
     ],
   },
   {
-    title: "Plan your trip",
-    subtitle: "Explore the world with ZIVO",
+    title: t("services.category.trip"),
+    subtitle: t("services.category.trip_sub"),
     services: [
-      { label: "Flights", href: "/flights", image: zivoFlightsIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-plane-fly" },
-      { label: "Hotels", href: "/hotels", image: zivoHotelsIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
-      { label: "Car Rental", href: "/rent-car", image: zivoRentalCarIcon, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-car-run" },
-      { label: "Insurance", href: "/travel-insurance", icon: Shield, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true },
-      { label: "Things to Do", href: "/things-to-do", icon: MapPin, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true },
-      { label: "AI Planner", href: "/ai-trip-planner", icon: Sparkles, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true },
-      { label: "Visa Help", href: "/support", icon: FileCheck, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true },
-      { label: "Cruise", href: "/flights", icon: Ship, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true },
+      { label: t("services.flights"), href: "/flights", image: zivoFlightsIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-plane-fly" },
+      { label: t("services.hotels"), href: "/hotels", image: zivoHotelsIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
+      { label: t("services.car_rental"), href: "/rent-car", image: zivoRentalCarIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-car-run" },
+      { label: t("services.insurance"), href: "/travel-insurance", icon: Shield, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
+      { label: t("services.things_to_do"), href: "/things-to-do", icon: MapPin, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
+      { label: t("services.ai_planner"), href: "/ai-trip-planner", icon: Sparkles, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
+      { label: t("services.visa_help"), href: "/support", icon: FileCheck, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
+      { label: t("services.cruise"), href: "/flights", icon: Ship, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
     ],
   },
   {
-    title: "More from ZIVO",
-    subtitle: "Unlock the full experience",
+    title: t("services.category.more"),
+    subtitle: t("services.category.more_sub"),
     services: [
-      { label: "Drive", href: "/drive", icon: Car },
-      { label: "ZIVO+", href: "/zivo-plus", icon: Crown, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true },
-      { label: "Rewards", href: "/rewards", icon: Gift, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true },
-      { label: "Deals", href: "/deals", icon: Sparkles, badge: "Coming Soon", badgeVariant: "coming_soon", comingSoon: true },
+      { label: t("services.drive"), href: "/drive", icon: Car },
+      { label: "ZIVO+", href: "/zivo-plus", icon: Crown, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
+      { label: t("services.rewards"), href: "/rewards", icon: Gift, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
+      { label: t("services.deals"), href: "/deals", icon: Sparkles, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
     ],
   },
 ];
@@ -175,12 +177,15 @@ const badgeStyles = {
 /* ── Page ── */
 export default function ServicesPage() {
   const navigate = useNavigate();
+  const { t } = useI18n();
+  const { isCambodia } = useCountry();
+  const serviceCategories = getServiceCategories(t, isCambodia);
   const [runningLabel, setRunningLabel] = useState<string | null>(null);
 
   const handleServiceClick = (service: ServiceItem) => {
     if (service.comingSoon) {
-      toast(`${service.label} is coming soon!`, {
-        description: "We're working hard to bring this to you. Stay tuned!",
+      toast(`${service.label} ${t("services.toast.coming_soon_title")}`, {
+        description: t("services.toast.coming_soon_desc"),
       });
       return;
     }
@@ -222,9 +227,9 @@ export default function ServicesPage() {
           transition={{ delay: 0.05, duration: 0.4 }}
         >
           <h1 className="text-[28px] font-black text-foreground mt-3 tracking-tight">
-            Everything ZIVO
+            {t("services.title")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">All services, one place</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{t("services.subtitle")}</p>
         </motion.div>
       </div>
 
@@ -232,10 +237,10 @@ export default function ServicesPage() {
       <div className="px-5 pt-3 relative z-10">
         <PromoBanner
           image={zivoReserveBanner}
-          alt="ZIVO Reserve - Premium Airport Rides"
-          label="ZIVO Reserve"
-          title="Premium Airport Rides"
-          subtitle="VIP pickup · Meet & greet · Luxury fleet"
+          alt={t("services.banner.reserve_alt")}
+          label={t("services.banner.reserve_label")}
+          title={t("services.banner.reserve_title")}
+          subtitle={t("services.banner.reserve_subtitle")}
           href="/rides?tab=reserve"
           delay={0.1}
           navigate={navigate}
@@ -332,9 +337,9 @@ export default function ServicesPage() {
             {catIdx === 0 && (
               <PromoBanner
                 image={zivoDeliveryBanner}
-                alt="Deliver with ZIVO"
-                title="Deliver with ZIVO"
-                subtitle="Earn on your schedule"
+                alt={t("services.banner.deliver_alt")}
+                title={t("services.banner.deliver_title")}
+                subtitle={t("services.banner.deliver_subtitle")}
                 href="/drive"
                 delay={0.2}
                 navigate={navigate}
@@ -345,10 +350,10 @@ export default function ServicesPage() {
             {catIdx === 1 && (
               <PromoBanner
                 image={zivoTravelBanner}
-                alt="Plan your trip with ZIVO"
-                label="Plan Your Trip"
-                title="Your Next Adventure Awaits"
-                subtitle="Flights · Hotels · Cars · All in one place"
+                alt={t("services.banner.trip_alt")}
+                label={t("services.banner.trip_label")}
+                title={t("services.banner.trip_title")}
+                subtitle={t("services.banner.trip_subtitle")}
                 href="/flights"
                 delay={0.25}
                 navigate={navigate}

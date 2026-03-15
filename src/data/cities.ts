@@ -18,8 +18,10 @@ export interface City {
 // Popular cities for hotel search
 export const CITIES: City[] = [
   // Asia - Southeast
-  { id: 'pnh', slug: 'phnom-penh', name: 'Phnom Penh', country: 'Cambodia', countryCode: 'KH', popularity: 85 },
-  { id: 'rep', slug: 'siem-reap', name: 'Siem Reap', country: 'Cambodia', countryCode: 'KH', popularity: 90 },
+  { id: 'pnh', slug: 'phnom-penh', name: 'Phnom Penh', country: 'Cambodia', countryCode: 'KH', lat: 11.5564, lng: 104.9282, popularity: 85 },
+  { id: 'rep', slug: 'siem-reap', name: 'Siem Reap', country: 'Cambodia', countryCode: 'KH', lat: 13.3671, lng: 103.8448, popularity: 90 },
+  { id: 'shv', slug: 'sihanoukville', name: 'Sihanoukville', country: 'Cambodia', countryCode: 'KH', lat: 10.6093, lng: 103.5229, popularity: 70 },
+  { id: 'btb', slug: 'battambang', name: 'Battambang', country: 'Cambodia', countryCode: 'KH', lat: 13.1023, lng: 103.1986, popularity: 55 },
   { id: 'bkk', slug: 'bangkok', name: 'Bangkok', country: 'Thailand', countryCode: 'TH', popularity: 98 },
   { id: 'hkt', slug: 'phuket', name: 'Phuket', country: 'Thailand', countryCode: 'TH', popularity: 95 },
   { id: 'cnx', slug: 'chiang-mai', name: 'Chiang Mai', country: 'Thailand', countryCode: 'TH', popularity: 88 },

@@ -2,6 +2,7 @@
  * TravelItineraryCard - Upcoming trips timeline with flight, hotel, car in one card
  */
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "@/hooks/useI18n";
 import { motion } from "framer-motion";
 import { Plane, Hotel, Car, Calendar, MapPin, ChevronRight, Luggage } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +38,7 @@ const itemConfig = {
 export default function TravelItineraryCard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const { data: tripData } = useQuery({
     queryKey: ["home-itinerary", user?.id],
@@ -94,8 +96,8 @@ export default function TravelItineraryCard() {
             <Luggage className="w-4 h-4 text-sky-500" />
           </div>
           <div>
-            <span className="text-sm font-bold text-foreground">No Upcoming Trips</span>
-            <p className="text-[10px] text-muted-foreground">Plan your next adventure</p>
+            <span className="text-sm font-bold text-foreground">{t("home.no_trips")}</span>
+            <p className="text-[10px] text-muted-foreground">{t("home.plan_adventure")}</p>
           </div>
         </div>
         <button
@@ -103,7 +105,7 @@ export default function TravelItineraryCard() {
           className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-sky-500 py-2.5 rounded-xl bg-sky-500/5 border border-sky-500/15 touch-manipulation active:scale-[0.98] transition-all"
         >
           <Plane className="w-3.5 h-3.5" />
-          Search Flights
+          {t("home.search_flights")}
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </motion.div>
@@ -126,7 +128,7 @@ export default function TravelItineraryCard() {
             <Luggage className="w-4 h-4 text-sky-500" />
           </div>
           <div>
-            <span className="text-sm font-bold text-foreground">Upcoming Trip</span>
+            <span className="text-sm font-bold text-foreground">{t("home.upcoming_trip")}</span>
             <p className="text-[10px] text-muted-foreground flex items-center gap-1">
               <MapPin className="w-2.5 h-2.5" /> {trip.destination}
             </p>
@@ -184,7 +186,7 @@ export default function TravelItineraryCard() {
         className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs font-bold text-sky-500 py-2.5 rounded-xl bg-sky-500/5 border border-sky-500/15 touch-manipulation active:scale-[0.98] transition-all relative z-10"
       >
         <Calendar className="w-3.5 h-3.5" />
-        View Full Itinerary
+        {t("home.view_itinerary")}
         <ChevronRight className="w-3.5 h-3.5" />
       </button>
     </motion.div>

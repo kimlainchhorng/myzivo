@@ -25,9 +25,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>ZIVO needs camera access to take a profile photo.</string>
+	<string>ZIVO uses your camera to take a profile photo that is displayed on your account and visible to restaurant partners when you place orders.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>ZIVO needs photo library access to choose a profile picture.</string>
+	<string>ZIVO accesses your photo library so you can select an existing photo to use as your profile picture on your account.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

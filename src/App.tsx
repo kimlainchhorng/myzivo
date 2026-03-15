@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect } from "react";
 import { usePageViewTracker } from "@/hooks/usePageViewTracker";
+import { useGeoDetect } from "@/hooks/useGeoDetect";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -318,6 +319,12 @@ function PageViewTracker() {
   return null;
 }
 
+/** Auto-detect country & language from IP on first visit */
+function GeoDetector() {
+  useGeoDetect();
+  return null;
+}
+
 const App = () => (
   <ErrorBoundary>
     <HelmetProvider>
@@ -331,6 +338,7 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <PageViewTracker />
+                <GeoDetector />
                 <RoutePrefetcher />
                 <AuthProvider>
                   <ZivoPlusProvider>

@@ -13308,6 +13308,7 @@ export type Database = {
           city_id: string | null
           completion_rate: number | null
           compliance_status: string | null
+          country: string | null
           created_at: string
           current_lat: number | null
           current_lng: number | null
@@ -13409,6 +13410,7 @@ export type Database = {
           city_id?: string | null
           completion_rate?: number | null
           compliance_status?: string | null
+          country?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -13510,6 +13512,7 @@ export type Database = {
           city_id?: string | null
           completion_rate?: number | null
           compliance_status?: string | null
+          country?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -42761,6 +42764,36 @@ export type Database = {
         }
         Relationships: []
       }
+      zivo_budget_settings: {
+        Row: {
+          budget_amount: number
+          category: string
+          created_at: string
+          currency: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget_amount?: number
+          category: string
+          created_at?: string
+          currency?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget_amount?: number
+          category?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       zivo_credits: {
         Row: {
           amount: number
@@ -43667,6 +43700,45 @@ export type Database = {
           total_service_fees?: number
           total_subscriptions?: number
           transaction_count?: number
+        }
+        Relationships: []
+      }
+      zivo_savings_goals: {
+        Row: {
+          created_at: string
+          currency: string
+          emoji: string | null
+          id: string
+          is_completed: boolean
+          name: string
+          saved_amount: number
+          target_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          emoji?: string | null
+          id?: string
+          is_completed?: boolean
+          name: string
+          saved_amount?: number
+          target_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          emoji?: string | null
+          id?: string
+          is_completed?: boolean
+          name?: string
+          saved_amount?: number
+          target_amount?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

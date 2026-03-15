@@ -341,7 +341,6 @@ const PrivacyPolicy = () => {
                 <li>Keep you logged in and remember your preferences</li>
                 <li>Understand how you use our services</li>
                 <li>Personalize content and recommendations</li>
-                <li>Measure advertising effectiveness</li>
               </ul>
 
               <h4 className="font-semibold text-foreground mt-6">Types of Cookies</h4>
@@ -358,17 +357,16 @@ const PrivacyPolicy = () => {
                   <p className="font-medium">Analytics Cookies</p>
                   <p className="text-sm">Help us understand usage patterns. Can be disabled.</p>
                 </div>
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="font-medium">Advertising Cookies</p>
-                  <p className="text-sm">Used for targeted advertising. Can be disabled.</p>
-                </div>
               </div>
+
+              <p className="text-sm mt-4">
+                ZIVO does not use advertising or tracking cookies. We do not track users across apps or websites.
+              </p>
 
               <h4 className="font-semibold text-foreground mt-6">Managing Cookies</h4>
               <p>
-                You can control cookies through your browser settings. Note that disabling cookies may affect 
-                functionality. You can also opt out of advertising cookies through industry tools like 
-                NAI (networkadvertising.org) or DAA (aboutads.info).
+                You can control cookies through your browser settings or our cookie preference controls. 
+                Note that disabling essential cookies may affect functionality.
               </p>
             </AccordionContent>
           </AccordionItem>

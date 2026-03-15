@@ -7,11 +7,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
+import { useI18n } from "@/hooks/useI18n";
+import { cn } from "@/lib/utils";
 
 // Login schema
 const loginSchema = z.object({
@@ -48,6 +50,12 @@ const Login = () => {
   }, [searchParams]);
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const { currentLanguage, changeLanguage, t } = useI18n();
+  const LANGS = [
+    { code: "en", label: "English", flag: "🇺🇸" },
+    { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
+  ];
   const { signIn, signUp, signInWithProvider } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -210,7 +218,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
+    <div className="h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 px-4 safe-area-top safe-area-bottom relative overflow-hidden">
       <SEOHead title={isLogin ? "Sign In – ZIVO" : "Create Account – ZIVO"} description="Sign in or create your ZIVO account to search flights, hotels, and car rentals." noIndex={true} />
       {/* Animated gradient background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -218,38 +226,72 @@ const Login = () => {
         <div className="absolute -bottom-1/3 -right-1/4 w-[60%] h-[60%] bg-gradient-to-tl from-[hsl(var(--flights))/0.1] to-transparent rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '1.5s' }} />
         <div className="absolute top-1/3 right-1/4 w-[30%] h-[30%] bg-gradient-to-bl from-[hsl(var(--hotels))/0.08] to-transparent rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '3s' }} />
       </div>
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-md relative z-10 flex flex-col max-h-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-card/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl shadow-black/[0.08] p-6 sm:p-8"
+          className="bg-card/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl shadow-black/[0.08] p-5 sm:p-6 flex-1 min-h-0 overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+          <div className="text-center mb-4 relative">
+            {/* Language toggle - top right */}
+            <div className="absolute right-0 top-0">
+              <div className="relative">
+                <button
+                  onClick={() => setShowLangMenu(!showLangMenu)}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all active:scale-90 touch-manipulation"
+                  aria-label="Change language"
+                >
+                  <Globe className="w-4 h-4 text-muted-foreground" />
+                </button>
+                {showLangMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
+                    <div className="absolute right-0 top-10 z-50 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[130px] animate-in fade-in slide-in-from-top-2 duration-150">
+                      {LANGS.map(l => (
+                        <button
+                          key={l.code}
+                          onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors",
+                            currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted"
+                          )}
+                        >
+                          <span className="text-sm">{l.flag}</span>
+                          <span>{l.label}</span>
+                          {currentLanguage === l.code && <CheckCircle className="w-3.5 h-3.5 ml-auto" />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
               ZIVO ID
             </h1>
             <motion.p 
               key={isLogin ? "login" : "signup"}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-muted-foreground mt-2 text-sm sm:text-base"
+              className="text-muted-foreground mt-1 text-xs sm:text-sm"
             >
-              {isLogin ? "Welcome back, Traveler" : "Get Started Free — No credit card needed"}
+              {isLogin ? t("auth.welcome_back") : t("auth.get_started")}
             </motion.p>
           </div>
 
           {/* Forms */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
           {isLogin ? (
             <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-3">
                 <FormField
                   control={loginForm.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Email</FormLabel>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.email")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -273,12 +315,12 @@ const Login = () => {
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center justify-between">
-                        <FormLabel className="text-muted-foreground text-sm font-medium">Password</FormLabel>
+                        <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.password")}</FormLabel>
                         <Link
                           to="/forgot-password"
                           className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
                         >
-                          Forgot?
+                          {t("auth.forgot")}
                         </Link>
                       </div>
                       <FormControl>
@@ -300,14 +342,14 @@ const Login = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-6 touch-manipulation active:scale-[0.98] transition-all" 
+                  className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-4 touch-manipulation active:scale-[0.98] transition-all" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <>
-                      Sign In
+                      {t("auth.sign_in")}
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </>
                   )}
@@ -316,13 +358,13 @@ const Login = () => {
             </Form>
           ) : (
             <Form {...signupForm}>
-              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-3">
+              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-2.5">
                 <FormField
                   control={signupForm.control}
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Full Name</FormLabel>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.full_name")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -344,7 +386,7 @@ const Login = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Email</FormLabel>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.email")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -367,7 +409,7 @@ const Login = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Password</FormLabel>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.password")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -390,7 +432,7 @@ const Login = () => {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Confirm Password</FormLabel>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.confirm_password")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -410,14 +452,14 @@ const Login = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-4 touch-manipulation active:scale-[0.98] transition-all" 
+                  className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-3 touch-manipulation active:scale-[0.98] transition-all" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <>
-                      Create Account
+                      {t("auth.create_account")}
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </>
                   )}
@@ -425,14 +467,15 @@ const Login = () => {
               </form>
             </Form>
           )}
+          </div>{/* end scrollable forms wrapper */}
 
           {/* Divider */}
-          <div className="relative my-6">
+          <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-4 text-muted-foreground">Or continue with</span>
+              <span className="bg-card px-4 text-muted-foreground">{t("auth.or_continue")}</span>
             </div>
           </div>
 
@@ -442,7 +485,7 @@ const Login = () => {
               type="button"
               onClick={() => handleSocialLogin('google')}
               disabled={socialLoading !== null}
-              className="h-12 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50"
+              className="h-11 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50 text-sm"
             >
               {socialLoading === 'google' ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -462,7 +505,7 @@ const Login = () => {
               type="button"
               onClick={() => handleSocialLogin('apple')}
               disabled={socialLoading !== null}
-              className="h-12 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50"
+              className="h-11 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50 text-sm"
             >
               {socialLoading === 'apple' ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -478,45 +521,45 @@ const Login = () => {
           </div>
 
           {/* Trust badges */}
-          <div className="flex items-center justify-center gap-4 mt-4 text-muted-foreground text-[10px]">
+          <div className="flex items-center justify-center gap-4 mt-3 text-muted-foreground text-[10px]">
             <div className="flex items-center gap-1">
               <Shield className="w-3 h-3" />
-              <span>256-bit encrypted</span>
+              <span>{t("auth.encrypted")}</span>
             </div>
             <div className="w-px h-3 bg-border" />
             <div className="flex items-center gap-1">
               <Mail className="w-3 h-3" />
-              <span>No spam, ever</span>
+              <span>{t("auth.no_spam")}</span>
             </div>
           </div>
 
           {/* Toggle Mode */}
-          <div className="text-center mt-6">
+          <div className="text-center mt-3">
             <button
               type="button"
               onClick={toggleMode}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              {isLogin ? t("auth.no_account") + " " : t("auth.have_account") + " "}
               <span className="text-primary font-semibold">
-                {isLogin ? "Sign Up" : "Log In"}
+                {isLogin ? t("auth.sign_up") : t("auth.log_in")}
               </span>
             </button>
           </div>
         </motion.div>
 
-        <p className="mt-4 sm:mt-6 text-center text-xs text-muted-foreground">
-          {isLogin ? "Protected by enterprise-grade security" : "By signing up, you agree to our Terms of Service"}
-        </p>
-
-        {/* Go to Home */}
-        <button
-          onClick={() => navigate("/")}
-          className="mt-4 w-full flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
-        >
-          <Home className="h-4 w-4" />
-          Go to Home
-        </button>
+        <div className="flex flex-col items-center gap-2 mt-3 shrink-0">
+          <p className="text-center text-xs text-muted-foreground">
+            {isLogin ? t("auth.protected") : t("auth.terms_agree")}
+          </p>
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+          >
+            <Home className="h-4 w-4" />
+            {t("auth.go_home")}
+          </button>
+        </div>
       </div>
     </div>
   );

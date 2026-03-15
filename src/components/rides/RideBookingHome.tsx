@@ -13,7 +13,8 @@ import {
   Star, Phone, MessageSquare, Shield, Banknote,
   Smartphone, Wallet, X, Baby, Sparkles,
   Route, Timer, Bell, Package, Plane, Hotel, TrendingDown, Gem,
-  PawPrint, Accessibility, Plus, ShoppingCart, Fuel, UtensilsCrossed, Store, Pill
+  PawPrint, Accessibility, Plus, ShoppingCart, Fuel, UtensilsCrossed, Store, Pill,
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,8 @@ import { Tag, Percent, CheckCircle2, Loader2 } from "lucide-react";
 import PlaceLogo from "@/components/rides/PlaceLogo";
 import { useCityPricing } from "@/hooks/useCityPricing";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
+import { useI18n } from "@/hooks/useI18n";
+import { useCountry } from "@/hooks/useCountry";
 
 /* ─── Types ─── */
 interface PlaceData {
@@ -49,8 +52,54 @@ interface PlaceData {
 interface RouteData {
   distance_miles: number;
   duration_minutes: number;
+  duration_in_traffic_minutes?: number | null;
   polyline: string | null;
   traffic_level?: string;
+}
+
+/** Detect if user is in Cambodia based on pickup address or coordinates */
+function isInCambodia(address?: string, lat?: number): boolean {
+  if (address && /cambodia|កម្ពុជា|phnom\s*penh|siem\s*reap|battambang|sihanoukville/i.test(address)) return true;
+  // Cambodia lat range: ~9.5 to ~14.7
+  if (lat && lat >= 9.5 && lat <= 14.7) return true;
+  return false;
+}
+
+/** Format distance: km for Cambodia, mi for others */
+function formatDist(miles: number, useKm: boolean): string {
+  if (useKm) return `${(miles * 1.60934).toFixed(1)} km`;
+  return `${miles} mi`;
+}
+
+/** Format per-unit label */
+function distUnit(useKm: boolean): string {
+  return useKm ? "km" : "mi";
+}
+
+/** Convert per-mile rate to per-km for display */
+function perDistRate(perMile: number, useKm: boolean): number {
+  return useKm ? perMile / 1.60934 : perMile;
+}
+
+/** USD → KHR exchange rate */
+const USD_TO_KHR = 4062.5;
+const US_DEFAULT_CENTER = { lat: 40.7128, lng: -73.9857 };
+const CAMBODIA_DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
+
+/** Format price in KHR */
+function toKHR(usd: number): string {
+  return `${Math.round(usd * USD_TO_KHR).toLocaleString()} ៛`;
+}
+
+/** Dual price display: KHR primary, USD secondary for Cambodia */
+function dualPrice(usd: number, showKhr: boolean): string {
+  if (!showKhr) return `$${usd.toFixed(2)}`;
+  return `${toKHR(usd)} ($${usd.toFixed(2)})`;
+}
+
+/** Distance value for display */
+function distValue(miles: number, useKm: boolean): number {
+  return useKm ? Number((miles * 1.60934).toFixed(1)) : miles;
 }
 
 type ViewStep =
@@ -98,19 +147,7 @@ const DEFAULT_VEHICLE_OPTIONS = [
   { id: "wheelchair", category: "accessible", name: "ZIVO Wheel Chair", desc: "Wheelchair accessible vehicle", etaMin: 8, pricePerMile: 1.80, basePrice: 4.00, perMinute: 0.35, bookingFee: 2.50, minimumFare: 8.00, capacity: 3, icon: Accessibility, carSeat: false, surgeMultiplier: 1.0 },
 ];
 
-const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
-  { id: "book", label: "Book", icon: Car },
-  { id: "reserve", label: "Reserve", icon: CalendarClock },
-  { id: "map", label: "Map", icon: Map },
-  { id: "history", label: "History", icon: History },
-];
-
-const homeServices = [
-  { id: "ride", label: "Ride", icon: Car },
-  { id: "delivery", label: "Delivery", icon: Package },
-  { id: "flights", label: "Flights", icon: Plane },
-  { id: "hotels", label: "Hotels", icon: Hotel },
-];
+// rideTabs and homeServices built inside component for translation
 
 /* ─── Price calculator ─── */
 function calcPrice(vehicle: typeof DEFAULT_VEHICLE_OPTIONS[0], distanceMiles: number, durationMinutes = 0, surge = 1.0): number {
@@ -230,6 +267,7 @@ function VehicleRow({
   price,
   originalPrice,
   surgeActive,
+  isCambodia = false,
 }: {
   vehicle: (typeof DEFAULT_VEHICLE_OPTIONS)[0];
   selected: boolean;
@@ -237,6 +275,7 @@ function VehicleRow({
   price: number;
   originalPrice?: number;
   surgeActive?: boolean;
+  isCambodia?: boolean;
 }) {
   const etaDate = new Date(Date.now() + vehicle.etaMin * 60000);
   const etaHour = etaDate.getHours();
@@ -258,14 +297,14 @@ function VehicleRow({
     >
       <div className="w-[72px] shrink-0 flex items-center justify-center">
         <img
-          src={VEHICLE_IMAGES[vehicle.id] ?? "/vehicles/economy-car.svg"}
-          alt={vehicle.name}
+          src={getVehicleImage(vehicle.id, isCambodia)}
+          alt={getVehicleName(vehicle.id, vehicle.name, isCambodia)}
           className="w-[72px] h-[44px] object-contain"
         />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-sm font-bold text-foreground">{vehicle.name}</span>
+          <span className="text-sm font-bold text-foreground">{getVehicleName(vehicle.id, vehicle.name, isCambodia)}</span>
           {vehicle.id === "economy" && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
               <TrendingDown className="w-3 h-3" />
@@ -273,9 +312,14 @@ function VehicleRow({
             </span>
           )}
           {vehicle.id === "share" && (
-            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
-              <Users className="w-3 h-3" />
-              SAVE
+            <span className={cn(
+              "flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold",
+              isCambodia
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+            )}>
+              {isCambodia ? <Zap className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+              {isCambodia ? "EV" : "SAVE"}
             </span>
           )}
           {vehicle.id === "comfort" && (
@@ -334,21 +378,21 @@ function VehicleRow({
           )}
           <div className="flex items-center gap-0.5 text-muted-foreground">
             <User className="w-3 h-3" />
-            <span className="text-xs">{vehicle.capacity}</span>
+            <span className="text-xs">{getVehicleCapacity(vehicle.id, vehicle.capacity, isCambodia)}</span>
           </div>
         </div>
         <div className="flex items-center gap-1.5 mt-0.5">
-          <span className="text-xs text-muted-foreground">{etaStr} · {vehicle.desc}</span>
+          <span className="text-xs text-muted-foreground">{etaStr} · {getVehicleDesc(vehicle.id, vehicle.desc, isCambodia)}</span>
         </div>
       </div>
       <div className="text-right shrink-0 flex flex-col items-end gap-0.5">
         {surgeActive && originalPrice && (
-          <span className="line-through text-muted-foreground text-xs">${originalPrice.toFixed(2)}</span>
+          <span className="line-through text-muted-foreground text-xs">{isCambodia ? dualPrice(originalPrice, true) : `$${originalPrice.toFixed(2)}`}</span>
         )}
         {isDiscount ? (
-          <span className="text-sm font-bold text-green-600">🟢 ${price.toFixed(2)}</span>
+          <span className="text-sm font-bold text-green-600">🟢 {isCambodia ? dualPrice(price, true) : `$${price.toFixed(2)}`}</span>
         ) : (
-          <span className="text-sm font-bold text-foreground">${price.toFixed(2)}</span>
+          <span className="text-sm font-bold text-foreground">{isCambodia ? dualPrice(price, true) : `$${price.toFixed(2)}`}</span>
         )}
         {selected && (
           <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center mt-0.5" aria-label="Selected">
@@ -373,6 +417,67 @@ const VEHICLE_IMAGES: Record<string, string> = {
   "pet":       "/vehicles/pet-car-v2.png",
   "wheelchair": "/vehicles/wheelchair-car-v2.png",
 };
+
+/* Cambodia-specific overrides */
+const CAMBODIA_VEHICLE_IMAGES: Record<string, string> = {
+  "economy": "/vehicles/zivo-tuktuk.png",
+  "share": "/vehicles/zivo-ev-tuktuk.png",
+};
+const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
+  "economy": "ZIVO Tuk Tuk",
+  "share": "ZIVO EV Tuk Tuk",
+};
+const CAMBODIA_VEHICLE_DESCS: Record<string, string> = {
+  "economy": "ការធ្វើដំណើរប្រចាំថ្ងៃតម្លៃសមរម្យ",
+  "share": "អគ្គិសនី សូន្យការបំភាយ",
+  "comfort": "អ្នកបើកបរល្អបំផុត កន្លែងដាក់ជើងទូលាយ",
+  "ev": "អគ្គិសនី សូន្យការបំភាយ",
+  "xl": "កន្លែងបន្ថែមសម្រាប់ក្រុម",
+};
+const CAMBODIA_VEHICLE_CAPACITY: Record<string, number> = {
+  "economy": 3,
+  "share": 3,
+};
+const CAMBODIA_BOOKING_FEE = 0.13;
+const CAMBODIA_PER_KM_KHR = 1550; // KHR per km
+const CAMBODIA_PER_MIN_KHR = 50;  // KHR per minute
+const KHR_RATE = 4062.5;
+const CAMBODIA_PER_MILE_USD = (CAMBODIA_PER_KM_KHR / KHR_RATE) * 1.60934; // convert per-km KHR → per-mile USD
+const CAMBODIA_PER_MIN_USD = CAMBODIA_PER_MIN_KHR / KHR_RATE;
+const CAMBODIA_EV_TUKTUK_PER_KM_KHR = 1250;
+const CAMBODIA_EV_TUKTUK_PER_MILE_USD = (CAMBODIA_EV_TUKTUK_PER_KM_KHR / KHR_RATE) * 1.60934;
+
+/** Get vehicle image based on region */
+function getVehicleImage(vehicleId: string, isCambodia: boolean): string {
+  if (isCambodia && CAMBODIA_VEHICLE_IMAGES[vehicleId]) {
+    return CAMBODIA_VEHICLE_IMAGES[vehicleId];
+  }
+  return VEHICLE_IMAGES[vehicleId] ?? "/vehicles/economy-car.svg";
+}
+
+/** Get vehicle display name based on region */
+function getVehicleName(vehicleId: string, originalName: string, isCambodia: boolean): string {
+  if (isCambodia && CAMBODIA_VEHICLE_NAMES[vehicleId]) {
+    return CAMBODIA_VEHICLE_NAMES[vehicleId];
+  }
+  return originalName;
+}
+
+/** Get vehicle description based on region */
+function getVehicleDesc(vehicleId: string, originalDesc: string, isCambodia: boolean): string {
+  if (isCambodia && CAMBODIA_VEHICLE_DESCS[vehicleId]) {
+    return CAMBODIA_VEHICLE_DESCS[vehicleId];
+  }
+  return originalDesc;
+}
+
+/** Get vehicle capacity based on region */
+function getVehicleCapacity(vehicleId: string, originalCapacity: number, isCambodia: boolean): number {
+  if (isCambodia && CAMBODIA_VEHICLE_CAPACITY[vehicleId]) {
+    return CAMBODIA_VEHICLE_CAPACITY[vehicleId];
+  }
+  return originalCapacity;
+}
 
 const etaTime = (minutesFromNow: number) =>
   new Date(Date.now() + minutesFromNow * 60000)
@@ -432,7 +537,7 @@ function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
         disabled={!stripe || processing || isSubmitting}
       >
         <Shield className="w-5 h-5" />
-        {processing ? "Authorizing..." : `Authorize $${price.toFixed(2)} · ${vehicleName}`}
+        {processing ? "Authorizing..." : `Authorize ${dualPrice(price, false)} · ${vehicleName}`}
       </Button>
       <p className="text-[10px] text-muted-foreground text-center">
         Your card will be pre-authorized. Final charge applied after ride completion.
@@ -447,6 +552,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const { user } = useAuth();
   const { getCurrentLocation } = useCurrentLocation();
   const { data: savedLocations = [] } = useSavedLocations(user?.id);
+  const { currentLanguage, changeLanguage, t } = useI18n();
+  const [showLangMenu, setShowLangMenu] = useState(false);
+
+  const { isCambodia: isCambodiaCountry } = useCountry();
+
+  const LANGS = [
+    { code: "en", label: "English", flag: "🇺🇸" },
+    { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
+  ];
+  const fallbackPickupCenter = isCambodiaCountry ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER;
 
   // Recent ride destinations from Supabase
   const [recentDestinations, setRecentDestinations] = useState<{ id: string; address: string; lat: number; lng: number; time: string }[]>([]);
@@ -488,12 +603,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     [savedLocations]
   );
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(userLocation?.lat ?? null, userLocation?.lng ?? null);
 
   const [viewStep, setViewStep] = useState<ViewStep>("search");
   const [activeTab, setActiveTab] = useState<RideTab>("book");
-   const [pickup, setPickup] = useState<PlaceData | null>(null);
+  const [pickup, setPickup] = useState<PlaceData | null>(null);
   const [destination, setDestination] = useState<PlaceData | null>(null);
+
+  const nearbyCenter = pickup ?? userLocation;
+  const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(nearbyCenter?.lat ?? null, nearbyCenter?.lng ?? null);
   const [pickupDisplay, setPickupDisplay] = useState("");
   const [destinationDisplay, setDestinationDisplay] = useState("");
 
@@ -503,6 +620,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     const addr = pickup.address.toLowerCase();
     if (addr.includes("new orleans")) return "New Orleans";
     if (addr.includes("baton rouge")) return "Baton Rouge";
+    if (addr.includes("phnom penh")) return "Phnom Penh";
+    if (addr.includes("siem reap")) return "Siem Reap";
+    if (addr.includes("sihanoukville")) return "Sihanoukville";
+    if (addr.includes("battambang")) return "Battambang";
+    if (addr.includes("cambodia") || addr.includes("កម្ពុជា")) return "Phnom Penh";
     return undefined; // falls back to "default" pricing
   }, [pickup?.address]);
 
@@ -511,20 +633,35 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Merge DB pricing into vehicle options (admin rates override defaults)
   const vehicleOptions = useMemo(() => {
-    if (!cityPricingMap || Object.keys(cityPricingMap).length === 0) return DEFAULT_VEHICLE_OPTIONS;
-    return DEFAULT_VEHICLE_OPTIONS.map((v) => {
-      const dbPricing = cityPricingMap[v.id];
-      if (!dbPricing) return v;
-      return {
+    const isCambodia = isCambodiaCountry;
+    let options = DEFAULT_VEHICLE_OPTIONS;
+    if (cityPricingMap && Object.keys(cityPricingMap).length > 0) {
+      options = DEFAULT_VEHICLE_OPTIONS.map((v) => {
+        const dbPricing = cityPricingMap[v.id];
+        if (!dbPricing) return v;
+        return {
+          ...v,
+          basePrice: dbPricing.base_fare ?? v.basePrice,
+          pricePerMile: dbPricing.per_mile ?? v.pricePerMile,
+          perMinute: dbPricing.per_minute ?? v.perMinute,
+          bookingFee: dbPricing.booking_fee ?? v.bookingFee,
+          minimumFare: dbPricing.minimum_fare ?? v.minimumFare,
+        };
+      });
+    }
+    if (isCambodia) {
+      options = options.map((v) => ({
         ...v,
-        basePrice: dbPricing.base_fare ?? v.basePrice,
-        pricePerMile: dbPricing.per_mile ?? v.pricePerMile,
-        perMinute: dbPricing.per_minute ?? v.perMinute,
-        bookingFee: dbPricing.booking_fee ?? v.bookingFee,
-        minimumFare: dbPricing.minimum_fare ?? v.minimumFare,
-      };
-    });
-  }, [cityPricingMap]);
+        basePrice: 0,
+        bookingFee: CAMBODIA_BOOKING_FEE,
+        pricePerMile: v.id === "share" ? CAMBODIA_EV_TUKTUK_PER_MILE_USD : CAMBODIA_PER_MILE_USD,
+        perMinute: CAMBODIA_PER_MIN_USD,
+        minimumFare: 0.25,
+        surgeMultiplier: 1.0,
+      }));
+    }
+    return options;
+  }, [cityPricingMap, currentLanguage]);
   const [stops, setStops] = useState<{ id: string; place: PlaceData | null; display: string }[]>([]);
   const stopsRef = useRef(stops);
   stopsRef.current = stops;
@@ -633,12 +770,31 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
-  // Fetch user location on mount
+  // Keep map region aligned to selected language mode
   useEffect(() => {
+    let cancelled = false;
+
+    if (isCambodiaCountry) {
+      // Force Cambodia center when Khmer is selected
+      setUserLocation(CAMBODIA_DEFAULT_CENTER);
+      setPickup(null);
+      setPickupDisplay("");
+      setDestination(null);
+      setDestinationDisplay("");
+      pickupManuallySet.current = false;
+      return () => { cancelled = true; };
+    }
+
     getCurrentLocation()
-      .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
-      .catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+      .then((loc) => {
+        if (!cancelled) setUserLocation({ lat: loc.lat, lng: loc.lng });
+      })
+      .catch(() => {
+        if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
+      });
+
+    return () => { cancelled = true; };
+  }, [currentLanguage, getCurrentLocation]);
 
   // Fetch real nearby drivers and poll every 10s
   useEffect(() => {
@@ -758,7 +914,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       // If no real driver found, show "no drivers available" and stay searching briefly
       if (!driverData) {
-        toast.error("No drivers available nearby. Expanding search...");
+        toast.error(t("ride.no_drivers_nearby"));
         // Retry once after brief delay
         await new Promise(r => setTimeout(r, 3000));
         if (cancelled) return;
@@ -823,10 +979,44 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [viewStep, destination, liveDriverLocation, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
+    if (isCambodiaCountry) {
+      // In Cambodia mode, use GPS but fall back to Phnom Penh
+      getCurrentLocation()
+        .then((loc) => {
+          // Only use GPS if actually in Cambodia region
+          if (loc.lat >= 9.5 && loc.lat <= 14.7) {
+            setUserLocation({ lat: loc.lat, lng: loc.lng });
+          } else {
+            setUserLocation(CAMBODIA_DEFAULT_CENTER);
+          }
+        })
+        .catch(() => setUserLocation(CAMBODIA_DEFAULT_CENTER));
+      return;
+    }
     getCurrentLocation()
       .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
       .catch(() => toast.error("Could not get your location"));
-  }, [getCurrentLocation]);
+  }, [currentLanguage, getCurrentLocation]);
+
+  const resolvePickupAddress = useCallback((coords: { lat: number; lng: number }) => {
+    reverseGeocode(coords.lat, coords.lng)
+      .then((addr) => {
+        setPickup((prev) => {
+          if (!prev) return prev;
+          const sameCoords = Math.abs(prev.lat - coords.lat) < 0.00001 && Math.abs(prev.lng - coords.lng) < 0.00001;
+          return sameCoords ? { ...prev, address: addr } : prev;
+        });
+        setPickupDisplay(addr);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!pickup) return;
+    const currentLocationLabel = t("ride.current_location");
+    if (pickup.address !== currentLocationLabel && pickup.address !== "Current Location") return;
+    resolvePickupAddress({ lat: pickup.lat, lng: pickup.lng });
+  }, [pickup?.address, pickup?.lat, pickup?.lng, resolvePickupAddress, t]);
 
   /** When user drags map in search view, reverse geocode center → pickup */
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
@@ -879,6 +1069,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
+  const useKm = useMemo(() => isInCambodia(pickup?.address, pickup?.lat) || isCambodiaCountry || currentLanguage === "km", [pickup?.address, pickup?.lat, isCambodiaCountry, currentLanguage]);
+  const rideCountry = useKm ? "kh" : undefined;
+  const locationModeKey = rideCountry ?? "global";
 
   const currentVehicle = vehicleOptions.find((v) => v.id === selectedVehicle) ?? vehicleOptions[0];
   const currentPrice = routeData
@@ -986,9 +1179,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     // Determine effective pickup (including auto-fallback)
     let pickupData = pickup;
     if (!pickupData) {
-      pickupData = userLocation
-        ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
-        : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
+      const coords = userLocation ?? fallbackPickupCenter;
+      pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
+      resolvePickupAddress(coords);
     }
 
     // Block same-location trips unless there are intermediate stops (round trip)
@@ -1031,6 +1224,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           setRouteData({
             distance_miles: data.distance_miles,
             duration_minutes: data.duration_minutes,
+            duration_in_traffic_minutes: data.duration_in_traffic_minutes ?? null,
             polyline: data.polyline,
             traffic_level: data.traffic_level,
           });
@@ -1069,7 +1263,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         setViewStep("route-preview");
       });
     }
-  }, [pickup, userLocation, isSameLocation]);
+  }, [pickup, userLocation, isSameLocation, fallbackPickupCenter]);
 
   /* ─── Multi-stop management ─── */
   const MAX_STOPS = 1;
@@ -1118,12 +1312,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const handleSavedPlace = (address: string, lat: number, lng: number) => {
     setDestinationDisplay(address);
     setDestination({ address, lat, lng });
-    setPickupDisplay("Current Location");
-    const pickupData = userLocation
-      ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
-      : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
+    const coords = userLocation ?? fallbackPickupCenter;
+    const pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
+    setPickupDisplay(t("ride.current_location"));
     setPickup(pickupData);
     fetchRoute(pickupData, { address, lat, lng });
+    resolvePickupAddress(coords);
   };
 
   /* ─── Fetch route (for initial route + confirm search) ─── */
@@ -1156,6 +1350,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         setRouteData({
           distance_miles: data.distance_miles,
           duration_minutes: data.duration_minutes,
+          duration_in_traffic_minutes: data.duration_in_traffic_minutes ?? null,
           polyline: data.polyline,
           traffic_level: data.traffic_level,
         });
@@ -1202,6 +1397,42 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
     fetchRoute(pickup, destination, wp);
   };
+
+  /* ─── Auto-refresh route data every 30s for live traffic updates ─── */
+  useEffect(() => {
+    if (viewStep !== "route-preview" && viewStep !== "ride-options") return;
+    if (!pickup?.lat || !destination?.lat) return;
+
+    const refresh = async () => {
+      try {
+        const wp = stopsRef.current
+          .filter(s => s.place && s.place.lat && s.place.lng)
+          .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
+        const { data, error } = await supabase.functions.invoke("maps-route", {
+          body: {
+            origin_lat: pickup.lat,
+            origin_lng: pickup.lng,
+            dest_lat: destination.lat,
+            dest_lng: destination.lng,
+            waypoints: wp.length > 0 ? wp : undefined,
+          },
+        });
+        if (!error && data?.ok) {
+          setRouteData(prev => ({
+            ...prev!,
+            duration_minutes: data.duration_minutes,
+            duration_in_traffic_minutes: data.duration_in_traffic_minutes ?? null,
+            traffic_level: data.traffic_level,
+            distance_miles: data.distance_miles,
+            polyline: data.polyline ?? prev?.polyline ?? null,
+          }));
+        }
+      } catch {}
+    };
+
+    const interval = setInterval(refresh, 30000);
+    return () => clearInterval(interval);
+  }, [viewStep, pickup?.lat, pickup?.lng, destination?.lat, destination?.lng]);
 
   /* ─── Request Ride — Create PaymentIntent + Confirm ─── */
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -1351,7 +1582,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
     setShowCancelModal(false);
     if (fee > 0) {
-      toast.error(`Ride cancelled — $${fee.toFixed(2)} cancellation fee applied`);
+      toast.error(`Ride cancelled — ${useKm ? dualPrice(fee, true) : `$${fee.toFixed(2)}`} cancellation fee applied`);
     } else {
       toast.info("Ride cancelled — no fee charged");
     }
@@ -1378,13 +1609,45 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <h1 className="flex-1 text-center font-black text-lg tracking-tight">
             <span className="text-primary">Zivo</span> Ride
           </h1>
-          <button
-            onClick={() => navigate("/notifications")}
-            className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
-            aria-label="Notifications"
-          >
-            <Bell className="w-5 h-5 text-muted-foreground" />
-          </button>
+          <div className="flex items-center gap-1 -mr-2">
+            <div className="relative">
+              <button
+                onClick={() => setShowLangMenu(!showLangMenu)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+                aria-label="Change language"
+              >
+                <Globe className="w-5 h-5 text-muted-foreground" />
+              </button>
+              {showLangMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
+                  <div className="absolute right-0 top-11 z-50 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[140px] animate-in fade-in slide-in-from-top-2 duration-150">
+                    {LANGS.map(l => (
+                      <button
+                        key={l.code}
+                        onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
+                        className={cn(
+                          "w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors",
+                          currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted"
+                        )}
+                      >
+                        <span className="text-base">{l.flag}</span>
+                        <span>{l.label}</span>
+                        {currentLanguage === l.code && <CheckCircle className="w-3.5 h-3.5 ml-auto" />}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            <button
+              onClick={() => navigate("/notifications")}
+              className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+              aria-label="Notifications"
+            >
+              <Bell className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -1403,19 +1666,52 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <h1 className="flex-1 text-center font-black text-lg tracking-tight">
               <span className="text-primary">Zivo</span> Ride
             </h1>
-            <button
-              onClick={() => navigate("/notifications")}
-              className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
-              aria-label="Notifications"
-            >
-              <Bell className="w-5 h-5 text-muted-foreground" />
-            </button>
+            <div className="flex items-center gap-1 -mr-2">
+              <div className="relative">
+                <button
+                  onClick={() => setShowLangMenu(!showLangMenu)}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+                  aria-label="Change language"
+                >
+                  <Globe className="w-5 h-5 text-muted-foreground" />
+                </button>
+                {showLangMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
+                    <div className="absolute right-0 top-11 z-50 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[140px] animate-in fade-in slide-in-from-top-2 duration-150">
+                      {LANGS.map(l => (
+                        <button
+                          key={l.code}
+                          onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
+                          className={cn(
+                            "w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors",
+                            currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted"
+                          )}
+                        >
+                          <span className="text-base">{l.flag}</span>
+                          <span>{l.label}</span>
+                          {currentLanguage === l.code && <CheckCircle className="w-3.5 h-3.5 ml-auto" />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={() => navigate("/notifications")}
+                className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+                aria-label="Notifications"
+              >
+                <Bell className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
           </div>
 
           {/* Map + bottom sheet container */}
           <div className="flex-1 relative z-0 min-h-0">
             <div className="absolute inset-0">
               <MapSection
+                key={`home-map-${locationModeKey}`}
                 compact
                 pickupCoords={null}
                 dropoffCoords={null}
@@ -1457,8 +1753,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="px-5 pt-1 pb-24">
               {/* Title */}
               <div className="text-center mb-3">
-                <h2 className="text-lg font-black text-foreground tracking-tight">Set your destination</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Drag map to move pin</p>
+                <h2 className="text-lg font-black text-foreground tracking-tight">{t("ride.set_destination")}</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("ride.drag_map_move_pin")}</p>
               </div>
 
               {/* Destination input */}
@@ -1470,7 +1766,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <span className="text-[10px] font-black text-primary-foreground leading-none">Z</span>
                 </div>
                 <span className="flex-1 text-left text-sm font-medium truncate" style={{ color: destinationDisplay ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
-                  {destinationDisplay || "Book a Ride"}
+                  {destinationDisplay || t("ride.book_a_ride")}
                 </span>
                 <Navigation className="w-4 h-4 text-primary/60 shrink-0" />
               </button>
@@ -1485,11 +1781,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   if (center && destinationDisplay) {
                     const dest: PlaceData = { address: destinationDisplay, lat: center.lat, lng: center.lng };
                     setDestination(dest);
-                    setPickupDisplay("Current Location");
-                    const pickupData = userLocation
-                      ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
-                      : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
+                    const coords = userLocation ?? fallbackPickupCenter;
+                    const pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
+                    setPickupDisplay(t("ride.current_location"));
                     setPickup(pickupData);
+                    resolvePickupAddress(coords);
                     const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
                     fetchRoute(pickupData, dest, wp);
                   } else {
@@ -1500,7 +1796,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
                 size="lg"
               >
-                {isReversingGeocode ? "Locating..." : destinationDisplay ? "Choose a ride" : "Search destination"}
+                {isReversingGeocode ? t("ride.locating") : destinationDisplay ? t("ride.choose_ride") : t("ride.search_destination")}
               </Button>
             </div>
             </div>
@@ -1527,6 +1823,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           }}
         >
           <MapSection
+            key={`active-map-${locationModeKey}`}
             compact
             pickupCoords={pickup}
             dropoffCoords={["route-preview", "ride-options", "confirm-ride", "searching", "pickup-confirm", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep) ? destination : null}
@@ -1558,6 +1855,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             }}
           >
             <MapSection
+              key={`search-map-${locationModeKey}`}
               compact
               pickupCoords={null}
               dropoffCoords={destination}
@@ -1669,20 +1967,22 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   </div>
                   <div className="flex-1 space-y-2">
-                    <AddressAutocomplete
+                     <AddressAutocomplete
                       placeholder="Pickup location"
                       value={pickupDisplay}
                       onSelect={handlePickupSelect}
+                      country={rideCountry}
                       className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
                     />
                     {/* Stop inputs */}
                     {stops.map((stop, idx) => (
                       <div key={stop.id} className="relative">
-                        <AddressAutocomplete
+                         <AddressAutocomplete
                           placeholder={`Stop ${idx + 1}`}
                           value={stop.display}
                           onSelect={(place) => handleStopSelect(stop.id, place)}
                           proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
+                          country={rideCountry}
                           className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0 [&_input]:pr-8"
                         />
                         <button
@@ -1693,11 +1993,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                         </button>
                       </div>
                     ))}
-                    <AddressAutocomplete
+                     <AddressAutocomplete
                       placeholder="Where to?"
                       value={destinationDisplay}
                       onSelect={handleDestinationSelect}
                       proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
+                      country={rideCountry}
                       className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
                     />
                   </div>
@@ -1717,7 +2018,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <div className="w-5 h-5 rounded-full bg-muted/30 flex items-center justify-center">
                     <Plus className="w-3 h-3" />
                   </div>
-                  Add Stop
+                  {t("ride.add_stop")}
                 </button>
                 <button
                   onClick={() => { setShowSchedule(!showSchedule); setShowPickupOther(false); }}
@@ -1899,9 +2200,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                         <div className="flex items-center justify-between mb-2.5 px-5">
                           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                             <CatIcon className="w-3.5 h-3.5 text-primary/60" />
-                            {cat.label}
+                            {cat.type === "restaurant" ? t("ride.restaurants") : cat.type === "shop" ? t("ride.shops_grocery") : t("ride.gas_stations")}
                           </p>
-                          <span className="text-[10px] text-muted-foreground/40">{cat.places.length} nearby</span>
+                          <span className="text-[10px] text-muted-foreground/40">{cat.places.length} {t("ride.nearby")}</span>
                         </div>
                         <div
                           className="flex gap-2.5 overflow-x-auto overflow-y-hidden px-5 pb-2 snap-x snap-mandatory touch-pan-x"
@@ -1921,9 +2222,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                               />
                               <p className="text-[11px] font-bold text-foreground text-center leading-tight truncate w-full">{place.name}</p>
                               <p className="text-[8px] text-muted-foreground/50 text-center leading-snug mt-0.5 truncate w-full">{place.address}</p>
-                              <p className="text-[9px] text-muted-foreground mt-1.5">{place.distanceMi} mi · {place.timeMin} min</p>
-                              <p className="text-[13px] font-extrabold text-primary mt-1">{place.priceEst}</p>
-                              <p className="text-[8px] text-muted-foreground/40">est.</p>
+                              <p className="text-[9px] text-muted-foreground mt-1.5">{useKm ? `${(parseFloat(place.distanceMi) * 1.60934).toFixed(1)} km` : `${place.distanceMi} mi`} · {place.timeMin} min</p>
+                              <p className="text-[13px] font-extrabold text-primary mt-1">{useKm ? dualPrice(parseFloat(place.priceEst.replace(/[^0-9.]/g, "")), true) : place.priceEst}</p>
+                              <p className="text-[8px] text-muted-foreground/40">{t("ride.est")}</p>
                             </button>
                           ))}
                           <div className="min-w-[1px] shrink-0" />
@@ -2034,9 +2335,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     Finding route...
                   </span>
                 ) : destination ? (
-                  "Choose a ride"
+                  t("ride.choose_ride")
                 ) : (
-                  "Search destination"
+                  t("ride.search_destination")
                 )}
               </Button>
             </div>
@@ -2103,7 +2404,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </div>
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div>
-                      <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Pickup</p>
+                      <p className="text-[10px] text-muted-foreground leading-none mb-0.5">{t("ride.pickup")}</p>
                       <p className="text-sm font-semibold text-foreground leading-tight whitespace-normal break-words">{pickup?.address || pickupDisplay}</p>
                     </div>
                     {stops.map((stop, idx) => (
@@ -2113,11 +2414,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                           <p className="text-xs font-medium text-foreground truncate leading-tight">{stop.place.address}</p>
                         ) : (
                           <div className="relative">
-                            <AddressAutocomplete
+                             <AddressAutocomplete
                               placeholder={`Enter stop ${idx + 1} address`}
                               value={stop.display}
                               onSelect={(place) => handleStopSelect(stop.id, place)}
                               proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
+                              country={rideCountry}
                               className="[&_input]:h-8 [&_input]:rounded-lg [&_input]:text-xs [&_input]:font-medium [&_input]:bg-muted/30 [&_input]:border-border/30 [&_input]:px-2"
                             />
                             <button
@@ -2131,37 +2433,76 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       </div>
                     ))}
                     <div>
-                      <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Destination</p>
+                      <p className="text-[10px] text-muted-foreground leading-none mb-0.5">{t("ride.destination")}</p>
                       <p className="text-sm font-semibold text-foreground leading-tight whitespace-normal break-words">{destination?.address || destinationDisplay}</p>
                     </div>
                   </div>
                 </div>
 
               {routeData && (
-                <div className="flex items-center gap-1.5">
-                  <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <div className="flex-1 min-w-[70px] flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
                     <Timer className="w-3.5 h-3.5 text-primary shrink-0" />
                     <div>
-                      <p className="text-sm font-bold text-foreground leading-none">{routeData.duration_minutes} min</p>
-                      <p className="text-[9px] text-muted-foreground">Trip time</p>
+                      <p className="text-sm font-bold text-foreground leading-none">
+                        {routeData.duration_in_traffic_minutes
+                          ? `${routeData.duration_in_traffic_minutes} ${t("ride.min_unit")}`
+                          : `${routeData.duration_minutes} ${t("ride.min_unit")}`}
+                      </p>
+                      {routeData.duration_in_traffic_minutes && routeData.duration_in_traffic_minutes !== routeData.duration_minutes && (
+                        <p className="text-[8px] text-muted-foreground/60 line-through">{routeData.duration_minutes} {t("ride.min_unit")}</p>
+                      )}
+                      <p className="text-[9px] text-muted-foreground">{t("ride.trip_time")}</p>
                     </div>
                   </div>
-                  <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
+                  <div className="flex-1 min-w-[70px] flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
                     <Route className="w-3.5 h-3.5 text-primary shrink-0" />
                     <div>
-                      <p className="text-sm font-bold text-foreground leading-none">{routeData.distance_miles} mi</p>
-                      <p className="text-[9px] text-muted-foreground">Distance</p>
+                      <p className="text-sm font-bold text-foreground leading-none">{formatDist(routeData.distance_miles, useKm)}</p>
+                      <p className="text-[9px] text-muted-foreground">{t("ride.distance")}</p>
                     </div>
                   </div>
-                  {routeData.traffic_level && (
-                    <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
-                      <Car className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <div>
-                        <p className="text-sm font-bold text-foreground leading-none capitalize">{routeData.traffic_level}</p>
-                        <p className="text-[9px] text-muted-foreground">Traffic</p>
-                      </div>
+                  <div className={cn(
+                    "flex-1 min-w-[70px] flex items-center gap-1.5 rounded-lg border px-2 py-1.5",
+                    routeData.traffic_level === "heavy"
+                      ? "bg-destructive/10 border-destructive/20"
+                      : routeData.traffic_level === "moderate"
+                        ? "bg-amber-500/10 border-amber-500/20"
+                        : "bg-emerald-500/10 border-emerald-500/20"
+                  )}>
+                    <Car className={cn(
+                      "w-3.5 h-3.5 shrink-0",
+                      routeData.traffic_level === "heavy"
+                        ? "text-destructive"
+                        : routeData.traffic_level === "moderate"
+                          ? "text-amber-500"
+                          : "text-emerald-500"
+                    )} />
+                    <div>
+                      <p className={cn(
+                        "text-sm font-bold leading-none capitalize",
+                        routeData.traffic_level === "heavy"
+                          ? "text-destructive"
+                          : routeData.traffic_level === "moderate"
+                            ? "text-amber-500"
+                            : "text-emerald-500"
+                      )}>
+                        {routeData.traffic_level
+                          ? (t(`ride.${routeData.traffic_level.toLowerCase()}`) !== `ride.${routeData.traffic_level.toLowerCase()}`
+                            ? t(`ride.${routeData.traffic_level.toLowerCase()}`)
+                            : routeData.traffic_level)
+                          : t("ride.light") !== "ride.light" ? t("ride.light") : "Light"}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground">{t("ride.traffic")}</p>
                     </div>
-                  )}
+                  </div>
+                  <div className="flex-1 min-w-[70px] flex items-center gap-1.5 rounded-lg bg-primary/10 border border-primary/20 px-2 py-1.5">
+                    <Tag className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-primary leading-none">{useKm ? dualPrice(currentPrice, true) : `$${currentPrice.toFixed(2)}`}</p>
+                      <p className="text-[9px] text-muted-foreground">{t("ride.est")}</p>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -2180,7 +2521,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
                     <Plus className="w-3 h-3" />
                   </div>
-                  Add Stop
+                  {t("ride.add_stop")}
                 </button>
               </div>
             </div>
@@ -2191,14 +2532,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 {isLoadingRoute ? (
                   <div className="flex items-center justify-center py-3">
                     <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    <span className="ml-2 text-sm text-muted-foreground">Calculating route...</span>
+                    <span className="ml-2 text-sm text-muted-foreground">{t("ride.calculating_route")}</span>
                   </div>
                 ) : (
                   <Button
                     className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
                     onClick={() => setViewStep("ride-options")}
                   >
-                    Choose a ride
+                    {t("ride.choose_ride")}
                   </Button>
                 )}
               </div>
@@ -2213,12 +2554,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   exit={{ opacity: 0 }}
                   className="flex-1 overflow-hidden flex flex-col items-center justify-center px-4 border-t border-border/15"
                 >
-                  <p className="text-sm text-muted-foreground mb-4">Browse available rides</p>
+                  <p className="text-sm text-muted-foreground mb-4">{t("ride.browse_available_rides")}</p>
                   <Button
                     className="w-full h-12 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90"
                     onClick={() => setViewStep("ride-options")}
                   >
-                    See ride options
+                    {t("ride.see_ride_options")}
                   </Button>
                 </motion.div>
               )}
@@ -2234,7 +2575,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           style={{ top: HEADER_HEIGHT }}
         >
           <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
-            <h2 className="text-xl font-black text-foreground tracking-tight">Choose a ride</h2>
+            <h2 className="text-xl font-black text-foreground tracking-tight">{t("ride.choose_ride")}</h2>
             {/* Promo badge — only when promo is actually applied */}
             {appliedPromo && (
               <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25">
@@ -2257,7 +2598,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     : "bg-card border border-border/30 text-muted-foreground hover:text-foreground hover:border-border/60"
                 )}
               >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {t(`ride.${cat}`)}
               </button>
             ))}
           </div>
@@ -2293,8 +2634,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   {/* Vehicle image */}
                   <div className="w-[68px] shrink-0 flex items-center justify-center">
                     <img
-                      src={VEHICLE_IMAGES[v.id] ?? "/vehicles/economy-car.svg"}
-                      alt={v.name}
+                      src={getVehicleImage(v.id, isCambodiaCountry)}
+                      alt={getVehicleName(v.id, v.name, isCambodiaCountry)}
                       className={cn("w-[68px] h-auto transition-transform duration-200", isSelected && "scale-105")}
                     />
                   </div>
@@ -2302,15 +2643,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   {/* Center: Name + meta */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={cn("text-[14px] font-bold", isSelected ? "text-foreground" : "text-foreground")}>{v.name}</span>
+                      <span className={cn("text-[14px] font-bold", isSelected ? "text-foreground" : "text-foreground")}>{getVehicleName(v.id, v.name, isCambodiaCountry)}</span>
                       {v.id === "economy" && (
                         <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
                           <TrendingDown className="w-3 h-3" />LOW
                         </span>
                       )}
                       {v.id === "share" && (
-                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold">
-                          <Users className="w-3 h-3" />SAVE
+                        <span className={cn(
+                          "flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold",
+                          isCambodiaCountry
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "bg-primary/10 text-primary"
+                        )}>
+                          {isCambodiaCountry ? <Zap className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+                          {isCambodiaCountry ? "EV" : "SAVE"}
                         </span>
                       )}
                       {v.id === "comfort" && (
@@ -2355,23 +2702,38 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       )}
                       <div className="flex items-center gap-0.5 text-muted-foreground/60">
                         <User className="w-3 h-3" />
-                        <span className="text-[11px]">{v.capacity}</span>
+                        <span className="text-[11px]">{getVehicleCapacity(v.id, v.capacity, isCambodiaCountry)}</span>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 leading-snug">
-                      {etaTime(v.etaMin)} · {v.desc}
+                      {etaTime(v.etaMin)} · {getVehicleDesc(v.id, v.desc, isCambodiaCountry)}
                     </p>
                   </div>
 
                   {/* Right: Price + check */}
-                  <div className="shrink-0 text-right flex flex-col items-end gap-1">
+                  <div className="shrink-0 text-right flex flex-col items-end gap-0.5">
                     {isDiscount && originalPrice ? (
                       <>
-                        <span className="text-[11px] text-muted-foreground line-through">${originalPrice.toFixed(2)}</span>
-                        <span className="text-[15px] font-bold text-primary flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
-                          ${price.toFixed(2)}
-                        </span>
+                        {useKm ? (
+                          <>
+                            <span className="text-[11px] text-muted-foreground line-through">{toKHR(originalPrice)}</span>
+                            <span className="text-[15px] font-bold text-primary">{toKHR(price)}</span>
+                            <span className="text-[11px] text-muted-foreground">${price.toFixed(2)}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-[11px] text-muted-foreground line-through">${originalPrice.toFixed(2)}</span>
+                            <span className="text-[15px] font-bold text-primary flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
+                              ${price.toFixed(2)}
+                            </span>
+                          </>
+                        )}
+                      </>
+                    ) : useKm ? (
+                      <>
+                        <span className="text-[15px] font-bold text-foreground">{toKHR(price)}</span>
+                        <span className="text-[11px] text-muted-foreground">${price.toFixed(2)}</span>
                       </>
                     ) : (
                       <span className="text-[15px] font-bold text-foreground">${price.toFixed(2)}</span>
@@ -2396,7 +2758,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               <div className="w-10 h-10 rounded-xl bg-muted/20 border border-border/20 flex items-center justify-center">
                 <CreditCard className="w-[18px] h-[18px] text-muted-foreground" />
               </div>
-              <span className="flex-1 text-[14px] text-foreground font-semibold text-left">Payment method</span>
+              <span className="flex-1 text-[14px] text-foreground font-semibold text-left">{t("ride.payment_method")}</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
             </button>
           </div>
@@ -2407,7 +2769,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 active:scale-[0.97] transition-all duration-200"
               onClick={() => { setPaymentStep("idle"); setViewStep("confirm-ride"); }}
             >
-              Confirm {currentVehicle.name} · ${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}
+              {t("ride.confirm")} {getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)} · {useKm ? `${toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)} ($${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)})` : `$${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}`}
             </Button>
           </div>
         </div>
@@ -2418,8 +2780,15 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         <div
           className="absolute inset-0 z-40 bg-background flex flex-col overflow-hidden"
         >
-          <div className="px-4 pt-3 pb-0.5 shrink-0">
-            <h2 className="text-lg font-black text-foreground tracking-tight">Confirm your ride</h2>
+          <div className="px-4 pt-3 pb-0.5 shrink-0 flex items-center gap-3">
+            <button
+              onClick={() => setViewStep("ride-options")}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-4 h-4 text-foreground" />
+            </button>
+            <h2 className="text-lg font-black text-foreground tracking-tight">{t("ride.confirm_your_ride")}</h2>
           </div>
 
           <div className="px-4 flex-1 flex flex-col gap-1.5 overflow-hidden min-h-0">
@@ -2433,11 +2802,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 </div>
                 <div className="flex-1 min-w-0 space-y-1.5">
                   <div>
-                    <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Pickup</p>
+                    <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">{t("ride.pickup")}</p>
                     <p className="text-[12px] font-bold text-foreground leading-tight line-clamp-1">{pickup?.address || pickupDisplay}</p>
                   </div>
                   <div>
-                    <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Dropoff</p>
+                    <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">{t("ride.dropoff")}</p>
                     <p className="text-[12px] font-bold text-foreground leading-tight line-clamp-1">{destination?.address || destinationDisplay}</p>
                   </div>
                 </div>
@@ -2448,49 +2817,74 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
               <div className="flex items-center gap-2.5 mb-1.5">
                 <div className="w-[50px] h-[36px] flex items-center justify-center shrink-0 bg-muted/10 rounded-md">
-                  <img src={VEHICLE_IMAGES[selectedVehicle] || VEHICLE_IMAGES["economy"]} alt={currentVehicle.name} className="w-full h-full object-contain" />
+                  <img src={getVehicleImage(selectedVehicle, isCambodiaCountry)} alt={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-foreground leading-tight">{currentVehicle.name} · {currentVehicle.capacity} seats</p>
-                  <p className="text-[10px] text-muted-foreground">{currentVehicle.etaMin} min away · {currentVehicle.desc}</p>
+                  <p className="text-[13px] font-bold text-foreground leading-tight">{getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)} · {getVehicleCapacity(selectedVehicle, currentVehicle.capacity, isCambodiaCountry)} {t("ride.seats")}</p>
+                  <p className="text-[10px] text-muted-foreground">{currentVehicle.etaMin} {t("ride.min_away")} · {getVehicleDesc(selectedVehicle, currentVehicle.desc, isCambodiaCountry)}</p>
                 </div>
               </div>
 
               {routeData && (
                 <div className="border-t border-border/15 pt-1.5 space-y-0.5 text-[12px]">
+                  {currentVehicle.basePrice > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t("ride.base_fare")}</span>
+                      <span className="text-foreground">{dualPrice(currentVehicle.basePrice, useKm)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Base fare</span>
-                    <span className="text-foreground">${currentVehicle.basePrice.toFixed(2)}</span>
+                    <span className="text-muted-foreground">{t("ride.distance")} ({formatDist(routeData.distance_miles, useKm)} × {useKm ? `${toKHR(perDistRate(currentVehicle.pricePerMile, useKm))}` : `$${perDistRate(currentVehicle.pricePerMile, useKm).toFixed(2)}`}/{distUnit(useKm)})</span>
+                    <span className="text-foreground">{dualPrice(routeData.distance_miles * currentVehicle.pricePerMile, useKm)}</span>
+                  </div>
+                  {useKm && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground/70 text-[10px]">{t("ride.rate")}: {toKHR(perDistRate(currentVehicle.pricePerMile, useKm))}/km</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("ride.trip_time")} ({routeData.duration_minutes} min × {useKm ? toKHR(currentVehicle.perMinute) : `$${currentVehicle.perMinute.toFixed(2)}`})</span>
+                    <span className="text-foreground">{dualPrice(routeData.duration_minutes * currentVehicle.perMinute, useKm)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Distance ({routeData.distance_miles} mi × ${currentVehicle.pricePerMile.toFixed(2)})</span>
-                    <span className="text-foreground">${(routeData.distance_miles * currentVehicle.pricePerMile).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Time ({routeData.duration_minutes} min × ${currentVehicle.perMinute.toFixed(2)})</span>
-                    <span className="text-foreground">${(routeData.duration_minutes * currentVehicle.perMinute).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Booking fee</span>
-                    <span className="text-foreground">${currentVehicle.bookingFee.toFixed(2)}</span>
+                    <span className="text-muted-foreground">{t("ride.booking_fee")}</span>
+                    <span className="text-foreground">{dualPrice(currentVehicle.bookingFee, useKm)}</span>
                   </div>
                   {appliedPromo && promoDiscount > 0 && (
                     <div className="flex justify-between text-primary">
-                      <span className="font-medium">Promo ({appliedPromo.code})</span>
-                      <span className="font-medium">-${promoDiscount.toFixed(2)}</span>
+                      <span className="font-medium">{t("ride.promo")} ({appliedPromo.code})</span>
+                      <span className="font-medium">-{dualPrice(promoDiscount, useKm)}</span>
                     </div>
                   )}
                   <div className="flex justify-between border-t border-border/15 pt-1 mt-0.5">
-                    <span className="font-bold text-foreground text-[13px]">Total</span>
-                    <span className="font-bold text-foreground text-[15px]">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
+                    <span className="font-bold text-foreground text-[13px]">{t("ride.total")}</span>
+                    <div className="text-right">
+                      {useKm ? (
+                        <>
+                          <p className="font-bold text-foreground text-[15px]">{toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)}</p>
+                          <p className="text-[10px] text-muted-foreground">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</p>
+                        </>
+                      ) : (
+                        <span className="font-bold text-foreground text-[15px]">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
+                      )}
+                    </div>
                   </div>
                   {currentPrice <= currentVehicle.minimumFare && (
-                    <p className="text-[9px] text-muted-foreground/60 text-right">Minimum fare applied</p>
+                    <p className="text-[9px] text-muted-foreground/60 text-right">{t("ride.minimum_fare_applied")}</p>
                   )}
                 </div>
               )}
               {!routeData && (
-                <p className="text-lg font-black text-foreground text-right">${currentPrice.toFixed(2)}</p>
+                <div className="text-right">
+                  {useKm ? (
+                    <>
+                      <p className="text-lg font-black text-foreground">{toKHR(currentPrice)}</p>
+                      <p className="text-[11px] text-muted-foreground">${currentPrice.toFixed(2)}</p>
+                    </>
+                  ) : (
+                    <p className="text-lg font-black text-foreground">${currentPrice.toFixed(2)}</p>
+                  )}
+                </div>
               )}
             </div>
 
@@ -2499,16 +2893,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               <div className="flex items-center gap-1 shrink-0">
                 <div className="flex-1 flex items-center justify-center gap-1 rounded-md bg-card border border-border/20 px-1.5 py-1.5">
                   <Timer className="w-3 h-3 text-primary" />
-                  <span className="text-[12px] font-bold text-foreground">{routeData.duration_minutes} min</span>
+                  <span className="text-[12px] font-bold text-foreground">{routeData.duration_minutes} {t("ride.min_unit")}</span>
                 </div>
                 <div className="flex-1 flex items-center justify-center gap-1 rounded-md bg-card border border-border/20 px-1.5 py-1.5">
                   <Route className="w-3 h-3 text-primary" />
-                  <span className="text-[12px] font-bold text-foreground">{routeData.distance_miles} mi</span>
+                  <span className="text-[12px] font-bold text-foreground">{formatDist(routeData.distance_miles, useKm)}</span>
                 </div>
                 {routeData.traffic_level && (
                   <div className="flex-1 flex items-center justify-center gap-1 rounded-md bg-card border border-border/20 px-1.5 py-1.5">
                     <Car className="w-3 h-3 text-primary" />
-                    <span className="text-[12px] font-bold text-foreground capitalize">{routeData.traffic_level}</span>
+                    <span className="text-[12px] font-bold text-foreground capitalize">{t(`ride.traffic_${routeData.traffic_level}`)}</span>
                   </div>
                 )}
               </div>
@@ -2518,9 +2912,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
               <div className="flex items-center gap-2">
                 <Tag className="w-3 h-3 text-primary shrink-0" />
-                <span className="text-[12px] font-bold text-foreground shrink-0">Promo</span>
+                <span className="text-[12px] font-bold text-foreground shrink-0">{t("ride.promo")}</span>
                 <Input
-                  placeholder="ENTER CODE"
+                  placeholder={t("ride.enter_code")}
                   value={promoInput}
                   onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
                   className="flex-1 h-8 font-mono text-[11px] uppercase tracking-wider"
@@ -2542,7 +2936,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     disabled={!promoInput.trim() || promoValidating}
                     onClick={handleApplyPromo}
                   >
-                    {promoValidating ? <Loader2 className="w-3 h-3 animate-spin" /> : "Apply"}
+                    {promoValidating ? <Loader2 className="w-3 h-3 animate-spin" /> : t("ride.apply")}
                   </Button>
                 )}
               </div>
@@ -2561,7 +2955,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="flex-1 min-h-0 overflow-hidden">
               <RidePaymentSection
                 price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
-                vehicleName={currentVehicle.name}
+                vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}
                 isSubmitting={isSubmitting}
                 onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
                 onAuthorizeWithNewCard={() => handleRequestRide()}
@@ -2569,6 +2963,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 onPaymentSuccess={handlePaymentSuccess}
                 paymentFailed={paymentStep === "failed"}
                 onClearError={() => setPaymentStep("idle")}
+                isCambodia={useKm}
               />
             </div>
           </div>
@@ -2596,12 +2991,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               ))}
             </div>
 
-            <h3 className="text-lg font-bold text-foreground mb-1">Finding your driver…</h3>
-            <p className="text-sm text-muted-foreground mb-1">Searching nearby drivers</p>
+            <h3 className="text-lg font-bold text-foreground mb-1">{t("ride.finding_your_driver")}</h3>
+            <p className="text-sm text-muted-foreground mb-1">{t("ride.searching_nearby_drivers")}</p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-              <span>Drivers nearby: {nearbyDriverCount}</span>
+              <span>{t("ride.drivers_nearby")}: {nearbyDriverCount}</span>
               <span>·</span>
-              <span>Estimated pickup: {currentVehicle.etaMin} min</span>
+              <span>{t("ride.estimated_pickup")}: {currentVehicle.etaMin} {t("ride.min_unit")}</span>
             </div>
 
             <Button
@@ -2610,7 +3005,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               className="text-destructive hover:text-destructive/80"
               onClick={handleCancelRide}
             >
-              Cancel ride
+              {t("ride.cancel_ride")}
             </Button>
           </div>
         </div>
@@ -2624,8 +3019,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         >
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
-          <h3 className="text-base font-bold text-foreground text-center mb-0.5">Meet your driver at pickup</h3>
-          <p className="text-xs text-muted-foreground text-center mb-3">Driver arriving in {assignedDriver.etaMin} minutes.</p>
+          <h3 className="text-base font-bold text-foreground text-center mb-0.5">{t("ride.meet_driver_at_pickup")}</h3>
+          <p className="text-xs text-muted-foreground text-center mb-3">{t("ride.driver_arriving_in_minutes").replace("{minutes}", String(assignedDriver.etaMin))}</p>
 
           <div className="border-t border-border/15 pt-3">
             <div className="flex items-center gap-3 mb-3">
@@ -2636,7 +3031,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <p className="font-bold text-foreground">{assignedDriver.name}</p>
                 <div className="flex items-center gap-1">
                   <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                  <span className="text-sm text-muted-foreground">{assignedDriver.rating} · {assignedDriver.trips.toLocaleString()} trips</span>
+                  <span className="text-sm text-muted-foreground">{assignedDriver.rating} · {assignedDriver.trips.toLocaleString()} {t("ride.trips")}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">{assignedDriver.vehicle}</p>
                 <p className="text-xs font-mono font-bold text-foreground">{assignedDriver.plate}</p>
@@ -2651,7 +3046,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={() => toast.info("Opening chat...")}
             >
               <MessageSquare className="w-4 h-4" />
-              Message
+              {t("ride.message")}
             </Button>
             <Button
               variant="outline"
@@ -2659,7 +3054,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={() => toast.info("Calling driver...")}
             >
               <Phone className="w-4 h-4" />
-              Call
+              {t("ride.call")}
             </Button>
             <Button
               variant="outline"
@@ -2667,7 +3062,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={handleCancelRide}
             >
               <X className="w-4 h-4" />
-              Cancel
+              {t("ride.cancel")}
             </Button>
           </div>
         </div>
@@ -2682,7 +3077,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
           <h3 className="text-base font-bold text-foreground mb-2">
-            Driver arriving in {driverEta > 0 ? `${driverEta} min` : "now"}
+            {t("ride.driver_arriving_in")} {driverEta > 0 ? `${driverEta} ${t("ride.min_unit")}` : t("ride.now")}
           </h3>
 
           <div className="flex items-center gap-2 mb-3 text-sm">
@@ -2701,7 +3096,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={() => toast.info("Opening chat...")}
             >
               <MessageSquare className="w-4 h-4" />
-              Message
+              {t("ride.message")}
             </Button>
             <Button
               variant="outline"
@@ -2709,7 +3104,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={() => toast.info("Calling driver...")}
             >
               <Phone className="w-4 h-4" />
-              Call
+              {t("ride.call")}
             </Button>
             <Button
               variant="outline"
@@ -2717,7 +3112,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={handleCancelRide}
             >
               <X className="w-4 h-4" />
-              Cancel
+              {t("ride.cancel")}
             </Button>
           </div>
         </div>
@@ -2731,9 +3126,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         >
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
-          <h3 className="text-base font-bold text-foreground mb-0.5">Heading to destination</h3>
+          <h3 className="text-base font-bold text-foreground mb-0.5">{t("ride.heading_to_destination")}</h3>
           {routeData && (
-            <p className="text-xs text-muted-foreground mb-2">ETA: {routeData.duration_minutes} min</p>
+            <p className="text-xs text-muted-foreground mb-2">{t("ride.eta")}: {routeData.duration_minutes} {t("ride.min_unit")}</p>
           )}
 
           <div className="flex items-center gap-2 mb-3 text-sm">
@@ -2809,32 +3204,34 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Distance</span>
-                    <span className="text-foreground">{routeData.distance_miles} mi</span>
+                    <span className="text-foreground">{formatDist(routeData.distance_miles, useKm)}</span>
                   </div>
                 </>
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Vehicle</span>
-                <span className="text-foreground">{currentVehicle.name}</span>
+                <span className="text-foreground">{getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}</span>
               </div>
               {routeData && (
                 <>
                   <div className="border-t border-border/15 pt-2 mt-1 space-y-1.5">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Base fare</span>
-                      <span className="text-foreground">${currentVehicle.basePrice.toFixed(2)}</span>
-                    </div>
+                    {currentVehicle.basePrice > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">{t("ride.base_fare")}</span>
+                        <span className="text-foreground">{dualPrice(currentVehicle.basePrice, useKm)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Distance</span>
-                      <span className="text-foreground">${(routeData.distance_miles * currentVehicle.pricePerMile).toFixed(2)}</span>
+                      <span className="text-foreground">{dualPrice(routeData.distance_miles * currentVehicle.pricePerMile, useKm)}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Time</span>
-                      <span className="text-foreground">${(routeData.duration_minutes * currentVehicle.perMinute).toFixed(2)}</span>
+                      <span className="text-foreground">{dualPrice(routeData.duration_minutes * currentVehicle.perMinute, useKm)}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Booking fee</span>
-                      <span className="text-foreground">${currentVehicle.bookingFee.toFixed(2)}</span>
+                      <span className="text-foreground">{dualPrice(currentVehicle.bookingFee, useKm)}</span>
                     </div>
                   </div>
                 </>
@@ -2842,12 +3239,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               {appliedPromo && promoDiscount > 0 && (
                 <div className="flex justify-between text-primary">
                   <span className="font-medium">Discount ({appliedPromo.code})</span>
-                  <span className="font-medium">-${promoDiscount.toFixed(2)}</span>
+                  <span className="font-medium">-{dualPrice(promoDiscount, useKm)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t border-border/20 pt-2">
                 <span className="font-bold text-foreground">Amount charged</span>
-                <span className="font-bold text-foreground">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
+                <span className="font-bold text-foreground">{dualPrice(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice, useKm)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment</span>
@@ -2892,7 +3289,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     )}
                   >
                     <span className="text-sm font-bold block">{pct}%</span>
-                    <span className="text-[10px] opacity-70">${tipAmount.toFixed(2)}</span>
+                    <span className="text-[10px] opacity-70">{dualPrice(tipAmount, useKm)}</span>
                   </button>
                 );
               })}
@@ -2912,7 +3309,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 )}
               >
                 {tip !== null && ![5, 10, 20, 50].some(p => Math.abs(tip - Math.round(currentPrice * p) / 100) < 0.01)
-                  ? `$${tip.toFixed(2)}`
+                  ? dualPrice(tip, useKm)
                   : "Custom"}
               </button>
             </div>
@@ -2938,6 +3335,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             placeholder="Edit pickup location"
             value={pickupDisplay}
             onSelect={handlePickupSelect}
+            country={rideCountry}
             className="mb-3"
           />
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
@@ -2971,6 +3369,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         }
         bookedPassengers={1}
         driverWaitMinutes={0}
+        t={t}
       />
 
     </div>

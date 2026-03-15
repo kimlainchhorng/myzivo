@@ -5,6 +5,8 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "@/hooks/useI18n";
+import { useCountry } from "@/hooks/useCountry";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -55,19 +57,7 @@ import zivoShoppingIcon from "@/assets/zivo-shopping.png";
 
 // ─── Saved Places Icon Map ───
 // ─── Dynamic search placeholder by tab ───
-function getSearchPlaceholder(tab: string): string {
-  if (tab === "rides") return "Book a Ride";
-  if (tab === "eats") {
-    const hour = new Date().getHours();
-    if (hour >= 6 && hour < 11) return "Breakfast time";
-    if (hour >= 11 && hour < 17) return "Lunch time";
-    if (hour >= 17 && hour < 22) return "Dinner time";
-    return "Late Night time";
-  }
-  if (tab === "flights") return "Search Flights";
-  if (tab === "hotels") return "Search Hotels";
-  return "Where to?";
-}
+// Search placeholder is now handled inside the component with t()
 
 const savedPlaceIconMap: Record<string, LucideIcon> = {
   home: Home,
@@ -77,20 +67,8 @@ const savedPlaceIconMap: Record<string, LucideIcon> = {
 };
 
 // ─── Top service tabs (Uber-style) ───
-const homeTabs = [
-  { id: "rides", label: "Rides", icon: null, image: zivoRideIcon },
-  { id: "eats", label: "Eats", icon: null, image: zivoEatsIcon },
-  { id: "flights", label: "Flights", icon: null, image: zivoFlightsIcon },
-  { id: "hotels", label: "Hotels", icon: null, image: zivoHotelsIcon },
-] as const;
-
-// ─── Suggestions row (service shortcuts) ───
-const suggestions = [
-  { label: "Ride", icon: null, image: zivoRideIcon, href: "/rides", badge: "10% Off", badgeVariant: "discount" as const },
-  { label: "Reserve", icon: null, image: zivoReserveIcon, href: "/rides?tab=reserve", badge: "Promo", badgeVariant: "promo" as const },
-  { label: "Rental Cars", icon: null, image: zivoRentalCarIcon, href: "/rent-car", badge: "Promo", badgeVariant: "promo" as const },
-  { label: "Shopping", icon: null, image: zivoShoppingIcon, href: "/rides", badge: null, badgeVariant: null },
-];
+// These are now built inside the component with t() for translation
+// See homeTabs and suggestions inside AppHome component
 
 // ─── Restaurant Card (Premium) ───
 const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant; onNavigate: () => void }) => (
@@ -127,7 +105,7 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
 );
 
 // ─── Section Header (Premium) ───
-const SectionHeader = ({ icon: Icon, iconColor, title, badge, onSeeAll }: { icon: LucideIcon; iconColor: string; title: string; badge?: string; onSeeAll: () => void }) => (
+const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSeeAll }: { icon: LucideIcon; iconColor: string; title: string; badge?: string; actionLabel?: string; onSeeAll: () => void }) => (
   <div className="flex items-center justify-between mb-4">
     <h2 className="text-sm font-bold text-foreground flex items-center gap-2.5">
       <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-muted/80 to-muted/40 flex items-center justify-center shadow-sm">
@@ -141,7 +119,7 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, onSeeAll }: { icon
       )}
     </h2>
     <button onClick={onSeeAll} className="text-xs text-primary font-bold touch-manipulation active:scale-95 min-w-[44px] min-h-[32px] flex items-center gap-0.5 hover:gap-1.5 transition-all">
-      See all
+      {actionLabel}
       <ChevronRight className="w-3.5 h-3.5" />
     </button>
   </div>
@@ -149,23 +127,14 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, onSeeAll }: { icon
 
 
 // ─── Promo banners ───
-const promos = [
-  { title: "50% off first ride", subtitle: "Use code ZIVO50", gradient: "from-emerald-500 to-teal-600", icon: Car, cta: "Claim Now" },
-  { title: "Free delivery", subtitle: "On orders over $25", gradient: "from-orange-500 to-amber-600", icon: Package, cta: "Order Now" },
-  { title: "Flight deals from $49", subtitle: "Book by this weekend", gradient: "from-sky-500 to-blue-600", icon: Plane, cta: "Explore" },
-  { title: "Hotel flash sale", subtitle: "Up to 60% off", gradient: "from-violet-500 to-purple-600", icon: BedDouble, cta: "Book Now" },
-];
+// Promos and trending rides are built inside the component for translation
 
 // ─── Trending Rides (static) ───
-const trendingRides = [
-  { name: "Airport Transfer", eta: "~15 min", price: "$22-35", icon: Plane, popular: true },
-  { name: "Downtown", eta: "~8 min", price: "$12-18", icon: Navigation, popular: false },
-  { name: "Beach", eta: "~20 min", price: "$18-28", icon: TrendingUp, popular: false },
-];
+// trendingRides built inside component for translation
 
 // ─── Popular Destinations (subset) ───
-const popularDestKeys = ["miami", "las-vegas", "new-york", "cancun", "los-angeles"] as const;
-const popularDestPrices: Record<string, string> = {
+const popularDestKeysUS = ["miami", "las-vegas", "new-york", "cancun", "los-angeles"] as const;
+const popularDestPricesUS: Record<string, string> = {
   miami: "$89",
   "las-vegas": "$79",
   "new-york": "$99",
@@ -173,32 +142,84 @@ const popularDestPrices: Record<string, string> = {
   "los-angeles": "$69",
 };
 
-// ─── Recently viewed type config ───
-const typeConfig: Record<string, { icon: LucideIcon; color: string }> = {
-  hotel: { icon: Hotel, color: "bg-amber-500" },
-  flight: { icon: Plane, color: "bg-sky-500" },
-  car: { icon: Car, color: "bg-emerald-500" },
-  restaurant: { icon: Utensils, color: "bg-orange-500" },
-};
+// Cambodia destinations
+const cambodiaDestinations = [
+  { key: "siem-reap", city: "Siem Reap", price: "៛32,000", src: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&q=80&w=400", alt: "Angkor Wat" },
+  { key: "sihanoukville", city: "Sihanoukville", price: "៛45,000", src: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&q=80&w=400", alt: "Sihanoukville Beach" },
+  { key: "kampot", city: "Kampot", price: "៛28,000", src: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=400", alt: "Kampot River" },
+  { key: "battambang", city: "Battambang", price: "៛35,000", src: "https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&q=80&w=400", alt: "Battambang" },
+  { key: "kep", city: "Kep", price: "៛25,000", src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=400", alt: "Kep Beach" },
+];
 
-// ─── Smart ETA logic ───
-const getQuickEstimate = () => {
-  const hour = new Date().getHours();
-  const isPeak = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);
-  return {
-    pickupEta: isPeak ? "~8 min" : "~4 min",
-    priceRange: isPeak ? "$15-22" : "$12-18",
-    label: isPeak ? "Peak hours" : "Normal",
-    surge: isPeak,
-  };
-};
+// Cambodia nearby attractions
+const cambodiaAttractions = [
+  { name: "វត្តភ្នំ", nameEn: "Wat Phnom", distance: "0.8 km", rating: 4.7, type: "វត្តអារាម" },
+  { name: "ផ្សារកណ្តាល", nameEn: "Central Market", distance: "1.2 km", rating: 4.6, type: "ផ្សារ" },
+  { name: "វាំងភ្នំពេញ", nameEn: "Royal Palace", distance: "1.5 km", rating: 4.9, type: "ប្រវត្តិសាស្ត្រ" },
+];
+
+// US nearby attractions
+const usAttractions = [
+  { name: "Central Park", distance: "0.5 mi", rating: 4.8, type: "Park" },
+  { name: "Museum of Art", distance: "1.2 mi", rating: 4.9, type: "Museum" },
+  { name: "Broadway District", distance: "0.8 mi", rating: 4.7, type: "Entertainment" },
+];
+
+// ─── Recently viewed type config ───
 
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, currentLanguage } = useI18n();
+  const { isCambodia: isKH } = useCountry();
   useDeviceIntegrityCheck();
+
+  const promos = [
+    { title: t("home.promo_first_ride"), subtitle: t("home.promo_first_ride_sub"), gradient: "from-emerald-500 to-teal-600", icon: Car, cta: t("home.promo_claim") },
+    { title: t("home.promo_free_delivery"), subtitle: t("home.promo_free_delivery_sub"), gradient: "from-orange-500 to-amber-600", icon: Package, cta: t("home.promo_order_now") },
+    { title: t("home.promo_flights_deal"), subtitle: t("home.promo_flights_deal_sub"), gradient: "from-sky-500 to-blue-600", icon: Plane, cta: t("home.promo_explore") },
+    { title: t("home.promo_hotel_sale"), subtitle: t("home.promo_hotel_sale_sub"), gradient: "from-violet-500 to-purple-600", icon: BedDouble, cta: t("home.promo_book_now") },
+  ];
+
+  const trendingRides = isKH ? [
+    { name: t("home.airport_transfer"), eta: "~១៥ នាទី", price: "៛89,000-៛142,000", icon: Plane, popular: true },
+    { name: t("home.downtown"), eta: "~៨ នាទី", price: "៛49,000-៛73,000", icon: Navigation, popular: false },
+    { name: t("home.beach"), eta: "~២០ នាទី", price: "៛73,000-៛114,000", icon: TrendingUp, popular: false },
+  ] : [
+    { name: t("home.airport_transfer"), eta: "~15 min", price: "$22-35", icon: Plane, popular: true },
+    { name: t("home.downtown"), eta: "~8 min", price: "$12-18", icon: Navigation, popular: false },
+    { name: t("home.beach"), eta: "~20 min", price: "$18-28", icon: TrendingUp, popular: false },
+  ];
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeHomeTab, setActiveHomeTab] = useState<"rides" | "eats" | "flights" | "hotels">("rides");
+
+  const homeTabs = [
+    { id: "rides", label: t("home.rides"), icon: null, image: zivoRideIcon },
+    { id: "eats", label: t("home.eats"), icon: null, image: zivoEatsIcon },
+    { id: "flights", label: t("home.flights"), icon: null, image: zivoFlightsIcon },
+    { id: "hotels", label: t("home.hotels"), icon: null, image: zivoHotelsIcon },
+  ] as const;
+
+  const suggestions = [
+    { label: t("home.ride"), icon: null, image: zivoRideIcon, href: "/rides", badge: "10% Off", badgeVariant: "discount" as const },
+    { label: t("home.reserve"), icon: null, image: zivoReserveIcon, href: "/rides?tab=reserve", badge: "Promo", badgeVariant: "promo" as const },
+    { label: t("home.rental_cars"), icon: null, image: zivoRentalCarIcon, href: "/rent-car", badge: "Promo", badgeVariant: "promo" as const },
+    { label: t("home.shopping"), icon: null, image: zivoShoppingIcon, href: "/rides", badge: null, badgeVariant: null },
+  ];
+
+  function getSearchPlaceholder(tab: string): string {
+    if (tab === "rides") return t("home.book_ride");
+    if (tab === "eats") {
+      const hour = new Date().getHours();
+      if (hour >= 6 && hour < 11) return t("home.breakfast");
+      if (hour >= 11 && hour < 17) return t("home.lunch");
+      if (hour >= 17 && hour < 22) return t("home.dinner");
+      return t("home.late_night");
+    }
+    if (tab === "flights") return t("home.search_flights");
+    if (tab === "hotels") return t("home.search_hotels");
+    return t("home.where_to");
+  }
   const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
   const { data: deals = [] } = useRecommendedDeals("all", 6);
@@ -217,7 +238,24 @@ const AppHome = () => {
   const { getDefault } = useLocalPaymentMethods();
   const defaultCard = getDefault();
 
-  const estimate = getQuickEstimate();
+  const estimate = (() => {
+    const hour = new Date().getHours();
+    const isPeak = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);
+    if (isKH) {
+      return {
+        pickupEta: isPeak ? "~៨ នាទី" : "~៤ នាទី",
+        priceRange: isPeak ? "៛61,000-៛89,000" : "៛49,000-៛73,000",
+        label: isPeak ? t("home.peak_hours") : t("home.normal"),
+        surge: isPeak,
+      };
+    }
+    return {
+      pickupEta: isPeak ? "~8 min" : "~4 min",
+      priceRange: isPeak ? "$15-22" : "$12-18",
+      label: isPeak ? t("home.peak_hours") : t("home.normal"),
+      surge: isPeak,
+    };
+  })();
   const { items: activityItems, hasActiveItems } = useCustomerActivityFeed();
 
   // Promo carousel
@@ -234,9 +272,9 @@ const AppHome = () => {
 
   const greeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return t("home.good_morning");
+    if (hour < 17) return t("home.good_afternoon");
+    return t("home.good_evening");
   };
 
   const userName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || "Traveler";
@@ -309,7 +347,7 @@ const AppHome = () => {
           {/* Suggestions Section */}
           <div className="pb-5">
             <div className="flex items-center justify-between mb-3 px-5">
-              <h2 className="text-base font-bold text-foreground">More Services</h2>
+              <h2 className="text-base font-bold text-foreground">{t("home.more_services")}</h2>
               <button onClick={() => navigate("/services")} className="w-8 h-8 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
                 <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>
@@ -375,7 +413,7 @@ const AppHome = () => {
           {/* ─── ORDER AGAIN ─── */}
           {user && orderAgain.length > 0 && (
             <div>
-              <SectionHeader icon={History} iconColor="text-orange-500" title="Order Again" badge="Quick" onSeeAll={() => navigate("/eats")} />
+              <SectionHeader icon={History} iconColor="text-orange-500" title={t("home.order_again")} badge="Quick" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/eats")} />
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {orderAgain.map((r) => (
                   <motion.button
@@ -393,7 +431,7 @@ const AppHome = () => {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                       <div className="absolute bottom-2 right-2 bg-orange-500/90 backdrop-blur-sm rounded-full px-2.5 py-0.5 shadow-sm">
-                        <span className="text-[9px] font-bold text-primary-foreground flex items-center gap-0.5"><Zap className="w-2.5 h-2.5" /> Reorder</span>
+                        <span className="text-[9px] font-bold text-primary-foreground flex items-center gap-0.5"><Zap className="w-2.5 h-2.5" /> {t("home.reorder")}</span>
                       </div>
                     </div>
                     <div className="p-3">
@@ -411,7 +449,7 @@ const AppHome = () => {
           {/* ─── RECENT ACTIVITY ─── */}
           {user && activityItems.length > 0 && (
             <div>
-              <SectionHeader icon={Clock} iconColor="text-primary" title="Recent Activity" onSeeAll={() => navigate("/trips")} />
+              <SectionHeader icon={Clock} iconColor="text-primary" title={t("home.recent_activity")} actionLabel={t("home.see_all")} onSeeAll={() => navigate("/trips")} />
               <ActivityTimeline
                 items={activityItems}
                 maxHeight="280px"
@@ -422,12 +460,12 @@ const AppHome = () => {
 
           {/* ─── POPULAR NEAR YOU ─── */}
           <div>
-            <SectionHeader icon={TrendingUp} iconColor="text-emerald-500" title="Popular Near You" badge="Hot" onSeeAll={() => navigate("/eats")} />
+            <SectionHeader icon={TrendingUp} iconColor="text-emerald-500" title={t("home.popular_near")} badge="Hot" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/eats")} />
 
             {/* Popular Restaurants */}
             {recommended.length > 0 && (
               <div className="mb-6">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">Restaurants</p>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.restaurants")}</p>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                   {recommended.slice(0, 5).map((r) => (
                     <RestaurantCard key={r.id} restaurant={r} onNavigate={() => navigate(`/eats/restaurant/${r.id}`)} />
@@ -438,9 +476,33 @@ const AppHome = () => {
 
             {/* Popular Destinations */}
             <div className="mb-6">
-              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">Destinations</p>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.destinations")}</p>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {popularDestKeys.map((key, i) => {
+                {isKH ? cambodiaDestinations.map((dest, i) => (
+                  <motion.button
+                    key={dest.key}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => navigate(`/search?tab=flights&to=${dest.city}`)}
+                    className="shrink-0 w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative"
+                  >
+                    <div className="relative h-[120px] overflow-hidden">
+                      <img src={dest.src} alt={dest.alt} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      {i < 2 && (
+                        <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
+                          <span className="text-[8px] font-bold text-primary-foreground uppercase tracking-wider">{t("home.trending")}</span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
+                        <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
+                          <Plane className="w-2.5 h-2.5" />
+                          {t("home.from")} {dest.price}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.button>
+                )) : popularDestKeysUS.map((key, i) => {
                   const dest = destinationPhotos[key];
                   return (
                     <motion.button
@@ -454,14 +516,14 @@ const AppHome = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                         {i < 2 && (
                           <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
-                            <span className="text-[8px] font-bold text-primary-foreground uppercase tracking-wider">Trending</span>
+                            <span className="text-[8px] font-bold text-primary-foreground uppercase tracking-wider">{t("home.trending")}</span>
                           </div>
                         )}
                         <div className="absolute bottom-3 left-3 right-3">
                           <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
                           <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
                             <Plane className="w-2.5 h-2.5" />
-                            from {popularDestPrices[key]}
+                            {t("home.from")} {popularDestPricesUS[key]}
                           </div>
                         </div>
                       </div>
@@ -473,7 +535,7 @@ const AppHome = () => {
 
             {/* Trending Rides */}
             <div>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">Trending Rides</p>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.trending_rides")}</p>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {trendingRides.map((ride) => (
                   <motion.button
@@ -484,7 +546,7 @@ const AppHome = () => {
                   >
                     {ride.popular && (
                       <div className="absolute top-0 right-0">
-                        <div className="bg-primary/90 text-[7px] font-bold text-primary-foreground px-2 py-0.5 rounded-bl-lg">POPULAR</div>
+                        <div className="bg-primary/90 text-[7px] font-bold text-primary-foreground px-2 py-0.5 rounded-bl-lg">{t("home.popular")}</div>
                       </div>
                     )}
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/8 flex items-center justify-center mb-3 border border-primary/10 shadow-inner group-hover:scale-105 transition-transform">
@@ -561,7 +623,7 @@ const AppHome = () => {
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-inner">
                       <Crown className="w-4.5 h-4.5 text-primary" />
                     </div>
-                    <span className="text-sm font-bold text-foreground">My Rewards</span>
+                    <span className="text-sm font-bold text-foreground">{t("home.my_rewards")}</span>
                   </div>
                   <Badge variant="outline" className={`text-[10px] font-bold ${tierConfig.color} ${tierConfig.borderColor} shadow-sm`}>
                     {tierConfig.icon} {tierConfig.displayName}
@@ -593,7 +655,7 @@ const AppHome = () => {
                   size="sm"
                 >
                   <Gift className="w-4 h-4 mr-2" />
-                  Redeem Points
+                  {t("home.redeem_points")}
                   <ArrowRight className="w-4 h-4 ml-auto" />
                 </Button>
               </motion.div>
@@ -618,14 +680,14 @@ const AppHome = () => {
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/20 to-violet-500/10 flex items-center justify-center shadow-inner">
                       <Users className="w-4.5 h-4.5 text-violet-500" />
                     </div>
-                    <span className="text-sm font-bold text-foreground">Invite Friends</span>
+                    <span className="text-sm font-bold text-foreground">{t("home.invite_friends")}</span>
                   </div>
                   <button onClick={() => navigate("/account/referrals")} className="text-[10px] text-violet-500 font-bold flex items-center gap-0.5 hover:gap-1.5 transition-all">
-                    Details <ChevronRight className="w-3 h-3" />
+                    {t("home.details")} <ChevronRight className="w-3 h-3" />
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4 relative z-10">
-                  Earn <span className="font-bold text-violet-500">{REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()} pts</span> for every friend who books
+                  Earn <span className="font-bold text-violet-500">{REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()} pts</span> {t("home.earn_per_referral")}
                 </p>
 
                 {referralCode?.code && (
@@ -638,11 +700,11 @@ const AppHome = () => {
 
                 <div className="flex gap-8 mb-5 text-xs relative z-10">
                   <div>
-                    <span className="text-muted-foreground">Invited</span>
+                    <span className="text-muted-foreground">{t("home.invited")}</span>
                     <p className="font-bold text-foreground text-lg">{totalInvited}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Earned</span>
+                    <span className="text-muted-foreground">{t("home.earned")}</span>
                     <p className="font-bold text-foreground text-lg">{totalEarned.toLocaleString()} pts</p>
                   </div>
                 </div>
@@ -654,7 +716,7 @@ const AppHome = () => {
                   className="w-full border-violet-500/25 text-violet-600 hover:bg-violet-500/10 rounded-xl h-12 font-bold relative z-10 shadow-sm"
                 >
                   <Share2 className="w-4 h-4 mr-2" />
-                  Share & Earn
+                  {t("home.share_earn")}
                 </Button>
               </motion.div>
             );
@@ -685,16 +747,16 @@ const AppHome = () => {
                     <div className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center shadow-inner">
                       <Clock className="w-4 h-4 text-primary" />
                     </div>
-                    <span className="text-sm font-bold text-foreground">Scheduled</span>
+                    <span className="text-sm font-bold text-foreground">{t("home.scheduled")}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {upcomingBookings.length > 1 && (
                       <Badge variant="outline" className="text-[10px] text-primary border-primary/20 bg-primary/5 font-bold">
-                        +{upcomingBookings.length - 1} more
+                        +{upcomingBookings.length - 1} {t("home.more_count")}
                       </Badge>
                     )}
                     <button onClick={() => navigate("/scheduled")} className="text-[10px] text-primary font-bold">
-                      View All
+                      {t("home.view_all")}
                     </button>
                   </div>
                 </div>
@@ -734,17 +796,17 @@ const AppHome = () => {
                   <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 flex items-center justify-center shadow-inner">
                     <Wallet className="w-4.5 h-4.5 text-emerald-500" />
                   </div>
-                  <span className="text-sm font-bold text-foreground">Wallet</span>
+                  <span className="text-sm font-bold text-foreground">{t("home.wallet")}</span>
                 </div>
                 <button onClick={() => navigate("/wallet")} className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5 hover:gap-1.5 transition-all">
-                  Manage <ChevronRight className="w-3 h-3" />
+                   {t("home.manage")} <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
               <div className="flex items-end gap-2 mb-3 relative z-10">
                 <p className="text-4xl font-bold text-foreground">
-                  ${balanceDollars.toFixed(2)}
+                  {isKH ? `៛${(balanceDollars * 4062.5).toLocaleString("en-US", { maximumFractionDigits: 0 })}` : `$${balanceDollars.toFixed(2)}`}
                 </p>
-                <span className="text-xs text-muted-foreground mb-1.5 font-medium">balance</span>
+                <span className="text-xs text-muted-foreground mb-1.5 font-medium">{t("home.balance")}</span>
               </div>
               {defaultCard && (
                 <div className="flex items-center gap-2 p-2.5 rounded-xl bg-card/40 border border-border/30 relative z-10">
@@ -753,7 +815,7 @@ const AppHome = () => {
                     •••• {defaultCard.last4}
                   </span>
                   <Badge variant="outline" className="text-[8px] ml-auto border-primary/20 text-primary bg-primary/5 font-bold">
-                    Default
+                     {t("home.default")}
                   </Badge>
                 </div>
               )}
@@ -765,7 +827,7 @@ const AppHome = () => {
                   className="w-full rounded-xl h-11 font-bold border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10 relative z-10"
                 >
                   <Plus className="w-4 h-4 mr-1.5" />
-                  Add Payment Method
+                  {t("home.add_payment")}
                 </Button>
               )}
             </motion.div>
@@ -774,24 +836,24 @@ const AppHome = () => {
           {/* ─── WAVE 5: Smart Home Widgets ─── */}
           <div className="space-y-3">
             <h2 className="text-xs font-bold text-muted-foreground flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-primary" /> SMART INSIGHTS
+              <Sparkles className="w-3.5 h-3.5 text-primary" /> {t("home.smart_insights")}
             </h2>
 
             {/* Weekly Spending */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl bg-card border border-border/40 p-4">
-              <p className="text-xs font-bold text-foreground mb-3">This Week's Spending</p>
+              <p className="text-xs font-bold text-foreground mb-3">{t("home.weekly_spending")}</p>
               <div className="flex items-end gap-1.5 h-14">
                 {[32, 18, 45, 12, 28, 52, 8].map((val, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
                     <motion.div initial={{ height: 0 }} animate={{ height: `${(val / 60) * 100}%` }} transition={{ duration: 0.6, delay: i * 0.08 }}
                       className={`w-full rounded-t ${i === new Date().getDay() ? "bg-primary" : "bg-primary/20"}`} />
-                    <span className="text-[8px] text-muted-foreground">{["S","M","T","W","T","F","S"][i]}</span>
+                    <span className="text-[8px] text-muted-foreground">{isKH ? ["អា","ច","អ","ព","ព្រ","សុ","ស"][i] : ["S","M","T","W","T","F","S"][i]}</span>
                   </div>
                 ))}
               </div>
               <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
-                <span>Total: <b className="text-foreground">$195</b></span>
-                <span className="text-emerald-500">↓ 12% vs last week</span>
+                <span>{t("home.total")}: <b className="text-foreground">{isKH ? "៛793,000" : "$195"}</b></span>
+                <span className="text-emerald-500">↓ 12% {t("home.vs_last_week")}</span>
               </div>
             </motion.div>
 
@@ -802,25 +864,21 @@ const AppHome = () => {
                   <Flame className="w-6 h-6 text-amber-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground">7-Day Booking Streak! 🔥</p>
-                  <p className="text-[10px] text-muted-foreground">Keep it going for bonus ZIVO points</p>
+                   <p className="text-xs font-bold text-foreground">{t("home.booking_streak")}</p>
+                   <p className="text-[10px] text-muted-foreground">{t("home.streak_desc")}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-lg font-bold text-amber-500">7</p>
-                  <p className="text-[8px] text-muted-foreground">days</p>
+                  <p className="text-[8px] text-muted-foreground">{t("home.days")}</p>
                 </div>
               </div>
             </div>
 
             {/* Nearby Attractions */}
             <div className="rounded-2xl bg-card border border-border/40 p-4">
-              <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-violet-500" /> Nearby Attractions</p>
+              <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-violet-500" /> {t("home.nearby_attractions")}</p>
               <div className="space-y-2">
-                {[
-                  { name: "Central Park", distance: "0.5 mi", rating: 4.8, type: "Park" },
-                  { name: "Museum of Art", distance: "1.2 mi", rating: 4.9, type: "Museum" },
-                  { name: "Broadway District", distance: "0.8 mi", rating: 4.7, type: "Entertainment" },
-                ].map(a => (
+                {(isKH ? cambodiaAttractions : usAttractions).map(a => (
                   <div key={a.name} className="flex items-center gap-2 p-2 rounded-xl hover:bg-muted/30 transition-colors">
                     <div className="flex-1"><p className="text-xs font-bold text-foreground">{a.name}</p><p className="text-[10px] text-muted-foreground">{a.distance} · {a.type}</p></div>
                     <span className="text-[10px] font-bold text-amber-500">★ {a.rating}</span>
@@ -831,11 +889,11 @@ const AppHome = () => {
 
             {/* Smart Suggestions */}
             <div className="rounded-2xl bg-sky-500/5 border border-sky-500/20 p-4">
-              <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 text-sky-500" /> Smart Suggestions</p>
+              <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 text-sky-500" /> {t("home.smart_suggestions")}</p>
               <div className="space-y-1.5">
-                <p className="text-[11px] text-muted-foreground">💡 Flights to Miami are 23% cheaper next Tuesday</p>
-                <p className="text-[11px] text-muted-foreground">🏨 Hotel prices drop 15% for mid-week stays</p>
-                <p className="text-[11px] text-muted-foreground">🚗 Book rental cars 3 weeks ahead to save $40+</p>
+                 <p className="text-[11px] text-muted-foreground">💡 {t("home.flights_cheaper")}</p>
+                 <p className="text-[11px] text-muted-foreground">🏨 {t("home.hotel_midweek")}</p>
+                 <p className="text-[11px] text-muted-foreground">🚗 {t("home.car_ahead")}</p>
               </div>
             </div>
           </div>
@@ -849,9 +907,9 @@ const AppHome = () => {
             >
               <div className="absolute -top-10 -right-10 w-28 h-28 bg-primary/10 rounded-full blur-3xl" />
               <div className="relative z-10">
-                <h3 className="text-base font-bold text-foreground mb-1">Join ZIVO — it's free</h3>
+                <h3 className="text-base font-bold text-foreground mb-1">{t("home.join_free")}</h3>
                 <p className="text-xs text-muted-foreground mb-4">
-                  Earn rewards, save trips, get price alerts, and access exclusive deals.
+                  {t("home.join_desc")}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -859,7 +917,7 @@ const AppHome = () => {
                     size="sm"
                     className="flex-1 h-11 rounded-xl font-bold shadow-md shadow-primary/20"
                   >
-                    Sign Up Free
+                    {t("home.sign_up_free")}
                   </Button>
                   <Button
                     onClick={() => navigate("/login")}
@@ -867,7 +925,7 @@ const AppHome = () => {
                     size="sm"
                     className="h-11 px-5 rounded-xl font-medium"
                   >
-                    Log In
+                    {t("home.log_in")}
                   </Button>
                 </div>
               </div>
@@ -878,15 +936,15 @@ const AppHome = () => {
           <div className="flex items-center justify-center gap-6 py-4">
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
               <Shield className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-medium">Secure</span>
+              <span className="text-[10px] font-medium">{t("home.secure")}</span>
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
               <Globe className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-medium">500K+ travelers</span>
+              <span className="text-[10px] font-medium">{t("home.travelers")}</span>
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
               <Star className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-medium">4.8 rating</span>
+              <span className="text-[10px] font-medium">{t("home.rating")}</span>
             </div>
           </div>
         </div>
