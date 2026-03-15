@@ -644,7 +644,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       });
     }
     if (isCambodia) {
-      options = options.map((v) => ({ ...v, bookingFee: CAMBODIA_BOOKING_FEE }));
+      options = options.map((v) => ({
+        ...v,
+        bookingFee: CAMBODIA_BOOKING_FEE,
+        pricePerMile: CAMBODIA_PER_MILE_USD,
+        perMinute: CAMBODIA_PER_MIN_USD,
+      }));
     }
     return options;
   }, [cityPricingMap, currentLanguage]);
