@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { setupActivityTracking, clearSessionArtifacts } from "@/lib/security/sessionSecurity";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
+import { SignInWithApple } from "@capacitor-community/apple-sign-in";
 
 type AuthContextType = {
   user: User | null;
@@ -119,6 +120,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const isNative = Capacitor.isNativePlatform();
 
+      // On native iOS, use the native Sign In with Apple SDK for the
+      // apple provider — this is required by Apple App Store guidelines
+      // (Guideline 4.8 / Sign In with Apple requirement).
+      if (isNative && provider === "apple") {
+        // Generate a cryptographically random nonce for replay-attack protection.
+        const rawNonce = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+
+        // SHA-256 hash the nonce — Apple embeds the hash in the identity token.
+        const hashBuffer = await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(rawNonce)
+        );
+        const hashedNonce = Array.from(new Uint8Array(hashBuffer))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+
+        const result = await SignInWithApple.authorize({
+          clientId: "com.hizovo.app",
+          redirectURI: "https://myzivo.lovable.app",
+          scopes: "email name",
+          nonce: hashedNonce,
+        });
+
+        // Exchange the Apple identity token for a Supabase session.
+        // We pass the raw nonce — Supabase will hash it and verify it
+        // against the nonce claim in the Apple-issued JWT.
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: "apple",
+          token: result.response.identityToken,
+          nonce: rawNonce,
+        });
+        return { error };
+      }
+
       const SAFE_OAUTH_ORIGINS = new Set<string>([
         "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app",
         "https://72f99340-9c9f-453a-acff-60e5a9b25774.lovableproject.com",
@@ -147,9 +184,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           options: {
             redirectTo,
             skipBrowserRedirect: true,
-            queryParams: {
-              prompt: "select_account",
-            },
           },
         });
         if (error) return { error };
