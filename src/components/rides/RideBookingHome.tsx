@@ -2674,7 +2674,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           className="absolute inset-0 z-40 bg-background flex flex-col overflow-hidden"
         >
           <div className="px-4 pt-3 pb-0.5 shrink-0">
-            <h2 className="text-lg font-black text-foreground tracking-tight">Confirm your ride</h2>
+            <h2 className="text-lg font-black text-foreground tracking-tight">{t("ride.confirm_your_ride")}</h2>
           </div>
 
           <div className="px-4 flex-1 flex flex-col gap-1.5 overflow-hidden min-h-0">
@@ -2688,11 +2688,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 </div>
                 <div className="flex-1 min-w-0 space-y-1.5">
                   <div>
-                    <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Pickup</p>
+                    <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">{t("ride.pickup")}</p>
                     <p className="text-[12px] font-bold text-foreground leading-tight line-clamp-1">{pickup?.address || pickupDisplay}</p>
                   </div>
                   <div>
-                    <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Dropoff</p>
+                    <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">{t("ride.dropoff")}</p>
                     <p className="text-[12px] font-bold text-foreground leading-tight line-clamp-1">{destination?.address || destinationDisplay}</p>
                   </div>
                 </div>
@@ -2706,42 +2706,42 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <img src={getVehicleImage(selectedVehicle, currentLanguage === "km")} alt={getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-foreground leading-tight">{getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} · {getVehicleCapacity(selectedVehicle, currentVehicle.capacity, currentLanguage === "km")} seats</p>
-                  <p className="text-[10px] text-muted-foreground">{currentVehicle.etaMin} min away · {getVehicleDesc(selectedVehicle, currentVehicle.desc, currentLanguage === "km")}</p>
+                  <p className="text-[13px] font-bold text-foreground leading-tight">{getVehicleName(selectedVehicle, currentVehicle.name, currentLanguage === "km")} · {getVehicleCapacity(selectedVehicle, currentVehicle.capacity, currentLanguage === "km")} {t("ride.seats")}</p>
+                  <p className="text-[10px] text-muted-foreground">{currentVehicle.etaMin} {t("ride.min_away")} · {getVehicleDesc(selectedVehicle, currentVehicle.desc, currentLanguage === "km")}</p>
                 </div>
               </div>
 
               {routeData && (
                 <div className="border-t border-border/15 pt-1.5 space-y-0.5 text-[12px]">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Base fare</span>
+                    <span className="text-muted-foreground">{t("ride.base_fare")}</span>
                     <span className="text-foreground">{dualPrice(currentVehicle.basePrice, useKm)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Distance ({formatDist(routeData.distance_miles, useKm)} × ${perDistRate(currentVehicle.pricePerMile, useKm).toFixed(2)}/{distUnit(useKm)})</span>
+                    <span className="text-muted-foreground">{t("ride.distance")} ({formatDist(routeData.distance_miles, useKm)} × ${perDistRate(currentVehicle.pricePerMile, useKm).toFixed(2)}/{distUnit(useKm)})</span>
                     <span className="text-foreground">{dualPrice(routeData.distance_miles * currentVehicle.pricePerMile, useKm)}</span>
                   </div>
                   {useKm && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground/70 text-[10px]">Rate: {toKHR(perDistRate(currentVehicle.pricePerMile, useKm))}/km</span>
+                      <span className="text-muted-foreground/70 text-[10px]">{t("ride.rate")}: {toKHR(perDistRate(currentVehicle.pricePerMile, useKm))}/km</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Time ({routeData.duration_minutes} min × ${currentVehicle.perMinute.toFixed(2)})</span>
+                    <span className="text-muted-foreground">{t("ride.trip_time")} ({routeData.duration_minutes} min × ${currentVehicle.perMinute.toFixed(2)})</span>
                     <span className="text-foreground">{dualPrice(routeData.duration_minutes * currentVehicle.perMinute, useKm)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Booking fee</span>
+                    <span className="text-muted-foreground">{t("ride.booking_fee")}</span>
                     <span className="text-foreground">{dualPrice(currentVehicle.bookingFee, useKm)}</span>
                   </div>
                   {appliedPromo && promoDiscount > 0 && (
                     <div className="flex justify-between text-primary">
-                      <span className="font-medium">Promo ({appliedPromo.code})</span>
+                      <span className="font-medium">{t("ride.promo")} ({appliedPromo.code})</span>
                       <span className="font-medium">-{dualPrice(promoDiscount, useKm)}</span>
                     </div>
                   )}
                   <div className="flex justify-between border-t border-border/15 pt-1 mt-0.5">
-                    <span className="font-bold text-foreground text-[13px]">Total</span>
+                    <span className="font-bold text-foreground text-[13px]">{t("ride.total")}</span>
                     <div className="text-right">
                       {useKm ? (
                         <>
@@ -2754,7 +2754,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   </div>
                   {currentPrice <= currentVehicle.minimumFare && (
-                    <p className="text-[9px] text-muted-foreground/60 text-right">Minimum fare applied</p>
+                    <p className="text-[9px] text-muted-foreground/60 text-right">{t("ride.minimum_fare_applied")}</p>
                   )}
                 </div>
               )}
@@ -2786,7 +2786,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 {routeData.traffic_level && (
                   <div className="flex-1 flex items-center justify-center gap-1 rounded-md bg-card border border-border/20 px-1.5 py-1.5">
                     <Car className="w-3 h-3 text-primary" />
-                    <span className="text-[12px] font-bold text-foreground capitalize">{routeData.traffic_level}</span>
+                    <span className="text-[12px] font-bold text-foreground capitalize">{t(`ride.traffic_${routeData.traffic_level}`)}</span>
                   </div>
                 )}
               </div>
@@ -2796,9 +2796,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
               <div className="flex items-center gap-2">
                 <Tag className="w-3 h-3 text-primary shrink-0" />
-                <span className="text-[12px] font-bold text-foreground shrink-0">Promo</span>
+                <span className="text-[12px] font-bold text-foreground shrink-0">{t("ride.promo")}</span>
                 <Input
-                  placeholder="ENTER CODE"
+                  placeholder={t("ride.enter_code")}
                   value={promoInput}
                   onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
                   className="flex-1 h-8 font-mono text-[11px] uppercase tracking-wider"
@@ -2820,7 +2820,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     disabled={!promoInput.trim() || promoValidating}
                     onClick={handleApplyPromo}
                   >
-                    {promoValidating ? <Loader2 className="w-3 h-3 animate-spin" /> : "Apply"}
+                    {promoValidating ? <Loader2 className="w-3 h-3 animate-spin" /> : t("ride.apply")}
                   </Button>
                 )}
               </div>
