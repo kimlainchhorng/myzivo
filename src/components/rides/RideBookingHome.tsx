@@ -653,6 +653,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         pricePerMile: v.id === "share" ? CAMBODIA_EV_TUKTUK_PER_MILE_USD : CAMBODIA_PER_MILE_USD,
         perMinute: CAMBODIA_PER_MIN_USD,
         minimumFare: 0.25,
+        surgeMultiplier: 1.0,
       }));
     }
     return options;
