@@ -170,26 +170,45 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Language / Translation Selector */}
-        <div className="mb-4 animate-in fade-in slide-in-from-top-3 duration-300">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-            {LANGS.map((lang) => (
+        {/* Language / Translation Selector — single dropdown button */}
+        {(() => {
+          const currentLang = LANGS.find(l => l.code === currentLanguage) || LANGS[0];
+          return (
+            <div className="relative mb-4 animate-in fade-in slide-in-from-top-3 duration-300">
               <button
-                key={lang.code}
-                onClick={() => changeLanguage(lang.code)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold transition-all touch-manipulation active:scale-95 whitespace-nowrap shrink-0 ${
-                  currentLanguage === lang.code
-                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                    : "bg-muted/50 text-muted-foreground hover:text-foreground"
-                }`}
+                onClick={() => setShowLangPicker(prev => !prev)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-md shadow-primary/20 touch-manipulation active:scale-95 transition-all"
               >
                 <Globe className="w-3.5 h-3.5" />
-                <span>{lang.flag}</span>
-                <span>{lang.label}</span>
+                <span>{currentLang.flag}</span>
+                <span>{currentLang.label}</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showLangPicker ? "rotate-180" : ""}`} />
               </button>
-            ))}
-          </div>
-        </div>
+
+              {showLangPicker && (
+                <div className="absolute left-0 top-full mt-2 z-50 bg-card border border-border rounded-2xl shadow-xl p-1.5 min-w-[180px] animate-in fade-in zoom-in-95 duration-150">
+                  {LANGS.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        changeLanguage(lang.code);
+                        setShowLangPicker(false);
+                      }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors touch-manipulation active:scale-[0.98] ${
+                        currentLanguage === lang.code
+                          ? "bg-primary/10 text-primary"
+                          : "text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <span className="text-base">{lang.flag}</span>
+                      <span>{lang.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Country / Location Selector */}
         <div className="flex items-center justify-center gap-2 mb-5 animate-in fade-in slide-in-from-top-4 duration-300">
