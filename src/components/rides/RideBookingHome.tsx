@@ -442,6 +442,8 @@ const CAMBODIA_PER_MIN_KHR = 50;  // KHR per minute
 const KHR_RATE = 4062.5;
 const CAMBODIA_PER_MILE_USD = (CAMBODIA_PER_KM_KHR / KHR_RATE) * 1.60934; // convert per-km KHR → per-mile USD
 const CAMBODIA_PER_MIN_USD = CAMBODIA_PER_MIN_KHR / KHR_RATE;
+const CAMBODIA_EV_TUKTUK_PER_KM_KHR = 1250;
+const CAMBODIA_EV_TUKTUK_PER_MILE_USD = (CAMBODIA_EV_TUKTUK_PER_KM_KHR / KHR_RATE) * 1.60934;
 
 /** Get vehicle image based on region */
 function getVehicleImage(vehicleId: string, isCambodia: boolean): string {
@@ -648,7 +650,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         ...v,
         basePrice: 0,
         bookingFee: CAMBODIA_BOOKING_FEE,
-        pricePerMile: CAMBODIA_PER_MILE_USD,
+        pricePerMile: v.id === "share" ? CAMBODIA_EV_TUKTUK_PER_MILE_USD : CAMBODIA_PER_MILE_USD,
         perMinute: CAMBODIA_PER_MIN_USD,
         minimumFare: 0.25,
       }));
