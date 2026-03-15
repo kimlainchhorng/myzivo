@@ -386,12 +386,12 @@ function VehicleRow({
       </div>
       <div className="text-right shrink-0 flex flex-col items-end gap-0.5">
         {surgeActive && originalPrice && (
-          <span className="line-through text-muted-foreground text-xs">${originalPrice.toFixed(2)}</span>
+          <span className="line-through text-muted-foreground text-xs">{isCambodia ? dualPrice(originalPrice, true) : `$${originalPrice.toFixed(2)}`}</span>
         )}
         {isDiscount ? (
-          <span className="text-sm font-bold text-green-600">🟢 ${price.toFixed(2)}</span>
+          <span className="text-sm font-bold text-green-600">🟢 {isCambodia ? dualPrice(price, true) : `$${price.toFixed(2)}`}</span>
         ) : (
-          <span className="text-sm font-bold text-foreground">${price.toFixed(2)}</span>
+          <span className="text-sm font-bold text-foreground">{isCambodia ? dualPrice(price, true) : `$${price.toFixed(2)}`}</span>
         )}
         {selected && (
           <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center mt-0.5" aria-label="Selected">
@@ -536,7 +536,7 @@ function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
         disabled={!stripe || processing || isSubmitting}
       >
         <Shield className="w-5 h-5" />
-        {processing ? "Authorizing..." : `Authorize $${price.toFixed(2)} · ${vehicleName}`}
+        {processing ? "Authorizing..." : `Authorize ${dualPrice(price, false)} · ${vehicleName}`}
       </Button>
       <p className="text-[10px] text-muted-foreground text-center">
         Your card will be pre-authorized. Final charge applied after ride completion.
@@ -2756,7 +2756,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("ride.distance")} ({formatDist(routeData.distance_miles, useKm)} × ${perDistRate(currentVehicle.pricePerMile, useKm).toFixed(2)}/{distUnit(useKm)})</span>
+                    <span className="text-muted-foreground">{t("ride.distance")} ({formatDist(routeData.distance_miles, useKm)} × {useKm ? `${toKHR(perDistRate(currentVehicle.pricePerMile, useKm))}` : `$${perDistRate(currentVehicle.pricePerMile, useKm).toFixed(2)}`}/{distUnit(useKm)})</span>
                     <span className="text-foreground">{dualPrice(routeData.distance_miles * currentVehicle.pricePerMile, useKm)}</span>
                   </div>
                   {useKm && (
@@ -2765,7 +2765,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("ride.trip_time")} ({routeData.duration_minutes} min × ${currentVehicle.perMinute.toFixed(2)})</span>
+                    <span className="text-muted-foreground">{t("ride.trip_time")} ({routeData.duration_minutes} min × {useKm ? toKHR(currentVehicle.perMinute) : `$${currentVehicle.perMinute.toFixed(2)}`})</span>
                     <span className="text-foreground">{dualPrice(routeData.duration_minutes * currentVehicle.perMinute, useKm)}</span>
                   </div>
                   <div className="flex justify-between">
