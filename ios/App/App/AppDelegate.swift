@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import AppTrackingTransparency
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -26,7 +27,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        // Restart any tasks that were paused (or not yet started) while the application was inactive.
+        // Request App Tracking Transparency permission the first time the app becomes active.
+        // This is required before the in-app WebView sets any tracking cookies.
+        if #available(iOS 14, *) {
+            if ATTrackingManager.trackingAuthorizationStatus == .notDetermined {
+                // Small delay so the app's splash screen has dismissed before the dialog appears.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    ATTrackingManager.requestTrackingAuthorization { _ in
+                        // Status is handled by the system; no tracking occurs
+                        // if the user denies permission.
+                    }
+                }
+            }
+        }
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
