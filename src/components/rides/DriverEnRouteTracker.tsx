@@ -91,12 +91,67 @@ export default function DriverEnRouteTracker({
   onShare,
 }: EnRouteProps) {
   const [expanded, setExpanded] = useState(false);
+  const [liveEta, setLiveEta] = useState(etaMinutes);
+  const lastFetchRef = useRef<string>("");
   const cfg = statusConfig[status];
 
   // Real-time driver location
   const { location: driverLocation, isConnected } = useDriverLocation(driverId);
 
-  // Calculate live progress and ETA from real coordinates
+  // Fetch real-time ETA from Google Maps when driver moves
+  useEffect(() => {
+    const target = status === "in_transit" || status === "almost_there" ? dropoffCoords : pickupCoords;
+    if (!driverLocation || !target) {
+      setLiveEta(etaMinutes);
+      return;
+    }
+
+    const key = `${driverLocation.lat.toFixed(4)},${driverLocation.lng.toFixed(4)}`;
+    if (key === lastFetchRef.current) return;
+
+    const fetchEta = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("maps-route", {
+          body: {
+            origin_lat: driverLocation.lat,
+            origin_lng: driverLocation.lng,
+            dest_lat: target.lat,
+            dest_lng: target.lng,
+          },
+        });
+        if (!error && data?.ok) {
+          setLiveEta(data.duration_in_traffic_minutes ?? data.duration_minutes ?? etaMinutes);
+          lastFetchRef.current = key;
+        }
+      } catch {}
+    };
+    fetchEta();
+  }, [driverLocation?.lat, driverLocation?.lng, status, pickupCoords, dropoffCoords, etaMinutes]);
+
+  // Periodic refresh every 20s for traffic changes
+  useEffect(() => {
+    const target = status === "in_transit" || status === "almost_there" ? dropoffCoords : pickupCoords;
+    if (!driverLocation || !target) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("maps-route", {
+          body: {
+            origin_lat: driverLocation.lat,
+            origin_lng: driverLocation.lng,
+            dest_lat: target.lat,
+            dest_lng: target.lng,
+          },
+        });
+        if (!error && data?.ok) {
+          setLiveEta(data.duration_in_traffic_minutes ?? data.duration_minutes ?? etaMinutes);
+        }
+      } catch {}
+    }, 20000);
+    return () => clearInterval(interval);
+  }, [driverLocation?.lat, driverLocation?.lng, status, pickupCoords, dropoffCoords, etaMinutes]);
+
+  // Calculate live progress from real coordinates
   const liveProgress = (() => {
     if (!driverLocation) return cfg.progress;
     const target = status === "in_transit" || status === "almost_there" ? dropoffCoords : pickupCoords;
@@ -105,23 +160,12 @@ export default function DriverEnRouteTracker({
     if (origin) {
       return calcProgress(driverLocation.lat, driverLocation.lng, origin.lat, origin.lng, target.lat, target.lng);
     }
-    // Estimate based on distance to target
     const dist = haversineKm(driverLocation.lat, driverLocation.lng, target.lat, target.lng);
     if (dist < 0.1) return 95;
     if (dist < 0.5) return 80;
     if (dist < 1) return 60;
     if (dist < 3) return 40;
     return 20;
-  })();
-
-  // Live ETA based on distance and speed
-  const liveEta = (() => {
-    if (!driverLocation) return etaMinutes;
-    const target = status === "in_transit" || status === "almost_there" ? dropoffCoords : pickupCoords;
-    if (!target) return etaMinutes;
-    const dist = haversineKm(driverLocation.lat, driverLocation.lng, target.lat, target.lng);
-    const speedKmh = driverLocation.speed && driverLocation.speed > 0 ? driverLocation.speed * 3.6 : 30; // default 30km/h
-    return Math.max(1, Math.round((dist / speedKmh) * 60));
   })();
 
   // Map car position as percentage for SVG
