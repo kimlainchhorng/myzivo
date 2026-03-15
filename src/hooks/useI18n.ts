@@ -517,6 +517,13 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "ride.confirm_rider": "បញ្ជាក់អ្នកជិះ",
     "ride.driver_contact_person": "អ្នកបើកបរនឹងទាក់ទងមនុស្សនេះសម្រាប់ទីតាំងឡើង",
     "ride.browse_available_rides": "មើលជម្រើសការជិះដែលមាន",
+    "ride.rate": "អត្រា",
+    "ride.payment": "ការបង់ប្រាក់",
+    "ride.minimum_fare_applied": "តម្លៃអប្បបរមាត្រូវបានអនុវត្ត",
+    "ride.promo": "ប្រូម៉ូ",
+    "ride.traffic_light": "ស្រាល",
+    "ride.traffic_moderate": "មធ្យម",
+    "ride.traffic_heavy": "កកស្ទះ",
     "ride.see_ride_options": "មើលជម្រើសការជិះ",
     // Auth
     "auth.welcome_back": "សូមស្វាគមន៍មកវិញ អ្នកធ្វើដំណើរ",
