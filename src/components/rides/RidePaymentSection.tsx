@@ -148,11 +148,11 @@ function CambodiaPaymentSelector({
               កំពុងដំណើរការ...
             </span>
           ) : selected === "cash" ? (
-            `បញ្ជាក់ · ${dualPrice(price, isCambodia)} · ${vehicleName}`
+            `បញ្ជាក់ · ${dualPrice(price, true)} · ${vehicleName}`
           ) : selected === "qr" ? (
-            `បង់តាម QR · ${dualPrice(price, isCambodia)} · ${vehicleName}`
+            `បង់តាម QR · ${dualPrice(price, true)} · ${vehicleName}`
           ) : (
-            `បង់តាមកាត · ${dualPrice(price, isCambodia)} · ${vehicleName}`
+            `បង់តាមកាត · ${dualPrice(price, true)} · ${vehicleName}`
           )}
         </Button>
         <p className="text-[10px] text-muted-foreground text-center mt-2">
