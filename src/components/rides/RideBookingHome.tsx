@@ -2981,7 +2981,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onClick={handleCancelRide}
             >
               <X className="w-4 h-4" />
-              Cancel
+              {t("ride.cancel")}
             </Button>
           </div>
         </div>
