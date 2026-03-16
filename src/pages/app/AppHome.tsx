@@ -401,6 +401,33 @@ const AppHome = () => {
             />
           </div>
 
+          {/* Driver Recruitment Banner — US only */}
+          {!isKH && (
+            <div className="px-5 pb-3">
+              <motion.button
+                onClick={() => navigate("/drive")}
+                whileTap={{ scale: 0.97 }}
+                className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 p-5 text-left shadow-lg relative overflow-hidden touch-manipulation"
+              >
+                <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+                <div className="relative z-10">
+                  <h3 className="text-lg font-bold text-white mb-2.5">Become a ZIVO Driver</h3>
+                  <div className="space-y-1.5 mb-4">
+                    {["Become your own boss", "Work anytime you want", "Instant payout – 0% fee", "Keep up to 75% of your earnings"].map((text) => (
+                      <div key={text} className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-[10px] font-bold shrink-0">✓</span>
+                        <span className="text-sm font-medium text-white/95">{text}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <span className="inline-block px-5 py-2 rounded-full bg-green-500 text-white text-sm font-bold shadow-md">
+                    Join ZIVO Today
+                  </span>
+                </div>
+              </motion.button>
+            </div>
+          )}
+
           {/* Subtle section divider */}
           <div className="h-2 bg-muted/30" />
         </div>
