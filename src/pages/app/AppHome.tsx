@@ -179,6 +179,8 @@ const AppHome = () => {
     { title: t("home.promo_free_delivery"), subtitle: t("home.promo_free_delivery_sub"), gradient: "from-orange-500 to-amber-600", icon: Package, cta: t("home.promo_order_now") },
     { title: t("home.promo_flights_deal"), subtitle: t("home.promo_flights_deal_sub"), gradient: "from-sky-500 to-blue-600", icon: Plane, cta: t("home.promo_explore") },
     { title: t("home.promo_hotel_sale"), subtitle: t("home.promo_hotel_sale_sub"), gradient: "from-violet-500 to-purple-600", icon: BedDouble, cta: t("home.promo_book_now") },
+    // Driver recruitment — US only
+    ...(!isKH ? [{ title: "Become a ZIVO Driver", subtitle: "", gradient: "from-sky-500 to-blue-600", icon: Car, cta: "Join ZIVO Today", isDriverPromo: true as const }] : []),
   ];
 
   const trendingRides = isKH ? [
