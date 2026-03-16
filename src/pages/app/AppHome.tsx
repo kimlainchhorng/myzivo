@@ -402,7 +402,7 @@ const AppHome = () => {
           </div>
 
           {/* Driver Recruitment Banner — US only */}
-          {!isCambodia && (
+          {!isKH && (
             <div className="px-5 pb-3">
               <motion.button
                 onClick={() => navigate("/drive")}
