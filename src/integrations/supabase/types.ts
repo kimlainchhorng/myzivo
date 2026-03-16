@@ -32555,6 +32555,8 @@ export type Database = {
           base_fare: number
           booking_fee: number
           city_name: string
+          city_name_km: string | null
+          country: string | null
           created_at: string
           id: string
           is_active: boolean
@@ -32562,6 +32564,7 @@ export type Database = {
           per_mile_rate: number
           per_minute_rate: number
           premium_multiplier: number
+          region_id: string | null
           service_fee_percent: number
           standard_multiplier: number
           surge_multiplier: number
@@ -32573,6 +32576,8 @@ export type Database = {
           base_fare?: number
           booking_fee?: number
           city_name: string
+          city_name_km?: string | null
+          country?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -32580,6 +32585,7 @@ export type Database = {
           per_mile_rate?: number
           per_minute_rate?: number
           premium_multiplier?: number
+          region_id?: string | null
           service_fee_percent?: number
           standard_multiplier?: number
           surge_multiplier?: number
@@ -32591,6 +32597,8 @@ export type Database = {
           base_fare?: number
           booking_fee?: number
           city_name?: string
+          city_name_km?: string | null
+          country?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -32598,6 +32606,7 @@ export type Database = {
           per_mile_rate?: number
           per_minute_rate?: number
           premium_multiplier?: number
+          region_id?: string | null
           service_fee_percent?: number
           standard_multiplier?: number
           surge_multiplier?: number
@@ -32605,7 +32614,15 @@ export type Database = {
           xl_multiplier?: number
           zone_code?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ride_zones_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rides: {
         Row: {
