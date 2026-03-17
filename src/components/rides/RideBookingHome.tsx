@@ -1574,6 +1574,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const handleReset = () => {
     if (trackingIntervalRef.current) clearInterval(trackingIntervalRef.current);
     pickupManuallySet.current = false;
+    setPickupConfirmed(false);
     setViewStep("home");
     setPickup(null);
     setDestination(null);
