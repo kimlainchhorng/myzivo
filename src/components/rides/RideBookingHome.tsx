@@ -770,7 +770,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
-  // Keep map region aligned to selected language mode
+  // Keep map region aligned to selected language mode + auto-set pickup from GPS
   useEffect(() => {
     let cancelled = false;
 
@@ -782,19 +782,44 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setDestination(null);
       setDestinationDisplay("");
       pickupManuallySet.current = false;
+      // Auto-set pickup for Cambodia default
+      reverseGeocode(CAMBODIA_DEFAULT_CENTER.lat, CAMBODIA_DEFAULT_CENTER.lng)
+        .then((addr) => {
+          if (!cancelled && !pickupManuallySet.current) {
+            setPickup({ address: addr, lat: CAMBODIA_DEFAULT_CENTER.lat, lng: CAMBODIA_DEFAULT_CENTER.lng });
+            setPickupDisplay(addr);
+          }
+        })
+        .catch(() => {});
       return () => { cancelled = true; };
     }
 
     getCurrentLocation()
       .then((loc) => {
-        if (!cancelled) setUserLocation({ lat: loc.lat, lng: loc.lng });
+        if (!cancelled) {
+          setUserLocation({ lat: loc.lat, lng: loc.lng });
+          // Auto-set pickup from GPS location
+          if (!pickupManuallySet.current) {
+            setPickup({ address: t("ride.current_location"), lat: loc.lat, lng: loc.lng });
+            setPickupDisplay(t("ride.current_location"));
+            // Resolve actual address
+            reverseGeocode(loc.lat, loc.lng)
+              .then((addr) => {
+                if (!cancelled && !pickupManuallySet.current) {
+                  setPickup({ address: addr, lat: loc.lat, lng: loc.lng });
+                  setPickupDisplay(addr);
+                }
+              })
+              .catch(() => {});
+          }
+        }
       })
       .catch(() => {
         if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
       });
 
     return () => { cancelled = true; };
-  }, [currentLanguage, getCurrentLocation]);
+  }, [currentLanguage, getCurrentLocation, t]);
 
   // Fetch real nearby drivers and poll every 10s
   useEffect(() => {
