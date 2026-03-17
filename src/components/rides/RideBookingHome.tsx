@@ -1182,6 +1182,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   const handlePickupSelect = useCallback((place: PlaceData) => {
     pickupManuallySet.current = true;
+    setPickupConfirmed(true);
     // Cancel any pending reverse geocode
     if (reverseGeocodeTimerRef.current) {
       clearTimeout(reverseGeocodeTimerRef.current);
