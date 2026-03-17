@@ -776,22 +776,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     let cancelled = false;
 
     if (isCambodiaCountry) {
-      // Force Cambodia center when Khmer is selected
       setUserLocation(CAMBODIA_DEFAULT_CENTER);
       setPickup(null);
       setPickupDisplay("");
       setDestination(null);
       setDestinationDisplay("");
       pickupManuallySet.current = false;
-      // Auto-set pickup for Cambodia default
-      reverseGeocode(CAMBODIA_DEFAULT_CENTER.lat, CAMBODIA_DEFAULT_CENTER.lng)
-        .then((addr) => {
-          if (!cancelled && !pickupManuallySet.current) {
-            setPickup({ address: addr, lat: CAMBODIA_DEFAULT_CENTER.lat, lng: CAMBODIA_DEFAULT_CENTER.lng });
-            setPickupDisplay(addr);
-          }
-        })
-        .catch(() => {});
+      setPickupConfirmed(false);
       return () => { cancelled = true; };
     }
 
@@ -799,20 +790,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       .then((loc) => {
         if (!cancelled) {
           setUserLocation({ lat: loc.lat, lng: loc.lng });
-          // Auto-set pickup from GPS location
-          if (!pickupManuallySet.current) {
-            setPickup({ address: t("ride.current_location"), lat: loc.lat, lng: loc.lng });
-            setPickupDisplay(t("ride.current_location"));
-            // Resolve actual address
-            reverseGeocode(loc.lat, loc.lng)
-              .then((addr) => {
-                if (!cancelled && !pickupManuallySet.current) {
-                  setPickup({ address: addr, lat: loc.lat, lng: loc.lng });
-                  setPickupDisplay(addr);
-                }
-              })
-              .catch(() => {});
-          }
         }
       })
       .catch(() => {
@@ -820,7 +797,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       });
 
     return () => { cancelled = true; };
-  }, [currentLanguage, getCurrentLocation, t]);
+  }, [isCambodiaCountry, getCurrentLocation]);
 
   // Fetch real nearby drivers and poll every 10s
   useEffect(() => {
@@ -1044,11 +1021,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     resolvePickupAddress({ lat: pickup.lat, lng: pickup.lng });
   }, [pickup?.address, pickup?.lat, pickup?.lng, resolvePickupAddress, t]);
 
-  /** When user drags map in search view, reverse geocode center → pickup */
+  /** When user drags map, keep the center pin as the source of truth */
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
-    // In home view: reverse geocode to show address in the destination field
+    mapCenterRef.current = center;
+
     if (viewStep === "home") {
-      mapCenterRef.current = center;
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = setTimeout(async () => {
         setIsReversingGeocode(true);
@@ -1063,33 +1040,58 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       }, 600);
       return;
     }
-    // Skip reverse geocode if user manually set pickup, or destination already chosen
-    if (viewStep !== "search" || destination || pickupManuallySet.current) return;
 
-    // Debounce reverse geocode
+    if (viewStep !== "search" || pickupManuallySet.current) return;
+
+    setPickupConfirmed(false);
     if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
     reverseGeocodeTimerRef.current = setTimeout(async () => {
-      // Re-check guard inside the timeout — pickup may have been set manually during the debounce window
       if (pickupManuallySet.current) return;
 
       setIsReversingGeocode(true);
       try {
-        // Final guard before writing state
         if (pickupManuallySet.current) return;
         const address = await reverseGeocode(center.lat, center.lng);
-        // Final guard after async — user may have selected pickup while API was in-flight
         if (pickupManuallySet.current) return;
         setPickup({ address, lat: center.lat, lng: center.lng });
         setPickupDisplay(address);
       } catch {
         if (pickupManuallySet.current) return;
-        setPickup({ address: `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`, lat: center.lat, lng: center.lng });
-        setPickupDisplay(`${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`);
+        const fallbackAddress = `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`;
+        setPickup({ address: fallbackAddress, lat: center.lat, lng: center.lng });
+        setPickupDisplay(fallbackAddress);
       } finally {
         setIsReversingGeocode(false);
       }
     }, 600);
-  }, [viewStep, destination]);
+  }, [viewStep]);
+
+  const handleConfirmPickupFromPin = useCallback(async () => {
+    const coords = mapCenterRef.current ?? pickup ?? userLocation ?? fallbackPickupCenter;
+    const fallbackAddress = pickupDisplay || pickup?.address || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
+
+    pickupManuallySet.current = true;
+    setPickupConfirmed(true);
+    if (reverseGeocodeTimerRef.current) {
+      clearTimeout(reverseGeocodeTimerRef.current);
+      reverseGeocodeTimerRef.current = null;
+    }
+
+    setPickup({ address: fallbackAddress, lat: coords.lat, lng: coords.lng });
+    setPickupDisplay(fallbackAddress);
+    setIsReversingGeocode(true);
+
+    try {
+      const address = await reverseGeocode(coords.lat, coords.lng);
+      setPickup({ address, lat: coords.lat, lng: coords.lng });
+      setPickupDisplay(address);
+    } catch {
+      setPickup({ address: fallbackAddress, lat: coords.lat, lng: coords.lng });
+      setPickupDisplay(fallbackAddress);
+    } finally {
+      setIsReversingGeocode(false);
+    }
+  }, [pickup, pickupDisplay, userLocation, fallbackPickupCenter]);
 
   const now = new Date();
   const hour = now.getHours();
@@ -1183,7 +1185,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const handlePickupSelect = useCallback((place: PlaceData) => {
     pickupManuallySet.current = true;
     setPickupConfirmed(true);
-    // Cancel any pending reverse geocode
     if (reverseGeocodeTimerRef.current) {
       clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = null;
@@ -1194,40 +1195,39 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, []);
 
   const handleDestinationSelect = useCallback((place: PlaceData) => {
-    // Lock pickup from reverse-geocode overwriting
-    pickupManuallySet.current = true;
-    // Stop pending reverse-geocode updates so pickup doesn't get overwritten after destination select
     if (reverseGeocodeTimerRef.current) {
       clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = null;
     }
     setIsReversingGeocode(false);
+    setDestination(place);
+    setDestinationDisplay(place.address);
 
-    // Determine effective pickup (including auto-fallback)
-    let pickupData = pickup;
-    if (!pickupData) {
-      const coords = userLocation ?? fallbackPickupCenter;
-      pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
-      resolvePickupAddress(coords);
+    if (!pickupConfirmed) {
+      toast.info("Confirm your pickup pin first");
+      return;
     }
 
-    // Block same-location trips unless there are intermediate stops (round trip)
+    let pickupData = pickup;
+    if (!pickupData) {
+      const coords = mapCenterRef.current ?? userLocation ?? fallbackPickupCenter;
+      pickupData = {
+        address: pickupDisplay || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+        lat: coords.lat,
+        lng: coords.lng,
+      };
+    }
+
     const hasStops = stopsRef.current.some(s => s.place && s.place.lat && s.place.lng);
     if (isSameLocation(pickupData, place) && !hasStops) {
       toast.error("Pickup and destination can't be the same. Add a stop for round trips.");
       return;
     }
 
-    setDestination(place);
-    setDestinationDisplay(place.address);
-
-    if (!pickup) {
-      setPickup(pickupData);
-      setPickupDisplay(pickupData.address);
-    }
+    setPickup(pickupData);
+    setPickupDisplay(pickupData.address);
 
     if (pickupData && place.lat && place.lng) {
-      // Include any existing stops as waypoints — use ref to avoid stale closure
       const wp = stopsRef.current
         .filter(s => s.place && s.place.lat && s.place.lng)
         .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
@@ -1339,12 +1339,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const handleSavedPlace = (address: string, lat: number, lng: number) => {
     setDestinationDisplay(address);
     setDestination({ address, lat, lng });
-    const coords = userLocation ?? fallbackPickupCenter;
-    const pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
-    setPickupDisplay(t("ride.current_location"));
+
+    if (!pickupConfirmed) {
+      toast.info("Confirm your pickup pin first");
+      return;
+    }
+
+    const coords = mapCenterRef.current ?? pickup ?? userLocation ?? fallbackPickupCenter;
+    const pickupData = {
+      address: pickupDisplay || pickup?.address || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+      lat: coords.lat,
+      lng: coords.lng,
+    };
     setPickup(pickupData);
+    setPickupDisplay(pickupData.address);
     fetchRoute(pickupData, { address, lat, lng });
-    resolvePickupAddress(coords);
   };
 
   /* ─── Fetch route (for initial route + confirm search) ─── */
@@ -1416,6 +1425,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   };
 
   const handleConfirmSearch = () => {
+    if (!pickupConfirmed) {
+      toast.error("Confirm your pickup pin first");
+      return;
+    }
     if (!pickup || !destination) return;
     const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
     if (isSameLocation(pickup, destination) && wp.length === 0) {
@@ -1809,16 +1822,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   if (center && destinationDisplay) {
                     const dest: PlaceData = { address: destinationDisplay, lat: center.lat, lng: center.lng };
                     setDestination(dest);
-                    const coords = userLocation ?? fallbackPickupCenter;
-                    const pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
-                    setPickupDisplay(t("ride.current_location"));
-                    setPickup(pickupData);
-                    resolvePickupAddress(coords);
-                    const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-                    fetchRoute(pickupData, dest, wp);
-                  } else {
-                    setViewStep("search");
+                    pickupManuallySet.current = false;
+                    setPickup(null);
+                    setPickupDisplay("");
+                    setPickupConfirmed(false);
                   }
+                  setViewStep("search");
                 }}
                 disabled={isReversingGeocode}
                 className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
@@ -1982,13 +1991,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   </div>
                   <Button
-                    onClick={() => { pickupManuallySet.current = true; setPickupConfirmed(true); }}
-                    disabled={isGettingLocation || !pickupDisplay}
+                    onClick={handleConfirmPickupFromPin}
+                    disabled={isGettingLocation || isReversingGeocode || (!pickupDisplay && !pickup && !mapCenterRef.current)}
                     size="sm"
                     className="w-full h-9 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                    Confirm Pickup Location
+                    Confirm This Pin
                   </Button>
                 </div>
               )}
