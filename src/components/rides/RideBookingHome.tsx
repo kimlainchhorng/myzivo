@@ -550,7 +550,7 @@ function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
 export default function RideBookingHome({ initialSchedule = false }: { initialSchedule?: boolean } = {}) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { getCurrentLocation } = useCurrentLocation();
+  const { getCurrentLocation, isGettingLocation } = useCurrentLocation();
   const { data: savedLocations = [] } = useSavedLocations(user?.id);
   const { currentLanguage, changeLanguage, t } = useI18n();
   const [showLangMenu, setShowLangMenu] = useState(false);
