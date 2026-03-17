@@ -583,6 +583,58 @@ export type Database = {
           },
         ]
       }
+      admin_driver_messages: {
+        Row: {
+          created_at: string | null
+          driver_id: string
+          id: string
+          is_read: boolean | null
+          message: string
+          sender_id: string
+          sender_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          sender_id: string
+          sender_type: string
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          sender_id?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_driver_messages_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_driver_messages_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_driver_messages_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "v_admin_driver_compliance"
+            referencedColumns: ["driver_id"]
+          },
+        ]
+      }
       admin_invitations: {
         Row: {
           accepted_at: string | null
@@ -5395,6 +5447,60 @@ export type Database = {
           status?: string
           twilio_proxy_number?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      calls: {
+        Row: {
+          caller_id: string
+          caller_name: string | null
+          caller_type: string
+          created_at: string | null
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          offer_sdp: Json | null
+          receiver_id: string
+          receiver_name: string | null
+          receiver_type: string
+          related_order_id: string | null
+          related_trip_id: string | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          caller_id: string
+          caller_name?: string | null
+          caller_type: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          offer_sdp?: Json | null
+          receiver_id: string
+          receiver_name?: string | null
+          receiver_type: string
+          related_order_id?: string | null
+          related_trip_id?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          caller_id?: string
+          caller_name?: string | null
+          caller_type?: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          offer_sdp?: Json | null
+          receiver_id?: string
+          receiver_name?: string | null
+          receiver_type?: string
+          related_order_id?: string | null
+          related_trip_id?: string | null
+          started_at?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -10605,6 +10711,76 @@ export type Database = {
           trips_required?: number
         }
         Relationships: []
+      }
+      driver_company_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          driver_id: string
+          due_date: string | null
+          id: string
+          paid_at: string | null
+          period_end: string | null
+          period_start: string | null
+          reference: string | null
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          driver_id: string
+          due_date?: string | null
+          id?: string
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          reference?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          driver_id?: string
+          due_date?: string | null
+          id?: string
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          reference?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_company_payments_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_company_payments_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_company_payments_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "v_admin_driver_compliance"
+            referencedColumns: ["driver_id"]
+          },
+        ]
       }
       driver_daily_goals: {
         Row: {
@@ -34215,6 +34391,7 @@ export type Database = {
       service_pricing: {
         Row: {
           base_fare: number
+          country: string
           created_at: string | null
           id: string
           is_active: boolean | null
@@ -34229,6 +34406,7 @@ export type Database = {
         }
         Insert: {
           base_fare?: number
+          country?: string
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -34243,6 +34421,7 @@ export type Database = {
         }
         Update: {
           base_fare?: number
+          country?: string
           created_at?: string | null
           id?: string
           is_active?: boolean | null
