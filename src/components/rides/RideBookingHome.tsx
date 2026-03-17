@@ -1185,7 +1185,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const handlePickupSelect = useCallback((place: PlaceData) => {
     pickupManuallySet.current = true;
     setPickupConfirmed(true);
-    // Cancel any pending reverse geocode
     if (reverseGeocodeTimerRef.current) {
       clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = null;
@@ -1196,40 +1195,39 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, []);
 
   const handleDestinationSelect = useCallback((place: PlaceData) => {
-    // Lock pickup from reverse-geocode overwriting
-    pickupManuallySet.current = true;
-    // Stop pending reverse-geocode updates so pickup doesn't get overwritten after destination select
     if (reverseGeocodeTimerRef.current) {
       clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = null;
     }
     setIsReversingGeocode(false);
+    setDestination(place);
+    setDestinationDisplay(place.address);
 
-    // Determine effective pickup (including auto-fallback)
-    let pickupData = pickup;
-    if (!pickupData) {
-      const coords = userLocation ?? fallbackPickupCenter;
-      pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
-      resolvePickupAddress(coords);
+    if (!pickupConfirmed) {
+      toast.info("Confirm your pickup pin first");
+      return;
     }
 
-    // Block same-location trips unless there are intermediate stops (round trip)
+    let pickupData = pickup;
+    if (!pickupData) {
+      const coords = mapCenterRef.current ?? userLocation ?? fallbackPickupCenter;
+      pickupData = {
+        address: pickupDisplay || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+        lat: coords.lat,
+        lng: coords.lng,
+      };
+    }
+
     const hasStops = stopsRef.current.some(s => s.place && s.place.lat && s.place.lng);
     if (isSameLocation(pickupData, place) && !hasStops) {
       toast.error("Pickup and destination can't be the same. Add a stop for round trips.");
       return;
     }
 
-    setDestination(place);
-    setDestinationDisplay(place.address);
-
-    if (!pickup) {
-      setPickup(pickupData);
-      setPickupDisplay(pickupData.address);
-    }
+    setPickup(pickupData);
+    setPickupDisplay(pickupData.address);
 
     if (pickupData && place.lat && place.lng) {
-      // Include any existing stops as waypoints — use ref to avoid stale closure
       const wp = stopsRef.current
         .filter(s => s.place && s.place.lat && s.place.lng)
         .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
