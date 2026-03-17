@@ -1964,6 +1964,45 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 pt-2 pb-20" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
               <h2 className="text-lg font-black text-foreground mb-4 tracking-tight">Where to?</h2>
 
+              {/* GPS Pickup Confirmation Banner */}
+              {pickup && !pickupManuallySet.current && (
+                <div className="mb-3 rounded-2xl bg-primary/5 border border-primary/20 p-3">
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Navigation className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-primary">{isGettingLocation ? "Detecting your location..." : "📍 GPS Pickup Location"}</p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        {pickupDisplay || t("ride.current_location")}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => { pickupManuallySet.current = true; }}
+                    size="sm"
+                    className="w-full h-9 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                    Confirm Pickup Location
+                  </Button>
+                </div>
+              )}
+
+              {/* Confirmed pickup indicator */}
+              {pickup && pickupManuallySet.current && (
+                <div className="mb-3 rounded-xl bg-muted/10 border border-border/20 px-3 py-2 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-primary shrink-0" />
+                  <p className="text-xs text-foreground truncate flex-1">{pickupDisplay}</p>
+                  <button
+                    onClick={() => { pickupManuallySet.current = false; }}
+                    className="text-xs text-primary font-semibold shrink-0"
+                  >
+                    Change
+                  </button>
+                </div>
+              )}
+
               {/* Address inputs with ZIVO-style connector */}
               <div className="rounded-2xl bg-muted/10 border border-border/20 p-3.5">
                 <div className="flex items-center gap-3">
