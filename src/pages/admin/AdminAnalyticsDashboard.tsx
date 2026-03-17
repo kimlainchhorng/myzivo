@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, TrendingUp, Users, Plane, Hotel, Car, ShoppingBag, ArrowLeft } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Plane, Hotel, Car, ShoppingBag } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 type TimeRange = "7d" | "30d" | "90d";
 
