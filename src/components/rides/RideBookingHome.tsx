@@ -1991,13 +1991,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   </div>
                   <Button
-                    onClick={() => { pickupManuallySet.current = true; setPickupConfirmed(true); }}
-                    disabled={isGettingLocation || !pickupDisplay}
+                    onClick={handleConfirmPickupFromPin}
+                    disabled={isGettingLocation || isReversingGeocode || (!pickupDisplay && !pickup && !mapCenterRef.current)}
                     size="sm"
                     className="w-full h-9 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                    Confirm Pickup Location
+                    Confirm This Pin
                   </Button>
                 </div>
               )}
