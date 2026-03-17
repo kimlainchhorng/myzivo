@@ -1966,7 +1966,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               <h2 className="text-lg font-black text-foreground mb-4 tracking-tight">Where to?</h2>
 
               {/* GPS Pickup Confirmation Banner */}
-              {pickup && !pickupManuallySet.current && (
+              {pickup && !pickupConfirmed && (
                 <div className="mb-3 rounded-2xl bg-primary/5 border border-primary/20 p-3">
                   <div className="flex items-center gap-2.5 mb-2">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -1980,7 +1980,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   </div>
                   <Button
-                    onClick={() => { pickupManuallySet.current = true; }}
+                    onClick={() => { pickupManuallySet.current = true; setPickupConfirmed(true); }}
+                    disabled={isGettingLocation || !pickupDisplay}
                     size="sm"
                     className="w-full h-9 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90"
                   >
@@ -1991,12 +1992,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               )}
 
               {/* Confirmed pickup indicator */}
-              {pickup && pickupManuallySet.current && (
+              {pickup && pickupConfirmed && (
                 <div className="mb-3 rounded-xl bg-muted/10 border border-border/20 px-3 py-2 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-primary shrink-0" />
                   <p className="text-xs text-foreground truncate flex-1">{pickupDisplay}</p>
                   <button
-                    onClick={() => { pickupManuallySet.current = false; }}
+                    onClick={() => { pickupManuallySet.current = false; setPickupConfirmed(false); }}
                     className="text-xs text-primary font-semibold shrink-0"
                   >
                     Change
