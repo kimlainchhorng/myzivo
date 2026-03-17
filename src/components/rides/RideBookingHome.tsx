@@ -550,7 +550,7 @@ function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
 export default function RideBookingHome({ initialSchedule = false }: { initialSchedule?: boolean } = {}) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { getCurrentLocation } = useCurrentLocation();
+  const { getCurrentLocation, isGettingLocation } = useCurrentLocation();
   const { data: savedLocations = [] } = useSavedLocations(user?.id);
   const { currentLanguage, changeLanguage, t } = useI18n();
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -679,6 +679,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [isReversingGeocode, setIsReversingGeocode] = useState(false);
   const reverseGeocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pickupManuallySet = useRef(false); // true when user selects pickup via autocomplete
+  const [pickupConfirmed, setPickupConfirmed] = useState(false); // reactive state for GPS confirm UI
   const mapCenterRef = useRef<{ lat: number; lng: number } | null>(null);
 
   // New state for enhanced flow
@@ -770,7 +771,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
-  // Keep map region aligned to selected language mode
+  // Keep map region aligned to selected language mode + auto-set pickup from GPS
   useEffect(() => {
     let cancelled = false;
 
@@ -782,19 +783,44 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setDestination(null);
       setDestinationDisplay("");
       pickupManuallySet.current = false;
+      // Auto-set pickup for Cambodia default
+      reverseGeocode(CAMBODIA_DEFAULT_CENTER.lat, CAMBODIA_DEFAULT_CENTER.lng)
+        .then((addr) => {
+          if (!cancelled && !pickupManuallySet.current) {
+            setPickup({ address: addr, lat: CAMBODIA_DEFAULT_CENTER.lat, lng: CAMBODIA_DEFAULT_CENTER.lng });
+            setPickupDisplay(addr);
+          }
+        })
+        .catch(() => {});
       return () => { cancelled = true; };
     }
 
     getCurrentLocation()
       .then((loc) => {
-        if (!cancelled) setUserLocation({ lat: loc.lat, lng: loc.lng });
+        if (!cancelled) {
+          setUserLocation({ lat: loc.lat, lng: loc.lng });
+          // Auto-set pickup from GPS location
+          if (!pickupManuallySet.current) {
+            setPickup({ address: t("ride.current_location"), lat: loc.lat, lng: loc.lng });
+            setPickupDisplay(t("ride.current_location"));
+            // Resolve actual address
+            reverseGeocode(loc.lat, loc.lng)
+              .then((addr) => {
+                if (!cancelled && !pickupManuallySet.current) {
+                  setPickup({ address: addr, lat: loc.lat, lng: loc.lng });
+                  setPickupDisplay(addr);
+                }
+              })
+              .catch(() => {});
+          }
+        }
       })
       .catch(() => {
         if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
       });
 
     return () => { cancelled = true; };
-  }, [currentLanguage, getCurrentLocation]);
+  }, [currentLanguage, getCurrentLocation, t]);
 
   // Fetch real nearby drivers and poll every 10s
   useEffect(() => {
@@ -1156,6 +1182,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   const handlePickupSelect = useCallback((place: PlaceData) => {
     pickupManuallySet.current = true;
+    setPickupConfirmed(true);
     // Cancel any pending reverse geocode
     if (reverseGeocodeTimerRef.current) {
       clearTimeout(reverseGeocodeTimerRef.current);
@@ -1547,6 +1574,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const handleReset = () => {
     if (trackingIntervalRef.current) clearInterval(trackingIntervalRef.current);
     pickupManuallySet.current = false;
+    setPickupConfirmed(false);
     setViewStep("home");
     setPickup(null);
     setDestination(null);
@@ -1938,6 +1966,46 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 pt-2 pb-20" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
               <h2 className="text-lg font-black text-foreground mb-4 tracking-tight">Where to?</h2>
+
+              {/* GPS Pickup Confirmation Banner */}
+              {pickup && !pickupConfirmed && (
+                <div className="mb-3 rounded-2xl bg-primary/5 border border-primary/20 p-3">
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Navigation className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-primary">{isGettingLocation ? "Detecting your location..." : "📍 GPS Pickup Location"}</p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        {pickupDisplay || t("ride.current_location")}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => { pickupManuallySet.current = true; setPickupConfirmed(true); }}
+                    disabled={isGettingLocation || !pickupDisplay}
+                    size="sm"
+                    className="w-full h-9 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                    Confirm Pickup Location
+                  </Button>
+                </div>
+              )}
+
+              {/* Confirmed pickup indicator */}
+              {pickup && pickupConfirmed && (
+                <div className="mb-3 rounded-xl bg-muted/10 border border-border/20 px-3 py-2 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-primary shrink-0" />
+                  <p className="text-xs text-foreground truncate flex-1">{pickupDisplay}</p>
+                  <button
+                    onClick={() => { pickupManuallySet.current = false; setPickupConfirmed(false); }}
+                    className="text-xs text-primary font-semibold shrink-0"
+                  >
+                    Change
+                  </button>
+                </div>
+              )}
 
               {/* Address inputs with ZIVO-style connector */}
               <div className="rounded-2xl bg-muted/10 border border-border/20 p-3.5">
