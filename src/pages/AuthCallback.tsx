@@ -75,8 +75,13 @@ const AuthCallback = () => {
         setStatus("success");
         setTimeout(() => navigate("/setup", { replace: true }), 200);
       } else {
+        // Check if user is admin for auto-redirect to dashboard
+        const { data: isAdminUser } = await supabase.rpc("check_user_role", {
+          _user_id: userId,
+          _role: "admin",
+        });
         setStatus("success");
-        setTimeout(() => navigate("/", { replace: true }), 200);
+        setTimeout(() => navigate(isAdminUser ? "/admin/analytics" : "/", { replace: true }), 200);
       }
     } catch (err) {
       console.error("Error checking setup status:", err);
