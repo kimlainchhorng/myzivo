@@ -1425,6 +1425,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   };
 
   const handleConfirmSearch = () => {
+    if (!pickupConfirmed) {
+      toast.error("Confirm your pickup pin first");
+      return;
+    }
     if (!pickup || !destination) return;
     const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
     if (isSameLocation(pickup, destination) && wp.length === 0) {
