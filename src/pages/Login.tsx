@@ -117,11 +117,19 @@ const Login = () => {
         .eq("user_id", user.id)
         .maybeSingle();
 
+      // Check if user is admin for auto-redirect
+      const { data: isAdminUser } = await supabase.rpc("check_user_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+
       setIsLoading(false);
       toast.success("Welcome back!");
 
       if (!profile || profile.setup_complete !== true) {
         navigate("/setup", { replace: true });
+      } else if (isAdminUser && from === "/") {
+        navigate("/admin/analytics", { replace: true });
       } else {
         navigate(from, { replace: true });
       }
