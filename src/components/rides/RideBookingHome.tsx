@@ -1339,12 +1339,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const handleSavedPlace = (address: string, lat: number, lng: number) => {
     setDestinationDisplay(address);
     setDestination({ address, lat, lng });
-    const coords = userLocation ?? fallbackPickupCenter;
-    const pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
-    setPickupDisplay(t("ride.current_location"));
+
+    if (!pickupConfirmed) {
+      toast.info("Confirm your pickup pin first");
+      return;
+    }
+
+    const coords = mapCenterRef.current ?? pickup ?? userLocation ?? fallbackPickupCenter;
+    const pickupData = {
+      address: pickupDisplay || pickup?.address || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+      lat: coords.lat,
+      lng: coords.lng,
+    };
     setPickup(pickupData);
+    setPickupDisplay(pickupData.address);
     fetchRoute(pickupData, { address, lat, lng });
-    resolvePickupAddress(coords);
   };
 
   /* ─── Fetch route (for initial route + confirm search) ─── */
