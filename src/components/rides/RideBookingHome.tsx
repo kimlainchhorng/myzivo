@@ -1822,16 +1822,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   if (center && destinationDisplay) {
                     const dest: PlaceData = { address: destinationDisplay, lat: center.lat, lng: center.lng };
                     setDestination(dest);
-                    const coords = userLocation ?? fallbackPickupCenter;
-                    const pickupData = { address: t("ride.current_location"), lat: coords.lat, lng: coords.lng };
-                    setPickupDisplay(t("ride.current_location"));
-                    setPickup(pickupData);
-                    resolvePickupAddress(coords);
-                    const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-                    fetchRoute(pickupData, dest, wp);
-                  } else {
-                    setViewStep("search");
+                    pickupManuallySet.current = false;
+                    setPickup(null);
+                    setPickupDisplay("");
+                    setPickupConfirmed(false);
                   }
+                  setViewStep("search");
                 }}
                 disabled={isReversingGeocode}
                 className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
