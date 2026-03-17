@@ -135,47 +135,24 @@ export default function AdminAnalyticsDashboard() {
   }
 
   return (
-    <>
-      <Helmet>
-        <title>Analytics Dashboard — ZIVO Admin</title>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
-        {/* Header */}
-        <div className="border-b border-border bg-card">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Go back">
-                <ArrowLeft className="w-5 h-5" />
+    <AdminLayout title="Analytics Dashboard">
+      <div className="max-w-7xl space-y-6">
+        {/* Time range selector */}
+        <div className="flex justify-end">
+          <div className="flex gap-1 bg-muted rounded-lg p-1">
+            {(["7d", "30d", "90d"] as TimeRange[]).map((range) => (
+              <Button
+                key={range}
+                variant={timeRange === range ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setTimeRange(range)}
+                className="text-xs"
+              >
+                {range === "7d" ? "7 Days" : range === "30d" ? "30 Days" : "90 Days"}
               </Button>
-              <div>
-                <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-primary" />
-                  Analytics Dashboard
-                </h1>
-                <p className="text-sm text-muted-foreground">Booking & traffic insights</p>
-              </div>
-            </div>
-
-            {/* Time range selector */}
-            <div className="flex gap-1 bg-muted rounded-lg p-1">
-              {(["7d", "30d", "90d"] as TimeRange[]).map((range) => (
-                <Button
-                  key={range}
-                  variant={timeRange === range ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setTimeRange(range)}
-                  className="text-xs"
-                >
-                  {range === "7d" ? "7 Days" : range === "30d" ? "30 Days" : "90 Days"}
-                </Button>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
           {/* Stat Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
