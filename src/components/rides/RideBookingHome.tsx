@@ -776,22 +776,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     let cancelled = false;
 
     if (isCambodiaCountry) {
-      // Force Cambodia center when Khmer is selected
       setUserLocation(CAMBODIA_DEFAULT_CENTER);
       setPickup(null);
       setPickupDisplay("");
       setDestination(null);
       setDestinationDisplay("");
       pickupManuallySet.current = false;
-      // Auto-set pickup for Cambodia default
-      reverseGeocode(CAMBODIA_DEFAULT_CENTER.lat, CAMBODIA_DEFAULT_CENTER.lng)
-        .then((addr) => {
-          if (!cancelled && !pickupManuallySet.current) {
-            setPickup({ address: addr, lat: CAMBODIA_DEFAULT_CENTER.lat, lng: CAMBODIA_DEFAULT_CENTER.lng });
-            setPickupDisplay(addr);
-          }
-        })
-        .catch(() => {});
+      setPickupConfirmed(false);
       return () => { cancelled = true; };
     }
 
@@ -799,20 +790,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       .then((loc) => {
         if (!cancelled) {
           setUserLocation({ lat: loc.lat, lng: loc.lng });
-          // Auto-set pickup from GPS location
-          if (!pickupManuallySet.current) {
-            setPickup({ address: t("ride.current_location"), lat: loc.lat, lng: loc.lng });
-            setPickupDisplay(t("ride.current_location"));
-            // Resolve actual address
-            reverseGeocode(loc.lat, loc.lng)
-              .then((addr) => {
-                if (!cancelled && !pickupManuallySet.current) {
-                  setPickup({ address: addr, lat: loc.lat, lng: loc.lng });
-                  setPickupDisplay(addr);
-                }
-              })
-              .catch(() => {});
-          }
         }
       })
       .catch(() => {
@@ -820,7 +797,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       });
 
     return () => { cancelled = true; };
-  }, [currentLanguage, getCurrentLocation, t]);
+  }, [isCambodiaCountry, getCurrentLocation]);
 
   // Fetch real nearby drivers and poll every 10s
   useEffect(() => {
