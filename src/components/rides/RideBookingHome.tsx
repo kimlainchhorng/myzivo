@@ -1021,11 +1021,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     resolvePickupAddress({ lat: pickup.lat, lng: pickup.lng });
   }, [pickup?.address, pickup?.lat, pickup?.lng, resolvePickupAddress, t]);
 
-  /** When user drags map in search view, reverse geocode center → pickup */
+  /** When user drags map, keep the center pin as the source of truth */
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
-    // In home view: reverse geocode to show address in the destination field
+    mapCenterRef.current = center;
+
     if (viewStep === "home") {
-      mapCenterRef.current = center;
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = setTimeout(async () => {
         setIsReversingGeocode(true);
@@ -1040,33 +1040,58 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       }, 600);
       return;
     }
-    // Skip reverse geocode if user manually set pickup, or destination already chosen
-    if (viewStep !== "search" || destination || pickupManuallySet.current) return;
 
-    // Debounce reverse geocode
+    if (viewStep !== "search" || pickupManuallySet.current) return;
+
+    setPickupConfirmed(false);
     if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
     reverseGeocodeTimerRef.current = setTimeout(async () => {
-      // Re-check guard inside the timeout — pickup may have been set manually during the debounce window
       if (pickupManuallySet.current) return;
 
       setIsReversingGeocode(true);
       try {
-        // Final guard before writing state
         if (pickupManuallySet.current) return;
         const address = await reverseGeocode(center.lat, center.lng);
-        // Final guard after async — user may have selected pickup while API was in-flight
         if (pickupManuallySet.current) return;
         setPickup({ address, lat: center.lat, lng: center.lng });
         setPickupDisplay(address);
       } catch {
         if (pickupManuallySet.current) return;
-        setPickup({ address: `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`, lat: center.lat, lng: center.lng });
-        setPickupDisplay(`${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`);
+        const fallbackAddress = `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`;
+        setPickup({ address: fallbackAddress, lat: center.lat, lng: center.lng });
+        setPickupDisplay(fallbackAddress);
       } finally {
         setIsReversingGeocode(false);
       }
     }, 600);
-  }, [viewStep, destination]);
+  }, [viewStep]);
+
+  const handleConfirmPickupFromPin = useCallback(async () => {
+    const coords = mapCenterRef.current ?? pickup ?? userLocation ?? fallbackPickupCenter;
+    const fallbackAddress = pickupDisplay || pickup?.address || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
+
+    pickupManuallySet.current = true;
+    setPickupConfirmed(true);
+    if (reverseGeocodeTimerRef.current) {
+      clearTimeout(reverseGeocodeTimerRef.current);
+      reverseGeocodeTimerRef.current = null;
+    }
+
+    setPickup({ address: fallbackAddress, lat: coords.lat, lng: coords.lng });
+    setPickupDisplay(fallbackAddress);
+    setIsReversingGeocode(true);
+
+    try {
+      const address = await reverseGeocode(coords.lat, coords.lng);
+      setPickup({ address, lat: coords.lat, lng: coords.lng });
+      setPickupDisplay(address);
+    } catch {
+      setPickup({ address: fallbackAddress, lat: coords.lat, lng: coords.lng });
+      setPickupDisplay(fallbackAddress);
+    } finally {
+      setIsReversingGeocode(false);
+    }
+  }, [pickup, pickupDisplay, userLocation, fallbackPickupCenter]);
 
   const now = new Date();
   const hour = now.getHours();
