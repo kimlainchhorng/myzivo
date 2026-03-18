@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.geo-detect]
 verify_jwt = false
+
+[functions.aba-payway-checkout]
+verify_jwt = false
