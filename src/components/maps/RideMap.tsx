@@ -417,10 +417,23 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   const driverNavLineRef = useRef<google.maps.Polyline | null>(null);
   const onCenterChangedRef = useRef<RideMapProps["onCenterChanged"]>(onCenterChanged);
   const [mapReady, setMapReady] = useState(false);
+  const hasPannedToUserRef = useRef(false);
 
   useEffect(() => {
     onCenterChangedRef.current = onCenterChanged;
   }, [onCenterChanged]);
+
+  // ─── Pan to user's GPS location once it becomes available ───
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !userLocation || hasPannedToUserRef.current) return;
+    // Only auto-pan if no pickup/dropoff coords are driving the view
+    if (!pickupCoords && !dropoffCoords) {
+      map.panTo(userLocation);
+      map.setZoom(15);
+      hasPannedToUserRef.current = true;
+    }
+  }, [userLocation, pickupCoords, dropoffCoords, mapReady]);
 
   const decodedRoute = useMemo(() => {
     if (!routePolyline) return null;
