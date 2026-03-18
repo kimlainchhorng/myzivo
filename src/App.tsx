@@ -423,7 +423,7 @@ const App = () => (
                 {/* flights-dashboard removed */}
                 <Route path="/airports/:iata" element={<RouteErrorBoundary section="Flights"><AirportPage /></RouteErrorBoundary>} />
                 <Route path="/booking/duffel-checkout" element={<RouteErrorBoundary section="Checkout"><DuffelCheckout /></RouteErrorBoundary>} />
-                <Route path="/checkout" element={<RouteErrorBoundary section="Checkout"><EmbeddedCheckout /></RouteErrorBoundary>} />
+                {/* /checkout removed — partners block iframe; redirect model used instead */}
 
                 {/* Hotels */}
                 <Route path="/hotels" element={<RouteErrorBoundary section="Hotels"><HotelsPage /></RouteErrorBoundary>} />
