@@ -3,7 +3,7 @@
  * Cambodia: Cash, QR Payment, Card only
  */
 import { useState, useEffect, useCallback } from "react";
-import { CreditCard, Plus, Trash2, Check, Shield, ChevronRight, Smartphone, LogIn, UserPlus, Banknote, QrCode } from "lucide-react";
+import { CreditCard, Plus, Trash2, Check, Shield, ChevronRight, Smartphone, LogIn, UserPlus, Banknote, QrCode, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
@@ -51,7 +51,7 @@ const BRAND_LABELS: Record<string, string> = {
   discover: "Discover",
 };
 
-type CambodiaPaymentMethod = "cash" | "qr" | "card";
+type CambodiaPaymentMethod = "aba" | "cash" | "qr" | "card";
 
 /* ─── Cambodia Payment Methods ─── */
 function CambodiaPaymentSelector({
@@ -65,9 +65,18 @@ function CambodiaPaymentSelector({
   isSubmitting: boolean;
   onConfirm: (method: CambodiaPaymentMethod) => void;
 }) {
-  const [selected, setSelected] = useState<CambodiaPaymentMethod>("cash");
+  const [selected, setSelected] = useState<CambodiaPaymentMethod>("aba");
 
   const methods = [
+    {
+      id: "aba" as CambodiaPaymentMethod,
+      label: "ABA Pay",
+      desc: "បង់តាម ABA · KHQR · Visa · MC",
+      icon: Building2,
+      iconColor: "text-blue-600",
+      bgColor: "bg-blue-600/10",
+      badge: "ពេញនិយម",
+    },
     {
       id: "cash" as CambodiaPaymentMethod,
       label: "សាច់ប្រាក់ (Cash)",
@@ -79,10 +88,10 @@ function CambodiaPaymentSelector({
     {
       id: "qr" as CambodiaPaymentMethod,
       label: "QR Payment",
-      desc: "ABA, ACLEDA, Wing, TrueMoney",
+      desc: "ACLEDA, Wing, TrueMoney",
       icon: QrCode,
-      iconColor: "text-blue-500",
-      bgColor: "bg-blue-500/10",
+      iconColor: "text-purple-500",
+      bgColor: "bg-purple-500/10",
     },
     {
       id: "card" as CambodiaPaymentMethod,
@@ -93,6 +102,20 @@ function CambodiaPaymentSelector({
       bgColor: "bg-amber-500/10",
     },
   ];
+
+  const confirmLabels: Record<CambodiaPaymentMethod, string> = {
+    aba: `បង់តាម ABA · ${dualPrice(price, true)} · ${vehicleName}`,
+    cash: `បញ្ជាក់ · ${dualPrice(price, true)} · ${vehicleName}`,
+    qr: `បង់តាម QR · ${dualPrice(price, true)} · ${vehicleName}`,
+    card: `បង់តាមកាត · ${dualPrice(price, true)} · ${vehicleName}`,
+  };
+
+  const footerLabels: Record<CambodiaPaymentMethod, string> = {
+    aba: "បើកទៅ ABA Payway សម្រាប់ការទូទាត់ · Redirected to ABA checkout",
+    cash: "បង់សាច់ប្រាក់ដល់អ្នកបើកបរ · Pay cash to driver after ride",
+    qr: "ស្កែន QR code ពេលអ្នកបើកបរមកដល់ · Scan QR when driver arrives",
+    card: "កាតនឹងត្រូវបានគិតប្រាក់បន្ទាប់ពីជិះ · Card charged after ride",
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -119,7 +142,14 @@ function CambodiaPaymentSelector({
                 <Icon className={cn("w-5 h-5", m.iconColor)} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground">{m.label}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-foreground">{m.label}</p>
+                  {"badge" in m && m.badge && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                      {m.badge}
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] text-muted-foreground">{m.desc}</p>
               </div>
               {isSelected ? (
@@ -147,20 +177,12 @@ function CambodiaPaymentSelector({
               <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
               កំពុងដំណើរការ...
             </span>
-          ) : selected === "cash" ? (
-            `បញ្ជាក់ · ${dualPrice(price, true)} · ${vehicleName}`
-          ) : selected === "qr" ? (
-            `បង់តាម QR · ${dualPrice(price, true)} · ${vehicleName}`
           ) : (
-            `បង់តាមកាត · ${dualPrice(price, true)} · ${vehicleName}`
+            confirmLabels[selected]
           )}
         </Button>
         <p className="text-[10px] text-muted-foreground text-center mt-2">
-          {selected === "cash"
-            ? "បង់សាច់ប្រាក់ដល់អ្នកបើកបរ · Pay cash to driver after ride"
-            : selected === "qr"
-            ? "ស្កែន QR code ពេលអ្នកបើកបរមកដល់ · Scan QR when driver arrives"
-            : "កាតនឹងត្រូវបានគិតប្រាក់បន្ទាប់ពីជិះ · Card charged after ride"}
+          {footerLabels[selected]}
         </p>
       </div>
     </div>
