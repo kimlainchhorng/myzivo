@@ -128,7 +128,7 @@ const Login = () => {
 
       if (!profile || profile.setup_complete !== true) {
         navigate("/setup", { replace: true });
-      } else if (isAdminUser && from === "/") {
+      } else if (isAdminUser) {
         navigate("/admin/analytics", { replace: true });
       } else {
         navigate(from, { replace: true });
