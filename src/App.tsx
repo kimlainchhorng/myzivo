@@ -105,7 +105,7 @@ const FlightTerms = lazy(() => import("./pages/legal/FlightTerms"));
 const AirportPage = lazy(() => import("./pages/AirportPage"));
 const FlightCityPage = lazy(() => import("./pages/FlightCityPage"));
 const DuffelCheckout = lazy(() => import("./pages/DuffelCheckout"));
-const EmbeddedCheckout = lazy(() => import("./pages/EmbeddedCheckout"));
+// EmbeddedCheckout removed — partners block iframe embedding; use redirect model
 // FlightDashboard removed
 
 // Hotels
