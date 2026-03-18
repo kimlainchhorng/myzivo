@@ -1026,14 +1026,18 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     mapCenterRef.current = center;
 
     if (viewStep === "home") {
+      // In home step, dragging map updates pickup pin — NOT destination
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = setTimeout(async () => {
         setIsReversingGeocode(true);
         try {
           const address = await reverseGeocode(center.lat, center.lng);
-          setDestinationDisplay(address);
+          setPickup({ address, lat: center.lat, lng: center.lng });
+          setPickupDisplay(address);
         } catch {
-          setDestinationDisplay(`${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`);
+          const fallback = `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`;
+          setPickup({ address: fallback, lat: center.lat, lng: center.lng });
+          setPickupDisplay(fallback);
         } finally {
           setIsReversingGeocode(false);
         }
