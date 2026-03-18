@@ -3,7 +3,7 @@
  * Cambodia: Cash, QR Payment, Card only
  */
 import { useState, useEffect, useCallback } from "react";
-import { CreditCard, Plus, Trash2, Check, Shield, ChevronRight, Smartphone, LogIn, UserPlus, Banknote, QrCode } from "lucide-react";
+import { CreditCard, Plus, Trash2, Check, Shield, ChevronRight, Smartphone, LogIn, UserPlus, Banknote, QrCode, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
