@@ -7,10 +7,12 @@ import {
   ChevronRight,
   Check,
   Plus,
-  Lock
+  Lock,
+  Building2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useCountry } from "@/hooks/useCountry";
 
 interface PaymentMethodSelectorProps {
   className?: string;
@@ -19,15 +21,26 @@ interface PaymentMethodSelectorProps {
 
 interface PaymentMethod {
   id: string;
-  type: "card" | "wallet" | "bnpl" | "gift";
+  type: "card" | "wallet" | "bnpl" | "gift" | "aba";
   label: string;
   description: string;
   icon: typeof CreditCard;
   available: boolean;
   badge?: string;
+  countryOnly?: string; // restrict to specific country
 }
 
 const paymentMethods: PaymentMethod[] = [
+  { 
+    id: "aba", 
+    type: "aba", 
+    label: "ABA Pay", 
+    description: "ABA Bank · KHQR · Cards",
+    icon: Building2,
+    available: true,
+    badge: "Popular",
+    countryOnly: "KH"
+  },
   { 
     id: "card", 
     type: "card", 
@@ -65,7 +78,16 @@ const paymentMethods: PaymentMethod[] = [
 ];
 
 const PaymentMethodSelector = ({ className, totalAmount = 1299 }: PaymentMethodSelectorProps) => {
-  const [selectedMethod, setSelectedMethod] = useState<string>("card");
+  const { country } = useCountry();
+  const isCambodia = country === "KH";
+
+  // Filter methods by country
+  const filteredMethods = paymentMethods.filter(m => {
+    if (m.countryOnly) return m.countryOnly === country;
+    return true;
+  });
+
+  const [selectedMethod, setSelectedMethod] = useState<string>(isCambodia ? "aba" : "card");
   const [savedCards] = useState([
     { id: "1", last4: "4242", brand: "Visa", isDefault: true },
     { id: "2", last4: "8888", brand: "Mastercard", isDefault: false },
@@ -86,7 +108,7 @@ const PaymentMethodSelector = ({ className, totalAmount = 1299 }: PaymentMethodS
 
       {/* Payment Methods */}
       <div className="space-y-2 mb-4">
-        {paymentMethods.map((method) => {
+        {filteredMethods.map((method) => {
           const Icon = method.icon;
           const isSelected = selectedMethod === method.id;
           
@@ -130,6 +152,16 @@ const PaymentMethodSelector = ({ className, totalAmount = 1299 }: PaymentMethodS
           );
         })}
       </div>
+
+      {/* ABA Pay info (if ABA selected) */}
+      {selectedMethod === "aba" && (
+        <div className="p-3 rounded-xl bg-muted/20 border border-border/30">
+          <p className="text-xs text-muted-foreground mb-2">ABA Payway Checkout</p>
+          <p className="text-xs text-muted-foreground">
+            You'll be redirected to ABA's secure checkout to complete payment via ABA Mobile, KHQR, or card.
+          </p>
+        </div>
+      )}
 
       {/* Saved Cards (if card selected) */}
       {selectedMethod === "card" && (
