@@ -12,9 +12,17 @@ const json = (body: Record<string, unknown>, status = 200) =>
     },
   });
 
+const toRad = (d: number) => (d * Math.PI) / 180;
+const haversine = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+  const R = 6371000;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 // deno-lint-ignore no-explicit-any
-async function manualDispatch(adminClient: any, job: any, jobId: string, radiusMeters: number, offerTtlSeconds: number) {
-  // Get job pickup coordinates
+async function manualDispatch(adminClient: any, jobId: string, customerId: string, radiusMeters: number, offerTtlSeconds: number) {
   const { data: fullJob } = await adminClient
     .from("jobs")
     .select("pickup_lat, pickup_lng")
@@ -26,29 +34,19 @@ async function manualDispatch(adminClient: any, job: any, jobId: string, radiusM
     return null;
   }
 
-  // Find nearby online drivers
+  // Find online available drivers
   const { data: nearby } = await adminClient
     .from("drivers_status")
     .select("driver_id, lat, lng")
     .eq("is_online", true)
-    .eq("driver_state", "online_available");
+    .in("driver_state", ["online_available", "online"]);
 
   if (!nearby || nearby.length === 0) {
     console.info("[dispatch-start] No online drivers found");
     return null;
   }
 
-  // Filter by radius using Haversine
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const haversine = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-    const R = 6371000;
-    const dLat = toRad(lat2 - lat1);
-    const dLng = toRad(lng2 - lng1);
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  };
-
-  // Get already-offered driver IDs for this job to avoid duplicates
+  // Get already-offered driver IDs to avoid duplicates
   const { data: existingOffers } = await adminClient
     .from("job_offers")
     .select("driver_id")
@@ -56,15 +54,18 @@ async function manualDispatch(adminClient: any, job: any, jobId: string, radiusM
 
   const alreadyOffered = new Set((existingOffers || []).map((o: { driver_id: string }) => o.driver_id));
 
+  // Score candidates: drivers WITH coordinates get distance-based priority,
+  // drivers WITHOUT coordinates are still eligible (placed after distance-matched ones)
   const candidates = nearby
-    .filter((d: { driver_id: string; lat: number; lng: number }) =>
-      d.lat && d.lng && !alreadyOffered.has(d.driver_id) && d.driver_id !== job.customer_id
-    )
-    .map((d: { driver_id: string; lat: number; lng: number }) => ({
-      ...d,
-      distance: haversine(fullJob.pickup_lat, fullJob.pickup_lng, d.lat, d.lng),
-    }))
-    .filter((d: { distance: number }) => d.distance <= radiusMeters)
+    .filter((d: { driver_id: string }) => !alreadyOffered.has(d.driver_id) && d.driver_id !== customerId)
+    .map((d: { driver_id: string; lat: number | null; lng: number | null }) => {
+      const hasCoords = d.lat != null && d.lng != null;
+      const distance = hasCoords
+        ? haversine(fullJob.pickup_lat, fullJob.pickup_lng, d.lat!, d.lng!)
+        : 999999; // no coords = lowest priority but still eligible
+      return { ...d, distance, hasCoords };
+    })
+    .filter((d: { distance: number; hasCoords: boolean }) => !d.hasCoords || d.distance <= radiusMeters)
     .sort((a: { distance: number }, b: { distance: number }) => a.distance - b.distance);
 
   if (candidates.length === 0) {
@@ -94,13 +95,12 @@ async function manualDispatch(adminClient: any, job: any, jobId: string, radiusM
     return null;
   }
 
-  // Update job status to dispatched
-  await adminClient
-    .from("jobs")
-    .update({ status: "dispatched" })
-    .eq("id", jobId);
+  // Update job status
+  await adminClient.from("jobs").update({ status: "dispatched" }).eq("id", jobId);
 
-  return { offer_id: offerData?.id, driver_id: best.driver_id, distance_m: Math.round(best.distance) };
+  console.info(`[dispatch-start] Matched driver ${best.driver_id} (distance: ${best.hasCoords ? Math.round(best.distance) + "m" : "unknown"})`);
+
+  return { offer_id: offerData?.id, driver_id: best.driver_id, distance_m: best.hasCoords ? Math.round(best.distance) : null };
 }
 
 serve(async (req) => {
@@ -110,9 +110,7 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("authorization") ?? "";
-    if (!authHeader) {
-      return json({ error: "Unauthorized" }, 401);
-    }
+    if (!authHeader) return json({ error: "Unauthorized" }, 401);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
@@ -131,14 +129,8 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    const {
-      data: { user },
-      error: userError,
-    } = await userClient.auth.getUser();
-
-    if (userError || !user) {
-      return json({ error: "Unauthorized" }, 401);
-    }
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    if (userError || !user) return json({ error: "Unauthorized" }, 401);
 
     const body = await req.json().catch(() => ({}));
     const jobId = typeof body.job_id === "string" ? body.job_id : "";
@@ -147,11 +139,9 @@ serve(async (req) => {
       : 25;
     const radiusMeters = Number.isFinite(body.radius_meters)
       ? Math.max(200, Math.min(50000, Number(body.radius_meters)))
-      : 1600;
+      : 15000;
 
-    if (!jobId) {
-      return json({ error: "job_id is required" }, 400);
-    }
+    if (!jobId) return json({ error: "job_id is required" }, 400);
 
     const { data: job, error: jobError } = await adminClient
       .from("jobs")
@@ -168,27 +158,8 @@ serve(async (req) => {
       return json({ error: `Job status ${job.status} cannot be dispatched` }, 400);
     }
 
-    // Try RPC first; fall back to manual matching
-    let offer = null;
-    try {
-      const { data: offerRows, error: dispatchError } = await adminClient.rpc("dispatch_next_offer", {
-        p_job_id: jobId,
-        p_radius_meters: radiusMeters,
-        p_offer_ttl_seconds: offerTtlSeconds,
-      });
-
-      if (dispatchError) {
-        console.warn("[dispatch-start] RPC error, using manual dispatch:", dispatchError.message);
-        offer = await manualDispatch(adminClient, job, jobId, radiusMeters, offerTtlSeconds);
-      } else {
-        offer = Array.isArray(offerRows) ? offerRows[0] ?? null : offerRows ?? null;
-      }
-    } catch {
-      console.warn("[dispatch-start] RPC unavailable, using manual dispatch");
-      offer = await manualDispatch(adminClient, job, jobId, radiusMeters, offerTtlSeconds);
-    }
-
-    console.info(`dispatch-start: job ${jobId} → offer=${offer?.offer_id ?? "none"}`);
+    // Always use manual dispatch (reliable, handles null coords)
+    const offer = await manualDispatch(adminClient, jobId, user.id, radiusMeters, offerTtlSeconds);
 
     return json({
       ok: true,
