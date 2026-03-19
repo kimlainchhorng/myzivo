@@ -105,6 +105,7 @@ const FlightTerms = lazy(() => import("./pages/legal/FlightTerms"));
 const AirportPage = lazy(() => import("./pages/AirportPage"));
 const FlightCityPage = lazy(() => import("./pages/FlightCityPage"));
 const DuffelCheckout = lazy(() => import("./pages/DuffelCheckout"));
+const FlightBookingsPage = lazy(() => import("./pages/FlightBookingsPage"));
 // EmbeddedCheckout removed — partners block iframe embedding; use redirect model
 // FlightDashboard removed
 
@@ -420,6 +421,7 @@ const App = () => (
                 <Route path="/flights/traveler-info" element={<RouteErrorBoundary section="Flights"><FlightTravelerInfo /></RouteErrorBoundary>} />
                 <Route path="/flights/checkout" element={<RouteErrorBoundary section="Flights"><FlightCheckout /></RouteErrorBoundary>} />
                 <Route path="/flights/confirmation/:bookingId" element={<RouteErrorBoundary section="Flights"><FlightConfirmation /></RouteErrorBoundary>} />
+                <Route path="/flights/bookings" element={<RouteErrorBoundary section="Flights"><FlightBookingsPage /></RouteErrorBoundary>} />
                 {/* flights-dashboard removed */}
                 <Route path="/airports/:iata" element={<RouteErrorBoundary section="Flights"><AirportPage /></RouteErrorBoundary>} />
                 <Route path="/booking/duffel-checkout" element={<RouteErrorBoundary section="Checkout"><DuffelCheckout /></RouteErrorBoundary>} />
