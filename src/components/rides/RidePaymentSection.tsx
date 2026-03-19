@@ -295,7 +295,7 @@ function AuthorizeForm({ onSuccess, price, vehicleName, cardOnly = false }: {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <PaymentElement options={cardOnly
-        ? { layout: "tabs", paymentMethodOrder: ["card"], wallets: { applePay: "never", googlePay: "never" } }
+        ? { layout: "tabs", paymentMethodOrder: ["card"], wallets: { applePay: "never", googlePay: "never" }, fields: { billingDetails: "auto" } }
         : { layout: "accordion", paymentMethodOrder: ["card", "apple_pay", "google_pay"], wallets: { applePay: "auto", googlePay: "auto" } }
       } />
       {error && <p className="text-xs text-destructive text-center">{error}</p>}
