@@ -676,6 +676,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [promoError, setPromoError] = useState<string | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [searchSheetY, setSearchSheetY] = useState(-20); // -20 = full, 0 = half, positive = peek
+  const searchDragControls = useDragControls();
   const [isReversingGeocode, setIsReversingGeocode] = useState(false);
   const reverseGeocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pickupManuallySet = useRef(false); // true when user selects pickup via autocomplete
