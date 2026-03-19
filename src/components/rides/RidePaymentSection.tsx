@@ -443,7 +443,6 @@ export default function RidePaymentSection({
                   theme: "stripe",
                   variables: { colorPrimary: "#16a34a", borderRadius: "12px" },
                 },
-                paymentMethodCreation: "manual",
               }}
             >
               <AuthorizeForm onSuccess={onPaymentSuccess} price={price} vehicleName={vehicleName} cardOnly />
