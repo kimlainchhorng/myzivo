@@ -1996,8 +1996,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
           >
-            {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
+            {/* Drag handle — only this area triggers sheet drag */}
+            <div
+              className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing touch-none"
+              onPointerDown={(e) => searchDragControls.start(e)}
+            >
               <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
             </div>
 
