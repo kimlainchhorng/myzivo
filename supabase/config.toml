@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.dispatch-start]
 verify_jwt = false
+
+[functions.check-zivo-plus]
+verify_jwt = false
