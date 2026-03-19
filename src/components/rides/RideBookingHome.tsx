@@ -837,107 +837,177 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     return () => clearInterval(interval);
   }, [pickup?.lat, pickup?.lng, userLocation?.lat, userLocation?.lng]);
 
-  // Auto-advance: searching → driver-assigned — fetch real driver from Supabase
+  // Auto-advance: searching → driver-assigned — dispatch via jobs + job_offers system
   useEffect(() => {
     if (viewStep !== "searching") return;
     let cancelled = false;
+    let jobId: string | null = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    const findDriver = async () => {
-      // Wait a moment for matching
-      await new Promise(r => setTimeout(r, 3000));
-      if (cancelled) return;
+    const dispatchRide = async () => {
+      if (!pickup || !destination || !user) return;
 
-      let driverData: AssignedDriver | null = null;
+      // 1. Create a job row for the dispatch system
+      const { data: jobData, error: jobError } = await supabase.from("jobs").insert({
+        customer_id: user.id,
+        job_type: "ride" as any,
+        status: "requested" as any,
+        pickup_address: pickup.address,
+        pickup_lat: pickup.lat,
+        pickup_lng: pickup.lng,
+        dropoff_address: destination.address,
+        dropoff_lat: destination.lat,
+        dropoff_lng: destination.lng,
+        estimated_miles: routeData?.distance_miles ?? null,
+        estimated_minutes: routeData?.duration_minutes ?? null,
+        price_total: currentPrice ?? null,
+        pricing_total_estimate: currentPrice ?? null,
+        requested_at: new Date().toISOString(),
+        notes: rideRequestId ? `ride_request:${rideRequestId}` : null,
+      } as any).select("id").single();
 
-      // Try to find a nearby online driver
-      if (pickup) {
-        // First get count of all nearby drivers
-        const { data: allNearby, error: nearbyError } = await supabase.rpc("get_nearby_drivers", {
-          p_lat: pickup.lat,
-          p_lng: pickup.lng,
-          p_radius_m: 15000,
-          p_limit: 20,
-        });
-
-        if (nearbyError) {
-          console.error("get_nearby_drivers error:", nearbyError);
+      if (jobError || !jobData) {
+        console.error("[Dispatch] Job creation error:", jobError);
+        if (!cancelled) {
+          toast.error("Failed to create ride request. Please try again.");
         }
-
-        const nearbyList = allNearby || [];
-        setNearbyDriverCount(nearbyList.length);
-        console.log("Nearby drivers found:", nearbyList.length, "pickup:", pickup.lat, pickup.lng);
-
-        if (nearbyList.length > 0) {
-          const nearbyDriver = nearbyList[0];
-          // Fetch full driver details
-          const { data: driverRow } = await supabase
-            .from("drivers")
-            .select("id, full_name, rating, total_trips, vehicle_model, vehicle_color, vehicle_plate, phone, current_lat, current_lng")
-            .eq("id", nearbyDriver.driver_id)
-            .single();
-
-          if (driverRow) {
-            const firstName = driverRow.full_name?.split(" ")[0] || "Driver";
-            const lastInitial = driverRow.full_name?.split(" ")[1]?.[0] || "";
-            const initials = `${firstName[0]}${lastInitial}`.toUpperCase();
-            const vehicleDesc = [driverRow.vehicle_color, driverRow.vehicle_model].filter(Boolean).join(" ");
-
-            // Calculate real ETA using route function
-            let eta = 5;
-            if (nearbyDriver.lat && nearbyDriver.lng && pickup) {
-              const distKm = haversineKm(nearbyDriver.lat, nearbyDriver.lng, pickup.lat, pickup.lng);
-              eta = Math.max(1, Math.round(distKm / 0.5)); // ~30km/h average in city
-            }
-
-            driverData = {
-              id: driverRow.id,
-              name: `${firstName} ${lastInitial}.`,
-              initials,
-              rating: driverRow.rating ?? 0,
-              trips: driverRow.total_trips ?? 0,
-              vehicle: vehicleDesc || "Vehicle",
-              plate: driverRow.vehicle_plate || "",
-              phone: driverRow.phone || "",
-              etaMin: eta,
-              lat: nearbyDriver.lat,
-              lng: nearbyDriver.lng,
-            };
-
-            // Assign driver to ride request
-            if (rideRequestId) {
-              await supabase.from("ride_requests").update({
-                status: "driver_assigned",
-                assigned_driver_id: driverRow.id,
-              }).eq("id", rideRequestId);
-            }
-          }
-        }
-      }
-
-      if (cancelled) return;
-
-      // If no real driver found, show "no drivers available" and stay searching briefly
-      if (!driverData) {
-        toast.error(t("ride.no_drivers_nearby"));
-        // Retry once after brief delay
-        await new Promise(r => setTimeout(r, 3000));
-        if (cancelled) return;
-        toast.error("No drivers found. Please try again later.");
         return;
       }
 
-      setAssignedDriver(driverData);
-      setDriverEta(driverData.etaMin);
-      if (driverData.lat && driverData.lng) {
-        setDriverCoords({ lat: driverData.lat, lng: driverData.lng });
+      jobId = jobData.id;
+      console.log("[Dispatch] Job created:", jobId);
+
+      // 2. Subscribe to job updates (driver acceptance)
+      channel = supabase
+        .channel(`job-assignment-${jobId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "jobs",
+            filter: `id=eq.${jobId}`,
+          },
+          async (payload) => {
+            const updatedJob = payload.new as any;
+            if (cancelled) return;
+            
+            if (updatedJob.assigned_driver_id && ["accepted", "driver_assigned", "en_route_pickup"].includes(updatedJob.status)) {
+              // Driver accepted! Fetch driver details
+              const { data: driverRow } = await supabase
+                .from("drivers")
+                .select("id, full_name, rating, total_trips, vehicle_model, vehicle_color, vehicle_plate, phone, current_lat, current_lng")
+                .eq("id", updatedJob.assigned_driver_id)
+                .single();
+
+              if (driverRow && !cancelled) {
+                const firstName = driverRow.full_name?.split(" ")[0] || "Driver";
+                const lastInitial = driverRow.full_name?.split(" ")[1]?.[0] || "";
+                const initials = `${firstName[0]}${lastInitial}`.toUpperCase();
+                const vehicleDesc = [driverRow.vehicle_color, driverRow.vehicle_model].filter(Boolean).join(" ");
+
+                let eta = 5;
+                if (driverRow.current_lat && driverRow.current_lng && pickup) {
+                  const distKm = haversineKm(driverRow.current_lat, driverRow.current_lng, pickup.lat, pickup.lng);
+                  eta = Math.max(1, Math.round(distKm / 0.5));
+                }
+
+                const driverData: AssignedDriver = {
+                  id: driverRow.id,
+                  name: `${firstName} ${lastInitial}.`,
+                  initials,
+                  rating: driverRow.rating ?? 0,
+                  trips: driverRow.total_trips ?? 0,
+                  vehicle: vehicleDesc || "Vehicle",
+                  plate: driverRow.vehicle_plate || "",
+                  phone: driverRow.phone || "",
+                  etaMin: eta,
+                  lat: driverRow.current_lat ?? pickup.lat,
+                  lng: driverRow.current_lng ?? pickup.lng,
+                };
+
+                // Link driver to ride_request too
+                if (rideRequestId) {
+                  await supabase.from("ride_requests").update({
+                    status: "driver_assigned",
+                    assigned_driver_id: driverRow.id,
+                  } as any).eq("id", rideRequestId);
+                }
+
+                setAssignedDriver(driverData);
+                setDriverEta(driverData.etaMin);
+                if (driverData.lat && driverData.lng) {
+                  setDriverCoords({ lat: driverData.lat, lng: driverData.lng });
+                }
+                setViewStep("driver-assigned");
+                toast("Driver Found! 🚗", { description: `${driverData.name} is on the way. Arriving in ~${driverData.etaMin} min.` });
+              }
+            }
+          }
+        )
+        .subscribe();
+
+      // 3. Call dispatch-start edge function to find and notify a driver
+      const { error: dispatchError } = await supabase.functions.invoke("dispatch-start", {
+        body: { job_id: jobId, offer_ttl_seconds: 30, radius_meters: 15000 },
+      });
+
+      if (dispatchError) {
+        console.error("[Dispatch] dispatch-start error:", dispatchError);
       }
-      setViewStep("driver-assigned");
-      toast("Driver Found! 🚗", { description: `${driverData.name} is on the way. Arriving in ~${driverData.etaMin} min.` });
+
+      // 4. Retry dispatch every 15s if no driver assigned yet
+      const retryInterval = setInterval(async () => {
+        if (cancelled || !jobId) {
+          clearInterval(retryInterval);
+          return;
+        }
+        // Check if already assigned
+        const { data: currentJob } = await supabase
+          .from("jobs")
+          .select("assigned_driver_id, status")
+          .eq("id", jobId)
+          .maybeSingle();
+
+        if (currentJob?.assigned_driver_id) {
+          clearInterval(retryInterval);
+          return;
+        }
+
+        if (currentJob && ["canceled", "completed"].includes(currentJob.status)) {
+          clearInterval(retryInterval);
+          return;
+        }
+
+        // Retry dispatch
+        console.log("[Dispatch] Retrying dispatch for job:", jobId);
+        await supabase.functions.invoke("dispatch-start", {
+          body: { job_id: jobId, offer_ttl_seconds: 30, radius_meters: 25000 },
+        });
+      }, 15000);
+
+      // Timeout after 90s
+      setTimeout(() => {
+        if (!cancelled && viewStep === "searching") {
+          clearInterval(retryInterval);
+          toast.error("No drivers found. Please try again later.");
+        }
+      }, 90000);
+
+      // Store interval for cleanup
+      (window as any).__dispatchRetryInterval = retryInterval;
     };
 
-    findDriver();
-    return () => { cancelled = true; };
-  }, [viewStep, rideRequestId, pickup]);
+    dispatchRide();
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+      if ((window as any).__dispatchRetryInterval) {
+        clearInterval((window as any).__dispatchRetryInterval);
+      }
+    };
+  }, [viewStep, rideRequestId, pickup, destination, user]);
 
   // Auto-advance: driver-assigned → driver-en-route after 5s
   useEffect(() => {
