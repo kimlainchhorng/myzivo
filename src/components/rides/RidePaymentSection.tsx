@@ -259,10 +259,11 @@ function AddCardForm({ onSuccess, onCancel, setupClientSecret }: {
 }
 
 /* ─── Stripe authorize form for new card payment ─── */
-function AuthorizeForm({ onSuccess, price, vehicleName }: {
+function AuthorizeForm({ onSuccess, price, vehicleName, cardOnly = false }: {
   onSuccess: () => void;
   price: number;
   vehicleName: string;
+  cardOnly?: boolean;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -293,7 +294,10 @@ function AuthorizeForm({ onSuccess, price, vehicleName }: {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <PaymentElement options={{ layout: "accordion", paymentMethodOrder: ["card", "apple_pay", "google_pay"], wallets: { applePay: "auto", googlePay: "auto" } }} />
+      <PaymentElement options={cardOnly
+        ? { layout: "tabs", paymentMethodOrder: ["card"], wallets: { applePay: "never", googlePay: "never" } }
+        : { layout: "accordion", paymentMethodOrder: ["card", "apple_pay", "google_pay"], wallets: { applePay: "auto", googlePay: "auto" } }
+      } />
       {error && <p className="text-xs text-destructive text-center">{error}</p>}
       <Button
         type="submit"
@@ -441,7 +445,7 @@ export default function RidePaymentSection({
                 },
               }}
             >
-              <AuthorizeForm onSuccess={onPaymentSuccess} price={price} vehicleName={vehicleName} />
+              <AuthorizeForm onSuccess={onPaymentSuccess} price={price} vehicleName={vehicleName} cardOnly />
             </Elements>
           </div>
         </div>
