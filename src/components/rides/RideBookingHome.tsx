@@ -1980,31 +1980,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 pt-2 pb-20" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
               <h2 className="text-lg font-black text-foreground mb-4 tracking-tight">Where to?</h2>
 
-              {/* GPS Pickup Confirmation Banner */}
-              {pickup && !pickupConfirmed && (
-                <div className="mb-3 rounded-2xl bg-primary/5 border border-primary/20 p-3">
-                  <div className="flex items-center gap-2.5 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <Navigation className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-primary">{isGettingLocation ? "Detecting your location..." : "📍 GPS Pickup Location"}</p>
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">
-                        {pickupDisplay || t("ride.current_location")}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={handleConfirmPickupFromPin}
-                    disabled={isGettingLocation || isReversingGeocode || (!pickupDisplay && !pickup && !mapCenterRef.current)}
-                    size="sm"
-                    className="w-full h-9 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                    Confirm This Pin
-                  </Button>
-                </div>
-              )}
 
               {/* Confirmed pickup indicator */}
               {pickup && pickupConfirmed && (
