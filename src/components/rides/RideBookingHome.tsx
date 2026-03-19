@@ -1843,15 +1843,24 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             {/* Sticky Choose Ride button at bottom */}
             <div className="shrink-0 px-5 pt-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}>
               <Button
-                onClick={() => {
+                onClick={async () => {
                   const center = mapCenterRef.current;
                   if (center && destinationDisplay) {
                     const dest: PlaceData = { address: destinationDisplay, lat: center.lat, lng: center.lng };
                     setDestination(dest);
-                    pickupManuallySet.current = false;
-                    setPickup(null);
-                    setPickupDisplay("");
-                    setPickupConfirmed(false);
+                  }
+                  // Set pickup from user's GPS location (not map center, which is the destination)
+                  const pickupCoords = userLocation ?? fallbackPickupCenter;
+                  pickupManuallySet.current = true;
+                  setPickupConfirmed(true);
+                  try {
+                    const addr = await reverseGeocode(pickupCoords.lat, pickupCoords.lng);
+                    setPickup({ address: addr, lat: pickupCoords.lat, lng: pickupCoords.lng });
+                    setPickupDisplay(addr);
+                  } catch {
+                    const fallback = `${pickupCoords.lat.toFixed(5)}, ${pickupCoords.lng.toFixed(5)}`;
+                    setPickup({ address: fallback, lat: pickupCoords.lat, lng: pickupCoords.lng });
+                    setPickupDisplay(fallback);
                   }
                   setViewStep("search");
                 }}
