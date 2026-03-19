@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { CreditCard, Plus, Trash2, Check, Shield, ChevronRight, Smartphone, LogIn, UserPlus, Banknote, QrCode, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { CardElement, Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -259,10 +259,11 @@ function AddCardForm({ onSuccess, onCancel, setupClientSecret }: {
 }
 
 /* ─── Stripe authorize form for new card payment ─── */
-function AuthorizeForm({ onSuccess, price, vehicleName, cardOnly = false }: {
+function AuthorizeForm({ onSuccess, price, vehicleName, clientSecret, cardOnly = false }: {
   onSuccess: () => void;
   price: number;
   vehicleName: string;
+  clientSecret: string;
   cardOnly?: boolean;
 }) {
   const stripe = useStripe();
@@ -277,6 +278,37 @@ function AuthorizeForm({ onSuccess, price, vehicleName, cardOnly = false }: {
     setProcessing(true);
     setError(null);
 
+    if (cardOnly) {
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) {
+        setError("Card form failed to load");
+        setProcessing(false);
+        return;
+      }
+
+      const { error: payError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+        },
+      });
+
+      if (payError) {
+        setError(payError.message || "Payment failed");
+        setProcessing(false);
+        return;
+      }
+
+      if (paymentIntent && ["requires_capture", "succeeded", "processing"].includes(paymentIntent.status)) {
+        setProcessing(false);
+        onSuccess();
+        return;
+      }
+
+      setError("Payment failed. Please try again.");
+      setProcessing(false);
+      return;
+    }
+
     const { error: payError } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: window.location.href },
@@ -286,18 +318,45 @@ function AuthorizeForm({ onSuccess, price, vehicleName, cardOnly = false }: {
     if (payError) {
       setError(payError.message || "Payment failed");
       setProcessing(false);
-    } else {
-      setProcessing(false);
-      onSuccess();
+      return;
     }
+
+    setProcessing(false);
+    onSuccess();
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <PaymentElement options={cardOnly
-        ? { layout: "tabs", paymentMethodOrder: ["card"], wallets: { applePay: "never", googlePay: "never" }, fields: { billingDetails: "auto" } }
-        : { layout: "accordion", paymentMethodOrder: ["card", "apple_pay", "google_pay"], wallets: { applePay: "auto", googlePay: "auto" } }
-      } />
+      {cardOnly ? (
+        <div className="rounded-2xl border border-border/20 bg-card p-4">
+          <CardElement
+            options={{
+              hidePostalCode: true,
+              style: {
+                base: {
+                  fontSize: "16px",
+                  color: "#0f172a",
+                  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                  "::placeholder": {
+                    color: "#64748b",
+                  },
+                },
+                invalid: {
+                  color: "#dc2626",
+                },
+              },
+            }}
+          />
+        </div>
+      ) : (
+        <PaymentElement
+          options={{
+            layout: "accordion",
+            paymentMethodOrder: ["card", "apple_pay", "google_pay"],
+            wallets: { applePay: "auto", googlePay: "auto" },
+          }}
+        />
+      )}
       {error && <p className="text-xs text-destructive text-center">{error}</p>}
       <Button
         type="submit"
@@ -445,7 +504,7 @@ export default function RidePaymentSection({
                 },
               }}
             >
-              <AuthorizeForm onSuccess={onPaymentSuccess} price={price} vehicleName={vehicleName} cardOnly />
+              <AuthorizeForm onSuccess={onPaymentSuccess} price={price} vehicleName={vehicleName} clientSecret={clientSecret} cardOnly />
             </Elements>
           </div>
         </div>
@@ -608,7 +667,7 @@ export default function RidePaymentSection({
               },
             }}
           >
-            <AuthorizeForm onSuccess={onPaymentSuccess} price={price} vehicleName={vehicleName} />
+            <AuthorizeForm onSuccess={onPaymentSuccess} price={price} vehicleName={vehicleName} clientSecret={clientSecret} />
           </Elements>
         </div>
       </div>
