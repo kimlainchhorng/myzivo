@@ -127,9 +127,9 @@ function CambodiaPaymentSelector({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-bold text-foreground">{m.label}</p>
-                  {"badge" in m && m.badge && (
+                  {"badge" in m && (m as any).badge && (
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
-                      {m.badge}
+                      {(m as any).badge as string}
                     </span>
                   )}
                 </div>
