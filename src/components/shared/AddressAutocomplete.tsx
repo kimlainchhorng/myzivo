@@ -28,6 +28,7 @@ interface AddressAutocompleteProps {
   placeholder?: string;
   value?: string;
   onSelect: (place: Place) => void;
+  onClear?: () => void;
   proximity?: { lat: number; lng: number };
   disabled?: boolean;
   className?: string;
@@ -38,6 +39,7 @@ export function AddressAutocomplete({
   placeholder = "Enter address",
   value = "",
   onSelect,
+  onClear,
   proximity,
   disabled = false,
   className,
