@@ -1207,9 +1207,19 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setDestination(place);
     setDestinationDisplay(place.address);
 
-    if (!pickupConfirmed) {
-      toast.info("Confirm your pickup pin first");
-      return;
+    // Auto-confirm pickup from map center/GPS if not manually set
+    if (!pickup) {
+      const coords = mapCenterRef.current ?? userLocation ?? fallbackPickupCenter;
+      const autoPickup = {
+        address: pickupDisplay || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+        lat: coords.lat,
+        lng: coords.lng,
+      };
+      setPickup(autoPickup);
+      setPickupDisplay(autoPickup.address);
+      setPickupConfirmed(true);
+    } else if (!pickupConfirmed) {
+      setPickupConfirmed(true);
     }
 
     let pickupData = pickup;
