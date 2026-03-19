@@ -220,6 +220,7 @@ export function AddressAutocomplete({
     setSuggestions([]);
     setIsOpen(false);
     setError(null);
+    onClear?.();
   };
 
   return (
