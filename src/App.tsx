@@ -421,6 +421,7 @@ const App = () => (
                 <Route path="/flights/traveler-info" element={<RouteErrorBoundary section="Flights"><FlightTravelerInfo /></RouteErrorBoundary>} />
                 <Route path="/flights/checkout" element={<RouteErrorBoundary section="Flights"><FlightCheckout /></RouteErrorBoundary>} />
                 <Route path="/flights/confirmation/:bookingId" element={<RouteErrorBoundary section="Flights"><FlightConfirmation /></RouteErrorBoundary>} />
+                <Route path="/flights/bookings" element={<RouteErrorBoundary section="Flights"><FlightBookingsPage /></RouteErrorBoundary>} />
                 {/* flights-dashboard removed */}
                 <Route path="/airports/:iata" element={<RouteErrorBoundary section="Flights"><AirportPage /></RouteErrorBoundary>} />
                 <Route path="/booking/duffel-checkout" element={<RouteErrorBoundary section="Checkout"><DuffelCheckout /></RouteErrorBoundary>} />
