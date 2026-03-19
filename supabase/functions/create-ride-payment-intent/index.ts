@@ -138,7 +138,6 @@ Deno.serve(async (req) => {
     } else {
       // Only allow card — no Link, no wallets, no Cash App
       piParams.payment_method_types = ["card"];
-      piParams.automatic_payment_methods = { enabled: false };
     }
 
     const paymentIntent = await stripe.paymentIntents.create(piParams);
