@@ -173,22 +173,21 @@ export default function DriverMapPage() {
 
     const goingOnline = !isOnline;
 
-    if (goingOnline && mapState.locationError) {
-      toast.error("Current location unavailable");
-      return;
-    }
-
     setIsOnline(goingOnline);
 
     if (goingOnline) {
       const { lat, lng } = mapState.driverLocation;
+      // Allow going online even without GPS - location will sync via interval
+      if (mapState.locationError) {
+        toast.info("GPS still loading, location will sync shortly");
+      }
       const { error } = await supabase.from("drivers_status").upsert({
         driver_id: driverId,
         is_online: true,
         is_busy: false,
         driver_state: "online_available",
-        lat,
-        lng,
+        lat: lat || null,
+        lng: lng || null,
         heading: mapState.heading,
         speed_mps: mapState.speed,
         last_seen: new Date().toISOString(),
