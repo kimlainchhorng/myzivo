@@ -1439,8 +1439,18 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   const handleConfirmSearch = () => {
     if (!pickupConfirmed) {
-      toast.error("Confirm your pickup pin first");
-      return;
+      // Auto-confirm pickup from current location
+      if (!pickup) {
+        const coords = mapCenterRef.current ?? userLocation ?? fallbackPickupCenter;
+        const autoPickup = {
+          address: pickupDisplay || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+          lat: coords.lat,
+          lng: coords.lng,
+        };
+        setPickup(autoPickup);
+        setPickupDisplay(autoPickup.address);
+      }
+      setPickupConfirmed(true);
     }
     if (!pickup || !destination) return;
     const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
