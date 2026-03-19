@@ -1,12 +1,12 @@
 /**
  * Flight Search Page — /flights
- * Full search form with airport autocomplete, dates, passengers, cabin class
+ * 2026 Spatial UI: glassmorphism, decorative orbs, staggered animations
  */
 
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { Plane, ArrowLeftRight, Users, CalendarIcon, ChevronDown, Search } from "lucide-react";
+import { Plane, ArrowLeftRight, Users, CalendarIcon, ChevronDown, Search, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -37,7 +37,6 @@ const FlightLanding = () => {
 
   const totalPassengers = adults + children + infants;
 
-  // Extract IATA code from display string like "New York (JFK)"
   const extractCode = (val: string): string => {
     const match = val.match(/\(([A-Z]{3})\)/);
     return match ? match[1] : val.trim().toUpperCase();
@@ -74,63 +73,67 @@ const FlightLanding = () => {
   const isValid = extractCode(origin).length === 3 && extractCode(destination).length === 3 && !!departureDate;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
       <SEOHead
         title="Search Flights – ZIVO"
         description="Search and compare flights from 500+ airlines. Find the best deals on domestic and international flights."
       />
+
+      {/* Decorative orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full bg-[hsl(var(--flights))]/8 blur-3xl" />
+        <div className="absolute top-1/2 -left-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+      </div>
+
       <Header />
 
-      <main className="pt-20 pb-20">
+      <main className="pt-20 pb-20 relative z-10">
         <div className="container mx-auto px-4">
           {/* Hero */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="max-w-3xl mx-auto text-center pt-8 pb-6"
+            transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="max-w-3xl mx-auto text-center pt-8 sm:pt-12 pb-6"
           >
-            <div className="w-14 h-14 rounded-2xl bg-[hsl(var(--flights))]/10 flex items-center justify-center mx-auto mb-4">
-              <Plane className="w-7 h-7 text-[hsl(var(--flights))]" />
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2">Search Flights</h1>
-            <p className="text-muted-foreground text-base">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="w-16 h-16 rounded-2xl bg-[hsl(var(--flights))]/10 backdrop-blur-xl border border-[hsl(var(--flights))]/20 flex items-center justify-center mx-auto mb-5"
+            >
+              <Plane className="w-8 h-8 text-[hsl(var(--flights))]" />
+            </motion.div>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2 tracking-tight">Search Flights</h1>
+            <p className="text-muted-foreground text-base sm:text-lg">
               Compare fares from 500+ airlines worldwide
             </p>
           </motion.div>
 
-          {/* Search Card */}
+          {/* Search Card — Glassmorphic */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
+            transition={{ duration: 0.5, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="max-w-3xl mx-auto"
           >
-            <div className="bg-card rounded-2xl border border-border shadow-lg p-4 sm:p-6 space-y-4">
+            <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/40 shadow-xl shadow-[hsl(var(--flights))]/5 p-4 sm:p-6 space-y-4">
               {/* Trip Type Toggle */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setTripType("roundtrip")}
-                  className={cn(
-                    "px-4 py-2 rounded-xl text-sm font-medium transition-all",
-                    tripType === "roundtrip"
-                      ? "bg-[hsl(var(--flights))] text-white"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  )}
-                >
-                  Round Trip
-                </button>
-                <button
-                  onClick={() => { setTripType("oneway"); setReturnDate(undefined); }}
-                  className={cn(
-                    "px-4 py-2 rounded-xl text-sm font-medium transition-all",
-                    tripType === "oneway"
-                      ? "bg-[hsl(var(--flights))] text-white"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  )}
-                >
-                  One Way
-                </button>
+              <div className="flex gap-1.5 p-1 bg-muted/60 rounded-xl w-fit">
+                {(["roundtrip", "oneway"] as TripType[]).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => { setTripType(type); if (type === "oneway") setReturnDate(undefined); }}
+                    className={cn(
+                      "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                      tripType === type
+                        ? "bg-[hsl(var(--flights))] text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {type === "roundtrip" ? "Round Trip" : "One Way"}
+                  </button>
+                ))}
               </div>
 
               {/* Origin / Destination */}
@@ -144,7 +147,7 @@ const FlightLanding = () => {
                 />
                 <button
                   onClick={handleSwap}
-                  className="self-end h-10 sm:h-11 w-10 sm:w-11 rounded-xl border border-border bg-muted flex items-center justify-center hover:bg-accent transition-colors mx-auto"
+                  className="self-end h-10 sm:h-11 w-10 sm:w-11 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm flex items-center justify-center hover:bg-accent hover:border-[hsl(var(--flights))]/40 transition-all duration-200 mx-auto active:scale-95"
                   aria-label="Swap origin and destination"
                 >
                   <ArrowLeftRight className="w-4 h-4 text-muted-foreground" />
@@ -161,17 +164,17 @@ const FlightLanding = () => {
               {/* Dates */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-muted-foreground mb-0.5 block font-medium">Departure</label>
+                  <label className="text-[11px] text-muted-foreground mb-1 block font-medium uppercase tracking-wider">Departure</label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full h-10 sm:h-11 justify-start text-left font-normal bg-muted/50",
+                          "w-full h-11 justify-start text-left font-normal bg-muted/40 border-border/40 hover:border-[hsl(var(--flights))]/40 transition-colors",
                           !departureDate && "text-muted-foreground"
                         )}
                       >
-                        <CalendarIcon className="w-4 h-4 mr-2" />
+                        <CalendarIcon className="w-4 h-4 mr-2 text-[hsl(var(--flights))]" />
                         {departureDate ? format(departureDate, "EEE, MMM d") : "Select date"}
                       </Button>
                     </PopoverTrigger>
@@ -190,17 +193,17 @@ const FlightLanding = () => {
 
                 {tripType === "roundtrip" && (
                   <div>
-                    <label className="text-xs text-muted-foreground mb-0.5 block font-medium">Return</label>
+                    <label className="text-[11px] text-muted-foreground mb-1 block font-medium uppercase tracking-wider">Return</label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full h-10 sm:h-11 justify-start text-left font-normal bg-muted/50",
+                            "w-full h-11 justify-start text-left font-normal bg-muted/40 border-border/40 hover:border-[hsl(var(--flights))]/40 transition-colors",
                             !returnDate && "text-muted-foreground"
                           )}
                         >
-                          <CalendarIcon className="w-4 h-4 mr-2" />
+                          <CalendarIcon className="w-4 h-4 mr-2 text-[hsl(var(--flights))]" />
                           {returnDate ? format(returnDate, "EEE, MMM d") : "Select date"}
                         </Button>
                       </PopoverTrigger>
@@ -222,15 +225,15 @@ const FlightLanding = () => {
               {/* Passengers + Cabin */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-muted-foreground mb-0.5 block font-medium">Passengers</label>
+                  <label className="text-[11px] text-muted-foreground mb-1 block font-medium uppercase tracking-wider">Passengers</label>
                   <Popover open={passengersOpen} onOpenChange={setPassengersOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full h-10 sm:h-11 justify-between font-normal bg-muted/50"
+                        className="w-full h-11 justify-between font-normal bg-muted/40 border-border/40 hover:border-[hsl(var(--flights))]/40"
                       >
                         <span className="flex items-center gap-2">
-                          <Users className="w-4 h-4" />
+                          <Users className="w-4 h-4 text-[hsl(var(--flights))]" />
                           {totalPassengers} Traveler{totalPassengers > 1 ? "s" : ""}
                         </span>
                         <ChevronDown className="w-4 h-4 text-muted-foreground" />
@@ -251,15 +254,15 @@ const FlightLanding = () => {
                             <div className="flex items-center gap-3">
                               <button
                                 onClick={() => item.setter(Math.max(item.min, item.value - 1))}
-                                className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-sm hover:bg-accent disabled:opacity-40"
+                                className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-sm hover:bg-accent transition-colors disabled:opacity-40 active:scale-95"
                                 disabled={item.value <= item.min}
                               >
                                 −
                               </button>
-                              <span className="w-6 text-center font-medium">{item.value}</span>
+                              <span className="w-6 text-center font-semibold tabular-nums">{item.value}</span>
                               <button
                                 onClick={() => item.setter(Math.min(item.max, item.value + 1))}
-                                className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-sm hover:bg-accent disabled:opacity-40"
+                                className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-sm hover:bg-accent transition-colors disabled:opacity-40 active:scale-95"
                                 disabled={item.value >= item.max}
                               >
                                 +
@@ -267,11 +270,7 @@ const FlightLanding = () => {
                             </div>
                           </div>
                         ))}
-                        <Button
-                          size="sm"
-                          className="w-full mt-2"
-                          onClick={() => setPassengersOpen(false)}
-                        >
+                        <Button size="sm" className="w-full mt-2" onClick={() => setPassengersOpen(false)}>
                           Done
                         </Button>
                       </div>
@@ -280,9 +279,9 @@ const FlightLanding = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs text-muted-foreground mb-0.5 block font-medium">Cabin Class</label>
+                  <label className="text-[11px] text-muted-foreground mb-1 block font-medium uppercase tracking-wider">Cabin Class</label>
                   <Select value={cabinClass} onValueChange={setCabinClass}>
-                    <SelectTrigger className="h-10 sm:h-11 bg-muted/50">
+                    <SelectTrigger className="h-11 bg-muted/40 border-border/40 hover:border-[hsl(var(--flights))]/40">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -300,12 +299,26 @@ const FlightLanding = () => {
                 size="lg"
                 onClick={handleSearch}
                 disabled={!isValid}
-                className="w-full h-12 text-base font-semibold gap-2 bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90"
+                className="w-full h-12 text-base font-semibold gap-2 bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 shadow-lg shadow-[hsl(var(--flights))]/20 active:scale-[0.98] transition-all duration-200"
               >
                 <Search className="w-5 h-5" />
                 Search Flights
               </Button>
             </div>
+          </motion.div>
+
+          {/* Trust strip */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="max-w-3xl mx-auto mt-6 flex items-center justify-center gap-6 text-xs text-muted-foreground"
+          >
+            <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> 500+ Airlines</span>
+            <span className="w-1 h-1 rounded-full bg-border" />
+            <span>Best Price Guarantee</span>
+            <span className="w-1 h-1 rounded-full bg-border" />
+            <span>Secure Booking</span>
           </motion.div>
         </div>
       </main>
