@@ -136,8 +136,9 @@ Deno.serve(async (req) => {
       piParams.confirm = true;
       piParams.off_session = true;
     } else {
-      // Only allow card and wallet (Apple Pay / Google Pay) — no Cash App
+      // Only allow card — no Link, no wallets, no Cash App
       piParams.payment_method_types = ["card"];
+      piParams.automatic_payment_methods = { enabled: false };
     }
 
     const paymentIntent = await stripe.paymentIntents.create(piParams);
