@@ -65,18 +65,9 @@ function CambodiaPaymentSelector({
   isSubmitting: boolean;
   onConfirm: (method: CambodiaPaymentMethod) => void;
 }) {
-  const [selected, setSelected] = useState<CambodiaPaymentMethod>("aba");
+  const [selected, setSelected] = useState<CambodiaPaymentMethod>("cash");
 
   const methods = [
-    {
-      id: "aba" as CambodiaPaymentMethod,
-      label: "ABA Pay",
-      desc: "បង់តាម ABA · KHQR · Visa · MC",
-      icon: Building2,
-      iconColor: "text-blue-600",
-      bgColor: "bg-blue-600/10",
-      badge: "ពេញនិយម",
-    },
     {
       id: "cash" as CambodiaPaymentMethod,
       label: "សាច់ប្រាក់ (Cash)",
@@ -84,14 +75,6 @@ function CambodiaPaymentSelector({
       icon: Banknote,
       iconColor: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
-    },
-    {
-      id: "qr" as CambodiaPaymentMethod,
-      label: "QR Payment",
-      desc: "ACLEDA, Wing, TrueMoney",
-      icon: QrCode,
-      iconColor: "text-purple-500",
-      bgColor: "bg-purple-500/10",
     },
     {
       id: "card" as CambodiaPaymentMethod,
@@ -144,9 +127,9 @@ function CambodiaPaymentSelector({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-bold text-foreground">{m.label}</p>
-                  {"badge" in m && m.badge && (
+                  {"badge" in m && (m as any).badge && (
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
-                      {m.badge}
+                      {(m as any).badge as string}
                     </span>
                   )}
                 </div>
