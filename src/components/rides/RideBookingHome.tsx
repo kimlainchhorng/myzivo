@@ -1046,8 +1046,29 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       return;
     }
 
-    if (viewStep !== "search" || pickupManuallySet.current || pickupConfirmed) return;
+    if (viewStep !== "search") return;
 
+    // Once pickup is confirmed, dragging the map updates the DESTINATION, not pickup
+    if (pickupManuallySet.current || pickupConfirmed) {
+      if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
+      reverseGeocodeTimerRef.current = setTimeout(async () => {
+        setIsReversingGeocode(true);
+        try {
+          const address = await reverseGeocode(center.lat, center.lng);
+          setDestination({ address, lat: center.lat, lng: center.lng });
+          setDestinationDisplay(address);
+        } catch {
+          const fallback = `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`;
+          setDestination({ address: fallback, lat: center.lat, lng: center.lng });
+          setDestinationDisplay(fallback);
+        } finally {
+          setIsReversingGeocode(false);
+        }
+      }, 600);
+      return;
+    }
+
+    // Pickup not yet confirmed — dragging map updates pickup
     setPickupConfirmed(false);
     if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
     reverseGeocodeTimerRef.current = setTimeout(async () => {
