@@ -1972,6 +1972,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   : Math.round((viewportHeight - HEADER_HEIGHT) * 0.38) // half — default
             }}
             drag="y"
+            dragControls={searchDragControls}
+            dragListener={false}
             dragConstraints={{
               top: 10,
               bottom: viewportHeight - HEADER_HEIGHT - BOTTOM_NAV_HEIGHT - 90,
