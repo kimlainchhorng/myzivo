@@ -277,27 +277,42 @@ function AuthorizeForm({ onSuccess, price, vehicleName, cardOnly = false }: {
     setProcessing(true);
     setError(null);
 
+    if (cardOnly) {
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) {
+        setError("Card form failed to load");
+        setProcessing(false);
+        return;
+      }
+
+      const { error: payError, paymentIntent } = await stripe.confirmCardPayment(clientSecretValue, {
+        payment_method: {
+          card: cardElement,
+        },
+      });
+
+      if (payError) {
+        setError(payError.message || "Payment failed");
+        setProcessing(false);
+        return;
+      }
+
+      if (paymentIntent && ["requires_capture", "succeeded", "processing"].includes(paymentIntent.status)) {
+        setProcessing(false);
+        onSuccess();
+        return;
+      }
+
+      setError("Payment failed. Please try again.");
+      setProcessing(false);
+      return;
+    }
+
     const { error: payError } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: window.location.href },
       redirect: "if_required",
     });
-
-    if (payError) {
-      setError(payError.message || "Payment failed");
-      setProcessing(false);
-    } else {
-      setProcessing(false);
-      onSuccess();
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <PaymentElement options={cardOnly
-        ? { layout: "tabs", paymentMethodOrder: ["card"], wallets: { applePay: "never", googlePay: "never" }, fields: { billingDetails: "auto" } }
-        : { layout: "accordion", paymentMethodOrder: ["card", "apple_pay", "google_pay"], wallets: { applePay: "auto", googlePay: "auto" } }
-      } />
       {error && <p className="text-xs text-destructive text-center">{error}</p>}
       <Button
         type="submit"
