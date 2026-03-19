@@ -2046,6 +2046,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       placeholder="Pickup location"
                       value={pickupDisplay}
                       onSelect={handlePickupSelect}
+                      onClear={() => {
+                        pickupManuallySet.current = false;
+                        setPickupConfirmed(false);
+                        setPickup(null);
+                        setPickupDisplay("");
+                      }}
                       country={rideCountry}
                       className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
                     />
