@@ -441,7 +441,7 @@ export default function RidePaymentSection({
                 },
               }}
             >
-              <AuthorizeForm onSuccess={onPaymentSuccess} price={price} vehicleName={vehicleName} />
+              <AuthorizeForm onSuccess={onPaymentSuccess} price={price} vehicleName={vehicleName} cardOnly />
             </Elements>
           </div>
         </div>
