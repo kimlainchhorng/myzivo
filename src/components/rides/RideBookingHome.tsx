@@ -676,6 +676,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [promoError, setPromoError] = useState<string | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [searchSheetY, setSearchSheetY] = useState(-20); // -20 = full, 0 = half, positive = peek
+  const searchDragControls = useDragControls();
   const [isReversingGeocode, setIsReversingGeocode] = useState(false);
   const reverseGeocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pickupManuallySet = useRef(false); // true when user selects pickup via autocomplete
@@ -1971,6 +1972,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   : Math.round((viewportHeight - HEADER_HEIGHT) * 0.38) // half — default
             }}
             drag="y"
+            dragControls={searchDragControls}
+            dragListener={false}
             dragConstraints={{
               top: 10,
               bottom: viewportHeight - HEADER_HEIGHT - BOTTOM_NAV_HEIGHT - 90,
@@ -1993,8 +1996,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
           >
-            {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
+            {/* Drag handle — only this area triggers sheet drag */}
+            <div
+              className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing touch-none"
+              onPointerDown={(e) => searchDragControls.start(e)}
+            >
               <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
             </div>
 
