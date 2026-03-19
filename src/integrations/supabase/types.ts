@@ -33274,6 +33274,67 @@ export type Database = {
         }
         Relationships: []
       }
+      road_reports: {
+        Row: {
+          confirmed_count: number
+          created_at: string
+          driver_id: string | null
+          expires_at: string
+          id: string
+          is_active: boolean
+          lat: number
+          lng: number
+          report_type: string
+          user_id: string | null
+        }
+        Insert: {
+          confirmed_count?: number
+          created_at?: string
+          driver_id?: string | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          lat: number
+          lng: number
+          report_type: string
+          user_id?: string | null
+        }
+        Update: {
+          confirmed_count?: number
+          created_at?: string
+          driver_id?: string | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          lat?: number
+          lng?: number
+          report_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "road_reports_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "road_reports_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "road_reports_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "v_admin_driver_compliance"
+            referencedColumns: ["driver_id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           created_at: string | null
