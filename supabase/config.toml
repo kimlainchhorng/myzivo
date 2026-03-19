@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.aba-payway-checkout]
 verify_jwt = false
+
+[functions.dispatch-start]
+verify_jwt = false

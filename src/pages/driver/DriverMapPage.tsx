@@ -7,25 +7,122 @@ import { useDriverMapState } from "@/hooks/useDriverMapState";
 import DriverMapHeader from "@/components/driver/DriverMapHeader";
 import DriverBottomNav from "@/components/driver/DriverBottomNav";
 import { motion } from "framer-motion";
-import { MapPin, Navigation, Loader2 } from "lucide-react";
+import { MapPin, Navigation, Loader2, Car, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+
+interface RideOffer {
+  offerId: string;
+  jobId: string;
+  expiresAt: string;
+  estPayout: number | null;
+  milesToPickup: number | null;
+  pickupAddress: string | null;
+  dropoffAddress: string | null;
+}
 
 export default function DriverMapPage() {
   const mapState = useDriverMapState();
   const [isOnline, setIsOnline] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [driverId, setDriverId] = useState<string | null>(null);
+  const [activeOffer, setActiveOffer] = useState<RideOffer | null>(null);
+  const [isRespondingToOffer, setIsRespondingToOffer] = useState(false);
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Get driver ID from auth
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setDriverId(data.user?.id ?? null);
+  const fetchPendingOffer = useCallback(async (currentDriverId: string) => {
+    const now = new Date().toISOString();
+    const { data: offer, error: offerError } = await supabase
+      .from("job_offers")
+      .select("id, job_id, expires_at, est_payout, miles_to_pickup")
+      .eq("driver_id", currentDriverId)
+      .eq("status", "pending")
+      .gt("expires_at", now)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (offerError || !offer) {
+      setActiveOffer(null);
+      return;
+    }
+
+    const { data: job } = await supabase
+      .from("jobs")
+      .select("pickup_address, dropoff_address")
+      .eq("id", offer.job_id)
+      .maybeSingle();
+
+    setActiveOffer({
+      offerId: offer.id,
+      jobId: offer.job_id,
+      expiresAt: offer.expires_at,
+      estPayout: offer.est_payout,
+      milesToPickup: offer.miles_to_pickup,
+      pickupAddress: job?.pickup_address ?? null,
+      dropoffAddress: job?.dropoff_address ?? null,
     });
   }, []);
 
-  // Sync location to drivers_status every 10s when online
+  useEffect(() => {
+    let mounted = true;
+
+    const loadDriver = async () => {
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id ?? null;
+      if (!mounted) return;
+
+      setDriverId(userId);
+      if (!userId) return;
+
+      const { data: status } = await supabase
+        .from("drivers_status")
+        .select("is_online")
+        .eq("driver_id", userId)
+        .maybeSingle();
+
+      if (mounted) {
+        setIsOnline(Boolean(status?.is_online));
+      }
+    };
+
+    loadDriver();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!driverId) {
+      setActiveOffer(null);
+      return;
+    }
+
+    fetchPendingOffer(driverId);
+
+    const channel = supabase
+      .channel(`driver-ride-offers-${driverId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "job_offers",
+          filter: `driver_id=eq.${driverId}`,
+        },
+        () => {
+          fetchPendingOffer(driverId);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [driverId, fetchPendingOffer]);
+
   useEffect(() => {
     if (!isOnline || !driverId) {
       if (locationIntervalRef.current) {
@@ -37,13 +134,13 @@ export default function DriverMapPage() {
 
     const updateLocation = async () => {
       const { lat, lng } = mapState.driverLocation;
-      if (!lat || !lng) return;
+      if (mapState.locationError || lat == null || lng == null) return;
 
-      await supabase.from("drivers_status").upsert({
+      const { error } = await supabase.from("drivers_status").upsert({
         driver_id: driverId,
         is_online: true,
         is_busy: false,
-        driver_state: "idle",
+        driver_state: "online_available",
         lat,
         lng,
         heading: mapState.heading,
@@ -51,9 +148,12 @@ export default function DriverMapPage() {
         last_seen: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }, { onConflict: "driver_id" });
+
+      if (error) {
+        console.error("Failed to sync driver location:", error);
+      }
     };
 
-    // Update immediately, then every 10s
     updateLocation();
     locationIntervalRef.current = setInterval(updateLocation, 10000);
 
@@ -63,7 +163,7 @@ export default function DriverMapPage() {
         locationIntervalRef.current = null;
       }
     };
-  }, [isOnline, driverId, mapState.driverLocation.lat, mapState.driverLocation.lng]);
+  }, [isOnline, driverId, mapState.driverLocation, mapState.heading, mapState.speed, mapState.locationError]);
 
   const handleToggleOnline = useCallback(async () => {
     if (!driverId) {
@@ -72,16 +172,21 @@ export default function DriverMapPage() {
     }
 
     const goingOnline = !isOnline;
+
+    if (goingOnline && mapState.locationError) {
+      toast.error("Current location unavailable");
+      return;
+    }
+
     setIsOnline(goingOnline);
 
     if (goingOnline) {
-      // Upsert as online with current location
       const { lat, lng } = mapState.driverLocation;
       const { error } = await supabase.from("drivers_status").upsert({
         driver_id: driverId,
         is_online: true,
         is_busy: false,
-        driver_state: "idle",
+        driver_state: "online_available",
         lat,
         lng,
         heading: mapState.heading,
@@ -98,10 +203,10 @@ export default function DriverMapPage() {
         toast.success("You're now online!");
       }
     } else {
-      // Set offline
       const { error } = await supabase.from("drivers_status").upsert({
         driver_id: driverId,
         is_online: false,
+        is_busy: false,
         driver_state: "offline",
         last_seen: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -110,16 +215,58 @@ export default function DriverMapPage() {
       if (error) {
         console.error("Failed to go offline:", error);
       } else {
+        setActiveOffer(null);
         toast.success("You're now offline");
       }
     }
-  }, [isOnline, driverId, mapState.driverLocation, mapState.heading, mapState.speed]);
+  }, [isOnline, driverId, mapState.driverLocation, mapState.heading, mapState.speed, mapState.locationError]);
+
+  const handleAcceptOffer = useCallback(async () => {
+    if (!activeOffer) return;
+
+    setIsRespondingToOffer(true);
+    const { error } = await supabase.rpc("accept_job_offer" as never, {
+      p_offer_id: activeOffer.offerId,
+    } as never);
+    setIsRespondingToOffer(false);
+
+    if (error) {
+      console.error("Failed to accept offer:", error);
+      toast.error("Could not accept ride");
+      return;
+    }
+
+    setActiveOffer(null);
+    toast.success("Ride accepted");
+  }, [activeOffer]);
+
+  const handleDeclineOffer = useCallback(async () => {
+    if (!activeOffer) return;
+
+    setIsRespondingToOffer(true);
+    const { error } = await supabase
+      .from("job_offers")
+      .update({
+        status: "declined",
+        offer_status: "declined",
+        declined_at: new Date().toISOString(),
+      } as never)
+      .eq("id", activeOffer.offerId);
+    setIsRespondingToOffer(false);
+
+    if (error) {
+      console.error("Failed to decline offer:", error);
+      toast.error("Could not decline ride");
+      return;
+    }
+
+    setActiveOffer(null);
+    toast.success("Ride declined");
+  }, [activeOffer]);
 
   return (
     <div className="h-[100dvh] flex flex-col bg-background relative overflow-hidden">
-      {/* Map Placeholder */}
       <div className="flex-1 relative bg-muted/30">
-        {/* Simulated map background */}
         <div className="absolute inset-0 flex items-center justify-center">
           {mapState.locationError ? (
             <div className="text-center px-6">
@@ -150,7 +297,6 @@ export default function DriverMapPage() {
           )}
         </div>
 
-        {/* Map Header Overlay */}
         <DriverMapHeader
           isOnline={isOnline}
           onToggleOnline={handleToggleOnline}
@@ -159,7 +305,55 @@ export default function DriverMapPage() {
           onRecenter={mapState.recenter}
         />
 
-        {/* Go Online/Offline bottom card */}
+        {activeOffer ? (
+          <div className="absolute left-4 right-4 bottom-44 z-20">
+            <div className="rounded-3xl border border-border bg-card/95 backdrop-blur shadow-xl p-4 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Car className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground">Incoming ride request</p>
+                    <p className="text-xs text-muted-foreground truncate">{activeOffer.pickupAddress || "Pickup location loading..."}</p>
+                    <p className="text-xs text-muted-foreground truncate">To {activeOffer.dropoffAddress || "Destination loading..."}</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-bold text-foreground">
+                    {activeOffer.estPayout != null ? `$${Number(activeOffer.estPayout).toFixed(2)}` : "--"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {activeOffer.milesToPickup != null ? `${Number(activeOffer.milesToPickup).toFixed(1)} mi away` : "Nearby"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-2xl"
+                  onClick={handleDeclineOffer}
+                  disabled={isRespondingToOffer}
+                >
+                  {isRespondingToOffer ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <X className="w-4 h-4 mr-2" />}
+                  Decline
+                </Button>
+                <Button
+                  type="button"
+                  className="rounded-2xl"
+                  onClick={handleAcceptOffer}
+                  disabled={isRespondingToOffer}
+                >
+                  {isRespondingToOffer ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+                  Accept ride
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         <div className="absolute bottom-20 left-0 right-0 px-4 pointer-events-auto">
           <motion.button
             whileTap={{ scale: 0.97 }}
