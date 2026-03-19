@@ -1542,6 +1542,15 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       return;
     }
 
+    const finalPrice = appliedPromo ? Math.max(currentPrice - promoDiscount, 0) : currentPrice;
+    const amountCents = Math.round(finalPrice * 100);
+
+    if (useKm && !paymentMethodId && amountCents < 50) {
+      toast.error("Card payments require at least $0.50. Please choose cash for this ride.");
+      setPaymentStep("idle");
+      return;
+    }
+
     setIsSubmitting(true);
     setPaymentStep("authorizing");
     try {
@@ -1582,8 +1591,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setRideRequestId(rideData.id);
 
       // 2. Create Stripe PaymentIntent (pre-authorization)
-      const finalPrice = appliedPromo ? Math.max(currentPrice - promoDiscount, 0) : currentPrice;
-      const amountCents = Math.round(finalPrice * 100);
       const { data: piData, error: piError } = await supabase.functions.invoke("create-ride-payment-intent", {
         body: {
           ride_request_id: rideData.id,
@@ -1596,7 +1603,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       });
 
       if (piError || !piData?.ok) {
-        throw new Error(piData?.error || "Failed to create payment");
+        throw new Error(piData?.error || piError?.message || "Failed to create payment");
       }
 
       // If free ride (100% promo), skip Stripe entirely
@@ -1623,7 +1630,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setPaymentStep("authorized");
     } catch (err: unknown) {
       console.error("[RideBooking] Payment error:", err);
-      toast.error("Payment failed. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Payment failed. Please try again.");
       setPaymentStep("failed");
     } finally {
       setIsSubmitting(false);
