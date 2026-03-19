@@ -1358,9 +1358,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setPickupConfirmed(true);
     }
 
-    const coords = mapCenterRef.current ?? pickup ?? userLocation ?? fallbackPickupCenter;
+    // Use existing confirmed pickup first, then fall back to map center / user location
+    const existingPickup = (pickup && pickup.lat && pickup.lng) ? pickup : null;
+    const coords = existingPickup ?? userLocation ?? mapCenterRef.current ?? fallbackPickupCenter;
     const pickupData = {
-      address: pickupDisplay || pickup?.address || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+      address: pickupDisplay || existingPickup?.address || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
       lat: coords.lat,
       lng: coords.lng,
     };
