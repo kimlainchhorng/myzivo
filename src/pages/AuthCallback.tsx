@@ -70,19 +70,13 @@ const AuthCallback = () => {
         return;
       }
 
-      // If setup not complete, go to setup page
-      if (profile.setup_complete !== true) {
-        setStatus("success");
-        setTimeout(() => navigate("/setup", { replace: true }), 200);
-      } else {
-        // Check if user is admin for auto-redirect to dashboard
-        const { data: isAdminUser } = await supabase.rpc("check_user_role", {
-          _user_id: userId,
-          _role: "admin",
-        });
-        setStatus("success");
-        setTimeout(() => navigate(isAdminUser ? "/admin/analytics" : "/", { replace: true }), 200);
-      }
+      // Check if user is admin for auto-redirect to dashboard
+      const { data: isAdminUser } = await supabase.rpc("check_user_role", {
+        _user_id: userId,
+        _role: "admin",
+      });
+      setStatus("success");
+      setTimeout(() => navigate(isAdminUser ? "/admin/analytics" : "/", { replace: true }), 200);
     } catch (err) {
       console.error("Error checking setup status:", err);
       // Default to home on error
