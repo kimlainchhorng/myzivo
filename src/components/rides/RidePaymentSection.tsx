@@ -423,6 +423,31 @@ export default function RidePaymentSection({
 
   /* ═══════ CAMBODIA PAYMENT ═══════ */
   if (isCambodia) {
+    // If Stripe clientSecret is ready, show inline Stripe payment form
+    if (clientSecret) {
+      return (
+        <div className="flex flex-col h-full gap-2">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
+            វិធីបង់ប្រាក់ / Card Payment
+          </p>
+          <div className="rounded-2xl bg-card border border-border/20 p-4 flex-1">
+            <Elements
+              stripe={getStripe()}
+              options={{
+                clientSecret,
+                appearance: {
+                  theme: "stripe",
+                  variables: { colorPrimary: "#16a34a", borderRadius: "12px" },
+                },
+              }}
+            >
+              <AuthorizeForm onSuccess={onPaymentSuccess} price={price} vehicleName={vehicleName} />
+            </Elements>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <CambodiaPaymentSelector
         price={price}
