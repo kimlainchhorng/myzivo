@@ -259,10 +259,11 @@ function AddCardForm({ onSuccess, onCancel, setupClientSecret }: {
 }
 
 /* ─── Stripe authorize form for new card payment ─── */
-function AuthorizeForm({ onSuccess, price, vehicleName, cardOnly = false }: {
+function AuthorizeForm({ onSuccess, price, vehicleName, clientSecret, cardOnly = false }: {
   onSuccess: () => void;
   price: number;
   vehicleName: string;
+  clientSecret: string;
   cardOnly?: boolean;
 }) {
   const stripe = useStripe();
@@ -285,7 +286,7 @@ function AuthorizeForm({ onSuccess, price, vehicleName, cardOnly = false }: {
         return;
       }
 
-      const { error: payError, paymentIntent } = await stripe.confirmCardPayment(clientSecretValue, {
+      const { error: payError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: cardElement,
         },
@@ -313,6 +314,49 @@ function AuthorizeForm({ onSuccess, price, vehicleName, cardOnly = false }: {
       confirmParams: { return_url: window.location.href },
       redirect: "if_required",
     });
+
+    if (payError) {
+      setError(payError.message || "Payment failed");
+      setProcessing(false);
+      return;
+    }
+
+    setProcessing(false);
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      {cardOnly ? (
+        <div className="rounded-2xl border border-border/20 bg-card p-4">
+          <CardElement
+            options={{
+              hidePostalCode: true,
+              style: {
+                base: {
+                  fontSize: "16px",
+                  color: "#0f172a",
+                  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                  "::placeholder": {
+                    color: "#64748b",
+                  },
+                },
+                invalid: {
+                  color: "#dc2626",
+                },
+              },
+            }}
+          />
+        </div>
+      ) : (
+        <PaymentElement
+          options={{
+            layout: "accordion",
+            paymentMethodOrder: ["card", "apple_pay", "google_pay"],
+            wallets: { applePay: "auto", googlePay: "auto" },
+          }}
+        />
+      )}
       {error && <p className="text-xs text-destructive text-center">{error}</p>}
       <Button
         type="submit"
