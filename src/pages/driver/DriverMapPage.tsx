@@ -1,22 +1,119 @@
 /**
  * DriverMapPage - Full-screen driver map with GPS tracking
- * Uses existing useDriverMapState hook and DriverMapHeader
+ * Syncs online status & location to drivers_status table
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useDriverMapState } from "@/hooks/useDriverMapState";
 import DriverMapHeader from "@/components/driver/DriverMapHeader";
 import DriverBottomNav from "@/components/driver/DriverBottomNav";
 import { motion } from "framer-motion";
 import { MapPin, Navigation, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function DriverMapPage() {
   const mapState = useDriverMapState();
   const [isOnline, setIsOnline] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [driverId, setDriverId] = useState<string | null>(null);
+  const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const handleToggleOnline = useCallback(() => {
-    setIsOnline(prev => !prev);
+  // Get driver ID from auth
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setDriverId(data.user?.id ?? null);
+    });
   }, []);
+
+  // Sync location to drivers_status every 10s when online
+  useEffect(() => {
+    if (!isOnline || !driverId) {
+      if (locationIntervalRef.current) {
+        clearInterval(locationIntervalRef.current);
+        locationIntervalRef.current = null;
+      }
+      return;
+    }
+
+    const updateLocation = async () => {
+      const { lat, lng } = mapState.driverLocation;
+      if (!lat || !lng) return;
+
+      await supabase.from("drivers_status").upsert({
+        driver_id: driverId,
+        is_online: true,
+        is_busy: false,
+        driver_state: "idle",
+        lat,
+        lng,
+        heading: mapState.heading,
+        speed_mps: mapState.speed,
+        last_seen: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "driver_id" });
+    };
+
+    // Update immediately, then every 10s
+    updateLocation();
+    locationIntervalRef.current = setInterval(updateLocation, 10000);
+
+    return () => {
+      if (locationIntervalRef.current) {
+        clearInterval(locationIntervalRef.current);
+        locationIntervalRef.current = null;
+      }
+    };
+  }, [isOnline, driverId, mapState.driverLocation.lat, mapState.driverLocation.lng]);
+
+  const handleToggleOnline = useCallback(async () => {
+    if (!driverId) {
+      toast.error("Not logged in as a driver");
+      return;
+    }
+
+    const goingOnline = !isOnline;
+    setIsOnline(goingOnline);
+
+    if (goingOnline) {
+      // Upsert as online with current location
+      const { lat, lng } = mapState.driverLocation;
+      const { error } = await supabase.from("drivers_status").upsert({
+        driver_id: driverId,
+        is_online: true,
+        is_busy: false,
+        driver_state: "idle",
+        lat,
+        lng,
+        heading: mapState.heading,
+        speed_mps: mapState.speed,
+        last_seen: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "driver_id" });
+
+      if (error) {
+        console.error("Failed to go online:", error);
+        toast.error("Failed to go online");
+        setIsOnline(false);
+      } else {
+        toast.success("You're now online!");
+      }
+    } else {
+      // Set offline
+      const { error } = await supabase.from("drivers_status").upsert({
+        driver_id: driverId,
+        is_online: false,
+        driver_state: "offline",
+        last_seen: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "driver_id" });
+
+      if (error) {
+        console.error("Failed to go offline:", error);
+      } else {
+        toast.success("You're now offline");
+      }
+    }
+  }, [isOnline, driverId, mapState.driverLocation, mapState.heading, mapState.speed]);
 
   return (
     <div className="h-[100dvh] flex flex-col bg-background relative overflow-hidden">
