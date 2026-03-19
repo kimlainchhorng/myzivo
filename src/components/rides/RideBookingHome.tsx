@@ -1355,21 +1355,32 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setDestinationDisplay(address);
     setDestination({ address, lat, lng });
 
-    if (!pickupConfirmed) {
-      setPickupConfirmed(true);
+    // If pickup is already confirmed, don't change it — just fetch route
+    if (pickupConfirmed && pickup && pickup.lat && pickup.lng) {
+      fetchRoute(pickup, { address, lat, lng });
+      return;
     }
 
-    // Use existing confirmed pickup first, then fall back to map center / user location
-    const existingPickup = (pickup && pickup.lat && pickup.lng) ? pickup : null;
-    const coords = existingPickup ?? userLocation ?? mapCenterRef.current ?? fallbackPickupCenter;
-    const pickupData = {
-      address: pickupDisplay || existingPickup?.address || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
-      lat: coords.lat,
-      lng: coords.lng,
-    };
-    setPickup(pickupData);
-    setPickupDisplay(pickupData.address);
-    fetchRoute(pickupData, { address, lat, lng });
+    // Set pickup from user's GPS location (not map center which may be at the destination)
+    const coords = userLocation ?? fallbackPickupCenter;
+    setPickupConfirmed(true);
+    pickupManuallySet.current = true;
+
+    // Reverse geocode the pickup location
+    reverseGeocode(coords.lat, coords.lng)
+      .then((addr) => {
+        const pickupData = { address: addr, lat: coords.lat, lng: coords.lng };
+        setPickup(pickupData);
+        setPickupDisplay(addr);
+        fetchRoute(pickupData, { address, lat, lng });
+      })
+      .catch(() => {
+        const fallback = `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
+        const pickupData = { address: fallback, lat: coords.lat, lng: coords.lng };
+        setPickup(pickupData);
+        setPickupDisplay(fallback);
+        fetchRoute(pickupData, { address, lat, lng });
+      });
   };
 
   /* ─── Fetch route (for initial route + confirm search) ─── */
