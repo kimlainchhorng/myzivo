@@ -112,7 +112,7 @@ const FlightConfirmation = () => {
 
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Passengers</span>
-                    <span>{booking.passengers}</span>
+                    <span>{String(booking.passengers)}</span>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
