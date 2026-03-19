@@ -117,7 +117,7 @@ const FlightConfirmation = () => {
 
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Cabin</span>
-                    <span className="capitalize">{booking.cabin_class?.replace("_", " ")}</span>
+                    <span className="capitalize">{String(booking.cabin_class || "").replace("_", " ")}</span>
                   </div>
 
                   <Separator />
@@ -127,14 +127,14 @@ const FlightConfirmation = () => {
                     <span className="text-xl font-bold text-[hsl(var(--flights))]">
                       {new Intl.NumberFormat("en-US", {
                         style: "currency",
-                        currency: booking.currency || "USD",
+                        currency: String(booking.currency || "USD"),
                         minimumFractionDigits: 0,
-                      }).format(booking.total_amount * (booking.passengers || 1))}
+                      }).format(Number(booking.total_amount) * Number(booking.passengers || 1))}
                     </span>
                   </div>
 
                   {/* Passengers list */}
-                  {booking.flight_passengers && booking.flight_passengers.length > 0 && (
+                  {booking.flight_passengers && Array.isArray(booking.flight_passengers) && booking.flight_passengers.length > 0 && (
                     <>
                       <Separator />
                       <div>
@@ -151,11 +151,11 @@ const FlightConfirmation = () => {
               </Card>
 
               {/* Ticket numbers */}
-              {booking.ticket_numbers && booking.ticket_numbers.length > 0 && (
+              {booking.ticket_numbers && Array.isArray(booking.ticket_numbers) && booking.ticket_numbers.length > 0 && (
                 <Card className="mb-4 border-emerald-500/20">
                   <CardContent className="p-4">
                     <p className="text-sm font-medium mb-2">E-Ticket Numbers</p>
-                    {booking.ticket_numbers.map((t: string, i: number) => (
+                    {(booking.ticket_numbers as string[]).map((t: string, i: number) => (
                       <p key={i} className="font-mono text-sm">{t}</p>
                     ))}
                   </CardContent>
