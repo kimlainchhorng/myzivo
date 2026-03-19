@@ -126,12 +126,10 @@ const Login = () => {
       setIsLoading(false);
       toast.success("Welcome back!");
 
-      if (!profile || profile.setup_complete !== true) {
-        navigate("/setup", { replace: true });
-      } else if (isAdminUser) {
+      if (isAdminUser) {
         navigate("/admin/analytics", { replace: true });
       } else {
-        navigate(from, { replace: true });
+        navigate("/", { replace: true });
       }
     } else {
       setIsLoading(false);
