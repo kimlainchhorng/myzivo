@@ -1355,8 +1355,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setDestination({ address, lat, lng });
 
     if (!pickupConfirmed) {
-      toast.info("Confirm your pickup pin first");
-      return;
+      setPickupConfirmed(true);
     }
 
     const coords = mapCenterRef.current ?? pickup ?? userLocation ?? fallbackPickupCenter;
