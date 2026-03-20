@@ -36,6 +36,16 @@ function calcLayover(prev: DuffelSegment, next: DuffelSegment): string {
   } catch { return ""; }
 }
 
+function parseDurationText(duration?: string): number {
+  if (!duration) return 0;
+
+  const normalized = duration.trim().toLowerCase();
+  const hourMatch = normalized.match(/(\d+)\s*h/);
+  const minuteMatch = normalized.match(/(\d+)\s*m/);
+
+  return (Number(hourMatch?.[1] || 0) * 60) + Number(minuteMatch?.[1] || 0);
+}
+
 const formatDate = (d: string) => {
   try { return new Date(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }); } catch { return d; }
 };
@@ -50,9 +60,22 @@ function getSliceInfo(segs: DuffelSegment[]) {
   if (!segs.length) return null;
   const first = segs[0];
   const last = segs[segs.length - 1];
-  const totalMs = new Date(last.arrivingAt).getTime() - new Date(first.departingAt).getTime();
-  const totalH = Math.floor(totalMs / 3600000);
-  const totalM = Math.floor((totalMs % 3600000) / 60000);
+
+  const segmentMinutes = segs.reduce((total, seg) => total + parseDurationText(seg.duration), 0);
+  const layoverMinutes = segs.slice(1).reduce((total, seg, index) => {
+    const layover = calcLayover(segs[index], seg);
+    return total + parseDurationText(layover);
+  }, 0);
+
+  let totalMinutes = segmentMinutes + layoverMinutes;
+  if (totalMinutes <= 0) {
+    const totalMs = new Date(last.arrivingAt).getTime() - new Date(first.departingAt).getTime();
+    totalMinutes = Math.max(0, Math.round(totalMs / 60000));
+  }
+
+  const totalH = Math.floor(totalMinutes / 60);
+  const totalM = totalMinutes % 60;
+
   return {
     depTime: formatTime(first.departingAt), arrTime: formatTime(last.arrivingAt),
     depCode: first.origin.code, arrCode: last.destination.code,
