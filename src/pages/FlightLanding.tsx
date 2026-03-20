@@ -13,6 +13,13 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
+
+import miamiImg from "@/assets/destinations/miami.jpg";
+import sfImg from "@/assets/destinations/san-francisco.jpg";
+import atlantaImg from "@/assets/destinations/atlanta.jpg";
+import denverImg from "@/assets/destinations/denver.jpg";
+import vegasImg from "@/assets/destinations/las-vegas.jpg";
+import fllImg from "@/assets/destinations/fort-lauderdale.jpg";
 import Footer from "@/components/Footer";
 import AppLayout from "@/components/app/AppLayout";
 import SEOHead from "@/components/SEOHead";
