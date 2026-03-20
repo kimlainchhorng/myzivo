@@ -27841,6 +27841,51 @@ export type Database = {
         }
         Relationships: []
       }
+      popular_route_prices: {
+        Row: {
+          airline_code: string | null
+          airline_name: string | null
+          currency: string
+          destination_city: string
+          destination_code: string
+          expires_at: string
+          fetched_at: string
+          id: string
+          lowest_price: number
+          origin_city: string
+          origin_code: string
+          search_date: string
+        }
+        Insert: {
+          airline_code?: string | null
+          airline_name?: string | null
+          currency?: string
+          destination_city: string
+          destination_code: string
+          expires_at?: string
+          fetched_at?: string
+          id?: string
+          lowest_price: number
+          origin_city: string
+          origin_code: string
+          search_date: string
+        }
+        Update: {
+          airline_code?: string | null
+          airline_name?: string | null
+          currency?: string
+          destination_city?: string
+          destination_code?: string
+          expires_at?: string
+          fetched_at?: string
+          id?: string
+          lowest_price?: number
+          origin_city?: string
+          origin_code?: string
+          search_date?: string
+        }
+        Relationships: []
+      }
       pos_integrations: {
         Row: {
           access_token: string | null
