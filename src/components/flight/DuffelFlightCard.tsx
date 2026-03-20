@@ -5,8 +5,9 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, ChevronRight, Luggage, Briefcase, ShieldCheck, MapPin } from "lucide-react";
-import { getDuffelAirlineLogo, type DuffelOffer } from "@/hooks/useDuffelFlights";
+import { Clock, ChevronRight, Briefcase, ShieldCheck, MapPin } from "lucide-react";
+import { type DuffelOffer } from "@/hooks/useDuffelFlights";
+import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { cn } from "@/lib/utils";
 
 interface DuffelFlightCardProps {
