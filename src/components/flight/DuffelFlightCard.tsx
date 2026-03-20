@@ -63,7 +63,7 @@ export default function DuffelFlightCard({
     >
       {/* Top badge strip */}
       {(isTop || isLowest || isFastest) && (
-        <div className="flex gap-1.5 px-3.5 pt-2.5 sm:px-4 sm:pt-3">
+        <div className="flex gap-1.5 px-3 pt-2 sm:px-4 sm:pt-3">
           {badge && (
             <Badge className={cn("text-[9px] font-bold px-2 py-0.5 border", badge.className)}>
               {badge.label}
