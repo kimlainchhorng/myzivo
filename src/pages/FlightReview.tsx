@@ -221,33 +221,65 @@ function SliceCard({ info, label, rotate, segs }: {
   );
 }
 
-/* ── Segment Detail Card ─────────────────────────────── */
+/* ── 3D Segment Detail Card ────────────────────────────── */
 function SegmentDetails({ segs, label, rotate }: { segs: DuffelSegment[]; label: string; rotate?: boolean }) {
   return (
-    <Card className="border-border/30 overflow-hidden">
-      <div className="px-4 py-2.5 bg-muted/30 border-b border-border/20 flex items-center gap-2">
-        <div className="w-5 h-5 rounded-md bg-[hsl(var(--flights))]/10 flex items-center justify-center">
+    <div
+      className="overflow-hidden rounded-3xl border-[1.5px] border-border/20"
+      style={{
+        background: "hsl(var(--card))",
+        boxShadow: `0 20px 40px -16px hsl(var(--foreground)/0.07),
+                     0 6px 12px -4px hsl(var(--foreground)/0.03),
+                     inset 0 1.5px 0 hsl(var(--background)/0.8),
+                     inset 0 -1px 0 hsl(var(--foreground)/0.03)`,
+        transform: "perspective(600px) rotateX(1deg)",
+      }}
+    >
+      <div
+        className="px-5 py-3 border-b border-border/15 flex items-center gap-2.5"
+        style={{ background: "linear-gradient(135deg, hsl(var(--muted)/0.3), transparent)" }}
+      >
+        <div
+          className="w-7 h-7 rounded-xl bg-gradient-to-br from-[hsl(var(--flights))]/15 to-[hsl(var(--flights))]/5 flex items-center justify-center"
+          style={{
+            transform: "perspective(200px) rotateX(5deg) rotateY(-3deg)",
+            boxShadow: "0 6px 14px -6px hsl(var(--flights)/0.2), inset 0 1px 0 hsl(var(--background)/0.5)",
+          }}
+        >
           <Plane className={cn("w-3 h-3 text-[hsl(var(--flights))]", rotate && "rotate-180")} />
         </div>
-        <p className="text-xs font-bold tracking-wide">{label}</p>
-        <Badge variant="secondary" className="text-[8px] ml-auto px-1.5 py-0">{segs.length} leg{segs.length > 1 ? "s" : ""}</Badge>
+        <p className="text-[12px] font-extrabold tracking-wide">{label}</p>
+        <span
+          className="text-[9px] font-bold ml-auto px-2.5 py-1 rounded-xl border border-border/15"
+          style={{
+            background: "linear-gradient(135deg, hsl(var(--muted)/0.3), transparent)",
+            boxShadow: "0 2px 6px -3px hsl(var(--foreground)/0.06)",
+          }}
+        >
+          {segs.length} leg{segs.length > 1 ? "s" : ""}
+        </span>
       </div>
-      <CardContent className="p-0">
+      <div>
         {segs.map((seg, i) => (
           <div key={seg.id || i}>
             {i > 0 && (
-              <div className="flex items-center gap-2.5 px-4 py-2.5 bg-accent/30 border-y border-dashed border-border/30">
-                <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center">
-                  <Clock className="w-3 h-3 text-accent-foreground" />
+              <div className="flex items-center gap-2.5 px-5 py-3 border-y border-dashed border-border/20"
+                style={{ background: "linear-gradient(135deg, hsl(var(--muted)/0.25), transparent)" }}
+              >
+                <div
+                  className="w-7 h-7 rounded-xl bg-muted/50 flex items-center justify-center"
+                  style={{ boxShadow: "inset 0 1px 2px hsl(var(--foreground)/0.04)" }}
+                >
+                  <Clock className="w-3 h-3 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold text-foreground">Layover in {seg.origin.city} ({seg.origin.code})</p>
+                  <p className="text-[10px] font-bold">Layover in {seg.origin.city} ({seg.origin.code})</p>
                   <p className="text-[9px] text-muted-foreground">{calcLayover(segs[i - 1], seg)} · {seg.origin.name}</p>
                 </div>
               </div>
             )}
-            <div className="px-4 py-3">
-              <div className="flex items-center gap-2.5 mb-2.5">
+            <div className="px-5 py-3.5">
+              <div className="flex items-center gap-2.5 mb-3">
                 <AirlineLogo
                   iataCode={seg.operatingCarrierCode || seg.marketingCarrierCode}
                   airlineName={seg.operatingCarrier || seg.marketingCarrier}
@@ -262,15 +294,23 @@ function SegmentDetails({ segs, label, rotate }: { segs: DuffelSegment[]; label:
                   </p>
                 </div>
                 {seg.duration && (
-                  <Badge variant="outline" className="text-[9px] font-semibold gap-0.5 px-2 py-0.5 border-border/30 shrink-0">
+                  <span
+                    className="text-[9px] font-bold gap-1 px-2.5 py-1 border border-border/15 rounded-xl flex items-center text-muted-foreground"
+                    style={{
+                      background: "linear-gradient(135deg, hsl(var(--muted)/0.3), transparent)",
+                      boxShadow: "0 2px 6px -3px hsl(var(--foreground)/0.06)",
+                    }}
+                  >
                     <Clock className="w-2.5 h-2.5" />{seg.duration}
-                  </Badge>
+                  </span>
                 )}
               </div>
               <div className="ml-3.5 pl-5 relative">
-                <div className="absolute left-0 top-2 bottom-2 w-[2px] bg-gradient-to-b from-[hsl(var(--flights))] via-[hsl(var(--flights))]/30 to-[hsl(var(--flights))]" />
+                <div className="absolute left-0 top-2 bottom-2 w-[2px] bg-gradient-to-b from-[hsl(var(--flights))] via-[hsl(var(--flights))]/30 to-[hsl(var(--flights))]"
+                  style={{ boxShadow: "0 0 6px -1px hsl(var(--flights)/0.2)" }} />
                 <div className="flex items-start gap-3 relative pb-4">
-                  <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm z-10" />
+                  <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm z-10"
+                    style={{ boxShadow: "0 2px 6px -1px hsl(var(--flights)/0.4)" }} />
                   <div>
                     <p className="text-sm font-bold tabular-nums leading-none">{formatTime(seg.departingAt)}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -281,7 +321,8 @@ function SegmentDetails({ segs, label, rotate }: { segs: DuffelSegment[]; label:
                   </div>
                 </div>
                 <div className="flex items-start gap-3 relative">
-                  <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm z-10" />
+                  <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm z-10"
+                    style={{ boxShadow: "0 2px 6px -1px hsl(var(--flights)/0.4)" }} />
                   <div>
                     <p className="text-sm font-bold tabular-nums leading-none">{formatTime(seg.arrivingAt)}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -295,54 +336,10 @@ function SegmentDetails({ segs, label, rotate }: { segs: DuffelSegment[]; label:
             </div>
           </div>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
-
-/* ── Main Page ───────────────────────────────────────── */
-const FlightReview = () => {
-  const navigate = useNavigate();
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
-  const [selectedServices, setSelectedServices] = useState<DuffelAvailableService[]>([]);
-  const [variantPrice, setVariantPrice] = useState<number | null>(null);
-  const [variantCurrency, setVariantCurrency] = useState<string | null>(null);
-
-  const handleToggleService = useCallback((svc: DuffelAvailableService) => {
-    setSelectedServiceIds(prev => {
-      if (prev.includes(svc.id)) {
-        setSelectedServices(s => s.filter(x => x.id !== svc.id));
-        return prev.filter(id => id !== svc.id);
-      }
-      setSelectedServices(s => [...s, svc]);
-      return [...prev, svc.id];
-    });
-  }, []);
-
-  const storedOffer: DuffelOffer | null = useMemo(() => {
-    try {
-      const raw = sessionStorage.getItem("zivo_selected_offer");
-      return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
-  }, []);
-
-  const searchParams = useMemo(() => {
-    try {
-      const raw = sessionStorage.getItem("zivo_search_params");
-      return raw ? JSON.parse(raw) : {};
-    } catch { return {}; }
-  }, []);
-
-  const { data: liveOffer } = useDuffelOffer(storedOffer?.id ?? null);
-  // Merge live offer with stored fareVariants (getOffer doesn't return them)
-  const offer = useMemo(() => {
-    if (!liveOffer && !storedOffer) return null;
-    const base = liveOffer ?? storedOffer;
-    if (!base) return null;
-    // Preserve fareVariants from stored offer since single-offer fetch doesn't include them
-    if (liveOffer && storedOffer?.fareVariants && !liveOffer.fareVariants) {
-      return { ...liveOffer, fareVariants: storedOffer.fareVariants };
-    }
     return base;
   }, [liveOffer, storedOffer]);
 
