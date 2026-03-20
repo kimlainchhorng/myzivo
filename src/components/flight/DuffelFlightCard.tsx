@@ -332,8 +332,8 @@ export default function DuffelFlightCard({
             transition={{ duration: 0.2, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="px-3 pb-3 sm:px-4 sm:pb-4 pt-1 border-t border-border/20 bg-muted/10">
-              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+            <div className="px-3 pb-3 sm:px-4 sm:pb-4 pt-2 border-t border-border/20 bg-muted/5 space-y-3">
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
                 {offer.segments.length} segment{offer.segments.length > 1 ? "s" : ""}
               </p>
 
@@ -341,9 +341,9 @@ export default function DuffelFlightCard({
                 <SegmentRow key={seg.id || i} seg={seg} isLast={i === offer.segments.length - 1} />
               ))}
 
-              {/* Layover info between segments */}
+              {/* Layover badges */}
               {offer.stopDetails?.length > 0 && (
-                <div className="mt-1 flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1.5">
                   {offer.stopDetails.map((stop, i) => (
                     <Badge
                       key={i}
@@ -358,17 +358,13 @@ export default function DuffelFlightCard({
               )}
 
               {/* 3D Boarding Pass */}
-              <div className="mt-2 pt-2 border-t border-border/10">
-                <BoardingPass3D offer={offer} />
-              </div>
+              <BoardingPass3D offer={offer} />
 
               {/* Seat map preview */}
-              <div className="mt-2 pt-2 border-t border-border/10">
-                <SeatMapPreview cabinClass={offer.cabinClass} />
-              </div>
+              <SeatMapPreview cabinClass={offer.cabinClass} />
 
-              {/* Conditions summary */}
-              <div className="mt-2 flex flex-wrap gap-1.5 text-[8px] text-muted-foreground">
+              {/* Conditions + disclosure */}
+              <div className="flex flex-wrap gap-1.5 text-[8px] text-muted-foreground pt-1 border-t border-border/10">
                 {offer.conditions?.changeBeforeDeparture !== null && (
                   <span>{offer.conditions.changeBeforeDeparture ? "✓ Changes allowed" : "✗ No changes"}</span>
                 )}
@@ -377,8 +373,7 @@ export default function DuffelFlightCard({
                 )}
               </div>
 
-              {/* Partner disclosure */}
-              <p className="mt-2 text-[8px] text-muted-foreground/60 flex items-center gap-0.5">
+              <p className="text-[8px] text-muted-foreground/60 flex items-center gap-0.5">
                 <ExternalLink className="w-2 h-2 shrink-0" />
                 Booking completed via licensed travel partner.{" "}
                 <a href="/partner-disclosure" className="underline hover:text-foreground">Learn more</a>
