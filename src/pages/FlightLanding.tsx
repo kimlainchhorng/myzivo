@@ -518,7 +518,11 @@ const FlightLanding = () => {
       <SEOHead title="Search Flights – ZIVO" description="Search and compare flights from 500+ airlines. Find the best deals." />
       <Animated3DBackground />
       <Header />
-      <main className="pt-16 pb-16 relative z-10">
+      {/* 3D Sky scene below desktop header */}
+      <div className="pt-16 sm:pt-20">
+        <Flight3DSkyHeader className="h-36" />
+      </div>
+      <main className="pb-16 relative z-10">
         <div className="container mx-auto px-4">
           <DesktopFlightSearch />
         </div>
