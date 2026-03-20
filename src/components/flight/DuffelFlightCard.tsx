@@ -52,9 +52,9 @@ export default function DuffelFlightCard({
   return (
     <div
       className={cn(
-        "bg-card rounded-xl border p-0 cursor-pointer group transition-all duration-200 overflow-hidden",
-        "hover:shadow-lg hover:shadow-[hsl(var(--flights))]/6 hover:border-[hsl(var(--flights))]/40",
-        "active:scale-[0.995]",
+        "bg-card rounded-xl sm:rounded-xl border p-0 cursor-pointer group transition-all duration-200 overflow-hidden",
+        "hover:shadow-md hover:border-[hsl(var(--flights))]/40",
+        "active:scale-[0.98] active:bg-muted/20",
         isTop
           ? "border-[hsl(var(--flights))]/30 shadow-sm shadow-[hsl(var(--flights))]/4"
           : "border-border/30"
@@ -63,7 +63,7 @@ export default function DuffelFlightCard({
     >
       {/* Top badge strip */}
       {(isTop || isLowest || isFastest) && (
-        <div className="flex gap-1.5 px-3.5 pt-2.5 sm:px-4 sm:pt-3">
+        <div className="flex gap-1.5 px-3 pt-2 sm:px-4 sm:pt-3">
           {badge && (
             <Badge className={cn("text-[9px] font-bold px-2 py-0.5 border", badge.className)}>
               {badge.label}
@@ -82,7 +82,7 @@ export default function DuffelFlightCard({
         </div>
       )}
 
-      <div className="px-3.5 py-3 sm:px-4 sm:py-3.5">
+      <div className="px-3 py-2.5 sm:px-4 sm:py-3.5">
         {/* Row 1: Airline + Price */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2.5 min-w-0">

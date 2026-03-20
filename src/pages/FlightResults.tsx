@@ -478,29 +478,29 @@ const FlightResults = () => {
   const pendingFilterChange = (partial: Partial<FlightFiltersState>) => setPendingFilters(prev => ({ ...prev, ...partial }));
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-background relative overflow-hidden flex flex-col">
       <SEOHead
         title={`Flights ${origin} → ${destination} – ZIVO`}
         description={`Compare flight deals from ${origin} to ${destination}.`}
       />
 
+      {/* Decorative orbs — subtle */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-[hsl(var(--flights))]/6 blur-3xl" />
-        <div className="absolute bottom-0 -left-32 w-64 h-64 rounded-full bg-primary/4 blur-3xl" />
       </div>
 
       <Header />
 
-      <main className="pt-16 pb-20 relative z-10">
-        <div className="container mx-auto px-4 max-w-5xl">
+      <main className="flex-1 pt-14 pb-4 sm:pb-20 relative z-10">
+        <div className="mx-auto px-3 sm:px-4 max-w-5xl">
 
-          {/* Sticky summary bar */}
-          <div className="sticky top-14 z-20 -mx-4 px-4 mb-4">
+          {/* Sticky summary bar — app-like nav bar */}
+          <div className="sticky top-14 z-20 -mx-3 sm:-mx-4 px-3 sm:px-4 mb-3">
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="bg-card/85 backdrop-blur-xl rounded-2xl border border-border/40 shadow-lg shadow-background/50 p-3 sm:p-3.5"
+              transition={{ duration: 0.25 }}
+              className="bg-card/90 backdrop-blur-xl sm:rounded-2xl border-b sm:border border-border/30 shadow-sm p-2.5 sm:p-3.5"
             >
               <div className="flex items-center gap-2.5">
                 <Button variant="ghost" size="icon" asChild className="shrink-0 -ml-1 w-8 h-8">
@@ -529,13 +529,13 @@ const FlightResults = () => {
             </motion.div>
           </div>
 
-          {/* Sort tabs + filter button */}
+          {/* Sort tabs + filter — native app toolbar feel */}
           {offers.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="flex items-center justify-between mb-3 gap-2"
+              className="flex items-center justify-between mb-2.5 gap-2 -mx-3 sm:mx-0 px-3 sm:px-0"
             >
               <div className="flex gap-0.5 p-0.5 bg-muted/40 backdrop-blur-sm rounded-lg border border-border/20 overflow-x-auto no-scrollbar">
                 {([
@@ -627,7 +627,7 @@ const FlightResults = () => {
             </motion.div>
           )}
 
-          <div className="flex gap-5">
+          <div className="flex gap-4 sm:gap-5">
             {/* Desktop filters sidebar */}
             {offers.length > 0 && (
               <div className="hidden sm:block w-56 shrink-0">
@@ -712,7 +712,7 @@ const FlightResults = () => {
               )}
 
               {/* Results list */}
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <AnimatePresence mode="popLayout">
                   {filtered.map((offer, idx) => (
                     <motion.div
@@ -748,7 +748,10 @@ const FlightResults = () => {
         </div>
       </main>
 
-      <Footer />
+      {/* Footer only on desktop */}
+      <div className="hidden sm:block">
+        <Footer />
+      </div>
     </div>
   );
 };
