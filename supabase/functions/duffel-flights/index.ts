@@ -816,6 +816,9 @@ interface DuffelOfferTransformed {
   durationMinutes: number;
   stops: number;
   stopCities: string[];
+  stopDetails: Array<{ code: string; city: string; layoverDuration: string }>;
+  carriers: Array<{ name: string; code: string; isOperating: boolean }>;
+  operatedBy: string | null;
   price: number;
   currency: string;
   pricePerPerson: number;
@@ -827,7 +830,7 @@ interface DuffelOfferTransformed {
     refundBeforeDeparture: boolean | null;
   };
   segments: unknown[];
-  owner: Record<string, string> | undefined;
+  owner: { name: string; code: string; isOperating: boolean } | undefined;
   expiresAt: string;
   passengers: number;
 }
