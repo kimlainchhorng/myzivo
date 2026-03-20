@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useFlightBookings, useFlightBooking, getTicketingStatusInfo } from "@/hooks/useFlightBooking";
-import { getDuffelAirlineLogo } from "@/hooks/useDuffelFlights";
+import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { cn } from "@/lib/utils";
 
 const statusIcons: Record<string, typeof CheckCircle> = {
