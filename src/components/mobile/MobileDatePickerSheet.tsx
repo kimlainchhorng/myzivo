@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format, isBefore, startOfToday } from "date-fns";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,11 @@ export default function MobileDatePickerSheet({
   label = "Select date",
   minDate,
 }: MobileDatePickerSheetProps) {
-  const earliestDate = minDate && !isBefore(minDate, startOfToday()) ? minDate : startOfToday();
+  const earliestDate = useMemo(() => {
+    const today = startOfToday();
+    return minDate && !isBefore(minDate, today) ? minDate : today;
+  }, [minDate]);
+
   const initialMonth = selectedDate && !isBefore(selectedDate, earliestDate) ? selectedDate : earliestDate;
   const [month, setMonth] = useState(initialMonth);
 
