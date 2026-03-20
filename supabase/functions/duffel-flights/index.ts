@@ -856,7 +856,6 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
   console.log(`[Transform] ${offers.length} raw -> ${transformed.length} transformed -> ${result.length} grouped (${groups.size} unique flights)`);
   return result;
 }
-}
 
 function formatTime(dateStr: string): string {
   if (!dateStr) return '--:--';
