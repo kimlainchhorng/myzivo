@@ -77,7 +77,7 @@ const getServiceCategories = (t: (key: string) => string, isCambodia = false): S
     title: t("services.category.trip"),
     subtitle: t("services.category.trip_sub"),
     services: [
-      { label: t("services.flights"), href: "/flights", image: zivoFlightsIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-plane-fly" },
+      { label: t("services.flights"), href: "/flights", image: zivoFlightsIcon, badge: "Hot", badgeVariant: "promo", animClass: "animate-plane-fly" },
       { label: t("services.hotels"), href: "/hotels", image: zivoHotelsIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
       { label: t("services.car_rental"), href: "/rent-car", image: zivoRentalCarIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-car-run" },
       { label: t("services.insurance"), href: "/travel-insurance", icon: Shield, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
