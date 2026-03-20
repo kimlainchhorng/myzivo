@@ -14,6 +14,7 @@ interface MobileDatePickerSheetProps {
   onOpenChange: (open: boolean) => void;
   selectedDate?: Date;
   onDateSelect: (date: Date | undefined) => void;
+  onDateConfirmed?: (date: Date) => void;
   label?: string;
   minDate?: Date;
   accentColor?: string;
@@ -24,10 +25,12 @@ export default function MobileDatePickerSheet({
   onOpenChange,
   selectedDate,
   onDateSelect,
+  onDateConfirmed,
   label = "Select date",
   minDate,
 }: MobileDatePickerSheetProps) {
   const earliestDate = minDate && !isBefore(minDate, startOfToday()) ? minDate : startOfToday();
+  const visibleMonth = selectedDate && !isBefore(selectedDate, earliestDate) ? selectedDate : earliestDate;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -47,10 +50,14 @@ export default function MobileDatePickerSheet({
           <div className="rounded-2xl border border-border bg-card">
             <Calendar
               mode="single"
+              month={visibleMonth}
               selected={selectedDate}
               onSelect={(date) => {
                 onDateSelect(date);
-                if (date) onOpenChange(false);
+                if (date) {
+                  onDateConfirmed?.(date);
+                  onOpenChange(false);
+                }
               }}
               disabled={(date) => isBefore(date, earliestDate)}
               initialFocus
@@ -60,7 +67,7 @@ export default function MobileDatePickerSheet({
 
           <div className="mt-4 flex items-center justify-between gap-3">
             <div className="min-h-10 text-sm text-muted-foreground">
-              {selectedDate ? `Selected: ${format(selectedDate, "EEE, MMM d")}` : "Choose a travel date"}
+              {selectedDate ? `Selected: ${format(selectedDate, "EEE, MMM d")}` : "Tap a date to continue"}
             </div>
             <Button type="button" onClick={() => onOpenChange(false)} className="min-w-24 rounded-xl">
               Done
