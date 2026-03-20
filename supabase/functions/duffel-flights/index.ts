@@ -237,6 +237,10 @@ interface CreateOrderParams {
     currency: string;
   }>;
   metadata?: Record<string, string>;
+  services?: Array<{
+    id: string;
+    quantity: number;
+  }>;
 }
 
 // Helper to make Duffel API requests
@@ -485,6 +489,7 @@ async function createOrder(params: CreateOrderParams) {
       passengers: params.passengers,
       payments: params.payments || [],
       metadata: params.metadata || {},
+      ...(params.services && params.services.length > 0 ? { services: params.services } : {}),
     }
   });
 
@@ -1010,6 +1015,98 @@ async function getAvailableServices(params: GetAvailableServicesParams) {
   return { services: services || [], grouped, total: (services || []).length };
 }
 
+// ---- Seat Maps ----
+interface GetSeatMapsParams {
+  offer_id: string;
+}
+
+async function getSeatMaps(params: GetSeatMapsParams) {
+  console.log('[Duffel] Fetching seat maps for offer:', params.offer_id);
+
+  const result = await duffelRequest(`/air/seat_maps?offer_id=${params.offer_id}`, 'GET');
+
+  if (result.error) {
+    const errStr = typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
+    const isNotFound = errStr.includes('not_found') || errStr.includes('Not found') || errStr.includes('does not exist');
+    if (isNotFound) {
+      console.log('[Duffel] Seat maps not available for this offer (expired or unsupported)');
+      return { seat_maps: [], available: false };
+    }
+    return { error: result.error };
+  }
+
+  const seatMaps = (Array.isArray(result.data) ? result.data : []) as Array<{
+    id: string;
+    slice_id: string;
+    segment_id: string;
+    cabins: Array<{
+      cabin_class: string;
+      deck: number;
+      wings: { first_row_index: number; last_row_index: number };
+      rows: Array<{
+        sections: Array<{
+          elements: Array<{
+            type: string; // 'seat' | 'bassinet' | 'empty' | 'exit_row' | 'lavatory' | 'galley'
+            designator?: string; // e.g. '14A'
+            name?: string;
+            disclosures?: string[];
+            available_services?: Array<{
+              id: string;
+              passenger_id: string;
+              total_amount: string;
+              total_currency: string;
+            }>;
+          }>;
+        }>;
+      }>;
+    }>;
+  }>;
+
+  if (!seatMaps || seatMaps.length === 0) {
+    console.log('[Duffel] No seat maps returned (airline may not support seat selection)');
+    return { seat_maps: [], available: false };
+  }
+
+  console.log(`[Duffel] Got ${seatMaps.length} seat map(s)`);
+
+  // Transform to a cleaner format
+  const transformed = seatMaps.map(sm => ({
+    id: sm.id,
+    slice_id: sm.slice_id,
+    segment_id: sm.segment_id,
+    cabins: sm.cabins.map(cabin => ({
+      cabin_class: cabin.cabin_class,
+      deck: cabin.deck,
+      wings: cabin.wings,
+      rows: cabin.rows.map((row, rowIdx) => ({
+        rowNumber: rowIdx + 1,
+        sections: row.sections.map(section => ({
+          elements: section.elements.map(el => ({
+            type: el.type,
+            designator: el.designator || null,
+            name: el.name || null,
+            disclosures: el.disclosures || [],
+            available_services: (el.available_services || []).map(svc => ({
+              id: svc.id,
+              passenger_id: svc.passenger_id,
+              price: parseFloat(svc.total_amount),
+              currency: svc.total_currency,
+            })),
+            is_available: el.type === 'seat' && (el.available_services || []).length > 0,
+          })),
+        })),
+      })),
+    })),
+  }));
+
+  return { seat_maps: transformed, available: true };
+}
+
+function validateGetSeatMaps(p: Record<string, unknown>): string | null {
+  if (!p.offer_id || typeof p.offer_id !== 'string') return 'offer_id is required';
+  return null;
+}
+
 // ---- Input validation helpers ----
 const IATA_RE = /^[A-Z]{3}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -1063,7 +1160,7 @@ serve(async (req) => {
     console.log('[Duffel] Action:', action);
 
     // Validate action
-    if (typeof action !== 'string' || !['createOfferRequest', 'getOffers', 'getOffer', 'createOrder', 'getAvailableServices'].includes(action)) {
+    if (typeof action !== 'string' || !['createOfferRequest', 'getOffers', 'getOffer', 'createOrder', 'getAvailableServices', 'getSeatMaps'].includes(action)) {
       return new Response(
         JSON.stringify({ error: `Unknown action: ${action}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -1076,6 +1173,7 @@ serve(async (req) => {
     else if (action === 'getOffers') validationError = validateGetOffers(params);
     else if (action === 'getOffer') validationError = validateGetOffer(params);
     else if (action === 'getAvailableServices') validationError = validateGetAvailableServices(params);
+    else if (action === 'getSeatMaps') validationError = validateGetSeatMaps(params);
 
     if (validationError) {
       return new Response(
@@ -1105,6 +1203,10 @@ serve(async (req) => {
 
       case 'getAvailableServices':
         result = await getAvailableServices(params as GetAvailableServicesParams);
+        break;
+
+      case 'getSeatMaps':
+        result = await getSeatMaps(params as GetSeatMapsParams);
         break;
 
       default:

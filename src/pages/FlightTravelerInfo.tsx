@@ -32,6 +32,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { type DuffelOffer, useDuffelOffer } from "@/hooks/useDuffelFlights";
 import { FLIGHT_CONSENT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 import { cn } from "@/lib/utils";
+import DuffelSeatPicker from "@/components/flight/DuffelSeatPicker";
 
 import { FlightSummaryCompact } from "@/components/flight/traveler/FlightSummaryCompact";
 import {
@@ -392,6 +393,22 @@ const FlightTravelerInfo = () => {
           </motion.div>
         ))}
       </div>
+
+      {/* Seat Selection */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35, duration: 0.5 }}
+        className="mt-5"
+      >
+        <DuffelSeatPicker
+          offerId={offer?.id ?? null}
+          passengerIds={Array.from({ length: totalPassengers }, (_, i) => `passenger_${i}`)}
+          onSeatsSelected={(seats) => {
+            sessionStorage.setItem("zivo_selected_seats", JSON.stringify(seats));
+          }}
+        />
+      </motion.div>
 
       {/* Consent + compliance — 3D styled */}
       <motion.div
