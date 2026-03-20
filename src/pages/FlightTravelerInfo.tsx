@@ -20,7 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { DuffelOffer } from "@/hooks/useDuffelFlights";
+import { type DuffelOffer, useDuffelOffer } from "@/hooks/useDuffelFlights";
 import { FLIGHT_CONSENT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 import { cn } from "@/lib/utils";
 

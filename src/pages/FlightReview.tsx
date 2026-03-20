@@ -3,7 +3,7 @@
  * Complete booking flow review with step indicator, trip details, fare rules
  */
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft, Plane, Clock, ChevronRight, ArrowRightLeft,
@@ -16,7 +16,7 @@ import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { type DuffelOffer, type DuffelSegment, type DuffelAvailableService } from "@/hooks/useDuffelFlights";
+import { type DuffelOffer, type DuffelSegment, type DuffelAvailableService, useDuffelOffer } from "@/hooks/useDuffelFlights";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import BoardingPass3D from "@/components/flight/BoardingPass3D";
 import { StepIndicator } from "@/components/flight/review/StepIndicator";
