@@ -169,7 +169,7 @@ export default function MobilePassengerCabinSheet({
                       <div
                         className={cn(
                           "w-7 h-7 rounded-lg flex items-center justify-center mb-2",
-                          isSelected ? "bg-white/20" : "bg-muted/40"
+                          isSelected ? "bg-white/20" : "bg-muted"
                         )}
                       >
                         <Icon className={cn(
