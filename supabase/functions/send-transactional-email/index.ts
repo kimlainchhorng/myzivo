@@ -56,19 +56,34 @@ function renderTemplate(
 
   switch (template) {
     case "booking-confirmation": {
-      const { booking_id, service_type, destination, departure_date, total_price, currency } =
-        data as Record<string, string>;
+      const { booking_id, booking_reference, origin, destination, departure_date, return_date, cabin_class, passengers, airline, flight_number, total_price, currency, ticket_numbers, pnr } =
+        data as Record<string, unknown>;
+      const ticketHtml = Array.isArray(ticket_numbers) && ticket_numbers.length > 0
+        ? `<tr><td style="padding:8px 16px;"><strong style="color:${mutedColor};font-size:13px;">E-Ticket(s)</strong><br><span style="color:${textColor};font-size:14px;font-family:monospace;">${(ticket_numbers as string[]).join(", ")}</span></td></tr>` : "";
+      const pnrHtml = pnr ? `<tr><td style="padding:8px 16px;"><strong style="color:${mutedColor};font-size:13px;">PNR</strong><br><span style="color:${textColor};font-size:15px;font-family:monospace;letter-spacing:1px;">${pnr}</span></td></tr>` : "";
+      const returnHtml = return_date ? `<tr><td style="padding:8px 16px;"><strong style="color:${mutedColor};font-size:13px;">Return</strong><br><span style="color:${textColor};font-size:15px;">${return_date}</span></td></tr>` : "";
       return wrapper(
-        `Booking Confirmed — ${service_type || "Travel"} to ${destination || "your destination"}`,
-        `<h1 style="color:${textColor};font-size:22px;margin:0 0 16px;">Your booking is confirmed! ✈️</h1>
-<p style="color:${textColor};font-size:15px;line-height:1.6;">Great news — your ${service_type || "travel"} booking has been confirmed.</p>
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;padding:20px;margin:20px 0;">
-<tr><td style="padding:8px 16px;"><strong style="color:${mutedColor};font-size:13px;">Booking ID</strong><br><span style="color:${textColor};font-size:15px;">${booking_id || "—"}</span></td></tr>
-<tr><td style="padding:8px 16px;"><strong style="color:${mutedColor};font-size:13px;">Destination</strong><br><span style="color:${textColor};font-size:15px;">${destination || "—"}</span></td></tr>
-<tr><td style="padding:8px 16px;"><strong style="color:${mutedColor};font-size:13px;">Date</strong><br><span style="color:${textColor};font-size:15px;">${departure_date || "—"}</span></td></tr>
-<tr><td style="padding:8px 16px;"><strong style="color:${mutedColor};font-size:13px;">Total</strong><br><span style="color:${textColor};font-size:18px;font-weight:600;">${currency || "$"}${total_price || "—"}</span></td></tr>
+        `Booking Confirmed — ${(origin as string) || ""} to ${(destination as string) || "your destination"}`,
+        `<h1 style="color:${textColor};font-size:22px;margin:0 0 8px;">Your flight is confirmed! ✈️</h1>
+<p style="color:${mutedColor};font-size:14px;margin:0 0 20px;">Reference: <strong style="color:${textColor};font-family:monospace;letter-spacing:1px;">${(booking_reference as string) || (booking_id as string) || "—"}</strong></p>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:12px;overflow:hidden;margin:0 0 20px;">
+<tr><td style="padding:20px 16px;text-align:center;border-bottom:2px dashed #e5e7eb;">
+  <span style="font-size:28px;font-weight:700;color:${textColor};">${(origin as string) || "—"}</span>
+  <span style="font-size:18px;color:${mutedColor};margin:0 12px;">✈</span>
+  <span style="font-size:28px;font-weight:700;color:${textColor};">${(destination as string) || "—"}</span>
+</td></tr>
+${(airline as string) ? `<tr><td style="padding:8px 16px;"><strong style="color:${mutedColor};font-size:13px;">Airline</strong><br><span style="color:${textColor};font-size:15px;">${airline}${(flight_number as string) ? " · " + flight_number : ""}</span></td></tr>` : ""}
+<tr><td style="padding:8px 16px;"><strong style="color:${mutedColor};font-size:13px;">Departure</strong><br><span style="color:${textColor};font-size:15px;">${(departure_date as string) || "—"}</span></td></tr>
+${returnHtml}
+<tr><td style="padding:8px 16px;"><strong style="color:${mutedColor};font-size:13px;">Class</strong><br><span style="color:${textColor};font-size:15px;text-transform:capitalize;">${((cabin_class as string) || "economy").replace("_", " ")}</span></td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:${mutedColor};font-size:13px;">Travelers</strong><br><span style="color:${textColor};font-size:15px;">${(passengers as string) || "1"}</span></td></tr>
+${pnrHtml}${ticketHtml}
+<tr><td style="padding:12px 16px;border-top:1px solid #e5e7eb;"><strong style="color:${mutedColor};font-size:13px;">Total Paid</strong><br><span style="color:${brandColor};font-size:22px;font-weight:700;">${(currency as string) || "$"}${(total_price as string) || "—"}</span></td></tr>
 </table>
-<p style="color:${mutedColor};font-size:14px;">Manage your booking anytime in your <a href="https://hizivo.com/trips" style="color:${brandColor};text-decoration:none;font-weight:500;">Traveler Dashboard</a>.</p>`
+<div style="text-align:center;margin:24px 0;">
+<a href="https://hizovo.com/flights/bookings" style="background:${brandColor};color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">View Booking</a>
+</div>
+<p style="color:${mutedColor};font-size:13px;line-height:1.6;">For changes, cancellations, or refund requests, contact the travel partner listed in your booking details.</p>`
       );
     }
 
