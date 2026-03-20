@@ -560,46 +560,73 @@ const FlightReview = () => {
             <PriceSummaryCard offer={variantPrice != null ? { ...offer, price: variantPrice, pricePerPerson: variantPrice, currency: variantCurrency || offer.currency } : offer} searchParams={searchParams} totalPassengers={totalPassengers} isRoundTrip={isRoundTrip} />
           </motion.div>
 
-          {/* Partner disclosure */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="mt-3">
-            <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-xl bg-[hsl(var(--flights))]/5 border border-[hsl(var(--flights))]/15">
-              <AlertTriangle className="w-4 h-4 text-[hsl(var(--flights))] shrink-0 mt-0.5" />
+          {/* Partner disclosure — 3D */}
+          <motion.div initial={{ opacity: 0, y: 12, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.35, duration: 0.5 }} className="mt-3">
+            <div
+              className="flex items-start gap-3 px-4 py-3.5 rounded-3xl border-[1.5px] border-[hsl(var(--flights))]/15"
+              style={{
+                background: "linear-gradient(135deg, hsl(var(--flights)/0.04), transparent)",
+                boxShadow: `0 12px 24px -10px hsl(var(--flights)/0.08),
+                             inset 0 1px 0 hsl(var(--background)/0.6)`,
+                transform: "perspective(600px) rotateX(1deg)",
+              }}
+            >
+              <div
+                className="w-8 h-8 rounded-xl bg-[hsl(var(--flights))]/10 flex items-center justify-center shrink-0 mt-0.5"
+                style={{
+                  transform: "perspective(200px) rotateX(5deg) rotateY(-3deg)",
+                  boxShadow: "0 4px 10px -4px hsl(var(--flights)/0.2), inset 0 1px 0 hsl(var(--background)/0.5)",
+                }}
+              >
+                <AlertTriangle className="w-3.5 h-3.5 text-[hsl(var(--flights))]" />
+              </div>
               <div>
                 <p className="text-[11px] font-medium leading-relaxed">
                   Continuing will proceed to a <span className="font-bold">real booking flow</span>.
                   You'll be asked for passenger details and payment.
                   Final price and terms are confirmed at checkout.
                 </p>
-                <a href="/partner-disclosure" className="text-[10px] text-[hsl(var(--flights))] hover:underline mt-1 inline-block">
+                <a href="/partner-disclosure" className="text-[10px] text-[hsl(var(--flights))] hover:underline mt-1.5 inline-block font-semibold">
                   Partner disclosure →
                 </a>
               </div>
             </div>
           </motion.div>
 
-          {/* Trust badges row */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }} className="mt-3">
-            <div className="flex items-center justify-center gap-4 py-2.5">
+          {/* Trust badges — 3D floating pills */}
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38, duration: 0.4 }} className="mt-3">
+            <div className="flex items-center justify-center gap-3 py-3">
               {[
                 { icon: Shield, text: "Secure booking" },
                 { icon: MapPin, text: "Real-time prices" },
               ].map(({ icon: Icon, text }) => (
-                <div key={text} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                <div
+                  key={text}
+                  className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium px-3.5 py-2 rounded-2xl border border-border/15"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(var(--muted)/0.25), transparent)",
+                    boxShadow: "0 4px 10px -4px hsl(var(--foreground)/0.05), inset 0 1px 0 hsl(var(--background)/0.5)",
+                    transform: "perspective(300px) rotateX(2deg)",
+                  }}
+                >
                   <Icon className="w-3.5 h-3.5 text-[hsl(var(--flights))]/70" />
-                  <span className="font-medium">{text}</span>
+                  <span>{text}</span>
                 </div>
               ))}
             </div>
           </motion.div>
 
-          {/* Desktop CTA */}
+          {/* Desktop CTA — 3D buttons */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mt-4 hidden sm:flex gap-3">
-            <Button variant="outline" onClick={handleBack} className="flex-1 border-border/40">
+            <Button variant="outline" onClick={handleBack} className="flex-1 border-border/30 rounded-2xl h-12">
               <ArrowLeft className="w-4 h-4 mr-2" /> Back to Results
             </Button>
             <Button
               onClick={handleContinue}
-              className="flex-1 bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 font-bold gap-2 active:scale-95 transition-all shadow-md shadow-[hsl(var(--flights))]/20"
+              className="flex-1 bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 font-bold gap-2 active:scale-95 transition-all rounded-2xl h-12"
+              style={{
+                boxShadow: "0 8px 24px -6px hsl(var(--flights)/0.35), inset 0 1px 0 hsl(var(--background)/0.15)",
+              }}
             >
               Continue to Passenger Details <ChevronRight className="w-4 h-4" />
             </Button>
@@ -607,22 +634,37 @@ const FlightReview = () => {
         </div>
       </main>
 
-      {/* Sticky mobile CTA */}
+      {/* Sticky mobile CTA — 3D glassmorphic */}
       <div className="fixed bottom-0 left-0 right-0 z-30 sm:hidden">
-        <div className="bg-card/80 backdrop-blur-2xl border-t border-[hsl(var(--flights))]/15 px-4 py-3 safe-area-bottom shadow-[0_-4px_20px_-4px_hsl(var(--flights)/0.1)]">
+        <div
+          className="backdrop-blur-2xl border-t border-[hsl(var(--flights))]/10 px-4 py-3.5 safe-area-bottom"
+          style={{
+            background: "hsl(var(--card)/0.85)",
+            boxShadow: "0 -8px 24px -4px hsl(var(--flights)/0.08), inset 0 1px 0 hsl(var(--background)/0.5)",
+          }}
+        >
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] text-muted-foreground font-medium">Total price</p>
-              <p className="text-xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none transition-all duration-200">
+              <motion.p
+                key={variantPrice ?? offer.price}
+                initial={{ scale: 0.95, opacity: 0.6 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="text-xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none"
+                style={{ textShadow: "0 3px 12px hsl(var(--flights)/0.2)" }}
+              >
                 ${((variantPrice ?? offer.pricePerPerson ?? offer.price) * totalPassengers).toFixed(2)}
-              </p>
+              </motion.p>
               <p className="text-[9px] text-muted-foreground mt-0.5">
                 {totalPassengers > 1 ? `${totalPassengers} travelers` : "1 traveler"} · {isRoundTrip ? "Round trip" : "One way"} · {variantCurrency || offer.currency || "USD"}
               </p>
             </div>
             <Button
               onClick={handleContinue}
-              className="bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 font-bold gap-1.5 active:scale-95 transition-all h-12 px-6 text-sm rounded-xl shadow-lg shadow-[hsl(var(--flights))]/25"
+              className="bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 font-bold gap-1.5 active:scale-95 transition-all h-12 px-6 text-sm rounded-2xl"
+              style={{
+                boxShadow: "0 8px 24px -6px hsl(var(--flights)/0.4), inset 0 1px 0 hsl(var(--background)/0.15)",
+              }}
             >
               Continue <ChevronRight className="w-4 h-4" />
             </Button>
