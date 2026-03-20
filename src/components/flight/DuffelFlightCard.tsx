@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
+import SeatMapPreview from "@/components/flight/SeatMapPreview";
 import { cn } from "@/lib/utils";
 
 interface DuffelFlightCardProps {
@@ -346,6 +347,11 @@ export default function DuffelFlightCard({
                   ))}
                 </div>
               )}
+
+              {/* Seat map preview */}
+              <div className="mt-2 pt-2 border-t border-border/10">
+                <SeatMapPreview cabinClass={offer.cabinClass} />
+              </div>
 
               {/* Conditions summary */}
               <div className="mt-2 flex flex-wrap gap-1.5 text-[8px] text-muted-foreground">

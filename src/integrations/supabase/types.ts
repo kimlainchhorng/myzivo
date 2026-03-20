@@ -16398,6 +16398,63 @@ export type Database = {
           },
         ]
       }
+      flight_price_alerts: {
+        Row: {
+          alert_triggered: boolean
+          cabin_class: string
+          created_at: string
+          current_price: number | null
+          departure_date: string
+          destination_iata: string
+          id: string
+          is_active: boolean
+          last_checked_at: string | null
+          lowest_seen_price: number | null
+          origin_iata: string
+          passengers: number
+          return_date: string | null
+          target_price: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_triggered?: boolean
+          cabin_class?: string
+          created_at?: string
+          current_price?: number | null
+          departure_date: string
+          destination_iata: string
+          id?: string
+          is_active?: boolean
+          last_checked_at?: string | null
+          lowest_seen_price?: number | null
+          origin_iata: string
+          passengers?: number
+          return_date?: string | null
+          target_price?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_triggered?: boolean
+          cabin_class?: string
+          created_at?: string
+          current_price?: number | null
+          departure_date?: string
+          destination_iata?: string
+          id?: string
+          is_active?: boolean
+          last_checked_at?: string | null
+          lowest_seen_price?: number | null
+          origin_iata?: string
+          passengers?: number
+          return_date?: string | null
+          target_price?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       flight_search_cache: {
         Row: {
           cabin_class: string

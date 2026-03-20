@@ -6,6 +6,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock, ChevronRight, ArrowRight, Sunrise, Sun, Sunset, Moon } from "lucide-react";
+import PriceAlertButton from "@/components/flight/PriceAlertButton";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -512,6 +513,15 @@ const FlightResults = () => {
                     <p className="text-sm font-bold text-[hsl(var(--flights))] tabular-nums">${lowestPrice}</p>
                   </div>
                 )}
+                <PriceAlertButton
+                  origin={origin}
+                  destination={destination}
+                  departureDate={departureDate}
+                  returnDate={returnDate}
+                  passengers={totalPassengers}
+                  cabinClass={cabinClass}
+                  currentLowestPrice={lowestPrice}
+                />
                 <Button variant="outline" size="sm" asChild className="shrink-0 h-7 text-[11px] px-2.5 border-border/40">
                   <Link to="/flights">Edit</Link>
                 </Button>
