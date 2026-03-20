@@ -1,17 +1,15 @@
 /**
  * Flight Search Page — /flights
- * Mobile: native app feel with AppLayout
- * Desktop: website layout with Header/Footer
- * Uses FlightSearchFormPro as unified search form
+ * 3D Spatial UI with parallax scroll, tilt cards, and smooth reveals
  */
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Plane, Shield, Star, TrendingUp, ArrowRight, Sparkles,
   Globe, Clock, Headphones, CreditCard, Loader2
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import Header from "@/components/Header";
 
 import miamiImg from "@/assets/destinations/miami.jpg";
@@ -29,7 +27,26 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { FlightSearchFormPro } from "@/components/search";
 import { usePopularRoutePrices } from "@/hooks/usePopularRoutePrices";
 
-/* ─── Fallback routes (shown while loading) ─── */
+/* ─── 3D Tilt Hook ─── */
+function use3DTilt(maxTilt = 8) {
+  const ref = useRef<HTMLDivElement>(null);
+  const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.transform = `perspective(600px) rotateY(${x * maxTilt}deg) rotateX(${-y * maxTilt}deg) scale3d(1.02,1.02,1.02)`;
+  }, [maxTilt]);
+  const onMouseLeave = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = "perspective(600px) rotateY(0deg) rotateX(0deg) scale3d(1,1,1)";
+  }, []);
+  return { ref, onMouseMove, onMouseLeave };
+}
+
+/* ─── Fallback routes ─── */
 const fallbackRoutes = [
   { from: "JFK", to: "MIA", fromCity: "New York", toCity: "Miami", image: miamiImg },
   { from: "LAX", to: "SFO", fromCity: "Los Angeles", toCity: "San Francisco", image: sfImg },
@@ -45,6 +62,71 @@ const whyZivo = [
   { icon: Clock, title: "Real-Time Prices", desc: "Live fares from Duffel API, always up to date" },
   { icon: Headphones, title: "24/7 Support", desc: "Get help with your booking anytime" },
 ];
+
+/* ─── 3D Route Card ─── */
+function RouteCard3D({ route, index, onRouteClick }: { route: any; index: number; onRouteClick: (from: string, to: string) => void }) {
+  const tilt = use3DTilt(10);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24, rotateX: 15 }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{
+        delay: index * 0.08,
+        duration: 0.6,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      style={{ perspective: 800 }}
+    >
+      <div
+        ref={tilt.ref}
+        onMouseMove={tilt.onMouseMove}
+        onMouseLeave={tilt.onMouseLeave}
+        onClick={() => onRouteClick(route.from, route.to)}
+        className="relative rounded-2xl overflow-hidden border border-border/30 hover:border-primary/40 cursor-pointer text-left active:scale-[0.97] touch-manipulation transition-[border-color,box-shadow] duration-300 hover:shadow-xl hover:shadow-primary/10"
+        style={{ transformStyle: "preserve-3d", transition: "transform 0.15s ease-out" }}
+      >
+        {/* Destination image with 3D parallax */}
+        <div className="relative h-28 overflow-hidden">
+          <motion.img
+            src={route.image}
+            alt={route.toCity}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            whileHover={{ scale: 1.08 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-card/10" />
+
+          {/* Floating route badge — 3D lifted */}
+          <div
+            className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-background/85 backdrop-blur-md rounded-full px-2.5 py-1 border border-border/40 shadow-lg"
+            style={{ transform: "translateZ(20px)" }}
+          >
+            <span className="font-bold text-[11px] text-foreground">{route.from}</span>
+            <Plane className="w-3 h-3 text-primary rotate-45" />
+            <span className="font-bold text-[11px] text-foreground">{route.to}</span>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
+          <p className="text-[10px] text-muted-foreground truncate">
+            {route.fromCity} → {route.toCity}
+          </p>
+          {route.price ? (
+            <p className="text-sm font-bold text-primary mt-0.5">
+              from {route.price}*
+            </p>
+          ) : (
+            <div className="h-4 w-16 mt-0.5 rounded bg-muted/50 animate-pulse" />
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 /* ─── Popular Routes Grid ─── */
 function PopularRoutesSection({ className }: { className?: string }) {
@@ -63,7 +145,6 @@ function PopularRoutesSection({ className }: { className?: string }) {
     );
   };
 
-  // Merge live prices with fallback routes
   const routes = fallbackRoutes.map((fr) => {
     const live = liveRoutes?.find(
       (lr) => lr.origin_code === fr.from && lr.destination_code === fr.to
@@ -79,19 +160,20 @@ function PopularRoutesSection({ className }: { className?: string }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.25, duration: 0.35 }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.5 }}
       className={className}
     >
-      <div className="flex items-center gap-2 mb-3">
-        <TrendingUp className="w-4 h-4 text-[hsl(var(--flights))]" />
+      <div className="flex items-center gap-2 mb-4">
+        <TrendingUp className="w-4 h-4 text-primary" />
         <h2 className="text-sm font-bold">Popular Routes</h2>
         <Badge variant="outline" className={cn(
           "text-[9px] ml-auto",
           hasLivePrices
             ? "border-emerald-500/30 text-emerald-600"
-            : "border-[hsl(var(--flights))]/30 text-[hsl(var(--flights))]"
+            : "border-primary/30 text-primary"
         )}>
           {isLoading ? (
             <><Loader2 className="w-2.5 h-2.5 mr-0.5 animate-spin" /> Loading</>
@@ -102,49 +184,17 @@ function PopularRoutesSection({ className }: { className?: string }) {
           )}
         </Badge>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-        {routes.map((route) => (
-          <button
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {routes.map((route, i) => (
+          <RouteCard3D
             key={`${route.from}-${route.to}`}
-            type="button"
-            onClick={() => handleRouteClick(route.from, route.to)}
-            className="relative rounded-2xl overflow-hidden border border-border/30 hover:border-[hsl(var(--flights))]/40 hover:shadow-lg transition-all group text-left active:scale-[0.97] touch-manipulation"
-          >
-            {/* Destination image */}
-            <div className="relative h-24">
-              <img
-                src={route.image}
-                alt={route.toCity}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
-              
-              {/* Route badge */}
-              <div className="absolute top-2 left-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded-full px-2 py-0.5 border border-border/30">
-                <span className="font-bold text-[10px] text-foreground">{route.from}</span>
-                <Plane className="w-2.5 h-2.5 text-[hsl(var(--flights))] rotate-45" />
-                <span className="font-bold text-[10px] text-foreground">{route.to}</span>
-              </div>
-            </div>
-            
-            {/* Info */}
-            <div className="absolute bottom-0 left-0 right-0 px-2.5 pb-2.5">
-              <p className="text-[10px] text-muted-foreground truncate">
-                {route.fromCity} — {route.toCity}
-              </p>
-              {route.price ? (
-                <p className="text-xs font-bold text-[hsl(var(--flights))] mt-0.5">
-                  from {route.price}*
-                </p>
-              ) : (
-                <div className="h-4 w-16 mt-0.5 rounded bg-muted/50 animate-pulse" />
-              )}
-            </div>
-          </button>
+            route={route}
+            index={i}
+            onRouteClick={handleRouteClick}
+          />
         ))}
       </div>
-      <p className="text-[9px] text-muted-foreground mt-2 text-center">
+      <p className="text-[9px] text-muted-foreground mt-3 text-center">
         {hasLivePrices
           ? "*Live prices from Duffel. Final price confirmed at partner checkout."
           : "*Prices loading. Final price confirmed at partner checkout."}
@@ -153,28 +203,52 @@ function PopularRoutesSection({ className }: { className?: string }) {
   );
 }
 
+/* ─── 3D Why ZIVO Card ─── */
+function WhyCard3D({ item, index }: { item: typeof whyZivo[0]; index: number }) {
+  const tilt = use3DTilt(12);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, rotateX: 10 }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ delay: index * 0.1, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+      style={{ perspective: 600 }}
+    >
+      <div
+        ref={tilt.ref}
+        onMouseMove={tilt.onMouseMove}
+        onMouseLeave={tilt.onMouseLeave}
+        className="bg-card/70 backdrop-blur-sm border border-border/30 rounded-2xl p-4 text-center transition-[box-shadow] duration-300 hover:shadow-lg hover:shadow-primary/5"
+        style={{ transformStyle: "preserve-3d", transition: "transform 0.15s ease-out" }}
+      >
+        <div
+          className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-2.5"
+          style={{ transform: "translateZ(16px)" }}
+        >
+          <item.icon className="w-5 h-5 text-primary" />
+        </div>
+        <p className="text-xs font-semibold" style={{ transform: "translateZ(8px)" }}>{item.title}</p>
+        <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed hidden sm:block">{item.desc}</p>
+      </div>
+    </motion.div>
+  );
+}
+
 /* ─── Trust / Why ZIVO Section ─── */
 function WhyZivoSection({ className }: { className?: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.35, duration: 0.35 }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.5 }}
       className={className}
     >
-      <h2 className="text-sm font-bold mb-3 text-center sm:text-left">Why book with ZIVO?</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        {whyZivo.map((item) => (
-          <div
-            key={item.title}
-            className="bg-card/60 backdrop-blur-sm border border-border/30 rounded-xl p-3 text-center"
-          >
-            <div className="w-9 h-9 rounded-xl bg-[hsl(var(--flights))]/10 border border-[hsl(var(--flights))]/20 flex items-center justify-center mx-auto mb-2">
-              <item.icon className="w-4 h-4 text-[hsl(var(--flights))]" />
-            </div>
-            <p className="text-xs font-semibold">{item.title}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed hidden sm:block">{item.desc}</p>
-          </div>
+      <h2 className="text-sm font-bold mb-4 text-center sm:text-left">Why book with ZIVO?</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {whyZivo.map((item, i) => (
+          <WhyCard3D key={item.title} item={item} index={i} />
         ))}
       </div>
     </motion.div>
@@ -185,9 +259,9 @@ function WhyZivoSection({ className }: { className?: string }) {
 function TrustStrip() {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.2 }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3, duration: 0.4 }}
       className="flex items-center justify-center gap-4 text-[11px] text-muted-foreground"
     >
       <span className="flex items-center gap-1"><Sparkles className="w-3 h-3" /> 500+ Airlines</span>
@@ -199,21 +273,25 @@ function TrustStrip() {
   );
 }
 
-/* ─── Mobile Flight Search ─── */
+/* ─── Mobile Flight Search with 3D scroll ─── */
 function MobileFlightSearch() {
   const { fromCity, toCity } = useParams();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ container: scrollRef });
 
   return (
-    <div className="flex flex-col gap-5 px-4 pb-8 pt-1">
+    <div ref={scrollRef} className="flex flex-col gap-6 px-4 pb-8 pt-1 overflow-y-auto" style={{ perspective: "1000px" }}>
+      {/* Search form — 3D entrance */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+        initial={{ opacity: 0, y: 30, rotateX: 8 }}
+        animate={{ opacity: 1, y: 0, rotateX: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        style={{ transformStyle: "preserve-3d" }}
       >
         <FlightSearchFormPro
           initialFrom={fromCity ? decodeURIComponent(fromCity) : ""}
           initialTo={toCity ? decodeURIComponent(toCity) : ""}
-          className="shadow-lg shadow-[hsl(var(--flights))]/5"
+          className="shadow-lg shadow-primary/8 rounded-2xl"
         />
       </motion.div>
 
@@ -229,21 +307,22 @@ function DesktopFlightSearch() {
   const { fromCity, toCity } = useParams();
 
   return (
-    <>
+    <div style={{ perspective: "1200px" }}>
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+        initial={{ opacity: 0, y: 24, rotateX: 6 }}
+        animate={{ opacity: 1, y: 0, rotateX: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="max-w-3xl mx-auto flex items-center gap-3.5 pt-2 sm:pt-4 pb-4"
+        style={{ transformStyle: "preserve-3d" }}
       >
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1, duration: 0.3 }}
-          className="w-11 h-11 rounded-xl bg-[hsl(var(--flights))]/10 border border-[hsl(var(--flights))]/20 flex items-center justify-center shrink-0"
+          initial={{ scale: 0.6, opacity: 0, rotateY: -20 }}
+          animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+          transition={{ delay: 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0"
         >
-          <Plane className="w-5.5 h-5.5 text-[hsl(var(--flights))]" />
+          <Plane className="w-5.5 h-5.5 text-primary" />
         </motion.div>
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-tight">Search Flights</h1>
@@ -251,30 +330,31 @@ function DesktopFlightSearch() {
         </div>
       </motion.div>
 
-      {/* Search Form */}
+      {/* Search Form — 3D floating card */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+        initial={{ opacity: 0, y: 30, rotateX: 8 }}
+        animate={{ opacity: 1, y: 0, rotateX: 0 }}
+        transition={{ duration: 0.55, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
         className="max-w-3xl mx-auto"
+        style={{ transformStyle: "preserve-3d" }}
       >
         <FlightSearchFormPro
           initialFrom={fromCity ? decodeURIComponent(fromCity) : ""}
           initialTo={toCity ? decodeURIComponent(toCity) : ""}
-          className="shadow-xl shadow-[hsl(var(--flights))]/5"
+          className="shadow-xl shadow-primary/8 rounded-2xl"
         />
       </motion.div>
 
-      <div className="max-w-3xl mx-auto mt-4">
+      <div className="max-w-3xl mx-auto mt-5">
         <TrustStrip />
       </div>
 
-      {/* Content sections */}
-      <div className="max-w-3xl mx-auto mt-8 space-y-8">
+      {/* Content sections with 3D scroll reveals */}
+      <div className="max-w-3xl mx-auto mt-10 space-y-10">
         <PopularRoutesSection />
         <WhyZivoSection />
       </div>
-    </>
+    </div>
   );
 }
 
@@ -288,9 +368,18 @@ const FlightLanding = () => {
         <SEOHead title="Search Flights – ZIVO" description="Search and compare flights from 500+ airlines." />
         <AppLayout title="Flights">
           <div className="relative overflow-hidden">
+            {/* Ambient 3D glow orbs */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[hsl(var(--flights))]/8 blur-3xl" />
-              <div className="absolute top-1/2 -left-32 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
+              <motion.div
+                animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/8 blur-3xl"
+              />
+              <motion.div
+                animate={{ y: [0, 15, 0], x: [0, -8, 0] }}
+                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                className="absolute top-1/2 -left-32 w-80 h-80 rounded-full bg-accent/5 blur-3xl"
+              />
             </div>
             <div className="relative z-10">
               <MobileFlightSearch />
@@ -304,9 +393,18 @@ const FlightLanding = () => {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <SEOHead title="Search Flights – ZIVO" description="Search and compare flights from 500+ airlines. Find the best deals." />
+      {/* Ambient glow orbs with float animation */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[hsl(var(--flights))]/8 blur-3xl" />
-        <div className="absolute top-1/3 -left-32 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
+        <motion.div
+          animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/8 blur-3xl"
+        />
+        <motion.div
+          animate={{ y: [0, 15, 0], x: [0, -8, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute top-1/3 -left-32 w-80 h-80 rounded-full bg-accent/5 blur-3xl"
+        />
       </div>
       <Header />
       <main className="pt-16 pb-16 relative z-10">
