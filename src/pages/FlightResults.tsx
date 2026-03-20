@@ -619,34 +619,80 @@ const FlightResults = () => {
                       cabinClass={cabinClass}
                       currentLowestPrice={lowestPrice}
                     />
-                    <Link
-                      to="/flights"
-                      className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border/40 flex items-center hover:bg-muted/50 active:scale-95 transition-all text-muted-foreground"
+                    <button
+                      onClick={() => setEditMode(!editMode)}
+                      className={cn(
+                        "h-7 px-2.5 text-[11px] font-semibold rounded-lg border flex items-center gap-1 active:scale-95 transition-all",
+                        editMode
+                          ? "border-[hsl(var(--flights))] bg-[hsl(var(--flights)/0.08)] text-[hsl(var(--flights))]"
+                          : "border-border/40 hover:bg-muted/50 text-muted-foreground"
+                      )}
                     >
-                      Edit
-                    </Link>
+                      <Pencil className="w-3 h-3" />
+                      {editMode ? "Close" : "Edit"}
+                    </button>
                   </div>
                 </div>
 
                 {/* Row 2: Meta pills */}
-                <div className="flex items-center gap-1.5 mt-1.5 ml-10">
-                  <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md bg-muted/50 text-[10px] font-medium text-muted-foreground">
-                    <CalendarDays className="w-2.5 h-2.5 opacity-60" />
-                    {departureDate}{returnDate ? ` – ${returnDate}` : ""}
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md bg-muted/50 text-[10px] font-medium text-muted-foreground">
-                    <Users className="w-2.5 h-2.5 opacity-60" />
-                    {totalPassengers}
-                  </span>
-                  <span className="inline-flex items-center px-1.5 py-[2px] rounded-md bg-[hsl(var(--flights)/0.08)] text-[10px] font-semibold text-[hsl(var(--flights))] capitalize">
-                    {cabinClass.replace("_", " ")}
-                  </span>
-                  {lowestPrice > 0 && (
-                    <span className="ml-auto text-[11px] font-bold text-[hsl(var(--flights))] tabular-nums">
-                      from ${lowestPrice}
-                    </span>
+                <AnimatePresence>
+                  {!editMode && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex items-center gap-1.5 mt-1.5 ml-10">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md bg-muted/50 text-[10px] font-medium text-muted-foreground">
+                          <CalendarDays className="w-2.5 h-2.5 opacity-60" />
+                          {departureDate}{returnDate ? ` – ${returnDate}` : ""}
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md bg-muted/50 text-[10px] font-medium text-muted-foreground">
+                          <Users className="w-2.5 h-2.5 opacity-60" />
+                          {totalPassengers}
+                        </span>
+                        <span className="inline-flex items-center px-1.5 py-[2px] rounded-md bg-[hsl(var(--flights)/0.08)] text-[10px] font-semibold text-[hsl(var(--flights))] capitalize">
+                          {cabinClass.replace("_", " ")}
+                        </span>
+                        {lowestPrice > 0 && (
+                          <span className="ml-auto text-[11px] font-bold text-[hsl(var(--flights))] tabular-nums">
+                            from ${lowestPrice}
+                          </span>
+                        )}
+                      </div>
+                    </motion.div>
                   )}
-                </div>
+                </AnimatePresence>
+
+                {/* Inline edit form */}
+                <AnimatePresence>
+                  {editMode && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pt-2 border-t border-border/20 mt-2">
+                        <FlightSearchFormPro
+                          initialFrom={origin}
+                          initialTo={destination}
+                          initialDepartDate={departureDate ? new Date(departureDate + "T00:00:00") : undefined}
+                          initialReturnDate={returnDate ? new Date(returnDate + "T00:00:00") : undefined}
+                          initialPassengers={totalPassengers}
+                          initialCabin={rawCabinClass === "premium_economy" ? "premium" : rawCabinClass as any}
+                          initialTripType={returnDate ? "roundtrip" : "oneway"}
+                          navigateOnSearch={true}
+                          onSearch={() => setEditMode(false)}
+                          className="!p-0"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           </div>
