@@ -7,12 +7,16 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import seatEconomy from "@/assets/seat-economy.png";
+import seatPremium from "@/assets/seat-premium.png";
+import seatBusiness from "@/assets/seat-business.png";
+import seatFirst from "@/assets/seat-first.png";
 
 const cabinOptions = [
-  { value: "economy", label: "Economy", icon: Plane, desc: "Standard seating" },
-  { value: "premium", label: "Premium Economy", icon: Star, desc: "Extra legroom" },
-  { value: "business", label: "Business", icon: Crown, desc: "Lie-flat seats" },
-  { value: "first", label: "First Class", icon: Gem, desc: "Ultimate luxury" },
+  { value: "economy", label: "Economy", icon: Plane, desc: "Standard seating", img: seatEconomy },
+  { value: "premium", label: "Premium Economy", icon: Star, desc: "Extra legroom", img: seatPremium },
+  { value: "business", label: "Business", icon: Crown, desc: "Lie-flat seats", img: seatBusiness },
+  { value: "first", label: "First Class", icon: Gem, desc: "Ultimate luxury", img: seatFirst },
 ] as const;
 
 interface MobilePassengerCabinSheetProps {
