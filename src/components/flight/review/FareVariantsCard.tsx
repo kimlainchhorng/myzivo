@@ -1,6 +1,7 @@
 /**
- * Fare Variants Card — lets user pick between fare brands (Basic Economy, Main Cabin, etc.)
+ * Fare Variants Card — lets user pick between fare brands (Basic Economy, Main Cabin, Business, etc.)
  * Uses real Duffel fareVariants data from the selected offer.
+ * Supports multi-cabin filtering when Business/First/Premium Economy are available.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,8 +18,20 @@ interface FareVariantsCardProps {
   onSelectVariant: (variant: FareVariant) => void;
 }
 
+/* ── Cabin class styling ────────────────────────────── */
+const CABIN_STYLES: Record<string, { bg: string; text: string; border: string; label: string; badgeBg: string }> = {
+  economy:         { bg: "bg-muted/30",        text: "text-foreground",    border: "border-border/40",        label: "Economy",         badgeBg: "bg-muted/40" },
+  premium_economy: { bg: "bg-amber-500/10",    text: "text-amber-700",    border: "border-amber-400/30",     label: "Premium Economy", badgeBg: "bg-amber-500/10" },
+  business:        { bg: "bg-indigo-500/10",   text: "text-indigo-700",   border: "border-indigo-400/30",    label: "Business",        badgeBg: "bg-indigo-500/10" },
+  first:           { bg: "bg-yellow-500/10",   text: "text-yellow-700",   border: "border-yellow-500/30",    label: "First",           badgeBg: "bg-yellow-500/10" },
+};
+
+function getCabinStyle(cabinClass: string) {
+  return CABIN_STYLES[cabinClass] ?? CABIN_STYLES.economy;
+}
+
 function formatCabinClass(cabinClass: string): string {
-  return cabinClass.replace(/_/g, " ");
+  return getCabinStyle(cabinClass).label;
 }
 
 function formatFareName(name: string | null, cabinClass: string): string {
@@ -29,36 +42,38 @@ function formatFareName(name: string | null, cabinClass: string): string {
   return name;
 }
 
-function getCarryOnLabel(variant: FareVariant): string {
-  const bag = variant.baggageDetails;
-  if (!bag.carryOnIncluded) return "No carry-on bag";
-  const qty = bag.carryOnQuantity > 0 ? `${bag.carryOnQuantity} carry-on bag${bag.carryOnQuantity > 1 ? "s" : ""}` : "Carry-on bag";
-  const weight = bag.carryOnWeightKg ? ` · ${bag.carryOnWeightKg}kg` : bag.carryOnWeightLb ? ` · ${bag.carryOnWeightLb}lb` : "";
-  return `${qty}${weight}`;
+/* ── Baggage / condition helpers ────────────────────── */
+function getCarryOnLabel(v: FareVariant): string {
+  const b = v.baggageDetails;
+  if (!b.carryOnIncluded) return "No carry-on bag";
+  const qty = b.carryOnQuantity > 0 ? `${b.carryOnQuantity} carry-on bag${b.carryOnQuantity > 1 ? "s" : ""}` : "Carry-on bag";
+  const w = b.carryOnWeightKg ? ` · ${b.carryOnWeightKg}kg` : b.carryOnWeightLb ? ` · ${b.carryOnWeightLb}lb` : "";
+  return `${qty}${w}`;
 }
 
-function getCheckedBagLabel(variant: FareVariant): string {
-  const bag = variant.baggageDetails;
-  if (!bag.checkedBagsIncluded) return "No checked bag";
-  const qty = bag.checkedBagQuantity > 0 ? `${bag.checkedBagQuantity} checked bag${bag.checkedBagQuantity > 1 ? "s" : ""}` : "Checked bag";
-  const weight = bag.checkedBagWeightKg ? ` · ${bag.checkedBagWeightKg}kg` : bag.checkedBagWeightLb ? ` · ${bag.checkedBagWeightLb}lb` : "";
-  return `${qty}${weight}`;
+function getCheckedBagLabel(v: FareVariant): string {
+  const b = v.baggageDetails;
+  if (!b.checkedBagsIncluded) return "No checked bag";
+  const qty = b.checkedBagQuantity > 0 ? `${b.checkedBagQuantity} checked bag${b.checkedBagQuantity > 1 ? "s" : ""}` : "Checked bag";
+  const w = b.checkedBagWeightKg ? ` · ${b.checkedBagWeightKg}kg` : b.checkedBagWeightLb ? ` · ${b.checkedBagWeightLb}lb` : "";
+  return `${qty}${w}`;
 }
 
-function getChangeLabel(variant: FareVariant): string {
-  const cond = variant.conditions;
-  if (!cond.changeable) return "Changes not allowed";
-  if (!cond.changePenalty || cond.changePenalty === 0) return "Changes allowed";
-  return `Change fee ${cond.penaltyCurrency} ${cond.changePenalty}`;
+function getChangeLabel(v: FareVariant): string {
+  const c = v.conditions;
+  if (!c.changeable) return "Not changeable";
+  if (!c.changePenalty || c.changePenalty === 0) return "Changeable";
+  return `Change fee ${c.penaltyCurrency} ${c.changePenalty}`;
 }
 
-function getRefundLabel(variant: FareVariant): string {
-  const cond = variant.conditions;
-  if (!cond.refundable) return "Refund not allowed";
-  if (!cond.refundPenalty || cond.refundPenalty === 0) return "Refund allowed";
-  return `Refund fee ${cond.penaltyCurrency} ${cond.refundPenalty}`;
+function getRefundLabel(v: FareVariant): string {
+  const c = v.conditions;
+  if (!c.refundable) return "Not refundable";
+  if (!c.refundPenalty || c.refundPenalty === 0) return "Refundable";
+  return `Refund fee ${c.penaltyCurrency} ${c.refundPenalty}`;
 }
 
+/* ── Feature row ────────────────────────────────────── */
 function FeatureRow({ included, label }: { included: boolean; label: string }) {
   return (
     <div className="flex items-start gap-2 text-[11px] leading-tight">
@@ -72,41 +87,47 @@ function FeatureRow({ included, label }: { included: boolean; label: string }) {
   );
 }
 
+/* ── Main component ─────────────────────────────────── */
 export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardProps) {
   const variants = offer.fareVariants;
   const [selectedId, setSelectedId] = useState<string>(offer.id);
+  const [cabinFilter, setCabinFilter] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
-  const cheapestPrice = useMemo(
-    () => Math.min(...(variants?.map((variant) => variant.price) ?? [offer.price])),
-    [offer.price, variants]
+  // Unique cabin classes
+  const cabinClasses = useMemo(
+    () => [...new Set(variants?.map((v) => v.cabinClass) ?? [])],
+    [variants]
+  );
+  const hasMultipleCabins = cabinClasses.length > 1;
+
+  const filteredVariants = useMemo(
+    () => (cabinFilter ? variants?.filter((v) => v.cabinClass === cabinFilter) : variants) ?? [],
+    [variants, cabinFilter]
   );
 
-  useEffect(() => {
-    setSelectedId(offer.id);
-  }, [offer.id]);
+  const cheapestPrice = useMemo(
+    () => (filteredVariants.length ? Math.min(...filteredVariants.map((v) => v.price)) : 0),
+    [filteredVariants]
+  );
+
+  useEffect(() => { setSelectedId(offer.id); }, [offer.id]);
 
   useEffect(() => {
     const node = scrollerRef.current;
     if (!node) return;
-
-    const updateScrollState = () => {
-      const maxScrollLeft = node.scrollWidth - node.clientWidth;
+    const update = () => {
+      const max = node.scrollWidth - node.clientWidth;
       setCanScrollLeft(node.scrollLeft > 4);
-      setCanScrollRight(node.scrollLeft < maxScrollLeft - 4);
+      setCanScrollRight(node.scrollLeft < max - 4);
     };
-
-    updateScrollState();
-    node.addEventListener("scroll", updateScrollState, { passive: true });
-    window.addEventListener("resize", updateScrollState);
-
-    return () => {
-      node.removeEventListener("scroll", updateScrollState);
-      window.removeEventListener("resize", updateScrollState);
-    };
-  }, [variants]);
+    update();
+    node.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => { node.removeEventListener("scroll", update); window.removeEventListener("resize", update); };
+  }, [filteredVariants]);
 
   if (!variants || variants.length <= 1) return null;
 
@@ -115,15 +136,15 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
     onSelectVariant(variant);
   };
 
-  const scrollByCards = (direction: "left" | "right") => {
+  const scrollByCards = (dir: "left" | "right") => {
     const node = scrollerRef.current;
     if (!node) return;
-    const amount = Math.max(node.clientWidth * 0.78, 220);
-    node.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" });
+    node.scrollBy({ left: dir === "left" ? -Math.max(node.clientWidth * 0.78, 220) : Math.max(node.clientWidth * 0.78, 220), behavior: "smooth" });
   };
 
   return (
     <section aria-label="Fare options">
+      {/* Header */}
       <div className="mb-2.5 flex items-center gap-2">
         <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[hsl(var(--flights))]/10">
           <Ticket className="h-3.5 w-3.5 text-[hsl(var(--flights))]" />
@@ -134,15 +155,55 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
         </Badge>
       </div>
 
+      {/* Cabin class filter chips (only when multiple cabin classes exist) */}
+      {hasMultipleCabins && (
+        <div className="mb-2.5 flex gap-1.5 overflow-x-auto pb-1">
+          <button
+            type="button"
+            onClick={() => setCabinFilter(null)}
+            className={cn(
+              "shrink-0 rounded-full border px-3 py-1 text-[10px] font-semibold transition-colors active:scale-95",
+              !cabinFilter
+                ? "border-[hsl(var(--flights))] bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))]"
+                : "border-border/30 bg-background text-muted-foreground hover:border-border/60"
+            )}
+          >
+            All ({variants.length})
+          </button>
+          {cabinClasses.map((cabin) => {
+            const style = getCabinStyle(cabin);
+            const count = variants.filter((v) => v.cabinClass === cabin).length;
+            const isActive = cabinFilter === cabin;
+            return (
+              <button
+                key={cabin}
+                type="button"
+                onClick={() => setCabinFilter(isActive ? null : cabin)}
+                className={cn(
+                  "shrink-0 rounded-full border px-3 py-1 text-[10px] font-semibold transition-colors active:scale-95",
+                  isActive
+                    ? cn(style.border, style.bg, style.text)
+                    : "border-border/30 bg-background text-muted-foreground hover:border-border/60"
+                )}
+              >
+                {style.label} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Scrollable fare cards */}
       <div
         ref={scrollerRef}
         className="flex gap-2.5 overflow-x-auto pb-2.5 pr-3 snap-x snap-proximity"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
-        {variants.map((variant, index) => {
+        {filteredVariants.map((variant, index) => {
           const isSelected = variant.id === selectedId;
           const fareName = formatFareName(variant.fareBrandName, variant.cabinClass);
           const priceDelta = variant.price - cheapestPrice;
+          const cabinStyle = getCabinStyle(variant.cabinClass);
 
           return (
             <motion.div
@@ -169,12 +230,13 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                 {isSelected && <div className="absolute left-0 right-0 top-0 h-[3px] bg-[hsl(var(--flights))]" />}
 
                 <CardContent className="flex h-full flex-col p-3.5">
+                  {/* Cabin class badge + fare name */}
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                        {formatCabinClass(variant.cabinClass)}
-                      </p>
-                      <p className="mt-0.5 text-lg font-extrabold leading-none tracking-tight">{fareName}</p>
+                      <Badge className={cn("mb-1.5 text-[9px] font-bold uppercase tracking-wider border", cabinStyle.badgeBg, cabinStyle.text, cabinStyle.border)}>
+                        {cabinStyle.label}
+                      </Badge>
+                      <p className="text-lg font-extrabold leading-none tracking-tight">{fareName}</p>
                     </div>
 
                     <AnimatePresence initial={false}>
@@ -191,27 +253,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                     </AnimatePresence>
                   </div>
 
-                  <div className="mb-3 flex items-end justify-between gap-3 border-b border-border/20 pb-3">
-                    <div>
-                      <p className="text-[9px] text-muted-foreground">Total amount from</p>
-                      <p className={cn(
-                        "mt-0.5 text-[1.95rem] font-extrabold leading-none tabular-nums tracking-tight",
-                        isSelected ? "text-[hsl(var(--flights))]" : "text-foreground"
-                      )}>
-                        US${variant.price.toFixed(2)}
-                      </p>
-                    </div>
-                    {priceDelta > 0 ? (
-                      <Badge variant="outline" className="border-border/30 bg-muted/20 text-[9px] font-semibold">
-                        +US${priceDelta.toFixed(2)}
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border border-[hsl(var(--flights))]/20 text-[9px] font-semibold">
-                        Lowest fare
-                      </Badge>
-                    )}
-                  </div>
-
+                  {/* Features */}
                   <div className="flex-1 space-y-2.5">
                     <FeatureRow included={variant.conditions.changeable} label={getChangeLabel(variant)} />
                     <FeatureRow included={variant.conditions.refundable} label={getRefundLabel(variant)} />
@@ -219,11 +261,34 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                     <FeatureRow included={variant.baggageDetails.checkedBagsIncluded} label={getCheckedBagLabel(variant)} />
                   </div>
 
+                  {/* Baggage summary */}
                   <div className="mt-3 rounded-xl border border-border/25 bg-muted/20 px-2.5 py-2">
                     <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Duffel baggage summary</p>
                     <p className="mt-1 text-[11px] leading-tight text-foreground/90">
                       {variant.baggageIncluded || "Baggage allowance varies by carrier."}
                     </p>
+                  </div>
+
+                  {/* Price */}
+                  <div className="mt-3 border-t border-border/20 pt-3">
+                    <p className="text-[9px] text-muted-foreground">total amount from</p>
+                    <div className="mt-0.5 flex items-end justify-between gap-2">
+                      <p className={cn(
+                        "text-[1.6rem] font-extrabold leading-none tabular-nums tracking-tight",
+                        isSelected ? "text-[hsl(var(--flights))]" : "text-foreground"
+                      )}>
+                        US${variant.price.toFixed(2)}
+                      </p>
+                      {priceDelta > 0 ? (
+                        <Badge variant="outline" className="border-border/30 bg-muted/20 text-[9px] font-semibold mb-0.5">
+                          +US${priceDelta.toFixed(2)}
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border border-[hsl(var(--flights))]/20 text-[9px] font-semibold mb-0.5">
+                          Lowest fare
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -232,6 +297,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
         })}
       </div>
 
+      {/* Scroll controls */}
       <div className="mt-1 flex items-center justify-between">
         <p className="text-[10px] text-muted-foreground">Swipe or use arrows to compare fare brands.</p>
         <div className="flex items-center gap-1.5">
