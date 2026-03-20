@@ -130,13 +130,36 @@ const FlightCheckout = () => {
     createPaymentIntent();
   }, [triggerValidation, toast, createPaymentIntent]);
 
+  const [isConfirmingBooking, setIsConfirmingBooking] = useState(false);
+
   const handlePaymentSuccess = useCallback(async (paymentIntentId: string) => {
-    toast({
-      title: "Payment Successful!",
-      description: "Your flight booking is confirmed. Redirecting...",
-    });
-    // Navigate to confirmation page
-    navigate(`/flights/confirmation/${bookingId}?success=true`, { replace: true });
+    // Card is authorized — now confirm booking via Duffel + capture payment
+    setIsConfirmingBooking(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('confirm-flight-payment', {
+        body: { booking_id: bookingId, payment_intent_id: paymentIntentId },
+      });
+
+      if (error) throw new Error(error.message || 'Booking confirmation failed');
+      if (!data?.ok) throw new Error(data?.error || 'Booking failed. Your card was not charged.');
+
+      toast({
+        title: "Booking Confirmed!",
+        description: "Your flight has been booked successfully.",
+      });
+      navigate(`/flights/confirmation/${bookingId}?success=true`, { replace: true });
+    } catch (err: any) {
+      console.error("Booking confirmation error:", err);
+      toast({
+        title: "Booking Failed",
+        description: err?.message || "Your card was not charged. Please try again.",
+        variant: "destructive",
+      });
+      setClientSecret(null);
+      intentCreated.current = false;
+    } finally {
+      setIsConfirmingBooking(false);
+    }
   }, [bookingId, navigate, toast]);
 
   const handlePaymentCancel = useCallback(() => {
@@ -210,8 +233,15 @@ const FlightCheckout = () => {
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6"
+              className="mb-6 relative"
             >
+              {isConfirmingBooking && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/90 backdrop-blur-sm rounded-2xl">
+                  <Loader2 className="h-6 w-6 animate-spin text-[hsl(var(--flights))]" />
+                  <p className="text-sm font-semibold">Confirming your booking…</p>
+                  <p className="text-xs text-muted-foreground">Your card has been authorized. Finalizing with the airline.</p>
+                </div>
+              )}
               <FlightInlinePaymentForm
                 clientSecret={clientSecret}
                 totalCents={totalCents}

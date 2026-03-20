@@ -222,6 +222,7 @@ Deno.serve(async (req) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalCents,
       currency: currency.toLowerCase(),
+      capture_method: "manual",
       customer: customerId,
       metadata: {
         type: "flight",
