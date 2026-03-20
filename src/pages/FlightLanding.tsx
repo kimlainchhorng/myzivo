@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Plane, Shield, Star, TrendingUp, ArrowRight, Sparkles,
   Globe, Clock, Headphones, CreditCard
@@ -40,6 +40,22 @@ const whyZivo = [
 
 /* ─── Popular Routes Grid ─── */
 function PopularRoutesSection({ className }: { className?: string }) {
+  const navigate = useNavigate();
+
+  const handleRouteClick = (from: string, to: string) => {
+    const today = new Date();
+    const departureDate = new Date(today);
+    departureDate.setDate(today.getDate() + 7);
+    const returnDate = new Date(today);
+    returnDate.setDate(today.getDate() + 14);
+
+    const formatDate = (date: Date) => date.toISOString().split("T")[0];
+
+    navigate(
+      `/flights/results?origin=${from}&destination=${to}&departureDate=${formatDate(departureDate)}&returnDate=${formatDate(returnDate)}&adults=1&cabinClass=economy`
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -56,9 +72,11 @@ function PopularRoutesSection({ className }: { className?: string }) {
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
         {popularRoutes.map((route) => (
-          <div
+          <button
             key={`${route.from}-${route.to}`}
-            className="bg-card/80 backdrop-blur-sm border border-border/40 rounded-xl p-3 hover:border-[hsl(var(--flights))]/30 transition-all group"
+            type="button"
+            onClick={() => handleRouteClick(route.from, route.to)}
+            className="bg-card/80 backdrop-blur-sm border border-border/40 rounded-xl p-3 hover:border-[hsl(var(--flights))]/30 transition-all group text-left active:scale-[0.98] touch-manipulation"
           >
             <div className="flex items-center gap-1 text-xs font-semibold text-foreground">
               <span>{route.from}</span>
@@ -71,7 +89,7 @@ function PopularRoutesSection({ className }: { className?: string }) {
             <p className="text-xs font-bold text-[hsl(var(--flights))] mt-1">
               from {route.price}*
             </p>
-          </div>
+          </button>
         ))}
       </div>
       <p className="text-[9px] text-muted-foreground mt-2 text-center">
