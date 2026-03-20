@@ -1,12 +1,12 @@
 /**
- * FlightLegCard — Shows a single leg (outbound OR return) for step-by-step selection
+ * FlightLegCard — 3D Spatial UI for step-by-step flight selection
  */
 
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Clock, ChevronRight, ChevronDown, Briefcase, ArrowRight, Repeat, Plane, RefreshCw, ShieldCheck, Luggage, PackageCheck, CheckCircle2
+  Clock, ChevronRight, ChevronDown, Briefcase, ArrowRight, Repeat, Plane, RefreshCw, Luggage, PackageCheck, CheckCircle2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
@@ -15,17 +15,11 @@ import { cn } from "@/lib/utils";
 
 export interface LegGroup {
   fingerprint: string;
-  /** The cheapest offer in this group */
   representativeOffer: DuffelOffer;
-  /** All offers sharing this leg */
   offers: DuffelOffer[];
-  /** Segments for this specific leg */
   segments: DuffelSegment[];
-  /** Pre-computed summary */
   summary: LegSummary;
-  /** Lowest price across all offers in this group */
   fromPrice: number;
-  /** Number of fare options */
   fareCount: number;
 }
 
@@ -60,8 +54,8 @@ function SegmentRow({ seg, isLast }: { seg: DuffelSegment; isLast: boolean }) {
   return (
     <div className="relative pl-5">
       <div className="absolute left-1.5 top-0 bottom-0 flex flex-col items-center">
-        <div className="w-2 h-2 rounded-full bg-[hsl(var(--flights))] border border-card shrink-0 mt-1" />
-        {!isLast && <div className="flex-1 w-px bg-border/40 my-0.5" />}
+        <div className="w-2.5 h-2.5 rounded-full bg-[hsl(var(--flights))] border-2 border-card shrink-0 mt-1" style={{ boxShadow: "0 0 6px hsl(var(--flights)/0.3)" }} />
+        {!isLast && <div className="flex-1 w-px bg-[hsl(var(--flights)/0.2)] my-0.5" />}
       </div>
       <div className="pb-3">
         <div className="flex items-center gap-2 mb-1">
@@ -128,224 +122,273 @@ export default function FlightLegCard({
 
   const airlineName = segments[0]?.marketingCarrier || representativeOffer.airline;
   const flightNumbers = segments.map(s => s.flightNumber).join(" · ");
-
   const stopLabel = summary.stops === 0 ? "Nonstop" : `${summary.stops} stop${summary.stops > 1 ? "s" : ""}`;
 
+  const bag = representativeOffer.baggageDetails;
+  const weightLabel = (kg: number | null, lb: number | null) => {
+    if (kg && lb) return `${kg}kg · ${lb}lb`;
+    if (kg) return `${kg}kg`;
+    if (lb) return `${lb}lb`;
+    return null;
+  };
+  const checkedWeight = bag ? weightLabel(bag.checkedBagWeightKg, bag.checkedBagWeightLb) : null;
+  const carryOnWeight = bag ? weightLabel(bag.carryOnWeightKg, bag.carryOnWeightLb) : null;
+
   return (
-    <div
-      className={cn(
-        "rounded-2xl group overflow-hidden transition-all",
-        isTop ? "ring-1 ring-[hsl(var(--flights)/0.25)]" : ""
-      )}
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: Math.min(index * 0.06, 0.3), ease: [0.16, 1, 0.3, 1] }}
+      className={cn("rounded-2xl group overflow-hidden", isTop ? "ring-1 ring-[hsl(var(--flights)/0.2)]" : "")}
       style={{
         background: "hsl(var(--card))",
         boxShadow: isTop
-          ? "0 2px 0 0 hsl(var(--flights)/0.06), 0 4px 16px -4px hsl(var(--foreground)/0.07), 0 12px 32px -8px hsl(var(--foreground)/0.04), inset 0 1px 0 0 hsl(0 0% 100%/0.05)"
-          : "0 1px 0 0 hsl(var(--border)/0.1), 0 2px 8px -2px hsl(var(--foreground)/0.05), inset 0 1px 0 0 hsl(0 0% 100%/0.04)",
+          ? `0 1px 0 0 hsl(var(--flights)/0.05),
+             0 6px 24px -6px hsl(var(--foreground)/0.08),
+             0 16px 48px -12px hsl(var(--foreground)/0.05),
+             inset 0 1px 0 0 hsl(0 0% 100%/0.06)`
+          : `0 1px 0 0 hsl(var(--border)/0.08),
+             0 3px 12px -3px hsl(var(--foreground)/0.05),
+             0 8px 28px -8px hsl(var(--foreground)/0.03),
+             inset 0 1px 0 0 hsl(0 0% 100%/0.05)`,
       }}
     >
-      {/* Top badge strip */}
+      {/* Badge strip */}
       {(isTop || isLowest || isFastest) && (
-        <div className="flex gap-1.5 px-3 pt-2.5 sm:px-4 sm:pt-3">
+        <div className="flex gap-1.5 px-4 pt-3">
           {badge && (
-            <Badge className={cn("text-[9px] font-bold px-2.5 py-0.5 border rounded-lg shadow-sm", badge.className)}>
+            <Badge
+              className={cn("text-[9px] font-bold px-2.5 py-0.5 border rounded-lg", badge.className)}
+              style={{ boxShadow: "0 1px 4px -1px hsl(var(--foreground)/0.06)" }}
+            >
               {badge.label}
             </Badge>
           )}
           {isLowest && !isTop && (
-            <Badge className="text-[9px] font-bold px-2.5 py-0.5 border rounded-lg shadow-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25">
+            <Badge className="text-[9px] font-bold px-2.5 py-0.5 border rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25" style={{ boxShadow: "0 1px 4px -1px hsl(var(--foreground)/0.06)" }}>
               🔥 Cheapest
             </Badge>
           )}
           {isFastest && !isTop && (
-            <Badge className="text-[9px] font-bold px-2.5 py-0.5 border rounded-lg shadow-sm bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25">
+            <Badge className="text-[9px] font-bold px-2.5 py-0.5 border rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25" style={{ boxShadow: "0 1px 4px -1px hsl(var(--foreground)/0.06)" }}>
               ⚡ Fastest
             </Badge>
           )}
         </div>
       )}
 
-      <div className="px-3 py-2.5 sm:px-4 sm:py-3.5">
-        {/* Row 1: Airline + Price */}
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="relative shrink-0" style={{ width: carrierCodes.length > 1 ? 58 : 44, height: 44 }}>
-              <AirlineLogo iataCode={carrierCodes[0]} airlineName={airlineName} size={44} className="border border-border/20 bg-card/80 shadow-sm" />
+      <div className="px-4 py-3">
+        {/* Airline + Price */}
+        <div className="flex items-center justify-between gap-3 mb-3.5">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="relative shrink-0 rounded-xl overflow-hidden"
+              style={{
+                width: carrierCodes.length > 1 ? 54 : 44,
+                height: 44,
+              }}
+            >
+              <AirlineLogo
+                iataCode={carrierCodes[0]}
+                airlineName={airlineName}
+                size={44}
+                className="border border-border/15 bg-card/80 shadow-md"
+              />
               {carrierCodes.length > 1 && (
-                <AirlineLogo iataCode={carrierCodes[1]} airlineName="" size={30} className="absolute bottom-0 right-0 border-2 border-card bg-card shadow-sm" />
+                <AirlineLogo iataCode={carrierCodes[1]} airlineName="" size={28} className="absolute bottom-0 right-0 border-2 border-card bg-card shadow-sm" />
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-[13px] sm:text-sm font-semibold leading-tight truncate">{airlineName}</p>
-              <p className="text-[10px] text-muted-foreground leading-tight">{flightNumbers}</p>
+              <p className="text-[13px] font-bold leading-tight truncate">{airlineName}</p>
+              <p className="text-[10px] text-muted-foreground/70 leading-tight">{flightNumbers}</p>
             </div>
           </div>
 
-          <div className="text-right shrink-0">
-            <p className="text-[9px] text-muted-foreground">from</p>
-            <p className="text-[22px] sm:text-2xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none tracking-tight">
+          <div
+            className="text-right shrink-0 px-3 py-1.5 rounded-xl"
+            style={{
+              background: "hsl(var(--flights)/0.04)",
+              boxShadow: "inset 0 1px 0 0 hsl(0 0% 100%/0.04), 0 1px 3px -1px hsl(var(--flights)/0.06)",
+            }}
+          >
+            <p className="text-[8px] text-muted-foreground font-medium uppercase tracking-wider">from</p>
+            <p className="text-xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none tracking-tight">
               ${Math.round(fromPrice)}
             </p>
             {fareCount > 1 && (
-              <p className="text-[9px] text-muted-foreground mt-0.5">
-                {fareCount} fare options
-              </p>
+              <p className="text-[8px] text-muted-foreground mt-0.5">{fareCount} fare options</p>
             )}
           </div>
         </div>
 
         {/* Route timeline */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <div className="text-left shrink-0 min-w-[52px] sm:min-w-[58px]">
-            <p className="text-[19px] sm:text-xl font-bold tabular-nums leading-none">{summary.depTime}</p>
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{summary.depCode}</p>
+        <div
+          className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
+          style={{
+            background: "hsl(var(--muted)/0.3)",
+            boxShadow: "inset 0 1px 2px 0 hsl(var(--foreground)/0.03)",
+          }}
+        >
+          <div className="text-left shrink-0 min-w-[50px]">
+            <p className="text-lg font-extrabold tabular-nums leading-none">{summary.depTime}</p>
+            <p className="text-[10px] text-muted-foreground font-semibold mt-1">{summary.depCode}</p>
           </div>
 
           <div className="flex flex-col items-center flex-1 py-0.5 min-w-0">
-            <span className="text-[9px] sm:text-[10px] text-muted-foreground font-medium flex items-center gap-0.5 whitespace-nowrap">
-              <Clock className="w-2.5 h-2.5 shrink-0" />
+            <span className="text-[9px] text-muted-foreground font-medium flex items-center gap-0.5 whitespace-nowrap">
+              <Clock className="w-2.5 h-2.5 shrink-0 opacity-60" />
               {summary.duration}
             </span>
-            <div className="w-full h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-border/50 to-[hsl(var(--flights))] relative my-1 rounded-full">
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full bg-[hsl(var(--flights))] border-[1.5px] border-card" />
-              {summary.stopDetails.map((stop, i) => (
+            <div className="w-full h-[3px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--flights)/0.3)] to-[hsl(var(--flights))] relative my-1.5 rounded-full"
+              style={{ boxShadow: "0 1px 4px -1px hsl(var(--flights)/0.2)" }}
+            >
+              {/* Departure dot */}
+              <div
+                className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[hsl(var(--flights))] border-2 border-card"
+                style={{ boxShadow: "0 0 6px hsl(var(--flights)/0.3)" }}
+              />
+              {/* Stop dots */}
+              {summary.stopDetails.map((_, i) => (
                 <div
                   key={i}
-                  className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center"
+                  className="absolute top-1/2 -translate-y-1/2"
                   style={{ left: `${((i + 1) / (summary.stopDetails.length + 1)) * 100}%`, transform: 'translate(-50%, -50%)' }}
                 >
-                  <div className="w-[6px] h-[6px] rounded-full bg-muted-foreground/60 border border-card" />
+                  <div className="w-[7px] h-[7px] rounded-full bg-amber-500 border-[1.5px] border-card" style={{ boxShadow: "0 0 4px hsl(38 92% 50%/0.3)" }} />
                 </div>
               ))}
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full bg-[hsl(var(--flights))] border-[1.5px] border-card" />
+              {/* Plane icon on the line */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <Plane className="w-3 h-3 text-[hsl(var(--flights))] -rotate-45 drop-shadow-sm" />
+              </div>
+              {/* Arrival dot */}
+              <div
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[hsl(var(--flights))] border-2 border-card"
+                style={{ boxShadow: "0 0 6px hsl(var(--flights)/0.3)" }}
+              />
             </div>
             <span className={cn(
-              "text-[9px] sm:text-[10px] font-semibold leading-tight",
-              summary.stops === 0 ? "text-primary" : "text-muted-foreground"
+              "text-[9px] font-bold leading-tight",
+              summary.stops === 0 ? "text-[hsl(var(--flights))]" : "text-amber-600 dark:text-amber-400"
             )}>
               {stopLabel}
             </span>
             {summary.stopDetails.length > 0 && (
-              <span className="text-[8px] text-muted-foreground/70 flex items-center gap-0.5 mt-0.5 truncate max-w-full">
+              <span className="text-[8px] text-muted-foreground/60 flex items-center gap-0.5 mt-0.5 truncate max-w-full">
                 {summary.stopDetails.map((s, i) => (
                   <span key={i} className="flex items-center gap-0.5">
                     {i > 0 && <ArrowRight className="w-1.5 h-1.5 shrink-0" />}
                     <span>{s.code}</span>
-                    {s.layoverDuration && <span className="text-muted-foreground/50">({s.layoverDuration})</span>}
+                    {s.layoverDuration && <span className="opacity-50">({s.layoverDuration})</span>}
                   </span>
                 ))}
               </span>
             )}
           </div>
 
-          <div className="text-right shrink-0 min-w-[52px] sm:min-w-[58px]">
-            <p className="text-[19px] sm:text-xl font-bold tabular-nums leading-none">
+          <div className="text-right shrink-0 min-w-[50px]">
+            <p className="text-lg font-extrabold tabular-nums leading-none">
               {summary.arrTime}
               {summary.dayDiff > 0 && (
-                <sup className="text-[10px] font-semibold text-muted-foreground ml-0.5">+{summary.dayDiff}</sup>
+                <sup className="text-[9px] font-bold text-amber-500 ml-0.5">+{summary.dayDiff}</sup>
               )}
             </p>
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{summary.arrCode}</p>
+            <p className="text-[10px] text-muted-foreground font-semibold mt-1">{summary.arrCode}</p>
           </div>
         </div>
 
-        {/* Baggage amenities row */}
-        {(() => {
-          const bag = representativeOffer.baggageDetails;
-          const weightLabel = (kg: number | null, lb: number | null) => {
-            if (kg && lb) return `${kg} kg / ${lb} lb`;
-            if (kg) return `${kg} kg`;
-            if (lb) return `${lb} lb`;
-            return null;
-          };
-          const checkedWeight = bag ? weightLabel(bag.checkedBagWeightKg, bag.checkedBagWeightLb) : null;
-          const carryOnWeight = bag ? weightLabel(bag.carryOnWeightKg, bag.carryOnWeightLb) : null;
+        {/* Baggage amenities */}
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {/* Personal item */}
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/6 border border-emerald-500/15"
+            style={{ boxShadow: "0 1px 3px -1px hsl(142 71% 45%/0.08), inset 0 1px 0 0 hsl(0 0% 100%/0.04)" }}
+          >
+            <div className="relative shrink-0">
+              <Briefcase style={{ width: 14, height: 14 }} className="text-emerald-600 dark:text-emerald-400" />
+              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500 absolute -bottom-0.5 -right-1.5 bg-card rounded-full" />
+            </div>
+            <span className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">Personal item</span>
+          </div>
 
-          return (
-            <div className="flex items-center gap-2.5 mt-3 pt-2.5 border-t border-border/15 flex-wrap">
-              {/* Personal item — always included */}
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
-                <div className="relative shrink-0">
-                  <Briefcase style={{ width: 15, height: 15 }} className="text-emerald-600 dark:text-emerald-400" />
-                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500 absolute -bottom-0.5 -right-1 bg-card rounded-full" />
-                </div>
-                <span className="text-[9px] font-medium text-emerald-700 dark:text-emerald-300">Personal item</span>
-              </div>
-
-              {/* Carry-on */}
-              <div className={cn(
-                "flex items-center gap-1.5 px-2 py-1 rounded-lg border",
-                bag?.carryOnIncluded
-                  ? "bg-emerald-500/5 border-emerald-500/15"
-                  : "bg-muted/30 border-border/20 opacity-50"
-              )}>
-                <div className="relative shrink-0">
-                  <PackageCheck style={{ width: 15, height: 15 }} className={bag?.carryOnIncluded ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"} />
-                  {bag?.carryOnIncluded && (
-                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500 absolute -bottom-0.5 -right-1 bg-card rounded-full" />
-                  )}
-                </div>
-                <div className="flex flex-col">
-                  <span className={cn("text-[9px] font-medium", bag?.carryOnIncluded ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground")}>
-                    Carry-on{bag?.carryOnQuantity && bag.carryOnQuantity > 1 ? ` ×${bag.carryOnQuantity}` : ""}
-                  </span>
-                  {bag?.carryOnIncluded && carryOnWeight && (
-                    <span className="text-[8px] text-muted-foreground leading-tight">{carryOnWeight}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Checked bag */}
-              <div className={cn(
-                "flex items-center gap-1.5 px-2 py-1 rounded-lg border",
-                bag?.checkedBagsIncluded
-                  ? "bg-emerald-500/5 border-emerald-500/15"
-                  : "bg-muted/30 border-border/20 opacity-50"
-              )}>
-                <div className="relative shrink-0">
-                  <Luggage style={{ width: 15, height: 15 }} className={bag?.checkedBagsIncluded ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"} />
-                  {bag?.checkedBagsIncluded && (
-                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500 absolute -bottom-0.5 -right-1 bg-card rounded-full" />
-                  )}
-                </div>
-                <div className="flex flex-col">
-                  <span className={cn("text-[9px] font-medium", bag?.checkedBagsIncluded ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground")}>
-                    {bag?.checkedBagsIncluded
-                      ? `Checked ×${bag.checkedBagQuantity}`
-                      : "No checked bag"}
-                  </span>
-                  {bag?.checkedBagsIncluded && checkedWeight && (
-                    <span className="text-[8px] text-muted-foreground leading-tight">{checkedWeight}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Refundable */}
-              {representativeOffer.isRefundable && (
-                <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
-                  <RefreshCw style={{ width: 13, height: 13 }} className="text-emerald-600 dark:text-emerald-400" />
-                  <span className="text-[9px] font-medium text-emerald-700 dark:text-emerald-300">Refundable</span>
-                </div>
+          {/* Carry-on */}
+          <div
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border",
+              bag?.carryOnIncluded
+                ? "bg-emerald-500/6 border-emerald-500/15"
+                : "bg-muted/20 border-border/15 opacity-45"
+            )}
+            style={bag?.carryOnIncluded ? { boxShadow: "0 1px 3px -1px hsl(142 71% 45%/0.08), inset 0 1px 0 0 hsl(0 0% 100%/0.04)" } : { boxShadow: "inset 0 1px 2px 0 hsl(var(--foreground)/0.02)" }}
+          >
+            <div className="relative shrink-0">
+              <PackageCheck style={{ width: 14, height: 14 }} className={bag?.carryOnIncluded ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"} />
+              {bag?.carryOnIncluded && <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500 absolute -bottom-0.5 -right-1.5 bg-card rounded-full" />}
+            </div>
+            <div className="flex flex-col leading-none">
+              <span className={cn("text-[9px] font-semibold", bag?.carryOnIncluded ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground")}>
+                Carry-on{bag?.carryOnQuantity && bag.carryOnQuantity > 1 ? ` ×${bag.carryOnQuantity}` : ""}
+              </span>
+              {bag?.carryOnIncluded && carryOnWeight && (
+                <span className="text-[7.5px] text-muted-foreground/70 mt-0.5">{carryOnWeight}</span>
               )}
             </div>
-          );
-        })()}
+          </div>
+
+          {/* Checked bag */}
+          <div
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border",
+              bag?.checkedBagsIncluded
+                ? "bg-emerald-500/6 border-emerald-500/15"
+                : "bg-muted/20 border-border/15 opacity-45"
+            )}
+            style={bag?.checkedBagsIncluded ? { boxShadow: "0 1px 3px -1px hsl(142 71% 45%/0.08), inset 0 1px 0 0 hsl(0 0% 100%/0.04)" } : { boxShadow: "inset 0 1px 2px 0 hsl(var(--foreground)/0.02)" }}
+          >
+            <div className="relative shrink-0">
+              <Luggage style={{ width: 14, height: 14 }} className={bag?.checkedBagsIncluded ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"} />
+              {bag?.checkedBagsIncluded && <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500 absolute -bottom-0.5 -right-1.5 bg-card rounded-full" />}
+            </div>
+            <div className="flex flex-col leading-none">
+              <span className={cn("text-[9px] font-semibold", bag?.checkedBagsIncluded ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground")}>
+                {bag?.checkedBagsIncluded ? `Checked ×${bag.checkedBagQuantity}` : "No checked bag"}
+              </span>
+              {bag?.checkedBagsIncluded && checkedWeight && (
+                <span className="text-[7.5px] text-muted-foreground/70 mt-0.5">{checkedWeight}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Refundable */}
+          {representativeOffer.isRefundable && (
+            <div
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-500/6 border border-emerald-500/15"
+              style={{ boxShadow: "0 1px 3px -1px hsl(142 71% 45%/0.08), inset 0 1px 0 0 hsl(0 0% 100%/0.04)" }}
+            >
+              <RefreshCw style={{ width: 12, height: 12 }} className="text-emerald-600 dark:text-emerald-400" />
+              <span className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">Refundable</span>
+            </div>
+          )}
+        </div>
 
         {/* CTA */}
-        <div className="flex items-center justify-end gap-2 mt-2">
+        <div className="flex items-center justify-between mt-3.5">
+          <p className="text-[10px] text-muted-foreground/60 capitalize font-medium">{label} flight</p>
           <Button
             size="sm"
             className={cn(
-              "h-9 px-5 text-[12px] font-bold active:scale-[0.97] transition-all gap-1 shrink-0 rounded-xl",
+              "h-10 px-6 text-[12px] font-bold active:scale-[0.97] transition-all gap-1.5 shrink-0 rounded-xl",
               "bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 text-primary-foreground"
             )}
             style={{
-              boxShadow: "0 2px 8px -2px hsl(var(--flights)/0.3), 0 1px 2px 0 hsl(var(--flights)/0.15)",
+              boxShadow: `0 3px 12px -3px hsl(var(--flights)/0.35),
+                           0 1px 3px 0 hsl(var(--flights)/0.15),
+                           inset 0 1px 0 0 hsl(0 0% 100%/0.12)`,
             }}
             onClick={(e) => { e.stopPropagation(); onSelect(group); }}
           >
             Select {label === "outbound" ? "Departure" : "Return"}
-            <ChevronRight className="w-3.5 h-3.5" />
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
 
@@ -353,9 +396,9 @@ export default function FlightLegCard({
         {segments.length > 0 && (
           <button
             onClick={() => setExpanded(prev => !prev)}
-            className="w-full flex items-center justify-center gap-1 mt-2.5 pt-2 border-t border-border/20 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="w-full flex items-center justify-center gap-1 mt-3 pt-2.5 border-t border-border/15 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ChevronDown className={cn("w-3 h-3 transition-transform", expanded && "rotate-180")} />
+            <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", expanded && "rotate-180")} />
             {expanded ? "Hide details" : "Flight details"}
           </button>
         )}
@@ -371,7 +414,10 @@ export default function FlightLegCard({
             transition={{ duration: 0.2, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="px-3 pb-3 sm:px-4 sm:pb-4 pt-2 border-t border-border/20 bg-muted/5 space-y-2">
+            <div
+              className="px-4 pb-3 pt-2 border-t border-border/15 space-y-2"
+              style={{ background: "hsl(var(--muted)/0.15)" }}
+            >
               {segments.map((seg, i) => (
                 <SegmentRow key={seg.id || i} seg={seg} isLast={i === segments.length - 1} />
               ))}
@@ -388,6 +434,6 @@ export default function FlightLegCard({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
