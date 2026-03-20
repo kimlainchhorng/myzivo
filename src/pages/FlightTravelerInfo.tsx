@@ -515,6 +515,68 @@ const FlightTravelerInfo = () => {
           </label>
         </div>
 
+        {/* Cancellation & baggage summary */}
+        <div className="space-y-2">
+          {/* Cancellation policy */}
+          <div
+            className="flex items-start gap-2.5 p-3 rounded-xl"
+            style={{
+              background: offer.conditions?.refundable
+                ? "hsl(142 71% 45% / 0.06)"
+                : "hsl(var(--muted) / 0.3)",
+              border: `1px solid ${offer.conditions?.refundable ? "hsl(142 71% 45% / 0.15)" : "hsl(var(--border) / 0.3)"}`,
+            }}
+          >
+            <RefreshCw className={cn("w-3.5 h-3.5 mt-0.5 shrink-0", offer.conditions?.refundable ? "text-emerald-500" : "text-muted-foreground")} />
+            <div className="text-[10px]">
+              <p className="font-semibold text-foreground">
+                {offer.conditions?.refundable ? "Refundable fare" : "Non-refundable fare"}
+                {offer.conditions?.changeable && " · Changeable"}
+              </p>
+              <p className="text-muted-foreground mt-0.5">
+                {offer.conditions?.refundable
+                  ? `Refund available${offer.conditions.refundPenalty ? ` (${offer.currency || "USD"} ${offer.conditions.refundPenalty} penalty)` : ""}`
+                  : "24-hour free cancellation may apply for US departures (DOT regulation)"}
+                {offer.conditions?.changeable && offer.conditions.changePenalty
+                  ? ` · Change fee: ${offer.currency || "USD"} ${offer.conditions.changePenalty}`
+                  : ""}
+              </p>
+            </div>
+          </div>
+
+          {/* Baggage summary */}
+          <div
+            className="flex items-start gap-2.5 p-3 rounded-xl"
+            style={{
+              background: "hsl(var(--muted) / 0.3)",
+              border: "1px solid hsl(var(--border) / 0.3)",
+            }}
+          >
+            <Luggage className="w-3.5 h-3.5 text-[hsl(var(--flights))] mt-0.5 shrink-0" />
+            <div className="text-[10px]">
+              <p className="font-semibold text-foreground">Baggage included</p>
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5 text-muted-foreground">
+                {offer.baggageDetails?.carryOnIncluded && (
+                  <span className="flex items-center gap-1">
+                    <PackageCheck className="w-2.5 h-2.5" />
+                    {offer.baggageDetails.carryOnQuantity}× carry-on
+                    {offer.baggageDetails.carryOnWeightKg ? ` (${offer.baggageDetails.carryOnWeightKg}kg)` : ""}
+                  </span>
+                )}
+                {offer.baggageDetails?.checkedBagsIncluded ? (
+                  <span className="flex items-center gap-1">
+                    <Luggage className="w-2.5 h-2.5" />
+                    {offer.baggageDetails.checkedBagQuantity}× checked bag
+                    {offer.baggageDetails.checkedBagWeightKg ? ` (${offer.baggageDetails.checkedBagWeightKg}kg)` : ""}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground/60">No checked bag</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Partner disclosure — 3D elevated */}
         <div
           className="relative flex items-start gap-3 p-3.5 rounded-2xl overflow-hidden"
@@ -524,7 +586,6 @@ const FlightTravelerInfo = () => {
             boxShadow: "0 4px 16px -4px hsl(var(--flights) / 0.08), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
           }}
         >
-          {/* Subtle side glow */}
           <div
             className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl"
             style={{ background: "linear-gradient(180deg, hsl(var(--flights)), hsl(var(--flights) / 0.3))" }}
@@ -534,6 +595,15 @@ const FlightTravelerInfo = () => {
             <p className="font-semibold text-foreground mb-0.5">Secure booking</p>
             <p>{FLIGHT_DISCLAIMERS.ticketing}</p>
           </div>
+        </div>
+
+        {/* Fare lock note */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "hsl(var(--muted) / 0.2)" }}>
+          <Clock className="w-3 h-3 text-[hsl(var(--flights))] shrink-0" />
+          <p className="text-[9px] text-muted-foreground">
+            <span className="font-semibold text-foreground">Price held during checkout.</span>{" "}
+            Final price confirmed by the travel partner at payment.
+          </p>
         </div>
 
         {/* Trust signals — 3D chips */}
@@ -557,12 +627,12 @@ const FlightTravelerInfo = () => {
           ))}
         </div>
 
-        {/* Legal links */}
+        {/* Legal links — tappable */}
         <p className="text-[9px] text-center text-muted-foreground/60">
           By continuing, you agree to our{" "}
-          <Link to="/terms" className="hover:underline">Terms</Link>,{" "}
-          <Link to="/privacy" className="hover:underline">Privacy</Link>, and{" "}
-          <Link to="/partner-disclosure" className="hover:underline">Partner Disclosure</Link>
+          <Link to="/terms-of-service" className="text-[hsl(var(--flights))]/70 hover:underline">Terms</Link>,{" "}
+          <Link to="/privacy-policy" className="text-[hsl(var(--flights))]/70 hover:underline">Privacy</Link>, and{" "}
+          <Link to="/partner-disclosure" className="text-[hsl(var(--flights))]/70 hover:underline">Partner Disclosure</Link>
         </p>
       </motion.div>
     </div>
