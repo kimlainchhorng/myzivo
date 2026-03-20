@@ -27942,6 +27942,90 @@ export type Database = {
         }
         Relationships: []
       }
+      price_alerts: {
+        Row: {
+          cabin_class: string | null
+          created_at: string
+          current_price: number | null
+          departure_date: string | null
+          destination_code: string
+          destination_name: string | null
+          email: string
+          flexible_dates: boolean | null
+          historical_low: number | null
+          id: string
+          is_active: boolean | null
+          last_checked_at: string | null
+          notify_email: boolean | null
+          notify_push: boolean | null
+          notify_sms: boolean | null
+          origin_code: string
+          origin_name: string | null
+          passengers: number | null
+          return_date: string | null
+          target_price: number
+          triggered: boolean | null
+          triggered_at: string | null
+          triggered_price: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          cabin_class?: string | null
+          created_at?: string
+          current_price?: number | null
+          departure_date?: string | null
+          destination_code: string
+          destination_name?: string | null
+          email: string
+          flexible_dates?: boolean | null
+          historical_low?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_checked_at?: string | null
+          notify_email?: boolean | null
+          notify_push?: boolean | null
+          notify_sms?: boolean | null
+          origin_code: string
+          origin_name?: string | null
+          passengers?: number | null
+          return_date?: string | null
+          target_price: number
+          triggered?: boolean | null
+          triggered_at?: string | null
+          triggered_price?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          cabin_class?: string | null
+          created_at?: string
+          current_price?: number | null
+          departure_date?: string | null
+          destination_code?: string
+          destination_name?: string | null
+          email?: string
+          flexible_dates?: boolean | null
+          historical_low?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_checked_at?: string | null
+          notify_email?: boolean | null
+          notify_push?: boolean | null
+          notify_sms?: boolean | null
+          origin_code?: string
+          origin_name?: string | null
+          passengers?: number | null
+          return_date?: string | null
+          target_price?: number
+          triggered?: boolean | null
+          triggered_at?: string | null
+          triggered_price?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       price_calculations: {
         Row: {
           calculation_inputs: Json | null
