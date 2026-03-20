@@ -203,65 +203,24 @@ export default function Flight3DSkyHeader({ className }: { className?: string })
         "relative w-full h-28 overflow-hidden",
         className
       )}
-      style={{
-        perspective: "800px",
-        transformStyle: "preserve-3d",
-      }}
     >
-      {/* Sky gradient layer */}
-      <div className={cn(
-        "absolute inset-0 bg-gradient-to-b transition-colors duration-1000",
-        sky
-      )} />
-
-      {/* Atmospheric haze */}
-      <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
-
-      {/* Sun / Moon */}
-      <motion.div
-        className={cn(
-          "absolute right-[15%] w-8 h-8 rounded-full",
-          celestial.color,
-          `shadow-[0_0_30px_8px] ${celestial.glow}`
-        )}
-        style={{ top: celestial.top }}
-        animate={{
-          scale: celestial.isMoon ? [1, 1.05, 1] : [1, 1.08, 1],
-          opacity: [celestial.opacity, celestial.opacity * 0.9, celestial.opacity],
-        }}
-        transition={{ duration: celestial.isMoon ? 6 : 4, repeat: Infinity, ease: "easeInOut" }}
+      {/* Video background */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+        src="/videos/airplane-header.mp4"
       />
 
-      {/* Sun rays (daytime only) */}
-      {!isNight && (
-        <motion.div
-          className="absolute right-[13%] w-16 h-16 rounded-full"
-          style={{
-            top: celestial.top,
-            background: `radial-gradient(circle, ${celestial.color.includes("amber") ? "rgba(251,191,36,0.15)" : "rgba(253,224,71,0.1)"} 0%, transparent 70%)`,
-          }}
-          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.7, 0.4] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        />
-      )}
+      {/* Subtle overlay for readability */}
+      <div className="absolute inset-0 bg-background/10" />
 
-      {/* Stars (night only) */}
-      {isNight && <Stars />}
+      {/* Atmospheric haze at bottom */}
+      <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
 
-      {/* Clouds — multiple layers for depth */}
-      <Cloud size="lg" top="20%" delay={0} duration={22} direction="ltr" />
-      <Cloud size="md" top="50%" delay={3} duration={18} direction="rtl" />
-      <Cloud size="sm" top="30%" delay={7} duration={25} direction="ltr" />
-      <Cloud size="md" top="65%" delay={10} duration={20} direction="ltr" />
-      <Cloud size="sm" top="15%" delay={5} duration={28} direction="rtl" />
-
-      {/* Flying airplanes — two directions */}
-      <FlyingAirplane direction="ltr" top="20%" size="lg" duration={10} />
-      <FlyingAirplane direction="rtl" top="50%" size="sm" duration={14} delay={3} />
-      <FlyingAirplane direction="rtl" top="30%" size="lg" duration={12} delay={6} />
-      <FlyingAirplane direction="ltr" top="60%" size="sm" duration={16} delay={8} />
-
-      {/* 3D depth ground perspective line */}
+      {/* 3D depth ground line */}
       <div
         className="absolute bottom-0 left-0 right-0 h-4"
         style={{
