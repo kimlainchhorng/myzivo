@@ -102,6 +102,7 @@ function RouteTimeline({
   stops,
   stopDetails,
   label,
+  dayDiff,
 }: {
   depTime: string;
   depCode: string;
@@ -111,6 +112,7 @@ function RouteTimeline({
   stops: number;
   stopDetails?: { code: string; city: string; layoverDuration: string }[];
   label?: string;
+  dayDiff?: number;
 }) {
   const stopLabel = stops === 0 ? "Nonstop" : `${stops} stop${stops > 1 ? "s" : ""}`;
 
@@ -176,7 +178,12 @@ function RouteTimeline({
         </div>
 
         <div className="text-right shrink-0 min-w-[52px] sm:min-w-[58px]">
-          <p className="text-[19px] sm:text-xl font-bold tabular-nums leading-none">{arrTime}</p>
+          <p className="text-[19px] sm:text-xl font-bold tabular-nums leading-none">
+            {arrTime}
+            {dayDiff && dayDiff > 0 ? (
+              <sup className="text-[10px] font-semibold text-muted-foreground ml-0.5">+{dayDiff}</sup>
+            ) : null}
+          </p>
           <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{arrCode}</p>
         </div>
       </div>
@@ -229,6 +236,18 @@ function getSliceSummary(segs: DuffelSegment[]) {
   const depCode = first.origin.code;
   const arrCode = last.destination.code;
   
+  // Calculate day difference for +1/+2 indicator
+  let dayDiff = 0;
+  try {
+    const depDate = first.departingAt?.split("T")[0];
+    const arrDate = last.arrivingAt?.split("T")[0];
+    if (depDate && arrDate) {
+      const dep = new Date(depDate);
+      const arr = new Date(arrDate);
+      dayDiff = Math.round((arr.getTime() - dep.getTime()) / (1000 * 60 * 60 * 24));
+    }
+  } catch { /* ignore */ }
+
   const flightMinutes = segs.reduce((total, seg) => total + parseDurationText(seg.duration), 0);
   let totalMin = flightMinutes + segs.slice(1).reduce(
     (total, seg, index) => total + calcLayoverMinutes(segs[index], seg),
@@ -258,7 +277,7 @@ function getSliceSummary(segs: DuffelSegment[]) {
     });
   }
   
-  return { depTime, arrTime, depCode, arrCode, duration, stops, stopDetails };
+  return { depTime, arrTime, depCode, arrCode, duration, stops, stopDetails, dayDiff };
 }
 
 export default function DuffelFlightCard({
@@ -401,6 +420,7 @@ export default function DuffelFlightCard({
           duration={hasReturnData && outboundSummary ? outboundSummary.duration : offer.duration}
           stops={hasReturnData && outboundSummary ? outboundSummary.stops : offer.stops}
           stopDetails={hasReturnData && outboundSummary ? outboundSummary.stopDetails : offer.stopDetails}
+          dayDiff={hasReturnData && outboundSummary ? outboundSummary.dayDiff : undefined}
           label={hasReturnData ? "Outbound" : undefined}
         />
 
@@ -415,6 +435,7 @@ export default function DuffelFlightCard({
               duration={returnSummary.duration}
               stops={returnSummary.stops}
               stopDetails={returnSummary.stopDetails}
+              dayDiff={returnSummary.dayDiff}
               label="Return"
             />
           </div>
