@@ -1,6 +1,6 @@
 /**
  * DuffelFlightCard — Premium OTA-style flight result card
- * With expandable segment details drawer
+ * With expandable segment details drawer + 3D tilt effect
  */
 
 import { useState } from "react";
@@ -14,6 +14,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import SeatMapPreview from "@/components/flight/SeatMapPreview";
+import BoardingPass3D from "@/components/flight/BoardingPass3D";
+import { use3DTilt } from "@/hooks/use3DTilt";
 import { cn } from "@/lib/utils";
 
 interface DuffelFlightCardProps {
