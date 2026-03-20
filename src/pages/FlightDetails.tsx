@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Plane, Clock, Luggage, RefreshCw, AlertTriangle, Shield, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Plane, Clock, Luggage, RefreshCw, AlertTriangle, Shield, ChevronDown, ChevronUp, Briefcase } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
