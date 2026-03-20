@@ -18,10 +18,12 @@ interface PriceSummaryCardProps {
 
 export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRoundTrip }: PriceSummaryCardProps) {
   const pricePerPerson = offer.pricePerPerson || offer.price;
-  const totalPrice = pricePerPerson * totalPassengers;
+  const processingFee = parseFloat((pricePerPerson * 0.029).toFixed(2));
+  const totalPerPerson = pricePerPerson + processingFee;
+  const totalPrice = totalPerPerson * totalPassengers;
   const currency = offer.currency || "USD";
-  const baseFare = (offer as any).baseFare || totalPrice * 0.7;
-  const taxesFees = (offer as any).taxesFees || totalPrice - baseFare;
+  const baseFare = pricePerPerson;
+  const taxesFees = processingFee;
 
   return (
     <motion.div

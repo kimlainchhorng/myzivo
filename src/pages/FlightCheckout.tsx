@@ -56,9 +56,10 @@ const FlightCheckout = () => {
   const passengers = passengersRaw ? JSON.parse(passengersRaw) : null;
 
   const totalPassengers = search ? (search.adults || 1) + (search.children || 0) + (search.infants || 0) : 1;
-  const baseFare = offer ? Math.round(offer.price * 0.7) : 0;
-  const taxesFees = offer ? offer.price - baseFare : 0;
-  const totalPrice = offer ? parseFloat((offer.price * totalPassengers).toFixed(2)) : 0;
+  const baseFare = offer ? offer.price : 0;
+  const processingFee = offer ? parseFloat((offer.price * 0.029).toFixed(2)) : 0;
+  const taxesFees = processingFee;
+  const totalPrice = offer ? parseFloat(((offer.price + processingFee) * totalPassengers).toFixed(2)) : 0;
 
   useEffect(() => {
     if (!offer || !passengers) navigate("/flights", { replace: true });
@@ -79,8 +80,9 @@ const FlightCheckout = () => {
     setIntentError(null);
 
     try {
-      const currentBaseFare = Math.round(offer.price * 0.7);
-      const currentTaxesFees = offer.price - currentBaseFare;
+      const currentBaseFare = offer.price;
+      const currentProcessingFee = parseFloat((offer.price * 0.029).toFixed(2));
+      const currentTotalPerPassenger = currentBaseFare + currentProcessingFee;
 
       const { data, error } = await supabase.functions.invoke('create-flight-payment-intent', {
         body: {
@@ -90,9 +92,9 @@ const FlightCheckout = () => {
             ...p,
             gender: p.gender as "m" | "f",
           })),
-          totalAmount: offer.price,
+          totalAmount: currentTotalPerPassenger,
           baseFare: currentBaseFare,
-          taxesFees: currentTaxesFees,
+          taxesFees: currentProcessingFee,
           currency: offer.currency || "USD",
           origin: search.origin,
           destination: search.destination,
