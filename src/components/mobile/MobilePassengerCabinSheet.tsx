@@ -7,12 +7,16 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import seatEconomy from "@/assets/seat-economy.png";
+import seatPremium from "@/assets/seat-premium.png";
+import seatBusiness from "@/assets/seat-business.png";
+import seatFirst from "@/assets/seat-first.png";
 
 const cabinOptions = [
-  { value: "economy", label: "Economy", icon: Plane, desc: "Standard seating" },
-  { value: "premium", label: "Premium Economy", icon: Star, desc: "Extra legroom" },
-  { value: "business", label: "Business", icon: Crown, desc: "Lie-flat seats" },
-  { value: "first", label: "First Class", icon: Gem, desc: "Ultimate luxury" },
+  { value: "economy", label: "Economy", icon: Plane, desc: "Standard seating", img: seatEconomy },
+  { value: "premium", label: "Premium Economy", icon: Star, desc: "Extra legroom", img: seatPremium },
+  { value: "business", label: "Business", icon: Crown, desc: "Lie-flat seats", img: seatBusiness },
+  { value: "first", label: "First Class", icon: Gem, desc: "Ultimate luxury", img: seatFirst },
 ] as const;
 
 interface MobilePassengerCabinSheetProps {
@@ -143,11 +147,11 @@ export default function MobilePassengerCabinSheet({
                 {cabinOptions.map((option) => {
                   const isSelected = cabin === option.value;
                   const Icon = option.icon;
-                  return (
+                    return (
                     <button
                       key={option.value}
                       type="button"
-                      className="relative rounded-[18px] p-3.5 text-left transition-all duration-200 active:scale-[0.95] touch-manipulation overflow-hidden"
+                      className="relative rounded-[18px] p-3.5 text-left transition-all duration-200 active:scale-[0.95] touch-manipulation overflow-hidden min-h-[110px]"
                       style={isSelected ? {
                         background: "linear-gradient(145deg, hsl(160 84% 39%), hsl(160 70% 44%))",
                         boxShadow: "0 6px 20px hsl(160 84% 39% / 0.35), 0 2px 4px hsl(160 84% 39% / 0.15), inset 0 1px 0 hsl(0 0% 100% / 0.2)",
@@ -157,6 +161,16 @@ export default function MobilePassengerCabinSheet({
                       }}
                       onClick={() => onCabinChange(option.value)}
                     >
+                      {/* Seat image in background */}
+                      <img
+                        src={option.img}
+                        alt=""
+                        className={cn(
+                          "absolute bottom-0 right-0 w-[70px] h-[70px] object-contain pointer-events-none transition-opacity duration-200",
+                          isSelected ? "opacity-25" : "opacity-15"
+                        )}
+                        draggable={false}
+                      />
                       {/* Subtle shine overlay on selected */}
                       {isSelected && (
                         <div
@@ -178,13 +192,13 @@ export default function MobilePassengerCabinSheet({
                         )} />
                       </div>
                       <p className={cn(
-                        "text-[13px] font-bold leading-tight",
+                        "text-[13px] font-bold leading-tight relative z-10",
                         isSelected ? "text-white" : "text-foreground"
                       )}>
                         {option.label}
                       </p>
                       <p className={cn(
-                        "text-[10px] mt-0.5 leading-tight font-medium",
+                        "text-[10px] mt-0.5 leading-tight font-medium relative z-10",
                         isSelected ? "text-white/65" : "text-muted-foreground/70"
                       )}>
                         {option.desc}
