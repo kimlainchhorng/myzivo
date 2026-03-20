@@ -1504,6 +1504,26 @@ export const airports: Airport[] = [
 ];
 
 
+// Airport code aliases (old → new) for transition periods
+export const AIRPORT_ALIASES: Record<string, string> = {
+  PNH: 'KTI', // Phnom Penh moved to Techo International
+};
+
+// Get the alternate code for fallback searches
+export const getAirportAlternate = (code: string): string | null => {
+  const upper = code.toUpperCase();
+  // PNH → KTI or KTI → PNH
+  if (upper === 'PNH') return 'KTI';
+  if (upper === 'KTI') return 'PNH';
+  return null;
+};
+
+// Normalize display: KTI shows as "Phnom Penh" city name
+export const normalizeAirportDisplay = (code: string): string => {
+  const airport = getAirportByCode(code);
+  return airport?.city || code;
+};
+
 // Helper functions
 export const getAirportByCode = (code: string): Airport | undefined => {
   return airports.find(a => a.code === code);
