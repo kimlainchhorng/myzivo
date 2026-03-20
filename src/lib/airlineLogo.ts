@@ -43,8 +43,8 @@ export function getPlaceholderLogoUrl(iataCode: string): string {
 export function getLogoFallbackChain(iataCode: string, size: AirHexSize = 64): string[] {
   const code = iataCode.toUpperCase();
   return [
-    getAVSLogoUrl(code, size),       // Primary: AVS CDN
-    getDuffelLogoUrl(code),           // Fallback 1: Duffel SVG
+    getDuffelLogoUrl(code),           // Primary: Duffel SVG (best quality)
+    getAVSLogoUrl(code, size),        // Fallback 1: AVS CDN
     getPlaceholderLogoUrl(code),      // Fallback 2: UI Avatars
   ];
 }
