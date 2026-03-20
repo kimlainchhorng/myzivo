@@ -964,7 +964,7 @@ const FlightResults = () => {
                   className="mb-3"
                 >
                   <div
-                    className="flex items-center gap-1.5 p-1.5 rounded-2xl"
+                    className="flex items-center gap-1.5 p-1.5 rounded-2xl overflow-visible"
                     style={{
                       background: "hsl(var(--card))",
                       boxShadow: "0 1px 0 0 hsl(var(--border)/0.1), 0 3px 12px -3px hsl(var(--foreground)/0.06), inset 0 1px 0 0 hsl(0 0% 100%/0.04)",
