@@ -32,6 +32,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { type DuffelOffer, useDuffelOffer } from "@/hooks/useDuffelFlights";
 import { FLIGHT_CONSENT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 import { cn } from "@/lib/utils";
+import DuffelSeatPicker from "@/components/flight/DuffelSeatPicker";
 
 import { FlightSummaryCompact } from "@/components/flight/traveler/FlightSummaryCompact";
 import {
