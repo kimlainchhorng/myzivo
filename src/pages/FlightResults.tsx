@@ -148,11 +148,14 @@ const FlightResults = () => {
     setSortBy("best");
   }, []);
 
-  const handleSelectReturn = useCallback((group: LegGroup) => {
-    // Find the best matching offer (cheapest in this return group)
+  const handleSelectReturn = (group: LegGroup) => {
     const bestOffer = group.representativeOffer;
-    handleSelect(bestOffer);
-  }, []);
+    sessionStorage.setItem("zivo_selected_offer", JSON.stringify(bestOffer));
+    sessionStorage.setItem("zivo_search_params", JSON.stringify({
+      origin, destination, departureDate, returnDate, adults, children, infants, cabinClass,
+    }));
+    navigate("/flights/details/review");
+  };
 
   const handleBackToOutbound = useCallback(() => {
     setSelectedOutboundGroup(null);
