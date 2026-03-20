@@ -154,22 +154,12 @@ export default function FlightBookingsPage() {
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
                           {/* Airline logo */}
-                          <div className="w-10 h-10 rounded-xl bg-muted/60 border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
-                            {airlineCode ? (
-                              <img
-                                src={getDuffelAirlineLogo(airlineCode)}
-                                alt={airlineCode}
-                                className="w-7 h-7 object-contain"
-                                onError={(e) => {
-                                  const el = e.target as HTMLImageElement;
-                                  el.style.display = 'none';
-                                  el.parentElement!.innerHTML = `<span class="text-xs font-bold text-muted-foreground">${airlineCode}</span>`;
-                                }}
-                              />
-                            ) : (
-                              <Plane className="w-4 h-4 text-[hsl(var(--flights))]" />
-                            )}
-                          </div>
+                          <AirlineLogo
+                            iataCode={airlineCode || "XX"}
+                            airlineName={airlineCode}
+                            size={40}
+                            className="border border-border/20 bg-muted/40 shrink-0"
+                          />
                           <div>
                             <span className="font-semibold text-sm block">
                               {booking.origin} → {booking.destination}
