@@ -91,7 +91,7 @@ function AirlineLogoComponent({
   return (
     <div
       className={cn(
-        'flex items-center justify-center overflow-hidden rounded-lg',
+        'flex items-center justify-center overflow-hidden rounded-lg bg-white',
         className
       )}
       style={{ width: size, height: size }}
@@ -99,7 +99,7 @@ function AirlineLogoComponent({
       <img
         src={currentSrc}
         alt={airlineName || `${iataCode} airline logo`}
-        className="w-full h-full object-contain"
+        className="w-full h-full object-contain p-0.5"
         loading="lazy"
         onError={handleError}
       />

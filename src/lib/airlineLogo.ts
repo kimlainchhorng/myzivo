@@ -10,7 +10,7 @@
 export const AVS_CDN = 'https://pics.avs.io';
 
 // Duffel SVG CDN - Fallback
-export const DUFFEL_CDN = 'https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup';
+export const DUFFEL_CDN = 'https://assets.duffel.com/img/airlines/for-light-background/full-color-logo';
 
 // Supported sizes for logos
 export type AirHexSize = 32 | 64 | 100 | 200;
@@ -43,8 +43,8 @@ export function getPlaceholderLogoUrl(iataCode: string): string {
 export function getLogoFallbackChain(iataCode: string, size: AirHexSize = 64): string[] {
   const code = iataCode.toUpperCase();
   return [
-    getAVSLogoUrl(code, size),       // Primary: AVS CDN
-    getDuffelLogoUrl(code),           // Fallback 1: Duffel SVG
+    getDuffelLogoUrl(code),           // Primary: Duffel SVG (best quality)
+    getAVSLogoUrl(code, size),        // Fallback 1: AVS CDN
     getPlaceholderLogoUrl(code),      // Fallback 2: UI Avatars
   ];
 }
