@@ -161,7 +161,7 @@ const MobileFlightSearch = () => {
             />
           </div>
 
-          {sameAirport && (
+          {s.sameAirport && (
             <p className="text-[11px] text-destructive font-medium -mt-2 pl-0.5">
               Origin and destination cannot be the same.
             </p>
