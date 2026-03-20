@@ -774,6 +774,7 @@ const FlightResults = () => {
                         totalPassengers={totalPassengers}
                         hasReturn={!!returnDate}
                         onSelect={handleSelect}
+                        searchDestination={destination}
                       />
                     </motion.div>
                   ))}
