@@ -1,15 +1,15 @@
 /**
  * Flight Search Page — /flights
- * 3D Spatial UI with parallax scroll, tilt cards, and smooth reveals
+ * Full immersive 3D spatial UI — scroll parallax, tilt cards, depth layers, animated backgrounds
  */
 
-import { useState, useRef, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Plane, Shield, Star, TrendingUp, ArrowRight, Sparkles,
-  Globe, Clock, Headphones, CreditCard, Loader2
+  Globe, Clock, Headphones, Loader2
 } from "lucide-react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 import Header from "@/components/Header";
 
 import miamiImg from "@/assets/destinations/miami.jpg";
@@ -27,6 +27,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { FlightSearchFormPro } from "@/components/search";
 import { usePopularRoutePrices } from "@/hooks/usePopularRoutePrices";
 
+/* ─── Shared easing ─── */
+const ease3D = [0.16, 1, 0.3, 1] as const;
+
 /* ─── 3D Tilt Hook ─── */
 function use3DTilt(maxTilt = 8) {
   const ref = useRef<HTMLDivElement>(null);
@@ -41,9 +44,105 @@ function use3DTilt(maxTilt = 8) {
   const onMouseLeave = useCallback(() => {
     const el = ref.current;
     if (!el) return;
-    el.style.transform = "perspective(600px) rotateY(0deg) rotateX(0deg) scale3d(1,1,1)";
+    el.style.transform = "perspective(600px) rotateY(0) rotateX(0) scale3d(1,1,1)";
   }, []);
   return { ref, onMouseMove, onMouseLeave };
+}
+
+/* ─── Scroll-linked 3D Section wrapper ─── */
+function ScrollReveal3D({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [60, 0, 0, -30]);
+  const rotateX = useTransform(scrollYProgress, [0, 0.25, 0.75, 1], [8, 0, 0, -4]);
+  const scale = useTransform(scrollYProgress, [0, 0.25, 0.75, 1], [0.95, 1, 1, 0.97]);
+  const opacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.6]);
+
+  return (
+    <motion.div
+      ref={ref}
+      style={{ y, rotateX, scale, opacity, perspective: 1000, transformStyle: "preserve-3d" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ─── Animated 3D Background ─── */
+function Animated3DBackground() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {/* Floating orbs with 3D depth */}
+      <motion.div
+        animate={{
+          y: [0, -40, 0],
+          x: [0, 20, 0],
+          scale: [1, 1.15, 1],
+        }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-primary/6 blur-[80px]"
+      />
+      <motion.div
+        animate={{
+          y: [0, 30, 0],
+          x: [0, -15, 0],
+          scale: [1.1, 0.9, 1.1],
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        className="absolute top-1/2 -left-40 w-[28rem] h-[28rem] rounded-full bg-accent/4 blur-[100px]"
+      />
+      <motion.div
+        animate={{
+          y: [0, -25, 0],
+          x: [0, 12, 0],
+        }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+        className="absolute bottom-20 right-10 w-64 h-64 rounded-full bg-primary/4 blur-[60px]"
+      />
+      
+      {/* 3D floating planes */}
+      <motion.div
+        animate={{
+          x: ["-10%", "110%"],
+          y: [60, 20, 80],
+          rotateZ: [0, 5, -3, 0],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="absolute top-24"
+      >
+        <Plane className="w-5 h-5 text-primary/10 rotate-45" />
+      </motion.div>
+      <motion.div
+        animate={{
+          x: ["110%", "-10%"],
+          y: [200, 160, 220],
+          rotateZ: [0, -5, 3, 0],
+        }}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear", delay: 5 }}
+        className="absolute top-48"
+      >
+        <Plane className="w-4 h-4 text-primary/8 -rotate-[135deg]" />
+      </motion.div>
+
+      {/* Grid overlay for depth */}
+      <div
+        className="absolute inset-0 opacity-[0.015]"
+        style={{
+          backgroundImage: `
+            linear-gradient(hsl(var(--primary) / 0.3) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px)
+          `,
+          backgroundSize: "60px 60px",
+          transform: "perspective(500px) rotateX(60deg)",
+          transformOrigin: "center top",
+        }}
+      />
+    </div>
+  );
 }
 
 /* ─── Fallback routes ─── */
@@ -65,17 +164,17 @@ const whyZivo = [
 
 /* ─── 3D Route Card ─── */
 function RouteCard3D({ route, index, onRouteClick }: { route: any; index: number; onRouteClick: (from: string, to: string) => void }) {
-  const tilt = use3DTilt(10);
+  const tilt = use3DTilt(12);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24, rotateX: 15 }}
-      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+      initial={{ opacity: 0, y: 30, rotateX: 18, filter: "blur(4px)" }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{
         delay: index * 0.08,
-        duration: 0.6,
-        ease: [0.16, 1, 0.3, 1],
+        duration: 0.65,
+        ease: ease3D,
       }}
       style={{ perspective: 800 }}
     >
@@ -84,43 +183,51 @@ function RouteCard3D({ route, index, onRouteClick }: { route: any; index: number
         onMouseMove={tilt.onMouseMove}
         onMouseLeave={tilt.onMouseLeave}
         onClick={() => onRouteClick(route.from, route.to)}
-        className="relative rounded-2xl overflow-hidden border border-border/30 hover:border-primary/40 cursor-pointer text-left active:scale-[0.97] touch-manipulation transition-[border-color,box-shadow] duration-300 hover:shadow-xl hover:shadow-primary/10"
-        style={{ transformStyle: "preserve-3d", transition: "transform 0.15s ease-out" }}
+        className="relative rounded-2xl overflow-hidden border border-border/20 cursor-pointer text-left active:scale-[0.96] touch-manipulation transition-[border-color,box-shadow] duration-300 hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/30"
+        style={{
+          transformStyle: "preserve-3d",
+          transition: "transform 0.15s ease-out, box-shadow 0.3s ease",
+        }}
       >
-        {/* Destination image with 3D parallax */}
-        <div className="relative h-28 overflow-hidden">
+        {/* Destination image with parallax zoom */}
+        <div className="relative h-32 overflow-hidden">
           <motion.img
             src={route.image}
             alt={route.toCity}
             className="w-full h-full object-cover"
             loading="lazy"
-            whileHover={{ scale: 1.08 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            whileHover={{ scale: 1.12 }}
+            transition={{ duration: 0.8, ease: ease3D }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-card/10" />
+          {/* Cinematic gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+          
+          {/* Sheen / light reflection */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
           {/* Floating route badge — 3D lifted */}
-          <div
-            className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-background/85 backdrop-blur-md rounded-full px-2.5 py-1 border border-border/40 shadow-lg"
-            style={{ transform: "translateZ(20px)" }}
+          <motion.div
+            className="absolute top-2.5 left-2.5 flex items-center gap-1.5 bg-background/90 backdrop-blur-xl rounded-full px-3 py-1.5 border border-border/30"
+            style={{ transform: "translateZ(24px)" }}
+            whileHover={{ scale: 1.05 }}
           >
             <span className="font-bold text-[11px] text-foreground">{route.from}</span>
             <Plane className="w-3 h-3 text-primary rotate-45" />
             <span className="font-bold text-[11px] text-foreground">{route.to}</span>
-          </div>
+          </motion.div>
         </div>
 
-        {/* Info */}
-        <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
+        {/* Info — 3D lifted text */}
+        <div className="absolute bottom-0 left-0 right-0 px-3 pb-3" style={{ transform: "translateZ(12px)" }}>
           <p className="text-[10px] text-muted-foreground truncate">
             {route.fromCity} → {route.toCity}
           </p>
           {route.price ? (
-            <p className="text-sm font-bold text-primary mt-0.5">
+            <p className="text-sm font-bold text-primary mt-0.5 drop-shadow-sm">
               from {route.price}*
             </p>
           ) : (
-            <div className="h-4 w-16 mt-0.5 rounded bg-muted/50 animate-pulse" />
+            <div className="h-4 w-16 mt-0.5 rounded-lg bg-muted/40 animate-pulse" />
           )}
         </div>
       </div>
@@ -159,14 +266,14 @@ function PopularRoutesSection({ className }: { className?: string }) {
   const hasLivePrices = routes.some((r) => r.price !== null);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.5 }}
-      className={className}
-    >
-      <div className="flex items-center gap-2 mb-4">
+    <div className={className}>
+      <motion.div
+        initial={{ opacity: 0, x: -12 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4, ease: ease3D }}
+        className="flex items-center gap-2 mb-4"
+      >
         <TrendingUp className="w-4 h-4 text-primary" />
         <h2 className="text-sm font-bold">Popular Routes</h2>
         <Badge variant="outline" className={cn(
@@ -183,7 +290,7 @@ function PopularRoutesSection({ className }: { className?: string }) {
             <><Sparkles className="w-2.5 h-2.5 mr-0.5" /> Updating</>
           )}
         </Badge>
-      </div>
+      </motion.div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {routes.map((route, i) => (
           <RouteCard3D
@@ -199,37 +306,39 @@ function PopularRoutesSection({ className }: { className?: string }) {
           ? "*Live prices from Duffel. Final price confirmed at partner checkout."
           : "*Prices loading. Final price confirmed at partner checkout."}
       </p>
-    </motion.div>
+    </div>
   );
 }
 
 /* ─── 3D Why ZIVO Card ─── */
 function WhyCard3D({ item, index }: { item: typeof whyZivo[0]; index: number }) {
-  const tilt = use3DTilt(12);
+  const tilt = use3DTilt(14);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, rotateX: 10 }}
-      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+      initial={{ opacity: 0, y: 24, rotateX: 12, filter: "blur(3px)" }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
       viewport={{ once: true, amount: 0.2 }}
-      transition={{ delay: index * 0.1, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ delay: index * 0.1, duration: 0.6, ease: ease3D }}
       style={{ perspective: 600 }}
     >
       <div
         ref={tilt.ref}
         onMouseMove={tilt.onMouseMove}
         onMouseLeave={tilt.onMouseLeave}
-        className="bg-card/70 backdrop-blur-sm border border-border/30 rounded-2xl p-4 text-center transition-[box-shadow] duration-300 hover:shadow-lg hover:shadow-primary/5"
+        className="bg-card/60 backdrop-blur-lg border border-border/20 rounded-2xl p-4 text-center transition-[box-shadow] duration-300 hover:shadow-xl hover:shadow-primary/8"
         style={{ transformStyle: "preserve-3d", transition: "transform 0.15s ease-out" }}
       >
-        <div
-          className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-2.5"
-          style={{ transform: "translateZ(16px)" }}
+        <motion.div
+          className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-2.5"
+          style={{ transform: "translateZ(20px)" }}
+          whileHover={{ rotateY: 15, scale: 1.1 }}
+          transition={{ duration: 0.3 }}
         >
           <item.icon className="w-5 h-5 text-primary" />
-        </div>
-        <p className="text-xs font-semibold" style={{ transform: "translateZ(8px)" }}>{item.title}</p>
-        <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed hidden sm:block">{item.desc}</p>
+        </motion.div>
+        <p className="text-xs font-semibold" style={{ transform: "translateZ(10px)" }}>{item.title}</p>
+        <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed hidden sm:block" style={{ transform: "translateZ(5px)" }}>{item.desc}</p>
       </div>
     </motion.div>
   );
@@ -238,66 +347,83 @@ function WhyCard3D({ item, index }: { item: typeof whyZivo[0]; index: number }) 
 /* ─── Trust / Why ZIVO Section ─── */
 function WhyZivoSection({ className }: { className?: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.5 }}
-      className={className}
-    >
-      <h2 className="text-sm font-bold mb-4 text-center sm:text-left">Why book with ZIVO?</h2>
+    <div className={className}>
+      <motion.h2
+        initial={{ opacity: 0, x: -12 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4 }}
+        className="text-sm font-bold mb-4 text-center sm:text-left"
+      >
+        Why book with ZIVO?
+      </motion.h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {whyZivo.map((item, i) => (
           <WhyCard3D key={item.title} item={item} index={i} />
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
-/* ─── Trust Strip ─── */
+/* ─── Trust Strip with 3D float ─── */
 function TrustStrip() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.4 }}
+      initial={{ opacity: 0, y: 10, rotateX: 5 }}
+      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+      transition={{ delay: 0.35, duration: 0.5, ease: ease3D }}
       className="flex items-center justify-center gap-4 text-[11px] text-muted-foreground"
+      style={{ perspective: 400 }}
     >
-      <span className="flex items-center gap-1"><Sparkles className="w-3 h-3" /> 500+ Airlines</span>
-      <span className="w-0.5 h-0.5 rounded-full bg-border" />
-      <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure</span>
-      <span className="w-0.5 h-0.5 rounded-full bg-border" />
-      <span className="flex items-center gap-1"><Star className="w-3 h-3" /> Best Price</span>
+      {[
+        { icon: Sparkles, label: "500+ Airlines" },
+        { icon: Shield, label: "Secure" },
+        { icon: Star, label: "Best Price" },
+      ].map((item, i) => (
+        <motion.span
+          key={item.label}
+          className="flex items-center gap-1"
+          whileHover={{ scale: 1.08, y: -2 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        >
+          {i > 0 && <span className="w-0.5 h-0.5 rounded-full bg-border mr-3" />}
+          <item.icon className="w-3 h-3" /> {item.label}
+        </motion.span>
+      ))}
     </motion.div>
   );
 }
 
-/* ─── Mobile Flight Search with 3D scroll ─── */
+/* ─── Mobile Flight Search — full 3D ─── */
 function MobileFlightSearch() {
   const { fromCity, toCity } = useParams();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ container: scrollRef });
 
   return (
-    <div ref={scrollRef} className="flex flex-col gap-6 px-4 pb-8 pt-1 overflow-y-auto" style={{ perspective: "1000px" }}>
-      {/* Search form — 3D entrance */}
+    <div className="flex flex-col gap-6 px-4 pb-10 pt-1" style={{ perspective: "1200px" }}>
+      {/* Search form — 3D swooping entrance */}
       <motion.div
-        initial={{ opacity: 0, y: 30, rotateX: 8 }}
-        animate={{ opacity: 1, y: 0, rotateX: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ opacity: 0, y: 40, rotateX: 12, filter: "blur(6px)" }}
+        animate={{ opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.65, ease: ease3D }}
         style={{ transformStyle: "preserve-3d" }}
       >
         <FlightSearchFormPro
           initialFrom={fromCity ? decodeURIComponent(fromCity) : ""}
           initialTo={toCity ? decodeURIComponent(toCity) : ""}
-          className="shadow-lg shadow-primary/8 rounded-2xl"
+          className="shadow-xl shadow-primary/10 rounded-2xl border border-border/30"
         />
       </motion.div>
 
       <TrustStrip />
-      <PopularRoutesSection />
-      <WhyZivoSection />
+
+      <ScrollReveal3D>
+        <PopularRoutesSection />
+      </ScrollReveal3D>
+
+      <ScrollReveal3D>
+        <WhyZivoSection />
+      </ScrollReveal3D>
     </div>
   );
 }
@@ -307,22 +433,24 @@ function DesktopFlightSearch() {
   const { fromCity, toCity } = useParams();
 
   return (
-    <div style={{ perspective: "1200px" }}>
-      {/* Header */}
+    <div style={{ perspective: "1400px" }}>
+      {/* Header — 3D depth entrance */}
       <motion.div
-        initial={{ opacity: 0, y: 24, rotateX: 6 }}
-        animate={{ opacity: 1, y: 0, rotateX: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ opacity: 0, y: 30, rotateX: 8, filter: "blur(4px)" }}
+        animate={{ opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.6, ease: ease3D }}
         className="max-w-3xl mx-auto flex items-center gap-3.5 pt-2 sm:pt-4 pb-4"
         style={{ transformStyle: "preserve-3d" }}
       >
         <motion.div
-          initial={{ scale: 0.6, opacity: 0, rotateY: -20 }}
+          initial={{ scale: 0.5, opacity: 0, rotateY: -30 }}
           animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-          transition={{ delay: 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0"
+          transition={{ delay: 0.15, duration: 0.6, ease: ease3D }}
+          whileHover={{ rotateY: 15, scale: 1.05 }}
+          className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0"
+          style={{ transformStyle: "preserve-3d" }}
         >
-          <Plane className="w-5.5 h-5.5 text-primary" />
+          <Plane className="w-6 h-6 text-primary" style={{ transform: "translateZ(8px)" }} />
         </motion.div>
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-tight">Search Flights</h1>
@@ -332,27 +460,31 @@ function DesktopFlightSearch() {
 
       {/* Search Form — 3D floating card */}
       <motion.div
-        initial={{ opacity: 0, y: 30, rotateX: 8 }}
-        animate={{ opacity: 1, y: 0, rotateX: 0 }}
-        transition={{ duration: 0.55, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ opacity: 0, y: 40, rotateX: 10, filter: "blur(6px)" }}
+        animate={{ opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.65, delay: 0.12, ease: ease3D }}
         className="max-w-3xl mx-auto"
         style={{ transformStyle: "preserve-3d" }}
       >
         <FlightSearchFormPro
           initialFrom={fromCity ? decodeURIComponent(fromCity) : ""}
           initialTo={toCity ? decodeURIComponent(toCity) : ""}
-          className="shadow-xl shadow-primary/8 rounded-2xl"
+          className="shadow-2xl shadow-primary/10 rounded-2xl border border-border/30"
         />
       </motion.div>
 
-      <div className="max-w-3xl mx-auto mt-5">
+      <div className="max-w-3xl mx-auto mt-6">
         <TrustStrip />
       </div>
 
-      {/* Content sections with 3D scroll reveals */}
-      <div className="max-w-3xl mx-auto mt-10 space-y-10">
-        <PopularRoutesSection />
-        <WhyZivoSection />
+      {/* Scroll-linked 3D sections */}
+      <div className="max-w-3xl mx-auto mt-12 space-y-12">
+        <ScrollReveal3D>
+          <PopularRoutesSection />
+        </ScrollReveal3D>
+        <ScrollReveal3D>
+          <WhyZivoSection />
+        </ScrollReveal3D>
       </div>
     </div>
   );
@@ -368,19 +500,7 @@ const FlightLanding = () => {
         <SEOHead title="Search Flights – ZIVO" description="Search and compare flights from 500+ airlines." />
         <AppLayout title="Flights">
           <div className="relative overflow-hidden">
-            {/* Ambient 3D glow orbs */}
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <motion.div
-                animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/8 blur-3xl"
-              />
-              <motion.div
-                animate={{ y: [0, 15, 0], x: [0, -8, 0] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                className="absolute top-1/2 -left-32 w-80 h-80 rounded-full bg-accent/5 blur-3xl"
-              />
-            </div>
+            <Animated3DBackground />
             <div className="relative z-10">
               <MobileFlightSearch />
             </div>
@@ -393,19 +513,7 @@ const FlightLanding = () => {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <SEOHead title="Search Flights – ZIVO" description="Search and compare flights from 500+ airlines. Find the best deals." />
-      {/* Ambient glow orbs with float animation */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/8 blur-3xl"
-        />
-        <motion.div
-          animate={{ y: [0, 15, 0], x: [0, -8, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute top-1/3 -left-32 w-80 h-80 rounded-full bg-accent/5 blur-3xl"
-        />
-      </div>
+      <Animated3DBackground />
       <Header />
       <main className="pt-16 pb-16 relative z-10">
         <div className="container mx-auto px-4">
