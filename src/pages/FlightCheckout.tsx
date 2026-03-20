@@ -3,7 +3,7 @@
  * Embedded Stripe PaymentElement for card input directly on page
  */
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Loader2, AlertTriangle, Lock, Info } from "lucide-react";
 import { motion } from "framer-motion";
@@ -25,6 +25,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FLIGHT_MOR_DISCLAIMERS, FLIGHT_CHECKOUT_CLARITY, ZIVO_SOT_REGISTRATION, FLIGHT_LEGAL_LINKS } from "@/config/flightMoRCompliance";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
+import { calculateFlightPricing, getStateOptions, type FlightPricingBreakdown } from "@/utils/flightPricing";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const STEPS = [
   { label: "Search", completed: true, active: false },
@@ -46,6 +48,7 @@ const FlightCheckout = () => {
   const [isCreatingIntent, setIsCreatingIntent] = useState(false);
   const [intentError, setIntentError] = useState<string | null>(null);
   const intentCreated = useRef(false);
+  const [selectedState, setSelectedState] = useState<string>("");
 
   const offerRaw = sessionStorage.getItem("zivo_selected_offer");
   const searchRaw = sessionStorage.getItem("zivo_search_params");
@@ -56,10 +59,16 @@ const FlightCheckout = () => {
   const passengers = passengersRaw ? JSON.parse(passengersRaw) : null;
 
   const totalPassengers = search ? (search.adults || 1) + (search.children || 0) + (search.infants || 0) : 1;
-  const baseFare = offer ? offer.price : 0;
-  const processingFee = offer ? parseFloat((offer.price * 0.029).toFixed(2)) : 0;
-  const taxesFees = processingFee;
-  const totalPrice = offer ? parseFloat(((offer.price + processingFee) * totalPassengers).toFixed(2)) : 0;
+
+  const pricing: FlightPricingBreakdown = useMemo(() =>
+    calculateFlightPricing(
+      offer?.price || 0,
+      totalPassengers,
+      offer?.currency || "USD",
+      selectedState || undefined,
+    ), [offer?.price, totalPassengers, offer?.currency, selectedState]);
+
+  const stateOptions = useMemo(() => getStateOptions(), []);
 
   useEffect(() => {
     if (!offer || !passengers) navigate("/flights", { replace: true });
@@ -80,10 +89,6 @@ const FlightCheckout = () => {
     setIntentError(null);
 
     try {
-      const currentBaseFare = offer.price;
-      const currentProcessingFee = parseFloat((offer.price * 0.029).toFixed(2));
-      const currentTotalPerPassenger = currentBaseFare + currentProcessingFee;
-
       const { data, error } = await supabase.functions.invoke('create-flight-payment-intent', {
         body: {
           userId: user.id,
@@ -92,9 +97,13 @@ const FlightCheckout = () => {
             ...p,
             gender: p.gender as "m" | "f",
           })),
-          totalAmount: currentTotalPerPassenger,
-          baseFare: currentBaseFare,
-          taxesFees: currentProcessingFee,
+          totalAmount: pricing.totalPerPassenger,
+          baseFare: pricing.baseFare,
+          taxesFees: pricing.stateTax + pricing.cardProcessingFee + pricing.zivoBookingFee,
+          stateTax: pricing.stateTax,
+          cardProcessingFee: pricing.cardProcessingFee,
+          zivoBookingFee: pricing.zivoBookingFee,
+          stateCode: selectedState || null,
           currency: offer.currency || "USD",
           origin: search.origin,
           destination: search.destination,
@@ -215,12 +224,24 @@ const FlightCheckout = () => {
             className="mb-4"
           />
 
+          {/* State selector for tax */}
+          <div className="mb-4 space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Your state (for tax calculation)</label>
+            <Select value={selectedState} onValueChange={setSelectedState}>
+              <SelectTrigger className="w-full rounded-xl">
+                <SelectValue placeholder="Select your state…" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {stateOptions.map((s) => (
+                  <SelectItem key={s.code} value={s.code}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Price Breakdown */}
           <FlightPriceBreakdown
-            baseFare={baseFare}
-            taxesFees={taxesFees}
-            passengers={totalPassengers}
-            currency={offer.currency || "USD"}
+            pricing={pricing}
             className="mb-4"
             showNoHiddenFees
           />
@@ -341,7 +362,7 @@ const FlightCheckout = () => {
           <div className="px-4 py-3 flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] text-muted-foreground leading-tight">Total</p>
-              <p className="text-lg font-bold tracking-tight">${totalPrice.toFixed(2)}</p>
+              <p className="text-lg font-bold tracking-tight">${pricing.totalAllPassengers.toFixed(2)}</p>
             </div>
             <div className="shrink-0">
               <Button

@@ -13,6 +13,10 @@ interface CheckoutRequest {
   totalAmount: number;
   baseFare: number;
   taxesFees: number;
+  stateTax?: number;
+  cardProcessingFee?: number;
+  zivoBookingFee?: number;
+  stateCode?: string;
   currency: string;
   origin: string;
   destination: string;

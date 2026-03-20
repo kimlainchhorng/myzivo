@@ -1,29 +1,32 @@
 /**
  * Price Summary Card — 3D Spatial premium breakdown
- * Floating glassmorphic card with depth shadows and perspective effects
+ * Uses centralized pricing logic with state tax, card fee, ZIVO booking fee
  */
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRightLeft, Users, Tag, Info } from "lucide-react";
+import { Sparkles, ArrowRightLeft, Users, Tag, Info, Building2, CreditCard } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { type DuffelOffer } from "@/hooks/useDuffelFlights";
+import { calculateFlightPricing } from "@/utils/flightPricing";
 
 interface PriceSummaryCardProps {
   offer: DuffelOffer;
   searchParams: Record<string, any>;
   totalPassengers: number;
   isRoundTrip: boolean;
+  stateCode?: string;
 }
 
-export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRoundTrip }: PriceSummaryCardProps) {
-  const pricePerPerson = offer.pricePerPerson || offer.price;
-  const processingFee = parseFloat((pricePerPerson * 0.029).toFixed(2));
-  const totalPerPerson = pricePerPerson + processingFee;
-  const totalPrice = totalPerPerson * totalPassengers;
-  const currency = offer.currency || "USD";
-  const baseFare = pricePerPerson;
-  const taxesFees = processingFee;
+export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRoundTrip, stateCode }: PriceSummaryCardProps) {
+  const pricing = calculateFlightPricing(
+    offer.pricePerPerson || offer.price,
+    totalPassengers,
+    offer.currency || "USD",
+    stateCode,
+  );
+
+  const zivoFeeLabel = pricing.baseFare < 100 ? "$10 flat" : "5%";
 
   return (
     <motion.div
@@ -72,7 +75,7 @@ export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRound
             }}
           >
             <Tag className="w-3 h-3 text-emerald-500" />
-            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">No markup</span>
+            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">Transparent</span>
           </div>
         </div>
 
@@ -88,9 +91,9 @@ export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRound
           )}
           <div className="flex justify-between text-[11px]">
             <span className="text-muted-foreground flex items-center gap-1.5">
-              <Users className="w-3 h-3" /> Price per traveler
+              <Users className="w-3 h-3" /> Base fare per traveler
             </span>
-            <span className="font-bold tabular-nums">${pricePerPerson.toFixed(2)}</span>
+            <span className="font-bold tabular-nums">${pricing.baseFare.toFixed(2)}</span>
           </div>
 
           {totalPassengers > 1 && (
@@ -99,19 +102,19 @@ export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRound
               {searchParams.adults > 0 && (
                 <div className="flex justify-between text-[11px] pl-5">
                   <span className="text-muted-foreground">Adult × {searchParams.adults}</span>
-                  <span className="font-medium tabular-nums">${(pricePerPerson * searchParams.adults).toFixed(2)}</span>
+                  <span className="font-medium tabular-nums">${(pricing.baseFare * searchParams.adults).toFixed(2)}</span>
                 </div>
               )}
               {searchParams.children > 0 && (
                 <div className="flex justify-between text-[11px] pl-5">
                   <span className="text-muted-foreground">Child × {searchParams.children}</span>
-                  <span className="font-medium tabular-nums">${(pricePerPerson * searchParams.children).toFixed(2)}</span>
+                  <span className="font-medium tabular-nums">${(pricing.baseFare * searchParams.children).toFixed(2)}</span>
                 </div>
               )}
               {searchParams.infants > 0 && (
                 <div className="flex justify-between text-[11px] pl-5">
                   <span className="text-muted-foreground">Infant × {searchParams.infants}</span>
-                  <span className="font-medium tabular-nums">${(pricePerPerson * searchParams.infants).toFixed(2)}</span>
+                  <span className="font-medium tabular-nums">${(pricing.baseFare * searchParams.infants).toFixed(2)}</span>
                 </div>
               )}
             </>
@@ -132,26 +135,34 @@ export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRound
         >
           <div className="flex justify-between text-[10px]">
             <span className="text-muted-foreground">Base fare</span>
-            <span className="font-medium tabular-nums">${baseFare.toFixed(2)}</span>
+            <span className="font-medium tabular-nums">${pricing.baseFare.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-[10px]">
+            <span className="text-muted-foreground flex items-center gap-0.5">
+              <Building2 className="w-2.5 h-2.5" /> {pricing.stateTaxLabel} tax ({(pricing.stateTaxRate * 100).toFixed(1)}%)
+            </span>
+            <span className="font-medium tabular-nums">${pricing.stateTax.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-[10px]">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="text-muted-foreground flex items-center gap-0.5 cursor-help">
-                    Taxes & fees <Info className="w-2.5 h-2.5" />
+                    <CreditCard className="w-2.5 h-2.5" /> Card fee (3.5%) <Info className="w-2.5 h-2.5" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-[10px] max-w-[200px]">
-                  Includes government taxes, airport charges, and carrier surcharges
+                  Credit & debit card processing fee
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <span className="font-medium tabular-nums">${taxesFees.toFixed(2)}</span>
+            <span className="font-medium tabular-nums">${pricing.cardProcessingFee.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-[10px]">
-            <span className="text-muted-foreground">ZIVO service fee</span>
-            <span className="font-bold text-emerald-600 dark:text-emerald-400">$0.00</span>
+            <span className="text-muted-foreground flex items-center gap-0.5">
+              <Sparkles className="w-2.5 h-2.5" /> ZIVO booking fee ({zivoFeeLabel})
+            </span>
+            <span className="font-medium tabular-nums">${pricing.zivoBookingFee.toFixed(2)}</span>
           </div>
         </div>
 
@@ -160,7 +171,7 @@ export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRound
           <span className="text-sm font-extrabold">Total</span>
           <div className="text-right">
             <motion.span
-              key={totalPrice}
+              key={pricing.totalAllPassengers}
               initial={{ scale: 0.95, opacity: 0.6 }}
               animate={{ scale: 1, opacity: 1 }}
               className="text-[1.8rem] font-black text-[hsl(var(--flights))] tabular-nums tracking-tight leading-none"
@@ -168,10 +179,10 @@ export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRound
                 textShadow: "0 4px 20px hsl(var(--flights)/0.25)",
               }}
             >
-              ${totalPrice.toFixed(2)}
+              ${pricing.totalAllPassengers.toFixed(2)}
             </motion.span>
             <p className="text-[9px] text-muted-foreground mt-1 font-medium">
-              {currency} · All taxes included
+              {pricing.currency} · All fees included
             </p>
           </div>
         </div>
