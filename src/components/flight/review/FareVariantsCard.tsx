@@ -350,9 +350,21 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
               >
                 {/* ── Background layers ─────────────── */}
                 <div className="absolute inset-0 bg-background" />
-                <div className={cn("absolute inset-0 bg-gradient-to-br", theme.gradient)} />
 
-                {/* Floating watermark icon */}
+                {/* Cabin seat photo strip */}
+                <div className="absolute inset-x-0 top-0 h-24 overflow-hidden">
+                  <img
+                    src={theme.cabinImage}
+                    alt={`${theme.label} cabin`}
+                    className="w-full h-full object-cover object-center"
+                  />
+                  {/* Gradient fade to card background */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/60 to-background" />
+                  {/* Subtle vignette for depth */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/40" />
+                </div>
+
+                <div className={cn("absolute inset-0 bg-gradient-to-br", theme.gradient)} />
                 <div className={cn("absolute -right-4 -top-4 pointer-events-none", theme.watermarkOpacity)}>
                   <CabinIcon className="h-28 w-28 text-foreground" strokeWidth={0.5} />
                 </div>
