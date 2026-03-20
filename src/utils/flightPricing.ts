@@ -80,9 +80,9 @@ export interface FlightPricingBreakdown {
 }
 
 export function getStateTaxInfo(stateCode?: string): { rate: number; label: string } {
-  if (!stateCode) return { rate: DEFAULT_TAX_RATE, label: "Estimated tax" };
+  if (!stateCode) return { rate: DEFAULT_TAX_RATE, label: "Estimated" };
   const upper = stateCode.toUpperCase();
-  return US_STATE_TAX_RATES[upper] || { rate: DEFAULT_TAX_RATE, label: "Estimated tax" };
+  return US_STATE_TAX_RATES[upper] || { rate: DEFAULT_TAX_RATE, label: "Estimated" };
 }
 
 export function calculateZivoBookingFee(baseFare: number): number {
