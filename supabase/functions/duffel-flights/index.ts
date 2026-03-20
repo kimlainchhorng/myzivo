@@ -1155,7 +1155,7 @@ serve(async (req) => {
     console.log('[Duffel] Action:', action);
 
     // Validate action
-    if (typeof action !== 'string' || !['createOfferRequest', 'getOffers', 'getOffer', 'createOrder', 'getAvailableServices'].includes(action)) {
+    if (typeof action !== 'string' || !['createOfferRequest', 'getOffers', 'getOffer', 'createOrder', 'getAvailableServices', 'getSeatMaps'].includes(action)) {
       return new Response(
         JSON.stringify({ error: `Unknown action: ${action}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
