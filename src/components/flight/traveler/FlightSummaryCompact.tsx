@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import type { DuffelOffer, DuffelSegment } from "@/hooks/useDuffelFlights";
+import { getAllInPrice } from "@/utils/flightPricing";
 
 function calcLayoverMinutes(prev: DuffelSegment, next: DuffelSegment): number {
   try {
@@ -211,7 +212,7 @@ export function FlightSummaryCompact({ offer, search }: { offer: DuffelOffer; se
                 className="text-xl font-bold tabular-nums leading-tight tracking-tight"
                 style={{ color: "hsl(var(--flights))" }}
               >
-                ${Math.round(offer.price).toLocaleString()}
+                ${Math.round(getAllInPrice(offer.price)).toLocaleString()}
               </p>
               <p className="text-[9px] text-muted-foreground font-medium">{isRoundTrip ? "round trip" : "one way"}</p>
             </div>
