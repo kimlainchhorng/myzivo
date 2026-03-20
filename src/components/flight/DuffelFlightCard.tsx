@@ -178,7 +178,12 @@ function RouteTimeline({
         </div>
 
         <div className="text-right shrink-0 min-w-[52px] sm:min-w-[58px]">
-          <p className="text-[19px] sm:text-xl font-bold tabular-nums leading-none">{arrTime}</p>
+          <p className="text-[19px] sm:text-xl font-bold tabular-nums leading-none">
+            {arrTime}
+            {dayDiff && dayDiff > 0 ? (
+              <sup className="text-[10px] font-semibold text-muted-foreground ml-0.5">+{dayDiff}</sup>
+            ) : null}
+          </p>
           <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{arrCode}</p>
         </div>
       </div>
