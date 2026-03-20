@@ -10,7 +10,7 @@ import {
   CreditCard, CheckCircle2, Fingerprint, Luggage, PackageCheck, RefreshCw,
   Clock, AlertCircle, ChevronDown
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AppLayout from "@/components/app/AppLayout";
