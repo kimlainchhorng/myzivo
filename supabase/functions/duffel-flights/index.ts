@@ -511,6 +511,34 @@ async function createOrder(params: CreateOrderParams) {
   };
 }
 
+/**
+ * Parse ISO 8601 duration (e.g. PT20H44M, PT45M, P0DT20H44M0S)
+ */
+function parseISO8601Duration(dur: string): { hours: number; minutes: number; totalMinutes: number } {
+  if (!dur) return { hours: 0, minutes: 0, totalMinutes: 0 };
+  let totalMinutes = 0;
+  const dayMatch = dur.match(/(\d+)D/);
+  const hourMatch = dur.match(/(\d+)H/);
+  const minMatch = dur.match(/(\d+)M/);
+  if (dayMatch) totalMinutes += parseInt(dayMatch[1]) * 24 * 60;
+  if (hourMatch) totalMinutes += parseInt(hourMatch[1]) * 60;
+  if (minMatch) totalMinutes += parseInt(minMatch[1]);
+  return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60, totalMinutes };
+}
+
+/**
+ * Calculate duration from timestamps as fallback
+ */
+function calcDurationFromTimestamps(departAt: string, arriveAt: string): { hours: number; minutes: number; totalMinutes: number } {
+  try {
+    const diff = new Date(arriveAt).getTime() - new Date(departAt).getTime();
+    const totalMinutes = Math.max(0, Math.round(diff / 60000));
+    return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60, totalMinutes };
+  } catch {
+    return { hours: 0, minutes: 0, totalMinutes: 0 };
+  }
+}
+
 // Transform Duffel offer to our format
 function transformOffer(offer: unknown): DuffelOfferTransformed | null {
   if (!offer || typeof offer !== 'object') return null;
@@ -529,21 +557,32 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
   
   if (!firstSegment || !lastSegment) return null;
 
-  // Extract carrier info
-  const operatingCarrier = firstSegment.operating_carrier as Record<string, string> | undefined;
-  const marketingCarrier = firstSegment.marketing_carrier as Record<string, string> | undefined;
-  const carrier = operatingCarrier || marketingCarrier;
+  // Extract carrier info - check if multi-carrier
+  const firstCarrier = (firstSegment.operating_carrier || firstSegment.marketing_carrier) as Record<string, string> | undefined;
+  const firstMarketingCarrier = firstSegment.marketing_carrier as Record<string, string> | undefined;
+  let isMultiCarrier = false;
+  for (let i = 1; i < segments.length; i++) {
+    const segCarrier = (segments[i].operating_carrier || segments[i].marketing_carrier) as Record<string, string> | undefined;
+    if (segCarrier?.iata_code && firstCarrier?.iata_code && segCarrier.iata_code !== firstCarrier.iata_code) {
+      isMultiCarrier = true;
+      break;
+    }
+  }
+  const airlineName = isMultiCarrier ? 'Multiple airlines' : (firstCarrier?.name || 'Unknown Airline');
+  const airlineCode = firstCarrier?.iata_code || 'XX';
 
   // Extract airports
   const origin = firstSegment.origin as Record<string, string> | undefined;
   const destination = lastSegment.destination as Record<string, string> | undefined;
 
-  // Calculate duration
-  const duration = firstSlice.duration as string || '';
-  const durationMatch = duration.match(/PT(\d+)H(\d+)?M?/);
-  const hours = durationMatch?.[1] || '0';
-  const mins = durationMatch?.[2] || '0';
-  const durationFormatted = `${hours}h ${mins}m`;
+  // Calculate duration with robust parser
+  const rawDuration = firstSlice.duration as string || '';
+  let dur = parseISO8601Duration(rawDuration);
+  // Fallback: calculate from timestamps if parser returns 0
+  if (dur.totalMinutes === 0 && firstSegment.departing_at && lastSegment.arriving_at) {
+    dur = calcDurationFromTimestamps(firstSegment.departing_at as string, lastSegment.arriving_at as string);
+  }
+  const durationFormatted = `${dur.hours}h ${dur.minutes}m`;
 
   // Get stops
   const stops = Math.max(0, segments.length - 1);
@@ -552,18 +591,52 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     return dest?.iata_code || '';
   }).filter(Boolean);
 
-  // Baggage info
-  const baggageInfo = (o.passenger_identity_documents_required === false) ? 'Personal item' : 'Varies by fare';
+  // Baggage info - check actual baggage data from passengers
+  let baggageInfo = 'No bags included';
+  try {
+    const firstPax = passengers[0];
+    if (firstPax) {
+      const baggages = firstPax.baggages as Array<Record<string, unknown>> | undefined;
+      if (baggages && baggages.length > 0) {
+        const checkedBags = baggages.filter(b => b.type === 'checked');
+        const carryOn = baggages.filter(b => b.type === 'carry_on');
+        if (checkedBags.length > 0) {
+          const qty = checkedBags.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
+          baggageInfo = qty > 0 ? `${qty} checked bag${qty > 1 ? 's' : ''}` : '1 checked bag';
+        } else if (carryOn.length > 0) {
+          baggageInfo = 'Carry-on only';
+        } else {
+          baggageInfo = 'Personal item';
+        }
+      }
+    }
+  } catch {
+    baggageInfo = 'Varies by fare';
+  }
+
+  // Cabin class with segment-level fallback
+  let cabinClass = o.cabin_class as string;
+  if (!cabinClass) {
+    try {
+      const segPax = (firstSegment.passengers as Array<Record<string, string>> | undefined);
+      cabinClass = segPax?.[0]?.cabin_class || 'economy';
+    } catch {
+      cabinClass = 'economy';
+    }
+  }
 
   // Conditions (cancellation, change)
   const conditions = o.conditions as Record<string, unknown> | undefined;
   const isRefundable = conditions?.refund_before_departure !== null;
 
+  // Debug logging
+  console.log(`[Transform] offer=${(o.id as string)?.slice(-8)} airline=${airlineName}(${airlineCode}) segs=${segments.length} stops=${stops} dur_raw="${rawDuration}" dur="${durationFormatted}" baggage="${baggageInfo}" cabin="${cabinClass}" price=${o.total_amount}`);
+
   return {
     id: o.id as string,
-    airline: carrier?.name || 'Unknown Airline',
-    airlineCode: carrier?.iata_code || 'XX',
-    flightNumber: `${marketingCarrier?.iata_code || ''}${firstSegment.marketing_carrier_flight_number || ''}`,
+    airline: airlineName,
+    airlineCode,
+    flightNumber: `${firstMarketingCarrier?.iata_code || ''}${firstSegment.marketing_carrier_flight_number || ''}`,
     departure: {
       time: formatTime(firstSegment.departing_at as string),
       date: formatDate(firstSegment.departing_at as string),
@@ -579,13 +652,13 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
       terminal: lastSegment.destination_terminal as string | undefined,
     },
     duration: durationFormatted,
-    durationMinutes: parseInt(hours) * 60 + parseInt(mins),
+    durationMinutes: dur.totalMinutes,
     stops,
     stopCities,
     price: parseFloat(o.total_amount as string) || 0,
     currency: o.total_currency as string || 'USD',
     pricePerPerson: parseFloat(o.total_amount as string) / Math.max(passengers.length, 1),
-    cabinClass: o.cabin_class as string || 'economy',
+    cabinClass,
     baggageIncluded: baggageInfo,
     isRefundable,
     conditions: {
@@ -593,7 +666,7 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
       refundBeforeDeparture: conditions?.refund_before_departure as boolean | null,
     },
     segments: segments.map(seg => transformSegment(seg)),
-    owner: carrier,
+    owner: firstCarrier,
     expiresAt: o.expires_at as string,
     passengers: passengers.length,
   };
@@ -606,10 +679,8 @@ function transformSegment(segment: Record<string, unknown>) {
   const destination = segment.destination as Record<string, string> | undefined;
   const aircraft = segment.aircraft as Record<string, string> | undefined;
 
-  const duration = segment.duration as string || '';
-  const durationMatch = duration.match(/PT(\d+)H(\d+)?M?/);
-  const hours = durationMatch?.[1] || '0';
-  const mins = durationMatch?.[2] || '0';
+  const rawDuration = segment.duration as string || '';
+  const dur = parseISO8601Duration(rawDuration);
 
   return {
     id: segment.id as string,
@@ -633,15 +704,29 @@ function transformSegment(segment: Record<string, unknown>) {
     marketingCarrierCode: marketingCarrier?.iata_code || '',
     flightNumber: `${marketingCarrier?.iata_code || ''}${segment.marketing_carrier_flight_number || ''}`,
     aircraft: aircraft?.name || 'Unknown',
-    duration: `${hours}h ${mins}m`,
+    duration: `${dur.hours}h ${dur.minutes}m`,
     cabinClass: (segment.passengers as Array<Record<string, string>> | undefined)?.[0]?.cabin_class || 'economy',
   };
 }
 
 function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
-  return offers
+  const transformed = offers
     .map(o => transformOffer(o))
     .filter((o): o is DuffelOfferTransformed => o !== null);
+
+  // Deduplicate by fingerprint: airlineCode + departure time + arrival time + stops + price
+  const seen = new Set<string>();
+  const deduped: DuffelOfferTransformed[] = [];
+  for (const offer of transformed) {
+    const fingerprint = `${offer.airlineCode}-${offer.departure.time}-${offer.arrival.time}-${offer.stops}-${offer.price}`;
+    if (!seen.has(fingerprint)) {
+      seen.add(fingerprint);
+      deduped.push(offer);
+    }
+  }
+
+  console.log(`[Transform] ${offers.length} raw -> ${transformed.length} transformed -> ${deduped.length} after dedup`);
+  return deduped;
 }
 
 function formatTime(dateStr: string): string {
