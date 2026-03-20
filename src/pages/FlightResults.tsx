@@ -22,6 +22,7 @@ import FlightResultsSkeleton from "@/components/flight/FlightResultsSkeleton";
 import { useDuffelFlightSearch, getDuffelAirlineLogo, type DuffelOffer } from "@/hooks/useDuffelFlights";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
+import DuffelFlightCard from "@/components/flight/DuffelFlightCard";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
