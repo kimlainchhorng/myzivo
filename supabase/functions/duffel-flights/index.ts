@@ -844,7 +844,17 @@ async function getAvailableServices(params: GetAvailableServicesParams) {
   console.log('[Duffel] Fetching available services for offer:', params.offer_id);
 
   const result = await duffelRequest(`/air/offers/${params.offer_id}/available_services`, 'GET');
-  if (result.error) return { error: result.error };
+
+  // If the offer expired or doesn't support services, return empty gracefully
+  if (result.error) {
+    const errStr = typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
+    const isNotFound = errStr.includes('not_found') || errStr.includes('Not found') || errStr.includes('does not exist');
+    if (isNotFound) {
+      console.log('[Duffel] Offer not found for available_services (likely expired), returning empty');
+      return { services: [], grouped: {}, total: 0 };
+    }
+    return { error: result.error };
+  }
 
   const services = result.data as Array<{
     id: string;
