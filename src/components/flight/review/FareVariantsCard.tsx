@@ -13,6 +13,11 @@ import {
 import { cn } from "@/lib/utils";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
 
+import cabinEconomy from "@/assets/cabin-economy.jpg";
+import cabinPremiumEconomy from "@/assets/cabin-premium-economy.jpg";
+import cabinBusiness from "@/assets/cabin-business.jpg";
+import cabinFirst from "@/assets/cabin-first.jpg";
+
 type FareVariant = NonNullable<DuffelOffer["fareVariants"]>[number];
 
 interface FareVariantsCardProps {
@@ -24,7 +29,7 @@ interface FareVariantsCardProps {
 const CABIN_THEMES: Record<string, {
   gradient: string; accent: string; label: string;
   icon: typeof Ticket; glow: string; watermarkOpacity: string;
-  chipActive: string; badgeBorder: string;
+  chipActive: string; badgeBorder: string; cabinImage: string;
 }> = {
   economy: {
     gradient: "from-slate-400/6 to-slate-300/3",
@@ -35,6 +40,7 @@ const CABIN_THEMES: Record<string, {
     watermarkOpacity: "opacity-[0.03]",
     chipActive: "border-[hsl(var(--flights))]/30 text-[hsl(var(--flights))]",
     badgeBorder: "border-border/30",
+    cabinImage: cabinEconomy,
   },
   premium_economy: {
     gradient: "from-amber-400/8 to-orange-300/4",
@@ -45,6 +51,7 @@ const CABIN_THEMES: Record<string, {
     watermarkOpacity: "opacity-[0.04]",
     chipActive: "border-amber-400/40 text-amber-600 dark:text-amber-400",
     badgeBorder: "border-amber-400/25",
+    cabinImage: cabinPremiumEconomy,
   },
   business: {
     gradient: "from-indigo-400/10 to-violet-300/5",
@@ -55,6 +62,7 @@ const CABIN_THEMES: Record<string, {
     watermarkOpacity: "opacity-[0.04]",
     chipActive: "border-indigo-400/40 text-indigo-600 dark:text-indigo-400",
     badgeBorder: "border-indigo-400/25",
+    cabinImage: cabinBusiness,
   },
   first: {
     gradient: "from-yellow-400/10 to-amber-300/5",
@@ -65,6 +73,7 @@ const CABIN_THEMES: Record<string, {
     watermarkOpacity: "opacity-[0.05]",
     chipActive: "border-yellow-400/40 text-yellow-600 dark:text-yellow-400",
     badgeBorder: "border-yellow-400/25",
+    cabinImage: cabinFirst,
   },
 };
 
@@ -341,9 +350,21 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
               >
                 {/* ── Background layers ─────────────── */}
                 <div className="absolute inset-0 bg-background" />
-                <div className={cn("absolute inset-0 bg-gradient-to-br", theme.gradient)} />
 
-                {/* Floating watermark icon */}
+                {/* Cabin seat photo strip */}
+                <div className="absolute inset-x-0 top-0 h-24 overflow-hidden">
+                  <img
+                    src={theme.cabinImage}
+                    alt={`${theme.label} cabin`}
+                    className="w-full h-full object-cover object-center"
+                  />
+                  {/* Gradient fade to card background */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/60 to-background" />
+                  {/* Subtle vignette for depth */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/40" />
+                </div>
+
+                <div className={cn("absolute inset-0 bg-gradient-to-br", theme.gradient)} />
                 <div className={cn("absolute -right-4 -top-4 pointer-events-none", theme.watermarkOpacity)}>
                   <CabinIcon className="h-28 w-28 text-foreground" strokeWidth={0.5} />
                 </div>
@@ -383,7 +404,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                 </AnimatePresence>
 
                 {/* ── Card content ──────────────────── */}
-                <div className="relative z-10 flex h-full flex-col p-4 pt-5">
+                <div className="relative z-10 flex h-full flex-col p-4 pt-[5.5rem]">
                   {/* Header row */}
                   <div className="mb-4 flex items-start gap-3">
                     <FloatingIcon3D
