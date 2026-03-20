@@ -133,21 +133,30 @@ const FlightReview = () => {
             <Card className="border-[hsl(var(--flights))]/20 shadow-sm shadow-[hsl(var(--flights))]/4 overflow-hidden">
               {/* Header strip */}
               <div className="bg-[hsl(var(--flights))]/8 px-4 py-3 flex items-center gap-3 border-b border-[hsl(var(--flights))]/10">
-                <div className="w-10 h-10 rounded-lg bg-card border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
-                  <img
-                    src={getDuffelAirlineLogo(offer.airlineCode)}
-                    alt={offer.airline}
-                    className="w-8 h-8 object-contain"
-                    onError={(e) => {
-                      const el = e.target as HTMLImageElement;
-                      el.style.display = "none";
-                      el.parentElement!.innerHTML = `<span class="text-sm font-bold text-muted-foreground">${offer.airlineCode}</span>`;
-                    }}
+                <div className="relative shrink-0" style={{ width: (offer.carriers?.length > 1) ? 52 : 40 }}>
+                  <AirlineLogo
+                    iataCode={offer.carriers?.[0]?.code || offer.airlineCode}
+                    airlineName={offer.airline}
+                    size={40}
+                    className="border border-border/20 bg-muted/40"
                   />
+                  {offer.carriers?.length > 1 && (
+                    <AirlineLogo
+                      iataCode={offer.carriers[1].code}
+                      airlineName={offer.carriers[1].name}
+                      size={28}
+                      className="absolute bottom-0 right-0 border-2 border-card bg-muted/40"
+                    />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">{offer.airline}</p>
-                  <p className="text-[11px] text-muted-foreground">{offer.flightNumber}</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[11px] text-muted-foreground">{offer.flightNumber}</p>
+                    {offer.operatedBy && (
+                      <p className="text-[9px] text-muted-foreground/70 truncate">· {offer.operatedBy}</p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-1.5 shrink-0">
                   {offer.isRefundable && (
