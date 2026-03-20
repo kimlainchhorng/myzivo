@@ -827,6 +827,30 @@ const FlightResults = () => {
               )}
             </div>
           </div>
+
+          {/* Cross-sell: Hotels & Cars */}
+          {!isLoading && filtered.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mt-6"
+            >
+              <TravelExtrasCTA currentService="flights" destination={destAirport?.city || destination} />
+            </motion.div>
+          )}
+
+          {/* FAQ section for SEO */}
+          {!isLoading && offers.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="mt-8"
+            >
+              <ResultsFAQ service="flights" />
+            </motion.div>
+          )}
         </div>
   );
 
