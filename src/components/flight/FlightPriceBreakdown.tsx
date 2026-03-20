@@ -1,12 +1,12 @@
 /**
  * Flight Price Breakdown Component
- * Shows: base fare, state tax, card processing fee, ZIVO booking fee, total
+ * Shows: base fare (includes card + booking fees) + state tax = total
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Receipt, Shield, Check, CreditCard, Building2, Sparkles } from 'lucide-react';
+import { Receipt, Shield, Check, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FLIGHT_MOR_DISCLAIMERS } from '@/config/flightMoRCompliance';
 import { CHECKOUT_PRICE } from '@/config/checkoutCompliance';
@@ -35,11 +35,8 @@ export default function FlightPriceBreakdown({
 }: FlightPriceBreakdownProps) {
   const {
     baseFare, stateTax, stateTaxRate, stateTaxLabel,
-    cardProcessingFee, cardProcessingRate, zivoBookingFee,
     totalPerPassenger, totalAllPassengers, passengers, currency,
   } = pricing;
-
-  const zivoFeeLabel = baseFare < 100 ? "Flat $10" : "5%";
 
   if (compact) {
     return (
@@ -49,16 +46,8 @@ export default function FlightPriceBreakdown({
           <span>{formatPrice(baseFare * passengers, currency)}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Tax ({(stateTaxRate * 100).toFixed(1)}%)</span>
+          <span className="text-muted-foreground">{stateTaxLabel} tax ({(stateTaxRate * 100).toFixed(1)}%)</span>
           <span>{formatPrice(stateTax * passengers, currency)}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Card fee (3.5%)</span>
-          <span>{formatPrice(cardProcessingFee * passengers, currency)}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Booking fee ({zivoFeeLabel})</span>
-          <span>{formatPrice(zivoBookingFee * passengers, currency)}</span>
         </div>
         <Separator />
         <div className="flex justify-between font-bold text-lg">
@@ -78,7 +67,7 @@ export default function FlightPriceBreakdown({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Per Person Breakdown */}
+        {/* Per Person Breakdown (multi-pax) */}
         {passengers > 1 && (
           <div className="space-y-2 p-3 rounded-lg bg-muted/30">
             <p className="text-sm font-medium text-muted-foreground">Per passenger</p>
@@ -91,18 +80,6 @@ export default function FlightPriceBreakdown({
                 <Building2 className="w-3 h-3" /> {stateTaxLabel} tax ({(stateTaxRate * 100).toFixed(1)}%)
               </span>
               <span>{formatPrice(stateTax, currency)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="flex items-center gap-1">
-                <CreditCard className="w-3 h-3" /> Card processing ({(cardProcessingRate * 100).toFixed(1)}%)
-              </span>
-              <span>{formatPrice(cardProcessingFee, currency)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> ZIVO booking fee ({zivoFeeLabel})
-              </span>
-              <span>{formatPrice(zivoBookingFee, currency)}</span>
             </div>
             <div className="flex justify-between font-medium pt-2 border-t border-border/50">
               <span>Subtotal</span>
@@ -125,18 +102,6 @@ export default function FlightPriceBreakdown({
                 </span>
                 <span>{formatPrice(stateTax, currency)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <CreditCard className="w-3.5 h-3.5" /> Card processing ({(cardProcessingRate * 100).toFixed(1)}%)
-                </span>
-                <span>{formatPrice(cardProcessingFee, currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5" /> ZIVO booking fee ({zivoFeeLabel})
-                </span>
-                <span>{formatPrice(zivoBookingFee, currency)}</span>
-              </div>
             </>
           ) : (
             <>
@@ -149,18 +114,6 @@ export default function FlightPriceBreakdown({
                   {stateTaxLabel} tax ({(stateTaxRate * 100).toFixed(1)}%) × {passengers}
                 </span>
                 <span>{formatPrice(stateTax * passengers, currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  Card processing (3.5%) × {passengers}
-                </span>
-                <span>{formatPrice(cardProcessingFee * passengers, currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  ZIVO booking fee ({zivoFeeLabel}) × {passengers}
-                </span>
-                <span>{formatPrice(zivoBookingFee * passengers, currency)}</span>
               </div>
             </>
           )}
@@ -189,11 +142,10 @@ export default function FlightPriceBreakdown({
           </Badge>
           <Badge variant="outline" className="text-xs gap-1 text-emerald-600 border-emerald-500/30">
             <Shield className="w-3 h-3" />
-            Transparent fees
+            All fees included
           </Badge>
         </div>
 
-        {/* No Hidden Fees Message */}
         {showNoHiddenFees && (
           <div className="pt-2 text-center">
             <p className="text-xs text-emerald-600 font-medium">
@@ -202,9 +154,8 @@ export default function FlightPriceBreakdown({
           </div>
         )}
 
-        {/* MoR Disclaimer */}
         <p className="text-[10px] text-muted-foreground leading-relaxed">
-          {FLIGHT_MOR_DISCLAIMERS.priceBreakdown}
+          Base fare includes card processing and booking fees. {FLIGHT_MOR_DISCLAIMERS.priceBreakdown}
         </p>
       </CardContent>
     </Card>
