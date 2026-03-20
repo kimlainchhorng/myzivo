@@ -261,14 +261,12 @@ const FlightReview = () => {
                         )}
                         <div className="py-2.5">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="w-6 h-6 rounded bg-muted/40 border border-border/20 flex items-center justify-center overflow-hidden shrink-0">
-                              <img
-                                src={getDuffelAirlineLogo(seg.operatingCarrierCode || seg.marketingCarrierCode)}
-                                alt=""
-                                className="w-5 h-5 object-contain"
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                              />
-                            </div>
+                            <AirlineLogo
+                              iataCode={seg.operatingCarrierCode || seg.marketingCarrierCode}
+                              airlineName={seg.operatingCarrier || seg.marketingCarrier}
+                              size={24}
+                              className="border border-border/20 bg-muted/40"
+                            />
                             <div className="min-w-0">
                               <p className="text-[11px] font-medium truncate">
                                 {seg.operatingCarrier || seg.marketingCarrier} · {seg.flightNumber}
