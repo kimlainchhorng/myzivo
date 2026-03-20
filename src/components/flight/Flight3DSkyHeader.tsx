@@ -5,7 +5,8 @@
  */
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import airplanePng from "@/assets/airplane-3d.png";
+import airplaneRightPng from "@/assets/airplane-3d.png";
+import airplaneLeftPng from "@/assets/airplane-left.png";
 import { cn } from "@/lib/utils";
 
 /* ─── Time-of-day system ─── */
