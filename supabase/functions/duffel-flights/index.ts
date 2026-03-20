@@ -551,7 +551,15 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
   const firstSlice = slices[0];
   if (!firstSlice) return null;
   
-  const segments = (firstSlice.segments || []) as Array<Record<string, unknown>>;
+  // Flatten ALL slices' segments for round-trip support
+  const firstSliceSegments = (firstSlice.segments || []) as Array<Record<string, unknown>>;
+  const allSegments: Array<Record<string, unknown>> = [];
+  for (const slice of slices) {
+    const sliceSegs = (slice.segments || []) as Array<Record<string, unknown>>;
+    allSegments.push(...sliceSegs);
+  }
+  const segments = firstSliceSegments; // outbound-only for departure/arrival metadata
+  const allSegs = allSegments; // all slices for full segment list
   const firstSegment = segments[0];
   const lastSegment = segments[segments.length - 1];
   
@@ -709,7 +717,7 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
       changeBeforeDeparture: conditions?.change_before_departure as boolean | null,
       refundBeforeDeparture: conditions?.refund_before_departure as boolean | null,
     },
-    segments: segments.map(seg => transformSegment(seg)),
+    segments: allSegs.map(seg => transformSegment(seg)),
     owner: firstCarrier,
     expiresAt: o.expires_at as string,
     passengers: passengers.length,
