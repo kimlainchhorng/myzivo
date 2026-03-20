@@ -712,7 +712,7 @@ const FlightResults = () => {
               )}
 
               {/* Results list */}
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <AnimatePresence mode="popLayout">
                   {filtered.map((offer, idx) => (
                     <motion.div
