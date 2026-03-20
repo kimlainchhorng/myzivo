@@ -1,11 +1,10 @@
 /**
  * Price Summary Card — 3D Spatial premium breakdown
- * Uses centralized pricing logic with state tax, card fee, ZIVO booking fee
+ * Base fare includes card processing + ZIVO booking fee automatically
  */
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRightLeft, Users, Tag, Info, Building2, CreditCard } from "lucide-react";
+import { Sparkles, ArrowRightLeft, Users, Tag, Building2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { type DuffelOffer } from "@/hooks/useDuffelFlights";
 import { calculateFlightPricing } from "@/utils/flightPricing";
@@ -25,8 +24,6 @@ export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRound
     offer.currency || "USD",
     stateCode,
   );
-
-  const zivoFeeLabel = pricing.baseFare < 100 ? "$10 flat" : "5%";
 
   return (
     <motion.div
@@ -75,7 +72,7 @@ export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRound
             }}
           >
             <Tag className="w-3 h-3 text-emerald-500" />
-            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">Transparent</span>
+            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">All-in price</span>
           </div>
         </div>
 
@@ -144,25 +141,8 @@ export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRound
             <span className="font-medium tabular-nums">${pricing.stateTax.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-[10px]">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-muted-foreground flex items-center gap-0.5 cursor-help">
-                    <CreditCard className="w-2.5 h-2.5" /> Card fee (3.5%) <Info className="w-2.5 h-2.5" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] max-w-[200px]">
-                  Credit & debit card processing fee
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <span className="font-medium tabular-nums">${pricing.cardProcessingFee.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-[10px]">
-            <span className="text-muted-foreground flex items-center gap-0.5">
-              <Sparkles className="w-2.5 h-2.5" /> ZIVO booking fee ({zivoFeeLabel})
-            </span>
-            <span className="font-medium tabular-nums">${pricing.zivoBookingFee.toFixed(2)}</span>
+            <span className="text-muted-foreground">ZIVO service fee</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">$0.00</span>
           </div>
         </div>
 
