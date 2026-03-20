@@ -1507,16 +1507,59 @@ export const getAirportByCode = (code: string): Airport | undefined => {
 };
 
 export const searchAirports = (query: string): Airport[] => {
-  const lowerQuery = query.toLowerCase();
-  return airports
-    .filter(a => 
-      a.code.toLowerCase().includes(lowerQuery) ||
-      a.city.toLowerCase().includes(lowerQuery) ||
-      a.name.toLowerCase().includes(lowerQuery) ||
-      a.country.toLowerCase().includes(lowerQuery)
-    )
-    .sort((a, b) => b.popularity - a.popularity)
-    .slice(0, 10);
+  const lowerQuery = query.toLowerCase().trim();
+  if (!lowerQuery) return getPopularAirports(10);
+
+  // Deduplicate by IATA code (keep highest popularity)
+  const seen = new Map<string, Airport>();
+  for (const a of airports) {
+    const existing = seen.get(a.code);
+    if (!existing || (a.popularity ?? 0) > (existing.popularity ?? 0)) {
+      seen.set(a.code, a);
+    }
+  }
+  const unique = Array.from(seen.values());
+
+  // Score-based matching for better relevance
+  const scored = unique
+    .map(a => {
+      let score = 0;
+      const code = a.code.toLowerCase();
+      const city = a.city.toLowerCase();
+      const name = a.name.toLowerCase();
+      const country = a.country.toLowerCase();
+
+      // Exact IATA code match — highest priority
+      if (code === lowerQuery) score += 100;
+      // Code starts with query
+      else if (code.startsWith(lowerQuery)) score += 60;
+
+      // Exact city match
+      if (city === lowerQuery) score += 90;
+      // City starts with query
+      else if (city.startsWith(lowerQuery)) score += 50;
+      // City contains query (word boundary)
+      else if (city.includes(lowerQuery)) score += 20;
+
+      // Country exact or starts with
+      if (country === lowerQuery) score += 40;
+      else if (country.startsWith(lowerQuery)) score += 25;
+      else if (country.includes(lowerQuery)) score += 10;
+
+      // Airport name contains query
+      if (name.includes(lowerQuery)) score += 15;
+
+      // Boost by popularity
+      if (score > 0) score += (a.popularity ?? 0);
+
+      return { airport: a, score };
+    })
+    .filter(s => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10)
+    .map(s => s.airport);
+
+  return scored;
 };
 
 export const getAirportsByRegion = (region: string): Airport[] => {
@@ -1524,7 +1567,15 @@ export const getAirportsByRegion = (region: string): Airport[] => {
 };
 
 export const getPopularAirports = (limit: number = 20): Airport[] => {
-  return [...airports].sort((a, b) => b.popularity - a.popularity).slice(0, limit);
+  // Deduplicate by code
+  const seen = new Map<string, Airport>();
+  for (const a of airports) {
+    const existing = seen.get(a.code);
+    if (!existing || (a.popularity ?? 0) > (existing.popularity ?? 0)) {
+      seen.set(a.code, a);
+    }
+  }
+  return Array.from(seen.values()).sort((a, b) => b.popularity - a.popularity).slice(0, limit);
 };
 
 export const formatAirportDisplay = (airport: Airport): string => {
