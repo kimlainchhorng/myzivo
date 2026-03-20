@@ -71,8 +71,12 @@ export interface DuffelOffer {
   baggageDetails: {
     carryOnIncluded: boolean;
     carryOnQuantity: number;
+    carryOnWeightKg: number | null;
+    carryOnWeightLb: number | null;
     checkedBagsIncluded: boolean;
     checkedBagQuantity: number;
+    checkedBagWeightKg: number | null;
+    checkedBagWeightLb: number | null;
   };
   segments: DuffelSegment[];
   expiresAt: string;
@@ -83,7 +87,7 @@ export interface DuffelOffer {
     price: number;
     currency: string;
     conditions: { changeable: boolean; refundable: boolean; changePenalty: number | null; refundPenalty: number | null; penaltyCurrency: string };
-    baggageDetails: { carryOnIncluded: boolean; carryOnQuantity: number; checkedBagsIncluded: boolean; checkedBagQuantity: number };
+    baggageDetails: { carryOnIncluded: boolean; carryOnQuantity: number; carryOnWeightKg: number | null; carryOnWeightLb: number | null; checkedBagsIncluded: boolean; checkedBagQuantity: number; checkedBagWeightKg: number | null; checkedBagWeightLb: number | null };
     baggageIncluded: string;
     cabinClass: string;
   }>;
