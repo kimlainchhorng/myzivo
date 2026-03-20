@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.check-zivo-plus]
 verify_jwt = false
+
+[functions.duffel-flights]
+verify_jwt = false
