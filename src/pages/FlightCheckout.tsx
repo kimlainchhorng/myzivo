@@ -233,8 +233,15 @@ const FlightCheckout = () => {
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6"
+              className="mb-6 relative"
             >
+              {isConfirmingBooking && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/90 backdrop-blur-sm rounded-2xl">
+                  <Loader2 className="h-6 w-6 animate-spin text-[hsl(var(--flights))]" />
+                  <p className="text-sm font-semibold">Confirming your booking…</p>
+                  <p className="text-xs text-muted-foreground">Your card has been authorized. Finalizing with the airline.</p>
+                </div>
+              )}
               <FlightInlinePaymentForm
                 clientSecret={clientSecret}
                 totalCents={totalCents}
