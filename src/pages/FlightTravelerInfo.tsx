@@ -393,6 +393,22 @@ const FlightTravelerInfo = () => {
         ))}
       </div>
 
+      {/* Seat Selection */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35, duration: 0.5 }}
+        className="mt-5"
+      >
+        <DuffelSeatPicker
+          offerId={offer?.id ?? null}
+          passengerIds={offer?.passengerIds || ["passenger_0"]}
+          onSeatsSelected={(seats) => {
+            sessionStorage.setItem("zivo_selected_seats", JSON.stringify(seats));
+          }}
+        />
+      </motion.div>
+
       {/* Consent + compliance — 3D styled */}
       <motion.div
         initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
