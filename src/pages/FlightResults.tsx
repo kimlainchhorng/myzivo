@@ -529,13 +529,13 @@ const FlightResults = () => {
             </motion.div>
           </div>
 
-          {/* Sort tabs + filter button */}
+          {/* Sort tabs + filter — native app toolbar feel */}
           {offers.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="flex items-center justify-between mb-3 gap-2"
+              className="flex items-center justify-between mb-2.5 gap-2 -mx-3 sm:mx-0 px-3 sm:px-0"
             >
               <div className="flex gap-0.5 p-0.5 bg-muted/40 backdrop-blur-sm rounded-lg border border-border/20 overflow-x-auto no-scrollbar">
                 {([
