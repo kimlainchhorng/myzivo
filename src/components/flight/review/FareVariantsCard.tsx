@@ -46,10 +46,9 @@ function FeatureRow({ included, label }: { included: boolean; label: string }) {
 
 export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardProps) {
   const variants = offer.fareVariants;
-  if (!variants || variants.length <= 1) return null;
-
-  // Find which variant is currently selected (match by id)
   const [selectedId, setSelectedId] = useState<string>(offer.id);
+
+  if (!variants || variants.length <= 1) return null;
 
   const handleSelect = (variant: FareVariant) => {
     setSelectedId(variant.id);
