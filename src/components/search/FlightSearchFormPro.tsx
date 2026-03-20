@@ -482,7 +482,7 @@ export default function FlightSearchFormPro({
                     <Button
                       variant="outline"
                       onClick={() => setPassengerSheetOpen(true)}
-                      className="w-full h-12 justify-start text-left font-normal rounded-xl touch-manipulation"
+                      className="w-full h-13 justify-start text-left font-normal rounded-2xl touch-manipulation shadow-sm border-border/30 hover:shadow-md transition-all active:scale-[0.98]"
                     >
                       <Users className="w-4 h-4 mr-2 text-purple-500" />
                       {passengers} {passengers === 1 ? "Traveler" : "Travelers"} • {cabin.charAt(0).toUpperCase() + cabin.slice(1)}
@@ -505,7 +505,7 @@ export default function FlightSearchFormPro({
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          className="w-full h-11 sm:h-12 justify-start text-left font-normal rounded-xl"
+                          className="w-full h-11 sm:h-12 justify-start text-left font-normal rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
                         >
                           <Users className="w-4 h-4 mr-2 text-purple-500" />
                           {passengers} {passengers === 1 ? "Traveler" : "Travelers"}
@@ -555,7 +555,7 @@ export default function FlightSearchFormPro({
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          className="w-full h-11 sm:h-12 justify-start text-left font-normal rounded-xl"
+                          className="w-full h-11 sm:h-12 justify-start text-left font-normal rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
                         >
                           <Crown className={cn(
                             "w-4 h-4 mr-2",
