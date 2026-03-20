@@ -557,19 +557,42 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
   
   if (!firstSegment || !lastSegment) return null;
 
-  // Extract carrier info - check if multi-carrier
-  const firstCarrier = (firstSegment.operating_carrier || firstSegment.marketing_carrier) as Record<string, string> | undefined;
+  // Extract all unique carriers from segments
+  const carrierMap = new Map<string, { name: string; code: string; isOperating: boolean }>();
+  let operatedBy: string | null = null;
   const firstMarketingCarrier = firstSegment.marketing_carrier as Record<string, string> | undefined;
-  let isMultiCarrier = false;
-  for (let i = 1; i < segments.length; i++) {
-    const segCarrier = (segments[i].operating_carrier || segments[i].marketing_carrier) as Record<string, string> | undefined;
-    if (segCarrier?.iata_code && firstCarrier?.iata_code && segCarrier.iata_code !== firstCarrier.iata_code) {
-      isMultiCarrier = true;
-      break;
+
+  for (const seg of segments) {
+    const opCarrier = seg.operating_carrier as Record<string, string> | undefined;
+    const mkCarrier = seg.marketing_carrier as Record<string, string> | undefined;
+    const opCode = opCarrier?.iata_code;
+    const mkCode = mkCarrier?.iata_code;
+
+    if (opCode && !carrierMap.has(opCode)) {
+      carrierMap.set(opCode, { name: opCarrier?.name || opCode, code: opCode, isOperating: true });
+    }
+    if (mkCode && !carrierMap.has(mkCode)) {
+      carrierMap.set(mkCode, { name: mkCarrier?.name || mkCode, code: mkCode, isOperating: false });
+    }
+    // Detect codeshare: marketing differs from operating
+    if (opCode && mkCode && opCode !== mkCode && !operatedBy) {
+      operatedBy = `Operated by ${opCarrier?.name || opCode}`;
     }
   }
-  const airlineName = isMultiCarrier ? 'Multiple airlines' : (firstCarrier?.name || 'Unknown Airline');
-  const airlineCode = firstCarrier?.iata_code || 'XX';
+
+  const carriers = Array.from(carrierMap.values());
+  // Build display name: max 2 carrier names
+  const uniqueNames = [...new Set(carriers.map(c => c.name))];
+  let airlineName: string;
+  if (uniqueNames.length === 1) {
+    airlineName = uniqueNames[0];
+  } else if (uniqueNames.length === 2) {
+    airlineName = `${uniqueNames[0]} + ${uniqueNames[1]}`;
+  } else {
+    airlineName = `${uniqueNames[0]} + ${uniqueNames[1]} +${uniqueNames.length - 2} more`;
+  }
+  const firstCarrier = carriers[0];
+  const airlineCode = firstCarrier?.code || 'XX';
 
   // Extract airports
   const origin = firstSegment.origin as Record<string, string> | undefined;
@@ -584,12 +607,30 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
   }
   const durationFormatted = `${dur.hours}h ${dur.minutes}m`;
 
-  // Get stops
+  // Get stops + stopDetails with layover durations
   const stops = Math.max(0, segments.length - 1);
-  const stopCities = segments.slice(0, -1).map(seg => {
-    const dest = seg.destination as Record<string, string> | undefined;
-    return dest?.iata_code || '';
-  }).filter(Boolean);
+  const stopCities: string[] = [];
+  const stopDetails: Array<{ code: string; city: string; layoverDuration: string }> = [];
+  for (let i = 0; i < segments.length - 1; i++) {
+    const segDest = segments[i].destination as Record<string, string> | undefined;
+    const code = segDest?.iata_code || '';
+    const city = segDest?.city_name || segDest?.name || code;
+    stopCities.push(code);
+    // Layover = next segment departure - this segment arrival
+    let layoverDuration = '';
+    try {
+      const arriveAt = segments[i].arriving_at as string;
+      const departAt = segments[i + 1].departing_at as string;
+      if (arriveAt && departAt) {
+        const diffMs = new Date(departAt).getTime() - new Date(arriveAt).getTime();
+        const layoverMin = Math.max(0, Math.round(diffMs / 60000));
+        const lH = Math.floor(layoverMin / 60);
+        const lM = layoverMin % 60;
+        layoverDuration = `${lH}h ${lM}m`;
+      }
+    } catch { /* ignore */ }
+    stopDetails.push({ code, city, layoverDuration });
+  }
 
   // Baggage info - check actual baggage data from passengers
   let baggageInfo = 'No bags included';
@@ -630,7 +671,7 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
   const isRefundable = conditions?.refund_before_departure !== null;
 
   // Debug logging
-  console.log(`[Transform] offer=${(o.id as string)?.slice(-8)} airline=${airlineName}(${airlineCode}) segs=${segments.length} stops=${stops} dur_raw="${rawDuration}" dur="${durationFormatted}" baggage="${baggageInfo}" cabin="${cabinClass}" price=${o.total_amount}`);
+  console.log(`[Transform] offer=${(o.id as string)?.slice(-8)} airline=${airlineName}(${airlineCode}) carriers=${carriers.length} segs=${segments.length} stops=${stops} dur="${durationFormatted}" baggage="${baggageInfo}" cabin="${cabinClass}" price=${o.total_amount}`);
 
   return {
     id: o.id as string,
@@ -655,6 +696,9 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     durationMinutes: dur.totalMinutes,
     stops,
     stopCities,
+    stopDetails,
+    carriers,
+    operatedBy,
     price: parseFloat(o.total_amount as string) || 0,
     currency: o.total_currency as string || 'USD',
     pricePerPerson: parseFloat(o.total_amount as string) / Math.max(passengers.length, 1),
