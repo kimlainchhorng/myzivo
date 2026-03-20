@@ -15945,7 +15945,7 @@ export type Database = {
           payment_processor_fee: number | null
           payment_status: string | null
           pnr: string | null
-          price_per_passenger: number
+          price_per_passenger: number | null
           refund_amount: number | null
           refund_processed_at: string | null
           refund_reason: string | null
@@ -16001,7 +16001,7 @@ export type Database = {
           payment_processor_fee?: number | null
           payment_status?: string | null
           pnr?: string | null
-          price_per_passenger: number
+          price_per_passenger?: number | null
           refund_amount?: number | null
           refund_processed_at?: string | null
           refund_reason?: string | null
@@ -16057,7 +16057,7 @@ export type Database = {
           payment_processor_fee?: number | null
           payment_status?: string | null
           pnr?: string | null
-          price_per_passenger?: number
+          price_per_passenger?: number | null
           refund_amount?: number | null
           refund_processed_at?: string | null
           refund_reason?: string | null
