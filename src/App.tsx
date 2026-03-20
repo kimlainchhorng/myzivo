@@ -106,6 +106,7 @@ const AirportPage = lazy(() => import("./pages/AirportPage"));
 const FlightCityPage = lazy(() => import("./pages/FlightCityPage"));
 const DuffelCheckout = lazy(() => import("./pages/DuffelCheckout"));
 const FlightBookingsPage = lazy(() => import("./pages/FlightBookingsPage"));
+const FlightReview = lazy(() => import("./pages/FlightReview"));
 // EmbeddedCheckout removed — partners block iframe embedding; use redirect model
 // FlightDashboard removed
 
