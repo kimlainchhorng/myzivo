@@ -221,7 +221,7 @@ const calendarClassNames = {
   day_selected: "bg-emerald-500 text-white hover:bg-emerald-600 focus:bg-emerald-500 font-semibold shadow-sm rounded-lg",
   day_today: "bg-muted text-foreground font-semibold rounded-lg",
   day_outside: "text-muted-foreground/30 aria-selected:bg-emerald-500/50 aria-selected:text-white",
-  day_disabled: "bg-slate-700 text-slate-300 rounded-lg",
+  day_disabled: "text-muted-foreground/30",
   day_range_middle: "aria-selected:bg-emerald-500/10 aria-selected:text-foreground rounded-none",
   day_hidden: "invisible",
 };
