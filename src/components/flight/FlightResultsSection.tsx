@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { getAllInPrice } from "@/utils/flightPricing";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -58,7 +59,7 @@ export default function FlightResultsSection({
       return match ? parseInt(match[1]) : 0;
     });
     return {
-      lowestPrice: Math.min(...prices),
+      lowestPrice: Math.round(getAllInPrice(Math.min(...prices))),
       fastestDuration: Math.min(...durations),
       directFlights: searchResults.filter(f => f.stops === 0).length,
       realPrices: searchResults.filter(f => f.isRealPrice).length,
