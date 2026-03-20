@@ -853,10 +853,133 @@ const FlightResults = () => {
                 </Card>
               )}
 
-              {/* Results list */}
+              {/* Step indicator for round-trip */}
+              {isRoundTrip && offers.length > 0 && !isLoading && !error && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-3"
+                >
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/30 border border-border/20">
+                    {/* Step 1: Outbound */}
+                    <button
+                      onClick={selectionStep === "return" ? handleBackToOutbound : undefined}
+                      className={cn(
+                        "flex items-center gap-2 flex-1 px-3 py-2 rounded-lg transition-all text-left",
+                        selectionStep === "outbound"
+                          ? "bg-[hsl(var(--flights))]/10 border border-[hsl(var(--flights))]/30 shadow-sm"
+                          : selectedOutboundGroup
+                            ? "bg-primary/5 border border-primary/20 cursor-pointer hover:bg-primary/10"
+                            : "bg-muted/20 border border-border/20"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
+                        selectionStep === "outbound"
+                          ? "bg-[hsl(var(--flights))] text-primary-foreground"
+                          : selectedOutboundGroup
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                      )}>
+                        {selectedOutboundGroup ? <Check className="w-3 h-3" /> : "1"}
+                      </div>
+                      <div className="min-w-0">
+                        <p className={cn(
+                          "text-[10px] font-semibold leading-tight",
+                          selectionStep === "outbound" ? "text-[hsl(var(--flights))]" : "text-foreground"
+                        )}>
+                          Departure
+                        </p>
+                        {selectedOutboundGroup ? (
+                          <p className="text-[9px] text-muted-foreground truncate">
+                            {selectedOutboundGroup.summary.depTime} → {selectedOutboundGroup.summary.arrTime} · {selectedOutboundGroup.representativeOffer.airline}
+                          </p>
+                        ) : (
+                          <p className="text-[9px] text-muted-foreground">{originAirport?.city || origin} → {destAirport?.city || destination}</p>
+                        )}
+                      </div>
+                    </button>
+
+                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+
+                    {/* Step 2: Return */}
+                    <div
+                      className={cn(
+                        "flex items-center gap-2 flex-1 px-3 py-2 rounded-lg transition-all text-left",
+                        selectionStep === "return"
+                          ? "bg-[hsl(var(--flights))]/10 border border-[hsl(var(--flights))]/30 shadow-sm"
+                          : "bg-muted/20 border border-border/20 opacity-60"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
+                        selectionStep === "return"
+                          ? "bg-[hsl(var(--flights))] text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        2
+                      </div>
+                      <div className="min-w-0">
+                        <p className={cn(
+                          "text-[10px] font-semibold leading-tight",
+                          selectionStep === "return" ? "text-[hsl(var(--flights))]" : "text-muted-foreground"
+                        )}>
+                          Return
+                        </p>
+                        <p className="text-[9px] text-muted-foreground">{destAirport?.city || destination} → {originAirport?.city || origin}</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Results list — Two-step for round-trip, single-step for one-way */}
               <div className="space-y-2">
                 <AnimatePresence mode="popLayout">
-                  {filtered.map((offer, idx) => (
+                  {isRoundTrip && selectionStep === "outbound" && sortedOutboundGroups.map((group, idx) => (
+                    <motion.div
+                      key={group.fingerprint}
+                      layout
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2, delay: Math.min(idx * 0.025, 0.15), ease: [0.25, 0.46, 0.45, 0.94] }}
+                    >
+                      <FlightLegCard
+                        group={group}
+                        index={idx}
+                        sortBy={sortBy}
+                        isLowest={idx !== 0 && group.fromPrice === Math.min(...sortedOutboundGroups.map(g => g.fromPrice))}
+                        isFastest={idx !== 0 && getLegDurationMinutes(group) === Math.min(...sortedOutboundGroups.map(g => getLegDurationMinutes(g)))}
+                        label="outbound"
+                        onSelect={handleSelectOutbound}
+                      />
+                    </motion.div>
+                  ))}
+
+                  {isRoundTrip && selectionStep === "return" && sortedReturnGroups.map((group, idx) => (
+                    <motion.div
+                      key={group.fingerprint}
+                      layout
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2, delay: Math.min(idx * 0.025, 0.15), ease: [0.25, 0.46, 0.45, 0.94] }}
+                    >
+                      <FlightLegCard
+                        group={group}
+                        index={idx}
+                        sortBy={sortBy}
+                        isLowest={idx !== 0 && group.fromPrice === Math.min(...sortedReturnGroups.map(g => g.fromPrice))}
+                        isFastest={idx !== 0 && getLegDurationMinutes(group) === Math.min(...sortedReturnGroups.map(g => getLegDurationMinutes(g)))}
+                        label="return"
+                        onSelect={handleSelectReturn}
+                      />
+                    </motion.div>
+                  ))}
+
+                  {/* One-way flights use original DuffelFlightCard */}
+                  {!isRoundTrip && filtered.map((offer, idx) => (
                     <motion.div
                       key={offer.id}
                       layout
@@ -872,7 +995,7 @@ const FlightResults = () => {
                         isLowest={offer.id === lowestPriceId && idx !== 0}
                         isFastest={offer.id === fastestId && idx !== 0}
                         totalPassengers={totalPassengers}
-                        hasReturn={!!returnDate}
+                        hasReturn={false}
                         onSelect={handleSelect}
                         searchDestination={destination}
                       />
@@ -881,9 +1004,18 @@ const FlightResults = () => {
                 </AnimatePresence>
               </div>
 
-              {filtered.length > 0 && (
+              {/* Count */}
+              {!isRoundTrip && filtered.length > 0 && (
                 <p className="text-center text-[10px] text-muted-foreground mt-4 sm:hidden">
                   Showing {filtered.length} of {offers.length} flights
+                </p>
+              )}
+              {isRoundTrip && (
+                <p className="text-center text-[10px] text-muted-foreground mt-4 sm:hidden">
+                  {selectionStep === "outbound"
+                    ? `${sortedOutboundGroups.length} departure option${sortedOutboundGroups.length !== 1 ? "s" : ""}`
+                    : `${sortedReturnGroups.length} return option${sortedReturnGroups.length !== 1 ? "s" : ""}`
+                  }
                 </p>
               )}
             </div>
