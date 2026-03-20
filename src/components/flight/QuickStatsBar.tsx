@@ -1,13 +1,12 @@
 /**
- * Quick Stats Comparison Bar
- * Shows Cheapest, Fastest, and Best Value options for flight results
- * OTA Mode: No partner names, direct airline data
+ * Quick Stats Comparison Bar — 3D Spatial UI
+ * Cheapest / Fastest / Best Value with depth and polish
  */
 
 import { Plane, Clock, Star, Zap } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 export interface QuickStat {
   price: number;
@@ -41,10 +40,12 @@ export function QuickStatsBar({
       icon: Plane,
       price: cheapest.price,
       airline: cheapest.airline,
-      color: "emerald",
-      bgClass: "bg-emerald-500/10",
-      textClass: "text-emerald-500",
-      borderClass: "border-emerald-500/30",
+      duration: cheapest.duration,
+      gradient: "from-emerald-400/20 via-emerald-500/8 to-transparent",
+      iconBg: "bg-emerald-500/12",
+      iconBorder: "border-emerald-400/30",
+      textColor: "text-emerald-600 dark:text-emerald-400",
+      accentLine: "bg-emerald-500",
     },
     {
       label: "Fastest",
@@ -52,76 +53,110 @@ export function QuickStatsBar({
       price: fastest.price,
       airline: fastest.airline,
       duration: fastest.duration,
-      color: "purple",
-      bgClass: "bg-purple-500/10",
-      textClass: "text-purple-500",
-      borderClass: "border-purple-500/30",
+      gradient: "from-violet-400/20 via-violet-500/8 to-transparent",
+      iconBg: "bg-violet-500/12",
+      iconBorder: "border-violet-400/30",
+      textColor: "text-violet-600 dark:text-violet-400",
+      accentLine: "bg-violet-500",
     },
     {
       label: "Best Value",
       icon: Star,
       price: bestValue.price,
       airline: bestValue.airline,
-      color: "amber",
-      bgClass: "bg-amber-500/10",
-      textClass: "text-amber-500",
-      borderClass: "border-amber-500/30",
+      duration: bestValue.duration,
+      gradient: "from-amber-400/20 via-amber-500/8 to-transparent",
+      iconBg: "bg-amber-500/12",
+      iconBorder: "border-amber-400/30",
+      textColor: "text-amber-600 dark:text-amber-400",
+      accentLine: "bg-amber-500",
     },
   ];
 
   return (
-    <Card className={cn("overflow-hidden border-sky-500/20 bg-card/80 backdrop-blur-sm", className)}>
-      <CardContent className="p-0">
-        {/* Header */}
-        <div className="px-4 py-3 bg-gradient-to-r from-sky-500/10 to-blue-500/10 border-b border-border/50">
-          <div className="flex items-center justify-center gap-2 text-sm">
-            <span className="text-muted-foreground">Compare prices from multiple airlines</span>
-            <Badge className="bg-sky-500/20 text-sky-500 text-[10px] gap-1">
-              <Zap className="w-3 h-3" />
-              Live Prices
-            </Badge>
-          </div>
-        </div>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className={cn("rounded-2xl overflow-hidden", className)}
+      style={{
+        background: "hsl(var(--card))",
+        boxShadow: `
+          0 1px 0 0 hsl(var(--border) / 0.1),
+          0 4px 16px -4px hsl(var(--foreground) / 0.06),
+          0 12px 32px -8px hsl(var(--foreground) / 0.04),
+          inset 0 1px 0 0 hsl(0 0% 100% / 0.05)
+        `,
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/20">
+        <p className="text-[12px] font-medium text-muted-foreground">
+          Compare prices from multiple airlines
+        </p>
+        <Badge className="bg-[hsl(var(--flights)/0.1)] text-[hsl(var(--flights))] text-[10px] gap-1 border-0 font-semibold px-2 py-0.5">
+          <Zap className="w-2.5 h-2.5" />
+          Live Prices
+        </Badge>
+      </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/50">
-          {stats.map((stat) => (
+      {/* Stats */}
+      <div className="divide-y divide-border/15">
+        {stats.map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className={cn(
+              "relative flex items-center gap-3 px-4 py-3 bg-gradient-to-r",
+              stat.gradient,
+              "hover:brightness-[1.02] transition-all active:scale-[0.99]"
+            )}
+          >
+            {/* Left accent line */}
+            <div className={cn("absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full", stat.accentLine, "opacity-60")} />
+
+            {/* Icon */}
             <div
-              key={stat.label}
               className={cn(
-                "flex items-center justify-center gap-3 p-4 transition-colors hover:bg-muted/30",
-                stat.bgClass
+                "shrink-0 w-9 h-9 flex items-center justify-center rounded-xl border",
+                stat.iconBg,
+                stat.iconBorder,
               )}
+              style={{
+                boxShadow: "0 2px 6px -1px hsl(var(--foreground) / 0.04)",
+              }}
             >
-              <div className={cn("p-2 rounded-xl", stat.bgClass, stat.borderClass, "border")}>
-                <stat.icon className={cn("w-5 h-5", stat.textClass)} />
-              </div>
-              <div className="text-left">
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                  {stat.label}
-                </p>
-                <p className={cn("text-xl font-bold", stat.textClass)}>
-                  {formatPrice(stat.price)}
-                </p>
-                {stat.airline && (
-                  <p className="text-[10px] text-muted-foreground">
-                    {stat.airline}
-                    {stat.duration && <span className="ml-1">• {stat.duration}</span>}
-                  </p>
-                )}
-              </div>
+              <stat.icon className={cn("w-4 h-4", stat.textColor)} />
             </div>
-          ))}
-        </div>
 
-        {/* Footer */}
-        <div className="px-4 py-2.5 bg-muted/30 border-t border-border/50">
-          <p className="text-center text-[10px] text-muted-foreground">
-            Final prices shown — tickets issued instantly after payment.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                {stat.label}
+              </p>
+              <p className={cn("text-lg font-extrabold tabular-nums leading-tight", stat.textColor)}>
+                {formatPrice(stat.price)}
+              </p>
+              {stat.airline && (
+                <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                  {stat.airline}
+                  {stat.duration && <span className="opacity-60"> • {stat.duration}</span>}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="px-4 py-2 border-t border-border/15 bg-muted/20">
+        <p className="text-center text-[10px] text-muted-foreground/70">
+          Final prices shown — tickets issued instantly after payment.
+        </p>
+      </div>
+    </motion.div>
   );
 }
 
