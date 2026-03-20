@@ -531,7 +531,7 @@ const FlightResults = () => {
           </div>
 
           {/* Limited coverage notice for Cambodia routes */}
-          {offers.length > 0 && offers.length <= 5 && ["PNH", "REP", "KOS"].some(c => origin.toUpperCase() === c || destination.toUpperCase() === c) && (
+          {offers.length > 0 && offers.length <= 5 && ["PNH", "KTI", "REP", "KOS"].some(c => origin.toUpperCase() === c || destination.toUpperCase() === c) && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
