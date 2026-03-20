@@ -16,15 +16,13 @@ import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
+import { type DuffelOffer, type DuffelSegment, type DuffelAvailableService } from "@/hooks/useDuffelFlights";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import BoardingPass3D from "@/components/flight/BoardingPass3D";
 import { StepIndicator } from "@/components/flight/review/StepIndicator";
 import { FareRulesCard } from "@/components/flight/review/FareRulesCard";
 import { PriceSummaryCard } from "@/components/flight/review/PriceSummaryCard";
-import CheckoutUpsells from "@/components/checkout/CheckoutUpsells";
-import { TravelInsuranceSelector } from "@/components/checkout/TravelInsuranceSelector";
-import UpgradeOpportunityWidget from "@/components/shared/UpgradeOpportunityWidget";
+import { DuffelServicesCard } from "@/components/flight/review/DuffelServicesCard";
 import { cn } from "@/lib/utils";
 
 /* ── Helpers ─────────────────────────────────────────── */
