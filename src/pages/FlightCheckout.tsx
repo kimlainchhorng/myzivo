@@ -1,30 +1,28 @@
 /**
  * Flight Checkout Page — /flights/checkout
- * Premium 'Secure Vault' checkout with compliance, trust signals, terms, Stripe redirect
+ * Embedded Stripe PaymentElement for card input directly on page
  */
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertTriangle, CheckCircle, Lock, Info } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Lock, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import CheckoutStepIndicator from "@/components/checkout/CheckoutStepIndicator";
 import CheckoutOrderSummary from "@/components/checkout/CheckoutOrderSummary";
 import CheckoutSecurityStrip from "@/components/checkout/CheckoutSecurityStrip";
-import CheckoutStickyFooter from "@/components/checkout/CheckoutStickyFooter";
 import FlightPriceBreakdown from "@/components/flight/FlightPriceBreakdown";
 import AcceptedPaymentMethods from "@/components/checkout/AcceptedPaymentMethods";
 import { CheckoutTermsAcceptance, useTermsValidation } from "@/components/checkout/CheckoutTermsAcceptance";
 import CheckoutTrustFooter from "@/components/checkout/CheckoutTrustFooter";
 import ImportantBookingNotice from "@/components/checkout/ImportantBookingNotice";
-import { useCreateFlightCheckout, type FlightCheckoutParams } from "@/hooks/useFlightBooking";
+import FlightInlinePaymentForm from "@/components/flight/FlightInlinePaymentForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { FLIGHT_MOR_DISCLAIMERS, FLIGHT_CHECKOUT_CLARITY, ZIVO_SOT_REGISTRATION, FLIGHT_LEGAL_LINKS } from "@/config/flightMoRCompliance";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
 
@@ -39,13 +37,15 @@ const FlightCheckout = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
-  const checkout = useCreateFlightCheckout();
   const [termsValid, handleTermsChange, triggerValidation] = useTermsValidation();
 
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [acknowledged, setAcknowledged] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const submitRef = useRef(false);
+  // Payment intent state
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [bookingId, setBookingId] = useState<string | null>(null);
+  const [totalCents, setTotalCents] = useState(0);
+  const [isCreatingIntent, setIsCreatingIntent] = useState(false);
+  const [intentError, setIntentError] = useState<string | null>(null);
+  const intentCreated = useRef(false);
 
   const offerRaw = sessionStorage.getItem("zivo_selected_offer");
   const searchRaw = sessionStorage.getItem("zivo_search_params");
@@ -71,55 +71,82 @@ const FlightCheckout = () => {
     }
   }, [user, authLoading, navigate, toast]);
 
-  const handlePayClick = useCallback(() => {
+  // Create payment intent when terms are accepted
+  const createPaymentIntent = useCallback(async () => {
+    if (intentCreated.current || isCreatingIntent || !offer || !passengers || !search || !user) return;
+    intentCreated.current = true;
+    setIsCreatingIntent(true);
+    setIntentError(null);
+
+    try {
+      const currentBaseFare = Math.round(offer.price * 0.7);
+      const currentTaxesFees = offer.price - currentBaseFare;
+
+      const { data, error } = await supabase.functions.invoke('create-flight-payment-intent', {
+        body: {
+          userId: user.id,
+          offerId: offer.id,
+          passengers: passengers.map((p: any) => ({
+            ...p,
+            gender: p.gender as "m" | "f",
+          })),
+          totalAmount: offer.price,
+          baseFare: currentBaseFare,
+          taxesFees: currentTaxesFees,
+          currency: offer.currency || "USD",
+          origin: search.origin,
+          destination: search.destination,
+          departureDate: search.departureDate,
+          returnDate: search.returnDate,
+          cabinClass: search.cabinClass,
+        },
+      });
+
+      if (error) throw new Error(error.message || 'Failed to create payment');
+      if (!data?.client_secret) throw new Error(data?.error || 'Failed to create payment session');
+
+      setClientSecret(data.client_secret);
+      setBookingId(data.booking_id);
+      setTotalCents(data.total_cents);
+    } catch (err: any) {
+      console.error("Payment intent error:", err);
+      setIntentError(err?.message || "Failed to initialize payment. Please try again.");
+      intentCreated.current = false;
+      toast({
+        title: "Payment Error",
+        description: err?.message || "Failed to initialize payment.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingIntent(false);
+    }
+  }, [offer, passengers, search, user, isCreatingIntent, toast]);
+
+  const handleProceedToPayment = useCallback(() => {
     if (!triggerValidation()) {
       toast({ title: "Please accept terms", description: "You must accept the terms and fare rules to continue.", variant: "destructive" });
       return;
     }
-    setShowConfirmDialog(true);
-    setAcknowledged(false);
-  }, [triggerValidation, toast]);
+    createPaymentIntent();
+  }, [triggerValidation, toast, createPaymentIntent]);
 
-  const handleConfirmPay = useCallback(() => {
-    if (submitRef.current || isSubmitting || !offer || !passengers || !search) return;
-    submitRef.current = true;
-    setIsSubmitting(true);
-    setShowConfirmDialog(false);
-
-    const currentBaseFare = Math.round(offer.price * 0.7);
-    const currentTaxesFees = offer.price - currentBaseFare;
-
-    const params: FlightCheckoutParams = {
-      offerId: offer.id,
-      passengers: passengers.map((p: any) => ({
-        ...p,
-        gender: p.gender as "m" | "f",
-      })),
-      totalAmount: offer.price,
-      baseFare: currentBaseFare,
-      taxesFees: currentTaxesFees,
-      currency: offer.currency || "USD",
-      origin: search.origin,
-      destination: search.destination,
-      departureDate: search.departureDate,
-      returnDate: search.returnDate,
-      cabinClass: search.cabinClass,
-    };
-
-    checkout.mutate(params, {
-      onSuccess: (data) => {
-        if (data.url) window.location.href = data.url;
-      },
-      onError: () => {
-        submitRef.current = false;
-        setIsSubmitting(false);
-      },
+  const handlePaymentSuccess = useCallback(async (paymentIntentId: string) => {
+    toast({
+      title: "Payment Successful!",
+      description: "Your flight booking is confirmed. Redirecting...",
     });
-  }, [offer, passengers, search, isSubmitting, checkout]);
+    // Navigate to confirmation page
+    navigate(`/flights/confirmation/${bookingId}?success=true`, { replace: true });
+  }, [bookingId, navigate, toast]);
+
+  const handlePaymentCancel = useCallback(() => {
+    setClientSecret(null);
+    intentCreated.current = false;
+  }, []);
 
   if (!offer || !passengers || !search || authLoading) return null;
 
-  const isPaying = isSubmitting || checkout.isPending;
+  const showPaymentForm = !!clientSecret;
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -137,7 +164,7 @@ const FlightCheckout = () => {
         <div className="container mx-auto px-4 max-w-lg">
           {/* Back + title */}
           <div className="flex items-center gap-3 mb-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} disabled={isPaying} className="shrink-0 rounded-xl">
+            <Button variant="ghost" size="icon" onClick={() => showPaymentForm ? handlePaymentCancel() : navigate(-1)} disabled={isCreatingIntent} className="shrink-0 rounded-xl">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
@@ -173,141 +200,139 @@ const FlightCheckout = () => {
             showNoHiddenFees
           />
 
-          {/* Accepted payment methods */}
-          <AcceptedPaymentMethods compact className="mb-5 justify-center" />
+          {/* Accepted payment methods - hide when payment form is showing */}
+          {!showPaymentForm && (
+            <AcceptedPaymentMethods compact className="mb-5 justify-center" />
+          )}
 
-          {/* Pre-payment notice */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-3 rounded-xl bg-[hsl(var(--flights))]/5 border border-[hsl(var(--flights))]/15"
-          >
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {FLIGHT_CHECKOUT_CLARITY.prePayment}
-            </p>
-          </motion.div>
-
-          {/* Important booking notice */}
-          <ImportantBookingNotice variant="flights" compact className="mb-4" />
-
-          {/* Seller of Travel Disclosure */}
-          <div className="mb-4 p-3 rounded-xl bg-muted/30 border border-border/30 space-y-2">
-            <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
-              <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-              {ZIVO_SOT_REGISTRATION.subAgent} {FLIGHT_MOR_DISCLAIMERS.ticketing}
-            </p>
-            <div className="flex items-center gap-3 text-[11px]">
-              <Link to={FLIGHT_LEGAL_LINKS.partnerDisclosure} className="text-primary hover:underline">
-                Partner Disclosure
-              </Link>
-              <span className="text-border">·</span>
-              <Link to={FLIGHT_LEGAL_LINKS.flightTerms} className="text-primary hover:underline">
-                Flight Terms
-              </Link>
-            </div>
-          </div>
-
-          {/* Terms acceptance */}
-          <CheckoutTermsAcceptance
-            onStateChange={handleTermsChange}
-            productType="flights"
-            className="mb-6"
-            disabled={isPaying}
-          />
-
-          {/* Desktop pay button */}
-          <div className="hidden md:block">
-            <motion.div whileTap={{ scale: 0.97 }}>
-              <Button
-                size="lg"
-                onClick={handlePayClick}
-                disabled={isPaying || !termsValid}
-                className="w-full h-14 text-base font-bold gap-2 bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 rounded-2xl shadow-lg transition-all duration-200 min-h-[48px]"
-              >
-                {isPaying ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Processing…
-                  </>
-                ) : (
-                  <>
-                    <Lock className="w-5 h-5" />
-                    Pay ${totalPrice.toFixed(2)} {offer.currency || "USD"}
-                  </>
-                )}
-              </Button>
+          {/* PAYMENT FORM or Pre-payment info */}
+          {showPaymentForm ? (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6"
+            >
+              <FlightInlinePaymentForm
+                clientSecret={clientSecret}
+                totalCents={totalCents}
+                currency={offer.currency || "USD"}
+                onCancel={handlePaymentCancel}
+                onSuccess={handlePaymentSuccess}
+              />
             </motion.div>
-            <p className="text-[11px] text-muted-foreground text-center mt-2">
-              {FLIGHT_MOR_DISCLAIMERS.payment}
-            </p>
-          </div>
+          ) : (
+            <>
+              {/* Pre-payment notice */}
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 p-3 rounded-xl bg-[hsl(var(--flights))]/5 border border-[hsl(var(--flights))]/15"
+              >
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {FLIGHT_CHECKOUT_CLARITY.prePayment}
+                </p>
+              </motion.div>
+
+              {/* Important booking notice */}
+              <ImportantBookingNotice variant="flights" compact className="mb-4" />
+
+              {/* Seller of Travel Disclosure */}
+              <div className="mb-4 p-3 rounded-xl bg-muted/30 border border-border/30 space-y-2">
+                <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                  <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  {ZIVO_SOT_REGISTRATION.subAgent} {FLIGHT_MOR_DISCLAIMERS.ticketing}
+                </p>
+                <div className="flex items-center gap-3 text-[11px]">
+                  <Link to={FLIGHT_LEGAL_LINKS.partnerDisclosure} className="text-primary hover:underline">
+                    Partner Disclosure
+                  </Link>
+                  <span className="text-border">·</span>
+                  <Link to={FLIGHT_LEGAL_LINKS.flightTerms} className="text-primary hover:underline">
+                    Flight Terms
+                  </Link>
+                </div>
+              </div>
+
+              {/* Terms acceptance */}
+              <CheckoutTermsAcceptance
+                onStateChange={handleTermsChange}
+                productType="flights"
+                className="mb-6"
+                disabled={isCreatingIntent}
+              />
+
+              {/* Intent error */}
+              {intentError && (
+                <div className="mb-4 p-3 rounded-xl bg-destructive/10 border border-destructive/30 text-sm text-destructive flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  {intentError}
+                </div>
+              )}
+
+              {/* Continue to Payment button (desktop) */}
+              <div className="hidden md:block">
+                <motion.div whileTap={{ scale: 0.97 }}>
+                  <Button
+                    size="lg"
+                    onClick={handleProceedToPayment}
+                    disabled={isCreatingIntent || !termsValid}
+                    className="w-full h-14 text-base font-bold gap-2 bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 rounded-2xl shadow-lg transition-all duration-200 min-h-[48px]"
+                  >
+                    {isCreatingIntent ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Preparing Payment…
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-5 h-5" />
+                        Continue to Payment
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
+                <p className="text-[11px] text-muted-foreground text-center mt-2">
+                  {FLIGHT_MOR_DISCLAIMERS.payment}
+                </p>
+              </div>
+            </>
+          )}
 
           {/* Trust footer */}
           <CheckoutTrustFooter className="mt-8" />
         </div>
       </main>
 
-      {/* Mobile sticky CTA */}
-      <CheckoutStickyFooter
-        totalPrice={totalPrice}
-        currency={offer.currency || "USD"}
-        isPaying={isPaying}
-        disabled={!termsValid}
-        onPay={handlePayClick}
-      />
-
-      {/* Confirmation Dialog */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-border/40">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
-              Confirm Booking
-            </DialogTitle>
-            <DialogDescription className="text-left space-y-3 pt-2">
-              <p className="font-medium text-foreground">
-                You are about to create a real airline booking:
-              </p>
-              <div className="p-3 rounded-xl bg-muted/40 border border-border/40 space-y-1.5 text-sm">
-                <p><span className="text-muted-foreground">Route:</span> <span className="font-semibold">{offer.departure.code} → {offer.arrival.code}</span></p>
-                <p><span className="text-muted-foreground">Airline:</span> {offer.airline} {offer.flightNumber}</p>
-                <p><span className="text-muted-foreground">Date:</span> {search.departureDate}</p>
-                <p><span className="text-muted-foreground">Travelers:</span> {totalPassengers}</p>
-                <p><span className="text-muted-foreground">Total:</span> <span className="font-bold text-[hsl(var(--flights))]">${totalPrice} {offer.currency || "USD"}</span></p>
-              </div>
-              <p className="text-xs text-destructive/80 font-medium">
-                ⚠️ This will charge your card and create a non-reversible airline reservation. Cancellation fees may apply.
-              </p>
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex items-start gap-3 py-2">
-            <Checkbox
-              id="confirm-booking"
-              checked={acknowledged}
-              onCheckedChange={(v) => setAcknowledged(v === true)}
-              className="mt-0.5"
-            />
-            <label htmlFor="confirm-booking" className="text-sm text-muted-foreground cursor-pointer leading-snug">
-              I understand this is a live booking and my card will be charged immediately.
-            </label>
+      {/* Mobile sticky CTA - only show before payment form */}
+      {!showPaymentForm && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-xl border-t border-border/50 safe-bottom">
+          <div className="px-4 py-3 flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-muted-foreground leading-tight">Total</p>
+              <p className="text-lg font-bold tracking-tight">${totalPrice.toFixed(2)}</p>
+            </div>
+            <div className="shrink-0">
+              <Button
+                onClick={handleProceedToPayment}
+                disabled={isCreatingIntent || !termsValid}
+                className="py-2 h-12 px-6 text-sm font-bold gap-2 bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 rounded-2xl shadow-lg min-h-[48px]"
+              >
+                {isCreatingIntent ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Preparing…
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    Continue
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
-
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setShowConfirmDialog(false)} className="w-full sm:w-auto rounded-xl">
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirmPay}
-              disabled={!acknowledged}
-              className="w-full sm:w-auto bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 gap-2 rounded-xl"
-            >
-              <CheckCircle className="w-4 h-4" />
-              Confirm & Pay ${totalPrice}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
 
       <Footer />
     </div>
