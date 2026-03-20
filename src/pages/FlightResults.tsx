@@ -9,6 +9,7 @@ import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AppLayout from "@/components/app/AppLayout";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
 import DuffelFlightCard from "@/components/flight/DuffelFlightCard";
 import FlightEmptyState from "@/components/flight/FlightEmptyState";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
