@@ -15,18 +15,27 @@ import type { DateRange } from "react-day-picker";
 type PriceLevel = "low" | "mid" | "high";
 
 function getPriceLevel(date: Date): PriceLevel {
-  const dow = getDay(date);
+  const dow = getDay(date); // 0=Sun..6=Sat
   const d = getDate(date);
-  if (dow === 2 || dow === 3) return "low";
-  if (dow === 0 || dow === 5 || dow === 6) return "high";
-  if (d % 7 === 0) return "low";
-  return "mid";
+  const m = date.getMonth();
+  // Deterministic hash for realistic variety
+  const hash = ((d * 31 + m * 17 + dow * 7) % 10);
+
+  // Weekends & holidays are expensive
+  if (dow === 5 || dow === 6) return "high";
+  if (dow === 0) return hash < 4 ? "high" : "mid";
+  // Tue/Wed mid-month are cheapest
+  if ((dow === 2 || dow === 3) && d >= 8 && d <= 22) return "low";
+  // Mon/Thu near month boundaries
+  if (dow === 1 || dow === 4) return hash < 3 ? "low" : hash < 7 ? "mid" : "high";
+  // Remaining
+  return hash < 4 ? "low" : hash < 7 ? "mid" : "high";
 }
 
 const priceLevelConfig = {
-  low:  { label: "Low",  dotClass: "bg-emerald-500", color: "hsl(160 84% 39%)" },
-  mid:  { label: "Mid",  dotClass: "bg-amber-500",   color: "hsl(45 93% 47%)" },
-  high: { label: "High", dotClass: "bg-red-500",     color: "hsl(0 72% 51%)" },
+  low:  { label: "Low",  bg: "hsl(160 84% 39% / 0.12)", color: "hsl(160 84% 32%)", legendDot: "bg-emerald-500" },
+  mid:  { label: "Mid",  bg: "hsl(45 93% 47% / 0.12)",  color: "hsl(35 80% 42%)",  legendDot: "bg-amber-500" },
+  high: { label: "High", bg: "hsl(0 72% 51% / 0.12)",   color: "hsl(0 65% 45%)",   legendDot: "bg-red-500" },
 };
 
 /* ─── Single-date picker ─── */
@@ -248,9 +257,12 @@ export function MobileDateRangePickerSheet({
           <div className="px-5 pt-3 pb-1 flex items-center gap-4">
             <span className="text-[10px] font-medium text-muted-foreground">Fare trend:</span>
             {(["low", "mid", "high"] as PriceLevel[]).map((level) => (
-              <span key={level} className="flex items-center gap-1">
-                <span className={`w-1.5 h-1.5 rounded-full ${priceLevelConfig[level].dotClass}`} />
-                <span className="text-[10px] font-medium" style={{ color: priceLevelConfig[level].color }}>
+              <span key={level} className="flex items-center gap-1.5">
+                <span
+                  className="w-4 h-4 rounded-md"
+                  style={{ background: priceLevelConfig[level].bg }}
+                />
+                <span className="text-[10px] font-semibold" style={{ color: priceLevelConfig[level].color }}>
                   {priceLevelConfig[level].label}
                 </span>
               </span>
@@ -281,11 +293,13 @@ export function MobileDateRangePickerSheet({
                     const disabled = isBefore(date, earliestDate);
                     const level = disabled ? null : getPriceLevel(date);
                     return (
-                      <div className="flex flex-col items-center justify-center w-full h-full">
-                        <span className="text-sm leading-none">{date.getDate()}</span>
-                        {level && (
-                          <span className={`w-1 h-1 rounded-full mt-0.5 ${priceLevelConfig[level].dotClass}`} />
-                        )}
+                      <div
+                        className="flex items-center justify-center w-8 h-8 rounded-lg mx-auto text-sm font-medium"
+                        style={level ? {
+                          background: priceLevelConfig[level].bg,
+                        } : undefined}
+                      >
+                        {date.getDate()}
                       </div>
                     );
                   },
