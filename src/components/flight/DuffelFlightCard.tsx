@@ -82,7 +82,7 @@ export default function DuffelFlightCard({
         </div>
       )}
 
-      <div className="px-3.5 py-3 sm:px-4 sm:py-3.5">
+      <div className="px-3 py-2.5 sm:px-4 sm:py-3.5">
         {/* Row 1: Airline + Price */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
