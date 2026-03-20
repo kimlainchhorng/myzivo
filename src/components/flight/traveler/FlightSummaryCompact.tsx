@@ -1,10 +1,9 @@
 /**
- * Compact flight summary card for the traveler info page
+ * Compact flight summary card — Premium 3D spatial design
  * Shows real Duffel API fare data: baggage, cabin, conditions
  */
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import type { DuffelOffer, DuffelSegment } from "@/hooks/useDuffelFlights";
@@ -55,21 +54,18 @@ function getSliceInfo(segs: DuffelSegment[]) {
   };
 }
 
-/** Build baggage summary text from real Duffel data */
 function getBaggageSummary(offer: DuffelOffer): string {
   const bag = offer.baggageDetails;
   if (!bag) return offer.baggageIncluded || "";
 
   const parts: string[] = [];
 
-  // Carry-on
   if (bag.carryOnIncluded) {
     let carryText = `Carry-on ×${bag.carryOnQuantity || 1}`;
     if (bag.carryOnWeightKg) carryText += ` (${bag.carryOnWeightKg}kg)`;
     parts.push(carryText);
   }
 
-  // Checked bags
   if (bag.checkedBagsIncluded && bag.checkedBagQuantity > 0) {
     let checkedText = `Checked ×${bag.checkedBagQuantity}`;
     if (bag.checkedBagWeightKg && bag.checkedBagWeightLb) {
@@ -117,32 +113,45 @@ export function FlightSummaryCompact({ offer, search }: { offer: DuffelOffer; se
     if (!info) return null;
     return (
       <div>
-        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">{label}</p>
-        <div className="flex items-center gap-2">
-          <div className="min-w-[44px]">
-            <p className="text-[15px] font-bold tabular-nums leading-none">{info.depTime}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{info.depCode}</p>
+        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-2">{label}</p>
+        <div className="flex items-center gap-2.5">
+          <div className="min-w-[48px]">
+            <p className="text-[17px] font-bold tabular-nums leading-none tracking-tight">{info.depTime}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{info.depCode}</p>
           </div>
 
-          {/* Flight path line */}
+          {/* 3D flight path line */}
           <div className="flex-1 flex flex-col items-center gap-0.5">
-            <span className="text-[9px] text-muted-foreground tabular-nums">{info.duration}</span>
-            <div className="w-full h-[2px] rounded-full relative"
+            <span className="text-[9px] text-muted-foreground tabular-nums font-medium">{info.duration}</span>
+            <div className="w-full h-[2.5px] rounded-full relative"
               style={{
-                background: "linear-gradient(90deg, hsl(var(--flights)) 0%, hsl(var(--flights)/0.3) 50%, hsl(var(--flights)) 100%)"
+                background: "linear-gradient(90deg, hsl(var(--flights)) 0%, hsl(var(--flights) / 0.2) 50%, hsl(var(--flights)) 100%)",
+                boxShadow: "0 1px 4px hsl(var(--flights) / 0.2)",
               }}
             >
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[6px] h-[6px] rounded-full bg-[hsl(var(--flights))] border-2 border-card" />
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[6px] h-[6px] rounded-full bg-[hsl(var(--flights))] border-2 border-card" />
+              <div
+                className="absolute left-0 top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full border-2 border-card"
+                style={{
+                  background: "hsl(var(--flights))",
+                  boxShadow: "0 0 6px hsl(var(--flights) / 0.4)",
+                }}
+              />
+              <div
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full border-2 border-card"
+                style={{
+                  background: "hsl(var(--flights))",
+                  boxShadow: "0 0 6px hsl(var(--flights) / 0.4)",
+                }}
+              />
             </div>
-            <span className="text-[9px] text-muted-foreground">
+            <span className="text-[9px] text-muted-foreground font-medium">
               {info.stops === 0 ? "Direct" : `${info.stops} stop${info.stops > 1 ? "s" : ""}`}
             </span>
           </div>
 
-          <div className="text-right min-w-[44px]">
-            <p className="text-[15px] font-bold tabular-nums leading-none">{info.arrTime}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{info.arrCode}</p>
+          <div className="text-right min-w-[48px]">
+            <p className="text-[17px] font-bold tabular-nums leading-none tracking-tight">{info.arrTime}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{info.arrCode}</p>
           </div>
         </div>
       </div>
@@ -150,36 +159,61 @@ export function FlightSummaryCompact({ offer, search }: { offer: DuffelOffer; se
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <Card
-        className="mb-4 overflow-hidden border-border/40"
+    <motion.div
+      initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div
+        className="relative mb-5 overflow-hidden rounded-2xl"
         style={{
-          boxShadow: "0 1px 0 0 hsl(var(--flights)/0.06), 0 4px 16px -4px hsl(var(--foreground)/0.06), 0 12px 36px -8px hsl(var(--foreground)/0.04), inset 0 1px 0 0 hsl(0 0% 100%/0.06)"
+          background: "hsl(var(--card))",
+          border: "1px solid hsl(var(--border) / 0.3)",
+          boxShadow: `
+            0 1px 0 0 hsl(var(--flights) / 0.05),
+            0 8px 24px -8px hsl(var(--foreground) / 0.08),
+            0 20px 48px -12px hsl(var(--foreground) / 0.04),
+            inset 0 1px 0 0 hsl(0 0% 100% / 0.06)
+          `,
+          transform: "perspective(600px) rotateX(0.5deg)",
         }}
       >
-        {/* Top accent line */}
-        <div className="h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--flights))]/50 to-[hsl(var(--flights))]" />
+        {/* Top glow accent */}
+        <div
+          className="absolute top-0 left-0 right-0 h-[2.5px]"
+          style={{ background: "linear-gradient(90deg, transparent 5%, hsl(var(--flights)) 50%, transparent 95%)" }}
+        />
 
-        <CardContent className="p-3.5">
+        <div className="p-4">
           {/* Airline + Price header */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="relative shrink-0" style={{ width: carrierCodes.length > 1 ? 44 : 34, height: 34 }}>
-                <AirlineLogo iataCode={carrierCodes[0]} airlineName={offer.airline} size={34} className="border border-border/20 shadow-sm" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div
+                className="relative shrink-0 rounded-xl p-0.5"
+                style={{
+                  boxShadow: "0 3px 10px -2px hsl(var(--foreground) / 0.08), inset 0 1px 0 hsl(0 0% 100% / 0.05)",
+                  width: carrierCodes.length > 1 ? 48 : 38,
+                  height: 38,
+                }}
+              >
+                <AirlineLogo iataCode={carrierCodes[0]} airlineName={offer.airline} size={36} className="border border-border/15 shadow-sm rounded-lg" />
                 {carrierCodes.length > 1 && (
-                  <AirlineLogo iataCode={carrierCodes[1]} airlineName="" size={22} className="absolute bottom-0 right-0 border-2 border-card shadow-sm" />
+                  <AirlineLogo iataCode={carrierCodes[1]} airlineName="" size={22} className="absolute bottom-0 right-0 border-2 border-card shadow-sm rounded-md" />
                 )}
               </div>
               <div>
-                <p className="text-[13px] font-semibold leading-tight">{offer.airline}</p>
-                <p className="text-[10px] text-muted-foreground">{offer.flightNumber}</p>
+                <p className="text-[14px] font-semibold leading-tight">{offer.airline}</p>
+                <p className="text-[10px] text-muted-foreground font-medium">{offer.flightNumber}</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-lg font-bold text-[hsl(var(--flights))] tabular-nums leading-tight">
+              <p
+                className="text-xl font-bold tabular-nums leading-tight tracking-tight"
+                style={{ color: "hsl(var(--flights))" }}
+              >
                 ${Math.round(offer.price).toLocaleString()}
               </p>
-              <p className="text-[9px] text-muted-foreground">{isRoundTrip ? "round trip" : "one way"}</p>
+              <p className="text-[9px] text-muted-foreground font-medium">{isRoundTrip ? "round trip" : "one way"}</p>
             </div>
           </div>
 
@@ -188,53 +222,99 @@ export function FlightSummaryCompact({ offer, search }: { offer: DuffelOffer; se
 
           {/* Return leg */}
           {retInfo && (
-            <div className="mt-3 pt-3 border-t border-dashed border-border/30">
+            <div
+              className="mt-3.5 pt-3.5"
+              style={{ borderTop: "1.5px dashed hsl(var(--border) / 0.25)" }}
+            >
               {renderLeg(retInfo, "Return")}
             </div>
           )}
 
-          {/* Fare badges — real Duffel data */}
-          <div className="flex gap-1.5 mt-3 pt-2.5 border-t border-border/20 flex-wrap">
-            {/* Cabin class */}
-            <Badge variant="outline" className="text-[8px] h-[18px] px-1.5 capitalize border-border/30 bg-muted/30 font-medium">
+          {/* Fare badges — 3D pill chips */}
+          <div className="flex gap-1.5 mt-4 pt-3 flex-wrap" style={{ borderTop: "1px solid hsl(var(--border) / 0.15)" }}>
+            <Badge
+              variant="outline"
+              className="text-[8px] h-[20px] px-2 capitalize font-medium rounded-lg"
+              style={{
+                background: "hsl(var(--muted) / 0.25)",
+                border: "1px solid hsl(var(--border) / 0.25)",
+                boxShadow: "inset 0 1px 2px hsl(var(--foreground) / 0.03)",
+              }}
+            >
               {offer.cabinClass?.replace("_", " ") || "Economy"}
             </Badge>
 
-            {/* Round trip */}
             {isRoundTrip && (
-              <Badge variant="outline" className="text-[8px] h-[18px] px-1.5 border-[hsl(var(--flights))]/20 text-[hsl(var(--flights))] bg-[hsl(var(--flights))]/5 font-medium">
+              <Badge
+                variant="outline"
+                className="text-[8px] h-[20px] px-2 font-medium rounded-lg"
+                style={{
+                  background: "hsl(var(--flights) / 0.06)",
+                  border: "1px solid hsl(var(--flights) / 0.15)",
+                  color: "hsl(var(--flights))",
+                  boxShadow: "0 1px 3px hsl(var(--flights) / 0.06)",
+                }}
+              >
                 Round trip
               </Badge>
             )}
 
-            {/* Fare brand name from Duffel */}
             {offer.fareBrandName && (
-              <Badge variant="outline" className="text-[8px] h-[18px] px-1.5 border-border/30 bg-muted/30 font-medium">
+              <Badge
+                variant="outline"
+                className="text-[8px] h-[20px] px-2 font-medium rounded-lg"
+                style={{
+                  background: "hsl(var(--muted) / 0.25)",
+                  border: "1px solid hsl(var(--border) / 0.25)",
+                  boxShadow: "inset 0 1px 2px hsl(var(--foreground) / 0.03)",
+                }}
+              >
                 {offer.fareBrandName}
               </Badge>
             )}
 
-            {/* Baggage summary from real data */}
             {baggageSummary && (
-              <Badge variant="outline" className="text-[8px] h-[18px] px-1.5 border-border/30 bg-muted/30 font-medium">
+              <Badge
+                variant="outline"
+                className="text-[8px] h-[20px] px-2 font-medium rounded-lg"
+                style={{
+                  background: "hsl(var(--muted) / 0.25)",
+                  border: "1px solid hsl(var(--border) / 0.25)",
+                  boxShadow: "inset 0 1px 2px hsl(var(--foreground) / 0.03)",
+                }}
+              >
                 {baggageSummary}
               </Badge>
             )}
 
-            {/* Refundable / Changeable conditions from Duffel */}
             {offer.conditions?.refundable && (
-              <Badge variant="outline" className="text-[8px] h-[18px] px-1.5 border-emerald-500/20 text-emerald-600 bg-emerald-500/5 font-medium">
+              <Badge
+                variant="outline"
+                className="text-[8px] h-[20px] px-2 font-medium rounded-lg"
+                style={{
+                  background: "hsl(142 71% 45% / 0.06)",
+                  border: "1px solid hsl(142 71% 45% / 0.15)",
+                  color: "hsl(142 71% 35%)",
+                }}
+              >
                 Refundable
               </Badge>
             )}
             {offer.conditions?.changeable && (
-              <Badge variant="outline" className="text-[8px] h-[18px] px-1.5 border-sky-500/20 text-sky-600 bg-sky-500/5 font-medium">
+              <Badge
+                variant="outline"
+                className="text-[8px] h-[20px] px-2 font-medium rounded-lg"
+                style={{
+                  background: "hsl(199 89% 48% / 0.06)",
+                  border: "1px solid hsl(199 89% 48% / 0.15)",
+                  color: "hsl(199 89% 38%)",
+                }}
+              >
                 Changeable
               </Badge>
             )}
           </div>
 
-          {/* Penalty details if present */}
           {(offer.conditions?.changePenalty || offer.conditions?.refundPenalty) && (
             <div className="mt-2 flex gap-3 text-[8px] text-muted-foreground/70">
               {offer.conditions.changePenalty != null && offer.conditions.changePenalty > 0 && (
@@ -245,8 +325,8 @@ export function FlightSummaryCompact({ offer, search }: { offer: DuffelOffer; se
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </motion.div>
   );
 }
