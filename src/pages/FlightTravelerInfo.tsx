@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
+import { getAllInPrice } from "@/utils/flightPricing";
 import { useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft, Plane, ChevronRight, Shield, Users, Lock, User,
@@ -640,9 +641,10 @@ const FlightTravelerInfo = () => {
   );
 
   /* Sticky bottom CTA — 3D elevated with price breakdown */
-  const basePrice = Math.round(offer.price * totalPassengers * 0.85);
-  const taxesFees = Math.round(offer.price * totalPassengers) - basePrice;
-  const totalPrice = Math.round(offer.price * totalPassengers);
+  const allInPerPerson = getAllInPrice(offer.price);
+  const totalPrice = Math.round(allInPerPerson * totalPassengers);
+  const basePrice = Math.round(allInPerPerson * totalPassengers * 0.85);
+  const taxesFees = totalPrice - basePrice;
 
   const stickyCTA = (
     <div
