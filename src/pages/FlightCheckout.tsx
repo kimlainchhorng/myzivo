@@ -4,8 +4,8 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertTriangle, CheckCircle, Lock } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, Loader2, AlertTriangle, CheckCircle, Lock, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -25,7 +25,7 @@ import ImportantBookingNotice from "@/components/checkout/ImportantBookingNotice
 import { useCreateFlightCheckout, type FlightCheckoutParams } from "@/hooks/useFlightBooking";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { FLIGHT_MOR_DISCLAIMERS, FLIGHT_CHECKOUT_CLARITY } from "@/config/flightMoRCompliance";
+import { FLIGHT_MOR_DISCLAIMERS, FLIGHT_CHECKOUT_CLARITY, ZIVO_SOT_REGISTRATION, FLIGHT_LEGAL_LINKS } from "@/config/flightMoRCompliance";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
 
 const STEPS = [
@@ -58,7 +58,7 @@ const FlightCheckout = () => {
   const totalPassengers = search ? (search.adults || 1) + (search.children || 0) + (search.infants || 0) : 1;
   const baseFare = offer ? Math.round(offer.price * 0.7) : 0;
   const taxesFees = offer ? offer.price - baseFare : 0;
-  const totalPrice = offer ? Math.round(offer.price * totalPassengers) : 0;
+  const totalPrice = offer ? parseFloat((offer.price * totalPassengers).toFixed(2)) : 0;
 
   useEffect(() => {
     if (!offer || !passengers) navigate("/flights", { replace: true });
