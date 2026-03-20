@@ -13,6 +13,7 @@ import {
 import { motion } from "framer-motion";
 import { useState } from "react";
 import Header from "@/components/Header";
+import { supabase } from "@/integrations/supabase/client";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
