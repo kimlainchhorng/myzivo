@@ -89,28 +89,60 @@ function getSliceInfo(segs: DuffelSegment[]) {
   };
 }
 
-/* ── Slice Overview Card ─────────────────────────────── */
+/* ── 3D Slice Overview Card ───────────────────────────── */
 function SliceCard({ info, label, rotate, segs }: {
   info: NonNullable<ReturnType<typeof getSliceInfo>>;
   label: string; rotate?: boolean; segs: DuffelSegment[];
 }) {
   return (
     <div>
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-6 h-6 rounded-lg bg-[hsl(var(--flights))]/10 flex items-center justify-center">
+      <div className="flex items-center gap-2.5 mb-2.5">
+        <div
+          className="w-7 h-7 rounded-xl bg-gradient-to-br from-[hsl(var(--flights))]/15 to-[hsl(var(--flights))]/5 flex items-center justify-center"
+          style={{
+            transform: "perspective(200px) rotateX(5deg) rotateY(-3deg)",
+            boxShadow: "0 6px 14px -6px hsl(var(--flights)/0.25), inset 0 1px 0 hsl(var(--background)/0.5)",
+          }}
+        >
           <Plane className={cn("w-3.5 h-3.5 text-[hsl(var(--flights))]", rotate && "rotate-180")} />
         </div>
-        <p className="text-xs font-bold text-[hsl(var(--flights))] uppercase tracking-wider">{label}</p>
-        <Badge variant="secondary" className="text-[8px] ml-auto px-1.5 py-0 h-4">
+        <p className="text-[11px] font-extrabold text-[hsl(var(--flights))] uppercase tracking-[0.12em]">{label}</p>
+        <span
+          className="text-[9px] font-bold ml-auto px-2.5 py-1 rounded-xl border border-border/15 text-muted-foreground"
+          style={{
+            background: "linear-gradient(135deg, hsl(var(--muted)/0.3), transparent)",
+            boxShadow: "0 2px 6px -3px hsl(var(--foreground)/0.06)",
+          }}
+        >
           {formatDateShort(info.depDate)}
-        </Badge>
+        </span>
       </div>
 
-      <Card className="border-[hsl(var(--flights))]/25 shadow-md shadow-[hsl(var(--flights))]/8 overflow-hidden relative">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[hsl(var(--flights))] to-transparent" />
+      <div
+        className="overflow-hidden rounded-3xl border-[1.5px] border-[hsl(var(--flights))]/20 relative"
+        style={{
+          background: "hsl(var(--card))",
+          boxShadow: `0 24px 48px -16px hsl(var(--flights)/0.12),
+                       0 8px 16px -6px hsl(var(--foreground)/0.04),
+                       inset 0 1.5px 0 hsl(var(--background)/0.8),
+                       inset 0 -1px 0 hsl(var(--foreground)/0.03)`,
+          transform: "perspective(600px) rotateX(1deg)",
+        }}
+      >
+        {/* Top glow bar */}
+        <div
+          className="absolute left-4 right-4 top-0 h-[2.5px] rounded-full"
+          style={{
+            background: "linear-gradient(90deg, transparent, hsl(var(--flights)), transparent)",
+            boxShadow: "0 0 12px 2px hsl(var(--flights)/0.2)",
+          }}
+        />
 
         {/* Carrier strip */}
-        <div className="bg-gradient-to-r from-[hsl(var(--flights))]/10 via-[hsl(var(--flights))]/5 to-[hsl(var(--flights))]/10 px-4 py-2.5 flex items-center gap-3 border-b border-[hsl(var(--flights))]/10">
+        <div
+          className="px-4 py-3 flex items-center gap-3 border-b border-[hsl(var(--flights))]/10"
+          style={{ background: "linear-gradient(135deg, hsl(var(--flights)/0.06), transparent)" }}
+        >
           <div className="flex items-center -space-x-2">
             {info.carrierCodes.slice(0, 2).map((code, ci) => (
               <AirlineLogo
@@ -126,13 +158,19 @@ function SliceCard({ info, label, rotate, segs }: {
             <p className="text-[11px] font-bold truncate">{info.carriers.join(" + ")}</p>
             <p className="text-[9px] text-muted-foreground">{segs[0].flightNumber}</p>
           </div>
-          <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
+          <div
+            className="flex items-center gap-1.5 text-[9px] text-muted-foreground rounded-xl border border-border/15 px-2.5 py-1"
+            style={{
+              background: "linear-gradient(135deg, hsl(var(--muted)/0.3), transparent)",
+              boxShadow: "0 2px 6px -3px hsl(var(--foreground)/0.06)",
+            }}
+          >
             <Timer className="w-3 h-3" />
-            <span className="font-semibold">{info.duration}</span>
+            <span className="font-bold">{info.duration}</span>
           </div>
         </div>
 
-        <CardContent className="p-4 space-y-3">
+        <div className="p-4 space-y-3">
           {/* Route timeline */}
           <div className="flex items-center gap-2">
             <div className="text-left shrink-0">
@@ -141,13 +179,17 @@ function SliceCard({ info, label, rotate, segs }: {
               <p className="text-[10px] text-muted-foreground">{info.depCity}</p>
             </div>
             <div className="flex flex-col items-center flex-1 min-w-0 px-1">
-              <div className="w-full h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--flights))]/30 to-[hsl(var(--flights))] relative rounded-full">
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm" />
+              <div className="w-full h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--flights))]/30 to-[hsl(var(--flights))] relative rounded-full"
+                style={{ boxShadow: "0 1px 4px -1px hsl(var(--flights)/0.3)" }}
+              >
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm"
+                  style={{ boxShadow: "0 2px 6px -1px hsl(var(--flights)/0.4)" }} />
                 {info.stops > 0 && Array.from({ length: Math.min(info.stops, 3) }).map((_, i) => (
                   <div key={i} className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-muted-foreground/40 border-2 border-card"
                     style={{ left: `${((i + 1) / (Math.min(info.stops, 3) + 1)) * 100}%` }} />
                 ))}
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm" />
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm"
+                  style={{ boxShadow: "0 2px 6px -1px hsl(var(--flights)/0.4)" }} />
               </div>
               <span className={cn("text-[10px] font-bold mt-1.5", info.stops === 0 ? "text-primary" : "text-[hsl(var(--flights))]")}>
                 {info.stops === 0 ? "Nonstop" : `${info.stops} stop${info.stops > 1 ? "s" : ""}`}
@@ -163,12 +205,18 @@ function SliceCard({ info, label, rotate, segs }: {
             </div>
           </div>
 
-          <div className="flex justify-between text-[10px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2 border border-border/20">
+          <div
+            className="flex justify-between text-[10px] text-muted-foreground rounded-2xl px-3.5 py-2.5 border border-border/15"
+            style={{
+              background: "linear-gradient(145deg, hsl(var(--muted)/0.35), hsl(var(--muted)/0.15))",
+              boxShadow: "inset 0 2px 4px -1px hsl(var(--foreground)/0.04), inset 0 -1px 0 hsl(var(--background)/0.5)",
+            }}
+          >
             <span className="font-medium flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(info.depDate)}</span>
             {segs[0].origin.terminal && <span>Terminal {segs[0].origin.terminal}</span>}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
