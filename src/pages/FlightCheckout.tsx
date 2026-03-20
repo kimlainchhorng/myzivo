@@ -190,6 +190,23 @@ const FlightCheckout = () => {
           {/* Important booking notice */}
           <ImportantBookingNotice variant="flights" compact className="mb-4" />
 
+          {/* Seller of Travel Disclosure */}
+          <div className="mb-4 p-3 rounded-xl bg-muted/30 border border-border/30 space-y-2">
+            <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
+              <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              {ZIVO_SOT_REGISTRATION.subAgent} {FLIGHT_MOR_DISCLAIMERS.ticketing}
+            </p>
+            <div className="flex items-center gap-3 text-[11px]">
+              <Link to={FLIGHT_LEGAL_LINKS.partnerDisclosure} className="text-primary hover:underline">
+                Partner Disclosure
+              </Link>
+              <span className="text-border">·</span>
+              <Link to={FLIGHT_LEGAL_LINKS.flightTerms} className="text-primary hover:underline">
+                Flight Terms
+              </Link>
+            </div>
+          </div>
+
           {/* Terms acceptance */}
           <CheckoutTermsAcceptance
             onStateChange={handleTermsChange}
