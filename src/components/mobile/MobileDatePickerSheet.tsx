@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { format, isBefore, startOfToday } from "date-fns";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,14 @@ export default function MobileDatePickerSheet({
   minDate,
 }: MobileDatePickerSheetProps) {
   const earliestDate = minDate && !isBefore(minDate, startOfToday()) ? minDate : startOfToday();
-  const visibleMonth = selectedDate && !isBefore(selectedDate, earliestDate) ? selectedDate : earliestDate;
+  const initialMonth = selectedDate && !isBefore(selectedDate, earliestDate) ? selectedDate : earliestDate;
+  const [month, setMonth] = useState(initialMonth);
+
+  useEffect(() => {
+    if (open) {
+      setMonth(selectedDate && !isBefore(selectedDate, earliestDate) ? selectedDate : earliestDate);
+    }
+  }, [open, selectedDate, earliestDate]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -50,7 +58,8 @@ export default function MobileDatePickerSheet({
           <div className="rounded-2xl border border-border bg-card">
             <Calendar
               mode="single"
-              month={visibleMonth}
+              month={month}
+              onMonthChange={setMonth}
               selected={selectedDate}
               onSelect={(date) => {
                 onDateSelect(date);
