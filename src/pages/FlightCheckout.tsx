@@ -53,23 +53,23 @@ const FlightCheckout = () => {
     }
   }, [user, authLoading, navigate, toast]);
 
-  if (!offer || !passengers || !search || authLoading) return null;
+  const baseFare = offer ? Math.round(offer.price * 0.7) : 0;
+  const taxesFees = offer ? offer.price - baseFare : 0;
+  const totalPrice = offer ? Math.round(offer.price * totalPassengers) : 0;
 
-  const baseFare = Math.round(offer.price * 0.7);
-  const taxesFees = offer.price - baseFare;
-  const totalPrice = Math.round(offer.price * totalPassengers);
-
-  const handlePayClick = () => {
+  const handlePayClick = useCallback(() => {
     setShowConfirmDialog(true);
     setAcknowledged(false);
-  };
+  }, []);
 
   const handleConfirmPay = useCallback(() => {
-    // Idempotency: prevent duplicate submissions
-    if (submitRef.current || isSubmitting) return;
+    if (submitRef.current || isSubmitting || !offer || !passengers || !search) return;
     submitRef.current = true;
     setIsSubmitting(true);
     setShowConfirmDialog(false);
+
+    const currentBaseFare = Math.round(offer.price * 0.7);
+    const currentTaxesFees = offer.price - currentBaseFare;
 
     const params: FlightCheckoutParams = {
       offerId: offer.id,
@@ -78,8 +78,8 @@ const FlightCheckout = () => {
         gender: p.gender as 'm' | 'f',
       })),
       totalAmount: offer.price,
-      baseFare,
-      taxesFees,
+      baseFare: currentBaseFare,
+      taxesFees: currentTaxesFees,
       currency: offer.currency || "USD",
       origin: search.origin,
       destination: search.destination,
@@ -95,12 +95,13 @@ const FlightCheckout = () => {
         }
       },
       onError: () => {
-        // Allow retry on error
         submitRef.current = false;
         setIsSubmitting(false);
       },
     });
-  }, [offer, passengers, search, baseFare, taxesFees, isSubmitting, checkout]);
+  }, [offer, passengers, search, isSubmitting, checkout]);
+
+  if (!offer || !passengers || !search || authLoading) return null;
 
   const isPaying = isSubmitting || checkout.isPending;
 
