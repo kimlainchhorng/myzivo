@@ -8,17 +8,45 @@ import { Badge } from "@/components/ui/badge";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import type { DuffelOffer, DuffelSegment } from "@/hooks/useDuffelFlights";
 
+function calcLayoverMinutes(prev: DuffelSegment, next: DuffelSegment): number {
+  try {
+    const ms = new Date(next.departingAt).getTime() - new Date(prev.arrivingAt).getTime();
+    return Math.max(0, Math.round(ms / 60000));
+  } catch {
+    return 0;
+  }
+}
+
+function parseDurationText(duration?: string): number {
+  if (!duration) return 0;
+
+  const normalized = duration.trim().toLowerCase();
+  const hourMatch = normalized.match(/(\d+)\s*h/);
+  const minuteMatch = normalized.match(/(\d+)\s*m/);
+
+  return (Number(hourMatch?.[1] || 0) * 60) + Number(minuteMatch?.[1] || 0);
+}
+
 function getSliceInfo(segs: DuffelSegment[]) {
   if (!segs.length) return null;
   const first = segs[0];
   const last = segs[segs.length - 1];
   const depTime = first.departingAt?.split("T")[1]?.slice(0, 5) || "—";
   const arrTime = last.arrivingAt?.split("T")[1]?.slice(0, 5) || "—";
-  const startMs = new Date(first.departingAt).getTime();
-  const endMs = new Date(last.arrivingAt).getTime();
-  const totalMin = Math.round((endMs - startMs) / 60000);
+
+  const flightMinutes = segs.reduce((total, seg) => total + parseDurationText(seg.duration), 0);
+  const layoverMinutes = segs.slice(1).reduce((total, seg, index) => total + calcLayoverMinutes(segs[index], seg), 0);
+  let totalMin = flightMinutes + layoverMinutes;
+
+  if (totalMin <= 0) {
+    const startMs = new Date(first.departingAt).getTime();
+    const endMs = new Date(last.arrivingAt).getTime();
+    totalMin = Math.max(0, Math.round((endMs - startMs) / 60000));
+  }
+
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
+
   return {
     depTime, arrTime,
     depCode: first.origin.code,
