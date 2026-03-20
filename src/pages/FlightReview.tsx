@@ -233,6 +233,18 @@ function SegmentDetails({ segs, label, rotate }: { segs: DuffelSegment[]; label:
 /* ── Main Page ───────────────────────────────────────── */
 const FlightReview = () => {
   const navigate = useNavigate();
+  const [selectedUpsellIds, setSelectedUpsellIds] = useState<string[]>([]);
+  const [insurancePlanId, setInsurancePlanId] = useState<string | null>(null);
+  const [insurancePrice, setInsurancePrice] = useState(0);
+
+  const handleUpsellToggle = useCallback((id: string) => {
+    setSelectedUpsellIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }, []);
+
+  const handleInsuranceSelect = useCallback((planId: string, price: number) => {
+    setInsurancePlanId(planId);
+    setInsurancePrice(price);
+  }, []);
 
   const offer: DuffelOffer | null = useMemo(() => {
     try {
