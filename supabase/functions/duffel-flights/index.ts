@@ -380,8 +380,17 @@ async function createOfferRequest(params: CreateOfferRequestParams) {
   };
 
   const offersCount = offerRequest.offers?.length || 0;
+  console.log('[Duffel] Raw offers count:', offersCount);
+  console.log('[Duffel] Environment:', DUFFEL_ENV);
+  if (offersCount > 0) {
+    const sampleOffer = offerRequest.offers[0] as Record<string, unknown>;
+    const sampleSlices = (sampleOffer.slices || []) as Array<Record<string, unknown>>;
+    const sampleSegs = sampleSlices[0] ? (sampleSlices[0].segments || []) as unknown[] : [];
+    const carrier = sampleSegs.length > 0 ? (sampleSegs[0] as Record<string, unknown>).operating_carrier : null;
+    console.log('[Duffel] Sample offer - airline:', JSON.stringify(carrier), 'slices:', sampleSlices.length, 'segments:', sampleSegs.length, 'price:', sampleOffer.total_amount, sampleOffer.total_currency);
+  }
   const transformedOffers = transformOffers(offerRequest.offers || []);
-  console.log('[Duffel] Offer request created:', offerRequest.id, 'with', offersCount, 'initial offers');
+  console.log('[Duffel] Offer request created:', offerRequest.id, 'with', offersCount, 'raw offers,', transformedOffers.length, 'transformed');
 
   // Log successful search
   await logSearch({
