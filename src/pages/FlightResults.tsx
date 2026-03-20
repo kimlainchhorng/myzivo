@@ -77,6 +77,9 @@ const FlightResults = () => {
   const [filters, setFilters] = useState<FlightFiltersState>(defaultFilters);
   const [pendingFilters, setPendingFilters] = useState<FlightFiltersState>(defaultFilters);
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Two-step round-trip selection
+  const [selectionStep, setSelectionStep] = useState<"outbound" | "return">("outbound");
+  const [selectedOutboundGroup, setSelectedOutboundGroup] = useState<LegGroup | null>(null);
 
   const origin = params.get("origin") || "";
   const destination = params.get("destination") || params.get("dest") || "";
