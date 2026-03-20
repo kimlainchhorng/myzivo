@@ -3,6 +3,7 @@
  */
 
 import { useState, useMemo } from "react";
+import { getAllInPrice } from "@/utils/flightPricing";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -213,7 +214,7 @@ export default function FlightLegCard({
           >
             <p className="text-[8px] text-muted-foreground font-medium uppercase tracking-wider">from</p>
             <p className="text-xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none tracking-tight">
-              ${Math.round(fromPrice)}
+              ${Math.round(getAllInPrice(fromPrice))}
             </p>
             {fareCount > 1 && (
               <p className="text-[8px] text-muted-foreground mt-0.5">{fareCount} fare options</p>
