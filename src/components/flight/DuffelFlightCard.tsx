@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
+import SeatMapPreview from "@/components/flight/SeatMapPreview";
 import { cn } from "@/lib/utils";
 
 interface DuffelFlightCardProps {
