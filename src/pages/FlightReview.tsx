@@ -16,15 +16,13 @@ import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
+import { type DuffelOffer, type DuffelSegment, type DuffelAvailableService } from "@/hooks/useDuffelFlights";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import BoardingPass3D from "@/components/flight/BoardingPass3D";
 import { StepIndicator } from "@/components/flight/review/StepIndicator";
 import { FareRulesCard } from "@/components/flight/review/FareRulesCard";
 import { PriceSummaryCard } from "@/components/flight/review/PriceSummaryCard";
-import CheckoutUpsells from "@/components/checkout/CheckoutUpsells";
-import { TravelInsuranceSelector } from "@/components/checkout/TravelInsuranceSelector";
-import UpgradeOpportunityWidget from "@/components/shared/UpgradeOpportunityWidget";
+import { DuffelServicesCard } from "@/components/flight/review/DuffelServicesCard";
 import { cn } from "@/lib/utils";
 
 /* ── Helpers ─────────────────────────────────────────── */
@@ -233,17 +231,18 @@ function SegmentDetails({ segs, label, rotate }: { segs: DuffelSegment[]; label:
 /* ── Main Page ───────────────────────────────────────── */
 const FlightReview = () => {
   const navigate = useNavigate();
-  const [selectedUpsellIds, setSelectedUpsellIds] = useState<string[]>([]);
-  const [insurancePlanId, setInsurancePlanId] = useState<string | null>(null);
-  const [insurancePrice, setInsurancePrice] = useState(0);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<DuffelAvailableService[]>([]);
 
-  const handleUpsellToggle = useCallback((id: string) => {
-    setSelectedUpsellIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-  }, []);
-
-  const handleInsuranceSelect = useCallback((planId: string, price: number) => {
-    setInsurancePlanId(planId);
-    setInsurancePrice(price);
+  const handleToggleService = useCallback((svc: DuffelAvailableService) => {
+    setSelectedServiceIds(prev => {
+      if (prev.includes(svc.id)) {
+        setSelectedServices(s => s.filter(x => x.id !== svc.id));
+        return prev.filter(id => id !== svc.id);
+      }
+      setSelectedServices(s => [...s, svc]);
+      return [...prev, svc.id];
+    });
   }, []);
 
   const offer: DuffelOffer | null = useMemo(() => {
@@ -385,30 +384,12 @@ const FlightReview = () => {
             <FareRulesCard offer={offer} />
           </motion.div>
 
-          {/* ── Upsells: Extras ─────────────────────────── */}
+          {/* ── Real Available Services from Duffel ───── */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.27 }} className="mt-3">
-            <CheckoutUpsells
-              serviceType="flights"
-              selectedIds={selectedUpsellIds}
-              onToggle={handleUpsellToggle}
-            />
-          </motion.div>
-
-          {/* ── Travel Insurance ─────────────────────────── */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.29 }} className="mt-3">
-            <TravelInsuranceSelector
-              selectedPlanId={insurancePlanId}
-              onSelect={handleInsuranceSelect}
-              tripPrice={(offer.pricePerPerson || offer.price) * totalPassengers}
-            />
-          </motion.div>
-
-          {/* ── Cabin Upgrade ────────────────────────────── */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.31 }} className="mt-3">
-            <UpgradeOpportunityWidget
-              currentClass={(offer.cabinClass || searchParams.cabinClass || "economy") as "economy" | "premium" | "business"}
-              route={`${offer.departure?.code || ""} → ${offer.arrival?.code || ""}`}
-              basePrice={Math.round((offer.pricePerPerson || offer.price) * totalPassengers)}
+            <DuffelServicesCard
+              offerId={offer.id}
+              selectedServiceIds={selectedServiceIds}
+              onToggleService={handleToggleService}
             />
           </motion.div>
 

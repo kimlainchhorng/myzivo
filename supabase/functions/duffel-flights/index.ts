@@ -835,6 +835,39 @@ interface DuffelOfferTransformed {
   passengers: number;
 }
 
+// ---- Available Services ----
+interface GetAvailableServicesParams {
+  offer_id: string;
+}
+
+async function getAvailableServices(params: GetAvailableServicesParams) {
+  console.log('[Duffel] Fetching available services for offer:', params.offer_id);
+
+  const result = await duffelRequest(`/air/offers/${params.offer_id}/available_services`, 'GET');
+  if (result.error) return { error: result.error };
+
+  const services = result.data as Array<{
+    id: string;
+    type: string;
+    maximum_quantity: number;
+    total_amount: string;
+    total_currency: string;
+    passenger_ids: string[];
+    segment_ids: string[];
+    metadata?: Record<string, unknown>;
+  }>;
+
+  // Group by type
+  const grouped: Record<string, typeof services> = {};
+  for (const svc of (services || [])) {
+    const t = svc.type || 'other';
+    if (!grouped[t]) grouped[t] = [];
+    grouped[t].push(svc);
+  }
+
+  return { services: services || [], grouped, total: (services || []).length };
+}
+
 // ---- Input validation helpers ----
 const IATA_RE = /^[A-Z]{3}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -870,6 +903,11 @@ function validateGetOffer(p: Record<string, unknown>): string | null {
   return null;
 }
 
+function validateGetAvailableServices(p: Record<string, unknown>): string | null {
+  if (typeof p.offer_id !== 'string' || !p.offer_id) return 'offer_id required';
+  return null;
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
@@ -883,7 +921,7 @@ serve(async (req) => {
     console.log('[Duffel] Action:', action);
 
     // Validate action
-    if (typeof action !== 'string' || !['createOfferRequest', 'getOffers', 'getOffer', 'createOrder'].includes(action)) {
+    if (typeof action !== 'string' || !['createOfferRequest', 'getOffers', 'getOffer', 'createOrder', 'getAvailableServices'].includes(action)) {
       return new Response(
         JSON.stringify({ error: `Unknown action: ${action}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -895,6 +933,7 @@ serve(async (req) => {
     if (action === 'createOfferRequest') validationError = validateCreateOfferRequest(params);
     else if (action === 'getOffers') validationError = validateGetOffers(params);
     else if (action === 'getOffer') validationError = validateGetOffer(params);
+    else if (action === 'getAvailableServices') validationError = validateGetAvailableServices(params);
 
     if (validationError) {
       return new Response(
@@ -920,6 +959,10 @@ serve(async (req) => {
 
       case 'createOrder':
         result = await createOrder(params as CreateOrderParams);
+        break;
+
+      case 'getAvailableServices':
+        result = await getAvailableServices(params as GetAvailableServicesParams);
         break;
 
       default:
