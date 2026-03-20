@@ -64,6 +64,7 @@ const timeOptions = [
 ];
 
 const FlightResults = () => {
+  const isMobile = useIsMobile();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<SortBy>("best");
