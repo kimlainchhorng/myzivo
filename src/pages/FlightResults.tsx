@@ -104,6 +104,60 @@ const FlightResults = () => {
   });
 
   const offers = data?.offers || [];
+  const isRoundTrip = !!returnDate;
+
+  // Group offers by outbound leg for step-by-step selection
+  const outboundGroups = useMemo(() => {
+    if (!isRoundTrip || offers.length === 0) return [];
+    return groupByOutbound(offers, destination);
+  }, [offers, destination, isRoundTrip]);
+
+  // When outbound is selected, group remaining offers by return leg
+  const returnGroups = useMemo(() => {
+    if (!selectedOutboundGroup) return [];
+    return groupByReturn(selectedOutboundGroup.offers, destination);
+  }, [selectedOutboundGroup, destination]);
+
+  // Sort leg groups
+  const sortLegGroups = useCallback((groups: LegGroup[], sort: SortBy) => {
+    const sorted = [...groups];
+    switch (sort) {
+      case "cheapest": sorted.sort((a, b) => a.fromPrice - b.fromPrice); break;
+      case "fastest": sorted.sort((a, b) => getLegDurationMinutes(a) - getLegDurationMinutes(b)); break;
+      case "earliest": sorted.sort((a, b) => a.summary.depTime.localeCompare(b.summary.depTime)); break;
+      case "best":
+        sorted.sort((a, b) => {
+          const maxP = Math.max(...groups.map(g => g.fromPrice), 1);
+          const maxD = Math.max(...groups.map(g => getLegDurationMinutes(g)), 1);
+          const scoreA = (a.fromPrice / maxP) * 0.4 + (getLegDurationMinutes(a) / maxD) * 0.4 + (a.summary.stops > 0 ? 0.2 : 0);
+          const scoreB = (b.fromPrice / maxP) * 0.4 + (getLegDurationMinutes(b) / maxD) * 0.4 + (b.summary.stops > 0 ? 0.2 : 0);
+          return scoreA - scoreB;
+        });
+        break;
+      default: sorted.sort((a, b) => a.fromPrice - b.fromPrice);
+    }
+    return sorted;
+  }, []);
+
+  const sortedOutboundGroups = useMemo(() => sortLegGroups(outboundGroups, sortBy), [outboundGroups, sortBy, sortLegGroups]);
+  const sortedReturnGroups = useMemo(() => sortLegGroups(returnGroups, sortBy), [returnGroups, sortBy, sortLegGroups]);
+
+  const handleSelectOutbound = useCallback((group: LegGroup) => {
+    setSelectedOutboundGroup(group);
+    setSelectionStep("return");
+    setSortBy("best");
+  }, []);
+
+  const handleSelectReturn = useCallback((group: LegGroup) => {
+    // Find the best matching offer (cheapest in this return group)
+    const bestOffer = group.representativeOffer;
+    handleSelect(bestOffer);
+  }, []);
+
+  const handleBackToOutbound = useCallback(() => {
+    setSelectedOutboundGroup(null);
+    setSelectionStep("outbound");
+  }, []);
 
   const priceRange = useMemo(() => {
     if (offers.length === 0) return { min: 0, max: 2000 };
