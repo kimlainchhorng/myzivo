@@ -963,32 +963,41 @@ const FlightResults = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-3"
                 >
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/30 border border-border/20">
+                  <div
+                    className="flex items-center gap-1.5 p-1.5 rounded-2xl"
+                    style={{
+                      background: "hsl(var(--card))",
+                      boxShadow: "0 1px 0 0 hsl(var(--border)/0.1), 0 3px 12px -3px hsl(var(--foreground)/0.06), inset 0 1px 0 0 hsl(0 0% 100%/0.04)",
+                    }}
+                  >
                     {/* Step 1: Outbound */}
                     <button
                       onClick={selectionStep === "return" ? handleBackToOutbound : undefined}
                       className={cn(
-                        "flex items-center gap-2 flex-1 px-3 py-2 rounded-lg transition-all text-left",
+                        "flex items-center gap-2.5 flex-1 px-3 py-2.5 rounded-xl transition-all text-left",
                         selectionStep === "outbound"
-                          ? "bg-[hsl(var(--flights))]/10 border border-[hsl(var(--flights))]/30 shadow-sm"
+                          ? "bg-[hsl(var(--flights)/0.08)]"
                           : selectedOutboundGroup
-                            ? "bg-primary/5 border border-primary/20 cursor-pointer hover:bg-primary/10"
-                            : "bg-muted/20 border border-border/20"
+                            ? "hover:bg-muted/30 cursor-pointer"
+                            : "opacity-50"
                       )}
+                      style={selectionStep === "outbound" ? {
+                        boxShadow: "0 1px 4px -1px hsl(var(--flights)/0.12), inset 0 1px 0 0 hsl(0 0% 100%/0.06)",
+                      } : undefined}
                     >
                       <div className={cn(
-                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
+                        "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
                         selectionStep === "outbound"
-                          ? "bg-[hsl(var(--flights))] text-primary-foreground"
+                          ? "bg-[hsl(var(--flights))] text-primary-foreground shadow-sm"
                           : selectedOutboundGroup
-                            ? "bg-primary text-primary-foreground"
+                            ? "bg-emerald-500 text-white"
                             : "bg-muted text-muted-foreground"
                       )}>
-                        {selectedOutboundGroup ? <Check className="w-3 h-3" /> : "1"}
+                        {selectedOutboundGroup ? <Check className="w-3.5 h-3.5" /> : "1"}
                       </div>
                       <div className="min-w-0">
                         <p className={cn(
-                          "text-[10px] font-semibold leading-tight",
+                          "text-[11px] font-bold leading-tight",
                           selectionStep === "outbound" ? "text-[hsl(var(--flights))]" : "text-foreground"
                         )}>
                           Departure
@@ -1003,28 +1012,31 @@ const FlightResults = () => {
                       </div>
                     </button>
 
-                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
 
                     {/* Step 2: Return */}
                     <div
                       className={cn(
-                        "flex items-center gap-2 flex-1 px-3 py-2 rounded-lg transition-all text-left",
+                        "flex items-center gap-2.5 flex-1 px-3 py-2.5 rounded-xl transition-all text-left",
                         selectionStep === "return"
-                          ? "bg-[hsl(var(--flights))]/10 border border-[hsl(var(--flights))]/30 shadow-sm"
-                          : "bg-muted/20 border border-border/20 opacity-60"
+                          ? "bg-[hsl(var(--flights)/0.08)]"
+                          : "opacity-40"
                       )}
+                      style={selectionStep === "return" ? {
+                        boxShadow: "0 1px 4px -1px hsl(var(--flights)/0.12), inset 0 1px 0 0 hsl(0 0% 100%/0.06)",
+                      } : undefined}
                     >
                       <div className={cn(
-                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
+                        "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
                         selectionStep === "return"
-                          ? "bg-[hsl(var(--flights))] text-primary-foreground"
+                          ? "bg-[hsl(var(--flights))] text-primary-foreground shadow-sm"
                           : "bg-muted text-muted-foreground"
                       )}>
                         2
                       </div>
                       <div className="min-w-0">
                         <p className={cn(
-                          "text-[10px] font-semibold leading-tight",
+                          "text-[11px] font-bold leading-tight",
                           selectionStep === "return" ? "text-[hsl(var(--flights))]" : "text-muted-foreground"
                         )}>
                           Return

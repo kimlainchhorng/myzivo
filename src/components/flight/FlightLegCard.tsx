@@ -51,9 +51,9 @@ interface FlightLegCardProps {
 }
 
 const sortBadgeConfig: Record<string, { label: string; className: string }> = {
-  best: { label: "✨ Best Option", className: "bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border-[hsl(var(--flights))]/25" },
-  cheapest: { label: "💰 Cheapest", className: "bg-primary/10 text-primary border-primary/25" },
-  fastest: { label: "⚡ Fastest", className: "bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border-[hsl(var(--flights))]/25" },
+  best: { label: "✨ Best Option", className: "bg-[hsl(var(--flights)/0.1)] text-[hsl(var(--flights))] border-[hsl(var(--flights)/0.25)]" },
+  cheapest: { label: "🔥 Cheapest", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25" },
+  fastest: { label: "⚡ Fastest", className: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25" },
 };
 
 function SegmentRow({ seg, isLast }: { seg: DuffelSegment; isLast: boolean }) {
@@ -134,28 +134,31 @@ export default function FlightLegCard({
   return (
     <div
       className={cn(
-        "bg-card rounded-xl border p-0 group overflow-hidden",
-        "hover:shadow-lg hover:shadow-[hsl(var(--flights))]/8 hover:border-[hsl(var(--flights))]/40 transition-shadow",
-        isTop
-          ? "border-[hsl(var(--flights))]/30 shadow-sm shadow-[hsl(var(--flights))]/4"
-          : "border-border/30"
+        "rounded-2xl group overflow-hidden transition-all",
+        isTop ? "ring-1 ring-[hsl(var(--flights)/0.25)]" : ""
       )}
+      style={{
+        background: "hsl(var(--card))",
+        boxShadow: isTop
+          ? "0 2px 0 0 hsl(var(--flights)/0.06), 0 4px 16px -4px hsl(var(--foreground)/0.07), 0 12px 32px -8px hsl(var(--foreground)/0.04), inset 0 1px 0 0 hsl(0 0% 100%/0.05)"
+          : "0 1px 0 0 hsl(var(--border)/0.1), 0 2px 8px -2px hsl(var(--foreground)/0.05), inset 0 1px 0 0 hsl(0 0% 100%/0.04)",
+      }}
     >
       {/* Top badge strip */}
       {(isTop || isLowest || isFastest) && (
-        <div className="flex gap-1.5 px-3 pt-2 sm:px-4 sm:pt-3">
+        <div className="flex gap-1.5 px-3 pt-2.5 sm:px-4 sm:pt-3">
           {badge && (
-            <Badge className={cn("text-[9px] font-bold px-2 py-0.5 border", badge.className)}>
+            <Badge className={cn("text-[9px] font-bold px-2.5 py-0.5 border rounded-lg shadow-sm", badge.className)}>
               {badge.label}
             </Badge>
           )}
           {isLowest && !isTop && (
-            <Badge className="text-[9px] font-bold px-2 py-0.5 border bg-primary/10 text-primary border-primary/25">
-              💰 Cheapest
+            <Badge className="text-[9px] font-bold px-2.5 py-0.5 border rounded-lg shadow-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25">
+              🔥 Cheapest
             </Badge>
           )}
           {isFastest && !isTop && (
-            <Badge className="text-[9px] font-bold px-2 py-0.5 border bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border-[hsl(var(--flights))]/25">
+            <Badge className="text-[9px] font-bold px-2.5 py-0.5 border rounded-lg shadow-sm bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25">
               ⚡ Fastest
             </Badge>
           )}
@@ -252,9 +255,12 @@ export default function FlightLegCard({
           <Button
             size="sm"
             className={cn(
-              "h-8 px-4 text-[11px] font-bold shadow-sm active:scale-95 transition-all gap-1 shrink-0",
+              "h-9 px-5 text-[12px] font-bold active:scale-[0.97] transition-all gap-1 shrink-0 rounded-xl",
               "bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 text-primary-foreground"
             )}
+            style={{
+              boxShadow: "0 2px 8px -2px hsl(var(--flights)/0.3), 0 1px 2px 0 hsl(var(--flights)/0.15)",
+            }}
             onClick={(e) => { e.stopPropagation(); onSelect(group); }}
           >
             Select {label === "outbound" ? "Departure" : "Return"}
