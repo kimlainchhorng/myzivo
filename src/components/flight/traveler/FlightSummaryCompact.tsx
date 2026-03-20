@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import type { DuffelOffer, DuffelSegment } from "@/hooks/useDuffelFlights";
+import { getAllInPrice } from "@/utils/flightPricing";
 
 function calcLayoverMinutes(prev: DuffelSegment, next: DuffelSegment): number {
   try {
