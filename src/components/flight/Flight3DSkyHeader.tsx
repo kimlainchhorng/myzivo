@@ -5,7 +5,7 @@
  */
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Plane } from "lucide-react";
+import airplanePng from "@/assets/airplane-3d.png";
 import { cn } from "@/lib/utils";
 
 /* ─── Time-of-day system ─── */
@@ -134,33 +134,35 @@ function FlyingAirplane({ layer }: { layer: "front" | "back" }) {
         className="relative"
         style={{
           transformStyle: "preserve-3d",
-          transform: `perspective(400px) rotateX(${isFront ? -8 : 5}deg) rotateY(${isFront ? 12 : -10}deg)`,
+          transform: `perspective(400px) rotateX(${isFront ? -5 : 3}deg)`,
         }}
       >
-        {/* Airplane body */}
-        <Plane
+        {/* Real airplane image */}
+        <img
+          src={airplanePng}
+          alt=""
           className={cn(
-            isFront ? "w-8 h-8 text-primary" : "w-5 h-5 text-primary/40",
-            isFront ? "rotate-[0deg] -scale-x-100" : "rotate-[180deg]"
+            "object-contain drop-shadow-lg",
+            isFront ? "w-16 h-10" : "w-10 h-6 opacity-40",
+            !isFront && "-scale-x-100"
           )}
-          strokeWidth={isFront ? 2.5 : 1.5}
+          draggable={false}
         />
-        {/* Engine glow / contrail */}
+        {/* Contrail */}
         {isFront && (
           <motion.div
-            className="absolute top-1/2 -right-6 -translate-y-1/2 w-12 h-1 rounded-full"
+            className="absolute top-1/2 right-full -translate-y-1/2 w-20 h-[2px] rounded-full origin-right"
             style={{
-              background: "linear-gradient(to left, transparent, hsl(var(--primary) / 0.3), transparent)",
+              background: "linear-gradient(to left, rgba(255,255,255,0.6), transparent)",
             }}
-            animate={{ scaleX: [0.6, 1, 0.6], opacity: [0.5, 0.8, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ scaleX: [0.5, 1, 0.5], opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />
         )}
-        {/* Shadow on ground */}
+        {/* Shadow below */}
         {isFront && (
           <div
-            className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-6 h-1.5 rounded-full bg-foreground/5 blur-sm"
-            style={{ transform: "perspective(200px) rotateX(70deg) translateX(-50%)" }}
+            className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-10 h-2 rounded-full bg-foreground/8 blur-sm"
           />
         )}
       </div>
