@@ -1706,3 +1706,22 @@ html[lang="km"] textarea {
   letter-spacing: 0.01em;
   line-height: 1.6;
 }
+
+/* =============================================
+   3D ANIMATIONS
+   ============================================= */
+
+@keyframes float3d {
+  0%, 100% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg);
+  }
+  25% {
+    transform: translateY(-12px) rotateX(8deg) rotateY(-6deg);
+  }
+  50% {
+    transform: translateY(-6px) rotateX(-4deg) rotateY(8deg);
+  }
+  75% {
+    transform: translateY(-14px) rotateX(6deg) rotateY(-4deg);
+  }
+}
