@@ -150,7 +150,7 @@ export default function FlightEmptyState({
   const destAirport = getAirportByCode(destination);
 
   // Airports with limited Duffel coverage
-  const LIMITED_COVERAGE_AIRPORTS = ["PNH", "REP", "KOS"];
+  const LIMITED_COVERAGE_AIRPORTS = ["PNH", "KTI", "REP", "KOS"];
   const isLimitedCoverage = LIMITED_COVERAGE_AIRPORTS.includes(origin.toUpperCase()) || LIMITED_COVERAGE_AIRPORTS.includes(destination.toUpperCase());
 
   return (
