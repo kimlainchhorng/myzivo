@@ -384,30 +384,12 @@ const FlightReview = () => {
             <FareRulesCard offer={offer} />
           </motion.div>
 
-          {/* ── Upsells: Extras ─────────────────────────── */}
+          {/* ── Real Available Services from Duffel ───── */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.27 }} className="mt-3">
-            <CheckoutUpsells
-              serviceType="flights"
-              selectedIds={selectedUpsellIds}
-              onToggle={handleUpsellToggle}
-            />
-          </motion.div>
-
-          {/* ── Travel Insurance ─────────────────────────── */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.29 }} className="mt-3">
-            <TravelInsuranceSelector
-              selectedPlanId={insurancePlanId}
-              onSelect={handleInsuranceSelect}
-              tripPrice={(offer.pricePerPerson || offer.price) * totalPassengers}
-            />
-          </motion.div>
-
-          {/* ── Cabin Upgrade ────────────────────────────── */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.31 }} className="mt-3">
-            <UpgradeOpportunityWidget
-              currentClass={(offer.cabinClass || searchParams.cabinClass || "economy") as "economy" | "premium" | "business"}
-              route={`${offer.departure?.code || ""} → ${offer.arrival?.code || ""}`}
-              basePrice={Math.round((offer.pricePerPerson || offer.price) * totalPassengers)}
+            <DuffelServicesCard
+              offerId={offer.id}
+              selectedServiceIds={selectedServiceIds}
+              onToggleService={handleToggleService}
             />
           </motion.div>
 
