@@ -1509,12 +1509,8 @@ export const AIRPORT_ALIASES: Record<string, string> = {
   PNH: 'KTI', // Phnom Penh moved to Techo International
 };
 
-// Get the alternate code for fallback searches
+// Get the alternate code for fallback searches (PNH retired, KTI is primary)
 export const getAirportAlternate = (code: string): string | null => {
-  const upper = code.toUpperCase();
-  // PNH → KTI or KTI → PNH
-  if (upper === 'PNH') return 'KTI';
-  if (upper === 'KTI') return 'PNH';
   return null;
 };
 
