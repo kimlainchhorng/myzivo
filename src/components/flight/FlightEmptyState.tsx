@@ -146,6 +146,10 @@ export default function FlightEmptyState({
   const originAirport = getAirportByCode(origin);
   const destAirport = getAirportByCode(destination);
 
+  // Airports with limited Duffel coverage
+  const LIMITED_COVERAGE_AIRPORTS = ["PNH", "REP", "KOS"];
+  const isLimitedCoverage = LIMITED_COVERAGE_AIRPORTS.includes(origin.toUpperCase()) || LIMITED_COVERAGE_AIRPORTS.includes(destination.toUpperCase());
+
   return (
     <Card className="border-border/40 overflow-hidden">
       <CardContent className="p-0">
@@ -158,6 +162,11 @@ export default function FlightEmptyState({
           <p className="text-sm text-muted-foreground max-w-xs mx-auto">
             We couldn't find flights from {originAirport?.city || origin} to {destAirport?.city || destination} on {formatShortDate(departureDate)}.
           </p>
+          {isLimitedCoverage && (
+            <p className="text-xs text-muted-foreground mt-2 max-w-sm mx-auto bg-muted/40 rounded-lg px-3 py-2">
+              Some local airlines may not be available through this booking source. Showing best available partner airlines.
+            </p>
+          )}
         </div>
 
         <div className="px-4 pb-5 sm:px-6 sm:pb-6 space-y-4">
