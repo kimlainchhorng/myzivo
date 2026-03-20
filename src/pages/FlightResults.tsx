@@ -572,98 +572,78 @@ const FlightResults = () => {
 
   const resultsContent = (
     <div className="mx-auto px-3 sm:px-4 max-w-5xl">
-      {/* Sticky summary bar — app-like nav bar */}
+      {/* Sticky summary bar — compact nav */}
       <div className={cn("sticky z-20 -mx-3 sm:-mx-4 px-3 sm:px-4 mb-3", isMobile ? "top-0" : "top-14")}>
-
             <motion.div
-              initial={{ opacity: 0, y: -8 }}
+              initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
-              className="sm:rounded-2xl border-b sm:border overflow-hidden"
+              transition={{ duration: 0.2 }}
+              className="sm:rounded-2xl overflow-hidden"
               style={{
                 background: "hsl(var(--card))",
-                boxShadow: `
-                  0 1px 0 0 hsl(var(--border) / 0.2),
-                  0 4px 20px -4px hsl(var(--foreground) / 0.08),
-                  0 12px 40px -8px hsl(var(--foreground) / 0.05),
-                  inset 0 1px 0 0 hsl(0 0% 100% / 0.06)
-                `,
+                borderBottom: "1px solid hsl(var(--border) / 0.15)",
+                boxShadow: "0 2px 12px -2px hsl(var(--foreground) / 0.06)",
               }}
             >
-              {/* Top accent bar */}
-              <div
-                className="h-[3px] w-full"
-                style={{
-                  background: "linear-gradient(90deg, hsl(var(--flights)), hsl(var(--flights) / 0.4))",
-                }}
-              />
+              {/* Thin accent line */}
+              <div className="h-[2px] w-full" style={{ background: "linear-gradient(90deg, hsl(var(--flights)), hsl(var(--flights) / 0.3))" }} />
 
-              <div className="p-3 sm:p-4">
-                <div className="flex items-center gap-3">
-                  {/* Back button */}
-                  <Button variant="ghost" size="icon" asChild className="shrink-0 -ml-1 w-9 h-9 rounded-xl hover:bg-muted/60 active:scale-95 transition-all">
-                    <Link to="/flights"><ArrowLeft className="w-4 h-4" /></Link>
-                  </Button>
+              <div className="px-3 py-2.5 sm:px-4 sm:py-3">
+                {/* Row 1: Back + Route + Actions */}
+                <div className="flex items-center gap-2">
+                  <Link to="/flights" className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted/50 active:scale-95 transition-all">
+                    <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+                  </Link>
 
-                  {/* Route info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 text-sm font-bold truncate">
-                      <span>{originAirport?.city || origin}</span>
-                      <div className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--flights))]" />
-                        <div className="w-6 h-px bg-[hsl(var(--flights))]" />
-                        <Plane className="w-3.5 h-3.5 text-[hsl(var(--flights))] -rotate-45" />
-                        <div className="w-6 h-px bg-[hsl(var(--flights))]" />
-                        <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--flights))]" />
-                      </div>
-                      <span>{destAirport?.city || destination}</span>
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <span className="text-[13px] font-semibold truncate">{originAirport?.city || origin}</span>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <div className="w-1 h-1 rounded-full bg-[hsl(var(--flights)/0.5)]" />
+                      <div className="w-4 border-t border-dashed border-[hsl(var(--flights)/0.4)]" />
+                      <Plane className="w-3 h-3 text-[hsl(var(--flights))] -rotate-45" />
+                      <div className="w-4 border-t border-dashed border-[hsl(var(--flights)/0.4)]" />
+                      <div className="w-1 h-1 rounded-full bg-[hsl(var(--flights)/0.5)]" />
                     </div>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/60 text-[10px] font-medium text-muted-foreground">
-                        <CalendarDays className="w-2.5 h-2.5" />
-                        {departureDate}{returnDate ? ` — ${returnDate}` : ""}
-                      </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/60 text-[10px] font-medium text-muted-foreground">
-                        <Users className="w-2.5 h-2.5" />
-                        {totalPassengers} pax
-                      </span>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[hsl(var(--flights)/0.1)] text-[10px] font-semibold text-[hsl(var(--flights))] capitalize">
-                        {cabinClass.replace("_", " ")}
-                      </span>
-                    </div>
+                    <span className="text-[13px] font-semibold truncate">{destAirport?.city || destination}</span>
                   </div>
 
-                  {/* Price chip */}
-                  {lowestPrice > 0 && (
-                    <div
-                      className="shrink-0 hidden sm:flex flex-col items-center px-3 py-1.5 rounded-xl"
-                      style={{
-                        background: "hsl(var(--flights) / 0.08)",
-                      }}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <PriceAlertButton
+                      origin={origin}
+                      destination={destination}
+                      departureDate={departureDate}
+                      returnDate={returnDate}
+                      passengers={totalPassengers}
+                      cabinClass={cabinClass}
+                      currentLowestPrice={lowestPrice}
+                    />
+                    <Link
+                      to="/flights"
+                      className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border/40 flex items-center hover:bg-muted/50 active:scale-95 transition-all text-muted-foreground"
                     >
-                      <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">From</span>
-                      <span className="text-base font-bold text-[hsl(var(--flights))] tabular-nums">${lowestPrice}</span>
-                    </div>
-                  )}
+                      Edit
+                    </Link>
+                  </div>
+                </div>
 
-                  {/* Actions */}
-                  <PriceAlertButton
-                    origin={origin}
-                    destination={destination}
-                    departureDate={departureDate}
-                    returnDate={returnDate}
-                    passengers={totalPassengers}
-                    cabinClass={cabinClass}
-                    currentLowestPrice={lowestPrice}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                    className="shrink-0 h-8 text-[11px] px-3 rounded-xl border-border/40 font-semibold hover:bg-muted/60 active:scale-95 transition-all"
-                  >
-                    <Link to="/flights">Edit</Link>
-                  </Button>
+                {/* Row 2: Meta pills */}
+                <div className="flex items-center gap-1.5 mt-1.5 ml-10">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md bg-muted/50 text-[10px] font-medium text-muted-foreground">
+                    <CalendarDays className="w-2.5 h-2.5 opacity-60" />
+                    {departureDate}{returnDate ? ` – ${returnDate}` : ""}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md bg-muted/50 text-[10px] font-medium text-muted-foreground">
+                    <Users className="w-2.5 h-2.5 opacity-60" />
+                    {totalPassengers}
+                  </span>
+                  <span className="inline-flex items-center px-1.5 py-[2px] rounded-md bg-[hsl(var(--flights)/0.08)] text-[10px] font-semibold text-[hsl(var(--flights))] capitalize">
+                    {cabinClass.replace("_", " ")}
+                  </span>
+                  {lowestPrice > 0 && (
+                    <span className="ml-auto text-[11px] font-bold text-[hsl(var(--flights))] tabular-nums">
+                      from ${lowestPrice}
+                    </span>
+                  )}
                 </div>
               </div>
             </motion.div>
