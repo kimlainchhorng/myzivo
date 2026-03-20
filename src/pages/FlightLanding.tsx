@@ -13,6 +13,13 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
+
+import miamiImg from "@/assets/destinations/miami.jpg";
+import sfImg from "@/assets/destinations/san-francisco.jpg";
+import atlantaImg from "@/assets/destinations/atlanta.jpg";
+import denverImg from "@/assets/destinations/denver.jpg";
+import vegasImg from "@/assets/destinations/las-vegas.jpg";
+import fllImg from "@/assets/destinations/fort-lauderdale.jpg";
 import Footer from "@/components/Footer";
 import AppLayout from "@/components/app/AppLayout";
 import SEOHead from "@/components/SEOHead";
@@ -24,12 +31,12 @@ import { usePopularRoutePrices } from "@/hooks/usePopularRoutePrices";
 
 /* ─── Fallback routes (shown while loading) ─── */
 const fallbackRoutes = [
-  { from: "JFK", to: "MIA", fromCity: "New York", toCity: "Miami" },
-  { from: "LAX", to: "SFO", fromCity: "Los Angeles", toCity: "San Francisco" },
-  { from: "ORD", to: "ATL", fromCity: "Chicago", toCity: "Atlanta" },
-  { from: "DFW", to: "DEN", fromCity: "Dallas", toCity: "Denver" },
-  { from: "SEA", to: "LAS", fromCity: "Seattle", toCity: "Las Vegas" },
-  { from: "BOS", to: "FLL", fromCity: "Boston", toCity: "Fort Lauderdale" },
+  { from: "JFK", to: "MIA", fromCity: "New York", toCity: "Miami", image: miamiImg },
+  { from: "LAX", to: "SFO", fromCity: "Los Angeles", toCity: "San Francisco", image: sfImg },
+  { from: "ORD", to: "ATL", fromCity: "Chicago", toCity: "Atlanta", image: atlantaImg },
+  { from: "DFW", to: "DEN", fromCity: "Dallas", toCity: "Denver", image: denverImg },
+  { from: "SEA", to: "LAS", fromCity: "Seattle", toCity: "Las Vegas", image: vegasImg },
+  { from: "BOS", to: "FLL", fromCity: "Boston", toCity: "Fort Lauderdale", image: fllImg },
 ];
 
 const whyZivo = [
@@ -101,23 +108,39 @@ function PopularRoutesSection({ className }: { className?: string }) {
             key={`${route.from}-${route.to}`}
             type="button"
             onClick={() => handleRouteClick(route.from, route.to)}
-            className="bg-card/80 backdrop-blur-sm border border-border/40 rounded-xl p-3 hover:border-[hsl(var(--flights))]/30 transition-all group text-left active:scale-[0.98] touch-manipulation"
+            className="relative rounded-2xl overflow-hidden border border-border/30 hover:border-[hsl(var(--flights))]/40 hover:shadow-lg transition-all group text-left active:scale-[0.97] touch-manipulation"
           >
-            <div className="flex items-center gap-1 text-xs font-semibold text-foreground">
-              <span>{route.from}</span>
-              <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:text-[hsl(var(--flights))] transition-colors" />
-              <span>{route.to}</span>
+            {/* Destination image */}
+            <div className="relative h-24">
+              <img
+                src={route.image}
+                alt={route.toCity}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
+              
+              {/* Route badge */}
+              <div className="absolute top-2 left-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded-full px-2 py-0.5 border border-border/30">
+                <span className="font-bold text-[10px] text-foreground">{route.from}</span>
+                <Plane className="w-2.5 h-2.5 text-[hsl(var(--flights))] rotate-45" />
+                <span className="font-bold text-[10px] text-foreground">{route.to}</span>
+              </div>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-              {route.fromCity} — {route.toCity}
-            </p>
-            {route.price ? (
-              <p className="text-xs font-bold text-[hsl(var(--flights))] mt-1">
-                from {route.price}*
+            
+            {/* Info */}
+            <div className="absolute bottom-0 left-0 right-0 px-2.5 pb-2.5">
+              <p className="text-[10px] text-muted-foreground truncate">
+                {route.fromCity} — {route.toCity}
               </p>
-            ) : (
-              <div className="h-4 w-16 mt-1 rounded bg-muted/50 animate-pulse" />
-            )}
+              {route.price ? (
+                <p className="text-xs font-bold text-[hsl(var(--flights))] mt-0.5">
+                  from {route.price}*
+                </p>
+              ) : (
+                <div className="h-4 w-16 mt-0.5 rounded bg-muted/50 animate-pulse" />
+              )}
+            </div>
           </button>
         ))}
       </div>
