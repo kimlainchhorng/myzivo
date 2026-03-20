@@ -601,6 +601,37 @@ const FlightResults = () => {
             </motion.div>
           )}
 
+          {/* Airline quick-filter chips with logos (mobile) */}
+          {availableAirlines.length > 1 && offers.length > 0 && (
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-2 -mx-3 px-3 sm:hidden">
+              {availableAirlines.slice(0, 6).map(al => {
+                const isActive = filters.airlines.includes(al.code);
+                return (
+                  <button
+                    key={al.code}
+                    onClick={() => {
+                      setFilters(prev => {
+                        const arr = prev.airlines;
+                        const next = arr.includes(al.code) ? arr.filter(c => c !== al.code) : [...arr, al.code];
+                        return { ...prev, airlines: next };
+                      });
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-semibold whitespace-nowrap shrink-0 transition-all active:scale-95",
+                      isActive
+                        ? "bg-[hsl(var(--flights))]/10 border-[hsl(var(--flights))]/40 text-[hsl(var(--flights))]"
+                        : "bg-card border-border/30 text-muted-foreground hover:border-[hsl(var(--flights))]/30"
+                    )}
+                  >
+                    <AirlineLogo iataCode={al.code} airlineName={al.name} size={18} className="shrink-0 rounded" />
+                    {al.name.split(" ")[0]}
+                    <span className="text-[9px] text-muted-foreground/70">({al.count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Active filter chips */}
           {activeChips.length > 0 && (
             <motion.div
