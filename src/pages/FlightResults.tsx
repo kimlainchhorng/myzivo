@@ -530,6 +530,17 @@ const FlightResults = () => {
             </motion.div>
           </div>
 
+          {/* Limited coverage notice for Cambodia routes */}
+          {offers.length > 0 && offers.length <= 5 && ["PNH", "REP", "KOS"].some(c => origin.toUpperCase() === c || destination.toUpperCase() === c) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mb-2.5 px-3 py-2 bg-muted/40 border border-border/30 rounded-xl text-xs text-muted-foreground text-center"
+            >
+              Some local airlines may not be available through this booking source. Showing best available partner airlines.
+            </motion.div>
+          )}
+
           {/* Sort tabs + filter — native app toolbar feel */}
           {offers.length > 0 && (
             <motion.div
