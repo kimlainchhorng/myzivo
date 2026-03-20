@@ -964,7 +964,7 @@ const FlightResults = () => {
                   className="mb-3"
                 >
                   <div
-                    className="flex items-center gap-1.5 p-1.5 rounded-2xl overflow-visible"
+                    className="flex items-center gap-1 p-1.5 rounded-2xl"
                     style={{
                       background: "hsl(var(--card))",
                       boxShadow: "0 1px 0 0 hsl(var(--border)/0.1), 0 3px 12px -3px hsl(var(--foreground)/0.06), inset 0 1px 0 0 hsl(0 0% 100%/0.04)",
@@ -974,7 +974,7 @@ const FlightResults = () => {
                     <button
                       onClick={selectionStep === "return" ? handleBackToOutbound : undefined}
                       className={cn(
-                        "flex items-center gap-2.5 flex-1 px-3 py-2.5 rounded-xl transition-all text-left",
+                        "flex items-center gap-2 flex-1 px-2 py-2.5 rounded-xl transition-all text-left min-w-0",
                         selectionStep === "outbound"
                           ? "bg-[hsl(var(--flights)/0.08)]"
                           : selectedOutboundGroup
@@ -986,14 +986,14 @@ const FlightResults = () => {
                       } : undefined}
                     >
                       <div className={cn(
-                        "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
+                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
                         selectionStep === "outbound"
                           ? "bg-[hsl(var(--flights))] text-primary-foreground shadow-sm"
                           : selectedOutboundGroup
                             ? "bg-emerald-500 text-white"
                             : "bg-muted text-muted-foreground"
                       )}>
-                        {selectedOutboundGroup ? <Check className="w-3.5 h-3.5" /> : "1"}
+                        {selectedOutboundGroup ? <Check className="w-3 h-3" /> : "1"}
                       </div>
                       <div className="min-w-0">
                         <p className={cn(
@@ -1007,17 +1007,17 @@ const FlightResults = () => {
                             {selectedOutboundGroup.summary.depTime} → {selectedOutboundGroup.summary.arrTime} · {selectedOutboundGroup.representativeOffer.airline}
                           </p>
                         ) : (
-                          <p className="text-[9px] text-muted-foreground">{originAirport?.city || origin} → {destAirport?.city || destination}</p>
+                          <p className="text-[9px] text-muted-foreground truncate">{originAirport?.city || origin} → {destAirport?.city || destination}</p>
                         )}
                       </div>
                     </button>
 
-                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+                    <ArrowRight className="w-3 h-3 text-muted-foreground/40 shrink-0" />
 
                     {/* Step 2: Return */}
                     <div
                       className={cn(
-                        "flex items-center gap-2.5 flex-1 px-3 py-2.5 rounded-xl transition-all text-left",
+                        "flex items-center gap-2 flex-1 px-2 py-2.5 rounded-xl transition-all text-left min-w-0",
                         selectionStep === "return"
                           ? "bg-[hsl(var(--flights)/0.08)]"
                           : "opacity-40"
@@ -1027,7 +1027,7 @@ const FlightResults = () => {
                       } : undefined}
                     >
                       <div className={cn(
-                        "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
+                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
                         selectionStep === "return"
                           ? "bg-[hsl(var(--flights))] text-primary-foreground shadow-sm"
                           : "bg-muted text-muted-foreground"
@@ -1041,7 +1041,7 @@ const FlightResults = () => {
                         )}>
                           Return
                         </p>
-                        <p className="text-[9px] text-muted-foreground">{destAirport?.city || destination} → {originAirport?.city || origin}</p>
+                        <p className="text-[9px] text-muted-foreground truncate">{destAirport?.city || destination} → {originAirport?.city || origin}</p>
                       </div>
                     </div>
                   </div>
