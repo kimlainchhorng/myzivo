@@ -5,7 +5,7 @@
 
 import { useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Plane, Clock, MapPin, Luggage, ShieldCheck, AlertTriangle, ChevronRight, Briefcase, Info } from "lucide-react";
+import { ArrowLeft, Plane, Clock, MapPin, Luggage, ShieldCheck, AlertTriangle, ChevronRight, Briefcase, Info, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getDuffelAirlineLogo, type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
+import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
+import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { cn } from "@/lib/utils";
 
 const FlightReview = () => {
