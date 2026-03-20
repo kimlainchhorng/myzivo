@@ -90,26 +90,27 @@ export default function DuffelFlightCard({
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
             {/* Stacked logos */}
-            <div className="relative shrink-0" style={{ width: carrierCodes.length > 1 ? 52 : 40 }}>
+            <div className="relative shrink-0" style={{ width: carrierCodes.length > 1 ? 58 : 44, height: 44 }}>
               <AirlineLogo
                 iataCode={carrierCodes[0]}
                 airlineName={offer.airline}
-                size={40}
-                className="border border-border/20 bg-muted/40"
+                size={44}
+                className="border border-border/20 bg-card/80 shadow-sm"
               />
               {carrierCodes.length > 1 && (
                 <AirlineLogo
                   iataCode={carrierCodes[1]}
                   airlineName=""
-                  size={28}
-                  className="absolute bottom-0 right-0 border-2 border-card bg-muted/40"
+                  size={30}
+                  className="absolute bottom-0 right-0 border-2 border-card bg-card shadow-sm"
                 />
               )}
             </div>
             <div className="min-w-0">
               <p className="text-[13px] sm:text-sm font-semibold leading-tight truncate">{offer.airline}</p>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-wrap">
                 <p className="text-[10px] text-muted-foreground leading-tight">{offer.flightNumber}</p>
+                <p className="text-[9px] text-muted-foreground/70 leading-tight">· {carrierSummary}</p>
                 {offer.operatedBy && (
                   <p className="text-[9px] text-muted-foreground/70 leading-tight truncate">· {offer.operatedBy}</p>
                 )}
