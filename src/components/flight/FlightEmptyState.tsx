@@ -44,6 +44,8 @@ const NEARBY_AIRPORTS: Record<string, string[]> = {
   IAD: ["DCA", "BWI", "JFK"],
   // Asia
   PNH: ["BKK", "SGN", "KUL"],
+  REP: ["BKK", "SGN", "PNH"],
+  KOS: ["PNH", "BKK", "SGN"],
   BKK: ["SGN", "KUL", "SIN"],
   SGN: ["BKK", "PNH", "KUL"],
   HAN: ["BKK", "SGN", "HKG"],
