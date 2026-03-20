@@ -1,11 +1,11 @@
 /**
  * Flight Results Page — /flights/results
- * 2026 Spatial UI: sticky summary bar, premium cards, glassmorphic filters
+ * Full OTA filter system with mobile bottom sheet
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock, ChevronRight, ArrowRight } from "lucide-react";
+import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock, ChevronRight, ArrowRight, Sunrise, Sun, Sunset, Moon, ArrowUpDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -15,22 +15,56 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import FlightResultsSkeleton from "@/components/flight/FlightResultsSkeleton";
 import { useDuffelFlightSearch, getDuffelAirlineLogo, type DuffelOffer } from "@/hooks/useDuffelFlights";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
 
-type SortBy = "cheapest" | "fastest" | "best";
+type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
+
+interface FlightFiltersState {
+  maxPrice: number;
+  stops: number[];
+  departureTime: string[];
+  arrivalTime: string[];
+  airlines: string[];
+  maxDuration: number;
+  refundableOnly: boolean;
+  baggagePersonalItem: boolean;
+  baggageCarryOn: boolean;
+  baggageChecked: boolean;
+}
+
+const defaultFilters: FlightFiltersState = {
+  maxPrice: 0,
+  stops: [],
+  departureTime: [],
+  arrivalTime: [],
+  airlines: [],
+  maxDuration: 0,
+  refundableOnly: false,
+  baggagePersonalItem: false,
+  baggageCarryOn: false,
+  baggageChecked: false,
+};
+
+const timeOptions = [
+  { id: "early_morning", label: "Early Morning", sub: "12am – 6am", icon: Moon },
+  { id: "morning", label: "Morning", sub: "6am – 12pm", icon: Sunrise },
+  { id: "afternoon", label: "Afternoon", sub: "12pm – 6pm", icon: Sun },
+  { id: "evening", label: "Evening", sub: "6pm – 12am", icon: Sunset },
+];
 
 const FlightResults = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<SortBy>("best");
-
-  const [maxPrice, setMaxPrice] = useState<number>(0);
-  const [stopsFilter, setStopsFilter] = useState<number | null>(null);
-  const [timeFilter, setTimeFilter] = useState<string | null>(null);
+  const [filters, setFilters] = useState<FlightFiltersState>(defaultFilters);
+  const [pendingFilters, setPendingFilters] = useState<FlightFiltersState>(defaultFilters);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const origin = params.get("origin") || "";
   const destination = params.get("destination") || "";
@@ -46,10 +80,7 @@ const FlightResults = () => {
   const destAirport = getAirportByCode(destination);
 
   const { data, isLoading, error, refetch } = useDuffelFlightSearch({
-    origin,
-    destination,
-    departureDate,
-    returnDate,
+    origin, destination, departureDate, returnDate,
     passengers: { adults, children, infants },
     cabinClass,
     enabled: !!origin && !!destination && !!departureDate,
@@ -63,48 +94,128 @@ const FlightResults = () => {
     return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) };
   }, [offers]);
 
-  const activeMaxPrice = maxPrice > 0 ? maxPrice : priceRange.max;
+  const maxDurationRange = useMemo(() => {
+    if (offers.length === 0) return { min: 0, max: 1440 };
+    const durations = offers.map(o => o.durationMinutes);
+    return { min: Math.floor(Math.min(...durations)), max: Math.ceil(Math.max(...durations)) };
+  }, [offers]);
+
+  const availableAirlines = useMemo(() => {
+    const map = new Map<string, { code: string; name: string; count: number }>();
+    offers.forEach(o => {
+      const existing = map.get(o.airlineCode);
+      if (existing) existing.count++;
+      else map.set(o.airlineCode, { code: o.airlineCode, name: o.airline, count: 1 });
+    });
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+  }, [offers]);
 
   const getTimeBucket = (time: string): string => {
     const hour = parseInt(time.split(":")[0], 10);
-    if (hour < 6) return "night";
+    if (hour < 6) return "early_morning";
     if (hour < 12) return "morning";
     if (hour < 18) return "afternoon";
     return "evening";
   };
 
-  const filtered = useMemo(() => {
-    let result = [...offers];
-    if (maxPrice > 0) result = result.filter((o) => o.price <= maxPrice);
-    if (stopsFilter !== null) result = result.filter((o) => (stopsFilter === 2 ? o.stops >= 2 : o.stops === stopsFilter));
-    if (timeFilter) result = result.filter((o) => getTimeBucket(o.departure.time) === timeFilter);
+  const applyFilters = (f: FlightFiltersState, offerList: DuffelOffer[]) => {
+    let result = [...offerList];
+    if (f.maxPrice > 0) result = result.filter(o => o.price <= f.maxPrice);
+    if (f.stops.length > 0) result = result.filter(o => f.stops.some(s => s === 2 ? o.stops >= 2 : o.stops === s));
+    if (f.departureTime.length > 0) result = result.filter(o => f.departureTime.includes(getTimeBucket(o.departure.time)));
+    if (f.arrivalTime.length > 0) result = result.filter(o => f.arrivalTime.includes(getTimeBucket(o.arrival.time)));
+    if (f.airlines.length > 0) result = result.filter(o => f.airlines.includes(o.airlineCode));
+    if (f.maxDuration > 0) result = result.filter(o => o.durationMinutes <= f.maxDuration);
+    if (f.refundableOnly) result = result.filter(o => o.isRefundable);
+    if (f.baggagePersonalItem) result = result.filter(o => o.baggageIncluded && o.baggageIncluded.toLowerCase().includes("personal"));
+    if (f.baggageCarryOn) result = result.filter(o => o.baggageIncluded && (o.baggageIncluded.toLowerCase().includes("carry") || o.baggageIncluded.toLowerCase().includes("cabin")));
+    if (f.baggageChecked) result = result.filter(o => o.baggageIncluded && o.baggageIncluded.toLowerCase().includes("checked"));
+    return result;
+  };
 
-    switch (sortBy) {
-      case "cheapest":
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case "fastest":
-        result.sort((a, b) => a.durationMinutes - b.durationMinutes);
-        break;
+  const sortOffers = (offerList: DuffelOffer[], sort: SortBy) => {
+    const sorted = [...offerList];
+    switch (sort) {
+      case "cheapest": sorted.sort((a, b) => a.price - b.price); break;
+      case "fastest": sorted.sort((a, b) => a.durationMinutes - b.durationMinutes); break;
+      case "earliest": sorted.sort((a, b) => a.departure.time.localeCompare(b.departure.time)); break;
+      case "shortest": sorted.sort((a, b) => a.durationMinutes - b.durationMinutes); break;
       case "best":
-        result.sort((a, b) => {
+        sorted.sort((a, b) => {
           const maxP = priceRange.max || 1;
-          const maxD = Math.max(...offers.map((o) => o.durationMinutes), 1);
+          const maxD = Math.max(...offerList.map(o => o.durationMinutes), 1);
           const scoreA = (a.price / maxP) * 0.4 + (a.durationMinutes / maxD) * 0.4 + (a.stops > 0 ? 0.2 : 0);
           const scoreB = (b.price / maxP) * 0.4 + (b.durationMinutes / maxD) * 0.4 + (b.stops > 0 ? 0.2 : 0);
           return scoreA - scoreB;
         });
         break;
     }
-    return result;
-  }, [offers, maxPrice, stopsFilter, timeFilter, sortBy, priceRange]);
+    return sorted;
+  };
 
-  const activeFilterCount = [maxPrice > 0, stopsFilter !== null, timeFilter !== null].filter(Boolean).length;
+  const filtered = useMemo(() => sortOffers(applyFilters(filters, offers), sortBy), [offers, filters, sortBy, priceRange]);
 
-  const clearFilters = () => {
-    setMaxPrice(0);
-    setStopsFilter(null);
-    setTimeFilter(null);
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.maxPrice > 0) count++;
+    if (filters.stops.length > 0) count++;
+    if (filters.departureTime.length > 0) count++;
+    if (filters.arrivalTime.length > 0) count++;
+    if (filters.airlines.length > 0) count++;
+    if (filters.maxDuration > 0) count++;
+    if (filters.refundableOnly) count++;
+    if (filters.baggagePersonalItem || filters.baggageCarryOn || filters.baggageChecked) count++;
+    return count;
+  }, [filters]);
+
+  const activeChips = useMemo(() => {
+    const chips: { label: string; key: string }[] = [];
+    if (filters.maxPrice > 0) chips.push({ label: `Max $${filters.maxPrice}`, key: "maxPrice" });
+    if (filters.stops.length > 0) chips.push({ label: filters.stops.map(s => s === 0 ? "Direct" : s === 1 ? "1 stop" : "2+").join(", "), key: "stops" });
+    if (filters.departureTime.length > 0) chips.push({ label: `Depart: ${filters.departureTime.length}`, key: "departureTime" });
+    if (filters.arrivalTime.length > 0) chips.push({ label: `Arrive: ${filters.arrivalTime.length}`, key: "arrivalTime" });
+    if (filters.airlines.length > 0) chips.push({ label: `${filters.airlines.length} airline${filters.airlines.length > 1 ? "s" : ""}`, key: "airlines" });
+    if (filters.maxDuration > 0) chips.push({ label: `≤ ${Math.floor(filters.maxDuration / 60)}h ${filters.maxDuration % 60}m`, key: "maxDuration" });
+    if (filters.refundableOnly) chips.push({ label: "Refundable", key: "refundableOnly" });
+    if (filters.baggagePersonalItem) chips.push({ label: "Personal item", key: "baggagePersonalItem" });
+    if (filters.baggageCarryOn) chips.push({ label: "Carry-on", key: "baggageCarryOn" });
+    if (filters.baggageChecked) chips.push({ label: "Checked bag", key: "baggageChecked" });
+    return chips;
+  }, [filters]);
+
+  const removeChip = (key: string) => {
+    setFilters(prev => {
+      const next = { ...prev };
+      switch (key) {
+        case "maxPrice": next.maxPrice = 0; break;
+        case "stops": next.stops = []; break;
+        case "departureTime": next.departureTime = []; break;
+        case "arrivalTime": next.arrivalTime = []; break;
+        case "airlines": next.airlines = []; break;
+        case "maxDuration": next.maxDuration = 0; break;
+        case "refundableOnly": next.refundableOnly = false; break;
+        case "baggagePersonalItem": next.baggagePersonalItem = false; break;
+        case "baggageCarryOn": next.baggageCarryOn = false; break;
+        case "baggageChecked": next.baggageChecked = false; break;
+      }
+      return next;
+    });
+  };
+
+  const clearFilters = () => setFilters(defaultFilters);
+
+  const handleOpenSheet = () => {
+    setPendingFilters(filters);
+    setSheetOpen(true);
+  };
+
+  const handleApplySheet = () => {
+    setFilters(pendingFilters);
+    setSheetOpen(false);
+  };
+
+  const handleResetSheet = () => {
+    setPendingFilters(defaultFilters);
   };
 
   const handleSelect = (offer: DuffelOffer) => {
@@ -122,11 +233,8 @@ const FlightResults = () => {
     return {
       icon: isNetwork ? WifiOff : AlertTriangle,
       title: isRateLimit ? "Too Many Searches" : isNetwork ? "Connection Error" : "Search Failed",
-      message: isRateLimit
-        ? "Please wait a moment before searching again."
-        : isNetwork
-        ? "Please check your internet connection and try again."
-        : msg,
+      message: isRateLimit ? "Please wait a moment before searching again."
+        : isNetwork ? "Please check your internet connection and try again." : msg,
       canRetry: !isRateLimit,
     };
   };
@@ -136,42 +244,61 @@ const FlightResults = () => {
     return Math.round(Math.min(...filtered.map(o => o.price)));
   }, [filtered]);
 
-  // Filter sidebar content
-  const filterContent = (
+  const pendingFiltered = useMemo(() => applyFilters(pendingFilters, offers), [offers, pendingFilters]);
+
+  // Toggle helpers for pending filters
+  const togglePendingArray = <K extends keyof FlightFiltersState>(key: K, value: string | number) => {
+    setPendingFilters(prev => {
+      const arr = prev[key] as (string | number)[];
+      const next = arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value];
+      return { ...prev, [key]: next };
+    });
+  };
+
+  // Shared filter content renderer
+  const renderFilterContent = (f: FlightFiltersState, onChange: (partial: Partial<FlightFiltersState>) => void, toggleArray: (key: keyof FlightFiltersState, value: string | number) => void) => (
     <div className="space-y-5">
+      {/* Price */}
       <div>
         <p className="text-xs font-semibold mb-2.5">Max Price</p>
-        <Slider
-          value={[activeMaxPrice]}
-          min={priceRange.min}
-          max={priceRange.max}
-          step={10}
-          onValueChange={([v]) => setMaxPrice(v === priceRange.max ? 0 : v)}
-          className="mb-1.5"
-        />
-        <div className="flex justify-between text-[11px] text-muted-foreground">
-          <span>${priceRange.min}</span>
-          <span className="font-semibold text-foreground">${activeMaxPrice}</span>
+        <div className="px-0.5">
+          <div className="flex justify-center mb-2">
+            <span className="text-lg font-bold text-[hsl(var(--flights))] tabular-nums">
+              ${f.maxPrice > 0 ? f.maxPrice : priceRange.max}
+            </span>
+          </div>
+          <Slider
+            value={[f.maxPrice > 0 ? f.maxPrice : priceRange.max]}
+            min={priceRange.min}
+            max={priceRange.max}
+            step={10}
+            onValueChange={([v]) => onChange({ maxPrice: v >= priceRange.max ? 0 : v })}
+            className="mb-1"
+          />
+          <div className="flex justify-between text-[10px] text-muted-foreground">
+            <span>${priceRange.min}</span>
+            <span>${priceRange.max}</span>
+          </div>
         </div>
       </div>
 
       <Separator className="bg-border/30" />
 
+      {/* Stops */}
       <div>
         <p className="text-xs font-semibold mb-2.5">Stops</p>
         <div className="flex flex-wrap gap-1.5">
           {[
-            { val: null, label: "Any" },
             { val: 0, label: "Direct" },
             { val: 1, label: "1 Stop" },
-            { val: 2, label: "2+" },
-          ].map((item) => (
+            { val: 2, label: "2+ Stops" },
+          ].map(item => (
             <button
-              key={String(item.val)}
-              onClick={() => setStopsFilter(item.val as number | null)}
+              key={item.val}
+              onClick={() => toggleArray("stops", item.val)}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all duration-200 active:scale-95",
-                stopsFilter === item.val
+                "px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all active:scale-95",
+                (f.stops as number[]).includes(item.val)
                   ? "bg-[hsl(var(--flights))] text-primary-foreground border-[hsl(var(--flights))]"
                   : "bg-card border-border/40 text-muted-foreground hover:border-[hsl(var(--flights))]/40"
               )}
@@ -184,43 +311,160 @@ const FlightResults = () => {
 
       <Separator className="bg-border/30" />
 
+      {/* Departure Time */}
       <div>
         <p className="text-xs font-semibold mb-2.5">Departure Time</p>
         <div className="grid grid-cols-2 gap-1.5">
-          {[
-            { val: null, label: "Any", icon: "🕐" },
-            { val: "morning", label: "Morning", icon: "🌅" },
-            { val: "afternoon", label: "Afternoon", icon: "☀️" },
-            { val: "evening", label: "Evening", icon: "🌆" },
-          ].map((item) => (
+          {timeOptions.map(t => (
             <button
-              key={String(item.val)}
-              onClick={() => setTimeFilter(item.val)}
+              key={t.id}
+              onClick={() => toggleArray("departureTime", t.id)}
               className={cn(
-                "px-2.5 py-2 rounded-lg text-[11px] font-semibold border transition-all duration-200 flex items-center gap-1.5 active:scale-95",
-                timeFilter === item.val
-                  ? "bg-[hsl(var(--flights))] text-primary-foreground border-[hsl(var(--flights))]"
-                  : "bg-card border-border/40 text-muted-foreground hover:border-[hsl(var(--flights))]/40"
+                "p-2 rounded-lg border text-center transition-all active:scale-95",
+                (f.departureTime as string[]).includes(t.id)
+                  ? "bg-[hsl(var(--flights))]/15 border-[hsl(var(--flights))]/50 text-[hsl(var(--flights))]"
+                  : "bg-card border-border/40 text-muted-foreground hover:border-[hsl(var(--flights))]/30"
               )}
             >
-              <span className="text-xs">{item.icon}</span>
-              {item.label}
+              <t.icon className="w-4 h-4 mx-auto mb-0.5" />
+              <p className="text-[10px] font-semibold">{t.label}</p>
+              <p className="text-[8px] text-muted-foreground">{t.sub}</p>
             </button>
           ))}
         </div>
       </div>
 
-      {activeFilterCount > 0 && (
+      <Separator className="bg-border/30" />
+
+      {/* Arrival Time */}
+      <div>
+        <p className="text-xs font-semibold mb-2.5">Arrival Time</p>
+        <div className="grid grid-cols-2 gap-1.5">
+          {timeOptions.map(t => (
+            <button
+              key={t.id}
+              onClick={() => toggleArray("arrivalTime", t.id)}
+              className={cn(
+                "p-2 rounded-lg border text-center transition-all active:scale-95",
+                (f.arrivalTime as string[]).includes(t.id)
+                  ? "bg-primary/15 border-primary/50 text-primary"
+                  : "bg-card border-border/40 text-muted-foreground hover:border-primary/30"
+              )}
+            >
+              <t.icon className="w-4 h-4 mx-auto mb-0.5" />
+              <p className="text-[10px] font-semibold">{t.label}</p>
+              <p className="text-[8px] text-muted-foreground">{t.sub}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Separator className="bg-border/30" />
+
+      {/* Airlines */}
+      {availableAirlines.length > 0 && (
         <>
+          <div>
+            <p className="text-xs font-semibold mb-2.5">Airlines</p>
+            <div className="space-y-1.5 max-h-40 overflow-y-auto">
+              {availableAirlines.map(al => (
+                <label key={al.code} className="flex items-center gap-2.5 cursor-pointer py-1">
+                  <Checkbox
+                    checked={(f.airlines as string[]).includes(al.code)}
+                    onCheckedChange={() => toggleArray("airlines", al.code)}
+                  />
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <img
+                      src={getDuffelAirlineLogo(al.code)}
+                      alt={al.name}
+                      className="w-5 h-5 object-contain rounded"
+                      onError={(e) => {
+                        const el = e.target as HTMLImageElement;
+                        el.style.display = 'none';
+                      }}
+                    />
+                    <span className="text-[11px] truncate">{al.name}</span>
+                    <span className="text-[10px] text-muted-foreground ml-auto shrink-0">({al.count})</span>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
           <Separator className="bg-border/30" />
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="w-full text-muted-foreground text-xs">
-            <X className="w-3 h-3 mr-1" />
-            Clear All Filters
-          </Button>
         </>
       )}
+
+      {/* Duration */}
+      <div>
+        <p className="text-xs font-semibold mb-2.5">
+          Max Duration: {f.maxDuration > 0 ? `${Math.floor(f.maxDuration / 60)}h ${f.maxDuration % 60}m` : "Any"}
+        </p>
+        <div className="px-0.5">
+          <Slider
+            value={[f.maxDuration > 0 ? f.maxDuration : maxDurationRange.max]}
+            min={maxDurationRange.min}
+            max={maxDurationRange.max}
+            step={15}
+            onValueChange={([v]) => onChange({ maxDuration: v >= maxDurationRange.max ? 0 : v })}
+            className="mb-1"
+          />
+          <div className="flex justify-between text-[10px] text-muted-foreground">
+            <span>{Math.floor(maxDurationRange.min / 60)}h</span>
+            <span>{Math.floor(maxDurationRange.max / 60)}h</span>
+          </div>
+        </div>
+      </div>
+
+      <Separator className="bg-border/30" />
+
+      {/* Refundability */}
+      <div className="flex items-center justify-between py-1">
+        <span className="text-[11px] font-semibold">Refundable only</span>
+        <Switch
+          checked={f.refundableOnly}
+          onCheckedChange={(v) => onChange({ refundableOnly: v })}
+        />
+      </div>
+
+      <Separator className="bg-border/30" />
+
+      {/* Baggage */}
+      <div>
+        <p className="text-xs font-semibold mb-2.5 flex items-center gap-1.5">
+          <Luggage className="w-3.5 h-3.5 text-[hsl(var(--flights))]" />
+          Baggage
+        </p>
+        <div className="space-y-2">
+          {[
+            { key: "baggagePersonalItem" as const, label: "Personal item included" },
+            { key: "baggageCarryOn" as const, label: "Carry-on included" },
+            { key: "baggageChecked" as const, label: "Checked bag included" },
+          ].map(bag => (
+            <label key={bag.key} className="flex items-center gap-2.5 cursor-pointer">
+              <Checkbox
+                checked={f[bag.key] as boolean}
+                onCheckedChange={(v) => onChange({ [bag.key]: !!v })}
+              />
+              <span className="text-[11px]">{bag.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
     </div>
   );
+
+  // Desktop filter onChange
+  const desktopFilterChange = (partial: Partial<FlightFiltersState>) => setFilters(prev => ({ ...prev, ...partial }));
+  const desktopToggleArray = (key: keyof FlightFiltersState, value: string | number) => {
+    setFilters(prev => {
+      const arr = prev[key] as (string | number)[];
+      const next = arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value];
+      return { ...prev, [key]: next };
+    });
+  };
+
+  // Pending filter onChange (for mobile sheet)
+  const pendingFilterChange = (partial: Partial<FlightFiltersState>) => setPendingFilters(prev => ({ ...prev, ...partial }));
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -229,7 +473,6 @@ const FlightResults = () => {
         description={`Compare flight deals from ${origin} to ${destination}.`}
       />
 
-      {/* Decorative orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-[hsl(var(--flights))]/6 blur-3xl" />
         <div className="absolute bottom-0 -left-32 w-64 h-64 rounded-full bg-primary/4 blur-3xl" />
@@ -240,7 +483,7 @@ const FlightResults = () => {
       <main className="pt-16 pb-20 relative z-10">
         <div className="container mx-auto px-4 max-w-5xl">
 
-          {/* Sticky summary bar — glassmorphic, compact */}
+          {/* Sticky summary bar */}
           <div className="sticky top-14 z-20 -mx-4 px-4 mb-4">
             <motion.div
               initial={{ opacity: 0, y: -8 }}
@@ -262,7 +505,6 @@ const FlightResults = () => {
                     {departureDate}{returnDate ? ` — ${returnDate}` : ""} · {totalPassengers} pax · <span className="capitalize">{cabinClass.replace("_", " ")}</span>
                   </p>
                 </div>
-                {/* Price indicator */}
                 {lowestPrice > 0 && (
                   <div className="text-right shrink-0 hidden sm:block">
                     <p className="text-[10px] text-muted-foreground">From</p>
@@ -276,7 +518,7 @@ const FlightResults = () => {
             </motion.div>
           </div>
 
-          {/* Sort tabs + filter — compact row */}
+          {/* Sort tabs + filter button */}
           {offers.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 6 }}
@@ -284,64 +526,101 @@ const FlightResults = () => {
               transition={{ delay: 0.05 }}
               className="flex items-center justify-between mb-3 gap-2"
             >
-              {/* Sort pills */}
-              <div className="flex gap-0.5 p-0.5 bg-muted/40 backdrop-blur-sm rounded-lg border border-border/20">
-                {(["best", "cheapest", "fastest"] as SortBy[]).map((s) => (
+              <div className="flex gap-0.5 p-0.5 bg-muted/40 backdrop-blur-sm rounded-lg border border-border/20 overflow-x-auto no-scrollbar">
+                {([
+                  { key: "best" as SortBy, label: "✨ Best" },
+                  { key: "cheapest" as SortBy, label: "💰 Cheapest" },
+                  { key: "fastest" as SortBy, label: "⚡ Fastest" },
+                ]).map(s => (
                   <button
-                    key={s}
-                    onClick={() => setSortBy(s)}
+                    key={s.key}
+                    onClick={() => setSortBy(s.key)}
                     className={cn(
-                      "px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all duration-200 capitalize",
-                      sortBy === s
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
+                      "px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all whitespace-nowrap",
+                      sortBy === s.key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {s === "best" ? "✨ Best" : s === "cheapest" ? "💰 Cheapest" : "⚡ Fastest"}
+                    {s.label}
                   </button>
                 ))}
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Result count */}
                 <span className="text-[10px] text-muted-foreground tabular-nums hidden sm:inline">
                   {filtered.length} flight{filtered.length !== 1 ? "s" : ""}
                 </span>
 
-                {/* Filter button (mobile = sheet) */}
-                <Sheet>
+                {/* Mobile filter button + sheet */}
+                <Sheet open={sheetOpen} onOpenChange={(open) => { if (open) handleOpenSheet(); else setSheetOpen(false); }}>
                   <SheetTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-1 border-border/40 relative h-7 px-2.5 text-[11px] sm:hidden">
                       <Filter className="w-3 h-3" />
                       Filter
                       {activeFilterCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[hsl(var(--flights))] text-[8px] text-primary-foreground font-bold flex items-center justify-center">
+                        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[hsl(var(--flights))] text-[9px] text-primary-foreground font-bold flex items-center justify-center">
                           {activeFilterCount}
                         </span>
                       )}
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh]">
-                    <SheetHeader>
-                      <SheetTitle>Filters</SheetTitle>
+                  <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] flex flex-col p-0">
+                    <SheetHeader className="px-4 pt-4 pb-2 border-b border-border/30 shrink-0">
+                      <div className="flex items-center justify-between">
+                        <SheetTitle className="text-base">Filters</SheetTitle>
+                        <button onClick={handleResetSheet} className="text-[11px] font-medium text-[hsl(var(--flights))]">
+                          Reset all
+                        </button>
+                      </div>
                     </SheetHeader>
-                    <div className="py-4 overflow-y-auto">{filterContent}</div>
-                    <SheetClose asChild>
-                      <Button className="w-full bg-[hsl(var(--flights))]">
-                        Show {filtered.length} flight{filtered.length !== 1 ? "s" : ""}
+                    <div className="flex-1 overflow-y-auto px-4 py-4 overscroll-contain">
+                      {renderFilterContent(pendingFilters, pendingFilterChange, togglePendingArray)}
+                    </div>
+                    <div className="shrink-0 px-4 py-3 border-t border-border/30 bg-card/90 backdrop-blur-sm safe-area-bottom">
+                      <Button
+                        className="w-full bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 font-semibold"
+                        onClick={handleApplySheet}
+                      >
+                        Show {pendingFiltered.length} flight{pendingFiltered.length !== 1 ? "s" : ""}
                       </Button>
-                    </SheetClose>
+                    </div>
                   </SheetContent>
                 </Sheet>
               </div>
             </motion.div>
           )}
 
+          {/* Active filter chips */}
+          {activeChips.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="flex flex-wrap gap-1.5 mb-3"
+            >
+              {activeChips.map(chip => (
+                <Badge
+                  key={chip.key}
+                  variant="secondary"
+                  className="text-[10px] h-6 px-2 gap-1 cursor-pointer hover:bg-destructive/10 hover:text-destructive transition-colors"
+                  onClick={() => removeChip(chip.key)}
+                >
+                  {chip.label}
+                  <X className="w-2.5 h-2.5" />
+                </Badge>
+              ))}
+              <button
+                onClick={clearFilters}
+                className="text-[10px] font-medium text-destructive hover:underline px-1"
+              >
+                Clear all
+              </button>
+            </motion.div>
+          )}
+
           <div className="flex gap-5">
             {/* Desktop filters sidebar */}
             {offers.length > 0 && (
-              <div className="hidden sm:block w-52 shrink-0">
-                <div className="sticky top-32 bg-card/70 backdrop-blur-xl rounded-2xl border border-border/40 p-3.5">
+              <div className="hidden sm:block w-56 shrink-0">
+                <div className="sticky top-32 bg-card/70 backdrop-blur-xl rounded-2xl border border-border/40 p-3.5 max-h-[calc(100vh-9rem)] overflow-y-auto">
                   <p className="text-xs font-semibold mb-3 flex items-center gap-1.5">
                     <Filter className="w-3.5 h-3.5 text-[hsl(var(--flights))]" />
                     Filters
@@ -349,7 +628,15 @@ const FlightResults = () => {
                       <Badge variant="secondary" className="text-[9px] h-4 px-1.5">{activeFilterCount}</Badge>
                     )}
                   </p>
-                  {filterContent}
+                  {renderFilterContent(filters, desktopFilterChange, desktopToggleArray)}
+                  {activeFilterCount > 0 && (
+                    <>
+                      <Separator className="bg-border/30 my-4" />
+                      <Button variant="ghost" size="sm" onClick={clearFilters} className="w-full text-muted-foreground text-xs">
+                        <X className="w-3 h-3 mr-1" /> Clear All
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -377,9 +664,7 @@ const FlightResults = () => {
                               <RefreshCw className="w-4 h-4" /> Try Again
                             </Button>
                           )}
-                          <Button variant="outline" asChild>
-                            <Link to="/flights">New Search</Link>
-                          </Button>
+                          <Button variant="outline" asChild><Link to="/flights">New Search</Link></Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -397,9 +682,7 @@ const FlightResults = () => {
                       </div>
                       <h2 className="text-lg font-bold mb-2">No Flights Found</h2>
                       <p className="text-sm text-muted-foreground mb-6">Try different dates, airports, or cabin class.</p>
-                      <Button asChild className="bg-[hsl(var(--flights))]">
-                        <Link to="/flights">Modify Search</Link>
-                      </Button>
+                      <Button asChild className="bg-[hsl(var(--flights))]"><Link to="/flights">Modify Search</Link></Button>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -417,7 +700,7 @@ const FlightResults = () => {
                 </Card>
               )}
 
-              {/* Results list — premium cards */}
+              {/* Results list */}
               <div className="space-y-2.5">
                 <AnimatePresence mode="popLayout">
                   {filtered.map((offer, idx) => (
@@ -438,7 +721,6 @@ const FlightResults = () => {
                         )}
                         onClick={() => handleSelect(offer)}
                       >
-                        {/* Top badge */}
                         {idx === 0 && (
                           <div className="mb-2">
                             <Badge className={cn(
@@ -446,17 +728,16 @@ const FlightResults = () => {
                               sortBy === "best" && "bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border-[hsl(var(--flights))]/20",
                               sortBy === "cheapest" && "bg-primary/10 text-primary border-primary/20",
                               sortBy === "fastest" && "bg-amber-500/10 text-amber-600 border-amber-500/20",
+                              sortBy === "earliest" && "bg-sky-500/10 text-sky-600 border-sky-500/20",
+                              sortBy === "shortest" && "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
                             )}>
-                              {sortBy === "best" ? "✨ Best Option" : sortBy === "cheapest" ? "💰 Lowest Price" : "⚡ Fastest"}
+                              {sortBy === "best" ? "✨ Best Option" : sortBy === "cheapest" ? "💰 Lowest Price" : sortBy === "fastest" ? "⚡ Fastest" : sortBy === "earliest" ? "🕐 Earliest" : "📏 Shortest"}
                             </Badge>
                           </div>
                         )}
 
-                        {/* Two-column: route info | price */}
                         <div className="flex items-start justify-between gap-3">
-                          {/* Left: airline + route */}
                           <div className="flex-1 min-w-0 space-y-2.5">
-                            {/* Airline row */}
                             <div className="flex items-center gap-2">
                               <div className="w-8 h-8 rounded-lg bg-muted/50 border border-border/20 flex items-center justify-center overflow-hidden shrink-0">
                                 <img
@@ -476,13 +757,11 @@ const FlightResults = () => {
                               </div>
                             </div>
 
-                            {/* Route timeline — the visual centerpiece */}
                             <div className="flex items-center gap-2">
                               <div className="text-left min-w-[46px]">
                                 <p className="text-lg font-bold tabular-nums leading-none">{offer.departure.time}</p>
                                 <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{offer.departure.code}</p>
                               </div>
-
                               <div className="flex flex-col items-center flex-1 py-1">
                                 <span className="text-[9px] text-muted-foreground font-medium flex items-center gap-0.5">
                                   <Clock className="w-2.5 h-2.5" />
@@ -506,7 +785,6 @@ const FlightResults = () => {
                                   {offer.stops === 0 ? "Direct" : `${offer.stops} stop${offer.stops > 1 ? "s" : ""}`}
                                 </span>
                               </div>
-
                               <div className="text-right min-w-[46px]">
                                 <p className="text-lg font-bold tabular-nums leading-none">{offer.arrival.time}</p>
                                 <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{offer.arrival.code}</p>
@@ -514,7 +792,6 @@ const FlightResults = () => {
                             </div>
                           </div>
 
-                          {/* Right: price + CTA */}
                           <div className="flex flex-col items-end justify-between shrink-0 min-h-[80px]">
                             <div className="text-right">
                               <p className="text-xl font-bold text-[hsl(var(--flights))] tabular-nums leading-none">
@@ -533,7 +810,6 @@ const FlightResults = () => {
                           </div>
                         </div>
 
-                        {/* Bottom tags */}
                         <div className="flex gap-1 mt-2.5 flex-wrap">
                           <Badge variant="outline" className="text-[8px] border-border/20 bg-muted/20 capitalize h-4 px-1.5">
                             {offer.cabinClass}
@@ -556,7 +832,6 @@ const FlightResults = () => {
                 </AnimatePresence>
               </div>
 
-              {/* Results count footer */}
               {filtered.length > 0 && (
                 <p className="text-center text-[10px] text-muted-foreground mt-4 sm:hidden">
                   Showing {filtered.length} of {offers.length} flights
