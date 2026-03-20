@@ -257,6 +257,8 @@ const FlightReview = () => {
   const navigate = useNavigate();
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [selectedServices, setSelectedServices] = useState<DuffelAvailableService[]>([]);
+  const [variantPrice, setVariantPrice] = useState<number | null>(null);
+  const [variantCurrency, setVariantCurrency] = useState<string | null>(null);
 
   const handleToggleService = useCallback((svc: DuffelAvailableService) => {
     setSelectedServiceIds(prev => {
