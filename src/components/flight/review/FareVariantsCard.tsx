@@ -68,7 +68,10 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
       </div>
 
       {/* Horizontal scrollable fare cards */}
-      <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide">
+      <div
+        className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
         {variants.map((variant, i) => {
           const isSelected = variant.id === selectedId;
           const bag = variant.baggageDetails;
@@ -81,8 +84,8 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06, duration: 0.3 }}
-              className="snap-start shrink-0"
-              style={{ width: variants.length <= 2 ? "calc(50% - 5px)" : "72%" }}
+              className="snap-start flex-none"
+              style={{ width: "70%", minWidth: 200, maxWidth: 280 }}
             >
               <Card
                 className={cn(
