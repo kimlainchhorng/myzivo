@@ -189,6 +189,15 @@ const FlightTravelerInfo = () => {
     });
   };
 
+  const fieldLabels: Record<string, string> = {
+    given_name: "First name",
+    family_name: "Last name",
+    gender: "Gender",
+    born_on: "Date of birth",
+    email: "Email",
+    consent: "Terms & conditions",
+  };
+
   const validate = (): boolean => {
     const nameRegex = /^[a-zA-Z\s\-']{2,}$/;
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -198,20 +207,57 @@ const FlightTravelerInfo = () => {
       const p = passengers[i];
       if (!nameRegex.test(p.given_name)) newErrors[`${i}.given_name`] = "Enter a valid first name";
       if (!nameRegex.test(p.family_name)) newErrors[`${i}.family_name`] = "Enter a valid last name";
-      if (!p.gender) newErrors[`${i}.gender`] = "Required";
-      if (!p.born_on) newErrors[`${i}.born_on`] = "Required";
+      if (!p.gender) newErrors[`${i}.gender`] = "Select gender";
+      if (!p.born_on) newErrors[`${i}.born_on`] = "Enter date of birth";
       if (i === 0 && !emailRegex.test(p.email)) newErrors[`${i}.email`] = "Enter a valid email";
     }
 
-    if (!consentChecked) newErrors["consent"] = "Required";
+    if (!consentChecked) newErrors["consent"] = "Accept terms to continue";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  /** Build a human-readable summary of missing fields */
+  const getMissingFieldsSummary = (errs: Record<string, string>): string => {
+    const missing: string[] = [];
+    for (const key of Object.keys(errs)) {
+      if (key === "consent") {
+        missing.push("Terms & conditions");
+        continue;
+      }
+      const parts = key.split(".");
+      if (parts.length === 2) {
+        const field = parts[1];
+        const label = fieldLabels[field] || field;
+        if (!missing.includes(label)) missing.push(label);
+      }
+    }
+    if (missing.length === 0) return "Please check the form for errors.";
+    if (missing.length === 1) return `Missing: ${missing[0]}`;
+    if (missing.length <= 3) return `Missing: ${missing.join(", ")}`;
+    return `Missing ${missing.length} required fields: ${missing.slice(0, 2).join(", ")} and ${missing.length - 2} more`;
+  };
+
   const handleContinue = () => {
     if (!validate()) {
-      toast({ title: "Missing Information", description: "Please fill in all required fields.", variant: "destructive" });
+      const summary = getMissingFieldsSummary(errors.consent ? errors : (() => {
+        // Re-run to get fresh errors for summary
+        const nameRegex = /^[a-zA-Z\s\-']{2,}$/;
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const freshErrors: Record<string, string> = {};
+        for (let i = 0; i < passengers.length; i++) {
+          const p = passengers[i];
+          if (!nameRegex.test(p.given_name)) freshErrors[`${i}.given_name`] = "x";
+          if (!nameRegex.test(p.family_name)) freshErrors[`${i}.family_name`] = "x";
+          if (!p.gender) freshErrors[`${i}.gender`] = "x";
+          if (!p.born_on) freshErrors[`${i}.born_on`] = "x";
+          if (i === 0 && !emailRegex.test(p.email)) freshErrors[`${i}.email`] = "x";
+        }
+        if (!consentChecked) freshErrors["consent"] = "x";
+        return freshErrors;
+      })());
+      toast({ title: "Complete Your Details", description: summary, variant: "destructive" });
       return;
     }
     const withContact = passengers.map((p, i) => ({
