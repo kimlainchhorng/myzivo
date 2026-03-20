@@ -23,6 +23,7 @@ import { StepIndicator } from "@/components/flight/review/StepIndicator";
 import { FareRulesCard } from "@/components/flight/review/FareRulesCard";
 import { PriceSummaryCard } from "@/components/flight/review/PriceSummaryCard";
 import { DuffelServicesCard } from "@/components/flight/review/DuffelServicesCard";
+import { FareVariantsCard } from "@/components/flight/review/FareVariantsCard";
 import { cn } from "@/lib/utils";
 
 /* ── Helpers ─────────────────────────────────────────── */
@@ -415,6 +416,31 @@ const FlightReview = () => {
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-3">
             <FareRulesCard offer={offer} />
           </motion.div>
+
+          {/* ── Fare Variants (Basic Economy / Main Cabin / etc.) ── */}
+          {offer.fareVariants && offer.fareVariants.length > 1 && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }} className="mt-3">
+              <FareVariantsCard
+                offer={offer}
+                onSelectVariant={(variant) => {
+                  // Update sessionStorage with the selected fare variant
+                  const updated = {
+                    ...offer,
+                    id: variant.id,
+                    price: variant.price,
+                    pricePerPerson: variant.price,
+                    currency: variant.currency,
+                    fareBrandName: variant.fareBrandName,
+                    cabinClass: variant.cabinClass,
+                    conditions: variant.conditions,
+                    baggageDetails: variant.baggageDetails,
+                    baggageIncluded: variant.baggageIncluded,
+                  };
+                  sessionStorage.setItem("zivo_selected_offer", JSON.stringify(updated));
+                }}
+              />
+            </motion.div>
+          )}
 
           {/* ── Real Available Services from Duffel ───── */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.27 }} className="mt-3">
