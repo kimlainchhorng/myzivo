@@ -7,7 +7,7 @@ import { getAllInPrice } from "@/utils/flightPricing";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Clock, ChevronRight, ChevronDown, Briefcase, ArrowRight, Repeat, Plane, RefreshCw, Luggage, PackageCheck, CheckCircle2
+  Clock, ChevronRight, ChevronDown, Briefcase, ArrowRight, Repeat, Plane, RefreshCw, Luggage, PackageCheck, CheckCircle2, Armchair
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
@@ -370,6 +370,15 @@ export default function FlightLegCard({
               <span className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">Refundable</span>
             </div>
           )}
+
+          {/* Seat selection indicator */}
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[hsl(var(--flights)/0.06)] border border-[hsl(var(--flights)/0.15)]"
+            style={{ boxShadow: "0 1px 3px -1px hsl(var(--flights)/0.08), inset 0 1px 0 0 hsl(0 0% 100%/0.04)" }}
+          >
+            <Armchair style={{ width: 13, height: 13 }} className="text-[hsl(var(--flights))]" />
+            <span className="text-[9px] font-semibold text-[hsl(var(--flights))]">Seat selection</span>
+          </div>
         </div>
 
         {/* CTA */}
