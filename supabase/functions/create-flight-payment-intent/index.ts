@@ -143,6 +143,11 @@ Deno.serve(async (req) => {
     const userEmail = userData.user?.email;
 
     // Create booking
+    const passengerCount = passengers.length;
+    const totalBookingAmount = Number((totalAmount * passengerCount).toFixed(2));
+    const totalBaseFare = Number((baseFare * passengerCount).toFixed(2));
+    const totalTaxesFees = Number((taxesFees * passengerCount).toFixed(2));
+
     const { data: booking, error: bookingError } = await supabase
       .from("flight_bookings")
       .insert({
@@ -151,11 +156,14 @@ Deno.serve(async (req) => {
         destination,
         departure_date: departureDate,
         return_date: returnDate || null,
-        passengers: passengers.length,
+        passengers: passengerCount,
+        total_passengers: passengerCount,
         cabin_class: cabinClass,
-        total_amount: totalAmount,
-        base_fare: baseFare,
-        taxes_fees: taxesFees,
+        price_per_passenger: totalAmount,
+        subtotal: totalBaseFare,
+        total_amount: totalBookingAmount,
+        base_fare: totalBaseFare,
+        taxes_fees: totalTaxesFees,
         currency: currency.toUpperCase(),
         offer_id: offerId,
         payment_status: "pending",
