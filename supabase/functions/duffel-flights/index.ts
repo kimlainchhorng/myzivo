@@ -819,19 +819,43 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
     .map(o => transformOffer(o))
     .filter((o): o is DuffelOfferTransformed => o !== null);
 
-  // Deduplicate by fingerprint: airlineCode + departure time + arrival time + stops + price
-  const seen = new Set<string>();
-  const deduped: DuffelOfferTransformed[] = [];
+  // Group by flight fingerprint (same itinerary, different fares)
+  // Fingerprint = airline + departure time + arrival time + stops (excludes price/fare)
+  const groups = new Map<string, DuffelOfferTransformed[]>();
   for (const offer of transformed) {
-    const fingerprint = `${offer.airlineCode}-${offer.departure.time}-${offer.arrival.time}-${offer.stops}-${offer.price}`;
-    if (!seen.has(fingerprint)) {
-      seen.add(fingerprint);
-      deduped.push(offer);
+    const flightFP = `${offer.airlineCode}-${offer.departure.time}-${offer.arrival.time}-${offer.stops}`;
+    const group = groups.get(flightFP) || [];
+    // Avoid exact duplicates (same price too)
+    const exactDup = group.some(g => g.price === offer.price && g.fareBrandName === offer.fareBrandName);
+    if (!exactDup) {
+      group.push(offer);
+      groups.set(flightFP, group);
     }
   }
 
-  console.log(`[Transform] ${offers.length} raw -> ${transformed.length} transformed -> ${deduped.length} after dedup`);
-  return deduped;
+  // For each group, pick cheapest as primary and attach fare variants
+  const result: DuffelOfferTransformed[] = [];
+  for (const group of groups.values()) {
+    // Sort by price ascending
+    group.sort((a, b) => a.price - b.price);
+    const primary = group[0];
+    // Attach all fare variants (including primary) as fareVariants
+    primary.fareVariants = group.map(g => ({
+      id: g.id,
+      fareBrandName: g.fareBrandName || g.cabinClass,
+      price: g.price,
+      currency: g.currency,
+      conditions: g.conditions,
+      baggageDetails: g.baggageDetails,
+      baggageIncluded: g.baggageIncluded,
+      cabinClass: g.cabinClass,
+    }));
+    result.push(primary);
+  }
+
+  console.log(`[Transform] ${offers.length} raw -> ${transformed.length} transformed -> ${result.length} grouped (${groups.size} unique flights)`);
+  return result;
+}
 }
 
 function formatTime(dateStr: string): string {
