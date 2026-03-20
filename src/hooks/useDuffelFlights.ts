@@ -51,6 +51,9 @@ export interface DuffelOffer {
   durationMinutes: number;
   stops: number;
   stopCities: string[];
+  stopDetails: { code: string; city: string; layoverDuration: string }[];
+  carriers: { name: string; code: string; isOperating: boolean }[];
+  operatedBy: string | null;
   price: number;
   currency: string;
   pricePerPerson: number;
