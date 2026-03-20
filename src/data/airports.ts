@@ -146,7 +146,7 @@ export const airports: Airport[] = [
   { code: 'REP', name: 'Siem Reap International', city: 'Siem Reap', country: 'Cambodia', region: 'Asia', timezone: 'ICT', lat: 13.4107, lng: 103.8132, type: 'international', popularity: 6 },
   { code: 'RGN', name: 'Yangon International', city: 'Yangon', country: 'Myanmar', region: 'Asia', timezone: 'MMT', lat: 16.9073, lng: 96.1322, type: 'international', popularity: 6 },
   { code: 'DAD', name: 'Da Nang International', city: 'Da Nang', country: 'Vietnam', region: 'Asia', timezone: 'ICT', lat: 16.0439, lng: 108.1994, type: 'international', popularity: 7 },
-  { code: 'PNH', name: 'Phnom Penh International (Legacy)', city: 'Phnom Penh', country: 'Cambodia', region: 'Asia', timezone: 'ICT', lat: 11.5466, lng: 104.8442, type: 'international', popularity: 6 },
+  
   { code: 'KTI', name: 'Techo International Airport', city: 'Phnom Penh', country: 'Cambodia', region: 'Asia', timezone: 'ICT', lat: 11.4017, lng: 104.9800, type: 'international', popularity: 8 },
   { code: 'CMB', name: 'Bandaranaike International', city: 'Colombo', country: 'Sri Lanka', region: 'Asia', timezone: 'IST', lat: 7.1808, lng: 79.8841, type: 'international', popularity: 7 },
   { code: 'MLE', name: 'Velana International', city: 'Malé', country: 'Maldives', region: 'Asia', timezone: 'MVT', lat: 4.1918, lng: 73.5290, type: 'international', popularity: 8 },
@@ -757,7 +757,7 @@ export const airports: Airport[] = [
   { code: 'PPS', name: 'Puerto Princesa', city: 'Puerto Princesa', country: 'Philippines', region: 'Asia', timezone: 'PHT', lat: 9.7421, lng: 118.7587, type: 'international', popularity: 6 },
   { code: 'TAG', name: 'Bohol-Panglao International', city: 'Bohol', country: 'Philippines', region: 'Asia', timezone: 'PHT', lat: 9.5840, lng: 123.7754, type: 'international', popularity: 5 },
   { code: 'REP', name: 'Siem Reap International', city: 'Siem Reap', country: 'Cambodia', region: 'Asia', timezone: 'ICT', lat: 13.4107, lng: 103.8128, type: 'international', popularity: 7 },
-  { code: 'PNH', name: 'Phnom Penh International (Legacy)', city: 'Phnom Penh', country: 'Cambodia', region: 'Asia', timezone: 'ICT', lat: 11.5466, lng: 104.8441, type: 'international', popularity: 6 },
+  
   { code: 'KTI', name: 'Techo International Airport', city: 'Phnom Penh', country: 'Cambodia', region: 'Asia', timezone: 'ICT', lat: 11.4017, lng: 104.9800, type: 'international', popularity: 8 },
   { code: 'VTE', name: 'Wattay International', city: 'Vientiane', country: 'Laos', region: 'Asia', timezone: 'ICT', lat: 17.9883, lng: 102.5633, type: 'international', popularity: 5 },
   { code: 'LPQ', name: 'Luang Prabang International', city: 'Luang Prabang', country: 'Laos', region: 'Asia', timezone: 'ICT', lat: 19.8973, lng: 102.1608, type: 'international', popularity: 6 },
@@ -1451,7 +1451,7 @@ export const airports: Airport[] = [
   { code: 'VII', name: 'Vinh Airport', city: 'Vinh', country: 'Vietnam', region: 'Asia', timezone: 'ICT', lat: 18.7376, lng: 105.6706, type: 'domestic', popularity: 4 },
   { code: 'UIH', name: 'Phu Cat Airport', city: 'Quy Nhon', country: 'Vietnam', region: 'Asia', timezone: 'ICT', lat: 13.9550, lng: 109.0422, type: 'domestic', popularity: 4 },
   { code: 'REP', name: 'Siem Reap-Angkor International', city: 'Siem Reap', country: 'Cambodia', region: 'Asia', timezone: 'ICT', lat: 13.4107, lng: 103.8128, type: 'international', popularity: 8 },
-  { code: 'PNH', name: 'Phnom Penh International (Legacy)', city: 'Phnom Penh', country: 'Cambodia', region: 'Asia', timezone: 'ICT', lat: 11.5466, lng: 104.8441, type: 'international', popularity: 7 },
+  
   { code: 'KTI', name: 'Techo International Airport', city: 'Phnom Penh', country: 'Cambodia', region: 'Asia', timezone: 'ICT', lat: 11.4017, lng: 104.9800, type: 'international', popularity: 9 },
   { code: 'KOS', name: 'Sihanoukville International', city: 'Sihanoukville', country: 'Cambodia', region: 'Asia', timezone: 'ICT', lat: 10.5797, lng: 103.6369, type: 'international', popularity: 5 },
   { code: 'VTE', name: 'Wattay International', city: 'Vientiane', country: 'Laos', region: 'Asia', timezone: 'ICT', lat: 17.9883, lng: 102.5633, type: 'international', popularity: 5 },

@@ -43,12 +43,11 @@ const NEARBY_AIRPORTS: Record<string, string[]> = {
   DCA: ["IAD", "BWI", "PHL"],
   IAD: ["DCA", "BWI", "JFK"],
   // Asia
-  PNH: ["KTI", "BKK", "SGN", "KUL"],
-  KTI: ["PNH", "BKK", "SGN", "KUL"],
-  REP: ["BKK", "SGN", "PNH", "KTI"],
-  KOS: ["PNH", "KTI", "BKK", "SGN"],
+  KTI: ["BKK", "SGN", "KUL", "REP"],
+  REP: ["BKK", "SGN", "KTI", "KUL"],
+  KOS: ["KTI", "BKK", "SGN", "REP"],
   BKK: ["SGN", "KUL", "SIN"],
-  SGN: ["BKK", "PNH", "KUL"],
+  SGN: ["BKK", "KTI", "KUL"],
   HAN: ["BKK", "SGN", "HKG"],
   KUL: ["SIN", "BKK", "SGN"],
   SIN: ["KUL", "BKK", "HKG"],
@@ -150,7 +149,7 @@ export default function FlightEmptyState({
   const destAirport = getAirportByCode(destination);
 
   // Airports with limited Duffel coverage
-  const LIMITED_COVERAGE_AIRPORTS = ["PNH", "KTI", "REP", "KOS"];
+  const LIMITED_COVERAGE_AIRPORTS = ["KTI", "REP", "KOS"];
   const isLimitedCoverage = LIMITED_COVERAGE_AIRPORTS.includes(origin.toUpperCase()) || LIMITED_COVERAGE_AIRPORTS.includes(destination.toUpperCase());
 
   return (
