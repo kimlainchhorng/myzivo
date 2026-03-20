@@ -249,9 +249,40 @@ export default function FlightLegCard({
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="flex items-center justify-between gap-2 mt-3">
+        {/* Baggage amenities row */}
+        <div className="flex items-center gap-3 mt-3 pt-2.5 border-t border-border/15">
+          {/* Personal item */}
+          <div className="relative" title="Personal item included">
+            <Briefcase className="w-4.5 h-4.5 text-muted-foreground" style={{ width: 18, height: 18 }} />
+            <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute -bottom-0.5 -right-1 bg-card rounded-full" />
+          </div>
+          {/* Carry-on */}
+          <div className="relative" title={representativeOffer.baggageDetails?.carryOnIncluded ? "Carry-on included" : "Carry-on not included"}>
+            <PackageCheck className="text-muted-foreground" style={{ width: 18, height: 18, opacity: representativeOffer.baggageDetails?.carryOnIncluded ? 1 : 0.35 }} />
+            {representativeOffer.baggageDetails?.carryOnIncluded && (
+              <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute -bottom-0.5 -right-1 bg-card rounded-full" />
+            )}
+          </div>
+          {/* Checked bag */}
+          <div className="relative" title={representativeOffer.baggageDetails?.checkedBagsIncluded ? `${representativeOffer.baggageDetails.checkedBagQuantity} checked bag(s)` : "No checked bag"}>
+            <Luggage className="text-muted-foreground" style={{ width: 18, height: 18, opacity: representativeOffer.baggageDetails?.checkedBagsIncluded ? 1 : 0.35 }} />
+            {representativeOffer.baggageDetails?.checkedBagsIncluded && (
+              <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute -bottom-0.5 -right-1 bg-card rounded-full" />
+            )}
+          </div>
+          {/* Refundable indicator */}
+          {representativeOffer.isRefundable && (
+            <div className="relative ml-1" title="Refundable">
+              <RefreshCw className="text-emerald-500" style={{ width: 16, height: 16 }} />
+            </div>
+          )}
+
+          <div className="flex-1" />
           <p className="text-[10px] text-muted-foreground capitalize">{label} flight</p>
+        </div>
+
+        {/* CTA */}
+        <div className="flex items-center justify-end gap-2 mt-2">
           <Button
             size="sm"
             className={cn(
