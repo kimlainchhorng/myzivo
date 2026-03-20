@@ -297,149 +297,176 @@ export default function FlightSearchFormPro({
             </Button>
 
             {/* Row 2: Dates */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Departure Date */}
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1.5 block">
-                  {t("flights.departure")} <span className="text-destructive">*</span>
-                </Label>
-                
-                {isMobile ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={() => setDepartSheetOpen(true)}
-                      className={cn(
-                        "w-full h-12 justify-start text-left font-normal rounded-xl touch-manipulation",
-                        !departDate && "text-muted-foreground",
-                        errors.depart && "border-destructive"
-                      )}
-                    >
-                      <CalendarIcon className="w-4 h-4 mr-2 text-sky-500" />
-                      {departDate ? format(departDate, "EEE, MMM d") : "Select date"}
-                    </Button>
-                    <MobileDatePickerSheet
-                      open={departSheetOpen}
-                      onOpenChange={setDepartSheetOpen}
-                      selectedDate={departDate}
-                      onDateSelect={(date) => {
-                        setDepartDate(date);
-                        if (date && returnDate && isBefore(returnDate, date)) {
-                          setReturnDate(addDays(date, 7));
-                        }
-                      }}
-                      onDateConfirmed={(date) => {
-                        if (tripType === "roundtrip") {
-                          setReturnDate((current) => (current && !isBefore(current, date) ? current : addDays(date, 7)));
-                          setReturnSheetOpen(true);
-                        }
-                      }}
-                      label="Departure Date"
-                      accentColor="sky"
-                    />
-                  </>
-                ) : (
-                  <Popover>
-                    <PopoverTrigger asChild>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">
+                {tripType === "roundtrip" ? `${t("flights.departure")} → ${t("flights.return")}` : t("flights.departure")}
+                <span className="text-destructive"> *</span>
+              </Label>
+
+              <div
+                className={cn(
+                  "rounded-xl border border-border bg-background overflow-hidden",
+                  (errors.depart || errors.return) && "border-destructive"
+                )}
+              >
+                <div className={cn("grid", tripType === "roundtrip" ? "grid-cols-2" : "grid-cols-1")}>
+                  {isMobile ? (
+                    <>
                       <Button
-                        variant="outline"
+                        variant="ghost"
+                        type="button"
+                        onClick={() => setDepartSheetOpen(true)}
                         className={cn(
-                          "w-full h-11 sm:h-12 justify-start text-left font-normal rounded-xl",
+                          "h-14 justify-start rounded-none px-4 text-left font-normal touch-manipulation",
                           !departDate && "text-muted-foreground",
-                          errors.depart && "border-destructive"
+                          tripType === "roundtrip" && "border-r border-border"
                         )}
                       >
-                        <CalendarIcon className="w-4 h-4 mr-2 text-sky-500" />
-                        {departDate ? format(departDate, "EEE, MMM d") : "Select date"}
+                        <CalendarIcon className="w-4 h-4 mr-3 text-primary" />
+                        <div className="flex flex-col items-start">
+                          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                            {t("flights.departure")}
+                          </span>
+                          <span>{departDate ? format(departDate, "EEE, MMM d") : "Select date"}</span>
+                        </div>
                       </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={departDate}
-                        onSelect={(date) => {
+                      <MobileDatePickerSheet
+                        open={departSheetOpen}
+                        onOpenChange={setDepartSheetOpen}
+                        selectedDate={departDate}
+                        onDateSelect={(date) => {
                           setDepartDate(date);
                           if (date && returnDate && isBefore(returnDate, date)) {
                             setReturnDate(addDays(date, 7));
                           }
                         }}
-                        disabled={(date) => isBefore(date, startOfToday())}
-                        initialFocus
-                        className="pointer-events-auto"
+                        onDateConfirmed={(date) => {
+                          if (tripType === "roundtrip") {
+                            setReturnDate((current) => (current && !isBefore(current, date) ? current : addDays(date, 7)));
+                            setReturnSheetOpen(true);
+                          }
+                        }}
+                        label="Departure Date"
+                        accentColor="sky"
                       />
-                    </PopoverContent>
-                  </Popover>
-                )}
-                
-                {errors.depart && (
-                  <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.depart}
-                  </p>
-                )}
-              </div>
 
-              {/* Return Date (roundtrip only) */}
-              {tripType === "roundtrip" && (
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1.5 block">
-                    {t("flights.return")} <span className="text-destructive">*</span>
-                  </Label>
-                  
-                  {isMobile ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        onClick={() => setReturnSheetOpen(true)}
-                        className={cn(
-                          "w-full h-12 justify-start text-left font-normal rounded-xl touch-manipulation",
-                          !returnDate && "text-muted-foreground",
-                          errors.return && "border-destructive"
-                        )}
-                      >
-                        <CalendarIcon className="w-4 h-4 mr-2 text-orange-500" />
-                        {returnDate ? format(returnDate, "EEE, MMM d") : "Select date"}
-                      </Button>
-                      <MobileDatePickerSheet
-                        open={returnSheetOpen}
-                        onOpenChange={setReturnSheetOpen}
-                        selectedDate={returnDate}
-                        onDateSelect={setReturnDate}
-                        label="Return Date"
-                        minDate={departDate}
-                        accentColor="orange"
-                      />
+                      {tripType === "roundtrip" && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            type="button"
+                            onClick={() => setReturnSheetOpen(true)}
+                            className={cn(
+                              "h-14 justify-start rounded-none px-4 text-left font-normal touch-manipulation",
+                              !returnDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="w-4 h-4 mr-3 text-primary" />
+                            <div className="flex flex-col items-start">
+                              <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                                {t("flights.return")}
+                              </span>
+                              <span>{returnDate ? format(returnDate, "EEE, MMM d") : "Select date"}</span>
+                            </div>
+                          </Button>
+                          <MobileDatePickerSheet
+                            open={returnSheetOpen}
+                            onOpenChange={setReturnSheetOpen}
+                            selectedDate={returnDate}
+                            onDateSelect={setReturnDate}
+                            label="Return Date"
+                            minDate={departDate}
+                            accentColor="orange"
+                          />
+                        </>
+                      )}
                     </>
                   ) : (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full h-11 sm:h-12 justify-start text-left font-normal rounded-xl",
-                            !returnDate && "text-muted-foreground",
-                            errors.return && "border-destructive"
-                          )}
-                        >
-                          <CalendarIcon className="w-4 h-4 mr-2 text-orange-500" />
-                          {returnDate ? format(returnDate, "EEE, MMM d") : "Select date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={returnDate}
-                          onSelect={setReturnDate}
-                          disabled={(date) => departDate ? isBefore(date, departDate) : isBefore(date, startOfToday())}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            type="button"
+                            className={cn(
+                              "h-14 justify-start rounded-none px-4 text-left font-normal hover:bg-muted/50",
+                              !departDate && "text-muted-foreground",
+                              tripType === "roundtrip" && "border-r border-border"
+                            )}
+                          >
+                            <CalendarIcon className="w-4 h-4 mr-3 text-primary" />
+                            <div className="flex flex-col items-start">
+                              <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                                {t("flights.departure")}
+                              </span>
+                              <span>{departDate ? format(departDate, "EEE, MMM d") : "Select date"}</span>
+                            </div>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={departDate}
+                            onSelect={(date) => {
+                              setDepartDate(date);
+                              if (date && returnDate && isBefore(returnDate, date)) {
+                                setReturnDate(addDays(date, 7));
+                              }
+                            }}
+                            disabled={(date) => isBefore(date, startOfToday())}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+
+                      {tripType === "roundtrip" && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              type="button"
+                              className={cn(
+                                "h-14 justify-start rounded-none px-4 text-left font-normal hover:bg-muted/50",
+                                !returnDate && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="w-4 h-4 mr-3 text-primary" />
+                              <div className="flex flex-col items-start">
+                                <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                                  {t("flights.return")}
+                                </span>
+                                <span>{returnDate ? format(returnDate, "EEE, MMM d") : "Select date"}</span>
+                              </div>
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={returnDate}
+                              onSelect={setReturnDate}
+                              disabled={(date) => departDate ? isBefore(date, departDate) : isBefore(date, startOfToday())}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                    </>
                   )}
-                  
+                </div>
+              </div>
+
+              {(errors.depart || errors.return) && (
+                <div className="mt-1 space-y-1">
+                  {errors.depart && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {errors.depart}
+                    </p>
+                  )}
                   {errors.return && (
-                    <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                    <p className="text-xs text-destructive flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
                       {errors.return}
                     </p>
