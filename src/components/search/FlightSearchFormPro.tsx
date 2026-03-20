@@ -40,7 +40,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import LocationAutocomplete, { type LocationOption } from "./LocationAutocomplete";
 import { useAirportSearch } from "./hooks/useLocationSearch";
 import MultiCityLegs from "./MultiCityLegs";
-import { MobileDatePickerSheet, MobilePassengerCabinSheet } from "@/components/mobile";
+import { MobileDatePickerSheet, MobileDateRangePickerSheet, MobilePassengerCabinSheet } from "@/components/mobile";
 import { useFlightFunnel } from "@/hooks/useFlightFunnel";
 import { useTranslation } from "@/hooks/useI18n";
 
@@ -330,55 +330,47 @@ export default function FlightSearchFormPro({
                           <span>{departDate ? format(departDate, "EEE, MMM d") : "Select date"}</span>
                         </div>
                       </Button>
-                      <MobileDatePickerSheet
-                        open={departSheetOpen}
-                        onOpenChange={setDepartSheetOpen}
-                        selectedDate={departDate}
-                        onDateSelect={(date) => {
-                          setDepartDate(date);
-                          if (date && returnDate && isBefore(returnDate, date)) {
-                            setReturnDate(addDays(date, 7));
-                          }
-                        }}
-                        onDateConfirmed={(date) => {
-                          if (tripType === "roundtrip") {
-                            setReturnDate((current) => (current && !isBefore(current, date) ? current : addDays(date, 7)));
-                            setReturnSheetOpen(true);
-                          }
-                        }}
-                        label="Departure Date"
-                        accentColor="sky"
-                      />
 
                       {tripType === "roundtrip" && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            type="button"
-                            onClick={() => setReturnSheetOpen(true)}
-                            className={cn(
-                              "h-14 justify-start rounded-none px-4 text-left font-normal touch-manipulation",
-                              !returnDate && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="w-4 h-4 mr-3 text-primary" />
-                            <div className="flex flex-col items-start">
-                              <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                                {t("flights.return")}
-                              </span>
-                              <span>{returnDate ? format(returnDate, "EEE, MMM d") : "Select date"}</span>
-                            </div>
-                          </Button>
-                          <MobileDatePickerSheet
-                            open={returnSheetOpen}
-                            onOpenChange={setReturnSheetOpen}
-                            selectedDate={returnDate}
-                            onDateSelect={setReturnDate}
-                            label="Return Date"
-                            minDate={departDate}
-                            accentColor="orange"
-                          />
-                        </>
+                        <Button
+                          variant="ghost"
+                          type="button"
+                          onClick={() => setDepartSheetOpen(true)}
+                          className={cn(
+                            "h-14 justify-start rounded-none px-4 text-left font-normal touch-manipulation",
+                            !returnDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="w-4 h-4 mr-3 text-primary" />
+                          <div className="flex flex-col items-start">
+                            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                              {t("flights.return")}
+                            </span>
+                            <span>{returnDate ? format(returnDate, "EEE, MMM d") : "Select date"}</span>
+                          </div>
+                        </Button>
+                      )}
+
+                      {tripType === "roundtrip" ? (
+                        <MobileDateRangePickerSheet
+                          open={departSheetOpen}
+                          onOpenChange={setDepartSheetOpen}
+                          departDate={departDate}
+                          returnDate={returnDate}
+                          onRangeConfirmed={(dep, ret) => {
+                            setDepartDate(dep);
+                            setReturnDate(ret);
+                          }}
+                          label="Departure → Return"
+                        />
+                      ) : (
+                        <MobileDatePickerSheet
+                          open={departSheetOpen}
+                          onOpenChange={setDepartSheetOpen}
+                          selectedDate={departDate}
+                          onDateSelect={setDepartDate}
+                          label="Departure Date"
+                        />
                       )}
                     </>
                   ) : (
