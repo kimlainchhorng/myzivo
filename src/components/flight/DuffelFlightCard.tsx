@@ -102,6 +102,7 @@ export default function DuffelFlightCard({
 }: DuffelFlightCardProps) {
   const [expanded, setExpanded] = useState(false);
   const isTop = index === 0;
+  const { ref: tiltRef, style: tiltStyle, glareStyle, handleMouseMove, handleMouseLeave } = use3DTilt(4, 1.015);
   const badge = isTop ? sortBadgeConfig[sortBy] : null;
 
   const stopLabel = offer.stops === 0
