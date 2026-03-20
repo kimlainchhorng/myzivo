@@ -642,6 +642,10 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
 
   // Baggage info - check actual baggage data from passengers
   let baggageInfo = 'No bags included';
+  let carryOnIncluded = false;
+  let checkedBagsIncluded = false;
+  let checkedBagQuantity = 0;
+  let carryOnQuantity = 0;
   try {
     const firstPax = passengers[0];
     if (firstPax) {
@@ -649,9 +653,12 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
       if (baggages && baggages.length > 0) {
         const checkedBags = baggages.filter(b => b.type === 'checked');
         const carryOn = baggages.filter(b => b.type === 'carry_on');
+        carryOnQuantity = carryOn.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
+        carryOnIncluded = carryOnQuantity > 0;
         if (checkedBags.length > 0) {
-          const qty = checkedBags.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
-          baggageInfo = qty > 0 ? `${qty} checked bag${qty > 1 ? 's' : ''}` : '1 checked bag';
+          checkedBagQuantity = checkedBags.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
+          checkedBagsIncluded = checkedBagQuantity > 0;
+          baggageInfo = checkedBagsIncluded ? `${checkedBagQuantity} checked bag${checkedBagQuantity > 1 ? 's' : ''}` : '1 checked bag';
         } else if (carryOn.length > 0) {
           baggageInfo = 'Carry-on only';
         } else {
@@ -676,7 +683,15 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
 
   // Conditions (cancellation, change)
   const conditions = o.conditions as Record<string, unknown> | undefined;
-  const isRefundable = conditions?.refund_before_departure !== null;
+  // Duffel conditions are objects like { allowed: true, penalty_amount: "0.00", penalty_currency: "USD" }
+  // or null if not allowed at all
+  const changeCondition = conditions?.change_before_departure as Record<string, unknown> | null | undefined;
+  const refundCondition = conditions?.refund_before_departure as Record<string, unknown> | null | undefined;
+  const isChangeable = changeCondition ? (changeCondition.allowed !== false) : false;
+  const isRefundable = refundCondition ? (refundCondition.allowed !== false) : false;
+  const changePenalty = changeCondition?.penalty_amount ? parseFloat(changeCondition.penalty_amount as string) : null;
+  const refundPenalty = refundCondition?.penalty_amount ? parseFloat(refundCondition.penalty_amount as string) : null;
+  const penaltyCurrency = (changeCondition?.penalty_currency || refundCondition?.penalty_currency || 'USD') as string;
 
   // Debug logging
   console.log(`[Transform] offer=${(o.id as string)?.slice(-8)} airline=${airlineName}(${airlineCode}) carriers=${carriers.length} segs=${segments.length} stops=${stops} dur="${durationFormatted}" baggage="${baggageInfo}" cabin="${cabinClass}" price=${o.total_amount}`);
@@ -714,8 +729,17 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     baggageIncluded: baggageInfo,
     isRefundable,
     conditions: {
-      changeBeforeDeparture: conditions?.change_before_departure as boolean | null,
-      refundBeforeDeparture: conditions?.refund_before_departure as boolean | null,
+      changeable: isChangeable,
+      refundable: isRefundable,
+      changePenalty,
+      refundPenalty,
+      penaltyCurrency,
+    },
+    baggageDetails: {
+      carryOnIncluded,
+      carryOnQuantity,
+      checkedBagsIncluded,
+      checkedBagQuantity,
     },
     segments: allSegs.map(seg => transformSegment(seg)),
     owner: firstCarrier,
@@ -834,8 +858,17 @@ interface DuffelOfferTransformed {
   baggageIncluded: string;
   isRefundable: boolean;
   conditions: {
-    changeBeforeDeparture: boolean | null;
-    refundBeforeDeparture: boolean | null;
+    changeable: boolean;
+    refundable: boolean;
+    changePenalty: number | null;
+    refundPenalty: number | null;
+    penaltyCurrency: string;
+  };
+  baggageDetails: {
+    carryOnIncluded: boolean;
+    carryOnQuantity: number;
+    checkedBagsIncluded: boolean;
+    checkedBagQuantity: number;
   };
   segments: unknown[];
   owner: { name: string; code: string; isOperating: boolean } | undefined;
