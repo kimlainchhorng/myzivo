@@ -67,12 +67,12 @@ export function FareRulesCard({ offer }: FareRulesCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const isRefundable = offer.isRefundable ?? false;
-  const isChangeable = offer.conditions?.changeBeforeDeparture ?? false;
+  const isChangeable = offer.conditions?.changeable ?? false;
 
   // Parse baggage info
-  const baggage = offer.baggageIncluded || "Personal item";
-  const hasCheckedBag = baggage.toLowerCase().includes("check") || baggage.toLowerCase().includes("kg") || baggage.toLowerCase().includes("pc");
-  const hasCarryOn = baggage.toLowerCase().includes("carry") || baggage.toLowerCase().includes("cabin") || hasCheckedBag;
+  const baggage = offer.baggageIncluded || "Personal item";  
+  const hasCarryOn = offer.baggageDetails?.carryOnIncluded ?? (baggage.toLowerCase().includes("carry") || baggage.toLowerCase().includes("cabin"));
+  const hasCheckedBag = offer.baggageDetails?.checkedBagsIncluded ?? (baggage.toLowerCase().includes("check") || baggage.toLowerCase().includes("kg") || baggage.toLowerCase().includes("pc"));
 
   return (
     <Card className="border-border/30 overflow-hidden">

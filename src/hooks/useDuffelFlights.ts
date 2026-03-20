@@ -61,8 +61,17 @@ export interface DuffelOffer {
   baggageIncluded: string;
   isRefundable: boolean;
   conditions: {
-    changeBeforeDeparture: boolean | null;
-    refundBeforeDeparture: boolean | null;
+    changeable: boolean;
+    refundable: boolean;
+    changePenalty: number | null;
+    refundPenalty: number | null;
+    penaltyCurrency: string;
+  };
+  baggageDetails: {
+    carryOnIncluded: boolean;
+    carryOnQuantity: number;
+    checkedBagsIncluded: boolean;
+    checkedBagQuantity: number;
   };
   segments: DuffelSegment[];
   expiresAt: string;
