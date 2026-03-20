@@ -58,6 +58,7 @@ export interface DuffelOffer {
   currency: string;
   pricePerPerson: number;
   cabinClass: string;
+  fareBrandName: string | null;
   baggageIncluded: string;
   isRefundable: boolean;
   conditions: {
