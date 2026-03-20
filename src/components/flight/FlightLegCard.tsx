@@ -250,36 +250,86 @@ export default function FlightLegCard({
         </div>
 
         {/* Baggage amenities row */}
-        <div className="flex items-center gap-3 mt-3 pt-2.5 border-t border-border/15">
-          {/* Personal item */}
-          <div className="relative" title="Personal item included">
-            <Briefcase className="w-4.5 h-4.5 text-muted-foreground" style={{ width: 18, height: 18 }} />
-            <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute -bottom-0.5 -right-1 bg-card rounded-full" />
-          </div>
-          {/* Carry-on */}
-          <div className="relative" title={representativeOffer.baggageDetails?.carryOnIncluded ? "Carry-on included" : "Carry-on not included"}>
-            <PackageCheck className="text-muted-foreground" style={{ width: 18, height: 18, opacity: representativeOffer.baggageDetails?.carryOnIncluded ? 1 : 0.35 }} />
-            {representativeOffer.baggageDetails?.carryOnIncluded && (
-              <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute -bottom-0.5 -right-1 bg-card rounded-full" />
-            )}
-          </div>
-          {/* Checked bag */}
-          <div className="relative" title={representativeOffer.baggageDetails?.checkedBagsIncluded ? `${representativeOffer.baggageDetails.checkedBagQuantity} checked bag(s)` : "No checked bag"}>
-            <Luggage className="text-muted-foreground" style={{ width: 18, height: 18, opacity: representativeOffer.baggageDetails?.checkedBagsIncluded ? 1 : 0.35 }} />
-            {representativeOffer.baggageDetails?.checkedBagsIncluded && (
-              <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute -bottom-0.5 -right-1 bg-card rounded-full" />
-            )}
-          </div>
-          {/* Refundable indicator */}
-          {representativeOffer.isRefundable && (
-            <div className="relative ml-1" title="Refundable">
-              <RefreshCw className="text-emerald-500" style={{ width: 16, height: 16 }} />
-            </div>
-          )}
+        {(() => {
+          const bag = representativeOffer.baggageDetails;
+          const weightLabel = (kg: number | null, lb: number | null) => {
+            if (kg && lb) return `${kg} kg / ${lb} lb`;
+            if (kg) return `${kg} kg`;
+            if (lb) return `${lb} lb`;
+            return null;
+          };
+          const checkedWeight = bag ? weightLabel(bag.checkedBagWeightKg, bag.checkedBagWeightLb) : null;
+          const carryOnWeight = bag ? weightLabel(bag.carryOnWeightKg, bag.carryOnWeightLb) : null;
 
-          <div className="flex-1" />
-          <p className="text-[10px] text-muted-foreground capitalize">{label} flight</p>
-        </div>
+          return (
+            <div className="flex items-center gap-2.5 mt-3 pt-2.5 border-t border-border/15 flex-wrap">
+              {/* Personal item — always included */}
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
+                <div className="relative shrink-0">
+                  <Briefcase style={{ width: 15, height: 15 }} className="text-emerald-600 dark:text-emerald-400" />
+                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500 absolute -bottom-0.5 -right-1 bg-card rounded-full" />
+                </div>
+                <span className="text-[9px] font-medium text-emerald-700 dark:text-emerald-300">Personal item</span>
+              </div>
+
+              {/* Carry-on */}
+              <div className={cn(
+                "flex items-center gap-1.5 px-2 py-1 rounded-lg border",
+                bag?.carryOnIncluded
+                  ? "bg-emerald-500/5 border-emerald-500/15"
+                  : "bg-muted/30 border-border/20 opacity-50"
+              )}>
+                <div className="relative shrink-0">
+                  <PackageCheck style={{ width: 15, height: 15 }} className={bag?.carryOnIncluded ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"} />
+                  {bag?.carryOnIncluded && (
+                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500 absolute -bottom-0.5 -right-1 bg-card rounded-full" />
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <span className={cn("text-[9px] font-medium", bag?.carryOnIncluded ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground")}>
+                    Carry-on{bag?.carryOnQuantity && bag.carryOnQuantity > 1 ? ` ×${bag.carryOnQuantity}` : ""}
+                  </span>
+                  {bag?.carryOnIncluded && carryOnWeight && (
+                    <span className="text-[8px] text-muted-foreground leading-tight">{carryOnWeight}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Checked bag */}
+              <div className={cn(
+                "flex items-center gap-1.5 px-2 py-1 rounded-lg border",
+                bag?.checkedBagsIncluded
+                  ? "bg-emerald-500/5 border-emerald-500/15"
+                  : "bg-muted/30 border-border/20 opacity-50"
+              )}>
+                <div className="relative shrink-0">
+                  <Luggage style={{ width: 15, height: 15 }} className={bag?.checkedBagsIncluded ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"} />
+                  {bag?.checkedBagsIncluded && (
+                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500 absolute -bottom-0.5 -right-1 bg-card rounded-full" />
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <span className={cn("text-[9px] font-medium", bag?.checkedBagsIncluded ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground")}>
+                    {bag?.checkedBagsIncluded
+                      ? `Checked ×${bag.checkedBagQuantity}`
+                      : "No checked bag"}
+                  </span>
+                  {bag?.checkedBagsIncluded && checkedWeight && (
+                    <span className="text-[8px] text-muted-foreground leading-tight">{checkedWeight}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Refundable */}
+              {representativeOffer.isRefundable && (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
+                  <RefreshCw style={{ width: 13, height: 13 }} className="text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-[9px] font-medium text-emerald-700 dark:text-emerald-300">Refundable</span>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* CTA */}
         <div className="flex items-center justify-end gap-2 mt-2">
