@@ -73,10 +73,10 @@ export default function CheckoutFlightSummary({ offer, search, className }: Chec
         </div>
 
         {/* Baggage badge if available */}
-        {offer.baggage && (
+        {(offer as any).baggage && (
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Luggage className="w-3.5 h-3.5" />
-            <span>{offer.baggage}</span>
+            <span>{(offer as any).baggage}</span>
           </div>
         )}
       </CardContent>
