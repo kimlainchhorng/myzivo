@@ -494,13 +494,13 @@ const FlightResults = () => {
       <main className="flex-1 pt-14 pb-4 sm:pb-20 relative z-10">
         <div className="mx-auto px-3 sm:px-4 max-w-5xl">
 
-          {/* Sticky summary bar */}
-          <div className="sticky top-14 z-20 -mx-4 px-4 mb-4">
+          {/* Sticky summary bar — app-like nav bar */}
+          <div className="sticky top-14 z-20 -mx-3 sm:-mx-4 px-3 sm:px-4 mb-3">
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="bg-card/85 backdrop-blur-xl rounded-2xl border border-border/40 shadow-lg shadow-background/50 p-3 sm:p-3.5"
+              transition={{ duration: 0.25 }}
+              className="bg-card/90 backdrop-blur-xl sm:rounded-2xl border-b sm:border border-border/30 shadow-sm p-2.5 sm:p-3.5"
             >
               <div className="flex items-center gap-2.5">
                 <Button variant="ghost" size="icon" asChild className="shrink-0 -ml-1 w-8 h-8">
