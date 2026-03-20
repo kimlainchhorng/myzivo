@@ -357,6 +357,11 @@ export default function DuffelFlightCard({
                 </div>
               )}
 
+              {/* 3D Boarding Pass */}
+              <div className="mt-2 pt-2 border-t border-border/10">
+                <BoardingPass3D offer={offer} />
+              </div>
+
               {/* Seat map preview */}
               <div className="mt-2 pt-2 border-t border-border/10">
                 <SeatMapPreview cabinClass={offer.cabinClass} />
