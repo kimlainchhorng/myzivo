@@ -299,15 +299,31 @@ const FlightLanding = () => {
                 </div>
               </div>
 
+              {/* Same airport error */}
+              {sameAirport && (
+                <p className="text-xs text-destructive font-medium -mt-1">
+                  Origin and destination cannot be the same airport.
+                </p>
+              )}
+
               {/* Search Button */}
               <Button
                 size="lg"
                 onClick={handleSearch}
-                disabled={!isValid}
+                disabled={!isValid || isSearching}
                 className="w-full h-12 text-base font-semibold gap-2 bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 shadow-lg shadow-[hsl(var(--flights))]/20 active:scale-[0.98] transition-all duration-200"
               >
-                <Search className="w-5 h-5" />
-                Search Flights
+                {isSearching ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-5 h-5" />
+                    Search Flights
+                  </>
+                )}
               </Button>
             </div>
           </motion.div>
