@@ -416,10 +416,44 @@ export default function DuffelFlightCard({
             <Badge variant="outline" className="text-[8px] sm:text-[9px] border-border/25 bg-muted/25 capitalize h-[18px] px-1.5 font-medium">
               {offer.cabinClass.replace("_", " ")}
             </Badge>
-            {offer.baggageIncluded && (
+            {offer.baggageDetails ? (
+              <>
+                <Badge variant="outline" className={cn(
+                  "text-[8px] sm:text-[9px] gap-0.5 h-[18px] px-1.5 font-medium",
+                  offer.baggageDetails.carryOnIncluded
+                    ? "border-primary/25 text-primary bg-primary/5"
+                    : "border-border/25 bg-muted/25 text-muted-foreground"
+                )}>
+                  <Briefcase className="w-2 h-2 shrink-0" />
+                  {offer.baggageDetails.carryOnIncluded ? "Carry-on included" : "No carry-on"}
+                </Badge>
+                <Badge variant="outline" className={cn(
+                  "text-[8px] sm:text-[9px] gap-0.5 h-[18px] px-1.5 font-medium",
+                  offer.baggageDetails.checkedBagsIncluded
+                    ? "border-primary/25 text-primary bg-primary/5"
+                    : "border-border/25 bg-muted/25 text-muted-foreground"
+                )}>
+                  <Briefcase className="w-2 h-2 shrink-0" />
+                  {offer.baggageDetails.checkedBagsIncluded
+                    ? `${offer.baggageDetails.checkedBagQuantity} checked bag${offer.baggageDetails.checkedBagQuantity > 1 ? 's' : ''}`
+                    : "No checked bags"}
+                </Badge>
+              </>
+            ) : offer.baggageIncluded ? (
               <Badge variant="outline" className="text-[8px] sm:text-[9px] border-border/25 bg-muted/25 gap-0.5 h-[18px] px-1.5 font-medium">
                 <Briefcase className="w-2 h-2 shrink-0" />
                 {offer.baggageIncluded}
+              </Badge>
+            ) : null}
+            {offer.conditions?.changeable ? (
+              <Badge variant="outline" className="text-[8px] sm:text-[9px] border-primary/25 text-primary bg-primary/5 h-[18px] px-1.5 font-medium gap-0.5">
+                <RefreshCw className="w-2 h-2 shrink-0" />
+                Changeable
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[8px] sm:text-[9px] border-border/25 bg-muted/25 text-muted-foreground gap-0.5 h-[18px] px-1.5 font-medium">
+                <RefreshCw className="w-2 h-2 shrink-0" />
+                Not changeable
               </Badge>
             )}
             {offer.isRefundable ? (
