@@ -1,10 +1,10 @@
 /**
  * Flight Confirmation Page — /flights/confirmation/:bookingId
- * 2026 Spatial UI with glassmorphism, auto-polling ticketing status
+ * Clear success/failure states with support contact on failures
  */
 
 import { useParams, Link } from "react-router-dom";
-import { CheckCircle, Clock, AlertCircle, Plane, Loader2, Ticket, Calendar, Users, CreditCard } from "lucide-react";
+import { CheckCircle, Clock, AlertCircle, Plane, Loader2, Ticket, Calendar, Users, CreditCard, Mail, Phone, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -15,15 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useFlightBooking, getTicketingStatusInfo } from "@/hooks/useFlightBooking";
 import { cn } from "@/lib/utils";
-
-const statusColors: Record<string, string> = {
-  issued: "text-primary border-primary/30 bg-primary/5",
-  failed: "text-destructive border-destructive/30 bg-destructive/5",
-  cancelled: "text-muted-foreground border-border bg-muted/30",
-  voided: "text-muted-foreground border-border bg-muted/30",
-  pending: "text-amber-600 border-amber-500/30 bg-amber-500/5",
-  processing: "text-[hsl(var(--flights))] border-[hsl(var(--flights))]/30 bg-[hsl(var(--flights))]/5",
-};
 
 const FlightConfirmation = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
@@ -77,14 +68,12 @@ const FlightConfirmation = () => {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", delay: 0.2, damping: 12 }}
-                  className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                  style={{
-                    background: booking.ticketing_status === "issued"
-                      ? "hsl(var(--primary) / 0.1)"
-                      : booking.ticketing_status === "failed"
-                      ? "hsl(var(--destructive) / 0.1)"
-                      : "hsl(var(--flights) / 0.1)",
-                  }}
+                  className={cn(
+                    "w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center",
+                    booking.ticketing_status === "issued" && "bg-primary/10",
+                    booking.ticketing_status === "failed" && "bg-destructive/10",
+                    !["issued", "failed"].includes(booking.ticketing_status) && "bg-[hsl(var(--flights))]/10",
+                  )}
                 >
                   {booking.ticketing_status === "issued" ? (
                     <CheckCircle className="w-8 h-8 text-primary" />
@@ -95,10 +84,77 @@ const FlightConfirmation = () => {
                   )}
                 </motion.div>
                 <h1 className="text-2xl font-bold mb-1">
-                  {booking.ticketing_status === "issued" ? "Booking Confirmed!" : statusInfo?.label}
+                  {booking.ticketing_status === "issued"
+                    ? "Booking Confirmed!"
+                    : booking.ticketing_status === "failed"
+                    ? "Booking Issue"
+                    : statusInfo?.label}
                 </h1>
                 <p className="text-sm text-muted-foreground">{statusInfo?.description}</p>
               </div>
+
+              {/* FAILED STATE: Support contact section */}
+              {booking.ticketing_status === "failed" && (
+                <Card className="mb-4 border-destructive/20 bg-destructive/5">
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-3 mb-4">
+                      <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-destructive">Ticketing Failed</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          There was an issue creating your airline ticket. Your payment may be held temporarily.
+                          Our team is reviewing this automatically. If the issue persists, please contact support.
+                        </p>
+                      </div>
+                    </div>
+                    <Separator className="mb-4 bg-destructive/10" />
+                    <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Contact Support</p>
+                    <div className="space-y-2.5">
+                      <a
+                        href="mailto:support@hizivo.com"
+                        className="flex items-center gap-3 text-sm text-foreground hover:text-[hsl(var(--flights))] transition-colors"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                        support@hizivo.com
+                      </a>
+                      <a
+                        href="https://hizivo.com/help"
+                        className="flex items-center gap-3 text-sm text-foreground hover:text-[hsl(var(--flights))] transition-colors"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                        Help Center
+                      </a>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-3">
+                      Reference: <span className="font-mono font-medium">{booking.booking_reference}</span>
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* SUCCESS STATE: Green confirmation banner */}
+              {booking.ticketing_status === "issued" && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="mb-4 p-4 rounded-xl bg-primary/5 border border-primary/20"
+                >
+                  <div className="flex gap-3">
+                    <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-primary">E-ticket issued successfully</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Your confirmation has been sent to your email. Present your booking reference at check-in.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
               {/* Main card — glassmorphic */}
               <Card className="bg-card/80 backdrop-blur-xl border-border/40 mb-4">
