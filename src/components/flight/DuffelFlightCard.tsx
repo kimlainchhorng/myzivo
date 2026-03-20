@@ -102,6 +102,7 @@ function RouteTimeline({
   stops,
   stopDetails,
   label,
+  dayDiff,
 }: {
   depTime: string;
   depCode: string;
@@ -111,6 +112,7 @@ function RouteTimeline({
   stops: number;
   stopDetails?: { code: string; city: string; layoverDuration: string }[];
   label?: string;
+  dayDiff?: number;
 }) {
   const stopLabel = stops === 0 ? "Nonstop" : `${stops} stop${stops > 1 ? "s" : ""}`;
 
