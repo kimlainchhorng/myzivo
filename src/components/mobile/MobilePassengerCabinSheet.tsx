@@ -41,107 +41,105 @@ export default function MobilePassengerCabinSheet({
       >
         {/* 3D Floating Card */}
         <div
-          className="mx-3 mb-2 rounded-3xl overflow-hidden animate-scale-in"
+          className="mx-3 mb-2 rounded-[28px] overflow-hidden animate-scale-in"
           style={{
             background: "hsl(var(--card))",
             boxShadow: `
-              0 -2px 0 0 hsl(var(--border) / 0.3),
-              0 8px 32px -4px hsl(var(--foreground) / 0.12),
-              0 24px 60px -8px hsl(var(--foreground) / 0.08),
-              inset 0 1px 0 0 hsl(var(--card) / 0.8)
+              0 -1px 0 0 hsl(var(--border) / 0.15),
+              0 12px 40px -6px hsl(var(--foreground) / 0.15),
+              0 30px 70px -10px hsl(var(--foreground) / 0.08),
+              inset 0 1px 0 0 hsl(0 0% 100% / 0.06)
             `,
-            transform: "perspective(800px) rotateX(1deg)",
+            transform: "perspective(900px) rotateX(0.8deg)",
             transformOrigin: "bottom center",
           }}
         >
           {/* Header */}
-          <SheetHeader className="px-5 pt-5 pb-3 text-left">
-            <SheetTitle className="flex items-center gap-2.5 text-base font-semibold">
+          <SheetHeader className="px-6 pt-6 pb-4 text-left">
+            <SheetTitle className="flex items-center gap-3 text-[17px] font-bold tracking-tight">
               <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center"
+                className="w-10 h-10 rounded-2xl flex items-center justify-center"
                 style={{
-                  background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8))",
-                  boxShadow: "0 2px 8px hsl(var(--primary) / 0.3)",
+                  background: "linear-gradient(145deg, hsl(160 84% 39%), hsl(160 70% 48%))",
+                  boxShadow: "0 3px 12px hsl(160 84% 39% / 0.35), inset 0 1px 0 hsl(0 0% 100% / 0.2)",
                 }}
               >
-                <Users className="h-4 w-4 text-primary-foreground" />
+                <Users className="h-[18px] w-[18px] text-white" />
               </div>
               Travelers & Cabin
             </SheetTitle>
           </SheetHeader>
 
-          <div className="mx-5 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+          <div className="mx-6 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
 
-          <div className="space-y-4 px-5 py-4">
+          <div className="space-y-5 px-6 py-5">
             {/* Passenger counter — recessed 3D surface */}
             <div
-              className="rounded-2xl p-4"
+              className="rounded-[20px] p-[18px]"
               style={{
                 background: "hsl(var(--background))",
-                boxShadow: "inset 0 2px 6px hsl(var(--foreground) / 0.04), 0 1px 0 hsl(var(--card))",
+                boxShadow: "inset 0 2px 8px hsl(var(--foreground) / 0.04), inset 0 0 0 1px hsl(var(--border) / 0.4)",
               }}
             >
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-foreground">Travelers</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Up to 9 passengers</p>
+                  <p className="font-bold text-[15px] text-foreground">Travelers</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 tracking-wide">Up to 9 passengers</p>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
+                  {/* Minus */}
                   <button
                     type="button"
                     aria-label="Decrease travelers"
-                    className={cn(
-                      "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-150 active:scale-[0.92] touch-manipulation",
-                      passengers <= 1
-                        ? "bg-muted/50 text-muted-foreground/30"
-                        : "text-foreground"
-                    )}
+                    className="h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 active:scale-[0.88] touch-manipulation"
                     style={passengers > 1 ? {
-                      background: "hsl(var(--background))",
-                      boxShadow: "0 2px 6px hsl(var(--foreground) / 0.08), 0 1px 2px hsl(var(--foreground) / 0.06), inset 0 -1px 0 hsl(var(--foreground) / 0.05)",
-                    } : undefined}
+                      background: "hsl(var(--card))",
+                      boxShadow: "0 3px 8px hsl(var(--foreground) / 0.07), 0 1px 2px hsl(var(--foreground) / 0.05), inset 0 -1px 0 hsl(var(--foreground) / 0.04), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
+                    } : {
+                      background: "hsl(var(--muted) / 0.4)",
+                    }}
                     onClick={() => onPassengersChange(Math.max(1, passengers - 1))}
                     disabled={passengers <= 1}
                   >
-                    <Minus className="h-4 w-4" />
+                    <Minus className={cn("h-4 w-4", passengers <= 1 ? "text-muted-foreground/30" : "text-foreground")} />
                   </button>
 
+                  {/* Count display — pill with gradient */}
                   <div
-                    className="w-12 h-10 flex items-center justify-center text-lg font-bold rounded-xl"
+                    className="w-[52px] h-11 flex items-center justify-center text-[18px] font-extrabold rounded-2xl"
                     style={{
-                      background: "hsl(var(--primary) / 0.08)",
-                      color: "hsl(var(--primary))",
+                      background: "linear-gradient(145deg, hsl(160 84% 39% / 0.12), hsl(160 84% 39% / 0.06))",
+                      color: "hsl(160 84% 32%)",
+                      boxShadow: "inset 0 0 0 1.5px hsl(160 84% 39% / 0.15)",
                     }}
                   >
                     {passengers}
                   </div>
 
+                  {/* Plus */}
                   <button
                     type="button"
                     aria-label="Increase travelers"
-                    className={cn(
-                      "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-150 active:scale-[0.92] touch-manipulation",
-                      passengers >= 9
-                        ? "bg-muted/50 text-muted-foreground/30"
-                        : "text-foreground"
-                    )}
+                    className="h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 active:scale-[0.88] touch-manipulation"
                     style={passengers < 9 ? {
-                      background: "hsl(var(--background))",
-                      boxShadow: "0 2px 6px hsl(var(--foreground) / 0.08), 0 1px 2px hsl(var(--foreground) / 0.06), inset 0 -1px 0 hsl(var(--foreground) / 0.05)",
-                    } : undefined}
+                      background: "hsl(var(--card))",
+                      boxShadow: "0 3px 8px hsl(var(--foreground) / 0.07), 0 1px 2px hsl(var(--foreground) / 0.05), inset 0 -1px 0 hsl(var(--foreground) / 0.04), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
+                    } : {
+                      background: "hsl(var(--muted) / 0.4)",
+                    }}
                     onClick={() => onPassengersChange(Math.min(9, passengers + 1))}
                     disabled={passengers >= 9}
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className={cn("h-4 w-4", passengers >= 9 ? "text-muted-foreground/30" : "text-foreground")} />
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Cabin class — 3D selectable cards */}
+            {/* Cabin class — premium 3D cards */}
             <div>
-              <p className="mb-2.5 text-sm font-semibold text-foreground tracking-tight">Cabin class</p>
-              <div className="grid grid-cols-2 gap-2">
+              <p className="mb-3 text-[13px] font-bold text-foreground tracking-tight uppercase opacity-60">Cabin class</p>
+              <div className="grid grid-cols-2 gap-2.5">
                 {cabinOptions.map((option) => {
                   const isSelected = cabin === option.value;
                   const Icon = option.icon;
@@ -149,36 +147,62 @@ export default function MobilePassengerCabinSheet({
                     <button
                       key={option.value}
                       type="button"
-                      className={cn(
-                        "relative rounded-2xl p-3 text-left transition-all duration-200 active:scale-[0.96] touch-manipulation",
-                        isSelected ? "text-primary-foreground" : "text-foreground"
-                      )}
+                      className="relative rounded-[18px] p-3.5 text-left transition-all duration-200 active:scale-[0.95] touch-manipulation overflow-hidden"
                       style={isSelected ? {
-                        background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))",
-                        boxShadow: "0 4px 14px hsl(var(--primary) / 0.3), 0 1px 3px hsl(var(--primary) / 0.2), inset 0 1px 0 hsl(var(--primary-foreground) / 0.15)",
+                        background: "linear-gradient(145deg, hsl(160 84% 39%), hsl(160 70% 44%))",
+                        boxShadow: "0 6px 20px hsl(160 84% 39% / 0.35), 0 2px 4px hsl(160 84% 39% / 0.15), inset 0 1px 0 hsl(0 0% 100% / 0.2)",
                       } : {
-                        background: "hsl(var(--background))",
-                        boxShadow: "0 2px 6px hsl(var(--foreground) / 0.06), 0 1px 2px hsl(var(--foreground) / 0.04), inset 0 -1px 0 hsl(var(--foreground) / 0.04)",
+                        background: "hsl(var(--card))",
+                        boxShadow: "0 2px 8px hsl(var(--foreground) / 0.05), 0 1px 2px hsl(var(--foreground) / 0.04), inset 0 0 0 1px hsl(var(--border) / 0.5), inset 0 -1px 0 hsl(var(--foreground) / 0.03)",
                       }}
                       onClick={() => onCabinChange(option.value)}
                     >
-                      <Icon className={cn("h-4 w-4 mb-1.5", isSelected ? "text-primary-foreground/90" : "text-muted-foreground")} />
-                      <p className="text-sm font-semibold leading-tight">{option.label}</p>
-                      <p className={cn("text-[10px] mt-0.5 leading-tight", isSelected ? "text-primary-foreground/70" : "text-muted-foreground")}>{option.desc}</p>
+                      {/* Subtle shine overlay on selected */}
+                      {isSelected && (
+                        <div
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            background: "linear-gradient(135deg, hsl(0 0% 100% / 0.15) 0%, transparent 50%)",
+                          }}
+                        />
+                      )}
+                      <div
+                        className={cn(
+                          "w-7 h-7 rounded-lg flex items-center justify-center mb-2",
+                          isSelected ? "bg-white/20" : "bg-muted/60"
+                        )}
+                      >
+                        <Icon className={cn(
+                          "h-3.5 w-3.5",
+                          isSelected ? "text-white" : "text-muted-foreground"
+                        )} />
+                      </div>
+                      <p className={cn(
+                        "text-[13px] font-bold leading-tight",
+                        isSelected ? "text-white" : "text-foreground"
+                      )}>
+                        {option.label}
+                      </p>
+                      <p className={cn(
+                        "text-[10px] mt-0.5 leading-tight font-medium",
+                        isSelected ? "text-white/65" : "text-muted-foreground/70"
+                      )}>
+                        {option.desc}
+                      </p>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Done button with 3D glow */}
+            {/* Done — premium gradient button */}
             <Button
               type="button"
               onClick={() => onOpenChange(false)}
-              className="h-12 w-full rounded-2xl text-primary-foreground font-semibold text-sm border-0 active:scale-[0.97] transition-all duration-150"
+              className="h-[52px] w-full rounded-2xl text-white font-bold text-[15px] border-0 active:scale-[0.97] transition-all duration-150 tracking-wide"
               style={{
-                background: "linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 45%))",
-                boxShadow: "0 4px 14px hsl(160 84% 39% / 0.35), 0 1px 3px hsl(160 84% 39% / 0.2), inset 0 1px 0 hsl(160 84% 60% / 0.3)",
+                background: "linear-gradient(145deg, hsl(160 84% 39%), hsl(160 70% 44%))",
+                boxShadow: "0 6px 20px hsl(160 84% 39% / 0.3), 0 2px 6px hsl(160 84% 39% / 0.15), inset 0 1px 0 hsl(160 84% 60% / 0.3), inset 0 -2px 0 hsl(160 84% 30% / 0.15)",
               }}
             >
               Done
