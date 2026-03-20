@@ -422,7 +422,53 @@ const FlightTravelerInfo = () => {
           <label htmlFor="consent" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer">
             {FLIGHT_CONSENT.checkboxLabel}{" "}
             I agree to share my information with the travel partner to complete this booking.{" "}
-            <Link to="/partner-disclosure" className="text-[hsl(var(--flights))] hover:underline font-medium">Learn more</Link>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  className="text-[hsl(var(--flights))] hover:underline font-medium"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Learn more
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md mx-4 max-h-[80vh]">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-bold flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-[hsl(var(--flights))]" />
+                    Partner Disclosure
+                  </DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="max-h-[55vh] pr-3">
+                  <div className="space-y-4 text-sm text-muted-foreground">
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">How ZIVO Works</h3>
+                      <p>ZIVO is a travel search and referral platform. We help you find and compare flights, but the actual booking, ticketing, and payment are handled by our licensed travel partner (the merchant of record).</p>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Your Information</h3>
+                      <p>With your consent, we securely share your traveler details (name, contact, date of birth) with the travel partner solely to complete your booking. We do not store payment card information.</p>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Pricing & Fees</h3>
+                      <p>Prices shown are estimates from our partners. The final price and terms are confirmed during checkout. Cancellation, change, and baggage policies are set by the airline and partner.</p>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Support</h3>
+                      <p>For booking changes, cancellations, or refunds, contact the travel partner directly. ZIVO provides support only for website and navigation issues.</p>
+                    </div>
+                    <div className="pt-2 border-t border-border/40">
+                      <Link
+                        to="/partner-disclosure"
+                        className="text-[hsl(var(--flights))] hover:underline font-medium text-xs"
+                      >
+                        View full Partner Disclosure →
+                      </Link>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </DialogContent>
+            </Dialog>
           </label>
         </div>
 
