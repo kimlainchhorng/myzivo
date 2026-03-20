@@ -1,11 +1,11 @@
 /**
  * Flight Results Page — /flights/results
- * 2026 Spatial UI with glassmorphism, filters, sorting, airline logos
+ * 2026 Spatial UI: sticky summary bar, premium cards, glassmorphic filters
  */
 
 import { useState, useMemo } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { Plane, ArrowLeft, SortAsc, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock } from "lucide-react";
+import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock, ChevronRight, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -28,10 +28,9 @@ const FlightResults = () => {
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<SortBy>("best");
 
-  // Filters
-  const [maxPrice, setMaxPrice] = useState<number>(0); // 0 = no limit
-  const [stopsFilter, setStopsFilter] = useState<number | null>(null); // null = any
-  const [timeFilter, setTimeFilter] = useState<string | null>(null); // null = any
+  const [maxPrice, setMaxPrice] = useState<number>(0);
+  const [stopsFilter, setStopsFilter] = useState<number | null>(null);
+  const [timeFilter, setTimeFilter] = useState<string | null>(null);
 
   const origin = params.get("origin") || "";
   const destination = params.get("destination") || "";
@@ -58,17 +57,14 @@ const FlightResults = () => {
 
   const offers = data?.offers || [];
 
-  // Compute price range for slider
   const priceRange = useMemo(() => {
     if (offers.length === 0) return { min: 0, max: 2000 };
     const prices = offers.map((o) => o.price);
     return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) };
   }, [offers]);
 
-  // Active max price (default to max when not set)
   const activeMaxPrice = maxPrice > 0 ? maxPrice : priceRange.max;
 
-  // Departure time buckets
   const getTimeBucket = (time: string): string => {
     const hour = parseInt(time.split(":")[0], 10);
     if (hour < 6) return "night";
@@ -77,26 +73,12 @@ const FlightResults = () => {
     return "evening";
   };
 
-  // Filter + sort
   const filtered = useMemo(() => {
     let result = [...offers];
+    if (maxPrice > 0) result = result.filter((o) => o.price <= maxPrice);
+    if (stopsFilter !== null) result = result.filter((o) => (stopsFilter === 2 ? o.stops >= 2 : o.stops === stopsFilter));
+    if (timeFilter) result = result.filter((o) => getTimeBucket(o.departure.time) === timeFilter);
 
-    // Price filter
-    if (maxPrice > 0) {
-      result = result.filter((o) => o.price <= maxPrice);
-    }
-
-    // Stops filter
-    if (stopsFilter !== null) {
-      result = result.filter((o) => (stopsFilter === 2 ? o.stops >= 2 : o.stops === stopsFilter));
-    }
-
-    // Time filter
-    if (timeFilter) {
-      result = result.filter((o) => getTimeBucket(o.departure.time) === timeFilter);
-    }
-
-    // Sort
     switch (sortBy) {
       case "cheapest":
         result.sort((a, b) => a.price - b.price);
@@ -105,7 +87,6 @@ const FlightResults = () => {
         result.sort((a, b) => a.durationMinutes - b.durationMinutes);
         break;
       case "best":
-        // Score: normalized price (40%) + normalized duration (40%) + direct bonus (20%)
         result.sort((a, b) => {
           const maxP = priceRange.max || 1;
           const maxD = Math.max(...offers.map((o) => o.durationMinutes), 1);
@@ -115,7 +96,6 @@ const FlightResults = () => {
         });
         break;
     }
-
     return result;
   }, [offers, maxPrice, stopsFilter, timeFilter, sortBy, priceRange]);
 
@@ -135,7 +115,6 @@ const FlightResults = () => {
     navigate("/flights/details/review");
   };
 
-  // Error UI helper
   const getErrorDisplay = (err: unknown) => {
     const msg = err instanceof Error ? err.message : "Something went wrong";
     const isNetwork = msg.toLowerCase().includes("network") || msg.toLowerCase().includes("fetch");
@@ -152,32 +131,35 @@ const FlightResults = () => {
     };
   };
 
-  // Filter sidebar content (shared between sheet and inline)
+  const lowestPrice = useMemo(() => {
+    if (filtered.length === 0) return 0;
+    return Math.round(Math.min(...filtered.map(o => o.price)));
+  }, [filtered]);
+
+  // Filter sidebar content
   const filterContent = (
-    <div className="space-y-6">
-      {/* Price */}
+    <div className="space-y-5">
       <div>
-        <p className="text-sm font-semibold mb-3">Max Price</p>
+        <p className="text-xs font-semibold mb-2.5">Max Price</p>
         <Slider
           value={[activeMaxPrice]}
           min={priceRange.min}
           max={priceRange.max}
           step={10}
           onValueChange={([v]) => setMaxPrice(v === priceRange.max ? 0 : v)}
-          className="mb-2"
+          className="mb-1.5"
         />
-        <div className="flex justify-between text-xs text-muted-foreground">
+        <div className="flex justify-between text-[11px] text-muted-foreground">
           <span>${priceRange.min}</span>
-          <span className="font-medium text-foreground">${activeMaxPrice}</span>
+          <span className="font-semibold text-foreground">${activeMaxPrice}</span>
         </div>
       </div>
 
-      <Separator />
+      <Separator className="bg-border/30" />
 
-      {/* Stops */}
       <div>
-        <p className="text-sm font-semibold mb-3">Stops</p>
-        <div className="flex flex-wrap gap-2">
+        <p className="text-xs font-semibold mb-2.5">Stops</p>
+        <div className="flex flex-wrap gap-1.5">
           {[
             { val: null, label: "Any" },
             { val: 0, label: "Direct" },
@@ -188,7 +170,7 @@ const FlightResults = () => {
               key={String(item.val)}
               onClick={() => setStopsFilter(item.val as number | null)}
               className={cn(
-                "px-3.5 py-2 rounded-xl text-xs font-medium border transition-all duration-200 active:scale-95",
+                "px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all duration-200 active:scale-95",
                 stopsFilter === item.val
                   ? "bg-[hsl(var(--flights))] text-primary-foreground border-[hsl(var(--flights))]"
                   : "bg-card border-border/40 text-muted-foreground hover:border-[hsl(var(--flights))]/40"
@@ -200,14 +182,13 @@ const FlightResults = () => {
         </div>
       </div>
 
-      <Separator />
+      <Separator className="bg-border/30" />
 
-      {/* Time of day */}
       <div>
-        <p className="text-sm font-semibold mb-3">Departure Time</p>
-        <div className="grid grid-cols-2 gap-2">
+        <p className="text-xs font-semibold mb-2.5">Departure Time</p>
+        <div className="grid grid-cols-2 gap-1.5">
           {[
-            { val: null, label: "Any Time", icon: "🕐" },
+            { val: null, label: "Any", icon: "🕐" },
             { val: "morning", label: "Morning", icon: "🌅" },
             { val: "afternoon", label: "Afternoon", icon: "☀️" },
             { val: "evening", label: "Evening", icon: "🌆" },
@@ -216,13 +197,13 @@ const FlightResults = () => {
               key={String(item.val)}
               onClick={() => setTimeFilter(item.val)}
               className={cn(
-                "px-3 py-2.5 rounded-xl text-xs font-medium border transition-all duration-200 flex items-center gap-2 active:scale-95",
+                "px-2.5 py-2 rounded-lg text-[11px] font-semibold border transition-all duration-200 flex items-center gap-1.5 active:scale-95",
                 timeFilter === item.val
                   ? "bg-[hsl(var(--flights))] text-primary-foreground border-[hsl(var(--flights))]"
                   : "bg-card border-border/40 text-muted-foreground hover:border-[hsl(var(--flights))]/40"
               )}
             >
-              <span>{item.icon}</span>
+              <span className="text-xs">{item.icon}</span>
               {item.label}
             </button>
           ))}
@@ -231,9 +212,9 @@ const FlightResults = () => {
 
       {activeFilterCount > 0 && (
         <>
-          <Separator />
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="w-full text-muted-foreground">
-            <X className="w-3.5 h-3.5 mr-1.5" />
+          <Separator className="bg-border/30" />
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="w-full text-muted-foreground text-xs">
+            <X className="w-3 h-3 mr-1" />
             Clear All Filters
           </Button>
         </>
@@ -256,103 +237,116 @@ const FlightResults = () => {
 
       <Header />
 
-      <main className="pt-20 pb-20 relative z-10">
+      <main className="pt-16 pb-20 relative z-10">
         <div className="container mx-auto px-4 max-w-5xl">
-          {/* Route header — glassmorphic */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="bg-card/70 backdrop-blur-xl rounded-2xl border border-border/40 p-4 sm:p-5 mb-5"
-          >
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" asChild className="shrink-0 -ml-1">
-                <Link to="/flights"><ArrowLeft className="w-5 h-5" /></Link>
-              </Button>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold truncate flex items-center gap-2">
-                  <span>{originAirport?.city || origin}</span>
-                  <Plane className="w-4 h-4 text-[hsl(var(--flights))] -rotate-12 shrink-0" />
-                  <span>{destAirport?.city || destination}</span>
-                </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  {departureDate}{returnDate ? ` — ${returnDate}` : " · One Way"} · {totalPassengers} traveler{totalPassengers > 1 ? "s" : ""} · <span className="capitalize">{cabinClass.replace("_", " ")}</span>
-                </p>
-              </div>
-              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
-                <Link to="/flights">Edit</Link>
-              </Button>
-            </div>
-          </motion.div>
 
-          {/* Sort tabs + filter button */}
+          {/* Sticky summary bar — glassmorphic, compact */}
+          <div className="sticky top-14 z-20 -mx-4 px-4 mb-4">
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-card/85 backdrop-blur-xl rounded-2xl border border-border/40 shadow-lg shadow-background/50 p-3 sm:p-3.5"
+            >
+              <div className="flex items-center gap-2.5">
+                <Button variant="ghost" size="icon" asChild className="shrink-0 -ml-1 w-8 h-8">
+                  <Link to="/flights"><ArrowLeft className="w-4 h-4" /></Link>
+                </Button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 text-sm font-bold truncate">
+                    <span>{originAirport?.city || origin}</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-[hsl(var(--flights))] shrink-0" />
+                    <span>{destAirport?.city || destination}</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {departureDate}{returnDate ? ` — ${returnDate}` : ""} · {totalPassengers} pax · <span className="capitalize">{cabinClass.replace("_", " ")}</span>
+                  </p>
+                </div>
+                {/* Price indicator */}
+                {lowestPrice > 0 && (
+                  <div className="text-right shrink-0 hidden sm:block">
+                    <p className="text-[10px] text-muted-foreground">From</p>
+                    <p className="text-sm font-bold text-[hsl(var(--flights))] tabular-nums">${lowestPrice}</p>
+                  </div>
+                )}
+                <Button variant="outline" size="sm" asChild className="shrink-0 h-7 text-[11px] px-2.5 border-border/40">
+                  <Link to="/flights">Edit</Link>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Sort tabs + filter — compact row */}
           {offers.length > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex items-center justify-between mb-4 gap-3"
+              transition={{ delay: 0.05 }}
+              className="flex items-center justify-between mb-3 gap-2"
             >
               {/* Sort pills */}
-              <div className="flex gap-1 p-1 bg-muted/50 backdrop-blur-sm rounded-xl border border-border/30">
+              <div className="flex gap-0.5 p-0.5 bg-muted/40 backdrop-blur-sm rounded-lg border border-border/20">
                 {(["best", "cheapest", "fastest"] as SortBy[]).map((s) => (
                   <button
                     key={s}
                     onClick={() => setSortBy(s)}
                     className={cn(
-                      "px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 capitalize",
+                      "px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all duration-200 capitalize",
                       sortBy === s
                         ? "bg-card text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {s}
+                    {s === "best" ? "✨ Best" : s === "cheapest" ? "💰 Cheapest" : "⚡ Fastest"}
                   </button>
                 ))}
               </div>
 
-              {/* Filter button (mobile = sheet, desktop = visible) */}
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1.5 border-border/40 relative sm:hidden">
-                    <Filter className="w-3.5 h-3.5" />
-                    Filter
-                    {activeFilterCount > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[hsl(var(--flights))] text-[10px] text-primary-foreground font-bold flex items-center justify-center">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh]">
-                  <SheetHeader>
-                    <SheetTitle>Filters</SheetTitle>
-                  </SheetHeader>
-                  <div className="py-4 overflow-y-auto">{filterContent}</div>
-                  <SheetClose asChild>
-                    <Button className="w-full bg-[hsl(var(--flights))]">
-                      Show {filtered.length} flight{filtered.length !== 1 ? "s" : ""}
-                    </Button>
-                  </SheetClose>
-                </SheetContent>
-              </Sheet>
+              <div className="flex items-center gap-2">
+                {/* Result count */}
+                <span className="text-[10px] text-muted-foreground tabular-nums hidden sm:inline">
+                  {filtered.length} flight{filtered.length !== 1 ? "s" : ""}
+                </span>
 
-              <p className="text-xs text-muted-foreground hidden sm:block">
-                {filtered.length} of {offers.length} flights
-              </p>
+                {/* Filter button (mobile = sheet) */}
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1 border-border/40 relative h-7 px-2.5 text-[11px] sm:hidden">
+                      <Filter className="w-3 h-3" />
+                      Filter
+                      {activeFilterCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[hsl(var(--flights))] text-[8px] text-primary-foreground font-bold flex items-center justify-center">
+                          {activeFilterCount}
+                        </span>
+                      )}
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh]">
+                    <SheetHeader>
+                      <SheetTitle>Filters</SheetTitle>
+                    </SheetHeader>
+                    <div className="py-4 overflow-y-auto">{filterContent}</div>
+                    <SheetClose asChild>
+                      <Button className="w-full bg-[hsl(var(--flights))]">
+                        Show {filtered.length} flight{filtered.length !== 1 ? "s" : ""}
+                      </Button>
+                    </SheetClose>
+                  </SheetContent>
+                </Sheet>
+              </div>
             </motion.div>
           )}
 
           <div className="flex gap-5">
             {/* Desktop filters sidebar */}
             {offers.length > 0 && (
-              <div className="hidden sm:block w-56 shrink-0">
-                <div className="sticky top-24 bg-card/70 backdrop-blur-xl rounded-2xl border border-border/40 p-4">
-                  <p className="text-sm font-semibold mb-4 flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-[hsl(var(--flights))]" />
+              <div className="hidden sm:block w-52 shrink-0">
+                <div className="sticky top-32 bg-card/70 backdrop-blur-xl rounded-2xl border border-border/40 p-3.5">
+                  <p className="text-xs font-semibold mb-3 flex items-center gap-1.5">
+                    <Filter className="w-3.5 h-3.5 text-[hsl(var(--flights))]" />
                     Filters
                     {activeFilterCount > 0 && (
-                      <Badge variant="secondary" className="text-[10px] h-5">{activeFilterCount}</Badge>
+                      <Badge variant="secondary" className="text-[9px] h-4 px-1.5">{activeFilterCount}</Badge>
                     )}
                   </p>
                   {filterContent}
@@ -362,7 +356,6 @@ const FlightResults = () => {
 
             {/* Results column */}
             <div className="flex-1 min-w-0">
-              {/* Loading */}
               {isLoading && <FlightResultsSkeleton count={6} />}
 
               {/* Error */}
@@ -424,142 +417,151 @@ const FlightResults = () => {
                 </Card>
               )}
 
-              {/* Results list */}
-              <div className="space-y-3">
+              {/* Results list — premium cards */}
+              <div className="space-y-2.5">
                 <AnimatePresence mode="popLayout">
                   {filtered.map((offer, idx) => (
                     <motion.div
                       key={offer.id}
                       layout
-                      initial={{ opacity: 0, y: 12 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.25, delay: Math.min(idx * 0.03, 0.2), ease: [0.25, 0.46, 0.45, 0.94] }}
+                      transition={{ duration: 0.2, delay: Math.min(idx * 0.025, 0.15), ease: [0.25, 0.46, 0.45, 0.94] }}
                     >
-                      <Card
-                        className="bg-card/80 backdrop-blur-sm border-border/40 hover:border-[hsl(var(--flights))]/40 hover:shadow-lg hover:shadow-[hsl(var(--flights))]/5 transition-all duration-200 cursor-pointer group"
+                      <div
+                        className={cn(
+                          "bg-card/80 backdrop-blur-sm rounded-xl border border-border/30 p-3.5 sm:p-4 cursor-pointer group transition-all duration-200",
+                          "hover:border-[hsl(var(--flights))]/40 hover:shadow-lg hover:shadow-[hsl(var(--flights))]/5",
+                          "active:scale-[0.99]",
+                          idx === 0 && "border-[hsl(var(--flights))]/25"
+                        )}
                         onClick={() => handleSelect(offer)}
                       >
-                        <CardContent className="p-3.5 sm:p-5">
-                          {/* Best tag */}
-                          {idx === 0 && sortBy === "best" && (
-                            <div className="mb-2.5">
-                              <Badge className="bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border-[hsl(var(--flights))]/20 text-[10px] font-semibold">
-                                ✨ Best Option
-                              </Badge>
-                            </div>
-                          )}
-                          {idx === 0 && sortBy === "cheapest" && (
-                            <div className="mb-2.5">
-                              <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold">
-                                💰 Cheapest
-                              </Badge>
-                            </div>
-                          )}
-                          {idx === 0 && sortBy === "fastest" && (
-                            <div className="mb-2.5">
-                              <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[10px] font-semibold">
-                                ⚡ Fastest
-                              </Badge>
-                            </div>
-                          )}
+                        {/* Top badge */}
+                        {idx === 0 && (
+                          <div className="mb-2">
+                            <Badge className={cn(
+                              "text-[9px] font-bold px-2 py-0.5 border",
+                              sortBy === "best" && "bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border-[hsl(var(--flights))]/20",
+                              sortBy === "cheapest" && "bg-primary/10 text-primary border-primary/20",
+                              sortBy === "fastest" && "bg-amber-500/10 text-amber-600 border-amber-500/20",
+                            )}>
+                              {sortBy === "best" ? "✨ Best Option" : sortBy === "cheapest" ? "💰 Lowest Price" : "⚡ Fastest"}
+                            </Badge>
+                          </div>
+                        )}
 
-                          <div className="flex flex-col gap-3">
-                            {/* Top row: airline + price (mobile) */}
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2.5">
-                                <div className="w-9 h-9 rounded-xl bg-muted/60 border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
-                                  <img
-                                    src={getDuffelAirlineLogo(offer.airlineCode)}
-                                    alt={offer.airline}
-                                    className="w-7 h-7 object-contain"
-                                    onError={(e) => {
-                                      const el = e.target as HTMLImageElement;
-                                      el.style.display = 'none';
-                                      el.parentElement!.innerHTML = `<span class="text-xs font-bold text-muted-foreground">${offer.airlineCode}</span>`;
-                                    }}
-                                  />
-                                </div>
-                                <div>
-                                  <p className="text-sm font-semibold leading-tight">{offer.airline}</p>
-                                  <p className="text-[11px] text-muted-foreground">{offer.flightNumber}</p>
-                                </div>
+                        {/* Two-column: route info | price */}
+                        <div className="flex items-start justify-between gap-3">
+                          {/* Left: airline + route */}
+                          <div className="flex-1 min-w-0 space-y-2.5">
+                            {/* Airline row */}
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-muted/50 border border-border/20 flex items-center justify-center overflow-hidden shrink-0">
+                                <img
+                                  src={getDuffelAirlineLogo(offer.airlineCode)}
+                                  alt={offer.airline}
+                                  className="w-6 h-6 object-contain"
+                                  onError={(e) => {
+                                    const el = e.target as HTMLImageElement;
+                                    el.style.display = 'none';
+                                    el.parentElement!.innerHTML = `<span class="text-[10px] font-bold text-muted-foreground">${offer.airlineCode}</span>`;
+                                  }}
+                                />
                               </div>
-                              <div className="text-right">
-                                <p className="text-lg sm:text-xl font-bold text-[hsl(var(--flights))] tabular-nums">
-                                  ${Math.round(offer.price)}
-                                </p>
-                                <p className="text-[10px] text-muted-foreground">per person</p>
+                              <div className="min-w-0">
+                                <p className="text-xs font-semibold leading-tight truncate">{offer.airline}</p>
+                                <p className="text-[10px] text-muted-foreground">{offer.flightNumber}</p>
                               </div>
                             </div>
 
-                            {/* Route timeline */}
-                            <div className="flex items-center gap-2 sm:gap-4">
-                              <div className="text-left min-w-[52px]">
-                                <p className="text-base sm:text-lg font-bold tabular-nums leading-tight">{offer.departure.time}</p>
-                                <p className="text-[11px] text-muted-foreground font-medium">{offer.departure.code}</p>
+                            {/* Route timeline — the visual centerpiece */}
+                            <div className="flex items-center gap-2">
+                              <div className="text-left min-w-[46px]">
+                                <p className="text-lg font-bold tabular-nums leading-none">{offer.departure.time}</p>
+                                <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{offer.departure.code}</p>
                               </div>
 
-                              <div className="flex flex-col items-center flex-1">
-                                <span className="text-[10px] text-muted-foreground font-medium">{offer.duration}</span>
-                                <div className="w-full h-px bg-border/60 relative my-1">
-                                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[hsl(var(--flights))] border-2 border-card" />
+                              <div className="flex flex-col items-center flex-1 py-1">
+                                <span className="text-[9px] text-muted-foreground font-medium flex items-center gap-0.5">
+                                  <Clock className="w-2.5 h-2.5" />
+                                  {offer.duration}
+                                </span>
+                                <div className="w-full h-[1.5px] bg-gradient-to-r from-[hsl(var(--flights))]/60 via-border/40 to-[hsl(var(--flights))]/60 relative my-1 rounded-full">
+                                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[hsl(var(--flights))] border-[1.5px] border-card" />
                                   {offer.stops > 0 && Array.from({ length: Math.min(offer.stops, 2) }).map((_, i) => (
                                     <div
                                       key={i}
-                                      className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-muted-foreground/40"
+                                      className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-muted-foreground/50 border border-card"
                                       style={{ left: `${((i + 1) / (offer.stops + 1)) * 100}%` }}
                                     />
                                   ))}
-                                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[hsl(var(--flights))] border-2 border-card" />
+                                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[hsl(var(--flights))] border-[1.5px] border-card" />
                                 </div>
                                 <span className={cn(
-                                  "text-[10px] font-medium",
+                                  "text-[9px] font-semibold",
                                   offer.stops === 0 ? "text-primary" : "text-muted-foreground"
                                 )}>
                                   {offer.stops === 0 ? "Direct" : `${offer.stops} stop${offer.stops > 1 ? "s" : ""}`}
                                 </span>
                               </div>
 
-                              <div className="text-right min-w-[52px]">
-                                <p className="text-base sm:text-lg font-bold tabular-nums leading-tight">{offer.arrival.time}</p>
-                                <p className="text-[11px] text-muted-foreground font-medium">{offer.arrival.code}</p>
+                              <div className="text-right min-w-[46px]">
+                                <p className="text-lg font-bold tabular-nums leading-none">{offer.arrival.time}</p>
+                                <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{offer.arrival.code}</p>
                               </div>
-                            </div>
-
-                            {/* Tags + Select */}
-                            <div className="flex items-center justify-between">
-                              <div className="flex gap-1.5 flex-wrap">
-                                <Badge variant="outline" className="text-[10px] border-border/30 bg-muted/30 capitalize">
-                                  {offer.cabinClass}
-                                </Badge>
-                                {offer.baggageIncluded && (
-                                  <Badge variant="outline" className="text-[10px] border-border/30 bg-muted/30 gap-1">
-                                    <Luggage className="w-2.5 h-2.5" />
-                                    {offer.baggageIncluded}
-                                  </Badge>
-                                )}
-                                {offer.isRefundable && (
-                                  <Badge variant="outline" className="text-[10px] border-primary/30 text-primary bg-primary/5">
-                                    Refundable
-                                  </Badge>
-                                )}
-                              </div>
-                              <Button
-                                size="sm"
-                                className="h-8 px-4 text-xs font-semibold bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 shadow-sm active:scale-95 transition-all"
-                                onClick={(e) => { e.stopPropagation(); handleSelect(offer); }}
-                              >
-                                Select
-                              </Button>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
+
+                          {/* Right: price + CTA */}
+                          <div className="flex flex-col items-end justify-between shrink-0 min-h-[80px]">
+                            <div className="text-right">
+                              <p className="text-xl font-bold text-[hsl(var(--flights))] tabular-nums leading-none">
+                                ${Math.round(offer.price)}
+                              </p>
+                              <p className="text-[9px] text-muted-foreground mt-0.5">/person</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="h-7 px-3 text-[10px] font-bold bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 shadow-sm active:scale-95 transition-all gap-1 mt-2"
+                              onClick={(e) => { e.stopPropagation(); handleSelect(offer); }}
+                            >
+                              Select
+                              <ChevronRight className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Bottom tags */}
+                        <div className="flex gap-1 mt-2.5 flex-wrap">
+                          <Badge variant="outline" className="text-[8px] border-border/20 bg-muted/20 capitalize h-4 px-1.5">
+                            {offer.cabinClass}
+                          </Badge>
+                          {offer.baggageIncluded && (
+                            <Badge variant="outline" className="text-[8px] border-border/20 bg-muted/20 gap-0.5 h-4 px-1.5">
+                              <Luggage className="w-2 h-2" />
+                              {offer.baggageIncluded}
+                            </Badge>
+                          )}
+                          {offer.isRefundable && (
+                            <Badge variant="outline" className="text-[8px] border-primary/20 text-primary bg-primary/5 h-4 px-1.5">
+                              Refundable
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
               </div>
+
+              {/* Results count footer */}
+              {filtered.length > 0 && (
+                <p className="text-center text-[10px] text-muted-foreground mt-4 sm:hidden">
+                  Showing {filtered.length} of {offers.length} flights
+                </p>
+              )}
             </div>
           </div>
         </div>
