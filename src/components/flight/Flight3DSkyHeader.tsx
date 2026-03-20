@@ -116,56 +116,52 @@ function FlyingAirplane({ layer }: { layer: "front" | "back" }) {
     <motion.div
       className="absolute"
       style={{
-        top: isFront ? "35%" : "55%",
+        top: isFront ? "25%" : "50%",
         zIndex: isFront ? 10 : 5,
       }}
       animate={{
-        x: isFront ? ["-8%", "108%"] : ["108%", "-8%"],
+        x: isFront ? ["-12%", "110%"] : ["110%", "-12%"],
         y: isFront
-          ? [0, -8, 4, -6, 2, 0]
-          : [0, 6, -4, 8, -2, 0],
+          ? [0, -6, 3, -4, 1, 0]
+          : [0, 4, -3, 5, -1, 0],
+        rotate: isFront ? [0, -1, 1, -0.5, 0] : [0, 1, -1, 0.5, 0],
       }}
       transition={{
-        x: { duration: isFront ? 8 : 14, repeat: Infinity, ease: "linear" },
-        y: { duration: isFront ? 4 : 6, repeat: Infinity, ease: "easeInOut" },
+        x: { duration: isFront ? 10 : 16, repeat: Infinity, ease: "linear" },
+        y: { duration: isFront ? 5 : 7, repeat: Infinity, ease: "easeInOut" },
+        rotate: { duration: isFront ? 6 : 8, repeat: Infinity, ease: "easeInOut" },
       }}
     >
-      <div
-        className="relative"
+      {/* Real airplane image */}
+      <img
+        src={airplanePng}
+        alt=""
+        className={cn(
+          "object-contain",
+          isFront
+            ? "w-20 h-14 drop-shadow-[0_4px_12px_rgba(0,0,0,0.2)]"
+            : "w-12 h-8 opacity-35 drop-shadow-sm -scale-x-100",
+        )}
         style={{
-          transformStyle: "preserve-3d",
-          transform: `perspective(400px) rotateX(${isFront ? -5 : 3}deg)`,
+          filter: isFront ? undefined : "blur(0.5px)",
         }}
-      >
-        {/* Real airplane image */}
-        <img
-          src={airplanePng}
-          alt=""
-          className={cn(
-            "object-contain drop-shadow-lg",
-            isFront ? "w-16 h-10" : "w-10 h-6 opacity-40",
-            !isFront && "-scale-x-100"
-          )}
-          draggable={false}
+        draggable={false}
+      />
+      {/* Contrail — white vapor trail */}
+      {isFront && (
+        <motion.div
+          className="absolute top-[55%] right-[85%] -translate-y-1/2 w-24 h-[2px] rounded-full origin-right"
+          style={{
+            background: "linear-gradient(to left, rgba(255,255,255,0.7), rgba(255,255,255,0.2), transparent)",
+          }}
+          animate={{ scaleX: [0.4, 1, 0.4], opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
         />
-        {/* Contrail */}
-        {isFront && (
-          <motion.div
-            className="absolute top-1/2 right-full -translate-y-1/2 w-20 h-[2px] rounded-full origin-right"
-            style={{
-              background: "linear-gradient(to left, rgba(255,255,255,0.6), transparent)",
-            }}
-            animate={{ scaleX: [0.5, 1, 0.5], opacity: [0.4, 0.7, 0.4] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          />
-        )}
-        {/* Shadow below */}
-        {isFront && (
-          <div
-            className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-10 h-2 rounded-full bg-foreground/8 blur-sm"
-          />
-        )}
-      </div>
+      )}
+      {/* Ground shadow */}
+      {isFront && (
+        <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-12 h-2 rounded-full bg-foreground/6 blur-md" />
+      )}
     </motion.div>
   );
 }
