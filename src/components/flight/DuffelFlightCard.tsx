@@ -435,6 +435,7 @@ export default function DuffelFlightCard({
               duration={returnSummary.duration}
               stops={returnSummary.stops}
               stopDetails={returnSummary.stopDetails}
+              dayDiff={returnSummary.dayDiff}
               label="Return"
             />
           </div>
