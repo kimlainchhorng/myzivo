@@ -10,7 +10,7 @@ import {
   Calendar, Users, CreditCard, Mail, MessageCircle,
   Share2, Download, Hotel, Car, ArrowRight, Copy, Check
 } from "lucide-react";
-import { motion } from "framer-motion";
+import DownloadItinerary from "@/components/flight/DownloadItinerary";
 import { useState } from "react";
 import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
