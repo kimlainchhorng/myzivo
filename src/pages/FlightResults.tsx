@@ -77,13 +77,15 @@ const FlightResults = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const origin = params.get("origin") || "";
-  const destination = params.get("destination") || "";
-  const departureDate = params.get("departureDate") || "";
-  const returnDate = params.get("returnDate") || undefined;
-  const adults = Number(params.get("adults") || 1);
+  const destination = params.get("destination") || params.get("dest") || "";
+  const departureDate = params.get("departureDate") || params.get("depart") || "";
+  const returnDate = params.get("returnDate") || params.get("return") || undefined;
+  const passengerCount = Number(params.get("passengers") || 0);
+  const adults = Number(params.get("adults") || passengerCount || 1);
   const children = Number(params.get("children") || 0);
   const infants = Number(params.get("infants") || 0);
-  const cabinClass = (params.get("cabinClass") || "economy") as 'economy' | 'premium_economy' | 'business' | 'first';
+  const rawCabinClass = params.get("cabinClass") || params.get("cabin") || "economy";
+  const cabinClass = (rawCabinClass === "premium" ? "premium_economy" : rawCabinClass) as 'economy' | 'premium_economy' | 'business' | 'first';
   const totalPassengers = adults + children + infants;
 
   const originAirport = getAirportByCode(origin);
