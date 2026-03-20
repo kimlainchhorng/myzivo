@@ -17,7 +17,7 @@ const steps = [
 export function StepIndicator({ current }: { current: number }) {
   return (
     <div
-      className="flex items-center justify-center gap-0 w-full overflow-x-auto py-3 px-1"
+      className="flex items-center justify-between w-full py-3 px-2"
       style={{ perspective: "600px" }}
     >
       {steps.map((step, i) => {
