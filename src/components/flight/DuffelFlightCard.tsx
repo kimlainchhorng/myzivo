@@ -52,9 +52,9 @@ export default function DuffelFlightCard({
   return (
     <div
       className={cn(
-        "bg-card rounded-xl border p-0 cursor-pointer group transition-all duration-200 overflow-hidden",
-        "hover:shadow-lg hover:shadow-[hsl(var(--flights))]/6 hover:border-[hsl(var(--flights))]/40",
-        "active:scale-[0.995]",
+        "bg-card rounded-xl sm:rounded-xl border p-0 cursor-pointer group transition-all duration-200 overflow-hidden",
+        "hover:shadow-md hover:border-[hsl(var(--flights))]/40",
+        "active:scale-[0.98] active:bg-muted/20",
         isTop
           ? "border-[hsl(var(--flights))]/30 shadow-sm shadow-[hsl(var(--flights))]/4"
           : "border-border/30"
