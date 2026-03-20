@@ -11,6 +11,7 @@ import {
   Share2, Download, Hotel, Car, ArrowRight, Copy, Check
 } from "lucide-react";
 import DownloadItinerary from "@/components/flight/DownloadItinerary";
+import { motion } from "framer-motion";
 import { useState } from "react";
 import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
