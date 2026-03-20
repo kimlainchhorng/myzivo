@@ -470,7 +470,7 @@ const FlightReview = () => {
 
           {/* Price Summary */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.33 }} className="mt-3">
-            <PriceSummaryCard offer={offer} searchParams={searchParams} totalPassengers={totalPassengers} isRoundTrip={isRoundTrip} />
+            <PriceSummaryCard offer={variantPrice != null ? { ...offer, price: variantPrice, pricePerPerson: variantPrice, currency: variantCurrency || offer.currency } : offer} searchParams={searchParams} totalPassengers={totalPassengers} isRoundTrip={isRoundTrip} />
           </motion.div>
 
           {/* Partner disclosure */}
