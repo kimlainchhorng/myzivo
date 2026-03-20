@@ -86,13 +86,26 @@ function FeatureRow({ included, label }: { included: boolean; label: string }) {
 export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardProps) {
   const variants = offer.fareVariants;
   const [selectedId, setSelectedId] = useState<string>(offer.id);
+  const [cabinFilter, setCabinFilter] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
+  // Unique cabin classes present in variants
+  const cabinClasses = useMemo(
+    () => [...new Set(variants?.map((v) => v.cabinClass) ?? [])],
+    [variants]
+  );
+  const hasMultipleCabins = cabinClasses.length > 1;
+
+  const filteredVariants = useMemo(
+    () => (cabinFilter ? variants?.filter((v) => v.cabinClass === cabinFilter) : variants) ?? [],
+    [variants, cabinFilter]
+  );
+
   const cheapestPrice = useMemo(
-    () => Math.min(...(variants?.map((variant) => variant.price) ?? [offer.price])),
-    [offer.price, variants]
+    () => Math.min(...(filteredVariants.map((variant) => variant.price))),
+    [filteredVariants]
   );
 
   useEffect(() => {
