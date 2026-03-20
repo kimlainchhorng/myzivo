@@ -301,7 +301,51 @@ export function useDuffelCreateOrder() {
 }
 
 /**
- * Format currency amount
+ * Available service from Duffel (baggage, seats, etc.)
+ */
+export interface DuffelAvailableService {
+  id: string;
+  type: string;
+  maximum_quantity: number;
+  total_amount: string;
+  total_currency: string;
+  passenger_ids: string[];
+  segment_ids: string[];
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Fetch available services (real add-ons) for an offer
+ */
+export function useDuffelAvailableServices(offerId: string | null) {
+  return useQuery({
+    queryKey: ['duffel-available-services', offerId],
+    queryFn: async () => {
+      if (!offerId) throw new Error('No offer ID');
+
+      const { data, error } = await supabase.functions.invoke('duffel-flights', {
+        body: {
+          action: 'getAvailableServices',
+          offer_id: offerId,
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      return data as {
+        services: DuffelAvailableService[];
+        grouped: Record<string, DuffelAvailableService[]>;
+        total: number;
+      };
+    },
+    enabled: !!offerId,
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+/**
  */
 export function formatDuffelPrice(amount: number, currency: string): string {
   return new Intl.NumberFormat('en-US', {
