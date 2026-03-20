@@ -211,7 +211,7 @@ export function FlightSummaryCompact({ offer, search }: { offer: DuffelOffer; se
                 className="text-xl font-bold tabular-nums leading-tight tracking-tight"
                 style={{ color: "hsl(var(--flights))" }}
               >
-                ${Math.round(offer.price).toLocaleString()}
+                ${Math.round(getAllInPrice(offer.price)).toLocaleString()}
               </p>
               <p className="text-[9px] text-muted-foreground font-medium">{isRoundTrip ? "round trip" : "one way"}</p>
             </div>

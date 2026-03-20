@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
+import { getAllInPrice } from "@/utils/flightPricing";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import SeatMapPreview from "@/components/flight/SeatMapPreview";
 import BoardingPass3D from "@/components/flight/BoardingPass3D";
@@ -300,7 +301,7 @@ export default function DuffelFlightCard({
   const hasVariants = offer.fareVariants && offer.fareVariants.length > 1;
   const activeVariant = hasVariants ? offer.fareVariants![selectedVariantIdx] : null;
   // Use active variant's data for display when a variant is selected
-  const displayPrice = activeVariant?.price ?? offer.price;
+  const displayPrice = getAllInPrice(activeVariant?.price ?? offer.price);
   const displayConditions = activeVariant?.conditions ?? offer.conditions;
   const displayBaggage = activeVariant?.baggageDetails ?? offer.baggageDetails;
   const displayFareName = activeVariant?.fareBrandName ?? offer.fareBrandName;

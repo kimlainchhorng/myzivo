@@ -92,6 +92,13 @@ function calculateZivoBookingFee(duffelPrice: number): number {
   return parseFloat((duffelPrice * ZIVO_FEE_PERCENT).toFixed(2));
 }
 
+/** Quick helper: returns the all-in base fare (duffel + card fee + booking fee) for display on cards */
+export function getAllInPrice(duffelPrice: number): number {
+  const cardFee = duffelPrice * CARD_PROCESSING_RATE;
+  const bookingFee = duffelPrice < ZIVO_FEE_THRESHOLD ? ZIVO_FEE_FLAT : duffelPrice * ZIVO_FEE_PERCENT;
+  return parseFloat((duffelPrice + cardFee + bookingFee).toFixed(2));
+}
+
 export function calculateFlightPricing(
   duffelPrice: number,
   passengers: number,
