@@ -1,12 +1,17 @@
 /**
  * DuffelFlightCard — Premium OTA-style flight result card
- * Displays all flight details in a dense, scannable layout
+ * With expandable segment details drawer
  */
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, ChevronRight, Briefcase, ShieldCheck, ShieldX, ArrowRight, Repeat } from "lucide-react";
-import { type DuffelOffer } from "@/hooks/useDuffelFlights";
+import {
+  Clock, ChevronRight, ChevronDown, Briefcase, ShieldCheck, ShieldX,
+  ArrowRight, Repeat, Plane, ExternalLink
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +34,59 @@ const sortBadgeConfig: Record<string, { label: string; className: string }> = {
   shortest: { label: "📏 Shortest", className: "bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border-[hsl(var(--flights))]/25" },
 };
 
+/* ── Segment detail row ── */
+function SegmentRow({ seg, isLast }: { seg: DuffelSegment; isLast: boolean }) {
+  return (
+    <div className="relative pl-5">
+      {/* Timeline dot + line */}
+      <div className="absolute left-1.5 top-0 bottom-0 flex flex-col items-center">
+        <div className="w-2 h-2 rounded-full bg-[hsl(var(--flights))] border border-card shrink-0 mt-1" />
+        {!isLast && <div className="flex-1 w-px bg-border/40 my-0.5" />}
+      </div>
+
+      <div className="pb-3">
+        <div className="flex items-center gap-2 mb-1">
+          <AirlineLogo
+            iataCode={seg.operatingCarrierCode || seg.marketingCarrierCode}
+            airlineName={seg.operatingCarrier || seg.marketingCarrier}
+            size={22}
+            className="shrink-0"
+          />
+          <span className="text-[10px] font-semibold truncate">
+            {seg.marketingCarrier} · {seg.flightNumber}
+          </span>
+          {seg.aircraft && (
+            <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{seg.aircraft}</span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 text-[10px]">
+          <div className="min-w-0">
+            <p className="font-bold tabular-nums">{seg.departingAt?.split("T")[1]?.slice(0, 5) || "—"}</p>
+            <p className="text-muted-foreground text-[9px]">{seg.origin.code} {seg.origin.terminal ? `T${seg.origin.terminal}` : ""}</p>
+          </div>
+          <div className="flex-1 flex items-center gap-1">
+            <div className="flex-1 h-px bg-border/40" />
+            <span className="text-[8px] text-muted-foreground whitespace-nowrap">{seg.duration}</span>
+            <div className="flex-1 h-px bg-border/40" />
+          </div>
+          <div className="text-right min-w-0">
+            <p className="font-bold tabular-nums">{seg.arrivingAt?.split("T")[1]?.slice(0, 5) || "—"}</p>
+            <p className="text-muted-foreground text-[9px]">{seg.destination.code} {seg.destination.terminal ? `T${seg.destination.terminal}` : ""}</p>
+          </div>
+        </div>
+
+        {seg.operatingCarrierCode !== seg.marketingCarrierCode && (
+          <p className="text-[8px] text-muted-foreground/70 mt-0.5 flex items-center gap-0.5">
+            <Repeat className="w-2 h-2" />
+            Operated by {seg.operatingCarrier}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function DuffelFlightCard({
   offer,
   index,
@@ -39,6 +97,7 @@ export default function DuffelFlightCard({
   hasReturn,
   onSelect,
 }: DuffelFlightCardProps) {
+  const [expanded, setExpanded] = useState(false);
   const isTop = index === 0;
   const badge = isTop ? sortBadgeConfig[sortBy] : null;
 
@@ -46,23 +105,25 @@ export default function DuffelFlightCard({
     ? "Nonstop"
     : `${offer.stops} stop${offer.stops > 1 ? "s" : ""}`;
 
-  // Get up to 2 unique carrier codes for stacked logos
   const carrierCodes = offer.carriers?.length
     ? [...new Set(offer.carriers.map(c => c.code))].slice(0, 2)
     : [offer.airlineCode];
   const carrierSummary = carrierCodes.filter(Boolean).join(" · ");
 
+  const toggleExpand = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpanded(prev => !prev);
+  };
+
   return (
     <div
       className={cn(
-        "bg-card rounded-xl sm:rounded-xl border p-0 cursor-pointer group transition-all duration-200 overflow-hidden",
+        "bg-card rounded-xl sm:rounded-xl border p-0 group transition-all duration-200 overflow-hidden",
         "hover:shadow-md hover:border-[hsl(var(--flights))]/40",
-        "active:scale-[0.98] active:bg-muted/20",
         isTop
           ? "border-[hsl(var(--flights))]/30 shadow-sm shadow-[hsl(var(--flights))]/4"
           : "border-border/30"
       )}
-      onClick={() => onSelect(offer)}
     >
       {/* Top badge strip */}
       {(isTop || isLowest || isFastest) && (
@@ -86,10 +147,9 @@ export default function DuffelFlightCard({
       )}
 
       <div className="px-3 py-2.5 sm:px-4 sm:py-3.5">
-        {/* Row 1: Stacked airline logos + name + Price */}
+        {/* Row 1: Airline + Price */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            {/* Stacked logos */}
             <div className="relative shrink-0" style={{ width: carrierCodes.length > 1 ? 58 : 44, height: 44 }}>
               <AirlineLogo
                 iataCode={carrierCodes[0]}
@@ -118,7 +178,6 @@ export default function DuffelFlightCard({
             </div>
           </div>
 
-          {/* Price block */}
           <div className="text-right shrink-0">
             <p className="text-[22px] sm:text-2xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none tracking-tight">
               ${Math.round(offer.price)}
@@ -134,22 +193,19 @@ export default function DuffelFlightCard({
           </div>
         </div>
 
-        {/* Row 2: Route timeline with labeled stops */}
+        {/* Row 2: Route timeline */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Departure */}
           <div className="text-left shrink-0 min-w-[52px] sm:min-w-[58px]">
             <p className="text-[19px] sm:text-xl font-bold tabular-nums leading-none">{offer.departure.time}</p>
             <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{offer.departure.code}</p>
           </div>
 
-          {/* Timeline connector with stop labels */}
           <div className="flex flex-col items-center flex-1 py-0.5 min-w-0">
             <span className="text-[9px] sm:text-[10px] text-muted-foreground font-medium flex items-center gap-0.5 whitespace-nowrap">
               <Clock className="w-2.5 h-2.5 shrink-0" />
               {offer.duration}
             </span>
 
-            {/* Route line */}
             <div className="w-full h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-border/50 to-[hsl(var(--flights))] relative my-1 rounded-full">
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full bg-[hsl(var(--flights))] border-[1.5px] border-card" />
               {offer.stopDetails?.length > 0
@@ -173,7 +229,6 @@ export default function DuffelFlightCard({
               <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full bg-[hsl(var(--flights))] border-[1.5px] border-card" />
             </div>
 
-            {/* Stop label + cities */}
             <span className={cn(
               "text-[9px] sm:text-[10px] font-semibold leading-tight",
               offer.stops === 0 ? "text-primary" : "text-muted-foreground"
@@ -195,14 +250,13 @@ export default function DuffelFlightCard({
             )}
           </div>
 
-          {/* Arrival */}
           <div className="text-right shrink-0 min-w-[52px] sm:min-w-[58px]">
             <p className="text-[19px] sm:text-xl font-bold tabular-nums leading-none">{offer.arrival.time}</p>
             <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{offer.arrival.code}</p>
           </div>
         </div>
 
-        {/* Row 3: Tags + CTA */}
+        {/* Row 3: Tags + Details toggle + CTA */}
         <div className="flex items-end justify-between gap-2 mt-3">
           <div className="flex gap-1 flex-wrap min-w-0">
             <Badge variant="outline" className="text-[8px] sm:text-[9px] border-border/25 bg-muted/25 capitalize h-[18px] px-1.5 font-medium">
@@ -245,7 +299,74 @@ export default function DuffelFlightCard({
             <ChevronRight className="w-3.5 h-3.5" />
           </Button>
         </div>
+
+        {/* Expand toggle */}
+        {offer.segments?.length > 0 && (
+          <button
+            onClick={toggleExpand}
+            className="w-full flex items-center justify-center gap-1 mt-2.5 pt-2 border-t border-border/20 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronDown className={cn("w-3 h-3 transition-transform", expanded && "rotate-180")} />
+            {expanded ? "Hide details" : "Flight details"}
+          </button>
+        )}
       </div>
+
+      {/* Expandable segment details drawer */}
+      <AnimatePresence>
+        {expanded && offer.segments?.length > 0 && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="px-3 pb-3 sm:px-4 sm:pb-4 pt-1 border-t border-border/20 bg-muted/10">
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                {offer.segments.length} segment{offer.segments.length > 1 ? "s" : ""}
+              </p>
+
+              {offer.segments.map((seg, i) => (
+                <SegmentRow key={seg.id || i} seg={seg} isLast={i === offer.segments.length - 1} />
+              ))}
+
+              {/* Layover info between segments */}
+              {offer.stopDetails?.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {offer.stopDetails.map((stop, i) => (
+                    <Badge
+                      key={i}
+                      variant="outline"
+                      className="text-[8px] border-amber-500/20 bg-amber-500/5 text-amber-600 h-[18px] px-1.5 gap-0.5"
+                    >
+                      <Clock className="w-2 h-2" />
+                      {stop.layoverDuration} layover in {stop.city || stop.code}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Conditions summary */}
+              <div className="mt-2 flex flex-wrap gap-1.5 text-[8px] text-muted-foreground">
+                {offer.conditions?.changeBeforeDeparture !== null && (
+                  <span>{offer.conditions.changeBeforeDeparture ? "✓ Changes allowed" : "✗ No changes"}</span>
+                )}
+                {offer.conditions?.refundBeforeDeparture !== null && (
+                  <span className="ml-2">{offer.conditions.refundBeforeDeparture ? "✓ Refundable" : "✗ Non-refundable"}</span>
+                )}
+              </div>
+
+              {/* Partner disclosure */}
+              <p className="mt-2 text-[8px] text-muted-foreground/60 flex items-center gap-0.5">
+                <ExternalLink className="w-2 h-2 shrink-0" />
+                Booking completed via licensed travel partner.{" "}
+                <a href="/partner-disclosure" className="underline hover:text-foreground">Learn more</a>
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
