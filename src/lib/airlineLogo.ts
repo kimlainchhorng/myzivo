@@ -10,7 +10,7 @@
 export const AVS_CDN = 'https://pics.avs.io';
 
 // Duffel SVG CDN - Fallback
-export const DUFFEL_CDN = 'https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup';
+export const DUFFEL_CDN = 'https://assets.duffel.com/img/airlines/for-light-background/full-color-logo';
 
 // Supported sizes for logos
 export type AirHexSize = 32 | 64 | 100 | 200;
