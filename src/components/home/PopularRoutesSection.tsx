@@ -50,11 +50,13 @@ export default function PopularRoutesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: i * 0.06, duration: 0.4 }}
+              className="cursor-pointer"
+              onClick={() => handleRouteClick(route.fromCode, route.toCode)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleRouteClick(route.fromCode, route.toCode); }}
             >
-              <button
-                onClick={() => handleRouteClick(route.fromCode, route.toCode)}
-                className="group block w-full text-left p-4 rounded-xl border border-border/60 bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 active:scale-[0.97]"
-              >
+              <div className="p-4 rounded-xl border border-border/60 bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 active:scale-[0.97]">
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <span className="font-bold text-sm">{route.fromCode}</span>
                   <ArrowRight className="w-3 h-3 text-muted-foreground" />
@@ -66,7 +68,7 @@ export default function PopularRoutesSection() {
                 <span className="text-sm font-bold text-primary">
                   from ${route.priceFrom}*
                 </span>
-              </button>
+              </div>
             </motion.div>
           ))}
         </div>
