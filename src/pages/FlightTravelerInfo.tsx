@@ -7,9 +7,10 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft, Plane, ChevronRight, Shield, Users, Lock, User,
-  CreditCard, CheckCircle2, Fingerprint
+  CreditCard, CheckCircle2, Fingerprint, Luggage, PackageCheck, RefreshCw,
+  Clock, AlertCircle, ChevronDown
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AppLayout from "@/components/app/AppLayout";
@@ -151,6 +152,7 @@ const FlightTravelerInfo = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [consentChecked, setConsentChecked] = useState(false);
   const [selectedProfiles, setSelectedProfiles] = useState<Record<number, string>>({});
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   useEffect(() => {
     if (liveOffer) {
@@ -514,6 +516,68 @@ const FlightTravelerInfo = () => {
           </label>
         </div>
 
+        {/* Cancellation & baggage summary */}
+        <div className="space-y-2">
+          {/* Cancellation policy */}
+          <div
+            className="flex items-start gap-2.5 p-3 rounded-xl"
+            style={{
+              background: offer.conditions?.refundable
+                ? "hsl(142 71% 45% / 0.06)"
+                : "hsl(var(--muted) / 0.3)",
+              border: `1px solid ${offer.conditions?.refundable ? "hsl(142 71% 45% / 0.15)" : "hsl(var(--border) / 0.3)"}`,
+            }}
+          >
+            <RefreshCw className={cn("w-3.5 h-3.5 mt-0.5 shrink-0", offer.conditions?.refundable ? "text-emerald-500" : "text-muted-foreground")} />
+            <div className="text-[10px]">
+              <p className="font-semibold text-foreground">
+                {offer.conditions?.refundable ? "Refundable fare" : "Non-refundable fare"}
+                {offer.conditions?.changeable && " · Changeable"}
+              </p>
+              <p className="text-muted-foreground mt-0.5">
+                {offer.conditions?.refundable
+                  ? `Refund available${offer.conditions.refundPenalty ? ` (${offer.currency || "USD"} ${offer.conditions.refundPenalty} penalty)` : ""}`
+                  : "24-hour free cancellation may apply for US departures (DOT regulation)"}
+                {offer.conditions?.changeable && offer.conditions.changePenalty
+                  ? ` · Change fee: ${offer.currency || "USD"} ${offer.conditions.changePenalty}`
+                  : ""}
+              </p>
+            </div>
+          </div>
+
+          {/* Baggage summary */}
+          <div
+            className="flex items-start gap-2.5 p-3 rounded-xl"
+            style={{
+              background: "hsl(var(--muted) / 0.3)",
+              border: "1px solid hsl(var(--border) / 0.3)",
+            }}
+          >
+            <Luggage className="w-3.5 h-3.5 text-[hsl(var(--flights))] mt-0.5 shrink-0" />
+            <div className="text-[10px]">
+              <p className="font-semibold text-foreground">Baggage included</p>
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5 text-muted-foreground">
+                {offer.baggageDetails?.carryOnIncluded && (
+                  <span className="flex items-center gap-1">
+                    <PackageCheck className="w-2.5 h-2.5" />
+                    {offer.baggageDetails.carryOnQuantity}× carry-on
+                    {offer.baggageDetails.carryOnWeightKg ? ` (${offer.baggageDetails.carryOnWeightKg}kg)` : ""}
+                  </span>
+                )}
+                {offer.baggageDetails?.checkedBagsIncluded ? (
+                  <span className="flex items-center gap-1">
+                    <Luggage className="w-2.5 h-2.5" />
+                    {offer.baggageDetails.checkedBagQuantity}× checked bag
+                    {offer.baggageDetails.checkedBagWeightKg ? ` (${offer.baggageDetails.checkedBagWeightKg}kg)` : ""}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground/60">No checked bag</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Partner disclosure — 3D elevated */}
         <div
           className="relative flex items-start gap-3 p-3.5 rounded-2xl overflow-hidden"
@@ -523,7 +587,6 @@ const FlightTravelerInfo = () => {
             boxShadow: "0 4px 16px -4px hsl(var(--flights) / 0.08), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
           }}
         >
-          {/* Subtle side glow */}
           <div
             className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl"
             style={{ background: "linear-gradient(180deg, hsl(var(--flights)), hsl(var(--flights) / 0.3))" }}
@@ -533,6 +596,15 @@ const FlightTravelerInfo = () => {
             <p className="font-semibold text-foreground mb-0.5">Secure booking</p>
             <p>{FLIGHT_DISCLAIMERS.ticketing}</p>
           </div>
+        </div>
+
+        {/* Fare lock note */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "hsl(var(--muted) / 0.2)" }}>
+          <Clock className="w-3 h-3 text-[hsl(var(--flights))] shrink-0" />
+          <p className="text-[9px] text-muted-foreground">
+            <span className="font-semibold text-foreground">Price held during checkout.</span>{" "}
+            Final price confirmed by the travel partner at payment.
+          </p>
         </div>
 
         {/* Trust signals — 3D chips */}
@@ -556,18 +628,22 @@ const FlightTravelerInfo = () => {
           ))}
         </div>
 
-        {/* Legal links */}
+        {/* Legal links — tappable */}
         <p className="text-[9px] text-center text-muted-foreground/60">
           By continuing, you agree to our{" "}
-          <Link to="/terms" className="hover:underline">Terms</Link>,{" "}
-          <Link to="/privacy" className="hover:underline">Privacy</Link>, and{" "}
-          <Link to="/partner-disclosure" className="hover:underline">Partner Disclosure</Link>
+          <Link to="/terms-of-service" className="text-[hsl(var(--flights))]/70 hover:underline">Terms</Link>,{" "}
+          <Link to="/privacy-policy" className="text-[hsl(var(--flights))]/70 hover:underline">Privacy</Link>, and{" "}
+          <Link to="/partner-disclosure" className="text-[hsl(var(--flights))]/70 hover:underline">Partner Disclosure</Link>
         </p>
       </motion.div>
     </div>
   );
 
-  /* Sticky bottom CTA — 3D elevated */
+  /* Sticky bottom CTA — 3D elevated with price breakdown */
+  const basePrice = Math.round(offer.price * totalPassengers * 0.85);
+  const taxesFees = Math.round(offer.price * totalPassengers) - basePrice;
+  const totalPrice = Math.round(offer.price * totalPassengers);
+
   const stickyCTA = (
     <div
       className="fixed bottom-0 left-0 right-0 z-30 safe-area-bottom"
@@ -578,37 +654,74 @@ const FlightTravelerInfo = () => {
         boxShadow: "0 -8px 32px -8px hsl(var(--flights) / 0.1), 0 -2px 8px hsl(var(--foreground) / 0.04)",
       }}
     >
-      <div className={cn("mx-auto px-4 py-3 flex items-center justify-between gap-3", isMobile ? "max-w-lg" : "max-w-2xl")}>
-        <div>
-          <p className="text-[9px] text-muted-foreground font-medium">Total</p>
-          <p className="text-xl font-bold text-[hsl(var(--flights))] tabular-nums leading-tight tracking-tight">
-            ${Math.round(offer.price * totalPassengers).toLocaleString()}
-          </p>
-          <p className="text-[9px] text-muted-foreground">
-            {totalPassengers} traveler{totalPassengers > 1 ? "s" : ""} · {offer.currency || "USD"}
-          </p>
-        </div>
-        <motion.div whileTap={{ scale: 0.96 }}>
-          <Button
-            size="lg"
-            onClick={handleContinue}
-            className="relative h-12 px-7 text-sm font-bold rounded-2xl text-primary-foreground gap-1.5 overflow-hidden"
-            style={{
-              background: "hsl(var(--flights))",
-              boxShadow: "0 8px 24px -4px hsl(var(--flights) / 0.4), 0 2px 8px hsl(var(--flights) / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.2)",
-            }}
-          >
-            {/* Shine sweep */}
-            <div
-              className="absolute inset-0 pointer-events-none"
+      {/* Flight reminder strip */}
+      <div className="border-b border-border/10 px-4 py-1.5" style={{ background: "hsl(var(--muted) / 0.15)" }}>
+        <p className="text-[9px] text-muted-foreground text-center truncate">
+          <Plane className="w-2.5 h-2.5 inline mr-1 -mt-px" />
+          {offer.airline} · {offer.departure.code} → {offer.arrival.code} · {offer.departure.time} – {offer.arrival.time}
+        </p>
+      </div>
+
+      <div className={cn("mx-auto px-4 py-3", isMobile ? "max-w-lg" : "max-w-2xl")}>
+        {/* Expandable price breakdown */}
+        <AnimatePresence>
+          {showBreakdown && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-1 mb-2.5 pb-2.5 border-b border-border/20">
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-muted-foreground">Base fare × {totalPassengers}</span>
+                  <span className="text-foreground tabular-nums">${basePrice.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-muted-foreground">Taxes & fees</span>
+                  <span className="text-foreground tabular-nums">${taxesFees.toLocaleString()}</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex items-center justify-between gap-3">
+          <button onClick={() => setShowBreakdown(!showBreakdown)} className="text-left active:scale-[0.98] transition-transform">
+            <p className="text-[9px] text-muted-foreground font-medium flex items-center gap-0.5">
+              Total
+              <ChevronDown className={cn("w-2.5 h-2.5 transition-transform", showBreakdown && "rotate-180")} />
+            </p>
+            <p className="text-xl font-bold text-[hsl(var(--flights))] tabular-nums leading-tight tracking-tight">
+              ${totalPrice.toLocaleString()}
+            </p>
+            <p className="text-[9px] text-muted-foreground">
+              {totalPassengers} traveler{totalPassengers > 1 ? "s" : ""} · {offer.currency || "USD"}
+            </p>
+          </button>
+          <motion.div whileTap={{ scale: 0.96 }}>
+            <Button
+              size="lg"
+              onClick={handleContinue}
+              className="relative h-12 px-7 text-sm font-bold rounded-2xl text-primary-foreground gap-1.5 overflow-hidden"
               style={{
-                background: "linear-gradient(105deg, transparent 40%, hsl(0 0% 100% / 0.12) 50%, transparent 60%)",
+                background: "hsl(var(--flights))",
+                boxShadow: "0 8px 24px -4px hsl(var(--flights) / 0.4), 0 2px 8px hsl(var(--flights) / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.2)",
               }}
-            />
-            <span className="relative z-10">Continue to Checkout</span>
-            <ChevronRight className="w-4 h-4 relative z-10" />
-          </Button>
-        </motion.div>
+            >
+              {/* Shine sweep */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: "linear-gradient(105deg, transparent 40%, hsl(0 0% 100% / 0.12) 50%, transparent 60%)",
+                }}
+              />
+              <span className="relative z-10">Continue to Checkout</span>
+              <ChevronRight className="w-4 h-4 relative z-10" />
+            </Button>
+          </motion.div>
+        </div>
       </div>
     </div>
   );
