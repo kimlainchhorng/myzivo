@@ -729,44 +729,59 @@ const FlightResults = () => {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="flex items-center justify-between mb-2.5 gap-2 -mx-3 sm:mx-0 px-3 sm:px-0"
+              className="mb-2.5 -mx-3 sm:mx-0 px-3 sm:px-0 space-y-2"
             >
-              <div className="flex gap-0.5 p-0.5 bg-muted/40 backdrop-blur-sm rounded-lg border border-border/20 overflow-x-auto no-scrollbar">
-                {([
-                  { key: "best" as SortBy, label: "✨ Best" },
-                  { key: "cheapest" as SortBy, label: "💰 Cheapest" },
-                  { key: "fastest" as SortBy, label: "⚡ Fastest" },
-                ]).map(s => (
-                  <button
-                    key={s.key}
-                    onClick={() => setSortBy(s.key)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all whitespace-nowrap",
-                      sortBy === s.key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
+              {/* Sort tabs + Filter */}
+              <div
+                className="flex items-center justify-between gap-2 p-1 rounded-xl"
+                style={{
+                  background: "hsl(var(--card))",
+                  boxShadow: "0 1px 0 0 hsl(var(--border)/0.1), 0 2px 8px -2px hsl(var(--foreground)/0.05), inset 0 1px 0 0 hsl(0 0% 100%/0.04)",
+                }}
+              >
+                <div className="flex gap-0.5 flex-1">
+                  {([
+                    { key: "best" as SortBy, label: "Best", emoji: "✨" },
+                    { key: "cheapest" as SortBy, label: "Cheapest", emoji: "🔥" },
+                    { key: "fastest" as SortBy, label: "Fastest", emoji: "⚡" },
+                  ]).map(s => (
+                    <button
+                      key={s.key}
+                      onClick={() => setSortBy(s.key)}
+                      className={cn(
+                        "flex-1 px-2.5 py-2 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap active:scale-[0.97]",
+                        sortBy === s.key
+                          ? "bg-[hsl(var(--flights)/0.1)] text-[hsl(var(--flights))] shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                      )}
+                      style={sortBy === s.key ? {
+                        boxShadow: "0 1px 4px -1px hsl(var(--flights)/0.15), inset 0 1px 0 0 hsl(0 0% 100%/0.06)",
+                      } : undefined}
+                    >
+                      <span className="mr-1">{s.emoji}</span>{s.label}
+                    </button>
+                  ))}
+                </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground tabular-nums hidden sm:inline">
-                  {filtered.length} flight{filtered.length !== 1 ? "s" : ""}
-                </span>
-
-                {/* Mobile filter button + sheet */}
+                {/* Filter button */}
                 <Sheet open={sheetOpen} onOpenChange={(open) => { if (open) handleOpenSheet(); else setSheetOpen(false); }}>
                   <SheetTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-1 border-border/40 relative h-7 px-2.5 text-[11px] sm:hidden">
-                      <Filter className="w-3 h-3" />
+                    <button
+                      className={cn(
+                        "flex items-center gap-1 px-3 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-[0.97] relative",
+                        activeFilterCount > 0
+                          ? "bg-[hsl(var(--flights)/0.1)] text-[hsl(var(--flights))]"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                      )}
+                    >
+                      <Filter className="w-3.5 h-3.5" />
                       Filter
                       {activeFilterCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[hsl(var(--flights))] text-[9px] text-primary-foreground font-bold flex items-center justify-center">
+                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[hsl(var(--flights))] text-[8px] text-primary-foreground font-bold flex items-center justify-center shadow-sm">
                           {activeFilterCount}
                         </span>
                       )}
-                    </Button>
+                    </button>
                   </SheetTrigger>
                   <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] flex flex-col p-0">
                     <SheetHeader className="px-4 pt-4 pb-2 border-b border-border/30 shrink-0">
@@ -791,38 +806,43 @@ const FlightResults = () => {
                   </SheetContent>
                 </Sheet>
               </div>
-            </motion.div>
-          )}
 
-          {/* Airline quick-filter chips with logos (mobile) */}
-          {availableAirlines.length > 1 && offers.length > 0 && (
-            <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-2 -mx-3 px-3 sm:hidden">
-              {availableAirlines.slice(0, 6).map(al => {
-                const isActive = filters.airlines.includes(al.code);
-                return (
-                  <button
-                    key={al.code}
-                    onClick={() => {
-                      setFilters(prev => {
-                        const arr = prev.airlines;
-                        const next = arr.includes(al.code) ? arr.filter(c => c !== al.code) : [...arr, al.code];
-                        return { ...prev, airlines: next };
-                      });
-                    }}
-                    className={cn(
-                      "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-semibold whitespace-nowrap shrink-0 transition-all active:scale-95",
-                      isActive
-                        ? "bg-[hsl(var(--flights))]/10 border-[hsl(var(--flights))]/40 text-[hsl(var(--flights))]"
-                        : "bg-card border-border/30 text-muted-foreground hover:border-[hsl(var(--flights))]/30"
-                    )}
-                  >
-                    <AirlineLogo iataCode={al.code} airlineName={al.name} size={18} className="shrink-0 rounded" />
-                    {al.name.split(" ")[0]}
-                    <span className="text-[9px] text-muted-foreground/70">({al.count})</span>
-                  </button>
-                );
-              })}
-            </div>
+              {/* Airline quick-filter chips */}
+              {availableAirlines.length > 1 && (
+                <div className="flex gap-1.5 overflow-x-auto no-scrollbar sm:hidden">
+                  {availableAirlines.slice(0, 6).map(al => {
+                    const isActive = filters.airlines.includes(al.code);
+                    return (
+                      <button
+                        key={al.code}
+                        onClick={() => {
+                          setFilters(prev => {
+                            const arr = prev.airlines;
+                            const next = arr.includes(al.code) ? arr.filter(c => c !== al.code) : [...arr, al.code];
+                            return { ...prev, airlines: next };
+                          });
+                        }}
+                        className={cn(
+                          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-semibold whitespace-nowrap shrink-0 transition-all active:scale-95",
+                          isActive
+                            ? "bg-[hsl(var(--flights)/0.1)] border-[hsl(var(--flights)/0.4)] text-[hsl(var(--flights))]"
+                            : "bg-card border-border/20 text-muted-foreground hover:border-[hsl(var(--flights)/0.3)]"
+                        )}
+                        style={{
+                          boxShadow: isActive
+                            ? "0 1px 4px -1px hsl(var(--flights)/0.12)"
+                            : "0 1px 3px -1px hsl(var(--foreground)/0.04)",
+                        }}
+                      >
+                        <AirlineLogo iataCode={al.code} airlineName={al.name} size={18} className="shrink-0 rounded" />
+                        {al.name.split(" ")[0]}
+                        <span className="text-[9px] opacity-50">({al.count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
           )}
 
           {/* Active filter chips */}
