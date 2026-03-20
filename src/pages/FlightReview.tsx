@@ -1,11 +1,15 @@
 /**
  * Flight Review Page — /flights/details/review
- * Premium 3D review experience before proceeding to passenger info
+ * Complete booking flow review with step indicator, trip details, fare rules
  */
 
 import { useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Plane, Clock, MapPin, Luggage, ShieldCheck, AlertTriangle, ChevronRight, Briefcase, Info, ArrowRight, Sparkles } from "lucide-react";
+import {
+  ArrowLeft, Plane, Clock, Luggage, ShieldCheck, AlertTriangle,
+  ChevronRight, Briefcase, Info, ArrowRight, Sparkles, Check,
+  Users, Calendar, ArrowRightLeft, MapPin, Timer, Globe, Ticket
+} from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -18,6 +22,64 @@ import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import BoardingPass3D from "@/components/flight/BoardingPass3D";
 import { cn } from "@/lib/utils";
+
+/* ── Step Indicator ─────────────────────────────────── */
+const steps = [
+  { label: "Search", icon: Globe },
+  { label: "Results", icon: Ticket },
+  { label: "Review", icon: Info },
+  { label: "Travelers", icon: Users },
+  { label: "Checkout", icon: Check },
+];
+
+function StepIndicator({ current }: { current: number }) {
+  return (
+    <div className="flex items-center justify-center gap-0 w-full overflow-x-auto py-3 px-1">
+      {steps.map((step, i) => {
+        const Icon = step.icon;
+        const isDone = i < current;
+        const isActive = i === current;
+        return (
+          <div key={step.label} className="flex items-center">
+            <div className="flex flex-col items-center gap-1 min-w-[52px]">
+              <div className={cn(
+                "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all border-2",
+                isDone && "bg-[hsl(var(--flights))] border-[hsl(var(--flights))] text-white",
+                isActive && "bg-[hsl(var(--flights))]/15 border-[hsl(var(--flights))] text-[hsl(var(--flights))]",
+                !isDone && !isActive && "bg-muted border-border/40 text-muted-foreground"
+              )}>
+                {isDone ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3 h-3" />}
+              </div>
+              <span className={cn(
+                "text-[9px] font-semibold",
+                isActive ? "text-[hsl(var(--flights))]" : isDone ? "text-foreground" : "text-muted-foreground"
+              )}>
+                {step.label}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <div className={cn(
+                "w-6 sm:w-8 h-[2px] rounded-full -mt-3",
+                i < current ? "bg-[hsl(var(--flights))]" : "bg-border/40"
+              )} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Layover calculator ──────────────────────────────── */
+function calcLayover(prev: DuffelSegment, next: DuffelSegment): string {
+  try {
+    const ms = new Date(next.departingAt).getTime() - new Date(prev.arrivingAt).getTime();
+    if (ms <= 0) return "";
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    return `${h}h ${m}m`;
+  } catch { return ""; }
+}
 
 const FlightReview = () => {
   const navigate = useNavigate();
@@ -47,66 +109,62 @@ const FlightReview = () => {
       return { outboundSegments: segments, returnSegments: [] as DuffelSegment[] };
     }
     const destCode = (searchParams.destination || offer?.arrival?.code || "").toUpperCase();
-    
+
     let splitIdx = -1;
     for (let i = 1; i < segments.length; i++) {
-      const segOrigin = segments[i].origin.code.toUpperCase();
-      if (segOrigin === destCode) {
+      if (segments[i].origin.code.toUpperCase() === destCode) {
         splitIdx = i;
         break;
       }
     }
-    
+
     if (splitIdx === -1 && searchParams.returnDate) {
       const returnDate = new Date(searchParams.returnDate + "T00:00:00").getTime();
       for (let i = 1; i < segments.length; i++) {
-        const segDate = new Date(segments[i].departingAt).getTime();
-        if (segDate >= returnDate) {
+        if (new Date(segments[i].departingAt).getTime() >= returnDate) {
           splitIdx = i;
           break;
         }
       }
     }
-    
+
     if (splitIdx === -1) {
       return { outboundSegments: segments, returnSegments: [] as DuffelSegment[] };
     }
-    
+
     return {
       outboundSegments: segments.slice(0, splitIdx),
       returnSegments: segments.slice(splitIdx),
     };
   }, [segments, isRoundTrip, searchParams]);
 
-  // Helper to get first/last info from a segment list
   const getSliceInfo = (segs: DuffelSegment[]) => {
     if (!segs.length) return null;
     const first = segs[0];
     const last = segs[segs.length - 1];
-    const formatTimeLocal = (dateStr: string) => {
-      try { return new Date(dateStr).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return ""; }
+    const fmt = (d: string) => {
+      try { return new Date(d).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return ""; }
     };
-    const depTime = formatTimeLocal(first.departingAt);
-    const arrTime = formatTimeLocal(last.arrivingAt);
-    const depCode = first.origin.code;
-    const arrCode = last.destination.code;
-    const depCity = first.origin.city;
-    const arrCity = last.destination.city;
-    const stops = segs.length - 1;
     const totalMs = new Date(last.arrivingAt).getTime() - new Date(first.departingAt).getTime();
     const totalH = Math.floor(totalMs / 3600000);
     const totalM = Math.floor((totalMs % 3600000) / 60000);
-    const duration = `${totalH}h ${totalM}m`;
-    return { depTime, arrTime, depCode, arrCode, depCity, arrCity, stops, duration, depDate: first.departingAt };
+    const stopCities = segs.slice(1).map(s => s.origin.code);
+    return {
+      depTime: fmt(first.departingAt), arrTime: fmt(last.arrivingAt),
+      depCode: first.origin.code, arrCode: last.destination.code,
+      depCity: first.origin.city, arrCity: last.destination.city,
+      stops: segs.length - 1, duration: `${totalH}h ${totalM}m`,
+      depDate: first.departingAt, arrDate: last.arrivingAt,
+      stopCities,
+      carriers: [...new Set(segs.map(s => s.operatingCarrier || s.marketingCarrier))],
+      carrierCodes: [...new Set(segs.map(s => s.operatingCarrierCode || s.marketingCarrierCode))],
+    };
   };
 
-  // Build carrier info (before early return to avoid hook issues)
   const carrierNames = (() => {
     if (!offer?.carriers?.length) return offer?.airline || "";
-    const unique = [...new Set(offer.carriers.map((c: any) => c.name))];
-    return unique.join(" + ");
+    return [...new Set(offer.carriers.map((c: any) => c.name))].join(" + ");
   })();
-
   const carrierCodes = (() => {
     if (!offer?.carriers?.length) return [offer?.airlineCode || ""];
     return [...new Set(offer.carriers.map((c: any) => c.code))];
@@ -133,30 +191,214 @@ const FlightReview = () => {
     );
   }
 
-  const handleContinue = () => {
-    navigate("/flights/traveler-info");
-  };
-
-  const handleBack = () => {
-    navigate(-1);
-  };
+  const handleContinue = () => navigate("/flights/traveler-info");
+  const handleBack = () => navigate(-1);
 
   const formatDate = (dateStr: string) => {
     try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+      return new Date(dateStr).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
     } catch { return dateStr; }
   };
-
+  const formatDateShort = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    } catch { return dateStr; }
+  };
   const formatTime = (dateStr: string) => {
     try {
-      const d = new Date(dateStr);
-      return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+      return new Date(dateStr).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
     } catch { return ""; }
   };
 
   const returnInfo = getSliceInfo(returnSegments);
   const outboundInfo = getSliceInfo(outboundSegments);
+
+  /* ── Slice overview card reusable ────────────────── */
+  const SliceCard = ({ info, label, rotate, segs }: {
+    info: NonNullable<ReturnType<typeof getSliceInfo>>;
+    label: string;
+    rotate?: boolean;
+    segs: DuffelSegment[];
+  }) => (
+    <div>
+      {/* Label */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-6 h-6 rounded-lg bg-[hsl(var(--flights))]/10 flex items-center justify-center">
+          <Plane className={cn("w-3.5 h-3.5 text-[hsl(var(--flights))]", rotate && "rotate-180")} />
+        </div>
+        <p className="text-xs font-bold text-[hsl(var(--flights))] uppercase tracking-wider">{label}</p>
+        <Badge variant="secondary" className="text-[8px] ml-auto px-1.5 py-0 h-4">
+          {formatDateShort(info.depDate)}
+        </Badge>
+      </div>
+
+      <Card className="border-[hsl(var(--flights))]/25 shadow-md shadow-[hsl(var(--flights))]/8 overflow-hidden relative">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[hsl(var(--flights))] to-transparent" />
+
+        {/* Carrier strip */}
+        <div className="bg-gradient-to-r from-[hsl(var(--flights))]/10 via-[hsl(var(--flights))]/5 to-[hsl(var(--flights))]/10 px-4 py-2.5 flex items-center gap-3 border-b border-[hsl(var(--flights))]/10">
+          <div className="flex items-center -space-x-2">
+            {info.carrierCodes.slice(0, 2).map((code, ci) => (
+              <AirlineLogo
+                key={code + ci}
+                iataCode={code}
+                airlineName={info.carriers[ci] || ""}
+                size={ci === 0 ? 36 : 28}
+                className={cn(
+                  "border border-border/20 bg-card shadow-sm",
+                  ci > 0 && "relative z-10"
+                )}
+              />
+            ))}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-bold truncate">{info.carriers.join(" + ")}</p>
+            <p className="text-[9px] text-muted-foreground">{segs[0].flightNumber}</p>
+          </div>
+          <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
+            <Timer className="w-3 h-3" />
+            <span className="font-semibold">{info.duration}</span>
+          </div>
+        </div>
+
+        <CardContent className="p-4 space-y-3">
+          {/* Route timeline */}
+          <div className="flex items-center gap-2">
+            <div className="text-left shrink-0">
+              <p className="text-[26px] sm:text-3xl font-extrabold tabular-nums leading-none tracking-tight">{info.depTime}</p>
+              <p className="text-xs text-[hsl(var(--flights))] font-bold mt-1">{info.depCode}</p>
+              <p className="text-[10px] text-muted-foreground">{info.depCity}</p>
+            </div>
+
+            <div className="flex flex-col items-center flex-1 min-w-0 px-1">
+              <div className="w-full h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--flights))]/30 to-[hsl(var(--flights))] relative rounded-full">
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm" />
+                {info.stops > 0 && Array.from({ length: Math.min(info.stops, 3) }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-muted-foreground/40 border-2 border-card"
+                    style={{ left: `${((i + 1) / (Math.min(info.stops, 3) + 1)) * 100}%` }}
+                  />
+                ))}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm" />
+              </div>
+              <span className={cn(
+                "text-[10px] font-bold mt-1.5",
+                info.stops === 0 ? "text-primary" : "text-[hsl(var(--flights))]"
+              )}>
+                {info.stops === 0 ? "Nonstop" : `${info.stops} stop${info.stops > 1 ? "s" : ""}`}
+              </span>
+              {info.stopCities.length > 0 && (
+                <span className="text-[9px] text-muted-foreground mt-0.5">
+                  via {info.stopCities.join(", ")}
+                </span>
+              )}
+            </div>
+
+            <div className="text-right shrink-0">
+              <p className="text-[26px] sm:text-3xl font-extrabold tabular-nums leading-none tracking-tight">{info.arrTime}</p>
+              <p className="text-xs text-[hsl(var(--flights))] font-bold mt-1">{info.arrCode}</p>
+              <p className="text-[10px] text-muted-foreground">{info.arrCity}</p>
+            </div>
+          </div>
+
+          {/* Date + terminal info */}
+          <div className="flex justify-between text-[10px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2 border border-border/20">
+            <span className="font-medium flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              {formatDate(info.depDate)}
+            </span>
+            {segs[0].origin.terminal && <span>Terminal {segs[0].origin.terminal}</span>}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  /* ── Segment detail card reusable ─────────────────── */
+  const SegmentDetails = ({ segs, label, rotate }: { segs: DuffelSegment[]; label: string; rotate?: boolean }) => (
+    <Card className="border-border/30 overflow-hidden">
+      <div className="px-4 py-2.5 bg-muted/30 border-b border-border/20 flex items-center gap-2">
+        <div className="w-5 h-5 rounded-md bg-[hsl(var(--flights))]/10 flex items-center justify-center">
+          <Plane className={cn("w-3 h-3 text-[hsl(var(--flights))]", rotate && "rotate-180")} />
+        </div>
+        <p className="text-xs font-bold tracking-wide">{label}</p>
+        <Badge variant="secondary" className="text-[8px] ml-auto px-1.5 py-0">{segs.length} leg{segs.length > 1 ? "s" : ""}</Badge>
+      </div>
+      <CardContent className="p-0">
+        {segs.map((seg, i) => (
+          <div key={seg.id || i}>
+            {i > 0 && (
+              <div className="flex items-center gap-2.5 px-4 py-2.5 bg-accent/30 border-y border-dashed border-border/30">
+                <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center">
+                  <Clock className="w-3 h-3 text-accent-foreground" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold text-foreground">
+                    Layover in {seg.origin.city} ({seg.origin.code})
+                  </p>
+                  <p className="text-[9px] text-muted-foreground">
+                    {calcLayover(segs[i - 1], seg)} · {seg.origin.name}
+                  </p>
+                </div>
+              </div>
+            )}
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-2.5 mb-2.5">
+                <AirlineLogo
+                  iataCode={seg.operatingCarrierCode || seg.marketingCarrierCode}
+                  airlineName={seg.operatingCarrier || seg.marketingCarrier}
+                  size={28}
+                  className="border border-border/20 bg-card shadow-sm"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-bold truncate">
+                    {seg.operatingCarrier || seg.marketingCarrier} · {seg.flightNumber}
+                  </p>
+                  <p className="text-[9px] text-muted-foreground flex items-center gap-1 flex-wrap">
+                    {seg.aircraft && <span>{seg.aircraft}</span>}
+                    {seg.aircraft && seg.cabinClass && <span>·</span>}
+                    {seg.cabinClass && <span className="capitalize">{seg.cabinClass.replace("_", " ")}</span>}
+                  </p>
+                </div>
+                {seg.duration && (
+                  <Badge variant="outline" className="text-[9px] font-semibold gap-0.5 px-2 py-0.5 border-border/30 shrink-0">
+                    <Clock className="w-2.5 h-2.5" />
+                    {seg.duration}
+                  </Badge>
+                )}
+              </div>
+              <div className="ml-3.5 pl-5 relative">
+                <div className="absolute left-0 top-2 bottom-2 w-[2px] bg-gradient-to-b from-[hsl(var(--flights))] via-[hsl(var(--flights))]/30 to-[hsl(var(--flights))]" />
+                <div className="flex items-start gap-3 relative pb-4">
+                  <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm z-10" />
+                  <div>
+                    <p className="text-sm font-bold tabular-nums leading-none">{formatTime(seg.departingAt)}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {seg.origin.code} · {seg.origin.city}
+                      {seg.origin.terminal && <span className="text-muted-foreground/60"> · T{seg.origin.terminal}</span>}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground/60">{formatDateShort(seg.departingAt)}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 relative">
+                  <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm z-10" />
+                  <div>
+                    <p className="text-sm font-bold tabular-nums leading-none">{formatTime(seg.arrivingAt)}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {seg.destination.code} · {seg.destination.city}
+                      {seg.destination.terminal && <span className="text-muted-foreground/60"> · T{seg.destination.terminal}</span>}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground/60">{formatDateShort(seg.arrivingAt)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="min-h-[100dvh] bg-background relative overflow-hidden flex flex-col">
@@ -173,19 +415,36 @@ const FlightReview = () => {
 
       <Header />
 
-      <main className="flex-1 pt-14 pb-28 sm:pb-20 relative z-10">
+      <main className="flex-1 pt-14 pb-32 sm:pb-20 relative z-10">
         <div className="mx-auto px-3 sm:px-4 max-w-2xl">
 
-          {/* Back button */}
+          {/* Step progress indicator */}
+          <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
+            <StepIndicator current={2} />
+          </motion.div>
+
+          {/* Back button + trip badge */}
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            className="mb-3"
+            className="mb-3 flex items-center justify-between"
           >
             <Button variant="ghost" size="sm" onClick={handleBack} className="gap-1.5 text-muted-foreground -ml-2 h-8 text-xs">
               <ArrowLeft className="w-3.5 h-3.5" />
               Back to results
             </Button>
+            <div className="flex items-center gap-2">
+              {isRoundTrip && (
+                <Badge className="text-[9px] font-bold bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border border-[hsl(var(--flights))]/20 gap-1 px-2 py-0.5">
+                  <ArrowRightLeft className="w-3 h-3" />
+                  Round trip
+                </Badge>
+              )}
+              <Badge variant="outline" className="text-[9px] font-bold gap-1 px-2 py-0.5 border-border/40">
+                <Users className="w-3 h-3" />
+                {totalPassengers} traveler{totalPassengers > 1 ? "s" : ""}
+              </Badge>
+            </div>
           </motion.div>
 
           {/* Page title */}
@@ -197,122 +456,26 @@ const FlightReview = () => {
           >
             <h1 className="text-xl sm:text-2xl font-bold">Review your flight</h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Confirm details before continuing to passenger information
+              Confirm all details before continuing to passenger information
             </p>
           </motion.div>
 
-          {/* ============================================ */}
-          {/* OUTBOUND FLIGHT — label + overview card      */}
-          {/* ============================================ */}
-          {isRoundTrip && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-2">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-md bg-[hsl(var(--flights))]/10 flex items-center justify-center">
-                  <Plane className="w-3 h-3 text-[hsl(var(--flights))]" />
-                </div>
-                <p className="text-xs font-bold text-[hsl(var(--flights))] uppercase tracking-wider">Outbound Flight</p>
-              </div>
+          {/* ── OUTBOUND OVERVIEW CARD ───────────────── */}
+          {outboundInfo && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <SliceCard
+                info={outboundInfo}
+                label={isRoundTrip ? "Outbound Flight" : "Your Flight"}
+                segs={outboundSegments}
+              />
             </motion.div>
           )}
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="border-[hsl(var(--flights))]/25 shadow-md shadow-[hsl(var(--flights))]/8 overflow-hidden relative">
-              {/* Gradient glow top edge */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[hsl(var(--flights))] to-transparent" />
-              
-              {/* Header strip — multi-carrier aware */}
-              <div className="bg-gradient-to-r from-[hsl(var(--flights))]/10 via-[hsl(var(--flights))]/6 to-[hsl(var(--flights))]/10 px-4 py-3 flex items-center gap-3 border-b border-[hsl(var(--flights))]/10">
-                {/* Stacked airline logos */}
-                <div className="relative shrink-0" style={{ width: carrierCodes.length > 1 ? 52 : 40 }}>
-                  <AirlineLogo
-                    iataCode={carrierCodes[0]}
-                    airlineName={offer.airline}
-                    size={40}
-                    className="border border-border/20 bg-card shadow-sm"
-                  />
-                  {carrierCodes.length > 1 && (
-                    <AirlineLogo
-                      iataCode={carrierCodes[1]}
-                      airlineName={offer.carriers?.[1]?.name || ""}
-                      size={28}
-                      className="absolute -bottom-0.5 -right-0.5 border-2 border-card bg-card shadow-sm"
-                    />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold truncate">{carrierNames}</p>
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-[10px] text-muted-foreground font-medium">{offer.flightNumber}</p>
-                    {offer.operatedBy && (
-                      <p className="text-[9px] text-muted-foreground/70 truncate">· Operated by {offer.operatedBy}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
-                  {offer.isRefundable && (
-                    <Badge className="text-[8px] font-semibold bg-primary/10 text-primary border border-primary/20 gap-0.5 px-1.5 py-0.5">
-                      <ShieldCheck className="w-2.5 h-2.5" />
-                      Refundable
-                    </Badge>
-                  )}
-                </div>
-              </div>
-
-              <CardContent className="p-4 space-y-3">
-                {/* Route summary */}
-                <div className="flex items-center gap-2">
-                  <div className="text-left shrink-0">
-                    <p className="text-[26px] sm:text-3xl font-extrabold tabular-nums leading-none tracking-tight">{offer.departure.time}</p>
-                    <p className="text-xs text-[hsl(var(--flights))] font-bold mt-1">{offer.departure.code}</p>
-                    <p className="text-[10px] text-muted-foreground">{offer.departure.city}</p>
-                  </div>
-
-                  <div className="flex flex-col items-center flex-1 min-w-0 px-1">
-                    <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1 mb-1.5">
-                      <Clock className="w-3 h-3" />
-                      {outboundInfo?.duration || offer.duration}
-                    </span>
-                    <div className="w-full h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--flights))]/30 to-[hsl(var(--flights))] relative rounded-full">
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm shadow-[hsl(var(--flights))]/30" />
-                      {(outboundInfo ? outboundInfo.stops : offer.stops) > 0 && Array.from({ length: Math.min(outboundInfo?.stops || offer.stops, 3) }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-muted-foreground/40 border-2 border-card"
-                          style={{ left: `${((i + 1) / (Math.min(outboundInfo?.stops || offer.stops, 3) + 1)) * 100}%` }}
-                        />
-                      ))}
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm shadow-[hsl(var(--flights))]/30" />
-                    </div>
-                    <span className={cn(
-                      "text-[10px] font-bold mt-1.5",
-                      (outboundInfo?.stops || offer.stops) === 0 ? "text-primary" : "text-[hsl(var(--flights))]"
-                    )}>
-                      {(outboundInfo?.stops || offer.stops) === 0 ? "Nonstop" : `${outboundInfo?.stops || offer.stops} stop${(outboundInfo?.stops || offer.stops) > 1 ? "s" : ""}`}
-                    </span>
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    <p className="text-[26px] sm:text-3xl font-extrabold tabular-nums leading-none tracking-tight">{outboundInfo?.arrTime || offer.arrival.time}</p>
-                    <p className="text-xs text-[hsl(var(--flights))] font-bold mt-1">{outboundInfo?.arrCode || offer.arrival.code}</p>
-                    <p className="text-[10px] text-muted-foreground">{outboundInfo?.arrCity || offer.arrival.city}</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-between text-[11px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2 border border-border/20">
-                  <span className="font-medium">{formatDate(offer.departure.date)}</span>
-                  {offer.departure.terminal && <span>Terminal {offer.departure.terminal}</span>}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* ============================================ */}
-          {/* RETURN FLIGHT OVERVIEW CARD                  */}
-          {/* ============================================ */}
+          {/* ── RETURN OVERVIEW CARD ─────────────────── */}
           {returnInfo && returnSegments.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
@@ -320,84 +483,16 @@ const FlightReview = () => {
               transition={{ delay: 0.13 }}
               className="mt-4"
             >
-              {/* Return label */}
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-5 h-5 rounded-md bg-[hsl(var(--flights))]/10 flex items-center justify-center">
-                  <Plane className="w-3 h-3 text-[hsl(var(--flights))] rotate-180" />
-                </div>
-                <p className="text-xs font-bold text-[hsl(var(--flights))] uppercase tracking-wider">Return Flight</p>
-              </div>
-
-              <Card className="border-[hsl(var(--flights))]/25 shadow-md shadow-[hsl(var(--flights))]/8 overflow-hidden relative">
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[hsl(var(--flights))] to-transparent" />
-
-                <div className="bg-gradient-to-r from-[hsl(var(--flights))]/10 via-[hsl(var(--flights))]/6 to-[hsl(var(--flights))]/10 px-4 py-3 flex items-center gap-3 border-b border-[hsl(var(--flights))]/10">
-                  <div className="relative shrink-0" style={{ width: 40 }}>
-                    <AirlineLogo
-                      iataCode={returnSegments[0].operatingCarrierCode || returnSegments[0].marketingCarrierCode}
-                      airlineName={returnSegments[0].operatingCarrier || returnSegments[0].marketingCarrier}
-                      size={40}
-                      className="border border-border/20 bg-card shadow-sm"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold truncate">
-                      {[...new Set(returnSegments.map(s => s.operatingCarrier || s.marketingCarrier))].join(" + ")}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground font-medium">{returnSegments[0].flightNumber}</p>
-                  </div>
-                </div>
-
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="text-left shrink-0">
-                      <p className="text-[26px] sm:text-3xl font-extrabold tabular-nums leading-none tracking-tight">{returnInfo.depTime}</p>
-                      <p className="text-xs text-[hsl(var(--flights))] font-bold mt-1">{returnInfo.depCode}</p>
-                      <p className="text-[10px] text-muted-foreground">{returnInfo.depCity}</p>
-                    </div>
-
-                    <div className="flex flex-col items-center flex-1 min-w-0 px-1">
-                      <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1 mb-1.5">
-                        <Clock className="w-3 h-3" />
-                        {returnInfo.duration}
-                      </span>
-                      <div className="w-full h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--flights))]/30 to-[hsl(var(--flights))] relative rounded-full">
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm shadow-[hsl(var(--flights))]/30" />
-                        {returnInfo.stops > 0 && Array.from({ length: Math.min(returnInfo.stops, 3) }).map((_, i) => (
-                          <div
-                            key={i}
-                            className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-muted-foreground/40 border-2 border-card"
-                            style={{ left: `${((i + 1) / (Math.min(returnInfo.stops, 3) + 1)) * 100}%` }}
-                          />
-                        ))}
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm shadow-[hsl(var(--flights))]/30" />
-                      </div>
-                      <span className={cn(
-                        "text-[10px] font-bold mt-1.5",
-                        returnInfo.stops === 0 ? "text-primary" : "text-[hsl(var(--flights))]"
-                      )}>
-                        {returnInfo.stops === 0 ? "Nonstop" : `${returnInfo.stops} stop${returnInfo.stops > 1 ? "s" : ""}`}
-                      </span>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <p className="text-[26px] sm:text-3xl font-extrabold tabular-nums leading-none tracking-tight">{returnInfo.arrTime}</p>
-                      <p className="text-xs text-[hsl(var(--flights))] font-bold mt-1">{returnInfo.arrCode}</p>
-                      <p className="text-[10px] text-muted-foreground">{returnInfo.arrCity}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between text-[11px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2 border border-border/20">
-                    <span className="font-medium">{formatDate(returnInfo.depDate)}</span>
-                  </div>
-                </CardContent>
-              </Card>
+              <SliceCard
+                info={returnInfo}
+                label="Return Flight"
+                rotate
+                segs={returnSegments}
+              />
             </motion.div>
           )}
 
-          {/* ============================================ */}
-          {/* 3D BOARDING PASS PREVIEW                     */}
-          {/* ============================================ */}
+          {/* ── 3D BOARDING PASS PREVIEW ─────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 16, rotateX: -8 }}
             animate={{ opacity: 1, y: 0, rotateX: 0 }}
@@ -407,99 +502,23 @@ const FlightReview = () => {
             <BoardingPass3D offer={offer} />
           </motion.div>
 
-          {/* ============================================ */}
-          {/* SEGMENT TIMELINES — outbound + return        */}
-          {/* ============================================ */}
-          {[
-            { label: isRoundTrip ? "Outbound Segments" : "Flight Segments", segs: outboundSegments, icon: false },
-            ...(returnSegments.length > 0 ? [{ label: "Return Segments", segs: returnSegments, icon: true }] : []),
-          ].map(({ label, segs, icon: rotateIcon }, sliceIdx) => segs.length > 0 && (
-            <motion.div
-              key={sliceIdx}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + sliceIdx * 0.08 }}
-              className="mt-4"
-            >
-              <Card className="border-border/30 overflow-hidden">
-                <div className="px-4 py-2.5 bg-muted/30 border-b border-border/20 flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-md bg-[hsl(var(--flights))]/10 flex items-center justify-center">
-                    <Plane className={cn("w-3 h-3 text-[hsl(var(--flights))]", rotateIcon && "rotate-180")} />
-                  </div>
-                  <p className="text-xs font-bold tracking-wide">{label}</p>
-                  <Badge variant="secondary" className="text-[8px] ml-auto px-1.5 py-0">{segs.length} leg{segs.length > 1 ? "s" : ""}</Badge>
-                </div>
-                <CardContent className="p-0">
-                  {segs.map((seg: DuffelSegment, i: number) => (
-                    <div key={seg.id || i}>
-                      {i > 0 && (
-                        <div className="flex items-center gap-2.5 px-4 py-2 bg-accent/30 border-y border-dashed border-border/30">
-                          <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center">
-                            <Clock className="w-2.5 h-2.5 text-accent-foreground" />
-                          </div>
-                          <p className="text-[10px] text-muted-foreground">
-                            Layover in <span className="font-semibold text-foreground">{seg.origin.city}</span>
-                            {seg.origin.name && <span className="text-muted-foreground/70"> ({seg.origin.name})</span>}
-                          </p>
-                        </div>
-                      )}
-                      <div className="px-4 py-3">
-                        <div className="flex items-center gap-2.5 mb-2.5">
-                          <AirlineLogo
-                            iataCode={seg.operatingCarrierCode || seg.marketingCarrierCode}
-                            airlineName={seg.operatingCarrier || seg.marketingCarrier}
-                            size={28}
-                            className="border border-border/20 bg-card shadow-sm"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[11px] font-bold truncate">
-                              {seg.operatingCarrier || seg.marketingCarrier} · {seg.flightNumber}
-                            </p>
-                            <p className="text-[9px] text-muted-foreground flex items-center gap-1">
-                              {seg.aircraft && <span>{seg.aircraft}</span>}
-                              {seg.aircraft && seg.cabinClass && <span>·</span>}
-                              {seg.cabinClass && <span className="capitalize">{seg.cabinClass.replace("_", " ")}</span>}
-                            </p>
-                          </div>
-                          {seg.duration && (
-                            <Badge variant="outline" className="text-[9px] font-semibold gap-0.5 px-2 py-0.5 border-border/30">
-                              <Clock className="w-2.5 h-2.5" />
-                              {seg.duration}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="ml-3.5 pl-5 relative">
-                          <div className="absolute left-0 top-2 bottom-2 w-[2px] bg-gradient-to-b from-[hsl(var(--flights))] via-[hsl(var(--flights))]/30 to-[hsl(var(--flights))]" />
-                          <div className="flex items-start gap-3 relative pb-4">
-                            <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm shadow-[hsl(var(--flights))]/30 z-10" />
-                            <div>
-                              <p className="text-sm font-bold tabular-nums leading-none">{formatTime(seg.departingAt)}</p>
-                              <p className="text-[10px] text-muted-foreground mt-0.5">
-                                {seg.origin.code} · {seg.origin.city}
-                                {seg.origin.terminal && <span className="text-muted-foreground/60"> · T{seg.origin.terminal}</span>}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-3 relative">
-                            <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm shadow-[hsl(var(--flights))]/30 z-10" />
-                            <div>
-                              <p className="text-sm font-bold tabular-nums leading-none">{formatTime(seg.arrivingAt)}</p>
-                              <p className="text-[10px] text-muted-foreground mt-0.5">
-                                {seg.destination.code} · {seg.destination.city}
-                                {seg.destination.terminal && <span className="text-muted-foreground/60"> · T{seg.destination.terminal}</span>}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+          {/* ── SEGMENT TIMELINES ────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-4 space-y-3"
+          >
+            <SegmentDetails
+              segs={outboundSegments}
+              label={isRoundTrip ? "Outbound Segments" : "Flight Segments"}
+            />
+            {returnSegments.length > 0 && (
+              <SegmentDetails segs={returnSegments} label="Return Segments" rotate />
+            )}
+          </motion.div>
 
-          {/* Fare Details */}
+          {/* ── FARE DETAILS ─────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -509,34 +528,29 @@ const FlightReview = () => {
             <Card className="border-border/30">
               <CardContent className="p-4 space-y-3">
                 <p className="text-xs font-bold flex items-center gap-1.5">
-                  <Info className="w-3.5 h-3.5 text-[hsl(var(--flights))]" />
+                  <Briefcase className="w-3.5 h-3.5 text-[hsl(var(--flights))]" />
                   Fare Details
                 </p>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between text-[11px]">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                  <div className="flex justify-between col-span-2">
                     <span className="text-muted-foreground">Cabin class</span>
-                    <span className="font-medium capitalize">{offer.cabinClass.replace("_", " ")}</span>
+                    <span className="font-medium capitalize">{offer.cabinClass?.replace("_", " ") || "Economy"}</span>
                   </div>
-                  <div className="flex justify-between text-[11px]">
-                    <span className="text-muted-foreground">Baggage</span>
-                    <span className="font-medium flex items-center gap-1">
-                      <Briefcase className="w-3 h-3" />
-                      {offer.baggageIncluded || "Personal item"}
-                    </span>
+                  <div className="flex justify-between col-span-2">
+                    <span className="text-muted-foreground flex items-center gap-1"><Luggage className="w-3 h-3" />Baggage</span>
+                    <span className="font-medium">{offer.baggageIncluded || "Personal item"}</span>
                   </div>
-                  <div className="flex justify-between text-[11px]">
-                    <span className="text-muted-foreground">Refundable</span>
+                  <div className="flex justify-between col-span-2">
+                    <span className="text-muted-foreground flex items-center gap-1"><ShieldCheck className="w-3 h-3" />Refundable</span>
                     <span className={cn("font-medium", offer.isRefundable ? "text-primary" : "text-muted-foreground")}>
                       {offer.isRefundable ? "Yes" : "No"}
                     </span>
                   </div>
-                  {offer.conditions?.changeBeforeDeparture !== null && (
-                    <div className="flex justify-between text-[11px]">
+                  {offer.conditions?.changeBeforeDeparture !== null && offer.conditions?.changeBeforeDeparture !== undefined && (
+                    <div className="flex justify-between col-span-2">
                       <span className="text-muted-foreground">Changeable</span>
-                      <span className="font-medium">
-                        {offer.conditions.changeBeforeDeparture ? "Yes" : "No"}
-                      </span>
+                      <span className="font-medium">{offer.conditions.changeBeforeDeparture ? "Yes" : "No"}</span>
                     </div>
                   )}
                 </div>
@@ -544,7 +558,7 @@ const FlightReview = () => {
             </Card>
           </motion.div>
 
-          {/* Price Summary */}
+          {/* ── PRICE SUMMARY ────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -553,38 +567,46 @@ const FlightReview = () => {
           >
             <Card className="border-[hsl(var(--flights))]/20 shadow-sm shadow-[hsl(var(--flights))]/5">
               <CardContent className="p-4 space-y-3">
-                <p className="text-xs font-bold">Price Summary</p>
+                <p className="text-xs font-bold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[hsl(var(--flights))]" />
+                  Price Summary
+                </p>
 
                 <div className="space-y-2">
+                  {isRoundTrip && (
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-muted-foreground">Trip type</span>
+                      <span className="font-medium flex items-center gap-1">
+                        <ArrowRightLeft className="w-3 h-3" /> Round trip
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-[11px]">
                     <span className="text-muted-foreground">Price per traveler</span>
                     <span className="font-medium tabular-nums">
-                      ${Math.round(offer.pricePerPerson || offer.price)} {offer.currency || "USD"}
+                      ${(offer.pricePerPerson || offer.price).toFixed(2)} {offer.currency || "USD"}
                     </span>
                   </div>
 
                   {totalPassengers > 1 && (
                     <>
-                      <div className="flex justify-between text-[11px]">
-                        <span className="text-muted-foreground">Travelers</span>
-                        <span className="font-medium">{totalPassengers}</span>
-                      </div>
+                      <Separator className="bg-border/20" />
                       {searchParams.adults > 0 && (
                         <div className="flex justify-between text-[11px]">
                           <span className="text-muted-foreground pl-2">Adults × {searchParams.adults}</span>
-                          <span className="font-medium tabular-nums">${Math.round((offer.pricePerPerson || offer.price) * searchParams.adults)}</span>
+                          <span className="font-medium tabular-nums">${((offer.pricePerPerson || offer.price) * searchParams.adults).toFixed(2)}</span>
                         </div>
                       )}
                       {searchParams.children > 0 && (
                         <div className="flex justify-between text-[11px]">
                           <span className="text-muted-foreground pl-2">Children × {searchParams.children}</span>
-                          <span className="font-medium tabular-nums">${Math.round((offer.pricePerPerson || offer.price) * searchParams.children)}</span>
+                          <span className="font-medium tabular-nums">${((offer.pricePerPerson || offer.price) * searchParams.children).toFixed(2)}</span>
                         </div>
                       )}
                       {searchParams.infants > 0 && (
                         <div className="flex justify-between text-[11px]">
                           <span className="text-muted-foreground pl-2">Infants × {searchParams.infants}</span>
-                          <span className="font-medium tabular-nums">${Math.round((offer.pricePerPerson || offer.price) * searchParams.infants)}</span>
+                          <span className="font-medium tabular-nums">${((offer.pricePerPerson || offer.price) * searchParams.infants).toFixed(2)}</span>
                         </div>
                       )}
                     </>
@@ -595,7 +617,7 @@ const FlightReview = () => {
                   <div className="flex justify-between items-baseline">
                     <span className="text-sm font-bold">Total</span>
                     <span className="text-2xl font-extrabold text-[hsl(var(--flights))] tabular-nums">
-                      ${Math.round((offer.pricePerPerson || offer.price) * totalPassengers)}
+                      ${((offer.pricePerPerson || offer.price) * totalPassengers).toFixed(2)}
                     </span>
                   </div>
                   <p className="text-[9px] text-muted-foreground text-right">
@@ -606,7 +628,7 @@ const FlightReview = () => {
             </Card>
           </motion.div>
 
-          {/* Warning */}
+          {/* ── PARTNER DISCLOSURE WARNING ────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -617,8 +639,8 @@ const FlightReview = () => {
               <AlertTriangle className="w-4 h-4 text-[hsl(var(--flights))] shrink-0 mt-0.5" />
               <div>
                 <p className="text-[11px] font-medium leading-relaxed">
-                  Continuing will proceed to a <span className="font-bold">real booking flow</span>. 
-                  You'll be asked for passenger details and payment. 
+                  Continuing will proceed to a <span className="font-bold">real booking flow</span>.
+                  You'll be asked for passenger details and payment.
                   Final price and terms are confirmed at checkout.
                 </p>
                 <a href="/partner-disclosure" className="text-[10px] text-[hsl(var(--flights))] hover:underline mt-1 inline-block">
@@ -650,19 +672,17 @@ const FlightReview = () => {
         </div>
       </main>
 
-      {/* ============================================ */}
-      {/* STICKY MOBILE CTA — glassmorphic upgrade     */}
-      {/* ============================================ */}
+      {/* ── STICKY MOBILE CTA ─────────────────────── */}
       <div className="fixed bottom-0 left-0 right-0 z-30 sm:hidden">
         <div className="bg-card/80 backdrop-blur-2xl border-t border-[hsl(var(--flights))]/15 px-4 py-3 safe-area-bottom shadow-[0_-4px_20px_-4px_hsl(var(--flights)/0.1)]">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] text-muted-foreground font-medium">Total price</p>
               <p className="text-xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none">
-                ${Math.round((offer.pricePerPerson || offer.price) * totalPassengers)}
+                ${((offer.pricePerPerson || offer.price) * totalPassengers).toFixed(2)}
               </p>
               <p className="text-[9px] text-muted-foreground mt-0.5">
-                {totalPassengers > 1 ? `${totalPassengers} travelers` : "1 traveler"} · {offer.currency || "USD"}
+                {totalPassengers > 1 ? `${totalPassengers} travelers` : "1 traveler"} · {isRoundTrip ? "Round trip" : "One way"} · {offer.currency || "USD"}
               </p>
             </div>
             <Button
