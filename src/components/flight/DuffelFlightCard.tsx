@@ -121,14 +121,20 @@ export default function DuffelFlightCard({
 
   return (
     <div
+      ref={tiltRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={tiltStyle}
       className={cn(
-        "bg-card rounded-xl sm:rounded-xl border p-0 group transition-all duration-200 overflow-hidden",
-        "hover:shadow-md hover:border-[hsl(var(--flights))]/40",
+        "bg-card rounded-xl sm:rounded-xl border p-0 group overflow-hidden will-change-transform",
+        "hover:shadow-lg hover:shadow-[hsl(var(--flights))]/8 hover:border-[hsl(var(--flights))]/40",
         isTop
           ? "border-[hsl(var(--flights))]/30 shadow-sm shadow-[hsl(var(--flights))]/4"
           : "border-border/30"
       )}
     >
+      {/* 3D Glare overlay */}
+      <div className="absolute inset-0 pointer-events-none z-20 rounded-xl" style={glareStyle} />
       {/* Top badge strip */}
       {(isTop || isLowest || isFastest) && (
         <div className="flex gap-1.5 px-3 pt-2 sm:px-4 sm:pt-3">
