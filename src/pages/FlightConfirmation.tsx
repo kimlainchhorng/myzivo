@@ -10,6 +10,7 @@ import {
   Calendar, Users, CreditCard, Mail, MessageCircle,
   Share2, Download, Hotel, Car, ArrowRight, Copy, Check
 } from "lucide-react";
+import DownloadItinerary from "@/components/flight/DownloadItinerary";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import Header from "@/components/Header";
@@ -370,7 +371,7 @@ const FlightConfirmation = () => {
                 </motion.div>
               )}
 
-              {/* Quick actions: Share & Copy */}
+              {/* Quick actions: Share, Copy & Download */}
               {isIssued && (
                 <div className="flex gap-2 mb-4">
                   <Button
@@ -381,13 +382,33 @@ const FlightConfirmation = () => {
                     <Share2 className="w-4 h-4" />
                     Share
                   </Button>
+                  <DownloadItinerary
+                    booking={{
+                      booking_reference: booking.booking_reference,
+                      pnr: booking.pnr,
+                      origin: booking.origin,
+                      destination: booking.destination,
+                      departure_date: booking.departure_date,
+                      return_date: booking.return_date,
+                      cabin_class: booking.cabin_class as string,
+                      passengers: Number(booking.passengers || 1),
+                      total_amount: Number(booking.total_amount),
+                      currency: String(booking.currency || "USD"),
+                      ticket_numbers: booking.ticket_numbers as string[] | null,
+                      payment_status: booking.payment_status,
+                      flight_passengers: Array.isArray(booking.flight_passengers) ? booking.flight_passengers.map((fp: any) => ({
+                        given_name: fp.given_name,
+                        family_name: fp.family_name,
+                        email: fp.email,
+                      })) : [],
+                    }}
+                  />
                   <Button
                     variant="outline"
                     onClick={handleCopyRef}
-                    className="flex-1 rounded-xl border-border/40 gap-2"
+                    className="rounded-xl border-border/40 gap-2 px-3"
                   >
                     {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                    Copy Ref
                   </Button>
                 </div>
               )}
