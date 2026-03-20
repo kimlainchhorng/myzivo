@@ -87,7 +87,7 @@ function generateIndicativeCars(
   const priceMultiplier: Record<string, number> = {
     'JFK': 1.5, 'LAX': 1.4, 'LHR': 1.6, 'CDG': 1.4, 'DXB': 1.3,
     'SIN': 1.2, 'HKG': 1.3, 'NRT': 1.4, 'SYD': 1.3,
-    'BKK': 0.7, 'PNH': 0.5, 'SGN': 0.6, 'KUL': 0.8,
+    'BKK': 0.7, 'KTI': 0.5, 'SGN': 0.6, 'KUL': 0.8,
     'default': 1.0,
   };
 
