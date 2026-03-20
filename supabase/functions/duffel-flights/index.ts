@@ -1200,6 +1200,10 @@ serve(async (req) => {
         result = await getAvailableServices(params as GetAvailableServicesParams);
         break;
 
+      case 'getSeatMaps':
+        result = await getSeatMaps(params as GetSeatMapsParams);
+        break;
+
       default:
         return new Response(
           JSON.stringify({ error: `Unknown action: ${action}` }),
