@@ -82,12 +82,6 @@ export default function MobileDatePickerSheet({
               </div>
               {label}
             </SheetTitle>
-            <button
-              onClick={() => onOpenChange(false)}
-              className="absolute top-5 right-5 w-8 h-8 rounded-xl bg-muted/60 hover:bg-muted flex items-center justify-center transition-colors active:scale-95"
-            >
-              <X className="h-4 w-4 text-muted-foreground" />
-            </button>
           </SheetHeader>
 
           {/* Divider with 3D depth */}
@@ -235,12 +229,6 @@ export function MobileDateRangePickerSheet({
               </div>
               {label}
             </SheetTitle>
-            <button
-              onClick={() => onOpenChange(false)}
-              className="absolute top-5 right-5 w-8 h-8 rounded-xl bg-muted/60 hover:bg-muted flex items-center justify-center transition-colors active:scale-95"
-            >
-              <X className="h-4 w-4 text-muted-foreground" />
-            </button>
           </SheetHeader>
 
           <div className="mx-5 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
