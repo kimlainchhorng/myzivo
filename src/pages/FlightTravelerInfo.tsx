@@ -638,7 +638,12 @@ const FlightTravelerInfo = () => {
     </div>
   );
 
-  /* Sticky bottom CTA — 3D elevated */
+  /* Sticky bottom CTA — 3D elevated with price breakdown */
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const basePrice = Math.round(offer.price * totalPassengers * 0.85);
+  const taxesFees = Math.round(offer.price * totalPassengers) - basePrice;
+  const totalPrice = Math.round(offer.price * totalPassengers);
+
   const stickyCTA = (
     <div
       className="fixed bottom-0 left-0 right-0 z-30 safe-area-bottom"
@@ -649,26 +654,62 @@ const FlightTravelerInfo = () => {
         boxShadow: "0 -8px 32px -8px hsl(var(--flights) / 0.1), 0 -2px 8px hsl(var(--foreground) / 0.04)",
       }}
     >
-      <div className={cn("mx-auto px-4 py-3 flex items-center justify-between gap-3", isMobile ? "max-w-lg" : "max-w-2xl")}>
-        <div>
-          <p className="text-[9px] text-muted-foreground font-medium">Total</p>
-          <p className="text-xl font-bold text-[hsl(var(--flights))] tabular-nums leading-tight tracking-tight">
-            ${Math.round(offer.price * totalPassengers).toLocaleString()}
-          </p>
-          <p className="text-[9px] text-muted-foreground">
-            {totalPassengers} traveler{totalPassengers > 1 ? "s" : ""} · {offer.currency || "USD"}
-          </p>
-        </div>
-        <motion.div whileTap={{ scale: 0.96 }}>
-          <Button
-            size="lg"
-            onClick={handleContinue}
-            className="relative h-12 px-7 text-sm font-bold rounded-2xl text-primary-foreground gap-1.5 overflow-hidden"
-            style={{
-              background: "hsl(var(--flights))",
-              boxShadow: "0 8px 24px -4px hsl(var(--flights) / 0.4), 0 2px 8px hsl(var(--flights) / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.2)",
-            }}
-          >
+      {/* Flight reminder strip */}
+      <div className="border-b border-border/10 px-4 py-1.5" style={{ background: "hsl(var(--muted) / 0.15)" }}>
+        <p className="text-[9px] text-muted-foreground text-center truncate">
+          <Plane className="w-2.5 h-2.5 inline mr-1 -mt-px" />
+          {offer.airline} · {offer.departure.code} → {offer.arrival.code} · {offer.departure.time} – {offer.arrival.time}
+        </p>
+      </div>
+
+      <div className={cn("mx-auto px-4 py-3", isMobile ? "max-w-lg" : "max-w-2xl")}>
+        {/* Expandable price breakdown */}
+        <AnimatePresence>
+          {showBreakdown && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-1 mb-2.5 pb-2.5 border-b border-border/20">
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-muted-foreground">Base fare × {totalPassengers}</span>
+                  <span className="text-foreground tabular-nums">${basePrice.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-muted-foreground">Taxes & fees</span>
+                  <span className="text-foreground tabular-nums">${taxesFees.toLocaleString()}</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex items-center justify-between gap-3">
+          <button onClick={() => setShowBreakdown(!showBreakdown)} className="text-left active:scale-[0.98] transition-transform">
+            <p className="text-[9px] text-muted-foreground font-medium flex items-center gap-0.5">
+              Total
+              <ChevronDown className={cn("w-2.5 h-2.5 transition-transform", showBreakdown && "rotate-180")} />
+            </p>
+            <p className="text-xl font-bold text-[hsl(var(--flights))] tabular-nums leading-tight tracking-tight">
+              ${totalPrice.toLocaleString()}
+            </p>
+            <p className="text-[9px] text-muted-foreground">
+              {totalPassengers} traveler{totalPassengers > 1 ? "s" : ""} · {offer.currency || "USD"}
+            </p>
+          </button>
+          <motion.div whileTap={{ scale: 0.96 }}>
+            <Button
+              size="lg"
+              onClick={handleContinue}
+              className="relative h-12 px-7 text-sm font-bold rounded-2xl text-primary-foreground gap-1.5 overflow-hidden"
+              style={{
+                background: "hsl(var(--flights))",
+                boxShadow: "0 8px 24px -4px hsl(var(--flights) / 0.4), 0 2px 8px hsl(var(--flights) / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.2)",
+              }}
+            >
             {/* Shine sweep */}
             <div
               className="absolute inset-0 pointer-events-none"
