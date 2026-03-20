@@ -48,14 +48,19 @@ const FlightLanding = () => {
     setDestination(temp);
   };
 
+  const [isSearching, setIsSearching] = useState(false);
+
+  const originCode = extractCode(origin);
+  const destCode = extractCode(destination);
+  const sameAirport = originCode.length === 3 && destCode.length === 3 && originCode === destCode;
+
   const handleSearch = () => {
-    const o = extractCode(origin);
-    const d = extractCode(destination);
-    if (!o || !d || !departureDate) return;
+    if (sameAirport || !originCode || !destCode || !departureDate) return;
+    setIsSearching(true);
 
     const params = new URLSearchParams({
-      origin: o,
-      destination: d,
+      origin: originCode,
+      destination: destCode,
       departureDate: format(departureDate, "yyyy-MM-dd"),
       adults: String(adults),
       children: String(children),
@@ -70,7 +75,7 @@ const FlightLanding = () => {
     navigate(`/flights/results?${params.toString()}`);
   };
 
-  const isValid = extractCode(origin).length === 3 && extractCode(destination).length === 3 && !!departureDate;
+  const isValid = originCode.length === 3 && destCode.length === 3 && !sameAirport && !!departureDate;
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
