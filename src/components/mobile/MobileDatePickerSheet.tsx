@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { format, isBefore, startOfToday, addDays, getDay, getDate } from "date-fns";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -10,32 +10,25 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import type { DateRange } from "react-day-picker";
+import { useFareCalendar, type PriceLevel } from "@/hooks/useFareCalendar";
 
-/* ─── Price level helper (simulated based on day-of-week) ─── */
-type PriceLevel = "low" | "mid" | "high";
-
-function getPriceLevel(date: Date): PriceLevel {
-  const dow = getDay(date); // 0=Sun..6=Sat
+/* ─── Fallback price level (used when API has no data) ─── */
+function getFallbackPriceLevel(date: Date): PriceLevel {
+  const dow = getDay(date);
   const d = getDate(date);
   const m = date.getMonth();
-  // Deterministic hash for realistic variety
   const hash = ((d * 31 + m * 17 + dow * 7) % 10);
-
-  // Weekends & holidays are expensive
   if (dow === 5 || dow === 6) return "high";
   if (dow === 0) return hash < 4 ? "high" : "mid";
-  // Tue/Wed mid-month are cheapest
   if ((dow === 2 || dow === 3) && d >= 8 && d <= 22) return "low";
-  // Mon/Thu near month boundaries
   if (dow === 1 || dow === 4) return hash < 3 ? "low" : hash < 7 ? "mid" : "high";
-  // Remaining
   return hash < 4 ? "low" : hash < 7 ? "mid" : "high";
 }
 
 const priceLevelConfig = {
-  low:  { label: "Low",  bg: "hsl(160 84% 39% / 0.12)", color: "hsl(160 84% 32%)", legendDot: "bg-emerald-500" },
-  mid:  { label: "Mid",  bg: "hsl(45 93% 47% / 0.12)",  color: "hsl(35 80% 42%)",  legendDot: "bg-amber-500" },
-  high: { label: "High", bg: "hsl(0 72% 51% / 0.12)",   color: "hsl(0 65% 45%)",   legendDot: "bg-red-500" },
+  low:  { label: "Low",  bg: "hsl(160 84% 39% / 0.15)", color: "hsl(160 84% 32%)", legendBg: "hsl(160 84% 39% / 0.2)" },
+  mid:  { label: "Mid",  bg: "hsl(45 93% 47% / 0.15)",  color: "hsl(35 80% 42%)",  legendBg: "hsl(45 93% 47% / 0.2)" },
+  high: { label: "High", bg: "hsl(0 72% 51% / 0.15)",   color: "hsl(0 65% 45%)",   legendBg: "hsl(0 72% 51% / 0.2)" },
 };
 
 /* ─── Single-date picker ─── */
@@ -170,6 +163,11 @@ interface MobileDateRangePickerSheetProps {
   onRangeConfirmed: (depart: Date, ret: Date) => void;
   label?: string;
   minDate?: Date;
+  /** IATA origin code for real fare data (e.g. "JFK") */
+  origin?: string;
+  /** IATA destination code for real fare data (e.g. "LAX") */
+  destination?: string;
+  cabinClass?: string;
 }
 
 export function MobileDateRangePickerSheet({
@@ -180,6 +178,9 @@ export function MobileDateRangePickerSheet({
   onRangeConfirmed,
   label = "Departure → Return",
   minDate,
+  origin,
+  destination,
+  cabinClass = "economy",
 }: MobileDateRangePickerSheetProps) {
   const earliestDate = useMemo(() => {
     const today = startOfToday();
@@ -198,6 +199,15 @@ export function MobileDateRangePickerSheet({
     }
   }, [open, departDate, returnDate, earliestDate]);
 
+  // Fetch real fare data from Duffel when origin & destination are set
+  const { fares, isLoading: faresLoading, hasData: hasFareData } = useFareCalendar(
+    origin,
+    destination,
+    month.getFullYear(),
+    month.getMonth(),
+    cabinClass
+  );
+
   const handleDone = () => {
     if (range?.from && range?.to) {
       onRangeConfirmed(range.from, range.to);
@@ -214,6 +224,15 @@ export function MobileDateRangePickerSheet({
       ? `${format(range.from, "MMM d")} → ${format(range.to, "MMM d")}`
       : `Depart: ${format(range.from, "MMM d")} — tap return`
     : "Tap departure date";
+
+  // Get price level for a date: real data first, fallback second
+  const getLevel = (date: Date): PriceLevel => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    if (hasFareData && fares[dateStr]) {
+      return fares[dateStr].level;
+    }
+    return getFallbackPriceLevel(date);
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -254,19 +273,24 @@ export function MobileDateRangePickerSheet({
           <div className="mx-5 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
 
           {/* Fare trend legend */}
-          <div className="px-5 pt-3 pb-1 flex items-center gap-4">
-            <span className="text-[10px] font-medium text-muted-foreground">Fare trend:</span>
+          <div className="px-5 pt-3 pb-1 flex items-center gap-3">
+            <span className="text-[10px] font-medium text-muted-foreground">
+              {hasFareData ? "Live fares:" : "Fare trend:"}
+            </span>
             {(["low", "mid", "high"] as PriceLevel[]).map((level) => (
               <span key={level} className="flex items-center gap-1.5">
                 <span
-                  className="w-4 h-4 rounded-md"
-                  style={{ background: priceLevelConfig[level].bg }}
+                  className="w-5 h-5 rounded-md"
+                  style={{ background: priceLevelConfig[level].legendBg }}
                 />
                 <span className="text-[10px] font-semibold" style={{ color: priceLevelConfig[level].color }}>
                   {priceLevelConfig[level].label}
                 </span>
               </span>
             ))}
+            {faresLoading && (
+              <Loader2 className="w-3 h-3 text-muted-foreground animate-spin ml-auto" />
+            )}
           </div>
 
           <div className="px-4 py-2">
@@ -291,13 +315,11 @@ export function MobileDateRangePickerSheet({
                 components={{
                   DayContent: ({ date }) => {
                     const disabled = isBefore(date, earliestDate);
-                    const level = disabled ? null : getPriceLevel(date);
+                    const level = disabled ? null : getLevel(date);
                     return (
                       <div
-                        className="flex items-center justify-center w-8 h-8 rounded-lg mx-auto text-sm font-medium"
-                        style={level ? {
-                          background: priceLevelConfig[level].bg,
-                        } : undefined}
+                        className="flex items-center justify-center w-9 h-9 rounded-lg mx-auto text-sm font-medium"
+                        style={level ? { background: priceLevelConfig[level].bg } : undefined}
                       >
                         {date.getDate()}
                       </div>
@@ -374,7 +396,6 @@ const calendarClassNames3D = {
   day_hidden: "invisible",
 };
 
-/* ─── Pricing variant with taller cells for dots ─── */
 const calendarClassNames3DPricing = {
   ...calendarClassNames3D,
   cell: `h-11 w-10 text-center text-sm p-0 relative

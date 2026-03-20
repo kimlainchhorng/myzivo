@@ -368,6 +368,9 @@ export default function FlightSearchFormPro({
                             setReturnDate(ret);
                           }}
                           label="Departure → Return"
+                          origin={fromOption?.value}
+                          destination={toOption?.value}
+                          cabinClass={cabin}
                         />
                       ) : (
                         <MobileDatePickerSheet
