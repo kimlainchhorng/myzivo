@@ -5,7 +5,8 @@
  */
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import airplanePng from "@/assets/airplane-3d.png";
+import airplaneRightPng from "@/assets/airplane-3d.png";
+import airplaneLeftPng from "@/assets/airplane-left.png";
 import { cn } from "@/lib/utils";
 
 /* ─── Time-of-day system ─── */
@@ -109,57 +110,63 @@ function Stars() {
 }
 
 /* ─── Main animated airplane ─── */
-function FlyingAirplane({ layer }: { layer: "front" | "back" }) {
-  const isFront = layer === "front";
+function FlyingAirplane({ direction, top, size, duration, delay = 0 }: {
+  direction: "ltr" | "rtl";
+  top: string;
+  size: "lg" | "sm";
+  duration: number;
+  delay?: number;
+}) {
+  const isLarge = size === "lg";
+  const isLTR = direction === "ltr";
 
   return (
     <motion.div
       className="absolute"
-      style={{
-        top: isFront ? "25%" : "50%",
-        zIndex: isFront ? 10 : 5,
-      }}
+      style={{ top, zIndex: isLarge ? 10 : 5 }}
       animate={{
-        x: isFront ? ["-12%", "110%"] : ["110%", "-12%"],
-        y: isFront
-          ? [0, -6, 3, -4, 1, 0]
-          : [0, 4, -3, 5, -1, 0],
-        rotate: isFront ? [0, -1, 1, -0.5, 0] : [0, 1, -1, 0.5, 0],
+        x: isLTR ? ["-15%", "115%"] : ["115%", "-15%"],
+        y: [0, -5, 3, -3, 1, 0],
+        rotate: [0, -0.8, 0.8, -0.4, 0],
       }}
       transition={{
-        x: { duration: isFront ? 10 : 16, repeat: Infinity, ease: "linear" },
-        y: { duration: isFront ? 5 : 7, repeat: Infinity, ease: "easeInOut" },
-        rotate: { duration: isFront ? 6 : 8, repeat: Infinity, ease: "easeInOut" },
+        x: { duration, repeat: Infinity, ease: "linear", delay },
+        y: { duration: duration * 0.5, repeat: Infinity, ease: "easeInOut", delay },
+        rotate: { duration: duration * 0.6, repeat: Infinity, ease: "easeInOut", delay },
       }}
     >
-      {/* Real airplane image */}
+      {/* Real airplane image — each direction uses the correct facing image */}
       <img
-        src={airplanePng}
+        src={isLTR ? airplaneRightPng : airplaneLeftPng}
         alt=""
         className={cn(
           "object-contain",
-          isFront
+          isLarge
             ? "w-20 h-14 drop-shadow-[0_4px_12px_rgba(0,0,0,0.2)]"
-            : "w-12 h-8 opacity-35 drop-shadow-sm -scale-x-100",
+            : "w-11 h-7 drop-shadow-sm",
+          !isLarge && "opacity-40"
         )}
-        style={{
-          filter: isFront ? undefined : "blur(0.5px)",
-        }}
+        style={{ filter: isLarge ? undefined : "blur(0.5px)" }}
         draggable={false}
       />
-      {/* Contrail — white vapor trail */}
-      {isFront && (
+      {/* Contrail vapor trail */}
+      {isLarge && (
         <motion.div
-          className="absolute top-[55%] right-[85%] -translate-y-1/2 w-24 h-[2px] rounded-full origin-right"
+          className={cn(
+            "absolute top-[55%] -translate-y-1/2 w-24 h-[2px] rounded-full",
+            isLTR ? "right-[85%] origin-right" : "left-[85%] origin-left"
+          )}
           style={{
-            background: "linear-gradient(to left, rgba(255,255,255,0.7), rgba(255,255,255,0.2), transparent)",
+            background: isLTR
+              ? "linear-gradient(to left, rgba(255,255,255,0.7), rgba(255,255,255,0.2), transparent)"
+              : "linear-gradient(to right, rgba(255,255,255,0.7), rgba(255,255,255,0.2), transparent)",
           }}
           animate={{ scaleX: [0.4, 1, 0.4], opacity: [0.3, 0.6, 0.3] }}
           transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
         />
       )}
       {/* Ground shadow */}
-      {isFront && (
+      {isLarge && (
         <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-12 h-2 rounded-full bg-foreground/6 blur-md" />
       )}
     </motion.div>
@@ -248,9 +255,11 @@ export default function Flight3DSkyHeader({ className }: { className?: string })
       <Cloud size="md" top="65%" delay={10} duration={20} direction="ltr" />
       <Cloud size="sm" top="15%" delay={5} duration={28} direction="rtl" />
 
-      {/* Flying airplanes */}
-      <FlyingAirplane layer="back" />
-      <FlyingAirplane layer="front" />
+      {/* Flying airplanes — two directions */}
+      <FlyingAirplane direction="ltr" top="20%" size="lg" duration={10} />
+      <FlyingAirplane direction="rtl" top="50%" size="sm" duration={14} delay={3} />
+      <FlyingAirplane direction="rtl" top="30%" size="lg" duration={12} delay={6} />
+      <FlyingAirplane direction="ltr" top="60%" size="sm" duration={16} delay={8} />
 
       {/* 3D depth ground perspective line */}
       <div
