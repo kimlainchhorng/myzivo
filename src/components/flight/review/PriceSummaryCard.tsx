@@ -21,8 +21,8 @@ export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRound
   const currency = offer.currency || "USD";
 
   // Calculate base fare and taxes (estimate if not provided)
-  const baseFare = offer.baseFare || totalPrice * 0.7;
-  const taxesFees = offer.taxesFees || totalPrice - baseFare;
+  const baseFare = (offer as any).baseFare || totalPrice * 0.7;
+  const taxesFees = (offer as any).taxesFees || totalPrice - baseFare;
 
   return (
     <Card className="border-[hsl(var(--flights))]/20 shadow-sm shadow-[hsl(var(--flights))]/5 overflow-hidden">
