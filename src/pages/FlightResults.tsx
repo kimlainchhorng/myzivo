@@ -23,6 +23,7 @@ import { useDuffelFlightSearch, getDuffelAirlineLogo, type DuffelOffer } from "@
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
 import DuffelFlightCard from "@/components/flight/DuffelFlightCard";
+import FlightEmptyState from "@/components/flight/FlightEmptyState";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
