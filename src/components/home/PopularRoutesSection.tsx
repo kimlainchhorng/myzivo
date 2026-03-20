@@ -8,14 +8,12 @@ import { Plane, TrendingUp, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const POPULAR_ROUTES = [
-  { from: "New York", fromCode: "JFK", to: "Los Angeles", toCode: "LAX", emoji: "🌴" },
-  { from: "Chicago", fromCode: "ORD", to: "Miami", toCode: "MIA", emoji: "🏖️" },
-  { from: "San Francisco", fromCode: "SFO", to: "New York", toCode: "JFK", emoji: "🗽" },
-  { from: "Atlanta", fromCode: "ATL", to: "Orlando", toCode: "MCO", emoji: "🎢" },
-  { from: "Dallas", fromCode: "DFW", to: "Las Vegas", toCode: "LAS", emoji: "🎰" },
-  { from: "Boston", fromCode: "BOS", to: "London", toCode: "LHR", emoji: "🇬🇧" },
-  { from: "Los Angeles", fromCode: "LAX", to: "Tokyo", toCode: "NRT", emoji: "🗼" },
-  { from: "New York", fromCode: "JFK", to: "Paris", toCode: "CDG", emoji: "🗼" },
+  { from: "New York", fromCode: "JFK", to: "Miami", toCode: "MIA", priceFrom: 89 },
+  { from: "Los Angeles", fromCode: "LAX", to: "San Francisco", toCode: "SFO", priceFrom: 59 },
+  { from: "Chicago", fromCode: "ORD", to: "Atlanta", toCode: "ATL", priceFrom: 75 },
+  { from: "Dallas", fromCode: "DFW", to: "Denver", toCode: "DEN", priceFrom: 68 },
+  { from: "Seattle", fromCode: "SEA", to: "Las Vegas", toCode: "LAS", priceFrom: 72 },
+  { from: "Boston", fromCode: "BOS", to: "Fort Lauderdale", toCode: "FLL", priceFrom: 95 },
 ];
 
 export default function PopularRoutesSection() {
