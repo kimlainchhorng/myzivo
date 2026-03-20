@@ -76,18 +76,12 @@ const FlightDetails = () => {
             <Card className="mb-4 bg-card/80 backdrop-blur-xl border-border/40 overflow-hidden">
               {/* Airline banner */}
               <div className="p-4 pb-3 flex items-center gap-3 border-b border-border/30">
-                <div className="w-11 h-11 rounded-xl bg-muted/60 border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
-                  <img
-                    src={getDuffelAirlineLogo(offer.airlineCode)}
-                    alt={offer.airline}
-                    className="w-8 h-8 object-contain"
-                    onError={(e) => {
-                      const el = e.target as HTMLImageElement;
-                      el.style.display = "none";
-                      el.parentElement!.innerHTML = `<span class="text-sm font-bold text-muted-foreground">${offer.airlineCode}</span>`;
-                    }}
-                  />
-                </div>
+                <AirlineLogo
+                  iataCode={offer.carriers?.[0]?.code || offer.airlineCode}
+                  airlineName={offer.airline}
+                  size={44}
+                  className="border border-border/20 bg-muted/40 shrink-0"
+                />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm">{offer.airline}</p>
                   <p className="text-xs text-muted-foreground">{offer.flightNumber}</p>
