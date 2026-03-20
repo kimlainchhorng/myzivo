@@ -46,7 +46,7 @@ export default function FlightPriceBreakdown({
           <span>{formatPrice(baseFare * passengers, currency)}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">{stateTaxLabel} tax ({(stateTaxRate * 100).toFixed(1)}%)</span>
+          <span className="text-muted-foreground">Taxes, Fees & Charges ({(stateTaxRate * 100).toFixed(1)}%)</span>
           <span>{formatPrice(stateTax * passengers, currency)}</span>
         </div>
         <Separator />
@@ -77,7 +77,7 @@ export default function FlightPriceBreakdown({
             </div>
             <div className="flex justify-between text-sm">
               <span className="flex items-center gap-1">
-                <Building2 className="w-3 h-3" /> {stateTaxLabel} tax ({(stateTaxRate * 100).toFixed(1)}%)
+                <Building2 className="w-3 h-3" /> Taxes, Fees & Charges ({(stateTaxRate * 100).toFixed(1)}%)
               </span>
               <span>{formatPrice(stateTax, currency)}</span>
             </div>
@@ -98,7 +98,7 @@ export default function FlightPriceBreakdown({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground flex items-center gap-1">
-                  <Building2 className="w-3.5 h-3.5" /> {stateTaxLabel} tax ({(stateTaxRate * 100).toFixed(1)}%)
+                  <Building2 className="w-3.5 h-3.5" /> Taxes, Fees & Charges ({(stateTaxRate * 100).toFixed(1)}%)
                 </span>
                 <span>{formatPrice(stateTax, currency)}</span>
               </div>
@@ -111,7 +111,7 @@ export default function FlightPriceBreakdown({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
-                  {stateTaxLabel} tax ({(stateTaxRate * 100).toFixed(1)}%) × {passengers}
+                  Taxes, Fees & Charges ({(stateTaxRate * 100).toFixed(1)}%) × {passengers}
                 </span>
                 <span>{formatPrice(stateTax * passengers, currency)}</span>
               </div>
@@ -155,7 +155,7 @@ export default function FlightPriceBreakdown({
         )}
 
         <p className="text-[10px] text-muted-foreground leading-relaxed">
-          Base fare includes card processing and booking fees. {FLIGHT_MOR_DISCLAIMERS.priceBreakdown}
+          Base fare includes card processing and booking fees breakdown. {FLIGHT_MOR_DISCLAIMERS.priceBreakdown}
         </p>
       </CardContent>
     </Card>
