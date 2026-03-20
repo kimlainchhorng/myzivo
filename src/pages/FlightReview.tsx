@@ -231,17 +231,18 @@ function SegmentDetails({ segs, label, rotate }: { segs: DuffelSegment[]; label:
 /* ── Main Page ───────────────────────────────────────── */
 const FlightReview = () => {
   const navigate = useNavigate();
-  const [selectedUpsellIds, setSelectedUpsellIds] = useState<string[]>([]);
-  const [insurancePlanId, setInsurancePlanId] = useState<string | null>(null);
-  const [insurancePrice, setInsurancePrice] = useState(0);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<DuffelAvailableService[]>([]);
 
-  const handleUpsellToggle = useCallback((id: string) => {
-    setSelectedUpsellIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-  }, []);
-
-  const handleInsuranceSelect = useCallback((planId: string, price: number) => {
-    setInsurancePlanId(planId);
-    setInsurancePrice(price);
+  const handleToggleService = useCallback((svc: DuffelAvailableService) => {
+    setSelectedServiceIds(prev => {
+      if (prev.includes(svc.id)) {
+        setSelectedServices(s => s.filter(x => x.id !== svc.id));
+        return prev.filter(id => id !== svc.id);
+      }
+      setSelectedServices(s => [...s, svc]);
+      return [...prev, svc.id];
+    });
   }, []);
 
   const offer: DuffelOffer | null = useMemo(() => {
