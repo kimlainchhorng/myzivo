@@ -3,7 +3,7 @@
  * Complete booking flow review with step indicator, trip details, fare rules
  */
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft, Plane, Clock, ChevronRight, ArrowRightLeft,
