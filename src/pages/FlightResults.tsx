@@ -156,6 +156,16 @@ const FlightResults = () => {
 
   const filtered = useMemo(() => sortOffers(applyFilters(filters, offers), sortBy), [offers, filters, sortBy, priceRange]);
 
+  const lowestPriceId = useMemo(() => {
+    if (filtered.length === 0) return null;
+    return filtered.reduce((min, o) => o.price < min.price ? o : min, filtered[0]).id;
+  }, [filtered]);
+
+  const fastestId = useMemo(() => {
+    if (filtered.length === 0) return null;
+    return filtered.reduce((min, o) => o.durationMinutes < min.durationMinutes ? o : min, filtered[0]).id;
+  }, [filtered]);
+
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.maxPrice > 0) count++;
