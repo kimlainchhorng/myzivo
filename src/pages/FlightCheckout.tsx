@@ -4,8 +4,8 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertTriangle, CheckCircle, Lock } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, Loader2, AlertTriangle, CheckCircle, Lock, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -25,7 +25,7 @@ import ImportantBookingNotice from "@/components/checkout/ImportantBookingNotice
 import { useCreateFlightCheckout, type FlightCheckoutParams } from "@/hooks/useFlightBooking";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { FLIGHT_MOR_DISCLAIMERS, FLIGHT_CHECKOUT_CLARITY } from "@/config/flightMoRCompliance";
+import { FLIGHT_MOR_DISCLAIMERS, FLIGHT_CHECKOUT_CLARITY, ZIVO_SOT_REGISTRATION, FLIGHT_LEGAL_LINKS } from "@/config/flightMoRCompliance";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
 
 const STEPS = [
@@ -58,7 +58,7 @@ const FlightCheckout = () => {
   const totalPassengers = search ? (search.adults || 1) + (search.children || 0) + (search.infants || 0) : 1;
   const baseFare = offer ? Math.round(offer.price * 0.7) : 0;
   const taxesFees = offer ? offer.price - baseFare : 0;
-  const totalPrice = offer ? Math.round(offer.price * totalPassengers) : 0;
+  const totalPrice = offer ? parseFloat((offer.price * totalPassengers).toFixed(2)) : 0;
 
   useEffect(() => {
     if (!offer || !passengers) navigate("/flights", { replace: true });
@@ -190,6 +190,23 @@ const FlightCheckout = () => {
           {/* Important booking notice */}
           <ImportantBookingNotice variant="flights" compact className="mb-4" />
 
+          {/* Seller of Travel Disclosure */}
+          <div className="mb-4 p-3 rounded-xl bg-muted/30 border border-border/30 space-y-2">
+            <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
+              <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              {ZIVO_SOT_REGISTRATION.subAgent} {FLIGHT_MOR_DISCLAIMERS.ticketing}
+            </p>
+            <div className="flex items-center gap-3 text-[11px]">
+              <Link to={FLIGHT_LEGAL_LINKS.partnerDisclosure} className="text-primary hover:underline">
+                Partner Disclosure
+              </Link>
+              <span className="text-border">·</span>
+              <Link to={FLIGHT_LEGAL_LINKS.flightTerms} className="text-primary hover:underline">
+                Flight Terms
+              </Link>
+            </div>
+          </div>
+
           {/* Terms acceptance */}
           <CheckoutTermsAcceptance
             onStateChange={handleTermsChange}
@@ -215,7 +232,7 @@ const FlightCheckout = () => {
                 ) : (
                   <>
                     <Lock className="w-5 h-5" />
-                    Pay ${totalPrice} {offer.currency || "USD"}
+                    Pay ${totalPrice.toFixed(2)} {offer.currency || "USD"}
                   </>
                 )}
               </Button>

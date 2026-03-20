@@ -106,7 +106,7 @@ export const FLIGHT_MOR_DISCLAIMERS = {
 
 export const FLIGHT_CHECKOUT_CLARITY = {
   /** Pre-payment message - above Pay button */
-  prePayment: "Your payment will be processed securely by ZIVO. After payment, your airline ticket will be issued instantly.",
+  prePayment: "Your payment will be processed securely by ZIVO. After payment, your airline ticket will be issued shortly — usually within a few minutes.",
   
   /** Updated consent checkbox */
   consent: "I understand ZIVO sells flights as a sub-agent and airline rules apply.",
