@@ -266,6 +266,27 @@ const FlightResults = () => {
 
   const pendingFiltered = useMemo(() => applyFilters(pendingFilters, offers), [offers, pendingFilters]);
 
+  // Quick stats for QuickStatsBar
+  const quickStats = useMemo(() => {
+    if (filtered.length === 0) return null;
+    const cheapest = filtered.reduce((min, o) => o.price < min.price ? o : min, filtered[0]);
+    const fastest = filtered.reduce((min, o) => o.durationMinutes < min.durationMinutes ? o : min, filtered[0]);
+    const bestArr = [...filtered].sort((a, b) => {
+      const maxP = priceRange.max || 1;
+      const maxD = Math.max(...filtered.map(o => o.durationMinutes), 1);
+      const scoreA = (a.price / maxP) * 0.4 + (a.durationMinutes / maxD) * 0.4 + (a.stops > 0 ? 0.2 : 0);
+      const scoreB = (b.price / maxP) * 0.4 + (b.durationMinutes / maxD) * 0.4 + (b.stops > 0 ? 0.2 : 0);
+      return scoreA - scoreB;
+    });
+    const best = bestArr[0];
+    return {
+      cheapest: { price: Math.round(cheapest.price), airline: cheapest.airline, duration: cheapest.duration },
+      fastest: { price: Math.round(fastest.price), airline: fastest.airline, duration: fastest.duration },
+      bestValue: { price: Math.round(best.price), airline: best.airline, duration: best.duration },
+    };
+  }, [filtered, priceRange]);
+
+
   // Toggle helpers for pending filters
   const togglePendingArray = <K extends keyof FlightFiltersState>(key: K, value: string | number) => {
     setPendingFilters(prev => {
