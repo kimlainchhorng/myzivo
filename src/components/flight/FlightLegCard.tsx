@@ -51,9 +51,9 @@ interface FlightLegCardProps {
 }
 
 const sortBadgeConfig: Record<string, { label: string; className: string }> = {
-  best: { label: "✨ Best Option", className: "bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border-[hsl(var(--flights))]/25" },
-  cheapest: { label: "💰 Cheapest", className: "bg-primary/10 text-primary border-primary/25" },
-  fastest: { label: "⚡ Fastest", className: "bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border-[hsl(var(--flights))]/25" },
+  best: { label: "✨ Best Option", className: "bg-[hsl(var(--flights)/0.1)] text-[hsl(var(--flights))] border-[hsl(var(--flights)/0.25)]" },
+  cheapest: { label: "🔥 Cheapest", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25" },
+  fastest: { label: "⚡ Fastest", className: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25" },
 };
 
 function SegmentRow({ seg, isLast }: { seg: DuffelSegment; isLast: boolean }) {
