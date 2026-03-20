@@ -420,61 +420,85 @@ export default function DuffelFlightCard({
           </div>
         )}
 
+        {/* Fare Brand Selector (when multiple fare options exist) */}
+        {hasVariants && (
+          <div className="mt-3 pt-2.5 border-t border-border/20">
+            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Choose fare</p>
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {offer.fareVariants!.map((variant, idx) => (
+                <button
+                  key={variant.id}
+                  onClick={(e) => { e.stopPropagation(); setSelectedVariantIdx(idx); }}
+                  className={cn(
+                    "flex flex-col items-start px-2.5 py-2 rounded-lg border text-left min-w-[110px] shrink-0 transition-all",
+                    idx === selectedVariantIdx
+                      ? "border-[hsl(var(--flights))] bg-[hsl(var(--flights))]/5 shadow-sm"
+                      : "border-border/30 bg-muted/10 hover:border-border/60"
+                  )}
+                >
+                  <span className="text-[8px] text-muted-foreground uppercase tracking-wide">{variant.cabinClass.replace("_", " ")}</span>
+                  <span className="text-[10px] font-bold leading-tight mt-0.5 capitalize">{variant.fareBrandName || variant.cabinClass.replace("_", " ")}</span>
+                  <span className="text-[11px] font-extrabold text-[hsl(var(--flights))] tabular-nums mt-1">${Math.round(variant.price)}</span>
+                  <div className="flex flex-col gap-0.5 mt-1.5 text-[8px]">
+                    <span className={variant.baggageDetails.carryOnIncluded ? "text-primary" : "text-muted-foreground"}>
+                      {variant.baggageDetails.carryOnIncluded ? "✓ Carry-on" : "✗ No carry-on"}
+                    </span>
+                    <span className={variant.baggageDetails.checkedBagsIncluded ? "text-primary" : "text-muted-foreground"}>
+                      {variant.baggageDetails.checkedBagsIncluded ? `✓ ${variant.baggageDetails.checkedBagQuantity} checked` : "✗ No checked bags"}
+                    </span>
+                    <span className={variant.conditions.changeable ? "text-primary" : "text-muted-foreground"}>
+                      {variant.conditions.changeable ? "✓ Changeable" : "✗ Not changeable"}
+                    </span>
+                    <span className={variant.conditions.refundable ? "text-primary" : "text-muted-foreground"}>
+                      {variant.conditions.refundable ? "✓ Refundable" : "✗ Non-refundable"}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Row 3: Tags + CTA */}
         <div className="flex items-end justify-between gap-2 mt-3">
           <div className="flex gap-1 flex-wrap min-w-0">
             <Badge variant="outline" className="text-[8px] sm:text-[9px] border-border/25 bg-muted/25 capitalize h-[18px] px-1.5 font-medium">
-              {offer.fareBrandName || offer.cabinClass.replace("_", " ")}
+              {displayFareName || offer.cabinClass.replace("_", " ")}
             </Badge>
-            {offer.baggageDetails ? (
+            {displayBaggage ? (
               <>
                 <Badge variant="outline" className={cn(
                   "text-[8px] sm:text-[9px] gap-0.5 h-[18px] px-1.5 font-medium",
-                  offer.baggageDetails.carryOnIncluded
+                  displayBaggage.carryOnIncluded
                     ? "border-primary/25 text-primary bg-primary/5"
                     : "border-border/25 bg-muted/25 text-muted-foreground"
                 )}>
                   <Briefcase className="w-2 h-2 shrink-0" />
-                  {offer.baggageDetails.carryOnIncluded ? "Carry-on included" : "No carry-on"}
+                  {displayBaggage.carryOnIncluded ? "Carry-on" : "No carry-on"}
                 </Badge>
                 <Badge variant="outline" className={cn(
                   "text-[8px] sm:text-[9px] gap-0.5 h-[18px] px-1.5 font-medium",
-                  offer.baggageDetails.checkedBagsIncluded
+                  displayBaggage.checkedBagsIncluded
                     ? "border-primary/25 text-primary bg-primary/5"
                     : "border-border/25 bg-muted/25 text-muted-foreground"
                 )}>
                   <Briefcase className="w-2 h-2 shrink-0" />
-                  {offer.baggageDetails.checkedBagsIncluded
-                    ? `${offer.baggageDetails.checkedBagQuantity} checked bag${offer.baggageDetails.checkedBagQuantity > 1 ? 's' : ''}`
+                  {displayBaggage.checkedBagsIncluded
+                    ? `${displayBaggage.checkedBagQuantity} checked`
                     : "No checked bags"}
                 </Badge>
               </>
-            ) : offer.baggageIncluded ? (
-              <Badge variant="outline" className="text-[8px] sm:text-[9px] border-border/25 bg-muted/25 gap-0.5 h-[18px] px-1.5 font-medium">
-                <Briefcase className="w-2 h-2 shrink-0" />
-                {offer.baggageIncluded}
-              </Badge>
             ) : null}
-            {offer.conditions?.changeable ? (
+            {displayConditions?.changeable && (
               <Badge variant="outline" className="text-[8px] sm:text-[9px] border-primary/25 text-primary bg-primary/5 h-[18px] px-1.5 font-medium gap-0.5">
                 <RefreshCw className="w-2 h-2 shrink-0" />
                 Changeable
               </Badge>
-            ) : (
-              <Badge variant="outline" className="text-[8px] sm:text-[9px] border-border/25 bg-muted/25 text-muted-foreground gap-0.5 h-[18px] px-1.5 font-medium">
-                <RefreshCw className="w-2 h-2 shrink-0" />
-                Not changeable
-              </Badge>
             )}
-            {offer.isRefundable ? (
+            {displayConditions?.refundable && (
               <Badge variant="outline" className="text-[8px] sm:text-[9px] border-primary/25 text-primary bg-primary/5 h-[18px] px-1.5 font-medium gap-0.5">
                 <ShieldCheck className="w-2 h-2 shrink-0" />
                 Refundable
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="text-[8px] sm:text-[9px] border-border/25 bg-muted/25 text-muted-foreground gap-0.5 h-[18px] px-1.5 font-medium">
-                <ShieldX className="w-2 h-2 shrink-0" />
-                Non-refundable
               </Badge>
             )}
             {offer.operatedBy && (
@@ -491,7 +515,7 @@ export default function DuffelFlightCard({
               "h-8 px-4 text-[11px] font-bold shadow-sm active:scale-95 transition-all gap-1 shrink-0",
               "bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 text-primary-foreground"
             )}
-            onClick={(e) => { e.stopPropagation(); onSelect(offer); }}
+            onClick={(e) => { e.stopPropagation(); onSelect({ ...offer, id: displayOfferId, price: displayPrice, conditions: displayConditions, baggageDetails: displayBaggage }); }}
           >
             Select
             <ChevronRight className="w-3.5 h-3.5" />
