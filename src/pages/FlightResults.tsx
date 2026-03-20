@@ -34,6 +34,7 @@ import { QuickStatsBar } from "@/components/flight/QuickStatsBar";
 import { ResultsFAQ } from "@/components/results/ResultsFAQ";
 import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import { groupByOutbound, groupByReturn, getLegDurationMinutes } from "@/lib/flightLegGrouping";
+import { getAllInPrice } from "@/utils/flightPricing";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
@@ -346,9 +347,9 @@ const FlightResults = () => {
     });
     const best = bestArr[0];
     return {
-      cheapest: { price: Math.round(cheapest.price), airline: cheapest.airline, duration: cheapest.duration },
-      fastest: { price: Math.round(fastest.price), airline: fastest.airline, duration: fastest.duration },
-      bestValue: { price: Math.round(best.price), airline: best.airline, duration: best.duration },
+      cheapest: { price: Math.round(getAllInPrice(cheapest.price)), airline: cheapest.airline, duration: cheapest.duration },
+      fastest: { price: Math.round(getAllInPrice(fastest.price)), airline: fastest.airline, duration: fastest.duration },
+      bestValue: { price: Math.round(getAllInPrice(best.price)), airline: best.airline, duration: best.duration },
     };
   }, [filtered, priceRange]);
 
