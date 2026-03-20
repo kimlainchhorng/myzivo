@@ -340,6 +340,48 @@ function SegmentDetails({ segs, label, rotate }: { segs: DuffelSegment[]; label:
     </div>
   );
 }
+
+/* ── Main Page ───────────────────────────────────────── */
+const FlightReview = () => {
+  const navigate = useNavigate();
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<DuffelAvailableService[]>([]);
+  const [variantPrice, setVariantPrice] = useState<number | null>(null);
+  const [variantCurrency, setVariantCurrency] = useState<string | null>(null);
+
+  const handleToggleService = useCallback((svc: DuffelAvailableService) => {
+    setSelectedServiceIds(prev => {
+      if (prev.includes(svc.id)) {
+        setSelectedServices(s => s.filter(x => x.id !== svc.id));
+        return prev.filter(id => id !== svc.id);
+      }
+      setSelectedServices(s => [...s, svc]);
+      return [...prev, svc.id];
+    });
+  }, []);
+
+  const storedOffer: DuffelOffer | null = useMemo(() => {
+    try {
+      const raw = sessionStorage.getItem("zivo_selected_offer");
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  }, []);
+
+  const searchParams = useMemo(() => {
+    try {
+      const raw = sessionStorage.getItem("zivo_search_params");
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  }, []);
+
+  const { data: liveOffer } = useDuffelOffer(storedOffer?.id ?? null);
+  const offer = useMemo(() => {
+    if (!liveOffer && !storedOffer) return null;
+    const base = liveOffer ?? storedOffer;
+    if (!base) return null;
+    if (liveOffer && storedOffer?.fareVariants && !liveOffer.fareVariants) {
+      return { ...liveOffer, fareVariants: storedOffer.fareVariants };
+    }
     return base;
   }, [liveOffer, storedOffer]);
 
