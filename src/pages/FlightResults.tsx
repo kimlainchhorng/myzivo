@@ -81,6 +81,7 @@ const FlightResults = () => {
   // Two-step round-trip selection
   const [selectionStep, setSelectionStep] = useState<"outbound" | "return">("outbound");
   const [selectedOutboundGroup, setSelectedOutboundGroup] = useState<LegGroup | null>(null);
+  const [editMode, setEditMode] = useState(false);
 
   const origin = params.get("origin") || "";
   const destination = params.get("destination") || params.get("dest") || "";
