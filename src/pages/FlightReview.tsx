@@ -257,6 +257,8 @@ const FlightReview = () => {
   const navigate = useNavigate();
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [selectedServices, setSelectedServices] = useState<DuffelAvailableService[]>([]);
+  const [variantPrice, setVariantPrice] = useState<number | null>(null);
+  const [variantCurrency, setVariantCurrency] = useState<string | null>(null);
 
   const handleToggleService = useCallback((svc: DuffelAvailableService) => {
     setSelectedServiceIds(prev => {
@@ -437,6 +439,7 @@ const FlightReview = () => {
               <FareVariantsCard
                 offer={offer}
                 onSelectVariant={(variant) => {
+                  setVariantPrice(variant.price);
                   // Update sessionStorage with the selected fare variant
                   const updated = {
                     ...offer,
@@ -467,7 +470,7 @@ const FlightReview = () => {
 
           {/* Price Summary */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.33 }} className="mt-3">
-            <PriceSummaryCard offer={offer} searchParams={searchParams} totalPassengers={totalPassengers} isRoundTrip={isRoundTrip} />
+            <PriceSummaryCard offer={variantPrice != null ? { ...offer, price: variantPrice, pricePerPerson: variantPrice, currency: variantCurrency || offer.currency } : offer} searchParams={searchParams} totalPassengers={totalPassengers} isRoundTrip={isRoundTrip} />
           </motion.div>
 
           {/* Partner disclosure */}
@@ -523,11 +526,11 @@ const FlightReview = () => {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] text-muted-foreground font-medium">Total price</p>
-              <p className="text-xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none">
-                ${((offer.pricePerPerson || offer.price) * totalPassengers).toFixed(2)}
+              <p className="text-xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none transition-all duration-200">
+                ${((variantPrice ?? offer.pricePerPerson ?? offer.price) * totalPassengers).toFixed(2)}
               </p>
               <p className="text-[9px] text-muted-foreground mt-0.5">
-                {totalPassengers > 1 ? `${totalPassengers} travelers` : "1 traveler"} · {isRoundTrip ? "Round trip" : "One way"} · {offer.currency || "USD"}
+                {totalPassengers > 1 ? `${totalPassengers} travelers` : "1 traveler"} · {isRoundTrip ? "Round trip" : "One way"} · {variantCurrency || offer.currency || "USD"}
               </p>
             </div>
             <Button
