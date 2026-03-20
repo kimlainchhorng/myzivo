@@ -12,13 +12,12 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import FlightPriceBreakdown from "@/components/flight/FlightPriceBreakdown";
 import CheckoutStepIndicator from "@/components/checkout/CheckoutStepIndicator";
 import CheckoutFlightSummary from "@/components/checkout/CheckoutFlightSummary";
-import CheckoutTermsAcceptance from "@/components/checkout/CheckoutTermsAcceptance";
+import { CheckoutTermsAcceptance, useTermsValidation } from "@/components/checkout/CheckoutTermsAcceptance";
 import CheckoutTrustFooter from "@/components/checkout/CheckoutTrustFooter";
 import { useCreateFlightCheckout, type FlightCheckoutParams } from "@/hooks/useFlightBooking";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,11 +37,10 @@ const FlightCheckout = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const checkout = useCreateFlightCheckout();
+  const [termsValid, handleTermsChange, triggerValidation] = useTermsValidation();
 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [fareRulesAccepted, setFareRulesAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitRef = useRef(false);
 
@@ -71,16 +69,14 @@ const FlightCheckout = () => {
   const taxesFees = offer ? offer.price - baseFare : 0;
   const totalPrice = offer ? Math.round(offer.price * totalPassengers) : 0;
 
-  const canProceed = termsAccepted && fareRulesAccepted;
-
   const handlePayClick = useCallback(() => {
-    if (!canProceed) {
+    if (!triggerValidation()) {
       toast({ title: "Please accept terms", description: "You must accept the terms and fare rules to continue.", variant: "destructive" });
       return;
     }
     setShowConfirmDialog(true);
     setAcknowledged(false);
-  }, [canProceed, toast]);
+  }, [triggerValidation, toast]);
 
   const handleConfirmPay = useCallback(() => {
     if (submitRef.current || isSubmitting || !offer || !passengers || !search) return;
@@ -194,11 +190,10 @@ const FlightCheckout = () => {
 
           {/* Terms acceptance */}
           <CheckoutTermsAcceptance
-            termsAccepted={termsAccepted}
-            onTermsChange={setTermsAccepted}
-            fareRulesAccepted={fareRulesAccepted}
-            onFareRulesChange={setFareRulesAccepted}
+            onStateChange={handleTermsChange}
+            productType="flights"
             className="mb-6"
+            disabled={isPaying}
           />
 
           {/* Pay button */}
@@ -206,7 +201,7 @@ const FlightCheckout = () => {
             <Button
               size="lg"
               onClick={handlePayClick}
-              disabled={isPaying || !canProceed}
+              disabled={isPaying || !termsValid}
               className="w-full h-14 text-base font-bold gap-2 bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 rounded-2xl shadow-lg transition-all duration-200 min-h-[48px]"
             >
               {isPaying ? (
