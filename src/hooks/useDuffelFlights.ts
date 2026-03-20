@@ -13,6 +13,7 @@ import { checkRateLimit, RateLimitError } from "@/lib/security/rateLimiter";
 import { checkSearchAbuse } from "@/lib/security/searchProtection";
 import { transformFlightError } from "@/lib/errors/flightErrors";
 import { getSearchSessionId } from "@/config/trackingParams";
+import { getAirportAlternate } from "@/data/airports";
 
 export interface DuffelSearchParams {
   origin: string;
