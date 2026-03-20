@@ -655,7 +655,7 @@ const FlightReview = () => {
                 className="text-xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none"
                 style={{ textShadow: "0 3px 12px hsl(var(--flights)/0.2)" }}
               >
-                ${((variantPrice ?? offer.pricePerPerson ?? offer.price) * totalPassengers).toFixed(2)}
+                ${(getAllInPrice(variantPrice ?? offer.pricePerPerson ?? offer.price) * totalPassengers).toFixed(2)}
               </motion.p>
               <p className="text-[9px] text-muted-foreground mt-0.5">
                 {totalPassengers > 1 ? `${totalPassengers} travelers` : "1 traveler"} · {isRoundTrip ? "Round trip" : "One way"} · {variantCurrency || offer.currency || "USD"}
