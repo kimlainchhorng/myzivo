@@ -379,14 +379,14 @@ export default function DuffelFlightCard({
 
           <div className="text-right shrink-0">
             <p className="text-[22px] sm:text-2xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none tracking-tight">
-              ${Math.round(offer.price)}
+              ${Math.round(displayPrice)}
             </p>
             <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5">
               {hasReturn ? "/person round trip" : "/person"}
             </p>
             {totalPassengers > 1 && (
               <p className="text-[9px] text-muted-foreground/70">
-                ${Math.round(offer.price * totalPassengers)} total
+                ${Math.round(displayPrice * totalPassengers)} total
               </p>
             )}
           </div>
