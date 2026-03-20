@@ -1567,7 +1567,15 @@ export const getAirportsByRegion = (region: string): Airport[] => {
 };
 
 export const getPopularAirports = (limit: number = 20): Airport[] => {
-  return [...airports].sort((a, b) => b.popularity - a.popularity).slice(0, limit);
+  // Deduplicate by code
+  const seen = new Map<string, Airport>();
+  for (const a of airports) {
+    const existing = seen.get(a.code);
+    if (!existing || (a.popularity ?? 0) > (existing.popularity ?? 0)) {
+      seen.set(a.code, a);
+    }
+  }
+  return Array.from(seen.values()).sort((a, b) => b.popularity - a.popularity).slice(0, limit);
 };
 
 export const formatAirportDisplay = (airport: Airport): string => {
