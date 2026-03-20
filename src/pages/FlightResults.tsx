@@ -844,8 +844,8 @@ const FlightResults = () => {
                 </motion.div>
               )}
 
-              {/* Filtered empty */}
-              {!isLoading && !error && offers.length > 0 && filtered.length === 0 && (
+              {/* Filtered empty (one-way only — round-trip uses leg groups) */}
+              {!isLoading && !error && !isRoundTrip && offers.length > 0 && filtered.length === 0 && (
                 <Card className="border-border/40">
                   <CardContent className="p-8 text-center">
                     <Filter className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
