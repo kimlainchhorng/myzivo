@@ -5,7 +5,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock, ChevronRight, ArrowRight, Sunrise, Sun, Sunset, Moon } from "lucide-react";
+import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock, ChevronRight, ArrowRight, Sunrise, Sun, Sunset, Moon, Check } from "lucide-react";
 import PriceAlertButton from "@/components/flight/PriceAlertButton";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
@@ -26,11 +26,13 @@ import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
 import DuffelFlightCard from "@/components/flight/DuffelFlightCard";
+import FlightLegCard, { type LegGroup } from "@/components/flight/FlightLegCard";
 import FlightEmptyState from "@/components/flight/FlightEmptyState";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { QuickStatsBar } from "@/components/flight/QuickStatsBar";
 import { ResultsFAQ } from "@/components/results/ResultsFAQ";
 import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
+import { groupByOutbound, groupByReturn, getLegDurationMinutes } from "@/lib/flightLegGrouping";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
