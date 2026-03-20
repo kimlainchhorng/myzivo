@@ -754,6 +754,7 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     currency: o.total_currency as string || 'USD',
     pricePerPerson: parseFloat(o.total_amount as string) / Math.max(passengers.length, 1),
     cabinClass,
+    fareBrandName: fareBrandName || null,
     baggageIncluded: baggageInfo,
     isRefundable,
     conditions: {
@@ -883,6 +884,7 @@ interface DuffelOfferTransformed {
   currency: string;
   pricePerPerson: number;
   cabinClass: string;
+  fareBrandName: string | null;
   baggageIncluded: string;
   isRefundable: boolean;
   conditions: {
