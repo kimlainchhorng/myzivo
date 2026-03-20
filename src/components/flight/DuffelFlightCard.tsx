@@ -229,6 +229,18 @@ function getSliceSummary(segs: DuffelSegment[]) {
   const depCode = first.origin.code;
   const arrCode = last.destination.code;
   
+  // Calculate day difference for +1/+2 indicator
+  let dayDiff = 0;
+  try {
+    const depDate = first.departingAt?.split("T")[0];
+    const arrDate = last.arrivingAt?.split("T")[0];
+    if (depDate && arrDate) {
+      const dep = new Date(depDate);
+      const arr = new Date(arrDate);
+      dayDiff = Math.round((arr.getTime() - dep.getTime()) / (1000 * 60 * 60 * 24));
+    }
+  } catch { /* ignore */ }
+
   const flightMinutes = segs.reduce((total, seg) => total + parseDurationText(seg.duration), 0);
   let totalMin = flightMinutes + segs.slice(1).reduce(
     (total, seg, index) => total + calcLayoverMinutes(segs[index], seg),
@@ -258,7 +270,7 @@ function getSliceSummary(segs: DuffelSegment[]) {
     });
   }
   
-  return { depTime, arrTime, depCode, arrCode, duration, stops, stopDetails };
+  return { depTime, arrTime, depCode, arrCode, duration, stops, stopDetails, dayDiff };
 }
 
 export default function DuffelFlightCard({
