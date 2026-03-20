@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -9,19 +8,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  SlidersHorizontal, 
-  ArrowUpDown, 
-  Zap, 
+import {
+  ArrowUpDown,
+  Zap,
   TrendingDown,
   Clock,
   Plane,
   CheckCircle,
-  ExternalLink,
 } from "lucide-react";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import CrossSellSection from "./CrossSellSection";
+import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import type { GeneratedFlight } from "@/data/flightGenerator";
 import { cn } from "@/lib/utils";
 

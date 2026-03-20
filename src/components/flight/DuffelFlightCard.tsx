@@ -50,6 +50,7 @@ export default function DuffelFlightCard({
   const carrierCodes = offer.carriers?.length
     ? [...new Set(offer.carriers.map(c => c.code))].slice(0, 2)
     : [offer.airlineCode];
+  const carrierSummary = carrierCodes.filter(Boolean).join(" · ");
 
   return (
     <div
