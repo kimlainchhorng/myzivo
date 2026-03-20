@@ -52,8 +52,14 @@ if (workbox) {
   );
 
   // NetworkFirst for navigation (HTML pages)
+  // Skip OAuth callback routes — must always hit the network
   workbox.routing.registerRoute(
-    ({ request }) => request.mode === 'navigate',
+    ({ request, url }) => {
+      if (request.mode !== 'navigate') return false;
+      // Never cache OAuth callback routes
+      if (url.pathname.startsWith('/~oauth')) return false;
+      return true;
+    },
     new workbox.strategies.NetworkFirst({
       cacheName: 'navigation-cache',
       networkTimeoutSeconds: 10,
