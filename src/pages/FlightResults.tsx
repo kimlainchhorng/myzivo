@@ -19,7 +19,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import FlightResultsSkeleton from "@/components/flight/FlightResultsSkeleton";
-import { useDuffelFlightSearch, getDuffelAirlineLogo, type DuffelOffer } from "@/hooks/useDuffelFlights";
+import { useDuffelFlightSearch, type DuffelOffer } from "@/hooks/useDuffelFlights";
+import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
 import DuffelFlightCard from "@/components/flight/DuffelFlightCard";
@@ -385,15 +386,12 @@ const FlightResults = () => {
                     checked={(f.airlines as string[]).includes(al.code)}
                     onCheckedChange={() => toggleArray("airlines", al.code)}
                   />
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <img
-                      src={getDuffelAirlineLogo(al.code)}
-                      alt={al.name}
-                      className="w-5 h-5 object-contain rounded"
-                      onError={(e) => {
-                        const el = e.target as HTMLImageElement;
-                        el.style.display = 'none';
-                      }}
+                   <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <AirlineLogo
+                      iataCode={al.code}
+                      airlineName={al.name}
+                      size={20}
+                      className="shrink-0"
                     />
                     <span className="text-[11px] truncate">{al.name}</span>
                     <span className="text-[10px] text-muted-foreground ml-auto shrink-0">({al.count})</span>

@@ -5,7 +5,7 @@
 
 import { useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Plane, Clock, MapPin, Luggage, ShieldCheck, AlertTriangle, ChevronRight, Briefcase, Info } from "lucide-react";
+import { ArrowLeft, Plane, Clock, MapPin, Luggage, ShieldCheck, AlertTriangle, ChevronRight, Briefcase, Info, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getDuffelAirlineLogo, type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
+import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
+import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { cn } from "@/lib/utils";
 
 const FlightReview = () => {
@@ -132,21 +133,30 @@ const FlightReview = () => {
             <Card className="border-[hsl(var(--flights))]/20 shadow-sm shadow-[hsl(var(--flights))]/4 overflow-hidden">
               {/* Header strip */}
               <div className="bg-[hsl(var(--flights))]/8 px-4 py-3 flex items-center gap-3 border-b border-[hsl(var(--flights))]/10">
-                <div className="w-10 h-10 rounded-lg bg-card border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
-                  <img
-                    src={getDuffelAirlineLogo(offer.airlineCode)}
-                    alt={offer.airline}
-                    className="w-8 h-8 object-contain"
-                    onError={(e) => {
-                      const el = e.target as HTMLImageElement;
-                      el.style.display = "none";
-                      el.parentElement!.innerHTML = `<span class="text-sm font-bold text-muted-foreground">${offer.airlineCode}</span>`;
-                    }}
+                <div className="relative shrink-0" style={{ width: (offer.carriers?.length > 1) ? 52 : 40 }}>
+                  <AirlineLogo
+                    iataCode={offer.carriers?.[0]?.code || offer.airlineCode}
+                    airlineName={offer.airline}
+                    size={40}
+                    className="border border-border/20 bg-muted/40"
                   />
+                  {offer.carriers?.length > 1 && (
+                    <AirlineLogo
+                      iataCode={offer.carriers[1].code}
+                      airlineName={offer.carriers[1].name}
+                      size={28}
+                      className="absolute bottom-0 right-0 border-2 border-card bg-muted/40"
+                    />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">{offer.airline}</p>
-                  <p className="text-[11px] text-muted-foreground">{offer.flightNumber}</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[11px] text-muted-foreground">{offer.flightNumber}</p>
+                    {offer.operatedBy && (
+                      <p className="text-[9px] text-muted-foreground/70 truncate">· {offer.operatedBy}</p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-1.5 shrink-0">
                   {offer.isRefundable && (
@@ -189,7 +199,17 @@ const FlightReview = () => {
                     )}>
                       {offer.stops === 0 ? "Nonstop" : `${offer.stops} stop${offer.stops > 1 ? "s" : ""}`}
                     </span>
-                    {offer.stopCities?.length > 0 && (
+                    {offer.stopDetails?.length > 0 ? (
+                      <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 flex-wrap">
+                        {offer.stopDetails.map((s, i) => (
+                          <span key={i} className="flex items-center gap-0.5">
+                            {i > 0 && <ArrowRight className="w-1.5 h-1.5" />}
+                            <span>{s.code}</span>
+                            {s.layoverDuration && <span className="text-muted-foreground/50">({s.layoverDuration})</span>}
+                          </span>
+                        ))}
+                      </span>
+                    ) : offer.stopCities?.length > 0 && (
                       <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
                         <MapPin className="w-2 h-2" />
                         {offer.stopCities.join(", ")}
@@ -241,14 +261,12 @@ const FlightReview = () => {
                         )}
                         <div className="py-2.5">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="w-6 h-6 rounded bg-muted/40 border border-border/20 flex items-center justify-center overflow-hidden shrink-0">
-                              <img
-                                src={getDuffelAirlineLogo(seg.operatingCarrierCode || seg.marketingCarrierCode)}
-                                alt=""
-                                className="w-5 h-5 object-contain"
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                              />
-                            </div>
+                            <AirlineLogo
+                              iataCode={seg.operatingCarrierCode || seg.marketingCarrierCode}
+                              airlineName={seg.operatingCarrier || seg.marketingCarrier}
+                              size={24}
+                              className="border border-border/20 bg-muted/40"
+                            />
                             <div className="min-w-0">
                               <p className="text-[11px] font-medium truncate">
                                 {seg.operatingCarrier || seg.marketingCarrier} · {seg.flightNumber}
