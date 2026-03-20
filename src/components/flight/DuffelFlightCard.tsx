@@ -273,9 +273,19 @@ export default function DuffelFlightCard({
   searchDestination,
 }: DuffelFlightCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
   const isTop = index === 0;
   const { ref: tiltRef, style: tiltStyle, glareStyle, handleMouseMove, handleMouseLeave } = use3DTilt(4, 1.015);
   const badge = isTop ? sortBadgeConfig[sortBy] : null;
+
+  const hasVariants = offer.fareVariants && offer.fareVariants.length > 1;
+  const activeVariant = hasVariants ? offer.fareVariants![selectedVariantIdx] : null;
+  // Use active variant's data for display when a variant is selected
+  const displayPrice = activeVariant?.price ?? offer.price;
+  const displayConditions = activeVariant?.conditions ?? offer.conditions;
+  const displayBaggage = activeVariant?.baggageDetails ?? offer.baggageDetails;
+  const displayFareName = activeVariant?.fareBrandName ?? offer.fareBrandName;
+  const displayOfferId = activeVariant?.id ?? offer.id;
 
   const carrierCodes = offer.carriers?.length
     ? [...new Set(offer.carriers.map(c => c.code))].slice(0, 2)
