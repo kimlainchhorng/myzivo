@@ -217,8 +217,8 @@ export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: b
       return result;
     },
     enabled: enabled && !!searchParams.origin && !!searchParams.destination && !!searchParams.departureDate,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes - match server cache TTL
+    gcTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
   });
 }
