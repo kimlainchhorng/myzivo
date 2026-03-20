@@ -362,7 +362,7 @@ const FlightCheckout = () => {
           <div className="px-4 py-3 flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] text-muted-foreground leading-tight">Total</p>
-              <p className="text-lg font-bold tracking-tight">${totalPrice.toFixed(2)}</p>
+              <p className="text-lg font-bold tracking-tight">${pricing.totalAllPassengers.toFixed(2)}</p>
             </div>
             <div className="shrink-0">
               <Button
