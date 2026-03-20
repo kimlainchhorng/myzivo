@@ -564,7 +564,22 @@ const FlightResults = () => {
             </motion.div>
           )}
 
-          {/* Sort tabs + filter — native app toolbar feel */}
+          {/* Quick Stats Bar */}
+          {!isLoading && quickStats && filtered.length > 3 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mb-3"
+            >
+              <QuickStatsBar
+                cheapest={quickStats.cheapest}
+                fastest={quickStats.fastest}
+                bestValue={quickStats.bestValue}
+              />
+            </motion.div>
+          )}
+
           {offers.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 6 }}
