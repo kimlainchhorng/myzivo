@@ -245,7 +245,7 @@ const FlightReview = () => {
     });
   }, []);
 
-  const offer: DuffelOffer | null = useMemo(() => {
+  const storedOffer: DuffelOffer | null = useMemo(() => {
     try {
       const raw = sessionStorage.getItem("zivo_selected_offer");
       return raw ? JSON.parse(raw) : null;
@@ -258,6 +258,15 @@ const FlightReview = () => {
       return raw ? JSON.parse(raw) : {};
     } catch { return {}; }
   }, []);
+
+  const { data: liveOffer } = useDuffelOffer(storedOffer?.id ?? null);
+  const offer = liveOffer ?? storedOffer;
+
+  useEffect(() => {
+    if (liveOffer) {
+      sessionStorage.setItem("zivo_selected_offer", JSON.stringify(liveOffer));
+    }
+  }, [liveOffer]);
 
   const totalPassengers = (searchParams.adults || 1) + (searchParams.children || 0) + (searchParams.infants || 0);
   const segments = offer?.segments || [];
@@ -280,7 +289,7 @@ const FlightReview = () => {
     }
     if (splitIdx === -1) return { outboundSegments: segments, returnSegments: [] as DuffelSegment[] };
     return { outboundSegments: segments.slice(0, splitIdx), returnSegments: segments.slice(splitIdx) };
-  }, [segments, isRoundTrip, searchParams]);
+  }, [segments, isRoundTrip, searchParams, offer?.arrival?.code]);
 
   if (!offer) {
     return (

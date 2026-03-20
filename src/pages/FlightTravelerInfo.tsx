@@ -83,8 +83,10 @@ const FlightTravelerInfo = () => {
 
   const offerRaw = sessionStorage.getItem("zivo_selected_offer");
   const searchRaw = sessionStorage.getItem("zivo_search_params");
-  const offer: DuffelOffer | null = offerRaw ? JSON.parse(offerRaw) : null;
+  const storedOffer: DuffelOffer | null = offerRaw ? JSON.parse(offerRaw) : null;
   const search = searchRaw ? JSON.parse(searchRaw) : null;
+  const { data: liveOffer } = useDuffelOffer(storedOffer?.id ?? null);
+  const offer = liveOffer ?? storedOffer;
 
   const totalPassengers = search ? (search.adults || 1) + (search.children || 0) + (search.infants || 0) : 1;
   const isRoundTrip = !!search?.returnDate;
@@ -108,6 +110,12 @@ const FlightTravelerInfo = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [consentChecked, setConsentChecked] = useState(false);
   const [selectedProfiles, setSelectedProfiles] = useState<Record<number, string>>({});
+
+  useEffect(() => {
+    if (liveOffer) {
+      sessionStorage.setItem("zivo_selected_offer", JSON.stringify(liveOffer));
+    }
+  }, [liveOffer]);
 
   useEffect(() => {
     if (!offer) navigate("/flights", { replace: true });
