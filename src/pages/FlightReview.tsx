@@ -284,13 +284,27 @@ const FlightReview = () => {
   }, []);
 
   const { data: liveOffer } = useDuffelOffer(storedOffer?.id ?? null);
-  const offer = liveOffer ?? storedOffer;
+  // Merge live offer with stored fareVariants (getOffer doesn't return them)
+  const offer = useMemo(() => {
+    if (!liveOffer && !storedOffer) return null;
+    const base = liveOffer ?? storedOffer;
+    if (!base) return null;
+    // Preserve fareVariants from stored offer since single-offer fetch doesn't include them
+    if (liveOffer && storedOffer?.fareVariants && !liveOffer.fareVariants) {
+      return { ...liveOffer, fareVariants: storedOffer.fareVariants };
+    }
+    return base;
+  }, [liveOffer, storedOffer]);
 
   useEffect(() => {
-    if (liveOffer) {
-      sessionStorage.setItem("zivo_selected_offer", JSON.stringify(liveOffer));
+    if (liveOffer && storedOffer) {
+      // Preserve fareVariants when saving back
+      const toSave = storedOffer.fareVariants && !liveOffer.fareVariants
+        ? { ...liveOffer, fareVariants: storedOffer.fareVariants }
+        : liveOffer;
+      sessionStorage.setItem("zivo_selected_offer", JSON.stringify(toSave));
     }
-  }, [liveOffer]);
+  }, [liveOffer, storedOffer]);
 
   const totalPassengers = (searchParams.adults || 1) + (searchParams.children || 0) + (searchParams.infants || 0);
   const segments = offer?.segments || [];
