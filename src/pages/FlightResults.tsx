@@ -747,12 +747,45 @@ const FlightResults = () => {
             </div>
           </div>
         </div>
-      </main>
-
-      {/* Footer only on desktop */}
-      <div className="hidden sm:block">
-        <Footer />
       </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <SEOHead
+          title={`Flights ${origin} → ${destination} – ZIVO`}
+          description={`Compare flight deals from ${origin} to ${destination}.`}
+        />
+        <AppLayout hideHeader hideNav>
+          <div className="relative overflow-hidden min-h-[100dvh]">
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-[hsl(var(--flights))]/6 blur-3xl" />
+            </div>
+            <div className="relative z-10 pb-6">
+              {resultsContent}
+            </div>
+          </div>
+        </AppLayout>
+      </>
+    );
+  }
+
+  return (
+    <div className="min-h-[100dvh] bg-background relative overflow-hidden flex flex-col">
+      <SEOHead
+        title={`Flights ${origin} → ${destination} – ZIVO`}
+        description={`Compare flight deals from ${origin} to ${destination}.`}
+      />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-[hsl(var(--flights))]/6 blur-3xl" />
+      </div>
+      <Header />
+      <main className="flex-1 pt-14 pb-20 relative z-10">
+        {resultsContent}
+      </main>
+      <Footer />
     </div>
   );
 };
