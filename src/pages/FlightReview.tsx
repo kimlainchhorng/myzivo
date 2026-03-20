@@ -38,6 +38,68 @@ const FlightReview = () => {
 
   const totalPassengers = (searchParams.adults || 1) + (searchParams.children || 0) + (searchParams.infants || 0);
 
+  const segments = offer?.segments || [];
+  const isRoundTrip = !!searchParams.returnDate;
+
+  // Split segments into outbound and return slices
+  const { outboundSegments, returnSegments } = useMemo(() => {
+    if (!isRoundTrip || segments.length === 0) {
+      return { outboundSegments: segments, returnSegments: [] as DuffelSegment[] };
+    }
+    const destCode = (searchParams.destination || offer?.arrival?.code || "").toUpperCase();
+    
+    let splitIdx = -1;
+    for (let i = 1; i < segments.length; i++) {
+      const segOrigin = segments[i].origin.code.toUpperCase();
+      if (segOrigin === destCode) {
+        splitIdx = i;
+        break;
+      }
+    }
+    
+    if (splitIdx === -1 && searchParams.returnDate) {
+      const returnDate = new Date(searchParams.returnDate + "T00:00:00").getTime();
+      for (let i = 1; i < segments.length; i++) {
+        const segDate = new Date(segments[i].departingAt).getTime();
+        if (segDate >= returnDate) {
+          splitIdx = i;
+          break;
+        }
+      }
+    }
+    
+    if (splitIdx === -1) {
+      return { outboundSegments: segments, returnSegments: [] as DuffelSegment[] };
+    }
+    
+    return {
+      outboundSegments: segments.slice(0, splitIdx),
+      returnSegments: segments.slice(splitIdx),
+    };
+  }, [segments, isRoundTrip, searchParams]);
+
+  // Helper to get first/last info from a segment list
+  const getSliceInfo = (segs: DuffelSegment[]) => {
+    if (!segs.length) return null;
+    const first = segs[0];
+    const last = segs[segs.length - 1];
+    const formatTimeLocal = (dateStr: string) => {
+      try { return new Date(dateStr).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return ""; }
+    };
+    const depTime = formatTimeLocal(first.departingAt);
+    const arrTime = formatTimeLocal(last.arrivingAt);
+    const depCode = first.origin.code;
+    const arrCode = last.destination.code;
+    const depCity = first.origin.city;
+    const arrCity = last.destination.city;
+    const stops = segs.length - 1;
+    const totalMs = new Date(last.arrivingAt).getTime() - new Date(first.departingAt).getTime();
+    const totalH = Math.floor(totalMs / 3600000);
+    const totalM = Math.floor((totalMs % 3600000) / 60000);
+    const duration = `${totalH}h ${totalM}m`;
+    return { depTime, arrTime, depCode, arrCode, depCity, arrCity, stops, duration, depDate: first.departingAt };
+  };
+
   if (!offer) {
     return (
       <div className="min-h-screen bg-background">
