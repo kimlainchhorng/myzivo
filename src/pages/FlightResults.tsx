@@ -684,19 +684,19 @@ const FlightResults = () => {
                 );
               })()}
 
-              {/* Empty */}
+              {/* Empty — smart suggestions */}
               {!isLoading && !error && offers.length === 0 && data && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <Card className="border-border/40">
-                    <CardContent className="p-8 sm:p-12 text-center">
-                      <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
-                        <Plane className="w-7 h-7 text-muted-foreground" />
-                      </div>
-                      <h2 className="text-lg font-bold mb-2">No Flights Found</h2>
-                      <p className="text-sm text-muted-foreground mb-6">Try different dates, airports, or cabin class.</p>
-                      <Button asChild className="bg-[hsl(var(--flights))]"><Link to="/flights">Modify Search</Link></Button>
-                    </CardContent>
-                  </Card>
+                  <FlightEmptyState
+                    origin={origin}
+                    destination={destination}
+                    departureDate={departureDate}
+                    returnDate={returnDate}
+                    adults={adults}
+                    children={children}
+                    infants={infants}
+                    cabinClass={cabinClass}
+                  />
                 </motion.div>
               )}
 
