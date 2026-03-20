@@ -3,7 +3,7 @@
  * Complete booking flow review with step indicator, trip details, fare rules
  */
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft, Plane, Clock, ChevronRight, ArrowRightLeft,
@@ -22,6 +22,9 @@ import BoardingPass3D from "@/components/flight/BoardingPass3D";
 import { StepIndicator } from "@/components/flight/review/StepIndicator";
 import { FareRulesCard } from "@/components/flight/review/FareRulesCard";
 import { PriceSummaryCard } from "@/components/flight/review/PriceSummaryCard";
+import CheckoutUpsells from "@/components/checkout/CheckoutUpsells";
+import { TravelInsuranceSelector } from "@/components/checkout/TravelInsuranceSelector";
+import UpgradeOpportunityWidget from "@/components/shared/UpgradeOpportunityWidget";
 import { cn } from "@/lib/utils";
 
 /* ── Helpers ─────────────────────────────────────────── */
@@ -230,6 +233,18 @@ function SegmentDetails({ segs, label, rotate }: { segs: DuffelSegment[]; label:
 /* ── Main Page ───────────────────────────────────────── */
 const FlightReview = () => {
   const navigate = useNavigate();
+  const [selectedUpsellIds, setSelectedUpsellIds] = useState<string[]>([]);
+  const [insurancePlanId, setInsurancePlanId] = useState<string | null>(null);
+  const [insurancePrice, setInsurancePrice] = useState(0);
+
+  const handleUpsellToggle = useCallback((id: string) => {
+    setSelectedUpsellIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }, []);
+
+  const handleInsuranceSelect = useCallback((planId: string, price: number) => {
+    setInsurancePlanId(planId);
+    setInsurancePrice(price);
+  }, []);
 
   const offer: DuffelOffer | null = useMemo(() => {
     try {
@@ -370,8 +385,35 @@ const FlightReview = () => {
             <FareRulesCard offer={offer} />
           </motion.div>
 
+          {/* ── Upsells: Extras ─────────────────────────── */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.27 }} className="mt-3">
+            <CheckoutUpsells
+              serviceType="flights"
+              selectedIds={selectedUpsellIds}
+              onToggle={handleUpsellToggle}
+            />
+          </motion.div>
+
+          {/* ── Travel Insurance ─────────────────────────── */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.29 }} className="mt-3">
+            <TravelInsuranceSelector
+              selectedPlanId={insurancePlanId}
+              onSelect={handleInsuranceSelect}
+              tripPrice={(offer.pricePerPerson || offer.price) * totalPassengers}
+            />
+          </motion.div>
+
+          {/* ── Cabin Upgrade ────────────────────────────── */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.31 }} className="mt-3">
+            <UpgradeOpportunityWidget
+              currentClass={(offer.cabinClass || searchParams.cabinClass || "economy") as "economy" | "premium" | "business"}
+              route={`${offer.departure?.code || ""} → ${offer.arrival?.code || ""}`}
+              basePrice={Math.round((offer.pricePerPerson || offer.price) * totalPassengers)}
+            />
+          </motion.div>
+
           {/* Price Summary */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-3">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.33 }} className="mt-3">
             <PriceSummaryCard offer={offer} searchParams={searchParams} totalPassengers={totalPassengers} isRoundTrip={isRoundTrip} />
           </motion.div>
 
