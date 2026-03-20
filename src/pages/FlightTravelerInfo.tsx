@@ -403,7 +403,7 @@ const FlightTravelerInfo = () => {
       >
         <DuffelSeatPicker
           offerId={offer?.id ?? null}
-          passengerIds={offer?.passengerIds || ["passenger_0"]}
+          passengerIds={Array.from({ length: totalPassengers }, (_, i) => `passenger_${i}`)}
           onSeatsSelected={(seats) => {
             sessionStorage.setItem("zivo_selected_seats", JSON.stringify(seats));
           }}
