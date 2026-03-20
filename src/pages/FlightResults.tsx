@@ -627,7 +627,7 @@ const FlightResults = () => {
             </motion.div>
           )}
 
-          <div className="flex gap-5">
+          <div className="flex gap-4 sm:gap-5">
             {/* Desktop filters sidebar */}
             {offers.length > 0 && (
               <div className="hidden sm:block w-56 shrink-0">
