@@ -1,6 +1,2 @@
-/**
- * Mobile Components - Stubs
- */
-const Stub = (_props: any) => null;
-export const MobileDatePickerSheet = Stub;
-export const MobilePassengerCabinSheet = Stub;
+export { default as MobileDatePickerSheet } from "./MobileDatePickerSheet";
+export { default as MobilePassengerCabinSheet } from "./MobilePassengerCabinSheet";
