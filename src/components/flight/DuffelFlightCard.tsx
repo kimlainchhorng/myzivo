@@ -201,6 +201,24 @@ function splitSegments(segments: DuffelSegment[], destCode: string) {
   };
 }
 
+function parseDurationText(duration?: string): number {
+  if (!duration) return 0;
+
+  const hours = duration.match(/(\d+)h/i);
+  const minutes = duration.match(/(\d+)m/i);
+
+  return (hours ? Number(hours[1]) * 60 : 0) + (minutes ? Number(minutes[1]) : 0);
+}
+
+function calcLayoverMinutes(prev: DuffelSegment, next: DuffelSegment): number {
+  try {
+    const ms = new Date(next.departingAt).getTime() - new Date(prev.arrivingAt).getTime();
+    return Math.max(0, Math.round(ms / 60000));
+  } catch {
+    return 0;
+  }
+}
+
 /* ── Helper: compute slice summary from segments ── */
 function getSliceSummary(segs: DuffelSegment[]) {
   if (!segs.length) return null;
@@ -211,10 +229,18 @@ function getSliceSummary(segs: DuffelSegment[]) {
   const depCode = first.origin.code;
   const arrCode = last.destination.code;
   
-  // Calculate total duration
-  const startMs = new Date(first.departingAt).getTime();
-  const endMs = new Date(last.arrivingAt).getTime();
-  const totalMin = Math.round((endMs - startMs) / 60000);
+  const flightMinutes = segs.reduce((total, seg) => total + parseDurationText(seg.duration), 0);
+  let totalMin = flightMinutes + segs.slice(1).reduce(
+    (total, seg, index) => total + calcLayoverMinutes(segs[index], seg),
+    0,
+  );
+
+  if (totalMin <= 0) {
+    const startMs = new Date(first.departingAt).getTime();
+    const endMs = new Date(last.arrivingAt).getTime();
+    totalMin = Math.max(0, Math.round((endMs - startMs) / 60000));
+  }
+
   const hours = Math.floor(totalMin / 60);
   const mins = totalMin % 60;
   const duration = totalMin > 0 ? `${hours}h ${mins}m` : "—";
@@ -222,9 +248,7 @@ function getSliceSummary(segs: DuffelSegment[]) {
   const stops = segs.length - 1;
   const stopDetails: { code: string; city: string; layoverDuration: string }[] = [];
   for (let i = 0; i < segs.length - 1; i++) {
-    const arriveAt = new Date(segs[i].arrivingAt).getTime();
-    const departAt = new Date(segs[i + 1].departingAt).getTime();
-    const layMin = Math.round((departAt - arriveAt) / 60000);
+    const layMin = calcLayoverMinutes(segs[i], segs[i + 1]);
     const lh = Math.floor(layMin / 60);
     const lm = layMin % 60;
     stopDetails.push({
