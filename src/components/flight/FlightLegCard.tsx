@@ -7,7 +7,7 @@ import { getAllInPrice } from "@/utils/flightPricing";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Clock, ChevronRight, ChevronDown, Briefcase, ArrowRight, Repeat, Plane, RefreshCw, Luggage, PackageCheck, CheckCircle2, Armchair
+  Clock, ChevronRight, ChevronDown, Briefcase, ArrowRight, Repeat, Plane, RefreshCw, Luggage, PackageCheck, CheckCircle2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
@@ -376,7 +376,13 @@ export default function FlightLegCard({
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[hsl(var(--flights)/0.06)] border border-[hsl(var(--flights)/0.15)]"
             style={{ boxShadow: "0 1px 3px -1px hsl(var(--flights)/0.08), inset 0 1px 0 0 hsl(0 0% 100%/0.04)" }}
           >
-            <Armchair style={{ width: 13, height: 13 }} className="text-[hsl(var(--flights))]" />
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[hsl(var(--flights))] shrink-0">
+              <path d="M4 18h4v-4H4zM16 18h4v-4h-4zM10 18h4v-4h-4zM4 12h4V8H4zM16 12h4V8h-4zM10 12h4V8h-4z" fill="currentColor" fillOpacity="0.15" />
+              <rect x="3" y="7" width="18" height="12" rx="2" />
+              <line x1="3" y1="13" x2="21" y2="13" />
+              <line x1="9" y1="7" x2="9" y2="19" />
+              <line x1="15" y1="7" x2="15" y2="19" />
+            </svg>
             <span className="text-[9px] font-semibold text-[hsl(var(--flights))]">Seat selection</span>
           </div>
         </div>
