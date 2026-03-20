@@ -343,14 +343,16 @@ async function createOfferRequest(params: CreateOfferRequestParams) {
     return { error: limitsCheck.reason || 'API limit reached' };
   }
   
-  const result = await duffelRequest('/air/offer_requests', 'POST', {
+  // Omit cabin_class so Duffel returns all cabin classes (Economy, Business, First)
+  // The frontend groups them as fare variants so users can upgrade within the same flight
+  const requestBody: Record<string, unknown> = {
     data: {
       slices: params.slices,
       passengers: params.passengers,
-      cabin_class: cabinClass,
       max_connections: params.max_connections ?? 2,
     }
-  });
+  };
+  const result = await duffelRequest('/air/offer_requests', 'POST', requestBody);
 
   const responseTimeMs = Date.now() - startTime;
 
