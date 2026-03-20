@@ -420,6 +420,7 @@ export default function DuffelFlightCard({
           duration={hasReturnData && outboundSummary ? outboundSummary.duration : offer.duration}
           stops={hasReturnData && outboundSummary ? outboundSummary.stops : offer.stops}
           stopDetails={hasReturnData && outboundSummary ? outboundSummary.stopDetails : offer.stopDetails}
+          dayDiff={hasReturnData && outboundSummary ? outboundSummary.dayDiff : undefined}
           label={hasReturnData ? "Outbound" : undefined}
         />
 
