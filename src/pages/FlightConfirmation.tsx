@@ -52,11 +52,46 @@ const FlightConfirmation = () => {
   const { data: booking, isLoading, error } = useFlightBooking(bookingId || null);
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const emailSentRef = useRef(false);
 
   const statusInfo = booking ? getTicketingStatusInfo(booking.ticketing_status) : null;
   const isIssued = booking?.ticketing_status === "issued";
   const isFailed = booking?.ticketing_status === "failed";
   const isProcessing = booking?.ticketing_status === "pending" || booking?.ticketing_status === "processing";
+
+  // Send booking confirmation email when ticket is issued
+  useEffect(() => {
+    if (!isIssued || !booking || emailSentRef.current) return;
+    emailSentRef.current = true;
+
+    const leadPassenger = Array.isArray(booking.flight_passengers) && booking.flight_passengers.length > 0
+      ? booking.flight_passengers[0] : null;
+    const recipientEmail = leadPassenger?.email;
+    if (!recipientEmail) return;
+
+    supabase.functions.invoke("send-transactional-email", {
+      body: {
+        to: recipientEmail,
+        template: "booking-confirmation",
+        data: {
+          booking_id: booking.id,
+          booking_reference: booking.booking_reference,
+          origin: booking.origin,
+          destination: booking.destination,
+          departure_date: booking.departure_date,
+          return_date: booking.return_date,
+          cabin_class: booking.cabin_class,
+          passengers: String(booking.passengers || 1),
+          airline: booking.airline,
+          flight_number: booking.flight_number,
+          total_price: String(Number(booking.total_amount) * Number(booking.passengers || 1)),
+          currency: booking.currency || "USD",
+          ticket_numbers: booking.ticket_numbers,
+          pnr: booking.pnr,
+        },
+      },
+    }).catch(() => { /* silent — email is best-effort */ });
+  }, [isIssued, booking]);
 
   const handleCopyRef = () => {
     if (!booking) return;
