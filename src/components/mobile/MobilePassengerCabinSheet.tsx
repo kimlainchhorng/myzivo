@@ -49,177 +49,202 @@ export default function MobilePassengerCabinSheet({
           style={{
             background: "hsl(var(--card))",
             boxShadow: `
-              0 -1px 0 0 hsl(var(--border) / 0.15),
-              0 12px 40px -6px hsl(var(--foreground) / 0.15),
-              0 30px 70px -10px hsl(var(--foreground) / 0.08),
-              inset 0 1px 0 0 hsl(0 0% 100% / 0.06)
+              0 -1px 0 0 hsl(var(--border) / 0.1),
+              0 16px 48px -8px hsl(var(--foreground) / 0.18),
+              0 32px 80px -12px hsl(var(--foreground) / 0.1),
+              inset 0 1px 0 0 hsl(0 0% 100% / 0.08)
             `,
-            transform: "perspective(900px) rotateX(0.8deg)",
+            transform: "perspective(1000px) rotateX(0.6deg)",
             transformOrigin: "bottom center",
           }}
         >
-          {/* Header */}
+          {/* Header — frosted feel */}
           <SheetHeader className="px-6 pt-6 pb-4 text-left">
             <SheetTitle className="flex items-center gap-3 text-[17px] font-bold tracking-tight">
               <div
-                className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                className="w-11 h-11 rounded-[14px] flex items-center justify-center relative"
                 style={{
-                  background: "linear-gradient(145deg, hsl(160 84% 39%), hsl(160 70% 48%))",
-                  boxShadow: "0 3px 12px hsl(160 84% 39% / 0.35), inset 0 1px 0 hsl(0 0% 100% / 0.2)",
+                  background: "linear-gradient(150deg, hsl(160 84% 42%), hsl(160 75% 36%))",
+                  boxShadow: "0 4px 16px hsl(160 84% 39% / 0.4), inset 0 1px 0 hsl(0 0% 100% / 0.25), inset 0 -1px 0 hsl(160 84% 25% / 0.2)",
                 }}
               >
-                <Users className="h-[18px] w-[18px] text-white" />
+                <Users className="h-[18px] w-[18px] text-white drop-shadow-sm" />
+                {/* Shine */}
+                <div
+                  className="absolute inset-0 rounded-[14px] pointer-events-none"
+                  style={{ background: "linear-gradient(135deg, hsl(0 0% 100% / 0.2) 0%, transparent 40%)" }}
+                />
               </div>
               Travelers & Cabin
             </SheetTitle>
           </SheetHeader>
 
-          <div className="mx-6 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+          <div className="mx-6 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
 
-          <div className="space-y-5 px-6 py-5">
-            {/* Passenger counter — recessed 3D surface */}
+          <div className="space-y-5 px-5 py-5">
+            {/* Passenger counter — deeply recessed 3D surface */}
             <div
-              className="rounded-[20px] p-[18px]"
+              className="rounded-[18px] p-4"
               style={{
-                background: "hsl(var(--background))",
-                boxShadow: "inset 0 2px 8px hsl(var(--foreground) / 0.04), inset 0 0 0 1px hsl(var(--border) / 0.4)",
+                background: "linear-gradient(180deg, hsl(var(--muted) / 0.5), hsl(var(--background)))",
+                boxShadow: "inset 0 3px 10px hsl(var(--foreground) / 0.05), inset 0 0 0 1px hsl(var(--border) / 0.35), 0 1px 0 hsl(0 0% 100% / 0.04)",
               }}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-bold text-[15px] text-foreground">Travelers</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 tracking-wide">Up to 9 passengers</p>
+                  <p className="font-bold text-[15px] text-foreground tracking-tight">Travelers</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Up to 9 passengers</p>
                 </div>
-                <div className="flex items-center gap-1">
-                  {/* Minus */}
+                <div className="flex items-center gap-1.5">
+                  {/* Minus — 3D raised button */}
                   <button
                     type="button"
                     aria-label="Decrease travelers"
-                    className="h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 active:scale-[0.88] touch-manipulation"
+                    className="h-11 w-11 rounded-[14px] flex items-center justify-center transition-all duration-150 active:scale-[0.88] active:shadow-none touch-manipulation"
                     style={passengers > 1 ? {
-                      background: "hsl(var(--card))",
-                      boxShadow: "0 3px 8px hsl(var(--foreground) / 0.07), 0 1px 2px hsl(var(--foreground) / 0.05), inset 0 -1px 0 hsl(var(--foreground) / 0.04), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
+                      background: "linear-gradient(180deg, hsl(var(--card)), hsl(var(--card) / 0.9))",
+                      boxShadow: "0 4px 10px hsl(var(--foreground) / 0.08), 0 1px 3px hsl(var(--foreground) / 0.06), inset 0 1px 0 hsl(0 0% 100% / 0.08), inset 0 -1px 0 hsl(var(--foreground) / 0.04)",
                     } : {
-                      background: "hsl(var(--muted) / 0.4)",
+                      background: "hsl(var(--muted) / 0.3)",
                     }}
                     onClick={() => onPassengersChange(Math.max(1, passengers - 1))}
                     disabled={passengers <= 1}
                   >
-                    <Minus className={cn("h-4 w-4", passengers <= 1 ? "text-muted-foreground/30" : "text-foreground")} />
+                    <Minus className={cn("h-4 w-4", passengers <= 1 ? "text-muted-foreground/25" : "text-foreground")} />
                   </button>
 
-                  {/* Count display — pill with gradient */}
+                  {/* Count — glowing pill */}
                   <div
-                    className="w-[52px] h-11 flex items-center justify-center text-[18px] font-extrabold rounded-2xl"
+                    className="w-[52px] h-11 flex items-center justify-center text-[19px] font-extrabold rounded-[14px] tabular-nums"
                     style={{
-                      background: "linear-gradient(145deg, hsl(160 84% 39% / 0.12), hsl(160 84% 39% / 0.06))",
-                      color: "hsl(160 84% 32%)",
-                      boxShadow: "inset 0 0 0 1.5px hsl(160 84% 39% / 0.15)",
+                      background: "linear-gradient(150deg, hsl(160 84% 42%), hsl(160 75% 36%))",
+                      color: "white",
+                      boxShadow: "0 4px 14px hsl(160 84% 39% / 0.35), inset 0 1px 0 hsl(0 0% 100% / 0.2), inset 0 -1px 0 hsl(160 84% 25% / 0.2)",
+                      textShadow: "0 1px 2px hsl(160 84% 20% / 0.3)",
                     }}
                   >
                     {passengers}
                   </div>
 
-                  {/* Plus */}
+                  {/* Plus — 3D raised button */}
                   <button
                     type="button"
                     aria-label="Increase travelers"
-                    className="h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 active:scale-[0.88] touch-manipulation"
+                    className="h-11 w-11 rounded-[14px] flex items-center justify-center transition-all duration-150 active:scale-[0.88] active:shadow-none touch-manipulation"
                     style={passengers < 9 ? {
-                      background: "hsl(var(--card))",
-                      boxShadow: "0 3px 8px hsl(var(--foreground) / 0.07), 0 1px 2px hsl(var(--foreground) / 0.05), inset 0 -1px 0 hsl(var(--foreground) / 0.04), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
+                      background: "linear-gradient(180deg, hsl(var(--card)), hsl(var(--card) / 0.9))",
+                      boxShadow: "0 4px 10px hsl(var(--foreground) / 0.08), 0 1px 3px hsl(var(--foreground) / 0.06), inset 0 1px 0 hsl(0 0% 100% / 0.08), inset 0 -1px 0 hsl(var(--foreground) / 0.04)",
                     } : {
-                      background: "hsl(var(--muted) / 0.4)",
+                      background: "hsl(var(--muted) / 0.3)",
                     }}
                     onClick={() => onPassengersChange(Math.min(9, passengers + 1))}
                     disabled={passengers >= 9}
                   >
-                    <Plus className={cn("h-4 w-4", passengers >= 9 ? "text-muted-foreground/30" : "text-foreground")} />
+                    <Plus className={cn("h-4 w-4", passengers >= 9 ? "text-muted-foreground/25" : "text-foreground")} />
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Cabin class — premium 3D cards */}
+            {/* Cabin class — 3D card grid */}
             <div>
-              <p className="mb-3 text-[13px] font-bold text-foreground tracking-tight uppercase opacity-60">Cabin class</p>
-              <div className="grid grid-cols-2 gap-2.5">
+              <p className="mb-3 text-[12px] font-bold text-muted-foreground tracking-widest uppercase">Cabin class</p>
+              <div className="grid grid-cols-2 gap-3">
                 {cabinOptions.map((option) => {
                   const isSelected = cabin === option.value;
                   const Icon = option.icon;
-                    return (
+                  return (
                     <button
                       key={option.value}
                       type="button"
-                      className="relative rounded-[18px] p-3.5 text-left transition-all duration-200 active:scale-[0.95] touch-manipulation overflow-hidden min-h-[110px]"
+                      className="relative rounded-[18px] p-4 pb-3.5 text-left transition-all duration-200 active:scale-[0.94] touch-manipulation overflow-hidden min-h-[120px] flex flex-col justify-between"
                       style={isSelected ? {
-                        background: "linear-gradient(145deg, hsl(160 84% 39%), hsl(160 70% 44%))",
-                        boxShadow: "0 6px 20px hsl(160 84% 39% / 0.35), 0 2px 4px hsl(160 84% 39% / 0.15), inset 0 1px 0 hsl(0 0% 100% / 0.2)",
+                        background: "linear-gradient(150deg, hsl(160 84% 42%), hsl(160 70% 38%))",
+                        boxShadow: "0 8px 24px hsl(160 84% 39% / 0.4), 0 2px 6px hsl(160 84% 39% / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.2), inset 0 -2px 0 hsl(160 84% 25% / 0.15)",
+                        transform: "translateY(-1px)",
                       } : {
-                        background: "hsl(var(--card))",
-                        boxShadow: "0 2px 8px hsl(var(--foreground) / 0.06), inset 0 0 0 1px hsl(var(--border) / 0.5)",
+                        background: "linear-gradient(180deg, hsl(var(--card)), hsl(var(--card) / 0.95))",
+                        boxShadow: "0 3px 10px hsl(var(--foreground) / 0.06), 0 1px 3px hsl(var(--foreground) / 0.04), inset 0 1px 0 hsl(0 0% 100% / 0.06), inset 0 0 0 1px hsl(var(--border) / 0.4)",
                       }}
                       onClick={() => onCabinChange(option.value)}
                     >
-                      {/* Seat image in background */}
+                      {/* Seat image — positioned bottom-right */}
                       <img
                         src={option.img}
                         alt=""
                         className={cn(
-                          "absolute bottom-0 right-0 w-[70px] h-[70px] object-contain pointer-events-none transition-opacity duration-200",
-                          isSelected ? "opacity-25" : "opacity-15"
+                          "absolute bottom-0 right-0 w-[80px] h-[80px] object-contain pointer-events-none transition-all duration-300",
+                          isSelected ? "opacity-30 scale-105" : "opacity-[0.12]"
                         )}
                         draggable={false}
                       />
-                      {/* Subtle shine overlay on selected */}
+
+                      {/* Glass shine on selected */}
                       {isSelected && (
                         <div
-                          className="absolute inset-0 pointer-events-none"
+                          className="absolute inset-0 pointer-events-none rounded-[18px]"
                           style={{
-                            background: "linear-gradient(135deg, hsl(0 0% 100% / 0.15) 0%, transparent 50%)",
+                            background: "linear-gradient(135deg, hsl(0 0% 100% / 0.18) 0%, transparent 45%)",
                           }}
                         />
                       )}
-                      <div
-                        className={cn(
-                          "w-7 h-7 rounded-lg flex items-center justify-center mb-2",
-                          isSelected ? "bg-white/20" : "bg-muted"
-                        )}
-                      >
-                        <Icon className={cn(
-                          "h-3.5 w-3.5",
-                          isSelected ? "text-white" : "text-muted-foreground"
-                        )} />
+
+                      {/* Top: icon */}
+                      <div className="relative z-10">
+                        <div
+                          className={cn(
+                            "w-8 h-8 rounded-xl flex items-center justify-center",
+                            isSelected ? "bg-white/20" : "bg-muted/70"
+                          )}
+                          style={isSelected ? {
+                            boxShadow: "inset 0 1px 0 hsl(0 0% 100% / 0.15)",
+                          } : undefined}
+                        >
+                          <Icon className={cn(
+                            "h-4 w-4",
+                            isSelected ? "text-white drop-shadow-sm" : "text-muted-foreground"
+                          )} />
+                        </div>
                       </div>
-                      <p className={cn(
-                        "text-[13px] font-bold leading-tight relative z-10",
-                        isSelected ? "text-white" : "text-foreground"
-                      )}>
-                        {option.label}
-                      </p>
-                      <p className={cn(
-                        "text-[10px] mt-0.5 leading-tight font-medium relative z-10",
-                        isSelected ? "text-white/65" : "text-muted-foreground/70"
-                      )}>
-                        {option.desc}
-                      </p>
+
+                      {/* Bottom: text */}
+                      <div className="relative z-10 mt-auto">
+                        <p className={cn(
+                          "text-[13px] font-bold leading-tight",
+                          isSelected ? "text-white" : "text-foreground"
+                        )}>
+                          {option.label}
+                        </p>
+                        <p className={cn(
+                          "text-[10px] mt-0.5 leading-tight font-medium",
+                          isSelected ? "text-white/60" : "text-muted-foreground/60"
+                        )}>
+                          {option.desc}
+                        </p>
+                      </div>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Done — premium gradient button */}
+            {/* Done — 3D gradient button with depth */}
             <Button
               type="button"
               onClick={() => onOpenChange(false)}
-              className="h-[52px] w-full rounded-2xl text-white font-bold text-[15px] border-0 active:scale-[0.97] transition-all duration-150 tracking-wide"
+              className="h-[54px] w-full rounded-[16px] text-white font-bold text-[15px] border-0 active:scale-[0.97] active:shadow-none transition-all duration-150 tracking-wide relative overflow-hidden"
               style={{
-                background: "linear-gradient(145deg, hsl(160 84% 39%), hsl(160 70% 44%))",
-                boxShadow: "0 6px 20px hsl(160 84% 39% / 0.3), 0 2px 6px hsl(160 84% 39% / 0.15), inset 0 1px 0 hsl(160 84% 60% / 0.3), inset 0 -2px 0 hsl(160 84% 30% / 0.15)",
+                background: "linear-gradient(150deg, hsl(160 84% 42%), hsl(160 70% 38%))",
+                boxShadow: "0 8px 24px hsl(160 84% 39% / 0.35), 0 2px 8px hsl(160 84% 39% / 0.2), inset 0 1px 0 hsl(160 84% 60% / 0.3), inset 0 -2px 0 hsl(160 84% 28% / 0.2)",
+                textShadow: "0 1px 2px hsl(160 84% 20% / 0.3)",
               }}
             >
-              Done
+              {/* Button shine */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: "linear-gradient(135deg, hsl(0 0% 100% / 0.12) 0%, transparent 40%)" }}
+              />
+              <span className="relative z-10">Done</span>
             </Button>
           </div>
         </div>
