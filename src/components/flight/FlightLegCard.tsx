@@ -376,13 +376,13 @@ export default function FlightLegCard({
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[hsl(var(--flights)/0.06)] border border-[hsl(var(--flights)/0.15)]"
             style={{ boxShadow: "0 1px 3px -1px hsl(var(--flights)/0.08), inset 0 1px 0 0 hsl(0 0% 100%/0.04)" }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" className="text-[hsl(var(--flights))] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M7 3v4" />
-              <path d="M7 7H5a2 2 0 0 0-2 2v6h4" />
-              <path d="M7 7h4a2 2 0 0 1 2 2v4H7V7z" />
-              <path d="M3 15h10v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3z" />
-              <path d="M13 13h5" />
-              <path d="M4 21v-2M12 21v-2" />
+            <svg width="14" height="14" viewBox="0 0 24 24" className="text-[hsl(var(--flights))] shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 3v2a1 1 0 0 0 1 1h1" />
+              <path d="M10 6l-2 6" />
+              <path d="M8 12h9" />
+              <path d="M8 12v4h9" />
+              <path d="M17 12v4" />
+              <path d="M12 16v4" />
             </svg>
             <span className="text-[9px] font-semibold text-[hsl(var(--flights))]">Seat selection</span>
           </div>
