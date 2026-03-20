@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { format, isBefore, startOfToday, addDays } from "date-fns";
-import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
