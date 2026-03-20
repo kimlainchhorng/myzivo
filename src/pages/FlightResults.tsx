@@ -28,6 +28,9 @@ import { cn } from "@/lib/utils";
 import DuffelFlightCard from "@/components/flight/DuffelFlightCard";
 import FlightEmptyState from "@/components/flight/FlightEmptyState";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { QuickStatsBar } from "@/components/flight/QuickStatsBar";
+import { ResultsFAQ } from "@/components/results/ResultsFAQ";
+import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
@@ -262,6 +265,27 @@ const FlightResults = () => {
   }, [filtered]);
 
   const pendingFiltered = useMemo(() => applyFilters(pendingFilters, offers), [offers, pendingFilters]);
+
+  // Quick stats for QuickStatsBar
+  const quickStats = useMemo(() => {
+    if (filtered.length === 0) return null;
+    const cheapest = filtered.reduce((min, o) => o.price < min.price ? o : min, filtered[0]);
+    const fastest = filtered.reduce((min, o) => o.durationMinutes < min.durationMinutes ? o : min, filtered[0]);
+    const bestArr = [...filtered].sort((a, b) => {
+      const maxP = priceRange.max || 1;
+      const maxD = Math.max(...filtered.map(o => o.durationMinutes), 1);
+      const scoreA = (a.price / maxP) * 0.4 + (a.durationMinutes / maxD) * 0.4 + (a.stops > 0 ? 0.2 : 0);
+      const scoreB = (b.price / maxP) * 0.4 + (b.durationMinutes / maxD) * 0.4 + (b.stops > 0 ? 0.2 : 0);
+      return scoreA - scoreB;
+    });
+    const best = bestArr[0];
+    return {
+      cheapest: { price: Math.round(cheapest.price), airline: cheapest.airline, duration: cheapest.duration },
+      fastest: { price: Math.round(fastest.price), airline: fastest.airline, duration: fastest.duration },
+      bestValue: { price: Math.round(best.price), airline: best.airline, duration: best.duration },
+    };
+  }, [filtered, priceRange]);
+
 
   // Toggle helpers for pending filters
   const togglePendingArray = <K extends keyof FlightFiltersState>(key: K, value: string | number) => {
@@ -540,7 +564,22 @@ const FlightResults = () => {
             </motion.div>
           )}
 
-          {/* Sort tabs + filter — native app toolbar feel */}
+          {/* Quick Stats Bar */}
+          {!isLoading && quickStats && filtered.length > 3 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mb-3"
+            >
+              <QuickStatsBar
+                cheapest={quickStats.cheapest}
+                fastest={quickStats.fastest}
+                bestValue={quickStats.bestValue}
+              />
+            </motion.div>
+          )}
+
           {offers.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 6 }}
@@ -788,6 +827,30 @@ const FlightResults = () => {
               )}
             </div>
           </div>
+
+          {/* Cross-sell: Hotels & Cars */}
+          {!isLoading && filtered.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mt-6"
+            >
+              <TravelExtrasCTA currentService="flights" destination={destAirport?.city || destination} />
+            </motion.div>
+          )}
+
+          {/* FAQ section for SEO */}
+          {!isLoading && offers.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="mt-8"
+            >
+              <ResultsFAQ service="flights" />
+            </motion.div>
+          )}
         </div>
   );
 
