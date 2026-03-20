@@ -404,7 +404,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                 </AnimatePresence>
 
                 {/* ── Card content ──────────────────── */}
-                <div className="relative z-10 flex h-full flex-col p-4 pt-5">
+                <div className="relative z-10 flex h-full flex-col p-4 pt-[5.5rem]">
                   {/* Header row */}
                   <div className="mb-4 flex items-start gap-3">
                     <FloatingIcon3D
