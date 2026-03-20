@@ -237,6 +237,10 @@ interface CreateOrderParams {
     currency: string;
   }>;
   metadata?: Record<string, string>;
+  services?: Array<{
+    id: string;
+    quantity: number;
+  }>;
 }
 
 // Helper to make Duffel API requests
@@ -485,6 +489,7 @@ async function createOrder(params: CreateOrderParams) {
       passengers: params.passengers,
       payments: params.payments || [],
       metadata: params.metadata || {},
+      ...(params.services && params.services.length > 0 ? { services: params.services } : {}),
     }
   });
 
