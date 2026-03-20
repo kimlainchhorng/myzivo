@@ -526,11 +526,11 @@ const FlightReview = () => {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] text-muted-foreground font-medium">Total price</p>
-              <p className="text-xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none">
-                ${((offer.pricePerPerson || offer.price) * totalPassengers).toFixed(2)}
+              <p className="text-xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none transition-all duration-200">
+                ${((variantPrice ?? offer.pricePerPerson ?? offer.price) * totalPassengers).toFixed(2)}
               </p>
               <p className="text-[9px] text-muted-foreground mt-0.5">
-                {totalPassengers > 1 ? `${totalPassengers} travelers` : "1 traveler"} · {isRoundTrip ? "Round trip" : "One way"} · {offer.currency || "USD"}
+                {totalPassengers > 1 ? `${totalPassengers} travelers` : "1 traveler"} · {isRoundTrip ? "Round trip" : "One way"} · {variantCurrency || offer.currency || "USD"}
               </p>
             </div>
             <Button
