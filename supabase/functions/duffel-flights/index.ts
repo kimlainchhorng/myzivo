@@ -640,33 +640,61 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     stopDetails.push({ code, city, layoverDuration });
   }
 
-  // Baggage info - check actual baggage data from passengers
+  // Baggage info - read from SEGMENTS' passengers (Duffel puts baggages at slice.segment.passengers[].baggages[])
+  // Also check offer-level passengers as fallback
   let baggageInfo = 'No bags included';
   let carryOnIncluded = false;
   let checkedBagsIncluded = false;
   let checkedBagQuantity = 0;
   let carryOnQuantity = 0;
+  let fareBrandName = '';
   try {
-    const firstPax = passengers[0];
-    if (firstPax) {
-      const baggages = firstPax.baggages as Array<Record<string, unknown>> | undefined;
-      if (baggages && baggages.length > 0) {
-        const checkedBags = baggages.filter(b => b.type === 'checked');
-        const carryOn = baggages.filter(b => b.type === 'carry_on');
+    // Primary: read from first segment's passengers (where Duffel puts baggage allowances)
+    let foundBaggages = false;
+    const firstSegPax = (firstSegment.passengers as Array<Record<string, unknown>> | undefined);
+    if (firstSegPax && firstSegPax.length > 0) {
+      const segPaxFirst = firstSegPax[0];
+      // Extract fare brand name
+      fareBrandName = (segPaxFirst.cabin_class_marketing_name as string) || '';
+      const segBaggages = segPaxFirst.baggages as Array<Record<string, unknown>> | undefined;
+      if (segBaggages && segBaggages.length > 0) {
+        foundBaggages = true;
+        const checkedBags = segBaggages.filter(b => b.type === 'checked');
+        const carryOn = segBaggages.filter(b => b.type === 'carry_on');
         carryOnQuantity = carryOn.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
         carryOnIncluded = carryOnQuantity > 0;
-        if (checkedBags.length > 0) {
+        checkedBagQuantity = checkedBags.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
+        checkedBagsIncluded = checkedBagQuantity > 0;
+      }
+    }
+    // Fallback: offer-level passengers
+    if (!foundBaggages) {
+      const firstPax = passengers[0];
+      if (firstPax) {
+        const baggages = firstPax.baggages as Array<Record<string, unknown>> | undefined;
+        if (baggages && baggages.length > 0) {
+          const checkedBags = baggages.filter(b => b.type === 'checked');
+          const carryOn = baggages.filter(b => b.type === 'carry_on');
+          carryOnQuantity = carryOn.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
+          carryOnIncluded = carryOnQuantity > 0;
           checkedBagQuantity = checkedBags.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
           checkedBagsIncluded = checkedBagQuantity > 0;
-          baggageInfo = checkedBagsIncluded ? `${checkedBagQuantity} checked bag${checkedBagQuantity > 1 ? 's' : ''}` : '1 checked bag';
-        } else if (carryOn.length > 0) {
-          baggageInfo = 'Carry-on only';
-        } else {
-          baggageInfo = 'Personal item';
         }
       }
     }
-  } catch {
+    // Build display string
+    if (carryOnIncluded && checkedBagsIncluded) {
+      baggageInfo = `Carry-on + ${checkedBagQuantity} checked bag${checkedBagQuantity > 1 ? 's' : ''}`;
+    } else if (checkedBagsIncluded) {
+      baggageInfo = `${checkedBagQuantity} checked bag${checkedBagQuantity > 1 ? 's' : ''}`;
+    } else if (carryOnIncluded) {
+      baggageInfo = 'Carry-on only';
+    } else {
+      baggageInfo = 'Personal item only';
+    }
+    console.log(`[Baggage] offer=${(o.id as string)?.slice(-8)} segPax=${JSON.stringify(firstSegPax?.[0]?.baggages)} offerPax=${JSON.stringify(passengers[0]?.baggages)} => carry=${carryOnQuantity} checked=${checkedBagQuantity} brand="${fareBrandName}"`);
+  } catch (err) {
+    console.error('[Baggage] Parse error:', err);
     baggageInfo = 'Varies by fare';
   }
 
@@ -726,6 +754,7 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     currency: o.total_currency as string || 'USD',
     pricePerPerson: parseFloat(o.total_amount as string) / Math.max(passengers.length, 1),
     cabinClass,
+    fareBrandName: fareBrandName || null,
     baggageIncluded: baggageInfo,
     isRefundable,
     conditions: {
@@ -790,19 +819,42 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
     .map(o => transformOffer(o))
     .filter((o): o is DuffelOfferTransformed => o !== null);
 
-  // Deduplicate by fingerprint: airlineCode + departure time + arrival time + stops + price
-  const seen = new Set<string>();
-  const deduped: DuffelOfferTransformed[] = [];
+  // Group by flight fingerprint (same itinerary, different fares)
+  // Fingerprint = airline + departure time + arrival time + stops (excludes price/fare)
+  const groups = new Map<string, DuffelOfferTransformed[]>();
   for (const offer of transformed) {
-    const fingerprint = `${offer.airlineCode}-${offer.departure.time}-${offer.arrival.time}-${offer.stops}-${offer.price}`;
-    if (!seen.has(fingerprint)) {
-      seen.add(fingerprint);
-      deduped.push(offer);
+    const flightFP = `${offer.airlineCode}-${offer.departure.time}-${offer.arrival.time}-${offer.stops}`;
+    const group = groups.get(flightFP) || [];
+    // Avoid exact duplicates (same price too)
+    const exactDup = group.some(g => g.price === offer.price && g.fareBrandName === offer.fareBrandName);
+    if (!exactDup) {
+      group.push(offer);
+      groups.set(flightFP, group);
     }
   }
 
-  console.log(`[Transform] ${offers.length} raw -> ${transformed.length} transformed -> ${deduped.length} after dedup`);
-  return deduped;
+  // For each group, pick cheapest as primary and attach fare variants
+  const result: DuffelOfferTransformed[] = [];
+  for (const group of groups.values()) {
+    // Sort by price ascending
+    group.sort((a, b) => a.price - b.price);
+    const primary = group[0];
+    // Attach all fare variants (including primary) as fareVariants
+    primary.fareVariants = group.map(g => ({
+      id: g.id,
+      fareBrandName: g.fareBrandName || g.cabinClass,
+      price: g.price,
+      currency: g.currency,
+      conditions: g.conditions,
+      baggageDetails: g.baggageDetails,
+      baggageIncluded: g.baggageIncluded,
+      cabinClass: g.cabinClass,
+    }));
+    result.push(primary);
+  }
+
+  console.log(`[Transform] ${offers.length} raw -> ${transformed.length} transformed -> ${result.length} grouped (${groups.size} unique flights)`);
+  return result;
 }
 
 function formatTime(dateStr: string): string {
@@ -855,6 +907,7 @@ interface DuffelOfferTransformed {
   currency: string;
   pricePerPerson: number;
   cabinClass: string;
+  fareBrandName: string | null;
   baggageIncluded: string;
   isRefundable: boolean;
   conditions: {
@@ -874,6 +927,16 @@ interface DuffelOfferTransformed {
   owner: { name: string; code: string; isOperating: boolean } | undefined;
   expiresAt: string;
   passengers: number;
+  fareVariants?: Array<{
+    id: string;
+    fareBrandName: string | null;
+    price: number;
+    currency: string;
+    conditions: { changeable: boolean; refundable: boolean; changePenalty: number | null; refundPenalty: number | null; penaltyCurrency: string };
+    baggageDetails: { carryOnIncluded: boolean; carryOnQuantity: number; checkedBagsIncluded: boolean; checkedBagQuantity: number };
+    baggageIncluded: string;
+    cabinClass: string;
+  }>;
 }
 
 // ---- Available Services ----

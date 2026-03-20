@@ -58,6 +58,7 @@ export interface DuffelOffer {
   currency: string;
   pricePerPerson: number;
   cabinClass: string;
+  fareBrandName: string | null;
   baggageIncluded: string;
   isRefundable: boolean;
   conditions: {
@@ -76,6 +77,16 @@ export interface DuffelOffer {
   segments: DuffelSegment[];
   expiresAt: string;
   passengers: number;
+  fareVariants?: Array<{
+    id: string;
+    fareBrandName: string | null;
+    price: number;
+    currency: string;
+    conditions: { changeable: boolean; refundable: boolean; changePenalty: number | null; refundPenalty: number | null; penaltyCurrency: string };
+    baggageDetails: { carryOnIncluded: boolean; carryOnQuantity: number; checkedBagsIncluded: boolean; checkedBagQuantity: number };
+    baggageIncluded: string;
+    cabinClass: string;
+  }>;
 }
 
 export interface DuffelSegment {
