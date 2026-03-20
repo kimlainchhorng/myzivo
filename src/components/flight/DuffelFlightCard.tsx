@@ -87,18 +87,12 @@ export default function DuffelFlightCard({
         {/* Row 1: Airline + Price */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-muted/40 border border-border/20 flex items-center justify-center overflow-hidden shrink-0">
-              <img
-                src={getDuffelAirlineLogo(offer.airlineCode)}
-                alt={offer.airline}
-                className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
-                onError={(e) => {
-                  const el = e.target as HTMLImageElement;
-                  el.style.display = "none";
-                  el.parentElement!.innerHTML = `<span class="text-xs font-bold text-muted-foreground">${offer.airlineCode}</span>`;
-                }}
-              />
-            </div>
+            <AirlineLogo
+              iataCode={offer.airlineCode}
+              airlineName={offer.airline}
+              size={40}
+              className="shrink-0 border border-border/20 bg-muted/40"
+            />
             <div className="min-w-0">
               <p className="text-[13px] sm:text-sm font-semibold leading-tight truncate">{offer.airline}</p>
               <p className="text-[10px] text-muted-foreground leading-tight">{offer.flightNumber}</p>
