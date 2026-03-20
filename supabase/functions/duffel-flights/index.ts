@@ -648,6 +648,36 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
   let checkedBagQuantity = 0;
   let carryOnQuantity = 0;
   let fareBrandName = '';
+  let checkedBagWeightKg: number | null = null;
+  let checkedBagWeightLb: number | null = null;
+  let carryOnWeightKg: number | null = null;
+  let carryOnWeightLb: number | null = null;
+
+  const extractBaggageWeights = (baggages: Array<Record<string, unknown>>) => {
+    const checkedBags = baggages.filter(b => b.type === 'checked');
+    const carryOn = baggages.filter(b => b.type === 'carry_on');
+    carryOnQuantity = carryOn.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
+    carryOnIncluded = carryOnQuantity > 0;
+    checkedBagQuantity = checkedBags.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
+    checkedBagsIncluded = checkedBagQuantity > 0;
+    // Extract weight info from first bag of each type
+    if (checkedBags.length > 0) {
+      const cb = checkedBags[0];
+      if (cb.max_weight_kg) checkedBagWeightKg = Number(cb.max_weight_kg);
+      if (cb.max_weight_lb) checkedBagWeightLb = Number(cb.max_weight_lb);
+      // Fallback: convert if only one unit present
+      if (checkedBagWeightKg && !checkedBagWeightLb) checkedBagWeightLb = Math.round(checkedBagWeightKg * 2.205);
+      if (checkedBagWeightLb && !checkedBagWeightKg) checkedBagWeightKg = Math.round(checkedBagWeightLb / 2.205);
+    }
+    if (carryOn.length > 0) {
+      const co = carryOn[0];
+      if (co.max_weight_kg) carryOnWeightKg = Number(co.max_weight_kg);
+      if (co.max_weight_lb) carryOnWeightLb = Number(co.max_weight_lb);
+      if (carryOnWeightKg && !carryOnWeightLb) carryOnWeightLb = Math.round(carryOnWeightKg * 2.205);
+      if (carryOnWeightLb && !carryOnWeightKg) carryOnWeightKg = Math.round(carryOnWeightLb / 2.205);
+    }
+  };
+
   try {
     // Primary: read from first segment's passengers (where Duffel puts baggage allowances)
     let foundBaggages = false;
@@ -659,12 +689,7 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
       const segBaggages = segPaxFirst.baggages as Array<Record<string, unknown>> | undefined;
       if (segBaggages && segBaggages.length > 0) {
         foundBaggages = true;
-        const checkedBags = segBaggages.filter(b => b.type === 'checked');
-        const carryOn = segBaggages.filter(b => b.type === 'carry_on');
-        carryOnQuantity = carryOn.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
-        carryOnIncluded = carryOnQuantity > 0;
-        checkedBagQuantity = checkedBags.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
-        checkedBagsIncluded = checkedBagQuantity > 0;
+        extractBaggageWeights(segBaggages);
       }
     }
     // Fallback: offer-level passengers
@@ -673,12 +698,7 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
       if (firstPax) {
         const baggages = firstPax.baggages as Array<Record<string, unknown>> | undefined;
         if (baggages && baggages.length > 0) {
-          const checkedBags = baggages.filter(b => b.type === 'checked');
-          const carryOn = baggages.filter(b => b.type === 'carry_on');
-          carryOnQuantity = carryOn.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
-          carryOnIncluded = carryOnQuantity > 0;
-          checkedBagQuantity = checkedBags.reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
-          checkedBagsIncluded = checkedBagQuantity > 0;
+          extractBaggageWeights(baggages);
         }
       }
     }
@@ -692,7 +712,7 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     } else {
       baggageInfo = 'Personal item only';
     }
-    console.log(`[Baggage] offer=${(o.id as string)?.slice(-8)} segPax=${JSON.stringify(firstSegPax?.[0]?.baggages)} offerPax=${JSON.stringify(passengers[0]?.baggages)} => carry=${carryOnQuantity} checked=${checkedBagQuantity} brand="${fareBrandName}"`);
+    console.log(`[Baggage] offer=${(o.id as string)?.slice(-8)} carry=${carryOnQuantity}(${carryOnWeightKg}kg) checked=${checkedBagQuantity}(${checkedBagWeightKg}kg) brand="${fareBrandName}"`);
   } catch (err) {
     console.error('[Baggage] Parse error:', err);
     baggageInfo = 'Varies by fare';
@@ -767,8 +787,12 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     baggageDetails: {
       carryOnIncluded,
       carryOnQuantity,
+      carryOnWeightKg,
+      carryOnWeightLb,
       checkedBagsIncluded,
       checkedBagQuantity,
+      checkedBagWeightKg,
+      checkedBagWeightLb,
     },
     segments: allSegs.map(seg => transformSegment(seg)),
     owner: firstCarrier,
