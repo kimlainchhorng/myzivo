@@ -255,9 +255,12 @@ export default function FlightLegCard({
           <Button
             size="sm"
             className={cn(
-              "h-8 px-4 text-[11px] font-bold shadow-sm active:scale-95 transition-all gap-1 shrink-0",
+              "h-9 px-5 text-[12px] font-bold active:scale-[0.97] transition-all gap-1 shrink-0 rounded-xl",
               "bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 text-primary-foreground"
             )}
+            style={{
+              boxShadow: "0 2px 8px -2px hsl(var(--flights)/0.3), 0 1px 2px 0 hsl(var(--flights)/0.15)",
+            }}
             onClick={(e) => { e.stopPropagation(); onSelect(group); }}
           >
             Select {label === "outbound" ? "Departure" : "Return"}
