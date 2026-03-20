@@ -5,7 +5,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock, ChevronRight, ArrowRight, Sunrise, Sun, Sunset, Moon, ArrowUpDown } from "lucide-react";
+import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock, ChevronRight, ArrowRight, Sunrise, Sun, Sunset, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -22,6 +22,7 @@ import FlightResultsSkeleton from "@/components/flight/FlightResultsSkeleton";
 import { useDuffelFlightSearch, getDuffelAirlineLogo, type DuffelOffer } from "@/hooks/useDuffelFlights";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
+import DuffelFlightCard from "@/components/flight/DuffelFlightCard";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
@@ -154,6 +155,16 @@ const FlightResults = () => {
   };
 
   const filtered = useMemo(() => sortOffers(applyFilters(filters, offers), sortBy), [offers, filters, sortBy, priceRange]);
+
+  const lowestPriceId = useMemo(() => {
+    if (filtered.length === 0) return null;
+    return filtered.reduce((min, o) => o.price < min.price ? o : min, filtered[0]).id;
+  }, [filtered]);
+
+  const fastestId = useMemo(() => {
+    if (filtered.length === 0) return null;
+    return filtered.reduce((min, o) => o.durationMinutes < min.durationMinutes ? o : min, filtered[0]).id;
+  }, [filtered]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -712,121 +723,16 @@ const FlightResults = () => {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.2, delay: Math.min(idx * 0.025, 0.15), ease: [0.25, 0.46, 0.45, 0.94] }}
                     >
-                      <div
-                        className={cn(
-                          "bg-card/80 backdrop-blur-sm rounded-xl border border-border/30 p-3.5 sm:p-4 cursor-pointer group transition-all duration-200",
-                          "hover:border-[hsl(var(--flights))]/40 hover:shadow-lg hover:shadow-[hsl(var(--flights))]/5",
-                          "active:scale-[0.99]",
-                          idx === 0 && "border-[hsl(var(--flights))]/25"
-                        )}
-                        onClick={() => handleSelect(offer)}
-                      >
-                        {idx === 0 && (
-                          <div className="mb-2">
-                            <Badge className={cn(
-                              "text-[9px] font-bold px-2 py-0.5 border",
-                              sortBy === "best" && "bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))] border-[hsl(var(--flights))]/20",
-                              sortBy === "cheapest" && "bg-primary/10 text-primary border-primary/20",
-                              sortBy === "fastest" && "bg-amber-500/10 text-amber-600 border-amber-500/20",
-                              sortBy === "earliest" && "bg-sky-500/10 text-sky-600 border-sky-500/20",
-                              sortBy === "shortest" && "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-                            )}>
-                              {sortBy === "best" ? "✨ Best Option" : sortBy === "cheapest" ? "💰 Lowest Price" : sortBy === "fastest" ? "⚡ Fastest" : sortBy === "earliest" ? "🕐 Earliest" : "📏 Shortest"}
-                            </Badge>
-                          </div>
-                        )}
-
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0 space-y-2.5">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-lg bg-muted/50 border border-border/20 flex items-center justify-center overflow-hidden shrink-0">
-                                <img
-                                  src={getDuffelAirlineLogo(offer.airlineCode)}
-                                  alt={offer.airline}
-                                  className="w-6 h-6 object-contain"
-                                  onError={(e) => {
-                                    const el = e.target as HTMLImageElement;
-                                    el.style.display = 'none';
-                                    el.parentElement!.innerHTML = `<span class="text-[10px] font-bold text-muted-foreground">${offer.airlineCode}</span>`;
-                                  }}
-                                />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-semibold leading-tight truncate">{offer.airline}</p>
-                                <p className="text-[10px] text-muted-foreground">{offer.flightNumber}</p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <div className="text-left min-w-[46px]">
-                                <p className="text-lg font-bold tabular-nums leading-none">{offer.departure.time}</p>
-                                <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{offer.departure.code}</p>
-                              </div>
-                              <div className="flex flex-col items-center flex-1 py-1">
-                                <span className="text-[9px] text-muted-foreground font-medium flex items-center gap-0.5">
-                                  <Clock className="w-2.5 h-2.5" />
-                                  {offer.duration}
-                                </span>
-                                <div className="w-full h-[1.5px] bg-gradient-to-r from-[hsl(var(--flights))]/60 via-border/40 to-[hsl(var(--flights))]/60 relative my-1 rounded-full">
-                                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[hsl(var(--flights))] border-[1.5px] border-card" />
-                                  {offer.stops > 0 && Array.from({ length: Math.min(offer.stops, 2) }).map((_, i) => (
-                                    <div
-                                      key={i}
-                                      className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-muted-foreground/50 border border-card"
-                                      style={{ left: `${((i + 1) / (offer.stops + 1)) * 100}%` }}
-                                    />
-                                  ))}
-                                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[hsl(var(--flights))] border-[1.5px] border-card" />
-                                </div>
-                                <span className={cn(
-                                  "text-[9px] font-semibold",
-                                  offer.stops === 0 ? "text-primary" : "text-muted-foreground"
-                                )}>
-                                  {offer.stops === 0 ? "Direct" : `${offer.stops} stop${offer.stops > 1 ? "s" : ""}`}
-                                </span>
-                              </div>
-                              <div className="text-right min-w-[46px]">
-                                <p className="text-lg font-bold tabular-nums leading-none">{offer.arrival.time}</p>
-                                <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{offer.arrival.code}</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col items-end justify-between shrink-0 min-h-[80px]">
-                            <div className="text-right">
-                              <p className="text-xl font-bold text-[hsl(var(--flights))] tabular-nums leading-none">
-                                ${Math.round(offer.price)}
-                              </p>
-                              <p className="text-[9px] text-muted-foreground mt-0.5">/person</p>
-                            </div>
-                            <Button
-                              size="sm"
-                              className="h-7 px-3 text-[10px] font-bold bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 shadow-sm active:scale-95 transition-all gap-1 mt-2"
-                              onClick={(e) => { e.stopPropagation(); handleSelect(offer); }}
-                            >
-                              Select
-                              <ChevronRight className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-1 mt-2.5 flex-wrap">
-                          <Badge variant="outline" className="text-[8px] border-border/20 bg-muted/20 capitalize h-4 px-1.5">
-                            {offer.cabinClass}
-                          </Badge>
-                          {offer.baggageIncluded && (
-                            <Badge variant="outline" className="text-[8px] border-border/20 bg-muted/20 gap-0.5 h-4 px-1.5">
-                              <Luggage className="w-2 h-2" />
-                              {offer.baggageIncluded}
-                            </Badge>
-                          )}
-                          {offer.isRefundable && (
-                            <Badge variant="outline" className="text-[8px] border-primary/20 text-primary bg-primary/5 h-4 px-1.5">
-                              Refundable
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
+                      <DuffelFlightCard
+                        offer={offer}
+                        index={idx}
+                        sortBy={sortBy}
+                        isLowest={offer.id === lowestPriceId && idx !== 0}
+                        isFastest={offer.id === fastestId && idx !== 0}
+                        totalPassengers={totalPassengers}
+                        hasReturn={!!returnDate}
+                        onSelect={handleSelect}
+                      />
                     </motion.div>
                   ))}
                 </AnimatePresence>
