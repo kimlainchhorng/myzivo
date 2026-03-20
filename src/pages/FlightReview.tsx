@@ -22,6 +22,9 @@ import BoardingPass3D from "@/components/flight/BoardingPass3D";
 import { StepIndicator } from "@/components/flight/review/StepIndicator";
 import { FareRulesCard } from "@/components/flight/review/FareRulesCard";
 import { PriceSummaryCard } from "@/components/flight/review/PriceSummaryCard";
+import CheckoutUpsells from "@/components/checkout/CheckoutUpsells";
+import { TravelInsuranceSelector } from "@/components/checkout/TravelInsuranceSelector";
+import UpgradeOpportunityWidget from "@/components/shared/UpgradeOpportunityWidget";
 import { cn } from "@/lib/utils";
 
 /* ── Helpers ─────────────────────────────────────────── */
