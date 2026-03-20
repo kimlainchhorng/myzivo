@@ -152,8 +152,8 @@ export default function MobilePassengerCabinSheet({
                         background: "linear-gradient(145deg, hsl(160 84% 39%), hsl(160 70% 44%))",
                         boxShadow: "0 6px 20px hsl(160 84% 39% / 0.35), 0 2px 4px hsl(160 84% 39% / 0.15), inset 0 1px 0 hsl(0 0% 100% / 0.2)",
                       } : {
-                        background: "hsl(var(--card))",
-                        boxShadow: "0 2px 8px hsl(var(--foreground) / 0.05), 0 1px 2px hsl(var(--foreground) / 0.04), inset 0 0 0 1px hsl(var(--border) / 0.5), inset 0 -1px 0 hsl(var(--foreground) / 0.03)",
+                        background: "hsl(var(--background))",
+                        boxShadow: "inset 0 2px 6px hsl(var(--foreground) / 0.03), inset 0 0 0 1px hsl(var(--border) / 0.45)",
                       }}
                       onClick={() => onCabinChange(option.value)}
                     >
