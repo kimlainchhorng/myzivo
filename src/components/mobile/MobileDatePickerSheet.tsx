@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { format, isBefore, startOfToday, addDays } from "date-fns";
+import { format, isBefore, startOfToday, addDays, getDay, getDate } from "date-fns";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -10,6 +10,24 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import type { DateRange } from "react-day-picker";
+
+/* ─── Price level helper (simulated based on day-of-week) ─── */
+type PriceLevel = "low" | "mid" | "high";
+
+function getPriceLevel(date: Date): PriceLevel {
+  const dow = getDay(date);
+  const d = getDate(date);
+  if (dow === 2 || dow === 3) return "low";
+  if (dow === 0 || dow === 5 || dow === 6) return "high";
+  if (d % 7 === 0) return "low";
+  return "mid";
+}
+
+const priceLevelConfig = {
+  low:  { label: "Low",  dotClass: "bg-emerald-500", color: "hsl(160 84% 39%)" },
+  mid:  { label: "Mid",  dotClass: "bg-amber-500",   color: "hsl(45 93% 47%)" },
+  high: { label: "High", dotClass: "bg-red-500",     color: "hsl(0 72% 51%)" },
+};
 
 /* ─── Single-date picker ─── */
 interface MobileDatePickerSheetProps {
@@ -53,7 +71,6 @@ export default function MobileDatePickerSheet({
         className="rounded-t-3xl px-0 bg-transparent border-0 shadow-none"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
       >
-        {/* 3D Card container */}
         <div
           className="mx-3 mb-2 rounded-3xl overflow-hidden animate-scale-in"
           style={{
@@ -68,7 +85,6 @@ export default function MobileDatePickerSheet({
             transformOrigin: "bottom center",
           }}
         >
-          {/* Header with close button */}
           <SheetHeader className="px-5 pt-5 pb-3 text-left relative">
             <SheetTitle className="flex items-center gap-2.5 text-base font-semibold">
               <div
@@ -84,10 +100,8 @@ export default function MobileDatePickerSheet({
             </SheetTitle>
           </SheetHeader>
 
-          {/* Divider with 3D depth */}
           <div className="mx-5 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
 
-          {/* Calendar with elevated inner surface */}
           <div className="px-4 py-3">
             <div
               className="rounded-2xl overflow-hidden"
@@ -116,7 +130,6 @@ export default function MobileDatePickerSheet({
             </div>
           </div>
 
-          {/* Footer with 3D Done button */}
           <div className="px-5 pb-5 pt-1 flex items-center justify-between gap-3">
             <div className="min-h-10 text-sm text-muted-foreground font-medium">
               {selectedDate ? `Selected: ${format(selectedDate, "EEE, MMM d")}` : "Tap a date to continue"}
@@ -200,7 +213,6 @@ export function MobileDateRangePickerSheet({
         className="rounded-t-3xl px-0 bg-transparent border-0 shadow-none"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
       >
-        {/* 3D Floating Card */}
         <div
           className="mx-3 mb-2 rounded-3xl overflow-hidden animate-scale-in"
           style={{
@@ -215,7 +227,6 @@ export function MobileDateRangePickerSheet({
             transformOrigin: "bottom center",
           }}
         >
-          {/* Header */}
           <SheetHeader className="px-5 pt-5 pb-3 text-left relative">
             <SheetTitle className="flex items-center gap-2.5 text-base font-semibold">
               <div
@@ -233,8 +244,20 @@ export function MobileDateRangePickerSheet({
 
           <div className="mx-5 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
 
-          {/* Calendar in recessed 3D surface */}
-          <div className="px-4 py-3">
+          {/* Fare trend legend */}
+          <div className="px-5 pt-3 pb-1 flex items-center gap-4">
+            <span className="text-[10px] font-medium text-muted-foreground">Fare trend:</span>
+            {(["low", "mid", "high"] as PriceLevel[]).map((level) => (
+              <span key={level} className="flex items-center gap-1">
+                <span className={`w-1.5 h-1.5 rounded-full ${priceLevelConfig[level].dotClass}`} />
+                <span className="text-[10px] font-medium" style={{ color: priceLevelConfig[level].color }}>
+                  {priceLevelConfig[level].label}
+                </span>
+              </span>
+            ))}
+          </div>
+
+          <div className="px-4 py-2">
             <div
               className="rounded-2xl overflow-hidden"
               style={{
@@ -252,14 +275,32 @@ export function MobileDateRangePickerSheet({
                 disabled={(date) => isBefore(date, earliestDate)}
                 initialFocus
                 className="pointer-events-auto p-3"
-                classNames={calendarClassNames3D}
+                classNames={calendarClassNames3DPricing}
+                components={{
+                  DayContent: ({ date }) => {
+                    const disabled = isBefore(date, earliestDate);
+                    const level = disabled ? null : getPriceLevel(date);
+                    return (
+                      <div className="flex flex-col items-center justify-center w-full h-full">
+                        <span className="text-sm leading-none">{date.getDate()}</span>
+                        {level && (
+                          <span className={`w-1 h-1 rounded-full mt-0.5 ${priceLevelConfig[level].dotClass}`} />
+                        )}
+                      </div>
+                    );
+                  },
+                }}
               />
             </div>
           </div>
 
-          {/* Footer */}
           <div className="px-5 pb-5 pt-1 flex items-center justify-between gap-3">
-            <div className="min-h-10 text-sm text-muted-foreground font-medium">{summaryText}</div>
+            <div className="min-h-10 flex flex-col justify-center">
+              <span className="text-sm text-muted-foreground font-medium">{summaryText}</span>
+              {range?.from && !range?.to && (
+                <span className="text-[10px] text-muted-foreground/60 mt-0.5">Now tap your return date</span>
+              )}
+            </div>
             <Button
               type="button"
               onClick={handleDone}
@@ -317,4 +358,20 @@ const calendarClassNames3D = {
   day_range_middle:
     "aria-selected:bg-emerald-500/8 aria-selected:text-foreground rounded-none",
   day_hidden: "invisible",
+};
+
+/* ─── Pricing variant with taller cells for dots ─── */
+const calendarClassNames3DPricing = {
+  ...calendarClassNames3D,
+  cell: `h-11 w-10 text-center text-sm p-0 relative
+    [&:has([aria-selected].day-range-end)]:rounded-r-xl
+    [&:has([aria-selected].day-outside)]:bg-emerald-500/8
+    [&:has([aria-selected])]:bg-emerald-500/8
+    first:[&:has([aria-selected])]:rounded-l-xl
+    last:[&:has([aria-selected])]:rounded-r-xl
+    focus-within:relative focus-within:z-20`,
+  day: `h-11 w-10 p-0 font-medium rounded-xl
+    hover:bg-emerald-500/10 transition-all duration-150
+    inline-flex items-center justify-center text-foreground
+    aria-selected:opacity-100 active:scale-[0.92]`,
 };
