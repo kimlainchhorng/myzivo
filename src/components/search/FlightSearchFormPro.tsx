@@ -268,7 +268,7 @@ export default function FlightSearchFormPro({
                 variant="outline"
                 size="icon"
                 onClick={handleSwap}
-                className="h-11 sm:h-12 w-11 sm:w-12 rounded-full border-dashed hover:border-sky-500 hover:bg-sky-500/10 shrink-0 transition-all hover:rotate-180 duration-500 hidden md:flex"
+                className="h-11 sm:h-12 w-11 sm:w-12 rounded-full border-dashed hover:border-sky-500 hover:bg-sky-500/10 shrink-0 transition-all hover:rotate-180 duration-500 hidden md:flex shadow-md hover:shadow-lg active:scale-[0.95] active:shadow-sm"
                 aria-label="Swap cities"
               >
                 <ArrowLeftRight className="w-4 h-4" />
@@ -296,7 +296,7 @@ export default function FlightSearchFormPro({
               type="button"
               variant="outline"
               onClick={handleSwap}
-              className="w-full h-10 md:hidden rounded-xl border-dashed gap-2"
+              className="w-full h-11 md:hidden rounded-xl border-dashed gap-2 shadow-sm hover:shadow-md active:scale-[0.97] transition-all"
             >
               <ArrowLeftRight className="w-4 h-4" />
               Swap
