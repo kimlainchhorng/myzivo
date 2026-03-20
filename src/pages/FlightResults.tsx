@@ -747,7 +747,6 @@ const FlightResults = () => {
             </div>
           </div>
         </div>
-    </div>
   );
 
   if (isMobile) {
