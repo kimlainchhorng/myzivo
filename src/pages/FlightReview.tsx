@@ -439,6 +439,7 @@ const FlightReview = () => {
               <FareVariantsCard
                 offer={offer}
                 onSelectVariant={(variant) => {
+                  setVariantPrice(variant.price);
                   // Update sessionStorage with the selected fare variant
                   const updated = {
                     ...offer,
