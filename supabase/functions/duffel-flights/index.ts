@@ -717,7 +717,7 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
       changeBeforeDeparture: conditions?.change_before_departure as boolean | null,
       refundBeforeDeparture: conditions?.refund_before_departure as boolean | null,
     },
-    segments: segments.map(seg => transformSegment(seg)),
+    segments: allSegs.map(seg => transformSegment(seg)),
     owner: firstCarrier,
     expiresAt: o.expires_at as string,
     passengers: passengers.length,
