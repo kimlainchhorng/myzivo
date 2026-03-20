@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Clock, ChevronRight, ChevronDown, Briefcase, ShieldCheck, ShieldX,
-  ArrowRight, Repeat, Plane, ExternalLink
+  ArrowRight, Repeat, Plane, ExternalLink, RefreshCw
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
