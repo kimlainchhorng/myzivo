@@ -271,13 +271,28 @@ export function useDuffelOffer(offerId: string | null) {
         },
       });
 
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
+      // If edge function returned an error (400), check if it's a known "expired/not found" case
+      if (error) {
+        console.warn('[useDuffelOffer] Edge function error:', error.message);
+        return null;
+      }
+      if (data?.error) {
+        console.warn('[useDuffelOffer] Duffel error:', data.error);
+        return null;
+      }
 
       return data.offer as DuffelOffer;
     },
     enabled: !!offerId,
-    staleTime: 60 * 1000, // 1 minute - offers expire
+    staleTime: 60 * 1000,
+    retry: (failureCount, error) => {
+      // Don't retry on "resource not found" / expired offer errors
+      const msg = (error as Error)?.message?.toLowerCase() || '';
+      if (msg.includes('does not exist') || msg.includes('no longer available') || msg.includes('expired')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 }
 
