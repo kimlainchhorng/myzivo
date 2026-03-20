@@ -417,6 +417,7 @@ const App = () => (
                 <Route path="/flights/:route" element={<RouteErrorBoundary section="Flights"><FlightLanding /></RouteErrorBoundary>} />
                 <Route path="/flights/results" element={<RouteErrorBoundary section="Flights"><FlightResults /></RouteErrorBoundary>} />
                 <Route path="/flights/live" element={<RouteErrorBoundary section="Flights"><FlightLive /></RouteErrorBoundary>} />
+                <Route path="/flights/details/review" element={<RouteErrorBoundary section="Flights"><FlightReview /></RouteErrorBoundary>} />
                 <Route path="/flights/details/:id" element={<RouteErrorBoundary section="Flights"><FlightDetails /></RouteErrorBoundary>} />
                 <Route path="/flights/traveler" element={<RouteErrorBoundary section="Flights"><FlightTravelerInfo /></RouteErrorBoundary>} />
                 <Route path="/flights/traveler-info" element={<RouteErrorBoundary section="Flights"><FlightTravelerInfo /></RouteErrorBoundary>} />
