@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { Plane, ArrowLeftRight, Users, CalendarIcon, ChevronDown, Search, Sparkles } from "lucide-react";
+import { Plane, ArrowLeftRight, Users, CalendarIcon, ChevronDown, Search, Sparkles, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
