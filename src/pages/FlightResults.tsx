@@ -30,7 +30,7 @@ import FlightEmptyState from "@/components/flight/FlightEmptyState";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { QuickStatsBar } from "@/components/flight/QuickStatsBar";
 import { ResultsFAQ } from "@/components/results/ResultsFAQ";
-import { TravelExtrasCTA } from "@/components/shared/TravelExtrasCTA";
+import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
