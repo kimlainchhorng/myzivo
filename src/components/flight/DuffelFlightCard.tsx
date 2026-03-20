@@ -1,9 +1,10 @@
 /**
  * DuffelFlightCard — Premium OTA-style flight result card
+ * Shows outbound + return legs for round-trip searches
  * With expandable segment details drawer + 3D tilt effect
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ interface DuffelFlightCardProps {
   totalPassengers: number;
   hasReturn: boolean;
   onSelect: (offer: DuffelOffer) => void;
+  searchDestination?: string;
 }
 
 const sortBadgeConfig: Record<string, { label: string; className: string }> = {
@@ -90,6 +92,151 @@ function SegmentRow({ seg, isLast }: { seg: DuffelSegment; isLast: boolean }) {
   );
 }
 
+/* ── Route timeline (reusable for outbound/return) ── */
+function RouteTimeline({
+  depTime,
+  depCode,
+  arrTime,
+  arrCode,
+  duration,
+  stops,
+  stopDetails,
+  label,
+}: {
+  depTime: string;
+  depCode: string;
+  arrTime: string;
+  arrCode: string;
+  duration: string;
+  stops: number;
+  stopDetails?: { code: string; city: string; layoverDuration: string }[];
+  label?: string;
+}) {
+  const stopLabel = stops === 0 ? "Nonstop" : `${stops} stop${stops > 1 ? "s" : ""}`;
+
+  return (
+    <div>
+      {label && (
+        <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">{label}</p>
+      )}
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="text-left shrink-0 min-w-[52px] sm:min-w-[58px]">
+          <p className="text-[19px] sm:text-xl font-bold tabular-nums leading-none">{depTime}</p>
+          <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{depCode}</p>
+        </div>
+
+        <div className="flex flex-col items-center flex-1 py-0.5 min-w-0">
+          <span className="text-[9px] sm:text-[10px] text-muted-foreground font-medium flex items-center gap-0.5 whitespace-nowrap">
+            <Clock className="w-2.5 h-2.5 shrink-0" />
+            {duration}
+          </span>
+
+          <div className="w-full h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-border/50 to-[hsl(var(--flights))] relative my-1 rounded-full">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full bg-[hsl(var(--flights))] border-[1.5px] border-card" />
+            {stopDetails && stopDetails.length > 0
+              ? stopDetails.map((stop, i) => (
+                  <div
+                    key={i}
+                    className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center"
+                    style={{ left: `${((i + 1) / (stopDetails.length + 1)) * 100}%`, transform: 'translate(-50%, -50%)' }}
+                  >
+                    <div className="w-[6px] h-[6px] rounded-full bg-muted-foreground/60 border border-card" />
+                  </div>
+                ))
+              : stops > 0 && Array.from({ length: Math.min(stops, 3) }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute top-1/2 -translate-y-1/2 w-[5px] h-[5px] rounded-full bg-muted-foreground/60 border border-card"
+                    style={{ left: `${((i + 1) / (Math.min(stops, 3) + 1)) * 100}%` }}
+                  />
+                ))
+            }
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full bg-[hsl(var(--flights))] border-[1.5px] border-card" />
+          </div>
+
+          <span className={cn(
+            "text-[9px] sm:text-[10px] font-semibold leading-tight",
+            stops === 0 ? "text-primary" : "text-muted-foreground"
+          )}>
+            {stopLabel}
+          </span>
+          {stopDetails && stopDetails.length > 0 && (
+            <span className="text-[8px] text-muted-foreground/70 flex items-center gap-0.5 mt-0.5 truncate max-w-full">
+              {stopDetails.map((s, i) => (
+                <span key={i} className="flex items-center gap-0.5">
+                  {i > 0 && <ArrowRight className="w-1.5 h-1.5 shrink-0" />}
+                  <span>{s.code}</span>
+                  {s.layoverDuration && (
+                    <span className="text-muted-foreground/50">({s.layoverDuration})</span>
+                  )}
+                </span>
+              ))}
+            </span>
+          )}
+        </div>
+
+        <div className="text-right shrink-0 min-w-[52px] sm:min-w-[58px]">
+          <p className="text-[19px] sm:text-xl font-bold tabular-nums leading-none">{arrTime}</p>
+          <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{arrCode}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Helper: split segments into outbound/return ── */
+function splitSegments(segments: DuffelSegment[], destCode: string) {
+  if (!segments?.length || !destCode) return { outbound: segments || [], returnSegs: [] };
+  const dest = destCode.toUpperCase();
+  
+  // Find the split point: first segment that departs from destination
+  const splitIdx = segments.findIndex((seg, i) => 
+    i > 0 && seg.origin.code.toUpperCase() === dest
+  );
+  
+  if (splitIdx <= 0) return { outbound: segments, returnSegs: [] };
+  return {
+    outbound: segments.slice(0, splitIdx),
+    returnSegs: segments.slice(splitIdx),
+  };
+}
+
+/* ── Helper: compute slice summary from segments ── */
+function getSliceSummary(segs: DuffelSegment[]) {
+  if (!segs.length) return null;
+  const first = segs[0];
+  const last = segs[segs.length - 1];
+  const depTime = first.departingAt?.split("T")[1]?.slice(0, 5) || "—";
+  const arrTime = last.arrivingAt?.split("T")[1]?.slice(0, 5) || "—";
+  const depCode = first.origin.code;
+  const arrCode = last.destination.code;
+  
+  // Calculate total duration
+  const startMs = new Date(first.departingAt).getTime();
+  const endMs = new Date(last.arrivingAt).getTime();
+  const totalMin = Math.round((endMs - startMs) / 60000);
+  const hours = Math.floor(totalMin / 60);
+  const mins = totalMin % 60;
+  const duration = totalMin > 0 ? `${hours}h ${mins}m` : "—";
+  
+  const stops = segs.length - 1;
+  const stopDetails: { code: string; city: string; layoverDuration: string }[] = [];
+  for (let i = 0; i < segs.length - 1; i++) {
+    const arriveAt = new Date(segs[i].arrivingAt).getTime();
+    const departAt = new Date(segs[i + 1].departingAt).getTime();
+    const layMin = Math.round((departAt - arriveAt) / 60000);
+    const lh = Math.floor(layMin / 60);
+    const lm = layMin % 60;
+    stopDetails.push({
+      code: segs[i].destination.code,
+      city: segs[i].destination.city || segs[i].destination.code,
+      layoverDuration: layMin > 0 ? `${lh}h ${lm}m` : "",
+    });
+  }
+  
+  return { depTime, arrTime, depCode, arrCode, duration, stops, stopDetails };
+}
+
 export default function DuffelFlightCard({
   offer,
   index,
@@ -99,20 +246,28 @@ export default function DuffelFlightCard({
   totalPassengers,
   hasReturn,
   onSelect,
+  searchDestination,
 }: DuffelFlightCardProps) {
   const [expanded, setExpanded] = useState(false);
   const isTop = index === 0;
   const { ref: tiltRef, style: tiltStyle, glareStyle, handleMouseMove, handleMouseLeave } = use3DTilt(4, 1.015);
   const badge = isTop ? sortBadgeConfig[sortBy] : null;
 
-  const stopLabel = offer.stops === 0
-    ? "Nonstop"
-    : `${offer.stops} stop${offer.stops > 1 ? "s" : ""}`;
-
   const carrierCodes = offer.carriers?.length
     ? [...new Set(offer.carriers.map(c => c.code))].slice(0, 2)
     : [offer.airlineCode];
   const carrierSummary = carrierCodes.filter(Boolean).join(" · ");
+
+  // Split segments into outbound/return for round-trip
+  const { outbound, returnSegs } = useMemo(() => {
+    if (!hasReturn || !offer.segments?.length) return { outbound: offer.segments || [], returnSegs: [] };
+    const dest = searchDestination || offer.arrival?.code || "";
+    return splitSegments(offer.segments, dest);
+  }, [offer.segments, hasReturn, searchDestination, offer.arrival?.code]);
+
+  const outboundSummary = useMemo(() => getSliceSummary(outbound), [outbound]);
+  const returnSummary = useMemo(() => getSliceSummary(returnSegs), [returnSegs]);
+  const hasReturnData = returnSegs.length > 0 && returnSummary;
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -182,7 +337,7 @@ export default function DuffelFlightCard({
                 <p className="text-[10px] text-muted-foreground leading-tight">{offer.flightNumber}</p>
                 <p className="text-[9px] text-muted-foreground/70 leading-tight">· {carrierSummary}</p>
                 {offer.operatedBy && (
-                  <p className="text-[9px] text-muted-foreground/70 leading-tight truncate">· {offer.operatedBy}</p>
+                  <p className="text-[9px] text-muted-foreground/70 leading-tight truncate">· Operated by {offer.operatedBy}</p>
                 )}
               </div>
             </div>
@@ -203,70 +358,35 @@ export default function DuffelFlightCard({
           </div>
         </div>
 
-        {/* Row 2: Route timeline */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <div className="text-left shrink-0 min-w-[52px] sm:min-w-[58px]">
-            <p className="text-[19px] sm:text-xl font-bold tabular-nums leading-none">{offer.departure.time}</p>
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{offer.departure.code}</p>
+        {/* Route timelines — outbound */}
+        <RouteTimeline
+          depTime={hasReturnData && outboundSummary ? outboundSummary.depTime : offer.departure.time}
+          depCode={hasReturnData && outboundSummary ? outboundSummary.depCode : offer.departure.code}
+          arrTime={hasReturnData && outboundSummary ? outboundSummary.arrTime : offer.arrival.time}
+          arrCode={hasReturnData && outboundSummary ? outboundSummary.arrCode : offer.arrival.code}
+          duration={hasReturnData && outboundSummary ? outboundSummary.duration : offer.duration}
+          stops={hasReturnData && outboundSummary ? outboundSummary.stops : offer.stops}
+          stopDetails={hasReturnData && outboundSummary ? outboundSummary.stopDetails : offer.stopDetails}
+          label={hasReturnData ? "Outbound" : undefined}
+        />
+
+        {/* Return timeline */}
+        {hasReturnData && returnSummary && (
+          <div className="mt-3 pt-2.5 border-t border-dashed border-border/30">
+            <RouteTimeline
+              depTime={returnSummary.depTime}
+              depCode={returnSummary.depCode}
+              arrTime={returnSummary.arrTime}
+              arrCode={returnSummary.arrCode}
+              duration={returnSummary.duration}
+              stops={returnSummary.stops}
+              stopDetails={returnSummary.stopDetails}
+              label="Return"
+            />
           </div>
+        )}
 
-          <div className="flex flex-col items-center flex-1 py-0.5 min-w-0">
-            <span className="text-[9px] sm:text-[10px] text-muted-foreground font-medium flex items-center gap-0.5 whitespace-nowrap">
-              <Clock className="w-2.5 h-2.5 shrink-0" />
-              {offer.duration}
-            </span>
-
-            <div className="w-full h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-border/50 to-[hsl(var(--flights))] relative my-1 rounded-full">
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full bg-[hsl(var(--flights))] border-[1.5px] border-card" />
-              {offer.stopDetails?.length > 0
-                ? offer.stopDetails.map((stop, i) => (
-                    <div
-                      key={i}
-                      className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center"
-                      style={{ left: `${((i + 1) / (offer.stopDetails.length + 1)) * 100}%`, transform: 'translate(-50%, -50%)' }}
-                    >
-                      <div className="w-[6px] h-[6px] rounded-full bg-muted-foreground/60 border border-card" />
-                    </div>
-                  ))
-                : offer.stops > 0 && Array.from({ length: Math.min(offer.stops, 3) }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="absolute top-1/2 -translate-y-1/2 w-[5px] h-[5px] rounded-full bg-muted-foreground/60 border border-card"
-                      style={{ left: `${((i + 1) / (Math.min(offer.stops, 3) + 1)) * 100}%` }}
-                    />
-                  ))
-              }
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full bg-[hsl(var(--flights))] border-[1.5px] border-card" />
-            </div>
-
-            <span className={cn(
-              "text-[9px] sm:text-[10px] font-semibold leading-tight",
-              offer.stops === 0 ? "text-primary" : "text-muted-foreground"
-            )}>
-              {stopLabel}
-            </span>
-            {offer.stopDetails?.length > 0 && (
-              <span className="text-[8px] text-muted-foreground/70 flex items-center gap-0.5 mt-0.5 truncate max-w-full">
-                {offer.stopDetails.map((s, i) => (
-                  <span key={i} className="flex items-center gap-0.5">
-                    {i > 0 && <ArrowRight className="w-1.5 h-1.5 shrink-0" />}
-                    <span>{s.code}</span>
-                    {s.layoverDuration && (
-                      <span className="text-muted-foreground/50">({s.layoverDuration})</span>
-                    )}
-                  </span>
-                ))}
-              </span>
-            )}
-          </div>
-
-          <div className="text-right shrink-0 min-w-[52px] sm:min-w-[58px]">
-            <p className="text-[19px] sm:text-xl font-bold tabular-nums leading-none">{offer.arrival.time}</p>
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{offer.arrival.code}</p>
-          </div>
-        </div>
-
-        {/* Row 3: Tags + Details toggle + CTA */}
+        {/* Row 3: Tags + CTA */}
         <div className="flex items-end justify-between gap-2 mt-3">
           <div className="flex gap-1 flex-wrap min-w-0">
             <Badge variant="outline" className="text-[8px] sm:text-[9px] border-border/25 bg-muted/25 capitalize h-[18px] px-1.5 font-medium">
@@ -333,16 +453,61 @@ export default function DuffelFlightCard({
             className="overflow-hidden"
           >
             <div className="px-3 pb-3 sm:px-4 sm:pb-4 pt-2 border-t border-border/20 bg-muted/5 space-y-3">
+              {/* Outbound segments */}
               <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                {offer.segments.length} segment{offer.segments.length > 1 ? "s" : ""}
+                {hasReturnData ? `Outbound · ${outbound.length} segment${outbound.length > 1 ? "s" : ""}` : `${offer.segments.length} segment${offer.segments.length > 1 ? "s" : ""}`}
               </p>
 
-              {offer.segments.map((seg, i) => (
-                <SegmentRow key={seg.id || i} seg={seg} isLast={i === offer.segments.length - 1} />
+              {(hasReturnData ? outbound : offer.segments).map((seg, i) => (
+                <SegmentRow key={seg.id || i} seg={seg} isLast={hasReturnData ? i === outbound.length - 1 : i === offer.segments.length - 1} />
               ))}
 
-              {/* Layover badges */}
-              {offer.stopDetails?.length > 0 && (
+              {/* Outbound layover badges */}
+              {outboundSummary && outboundSummary.stopDetails.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {outboundSummary.stopDetails.map((stop, i) => (
+                    <Badge
+                      key={i}
+                      variant="outline"
+                      className="text-[8px] border-amber-500/20 bg-amber-500/5 text-amber-600 h-[18px] px-1.5 gap-0.5"
+                    >
+                      <Clock className="w-2 h-2" />
+                      {stop.layoverDuration} layover in {stop.city || stop.code}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Return segments */}
+              {hasReturnData && returnSegs.length > 0 && (
+                <>
+                  <div className="border-t border-dashed border-border/30 pt-3">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                      Return · {returnSegs.length} segment{returnSegs.length > 1 ? "s" : ""}
+                    </p>
+                    {returnSegs.map((seg, i) => (
+                      <SegmentRow key={seg.id || i} seg={seg} isLast={i === returnSegs.length - 1} />
+                    ))}
+                    {returnSummary && returnSummary.stopDetails.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {returnSummary.stopDetails.map((stop, i) => (
+                          <Badge
+                            key={i}
+                            variant="outline"
+                            className="text-[8px] border-amber-500/20 bg-amber-500/5 text-amber-600 h-[18px] px-1.5 gap-0.5"
+                          >
+                            <Clock className="w-2 h-2" />
+                            {stop.layoverDuration} layover in {stop.city || stop.code}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Non-return layover badges fallback */}
+              {!hasReturnData && offer.stopDetails?.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {offer.stopDetails.map((stop, i) => (
                     <Badge
