@@ -1725,3 +1725,12 @@ html[lang="km"] textarea {
     transform: translateY(-14px) rotateX(6deg) rotateY(-4deg);
   }
 }
+
+@keyframes foilShimmer {
+  0%, 100% {
+    background-position: 200% 200%;
+  }
+  50% {
+    background-position: 0% 0%;
+  }
+}
