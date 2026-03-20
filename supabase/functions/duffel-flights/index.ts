@@ -820,10 +820,12 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
     .filter((o): o is DuffelOfferTransformed => o !== null);
 
   // Group by flight fingerprint (same itinerary, different fares)
-  // Fingerprint = airline + departure time + arrival time + stops (excludes price/fare)
+  // For round-trips, include ALL segment flight numbers so different return legs stay separate
   const groups = new Map<string, DuffelOfferTransformed[]>();
   for (const offer of transformed) {
-    const flightFP = `${offer.airlineCode}-${offer.departure.time}-${offer.arrival.time}-${offer.stops}`;
+    // Build fingerprint from all segment flight numbers + times to uniquely identify the itinerary
+    const segFP = offer.segments.map(s => `${s.marketingCarrierCode}${s.flightNumber}-${s.departingAt}`).join('|');
+    const flightFP = `${offer.airlineCode}-${segFP}`;
     const group = groups.get(flightFP) || [];
     // Avoid exact duplicates (same price too)
     const exactDup = group.some(g => g.price === offer.price && g.fareBrandName === offer.fareBrandName);
