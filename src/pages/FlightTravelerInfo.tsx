@@ -7,7 +7,8 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft, Plane, ChevronRight, Shield, Users, Lock, User,
-  CreditCard, CheckCircle2, Fingerprint
+  CreditCard, CheckCircle2, Fingerprint, Luggage, PackageCheck, RefreshCw,
+  Clock, AlertCircle, ChevronDown
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
