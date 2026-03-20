@@ -835,6 +835,39 @@ interface DuffelOfferTransformed {
   passengers: number;
 }
 
+// ---- Available Services ----
+interface GetAvailableServicesParams {
+  offer_id: string;
+}
+
+async function getAvailableServices(params: GetAvailableServicesParams) {
+  console.log('[Duffel] Fetching available services for offer:', params.offer_id);
+
+  const result = await duffelRequest(`/air/offers/${params.offer_id}/available_services`, 'GET');
+  if (result.error) return { error: result.error };
+
+  const services = result.data as Array<{
+    id: string;
+    type: string;
+    maximum_quantity: number;
+    total_amount: string;
+    total_currency: string;
+    passenger_ids: string[];
+    segment_ids: string[];
+    metadata?: Record<string, unknown>;
+  }>;
+
+  // Group by type
+  const grouped: Record<string, typeof services> = {};
+  for (const svc of (services || [])) {
+    const t = svc.type || 'other';
+    if (!grouped[t]) grouped[t] = [];
+    grouped[t].push(svc);
+  }
+
+  return { services: services || [], grouped, total: (services || []).length };
+}
+
 // ---- Input validation helpers ----
 const IATA_RE = /^[A-Z]{3}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -866,6 +899,11 @@ function validateGetOffers(p: Record<string, unknown>): string | null {
 }
 
 function validateGetOffer(p: Record<string, unknown>): string | null {
+  if (typeof p.offer_id !== 'string' || !p.offer_id) return 'offer_id required';
+  return null;
+}
+
+function validateGetAvailableServices(p: Record<string, unknown>): string | null {
   if (typeof p.offer_id !== 'string' || !p.offer_id) return 'offer_id required';
   return null;
 }
