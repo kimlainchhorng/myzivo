@@ -99,18 +99,18 @@ const FlightLanding = () => {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="max-w-3xl mx-auto text-center pt-8 sm:pt-12 pb-6"
+            className="max-w-3xl mx-auto text-center pt-4 sm:pt-8 pb-4"
           >
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.4 }}
-              className="w-16 h-16 rounded-2xl bg-[hsl(var(--flights))]/10 backdrop-blur-xl border border-[hsl(var(--flights))]/20 flex items-center justify-center mx-auto mb-5"
+              className="w-14 h-14 rounded-2xl bg-[hsl(var(--flights))]/10 backdrop-blur-xl border border-[hsl(var(--flights))]/20 flex items-center justify-center mx-auto mb-4"
             >
-              <Plane className="w-8 h-8 text-[hsl(var(--flights))]" />
+              <Plane className="w-7 h-7 text-[hsl(var(--flights))]" />
             </motion.div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 tracking-tight">Search Flights</h1>
-            <p className="text-muted-foreground text-base sm:text-lg">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-1.5 tracking-tight">Search Flights</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Compare fares from 500+ airlines worldwide
             </p>
           </motion.div>
