@@ -1168,6 +1168,7 @@ serve(async (req) => {
     else if (action === 'getOffers') validationError = validateGetOffers(params);
     else if (action === 'getOffer') validationError = validateGetOffer(params);
     else if (action === 'getAvailableServices') validationError = validateGetAvailableServices(params);
+    else if (action === 'getSeatMaps') validationError = validateGetSeatMaps(params);
 
     if (validationError) {
       return new Response(
