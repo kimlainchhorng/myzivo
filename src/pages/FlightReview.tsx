@@ -480,7 +480,9 @@ const FlightReview = () => {
         </div>
       </div>
 
-      <Footer />
+      <div className="hidden sm:block">
+        <Footer />
+      </div>
     </div>
   );
 };
