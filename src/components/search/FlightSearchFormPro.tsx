@@ -40,7 +40,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import LocationAutocomplete, { type LocationOption } from "./LocationAutocomplete";
 import { useAirportSearch } from "./hooks/useLocationSearch";
 import MultiCityLegs from "./MultiCityLegs";
-import { MobileDatePickerSheet, MobilePassengerCabinSheet } from "@/components/mobile";
+import { MobileDatePickerSheet, MobileDateRangePickerSheet, MobilePassengerCabinSheet } from "@/components/mobile";
 import { useFlightFunnel } from "@/hooks/useFlightFunnel";
 import { useTranslation } from "@/hooks/useI18n";
 
