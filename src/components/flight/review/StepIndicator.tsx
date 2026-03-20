@@ -27,7 +27,7 @@ export function StepIndicator({ current }: { current: number }) {
         return (
           <div key={step.label} className="flex items-center">
             <motion.div
-              className="flex flex-col items-center gap-1.5 min-w-[52px]"
+              className="flex flex-col items-center gap-1.5 min-w-0 flex-1"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
