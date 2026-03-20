@@ -255,9 +255,11 @@ export default function Flight3DSkyHeader({ className }: { className?: string })
       <Cloud size="md" top="65%" delay={10} duration={20} direction="ltr" />
       <Cloud size="sm" top="15%" delay={5} duration={28} direction="rtl" />
 
-      {/* Flying airplanes */}
-      <FlyingAirplane layer="back" />
-      <FlyingAirplane layer="front" />
+      {/* Flying airplanes — two directions */}
+      <FlyingAirplane direction="ltr" top="20%" size="lg" duration={10} />
+      <FlyingAirplane direction="rtl" top="50%" size="sm" duration={14} delay={3} />
+      <FlyingAirplane direction="rtl" top="30%" size="lg" duration={12} delay={6} />
+      <FlyingAirplane direction="ltr" top="60%" size="sm" duration={16} delay={8} />
 
       {/* 3D depth ground perspective line */}
       <div
