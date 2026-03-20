@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -9,19 +8,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  SlidersHorizontal, 
-  ArrowUpDown, 
-  Zap, 
+import {
+  ArrowUpDown,
+  Zap,
   TrendingDown,
   Clock,
   Plane,
   CheckCircle,
-  ExternalLink,
 } from "lucide-react";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import CrossSellSection from "./CrossSellSection";
+import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import type { GeneratedFlight } from "@/data/flightGenerator";
 import { cn } from "@/lib/utils";
 
@@ -175,9 +172,12 @@ export default function FlightResultsSection({
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3 sm:gap-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-muted flex items-center justify-center font-bold text-sm">
-                        {flight.airlineCode}
-                      </div>
+                      <AirlineLogo
+                        iataCode={flight.airlineCode}
+                        airlineName={flight.airline}
+                        size={48}
+                        className="shrink-0 border border-border/30 bg-card/70"
+                      />
                       <div>
                         <p className="font-semibold text-sm sm:text-base">{flight.airline}</p>
                         <p className="text-xs text-muted-foreground">{flight.flightNumber} • {flight.aircraft || "Boeing 737"}</p>
