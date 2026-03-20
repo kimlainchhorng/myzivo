@@ -56,7 +56,7 @@ const getServiceCategories = (t: (key: string) => string, isCambodia = false): S
     services: [
       { label: t("services.ride"), href: "/rides", image: zivoRideIcon, badge: t("services.badge.off_10"), badgeVariant: "discount", animClass: "animate-car-run" },
       { label: t("services.package"), href: "/delivery", image: zivoPackageIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
-      { label: t("services.travel"), href: "/flights", image: zivoFlightsIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-plane-fly" },
+      { label: t("services.travel"), href: "/flights", image: zivoFlightsIcon, badge: "Hot", badgeVariant: "promo", animClass: "animate-plane-fly" },
       { label: t("services.reserve"), href: "/rides?tab=reserve", image: zivoReserveIcon, badge: t("services.badge.promo"), badgeVariant: "promo", animClass: "animate-car-run" },
       { label: t("services.rental_cars"), href: "/rent-car", image: zivoRentalCarIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-car-run" },
       { label: t("services.group_ride"), href: "/rides", image: zivoGroupRideIcon, animClass: "animate-car-run" },
@@ -77,7 +77,7 @@ const getServiceCategories = (t: (key: string) => string, isCambodia = false): S
     title: t("services.category.trip"),
     subtitle: t("services.category.trip_sub"),
     services: [
-      { label: t("services.flights"), href: "/flights", image: zivoFlightsIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-plane-fly" },
+      { label: t("services.flights"), href: "/flights", image: zivoFlightsIcon, badge: "Hot", badgeVariant: "promo", animClass: "animate-plane-fly" },
       { label: t("services.hotels"), href: "/hotels", image: zivoHotelsIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
       { label: t("services.car_rental"), href: "/rent-car", image: zivoRentalCarIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-car-run" },
       { label: t("services.insurance"), href: "/travel-insurance", icon: Shield, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
