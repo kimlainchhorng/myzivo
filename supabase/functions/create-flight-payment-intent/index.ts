@@ -254,9 +254,10 @@ Deno.serve(async (req) => {
       { headers: { ...cors, "Content-Type": "application/json" } },
     );
   } catch (e) {
-    console.error("[FlightPI] Error:", e);
+    const errMsg = e instanceof Error ? e.message : (typeof e === "object" && e !== null && "message" in e) ? (e as any).message : String(e);
+    console.error("[FlightPI] Error:", errMsg);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : String(e) }),
+      JSON.stringify({ error: errMsg }),
       { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }
