@@ -8,73 +8,60 @@ import { Plane, TrendingUp, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const POPULAR_ROUTES = [
-  { from: "New York", fromCode: "JFK", to: "Los Angeles", toCode: "LAX", emoji: "🌴" },
-  { from: "Chicago", fromCode: "ORD", to: "Miami", toCode: "MIA", emoji: "🏖️" },
-  { from: "San Francisco", fromCode: "SFO", to: "New York", toCode: "JFK", emoji: "🗽" },
-  { from: "Atlanta", fromCode: "ATL", to: "Orlando", toCode: "MCO", emoji: "🎢" },
-  { from: "Dallas", fromCode: "DFW", to: "Las Vegas", toCode: "LAS", emoji: "🎰" },
-  { from: "Boston", fromCode: "BOS", to: "London", toCode: "LHR", emoji: "🇬🇧" },
-  { from: "Los Angeles", fromCode: "LAX", to: "Tokyo", toCode: "NRT", emoji: "🗼" },
-  { from: "New York", fromCode: "JFK", to: "Paris", toCode: "CDG", emoji: "🗼" },
+  { from: "New York", fromCode: "JFK", to: "Miami", toCode: "MIA", priceFrom: 89 },
+  { from: "Los Angeles", fromCode: "LAX", to: "San Francisco", toCode: "SFO", priceFrom: 59 },
+  { from: "Chicago", fromCode: "ORD", to: "Atlanta", toCode: "ATL", priceFrom: 75 },
+  { from: "Dallas", fromCode: "DFW", to: "Denver", toCode: "DEN", priceFrom: 68 },
+  { from: "Seattle", fromCode: "SEA", to: "Las Vegas", toCode: "LAS", priceFrom: 72 },
+  { from: "Boston", fromCode: "BOS", to: "Fort Lauderdale", toCode: "FLL", priceFrom: 95 },
 ];
 
 export default function PopularRoutesSection() {
   return (
     <section className="py-16 bg-muted/20" aria-label="Popular flight routes">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              <span className="text-sm font-semibold text-primary uppercase tracking-wider">Trending</span>
-            </div>
-            <h2 className="text-2xl lg:text-3xl font-bold">Popular Routes</h2>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-bold">Popular Routes</h2>
           </div>
-          <Link
-            to="/flights"
-            className="hidden sm:flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-          >
-            View all routes
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+            Live
+          </span>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {POPULAR_ROUTES.map((route, i) => (
             <motion.div
               key={`${route.fromCode}-${route.toCode}`}
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05, duration: 0.3 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ delay: i * 0.06, duration: 0.4 }}
             >
               <Link
                 to={`/flights/results?origin=${route.fromCode}&destination=${route.toCode}&passengers=1&cabinClass=economy`}
-                className="group block p-4 rounded-2xl border border-border/50 bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200"
+                className="group block p-4 rounded-xl border border-border/60 bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 active:scale-[0.97]"
               >
-                <div className="text-2xl mb-2">{route.emoji}</div>
-                <div className="flex items-center gap-1.5 mb-1">
+                <div className="flex items-center gap-1.5 mb-0.5">
                   <span className="font-bold text-sm">{route.fromCode}</span>
-                  <Plane className="w-3 h-3 text-muted-foreground -rotate-45" />
+                  <ArrowRight className="w-3 h-3 text-muted-foreground" />
                   <span className="font-bold text-sm">{route.toCode}</span>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  {route.from} → {route.to}
+                <p className="text-xs text-muted-foreground mb-2 truncate">
+                  {route.from} — {route.to}
                 </p>
-                <div className="mt-2 text-xs font-medium text-primary sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                  Search flights <ArrowRight className="w-3 h-3" />
-                </div>
+                <span className="text-sm font-bold text-primary">
+                  from ${route.priceFrom}*
+                </span>
               </Link>
             </motion.div>
           ))}
         </div>
 
-        <Link
-          to="/flights"
-          className="sm:hidden flex items-center justify-center gap-1 mt-6 text-sm font-medium text-primary"
-        >
-          View all routes <ArrowRight className="w-4 h-4" />
-        </Link>
+        <p className="text-[11px] text-muted-foreground mt-4 text-center">
+          *Prices are indicative and may vary. Final price confirmed at partner checkout.
+        </p>
       </div>
     </section>
   );
