@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { Plane, ArrowLeftRight, Users, CalendarIcon, ChevronDown, Search, Sparkles } from "lucide-react";
+import { Plane, ArrowLeftRight, Users, CalendarIcon, ChevronDown, Search, Sparkles, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -48,14 +48,19 @@ const FlightLanding = () => {
     setDestination(temp);
   };
 
+  const [isSearching, setIsSearching] = useState(false);
+
+  const originCode = extractCode(origin);
+  const destCode = extractCode(destination);
+  const sameAirport = originCode.length === 3 && destCode.length === 3 && originCode === destCode;
+
   const handleSearch = () => {
-    const o = extractCode(origin);
-    const d = extractCode(destination);
-    if (!o || !d || !departureDate) return;
+    if (sameAirport || !originCode || !destCode || !departureDate) return;
+    setIsSearching(true);
 
     const params = new URLSearchParams({
-      origin: o,
-      destination: d,
+      origin: originCode,
+      destination: destCode,
       departureDate: format(departureDate, "yyyy-MM-dd"),
       adults: String(adults),
       children: String(children),
@@ -70,7 +75,7 @@ const FlightLanding = () => {
     navigate(`/flights/results?${params.toString()}`);
   };
 
-  const isValid = extractCode(origin).length === 3 && extractCode(destination).length === 3 && !!departureDate;
+  const isValid = originCode.length === 3 && destCode.length === 3 && !sameAirport && !!departureDate;
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -94,18 +99,18 @@ const FlightLanding = () => {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="max-w-3xl mx-auto text-center pt-8 sm:pt-12 pb-6"
+            className="max-w-3xl mx-auto text-center pt-4 sm:pt-8 pb-4"
           >
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.4 }}
-              className="w-16 h-16 rounded-2xl bg-[hsl(var(--flights))]/10 backdrop-blur-xl border border-[hsl(var(--flights))]/20 flex items-center justify-center mx-auto mb-5"
+              className="w-14 h-14 rounded-2xl bg-[hsl(var(--flights))]/10 backdrop-blur-xl border border-[hsl(var(--flights))]/20 flex items-center justify-center mx-auto mb-4"
             >
-              <Plane className="w-8 h-8 text-[hsl(var(--flights))]" />
+              <Plane className="w-7 h-7 text-[hsl(var(--flights))]" />
             </motion.div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 tracking-tight">Search Flights</h1>
-            <p className="text-muted-foreground text-base sm:text-lg">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-1.5 tracking-tight">Search Flights</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Compare fares from 500+ airlines worldwide
             </p>
           </motion.div>
@@ -294,15 +299,31 @@ const FlightLanding = () => {
                 </div>
               </div>
 
+              {/* Same airport error */}
+              {sameAirport && (
+                <p className="text-xs text-destructive font-medium -mt-1">
+                  Origin and destination cannot be the same airport.
+                </p>
+              )}
+
               {/* Search Button */}
               <Button
                 size="lg"
                 onClick={handleSearch}
-                disabled={!isValid}
+                disabled={!isValid || isSearching}
                 className="w-full h-12 text-base font-semibold gap-2 bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 shadow-lg shadow-[hsl(var(--flights))]/20 active:scale-[0.98] transition-all duration-200"
               >
-                <Search className="w-5 h-5" />
-                Search Flights
+                {isSearching ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-5 h-5" />
+                    Search Flights
+                  </>
+                )}
               </Button>
             </div>
           </motion.div>

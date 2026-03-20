@@ -132,7 +132,7 @@ const FlightResults = () => {
     sessionStorage.setItem("zivo_search_params", JSON.stringify({
       origin, destination, departureDate, returnDate, adults, children, infants, cabinClass,
     }));
-    navigate("/flights/traveler-info");
+    navigate("/flights/details/review");
   };
 
   // Error UI helper
