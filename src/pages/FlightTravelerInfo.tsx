@@ -152,6 +152,7 @@ const FlightTravelerInfo = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [consentChecked, setConsentChecked] = useState(false);
   const [selectedProfiles, setSelectedProfiles] = useState<Record<number, string>>({});
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   useEffect(() => {
     if (liveOffer) {
