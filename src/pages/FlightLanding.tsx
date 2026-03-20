@@ -9,7 +9,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Plane, Shield, Star, TrendingUp, ArrowRight, Sparkles,
-  Globe, Clock, Headphones, CreditCard
+  Globe, Clock, Headphones, CreditCard, Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
@@ -20,15 +20,16 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { FlightSearchFormPro } from "@/components/search";
+import { usePopularRoutePrices } from "@/hooks/usePopularRoutePrices";
 
-/* ─── Popular Routes ─── */
-const popularRoutes = [
-  { from: "JFK", to: "MIA", fromCity: "New York", toCity: "Miami", price: "$89" },
-  { from: "LAX", to: "SFO", fromCity: "Los Angeles", toCity: "San Francisco", price: "$59" },
-  { from: "ORD", to: "ATL", fromCity: "Chicago", toCity: "Atlanta", price: "$75" },
-  { from: "DFW", to: "DEN", fromCity: "Dallas", toCity: "Denver", price: "$68" },
-  { from: "SEA", to: "LAS", fromCity: "Seattle", toCity: "Las Vegas", price: "$72" },
-  { from: "BOS", to: "FLL", fromCity: "Boston", toCity: "Fort Lauderdale", price: "$95" },
+/* ─── Fallback routes (shown while loading) ─── */
+const fallbackRoutes = [
+  { from: "JFK", to: "MIA", fromCity: "New York", toCity: "Miami" },
+  { from: "LAX", to: "SFO", fromCity: "Los Angeles", toCity: "San Francisco" },
+  { from: "ORD", to: "ATL", fromCity: "Chicago", toCity: "Atlanta" },
+  { from: "DFW", to: "DEN", fromCity: "Dallas", toCity: "Denver" },
+  { from: "SEA", to: "LAS", fromCity: "Seattle", toCity: "Las Vegas" },
+  { from: "BOS", to: "FLL", fromCity: "Boston", toCity: "Fort Lauderdale" },
 ];
 
 const whyZivo = [
@@ -41,6 +42,7 @@ const whyZivo = [
 /* ─── Popular Routes Grid ─── */
 function PopularRoutesSection({ className }: { className?: string }) {
   const navigate = useNavigate();
+  const { data: liveRoutes, isLoading } = usePopularRoutePrices();
 
   const handleRouteClick = (from: string, to: string) => {
     const today = new Date();
@@ -48,13 +50,25 @@ function PopularRoutesSection({ className }: { className?: string }) {
     departureDate.setDate(today.getDate() + 7);
     const returnDate = new Date(today);
     returnDate.setDate(today.getDate() + 14);
-
     const formatDate = (date: Date) => date.toISOString().split("T")[0];
-
     navigate(
       `/flights/results?origin=${from}&destination=${to}&departureDate=${formatDate(departureDate)}&returnDate=${formatDate(returnDate)}&adults=1&cabinClass=economy`
     );
   };
+
+  // Merge live prices with fallback routes
+  const routes = fallbackRoutes.map((fr) => {
+    const live = liveRoutes?.find(
+      (lr) => lr.origin_code === fr.from && lr.destination_code === fr.to
+    );
+    return {
+      ...fr,
+      price: live ? `$${Math.round(live.lowest_price)}` : null,
+      airline: live?.airline_name || null,
+    };
+  });
+
+  const hasLivePrices = routes.some((r) => r.price !== null);
 
   return (
     <motion.div
@@ -66,12 +80,23 @@ function PopularRoutesSection({ className }: { className?: string }) {
       <div className="flex items-center gap-2 mb-3">
         <TrendingUp className="w-4 h-4 text-[hsl(var(--flights))]" />
         <h2 className="text-sm font-bold">Popular Routes</h2>
-        <Badge variant="outline" className="text-[9px] border-[hsl(var(--flights))]/30 text-[hsl(var(--flights))] ml-auto">
-          <Sparkles className="w-2.5 h-2.5 mr-0.5" /> Live
+        <Badge variant="outline" className={cn(
+          "text-[9px] ml-auto",
+          hasLivePrices
+            ? "border-emerald-500/30 text-emerald-600"
+            : "border-[hsl(var(--flights))]/30 text-[hsl(var(--flights))]"
+        )}>
+          {isLoading ? (
+            <><Loader2 className="w-2.5 h-2.5 mr-0.5 animate-spin" /> Loading</>
+          ) : hasLivePrices ? (
+            <><Sparkles className="w-2.5 h-2.5 mr-0.5" /> Live</>
+          ) : (
+            <><Sparkles className="w-2.5 h-2.5 mr-0.5" /> Updating</>
+          )}
         </Badge>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-        {popularRoutes.map((route) => (
+        {routes.map((route) => (
           <button
             key={`${route.from}-${route.to}`}
             type="button"
@@ -84,16 +109,22 @@ function PopularRoutesSection({ className }: { className?: string }) {
               <span>{route.to}</span>
             </div>
             <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-              {route.fromCity} → {route.toCity}
+              {route.fromCity} — {route.toCity}
             </p>
-            <p className="text-xs font-bold text-[hsl(var(--flights))] mt-1">
-              from {route.price}*
-            </p>
+            {route.price ? (
+              <p className="text-xs font-bold text-[hsl(var(--flights))] mt-1">
+                from {route.price}*
+              </p>
+            ) : (
+              <div className="h-4 w-16 mt-1 rounded bg-muted/50 animate-pulse" />
+            )}
           </button>
         ))}
       </div>
       <p className="text-[9px] text-muted-foreground mt-2 text-center">
-        *Prices are indicative and may vary. Final price confirmed at partner checkout.
+        {hasLivePrices
+          ? "*Live prices from Duffel. Final price confirmed at partner checkout."
+          : "*Prices loading. Final price confirmed at partner checkout."}
       </p>
     </motion.div>
   );

@@ -1,33 +1,48 @@
 /**
  * Popular Routes Quick Search Section
- * Displays trending flight routes as clickable cards on the homepage
- * Uses real navigation with default dates so Duffel search triggers
+ * Displays live Duffel prices for trending flight routes on the homepage
  */
 
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, ArrowRight } from "lucide-react";
+import { TrendingUp, ArrowRight, Sparkles, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { format, addDays } from "date-fns";
+import { usePopularRoutePrices } from "@/hooks/usePopularRoutePrices";
 
-const POPULAR_ROUTES = [
-  { from: "New York", fromCode: "JFK", to: "Miami", toCode: "MIA", priceFrom: 89 },
-  { from: "Los Angeles", fromCode: "LAX", to: "San Francisco", toCode: "SFO", priceFrom: 59 },
-  { from: "Chicago", fromCode: "ORD", to: "Atlanta", toCode: "ATL", priceFrom: 75 },
-  { from: "Dallas", fromCode: "DFW", to: "Denver", toCode: "DEN", priceFrom: 68 },
-  { from: "Seattle", fromCode: "SEA", to: "Las Vegas", toCode: "LAS", priceFrom: 72 },
-  { from: "Boston", fromCode: "BOS", to: "Fort Lauderdale", toCode: "FLL", priceFrom: 95 },
+const FALLBACK_ROUTES = [
+  { from: "New York", fromCode: "JFK", to: "Miami", toCode: "MIA" },
+  { from: "Los Angeles", fromCode: "LAX", to: "San Francisco", toCode: "SFO" },
+  { from: "Chicago", fromCode: "ORD", to: "Atlanta", toCode: "ATL" },
+  { from: "Dallas", fromCode: "DFW", to: "Denver", toCode: "DEN" },
+  { from: "Seattle", fromCode: "SEA", to: "Las Vegas", toCode: "LAS" },
+  { from: "Boston", fromCode: "BOS", to: "Fort Lauderdale", toCode: "FLL" },
 ];
 
 export default function PopularRoutesSection() {
   const navigate = useNavigate();
+  const { data: liveRoutes, isLoading } = usePopularRoutePrices();
 
   const handleRouteClick = (fromCode: string, toCode: string) => {
-    const depart = format(addDays(new Date(), 7), "yyyy-MM-dd");
-    const ret = format(addDays(new Date(), 14), "yyyy-MM-dd");
+    const depart = new Date();
+    depart.setDate(depart.getDate() + 7);
+    const ret = new Date();
+    ret.setDate(ret.getDate() + 14);
+    const fmt = (d: Date) => d.toISOString().split("T")[0];
     navigate(
-      `/flights/results?origin=${fromCode}&destination=${toCode}&departureDate=${depart}&returnDate=${ret}&adults=1&cabinClass=economy`
+      `/flights/results?origin=${fromCode}&destination=${toCode}&departureDate=${fmt(depart)}&returnDate=${fmt(ret)}&adults=1&cabinClass=economy`
     );
   };
+
+  const routes = FALLBACK_ROUTES.map((fr) => {
+    const live = liveRoutes?.find(
+      (lr) => lr.origin_code === fr.fromCode && lr.destination_code === fr.toCode
+    );
+    return {
+      ...fr,
+      price: live ? `$${Math.round(live.lowest_price)}` : null,
+    };
+  });
+
+  const hasLive = routes.some((r) => r.price !== null);
 
   return (
     <section className="py-16 bg-muted/20" aria-label="Popular flight routes">
@@ -37,13 +52,23 @@ export default function PopularRoutesSection() {
             <TrendingUp className="w-5 h-5 text-primary" />
             <h2 className="text-xl font-bold">Popular Routes</h2>
           </div>
-          <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-            Live
+          <span className={`text-xs font-medium px-3 py-1 rounded-full border flex items-center gap-1 ${
+            hasLive
+              ? "text-emerald-600 bg-emerald-500/10 border-emerald-500/20"
+              : "text-primary bg-primary/10 border-primary/20"
+          }`}>
+            {isLoading ? (
+              <><Loader2 className="w-3 h-3 animate-spin" /> Loading</>
+            ) : hasLive ? (
+              <><Sparkles className="w-3 h-3" /> Live</>
+            ) : (
+              <><Sparkles className="w-3 h-3" /> Updating</>
+            )}
           </span>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {POPULAR_ROUTES.map((route, i) => (
+          {routes.map((route, i) => (
             <motion.div
               key={`${route.fromCode}-${route.toCode}`}
               initial={{ opacity: 0, y: 12 }}
@@ -65,16 +90,22 @@ export default function PopularRoutesSection() {
                 <p className="text-xs text-muted-foreground mb-2 truncate">
                   {route.from} — {route.to}
                 </p>
-                <span className="text-sm font-bold text-primary">
-                  from ${route.priceFrom}*
-                </span>
+                {route.price ? (
+                  <span className="text-sm font-bold text-primary">
+                    from {route.price}*
+                  </span>
+                ) : (
+                  <div className="h-4 w-16 rounded bg-muted/50 animate-pulse" />
+                )}
               </div>
             </motion.div>
           ))}
         </div>
 
         <p className="text-[11px] text-muted-foreground mt-4 text-center">
-          *Prices are indicative and may vary. Final price confirmed at partner checkout.
+          {hasLive
+            ? "*Live prices from Duffel. Final price confirmed at partner checkout."
+            : "*Prices loading. Final price confirmed at partner checkout."}
         </p>
       </div>
     </section>
