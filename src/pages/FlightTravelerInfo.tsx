@@ -441,28 +441,70 @@ const FlightTravelerInfo = () => {
                 </DialogHeader>
                 <ScrollArea className="max-h-[55vh] pr-3">
                   <div className="space-y-4 text-sm text-muted-foreground">
+                    {/* Important notice */}
+                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                      <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                        <Shield className="w-3.5 h-3.5" />
+                        ZIVO does NOT issue airline tickets and does NOT collect payment for flights.
+                      </p>
+                    </div>
+
                     <div>
                       <h3 className="font-semibold text-foreground mb-1">How ZIVO Works</h3>
                       <p>ZIVO is a travel search and referral platform. We help you find and compare flights, but the actual booking, ticketing, and payment are handled by our licensed travel partner (the merchant of record).</p>
                     </div>
+
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Booking Flow</h3>
+                      <ul className="space-y-1.5 mt-1">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[hsl(var(--flights))] mt-0.5 shrink-0" />
+                          <span>You are redirected to the travel partner's secure checkout</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[hsl(var(--flights))] mt-0.5 shrink-0" />
+                          <span>The partner processes payment and issues your ticket</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[hsl(var(--flights))] mt-0.5 shrink-0" />
+                          <span>Final price and terms are confirmed at checkout</span>
+                        </li>
+                      </ul>
+                    </div>
+
                     <div>
                       <h3 className="font-semibold text-foreground mb-1">Your Information</h3>
-                      <p>With your consent, we securely share your traveler details (name, contact, date of birth) with the travel partner solely to complete your booking. We do not store payment card information.</p>
+                      <p>With your consent, we securely share your traveler details (name, contact, date of birth) with the travel partner solely to complete your booking. We do not store payment card information. We do not sell your personal information.</p>
                     </div>
+
                     <div>
                       <h3 className="font-semibold text-foreground mb-1">Pricing & Fees</h3>
                       <p>Prices shown are estimates from our partners. The final price and terms are confirmed during checkout. Cancellation, change, and baggage policies are set by the airline and partner.</p>
                     </div>
+
                     <div>
                       <h3 className="font-semibold text-foreground mb-1">Support</h3>
-                      <p>For booking changes, cancellations, or refunds, contact the travel partner directly. ZIVO provides support only for website and navigation issues.</p>
+                      <p>For booking changes, cancellations, or refunds, contact the travel partner listed in your confirmation email. ZIVO provides support only for website and navigation issues.</p>
+                      <a
+                        href="mailto:support@hizivo.com"
+                        className="inline-flex items-center gap-1.5 text-[hsl(var(--flights))] hover:underline font-medium text-xs mt-1.5"
+                      >
+                        support@hizivo.com
+                      </a>
                     </div>
-                    <div className="pt-2 border-t border-border/40">
+
+                    <div className="pt-2 border-t border-border/40 flex items-center justify-between">
                       <Link
                         to="/partner-disclosure"
                         className="text-[hsl(var(--flights))] hover:underline font-medium text-xs"
                       >
                         View full Partner Disclosure →
+                      </Link>
+                      <Link
+                        to="/privacy-policy"
+                        className="text-muted-foreground hover:underline text-xs"
+                      >
+                        Privacy Policy
                       </Link>
                     </div>
                   </div>
