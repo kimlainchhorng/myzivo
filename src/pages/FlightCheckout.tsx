@@ -232,7 +232,7 @@ const FlightCheckout = () => {
                 ) : (
                   <>
                     <Lock className="w-5 h-5" />
-                    Pay ${totalPrice} {offer.currency || "USD"}
+                    Pay ${totalPrice.toFixed(2)} {offer.currency || "USD"}
                   </>
                 )}
               </Button>
