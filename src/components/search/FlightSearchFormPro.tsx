@@ -311,7 +311,7 @@ export default function FlightSearchFormPro({
 
               <div
                 className={cn(
-                  "rounded-xl border border-border bg-background overflow-hidden",
+                  "rounded-2xl border border-border/30 bg-background/80 backdrop-blur-sm overflow-hidden shadow-sm",
                   (errors.depart || errors.return) && "border-destructive"
                 )}
               >
