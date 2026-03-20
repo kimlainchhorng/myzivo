@@ -13,6 +13,11 @@ import {
 import { cn } from "@/lib/utils";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
 
+import cabinEconomy from "@/assets/cabin-economy.jpg";
+import cabinPremiumEconomy from "@/assets/cabin-premium-economy.jpg";
+import cabinBusiness from "@/assets/cabin-business.jpg";
+import cabinFirst from "@/assets/cabin-first.jpg";
+
 type FareVariant = NonNullable<DuffelOffer["fareVariants"]>[number];
 
 interface FareVariantsCardProps {
