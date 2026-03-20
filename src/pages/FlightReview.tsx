@@ -4,6 +4,7 @@
  */
 
 import { useMemo, useState, useCallback, useEffect } from "react";
+import { getAllInPrice } from "@/utils/flightPricing";
 import { useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft, Plane, Clock, ChevronRight, ArrowRightLeft,
