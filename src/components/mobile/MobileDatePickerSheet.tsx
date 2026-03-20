@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { format, isBefore, startOfToday, addDays } from "date-fns";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import type { DateRange } from "react-day-picker";
 
-/* ─── Single-date picker (existing) ─── */
+/* ─── Single-date picker ─── */
 interface MobileDatePickerSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -50,45 +50,91 @@ export default function MobileDatePickerSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="rounded-t-3xl px-0"
+        className="rounded-t-3xl px-0 bg-transparent border-0 shadow-none"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
       >
-        <SheetHeader className="px-4 pb-2 text-left">
-          <SheetTitle className="flex items-center gap-2 text-base">
-            <CalendarDays className="h-4 w-4 text-emerald-500" />
-            {label}
-          </SheetTitle>
-        </SheetHeader>
+        {/* 3D Card container */}
+        <div
+          className="mx-3 mb-2 rounded-3xl overflow-hidden animate-scale-in"
+          style={{
+            background: "hsl(var(--card))",
+            boxShadow: `
+              0 -2px 0 0 hsl(var(--border) / 0.3),
+              0 8px 32px -4px hsl(var(--foreground) / 0.12),
+              0 24px 60px -8px hsl(var(--foreground) / 0.08),
+              inset 0 1px 0 0 hsl(var(--card) / 0.8)
+            `,
+            transform: "perspective(800px) rotateX(1deg)",
+            transformOrigin: "bottom center",
+          }}
+        >
+          {/* Header with close button */}
+          <SheetHeader className="px-5 pt-5 pb-3 text-left relative">
+            <SheetTitle className="flex items-center gap-2.5 text-base font-semibold">
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{
+                  background: "linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 45%))",
+                  boxShadow: "0 2px 8px hsl(160 84% 39% / 0.3)",
+                }}
+              >
+                <CalendarDays className="h-4 w-4 text-white" />
+              </div>
+              {label}
+            </SheetTitle>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-xl bg-muted/60 hover:bg-muted flex items-center justify-center transition-colors active:scale-95"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </SheetHeader>
 
-        <div className="px-4 pb-4">
-          <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-            <Calendar
-              mode="single"
-              month={month}
-              onMonthChange={setMonth}
-              selected={selectedDate}
-              onSelect={(date) => {
-                onDateSelect(date);
-                if (date) {
-                  onDateConfirmed?.(date);
-                  onOpenChange(false);
-                }
+          {/* Divider with 3D depth */}
+          <div className="mx-5 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+
+          {/* Calendar with elevated inner surface */}
+          <div className="px-4 py-3">
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: "hsl(var(--background))",
+                boxShadow: "inset 0 2px 6px hsl(var(--foreground) / 0.04), 0 1px 0 hsl(var(--card))",
               }}
-              disabled={(date) => isBefore(date, earliestDate)}
-              initialFocus
-              className="pointer-events-auto p-3"
-              classNames={calendarClassNames}
-            />
+            >
+              <Calendar
+                mode="single"
+                month={month}
+                onMonthChange={setMonth}
+                selected={selectedDate}
+                onSelect={(date) => {
+                  onDateSelect(date);
+                  if (date) {
+                    onDateConfirmed?.(date);
+                    onOpenChange(false);
+                  }
+                }}
+                disabled={(date) => isBefore(date, earliestDate)}
+                initialFocus
+                className="pointer-events-auto p-3"
+                classNames={calendarClassNames3D}
+              />
+            </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <div className="min-h-10 text-sm text-muted-foreground">
+          {/* Footer with 3D Done button */}
+          <div className="px-5 pb-5 pt-1 flex items-center justify-between gap-3">
+            <div className="min-h-10 text-sm text-muted-foreground font-medium">
               {selectedDate ? `Selected: ${format(selectedDate, "EEE, MMM d")}` : "Tap a date to continue"}
             </div>
             <Button
               type="button"
               onClick={() => onOpenChange(false)}
-              className="min-w-24 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-sm"
+              className="min-w-[100px] h-11 rounded-2xl text-white font-semibold text-sm border-0 active:scale-[0.97] transition-all duration-150"
+              style={{
+                background: "linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 45%))",
+                boxShadow: "0 4px 14px hsl(160 84% 39% / 0.35), 0 1px 3px hsl(160 84% 39% / 0.2), inset 0 1px 0 hsl(160 84% 60% / 0.3)",
+              }}
             >
               Done
             </Button>
@@ -116,7 +162,7 @@ export function MobileDateRangePickerSheet({
   departDate,
   returnDate,
   onRangeConfirmed,
-  label = "Select dates",
+  label = "Departure → Return",
   minDate,
 }: MobileDateRangePickerSheetProps) {
   const earliestDate = useMemo(() => {
@@ -141,7 +187,6 @@ export function MobileDateRangePickerSheet({
       onRangeConfirmed(range.from, range.to);
       onOpenChange(false);
     } else if (range?.from) {
-      // Auto-set return 7 days later if only departure selected
       const ret = addDays(range.from, 7);
       onRangeConfirmed(range.from, ret);
       onOpenChange(false);
@@ -158,39 +203,84 @@ export function MobileDateRangePickerSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="rounded-t-3xl px-0"
+        className="rounded-t-3xl px-0 bg-transparent border-0 shadow-none"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
       >
-        <SheetHeader className="px-4 pb-2 text-left">
-          <SheetTitle className="flex items-center gap-2 text-base">
-            <CalendarDays className="h-4 w-4 text-emerald-500" />
-            {label}
-          </SheetTitle>
-        </SheetHeader>
+        {/* 3D Floating Card */}
+        <div
+          className="mx-3 mb-2 rounded-3xl overflow-hidden animate-scale-in"
+          style={{
+            background: "hsl(var(--card))",
+            boxShadow: `
+              0 -2px 0 0 hsl(var(--border) / 0.3),
+              0 8px 32px -4px hsl(var(--foreground) / 0.12),
+              0 24px 60px -8px hsl(var(--foreground) / 0.08),
+              inset 0 1px 0 0 hsl(var(--card) / 0.8)
+            `,
+            transform: "perspective(800px) rotateX(1deg)",
+            transformOrigin: "bottom center",
+          }}
+        >
+          {/* Header */}
+          <SheetHeader className="px-5 pt-5 pb-3 text-left relative">
+            <SheetTitle className="flex items-center gap-2.5 text-base font-semibold">
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{
+                  background: "linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 45%))",
+                  boxShadow: "0 2px 8px hsl(160 84% 39% / 0.3)",
+                }}
+              >
+                <CalendarDays className="h-4 w-4 text-white" />
+              </div>
+              {label}
+            </SheetTitle>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-xl bg-muted/60 hover:bg-muted flex items-center justify-center transition-colors active:scale-95"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </SheetHeader>
 
-        <div className="px-4 pb-4">
-          <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-            <Calendar
-              mode="range"
-              month={month}
-              onMonthChange={setMonth}
-              selected={range}
-              onSelect={setRange}
-              numberOfMonths={1}
-              disabled={(date) => isBefore(date, earliestDate)}
-              initialFocus
-              className="pointer-events-auto p-3"
-              classNames={calendarClassNames}
-            />
+          <div className="mx-5 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+
+          {/* Calendar in recessed 3D surface */}
+          <div className="px-4 py-3">
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: "hsl(var(--background))",
+                boxShadow: "inset 0 2px 6px hsl(var(--foreground) / 0.04), 0 1px 0 hsl(var(--card))",
+              }}
+            >
+              <Calendar
+                mode="range"
+                month={month}
+                onMonthChange={setMonth}
+                selected={range}
+                onSelect={setRange}
+                numberOfMonths={1}
+                disabled={(date) => isBefore(date, earliestDate)}
+                initialFocus
+                className="pointer-events-auto p-3"
+                classNames={calendarClassNames3D}
+              />
+            </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <div className="min-h-10 text-sm text-muted-foreground">{summaryText}</div>
+          {/* Footer */}
+          <div className="px-5 pb-5 pt-1 flex items-center justify-between gap-3">
+            <div className="min-h-10 text-sm text-muted-foreground font-medium">{summaryText}</div>
             <Button
               type="button"
               onClick={handleDone}
               disabled={!range?.from}
-              className="min-w-24 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-sm disabled:opacity-40"
+              className="min-w-[100px] h-11 rounded-2xl text-white font-semibold text-sm border-0 active:scale-[0.97] transition-all duration-150 disabled:opacity-40"
+              style={{
+                background: "linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 45%))",
+                boxShadow: "0 4px 14px hsl(160 84% 39% / 0.35), 0 1px 3px hsl(160 84% 39% / 0.2), inset 0 1px 0 hsl(160 84% 60% / 0.3)",
+              }}
             >
               Done
             </Button>
@@ -201,27 +291,42 @@ export function MobileDateRangePickerSheet({
   );
 }
 
-/* ─── Shared classNames ─── */
-const calendarClassNames = {
+/* ─── 3D-styled calendar classNames ─── */
+const calendarClassNames3D = {
   months: "flex flex-col space-y-4",
   month: "space-y-3",
   caption: "flex justify-center pt-1 relative items-center",
-  caption_label: "text-sm font-semibold text-foreground",
+  caption_label: "text-sm font-bold text-foreground tracking-tight",
   nav: "space-x-1 flex items-center",
-  nav_button: "h-8 w-8 bg-transparent p-0 opacity-60 hover:opacity-100 inline-flex items-center justify-center rounded-full hover:bg-muted transition-colors",
+  nav_button:
+    "h-8 w-8 p-0 opacity-60 hover:opacity-100 inline-flex items-center justify-center rounded-xl hover:bg-muted/80 transition-all active:scale-95",
   nav_button_previous: "absolute left-1",
   nav_button_next: "absolute right-1",
   table: "w-full border-collapse",
   head_row: "flex",
-  head_cell: "text-muted-foreground rounded-md w-10 font-medium text-xs py-2 text-center",
-  row: "flex w-full mt-1",
-  cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-lg [&:has([aria-selected].day-outside)]:bg-emerald-500/10 [&:has([aria-selected])]:bg-emerald-500/10 first:[&:has([aria-selected])]:rounded-l-lg last:[&:has([aria-selected])]:rounded-r-lg focus-within:relative focus-within:z-20",
-  day: "h-10 w-10 p-0 font-normal rounded-lg hover:bg-emerald-500/10 transition-colors inline-flex items-center justify-center text-foreground aria-selected:opacity-100",
+  head_cell:
+    "text-muted-foreground/70 rounded-md w-10 font-semibold text-[11px] uppercase tracking-wider py-2 text-center",
+  row: "flex w-full mt-0.5",
+  cell: `h-10 w-10 text-center text-sm p-0 relative
+    [&:has([aria-selected].day-range-end)]:rounded-r-xl
+    [&:has([aria-selected].day-outside)]:bg-emerald-500/8
+    [&:has([aria-selected])]:bg-emerald-500/8
+    first:[&:has([aria-selected])]:rounded-l-xl
+    last:[&:has([aria-selected])]:rounded-r-xl
+    focus-within:relative focus-within:z-20`,
+  day: `h-10 w-10 p-0 font-medium rounded-xl
+    hover:bg-emerald-500/10 transition-all duration-150
+    inline-flex items-center justify-center text-foreground
+    aria-selected:opacity-100 active:scale-[0.92]`,
   day_range_end: "day-range-end",
-  day_selected: "bg-emerald-500 text-white hover:bg-emerald-600 focus:bg-emerald-500 font-semibold shadow-sm rounded-lg",
-  day_today: "bg-muted text-foreground font-semibold rounded-lg",
-  day_outside: "text-muted-foreground/30 aria-selected:bg-emerald-500/50 aria-selected:text-white",
-  day_disabled: "text-muted-foreground/30",
-  day_range_middle: "aria-selected:bg-emerald-500/10 aria-selected:text-foreground rounded-none",
+  day_selected: `bg-emerald-500 text-white hover:bg-emerald-600 focus:bg-emerald-500
+    font-bold rounded-xl`,
+  day_today:
+    "text-emerald-600 font-bold rounded-xl ring-1 ring-emerald-500/30",
+  day_outside:
+    "text-muted-foreground/25 aria-selected:bg-emerald-500/40 aria-selected:text-white",
+  day_disabled: "text-muted-foreground/20",
+  day_range_middle:
+    "aria-selected:bg-emerald-500/8 aria-selected:text-foreground rounded-none",
   day_hidden: "invisible",
 };
