@@ -1,14 +1,13 @@
 /**
  * Passenger Details Page — /flights/traveler-info
- * Premium traveler form with saved profile autofill, passport fields,
- * flight summary, round-trip display, and sticky CTA
+ * Premium 3D spatial traveler form with depth, perspective, glassmorphism
  */
 
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft, Plane, ChevronRight, Shield, Users, Lock, User,
-  CreditCard, CheckCircle2
+  CreditCard, CheckCircle2, Fingerprint
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
@@ -36,8 +35,8 @@ import {
 } from "@/components/flight/traveler/SavedTravelerPicker";
 import type { TravelerProfile } from "@/hooks/useTravelerProfiles";
 
-/* ── Step indicator ────────────────────────── */
-function StepIndicator({ current = 2 }: { current?: number }) {
+/* ── 3D Step indicator ────────────────────────── */
+function StepIndicator3D({ current = 2 }: { current?: number }) {
   const steps = [
     { label: "Search", icon: Plane },
     { label: "Review", icon: CheckCircle2 },
@@ -45,32 +44,67 @@ function StepIndicator({ current = 2 }: { current?: number }) {
     { label: "Checkout", icon: CreditCard },
   ];
   return (
-    <div className="flex items-center justify-center gap-0.5 mb-5">
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="flex items-center justify-center gap-1 mb-6"
+      style={{ perspective: "400px" }}
+    >
       {steps.map((s, i) => {
         const Icon = s.icon;
+        const isActive = i === current;
+        const isDone = i < current;
         return (
-          <div key={s.label} className="flex items-center gap-0.5">
+          <div key={s.label} className="flex items-center gap-1">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.05 }}
+              initial={{ opacity: 0, scale: 0.8, rotateY: -15 }}
+              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+              transition={{ delay: i * 0.07, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               className={cn(
-                "flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[10px] font-semibold transition-all",
-                i < current && "bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))]",
-                i === current && "bg-[hsl(var(--flights))] text-primary-foreground shadow-md shadow-[hsl(var(--flights))]/25",
-                i > current && "bg-muted/50 text-muted-foreground"
+                "relative flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-[10px] font-semibold transition-all",
+                isDone && "text-[hsl(var(--flights))]",
+                isActive && "text-primary-foreground",
+                !isDone && !isActive && "text-muted-foreground/50"
               )}
+              style={{
+                background: isActive
+                  ? "hsl(var(--flights))"
+                  : isDone
+                    ? "hsl(var(--flights) / 0.08)"
+                    : "hsl(var(--muted) / 0.3)",
+                boxShadow: isActive
+                  ? "0 6px 20px -4px hsl(var(--flights) / 0.4), 0 2px 6px -2px hsl(var(--flights) / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.2)"
+                  : isDone
+                    ? "0 2px 8px -2px hsl(var(--flights) / 0.1), inset 0 1px 0 hsl(0 0% 100% / 0.05)"
+                    : "inset 0 1px 2px hsl(var(--foreground) / 0.04)",
+                transform: isActive ? "translateZ(4px)" : "none",
+              }}
             >
-              <Icon className="w-3 h-3" />
-              <span className="hidden sm:inline">{s.label}</span>
+              {/* Shine effect on active */}
+              {isActive && (
+                <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: "linear-gradient(105deg, transparent 40%, hsl(0 0% 100% / 0.15) 50%, transparent 60%)",
+                    }}
+                  />
+                </div>
+              )}
+              <Icon className="w-3 h-3 relative z-10" />
+              <span className="hidden sm:inline relative z-10">{s.label}</span>
             </motion.div>
             {i < steps.length - 1 && (
-              <ChevronRight className={cn("w-3 h-3 shrink-0", i < current ? "text-[hsl(var(--flights))]" : "text-muted-foreground/30")} />
+              <ChevronRight className={cn(
+                "w-3 h-3 shrink-0 transition-colors",
+                isDone ? "text-[hsl(var(--flights))]/60" : "text-muted-foreground/20"
+              )} />
             )}
           </div>
         );
       })}
-    </div>
+    </motion.div>
   );
 }
 
@@ -89,7 +123,6 @@ const FlightTravelerInfo = () => {
   const offer = liveOffer ?? storedOffer;
 
   const totalPassengers = search ? (search.adults || 1) + (search.children || 0) + (search.infants || 0) : 1;
-  const isRoundTrip = !!search?.returnDate;
 
   const isInternational = useMemo(() => {
     if (!search) return true;
@@ -191,21 +224,43 @@ const FlightTravelerInfo = () => {
   };
 
   const pageContent = (
-    <div className={cn("mx-auto px-3 sm:px-4", isMobile ? "max-w-lg pb-32" : "max-w-2xl pb-32")}>
-      {/* Sticky header for mobile */}
+    <div className={cn("mx-auto px-3 sm:px-4", isMobile ? "max-w-lg pb-36" : "max-w-2xl pb-36")}>
+      {/* Sticky 3D header for mobile */}
       {isMobile && (
-        <div className="sticky top-0 z-20 -mx-3 px-3 mb-3">
+        <div className="sticky top-0 z-20 -mx-3 px-3 mb-4">
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-card/90 backdrop-blur-xl border-b border-border/30 shadow-sm p-2.5"
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="relative overflow-hidden rounded-b-2xl"
+            style={{
+              background: "hsl(var(--card) / 0.85)",
+              backdropFilter: "blur(24px) saturate(1.4)",
+              boxShadow: "0 8px 32px -8px hsl(var(--flights) / 0.12), 0 2px 8px -2px hsl(var(--foreground) / 0.06), inset 0 -1px 0 hsl(var(--border) / 0.1)",
+            }}
           >
-            <div className="flex items-center gap-2.5">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0 -ml-1 w-8 h-8">
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
+            {/* Top glow line */}
+            <div
+              className="absolute top-0 left-0 right-0 h-[2px]"
+              style={{ background: "linear-gradient(90deg, transparent 10%, hsl(var(--flights)) 50%, transparent 90%)" }}
+            />
+            <div className="p-3 flex items-center gap-3">
+              <motion.div whileTap={{ scale: 0.92 }}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate(-1)}
+                  className="shrink-0 w-9 h-9 rounded-xl"
+                  style={{
+                    background: "hsl(var(--muted) / 0.5)",
+                    boxShadow: "inset 0 1px 2px hsl(var(--foreground) / 0.04), 0 1px 3px hsl(var(--foreground) / 0.06)",
+                  }}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+              </motion.div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold">Traveler Details</p>
+                <p className="text-sm font-bold tracking-tight">Traveler Details</p>
                 <p className="text-[10px] text-muted-foreground truncate">
                   {offer.departure.code} → {offer.arrival.code} · {totalPassengers} traveler{totalPassengers > 1 ? "s" : ""}
                 </p>
@@ -218,15 +273,27 @@ const FlightTravelerInfo = () => {
       {/* Desktop header */}
       {!isMobile && (
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
+          initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 mb-4 pt-4"
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="flex items-center gap-3 mb-5 pt-4"
         >
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0 rounded-xl">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+          <motion.div whileTap={{ scale: 0.92 }}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="shrink-0 rounded-xl"
+              style={{
+                background: "hsl(var(--muted) / 0.4)",
+                boxShadow: "inset 0 1px 2px hsl(var(--foreground) / 0.04), 0 2px 6px hsl(var(--foreground) / 0.06)",
+              }}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          </motion.div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Traveler Details</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Traveler Details</h1>
             <p className="text-sm text-muted-foreground">
               {offer.departure.code} → {offer.arrival.code} · {offer.airline}
             </p>
@@ -234,16 +301,21 @@ const FlightTravelerInfo = () => {
         </motion.div>
       )}
 
-      {/* Step indicator */}
-      <StepIndicator current={2} />
+      {/* 3D Step indicator */}
+      <StepIndicator3D current={2} />
 
       {/* Flight summary */}
       <FlightSummaryCompact offer={offer} search={search} />
 
       {/* Passenger Forms with saved traveler pickers */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {passengers.map((p, idx) => (
-          <div key={idx}>
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, y: 16, filter: "blur(4px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ delay: 0.15 + idx * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          >
             {/* Saved traveler picker per passenger */}
             {user && (
               <SavedTravelerPicker
@@ -260,22 +332,30 @@ const FlightTravelerInfo = () => {
               isInternational={isInternational}
               onUpdate={(field, value) => updatePassenger(idx, field, value)}
             />
-          </div>
+          </motion.div>
         ))}
       </div>
 
-      {/* Consent + compliance */}
+      {/* Consent + compliance — 3D styled */}
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="mt-4 space-y-3"
+        initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ delay: 0.4, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="mt-5 space-y-3"
       >
-        {/* Consent checkbox */}
-        <div className={cn(
-          "flex items-start gap-2.5 p-3 rounded-xl border",
-          errors.consent ? "border-destructive/40 bg-destructive/5" : "border-border/40 bg-muted/20"
-        )}>
+        {/* Consent checkbox — 3D recessed */}
+        <div
+          className={cn(
+            "relative flex items-start gap-3 p-3.5 rounded-2xl border transition-all",
+            errors.consent ? "border-destructive/40" : "border-border/30"
+          )}
+          style={{
+            background: errors.consent
+              ? "hsl(var(--destructive) / 0.04)"
+              : "hsl(var(--muted) / 0.2)",
+            boxShadow: "inset 0 2px 4px hsl(var(--foreground) / 0.03), 0 1px 0 hsl(0 0% 100% / 0.04)",
+          }}
+        >
           <Checkbox
             id="consent"
             checked={consentChecked}
@@ -288,26 +368,50 @@ const FlightTravelerInfo = () => {
           <label htmlFor="consent" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer">
             {FLIGHT_CONSENT.checkboxLabel}{" "}
             I agree to share my information with the travel partner to complete this booking.{" "}
-            <Link to="/partner-disclosure" className="text-[hsl(var(--flights))] hover:underline">Learn more</Link>
+            <Link to="/partner-disclosure" className="text-[hsl(var(--flights))] hover:underline font-medium">Learn more</Link>
           </label>
         </div>
 
-        {/* Partner disclosure */}
-        <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-[hsl(var(--flights))]/5 border border-[hsl(var(--flights))]/10">
-          <Shield className="w-4 h-4 text-[hsl(var(--flights))] shrink-0 mt-0.5" />
+        {/* Partner disclosure — 3D elevated */}
+        <div
+          className="relative flex items-start gap-3 p-3.5 rounded-2xl overflow-hidden"
+          style={{
+            background: "hsl(var(--flights) / 0.04)",
+            border: "1px solid hsl(var(--flights) / 0.12)",
+            boxShadow: "0 4px 16px -4px hsl(var(--flights) / 0.08), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
+          }}
+        >
+          {/* Subtle side glow */}
+          <div
+            className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl"
+            style={{ background: "linear-gradient(180deg, hsl(var(--flights)), hsl(var(--flights) / 0.3))" }}
+          />
+          <Shield className="w-4 h-4 text-[hsl(var(--flights))] shrink-0 mt-0.5 ml-1" />
           <div className="text-[10px] text-muted-foreground leading-relaxed">
             <p className="font-semibold text-foreground mb-0.5">Secure booking</p>
             <p>{FLIGHT_DISCLAIMERS.ticketing}</p>
           </div>
         </div>
 
-        {/* Trust signals */}
-        <div className="flex items-center justify-center gap-3 text-[9px] text-muted-foreground/70">
-          <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5" /> 256-bit encryption</span>
-          <span className="w-1 h-1 rounded-full bg-muted-foreground/20" />
-          <span className="flex items-center gap-1"><Shield className="w-2.5 h-2.5" /> PCI compliant</span>
-          <span className="w-1 h-1 rounded-full bg-muted-foreground/20" />
-          <span className="flex items-center gap-1"><User className="w-2.5 h-2.5" /> GDPR ready</span>
+        {/* Trust signals — 3D chips */}
+        <div className="flex items-center justify-center gap-2.5 py-1">
+          {[
+            { icon: Lock, label: "256-bit encryption" },
+            { icon: Fingerprint, label: "PCI compliant" },
+            { icon: User, label: "GDPR ready" },
+          ].map((t, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-1 text-[9px] text-muted-foreground/60 px-2 py-1 rounded-lg"
+              style={{
+                background: "hsl(var(--muted) / 0.25)",
+                boxShadow: "inset 0 1px 2px hsl(var(--foreground) / 0.03)",
+              }}
+            >
+              <t.icon className="w-2.5 h-2.5" />
+              <span>{t.label}</span>
+            </div>
+          ))}
         </div>
 
         {/* Legal links */}
@@ -321,27 +425,46 @@ const FlightTravelerInfo = () => {
     </div>
   );
 
-  /* Sticky bottom CTA */
+  /* Sticky bottom CTA — 3D elevated */
   const stickyCTA = (
-    <div className="fixed bottom-0 left-0 right-0 z-30 bg-card/80 backdrop-blur-2xl border-t border-[hsl(var(--flights))]/15 safe-area-bottom shadow-[0_-4px_20px_-4px_hsl(var(--flights)/0.1)]">
-      <div className={cn("mx-auto px-4 py-2.5 flex items-center justify-between gap-3", isMobile ? "max-w-lg" : "max-w-2xl")}>
+    <div
+      className="fixed bottom-0 left-0 right-0 z-30 safe-area-bottom"
+      style={{
+        background: "hsl(var(--card) / 0.8)",
+        backdropFilter: "blur(24px) saturate(1.4)",
+        borderTop: "1px solid hsl(var(--flights) / 0.1)",
+        boxShadow: "0 -8px 32px -8px hsl(var(--flights) / 0.1), 0 -2px 8px hsl(var(--foreground) / 0.04)",
+      }}
+    >
+      <div className={cn("mx-auto px-4 py-3 flex items-center justify-between gap-3", isMobile ? "max-w-lg" : "max-w-2xl")}>
         <div>
-          <p className="text-[9px] text-muted-foreground">Total</p>
-          <p className="text-lg font-bold text-[hsl(var(--flights))] tabular-nums leading-tight">
+          <p className="text-[9px] text-muted-foreground font-medium">Total</p>
+          <p className="text-xl font-bold text-[hsl(var(--flights))] tabular-nums leading-tight tracking-tight">
             ${Math.round(offer.price * totalPassengers).toLocaleString()}
           </p>
           <p className="text-[9px] text-muted-foreground">
             {totalPassengers} traveler{totalPassengers > 1 ? "s" : ""} · {offer.currency || "USD"}
           </p>
         </div>
-        <motion.div whileTap={{ scale: 0.97 }}>
+        <motion.div whileTap={{ scale: 0.96 }}>
           <Button
             size="lg"
             onClick={handleContinue}
-            className="h-11 px-6 text-sm font-bold rounded-2xl bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 text-primary-foreground shadow-lg shadow-[hsl(var(--flights))]/25 gap-1.5"
+            className="relative h-12 px-7 text-sm font-bold rounded-2xl text-primary-foreground gap-1.5 overflow-hidden"
+            style={{
+              background: "hsl(var(--flights))",
+              boxShadow: "0 8px 24px -4px hsl(var(--flights) / 0.4), 0 2px 8px hsl(var(--flights) / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.2)",
+            }}
           >
-            Continue to Checkout
-            <ChevronRight className="w-4 h-4" />
+            {/* Shine sweep */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: "linear-gradient(105deg, transparent 40%, hsl(0 0% 100% / 0.12) 50%, transparent 60%)",
+              }}
+            />
+            <span className="relative z-10">Continue to Checkout</span>
+            <ChevronRight className="w-4 h-4 relative z-10" />
           </Button>
         </motion.div>
       </div>
@@ -354,8 +477,16 @@ const FlightTravelerInfo = () => {
         <SEOHead title="Traveler Details – ZIVO Flights" description="Enter passenger information for your flight booking." />
         <AppLayout hideHeader hideNav>
           <div className="relative overflow-hidden min-h-[100dvh]">
+            {/* 3D ambient background orbs */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="absolute -top-20 right-0 w-60 h-60 rounded-full bg-[hsl(var(--flights))]/5 blur-3xl" />
+              <div
+                className="absolute -top-24 right-[-40px] w-72 h-72 rounded-full blur-3xl"
+                style={{ background: "hsl(var(--flights) / 0.06)" }}
+              />
+              <div
+                className="absolute bottom-40 left-[-60px] w-48 h-48 rounded-full blur-3xl"
+                style={{ background: "hsl(var(--flights) / 0.04)" }}
+              />
             </div>
             <div className="relative z-10">
               {pageContent}
@@ -371,7 +502,14 @@ const FlightTravelerInfo = () => {
     <div className="min-h-[100dvh] bg-background relative overflow-hidden flex flex-col">
       <SEOHead title="Traveler Details – ZIVO Flights" description="Enter passenger information for your flight booking." />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-[hsl(var(--flights))]/5 blur-3xl" />
+        <div
+          className="absolute -top-24 right-0 w-80 h-80 rounded-full blur-3xl"
+          style={{ background: "hsl(var(--flights) / 0.06)" }}
+        />
+        <div
+          className="absolute bottom-40 left-[-60px] w-56 h-56 rounded-full blur-3xl"
+          style={{ background: "hsl(var(--flights) / 0.03)" }}
+        />
       </div>
       <Header />
       <main className="flex-1 pt-16 pb-8 relative z-10">
