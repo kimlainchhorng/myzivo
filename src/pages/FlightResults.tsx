@@ -9,6 +9,7 @@ import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AppLayout from "@/components/app/AppLayout";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
 import DuffelFlightCard from "@/components/flight/DuffelFlightCard";
 import FlightEmptyState from "@/components/flight/FlightEmptyState";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
@@ -62,6 +64,7 @@ const timeOptions = [
 ];
 
 const FlightResults = () => {
+  const isMobile = useIsMobile();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<SortBy>("best");
@@ -476,25 +479,13 @@ const FlightResults = () => {
   // Pending filter onChange (for mobile sheet)
   const pendingFilterChange = (partial: Partial<FlightFiltersState>) => setPendingFilters(prev => ({ ...prev, ...partial }));
 
-  return (
-    <div className="min-h-[100dvh] bg-background relative overflow-hidden flex flex-col">
-      <SEOHead
-        title={`Flights ${origin} → ${destination} – ZIVO`}
-        description={`Compare flight deals from ${origin} to ${destination}.`}
-      />
+  const routeSummary = `${originAirport?.city || origin} → ${destAirport?.city || destination}`;
 
-      {/* Decorative orbs — subtle */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-[hsl(var(--flights))]/6 blur-3xl" />
-      </div>
+  const resultsContent = (
+    <div className="mx-auto px-3 sm:px-4 max-w-5xl">
+      {/* Sticky summary bar — app-like nav bar */}
+      <div className={cn("sticky z-20 -mx-3 sm:-mx-4 px-3 sm:px-4 mb-3", isMobile ? "top-0" : "top-14")}>
 
-      <Header />
-
-      <main className="flex-1 pt-14 pb-4 sm:pb-20 relative z-10">
-        <div className="mx-auto px-3 sm:px-4 max-w-5xl">
-
-          {/* Sticky summary bar — app-like nav bar */}
-          <div className="sticky top-14 z-20 -mx-3 sm:-mx-4 px-3 sm:px-4 mb-3">
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -756,12 +747,43 @@ const FlightResults = () => {
             </div>
           </div>
         </div>
-      </main>
+  );
 
-      {/* Footer only on desktop */}
-      <div className="hidden sm:block">
-        <Footer />
+  if (isMobile) {
+    return (
+      <>
+        <SEOHead
+          title={`Flights ${origin} → ${destination} – ZIVO`}
+          description={`Compare flight deals from ${origin} to ${destination}.`}
+        />
+        <AppLayout hideHeader hideNav>
+          <div className="relative overflow-hidden min-h-[100dvh]">
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-[hsl(var(--flights))]/6 blur-3xl" />
+            </div>
+            <div className="relative z-10 pb-6">
+              {resultsContent}
+            </div>
+          </div>
+        </AppLayout>
+      </>
+    );
+  }
+
+  return (
+    <div className="min-h-[100dvh] bg-background relative overflow-hidden flex flex-col">
+      <SEOHead
+        title={`Flights ${origin} → ${destination} – ZIVO`}
+        description={`Compare flight deals from ${origin} to ${destination}.`}
+      />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-[hsl(var(--flights))]/6 blur-3xl" />
       </div>
+      <Header />
+      <main className="flex-1 pt-14 pb-20 relative z-10">
+        {resultsContent}
+      </main>
+      <Footer />
     </div>
   );
 };
