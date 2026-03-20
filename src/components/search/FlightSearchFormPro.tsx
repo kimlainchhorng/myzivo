@@ -203,14 +203,19 @@ export default function FlightSearchFormPro({
 
   return (
     <div className={cn(
-      "bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl p-4 sm:p-6 shadow-2xl",
+      "relative bg-card/80 backdrop-blur-2xl border border-border/20 rounded-3xl p-5 sm:p-7",
+      "shadow-[0_8px_40px_-8px_hsl(var(--primary)/0.12),0_2px_12px_-4px_hsl(var(--primary)/0.08)]",
+      "before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-b before:from-white/[0.06] before:to-transparent before:pointer-events-none",
       className
-    )}>
-      {/* Accent bar */}
-      <div className="h-1 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 rounded-t-2xl mb-4 sm:mb-5" />
+    )} style={{ transformStyle: "preserve-3d" }}>
+      {/* Accent bar with 3D lift */}
+      <div
+        className="h-1.5 bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 rounded-t-3xl mb-5 sm:mb-6 shadow-[0_2px_12px_hsl(var(--primary)/0.3)]"
+        style={{ transform: "translateZ(4px)" }}
+      />
 
       {/* Trip Type Toggle */}
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex gap-2 mb-5 flex-wrap" style={{ transform: "translateZ(8px)" }}>
         {[
           { id: "roundtrip" as TripType, label: t("flights.roundtrip"), icon: RefreshCw },
           { id: "oneway" as TripType, label: t("flights.oneway"), icon: Plane },
@@ -220,11 +225,12 @@ export default function FlightSearchFormPro({
             key={type.id}
             onClick={() => setTripType(type.id)}
             className={cn(
-              "px-3 sm:px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm",
+              "px-3.5 sm:px-5 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm",
               tripType === type.id
-                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-primary-foreground shadow-lg shadow-sky-500/30"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-primary-foreground shadow-[0_4px_16px_hsl(var(--primary)/0.35),inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-[0.96] active:shadow-[0_2px_8px_hsl(var(--primary)/0.25)]"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted/80 hover:shadow-md active:scale-[0.97] border border-border/30"
             )}
+            style={tripType === type.id ? { transform: "translateZ(6px)" } : {}}
           >
             <type.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             {type.label}
@@ -584,24 +590,28 @@ export default function FlightSearchFormPro({
             </div>
           </div>
 
-          {/* Search Button */}
+          {/* Search Button — 3D elevated */}
           <Button
             onClick={handleSearch}
             disabled={!isFormValid}
             size="lg"
             className={cn(
-              "w-full h-12 sm:h-14 mt-5 font-bold text-base sm:text-lg rounded-xl",
-              "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-600 hover:via-blue-700 hover:to-sky-600",
-              "text-primary-foreground shadow-xl shadow-sky-500/30 hover:shadow-sky-500/40",
-              "transition-all duration-200 active:scale-[0.98]",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
+              "w-full h-13 sm:h-14 mt-6 font-bold text-base sm:text-lg rounded-2xl",
+              "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-400 hover:via-blue-500 hover:to-sky-400",
+              "text-primary-foreground",
+              "shadow-[0_6px_24px_-4px_hsl(var(--primary)/0.4),0_2px_8px_-2px_hsl(var(--primary)/0.3),inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.1)]",
+              "hover:shadow-[0_8px_32px_-4px_hsl(var(--primary)/0.5),0_4px_12px_-2px_hsl(var(--primary)/0.35)]",
+              "hover:-translate-y-0.5",
+              "transition-all duration-200 active:translate-y-0 active:scale-[0.98] active:shadow-[0_2px_8px_-2px_hsl(var(--primary)/0.3)]",
+              "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
             )}
+            style={{ transform: "translateZ(12px)" }}
           >
             <Search className="w-5 h-5 mr-2" />
             {t("flights.search_title")}
           </Button>
           
-          <p className="text-xs text-muted-foreground text-center mt-2">
+          <p className="text-xs text-muted-foreground text-center mt-3">
             Payment completed securely on ZIVO. Tickets issued by licensed partners.
           </p>
         </>
