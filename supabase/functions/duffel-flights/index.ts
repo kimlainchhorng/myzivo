@@ -921,7 +921,7 @@ serve(async (req) => {
     console.log('[Duffel] Action:', action);
 
     // Validate action
-    if (typeof action !== 'string' || !['createOfferRequest', 'getOffers', 'getOffer', 'createOrder'].includes(action)) {
+    if (typeof action !== 'string' || !['createOfferRequest', 'getOffers', 'getOffer', 'createOrder', 'getAvailableServices'].includes(action)) {
       return new Response(
         JSON.stringify({ error: `Unknown action: ${action}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -933,6 +933,7 @@ serve(async (req) => {
     if (action === 'createOfferRequest') validationError = validateCreateOfferRequest(params);
     else if (action === 'getOffers') validationError = validateGetOffers(params);
     else if (action === 'getOffer') validationError = validateGetOffer(params);
+    else if (action === 'getAvailableServices') validationError = validateGetAvailableServices(params);
 
     if (validationError) {
       return new Response(
@@ -958,6 +959,10 @@ serve(async (req) => {
 
       case 'createOrder':
         result = await createOrder(params as CreateOrderParams);
+        break;
+
+      case 'getAvailableServices':
+        result = await getAvailableServices(params as GetAvailableServicesParams);
         break;
 
       default:
