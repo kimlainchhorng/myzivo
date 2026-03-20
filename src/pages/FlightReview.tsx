@@ -374,8 +374,9 @@ const FlightReview = () => {
     } catch { return {}; }
   }, []);
 
-  const { data: liveOffer } = useDuffelOffer(storedOffer?.id ?? null);
+  const { data: liveOffer, isError: liveOfferError } = useDuffelOffer(storedOffer?.id ?? null);
   const offer = useMemo(() => {
+    // If live offer fetch failed or returned null (expired), fall back to stored offer
     if (!liveOffer && !storedOffer) return null;
     const base = liveOffer ?? storedOffer;
     if (!base) return null;
