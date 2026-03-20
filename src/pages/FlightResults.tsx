@@ -748,7 +748,10 @@ const FlightResults = () => {
         </div>
       </main>
 
-      <Footer />
+      {/* Footer only on desktop */}
+      <div className="hidden sm:block">
+        <Footer />
+      </div>
     </div>
   );
 };
