@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 import Header from "@/components/Header";
+import Flight3DSkyHeader from "@/components/flight/Flight3DSkyHeader";
 
 import miamiImg from "@/assets/destinations/miami.jpg";
 import sfImg from "@/assets/destinations/san-francisco.jpg";
@@ -498,7 +499,9 @@ const FlightLanding = () => {
     return (
       <>
         <SEOHead title="Search Flights – ZIVO" description="Search and compare flights from 500+ airlines." />
-        <AppLayout title="Flights">
+        <AppLayout title="Flights" headerRightAction={undefined}>
+          {/* 3D Sky scene below header */}
+          <Flight3DSkyHeader className="-mt-1" />
           <div className="relative overflow-hidden">
             <Animated3DBackground />
             <div className="relative z-10">
