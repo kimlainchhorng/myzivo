@@ -192,8 +192,7 @@ export default function FlightLegCard({
                 iataCode={carrierCodes[0]}
                 airlineName={airlineName}
                 size={44}
-                className="border border-border/15 bg-card/80"
-                style={{ boxShadow: "0 2px 8px -2px hsl(var(--foreground)/0.08)" } as any}
+                className="border border-border/15 bg-card/80 shadow-md"
               />
               {carrierCodes.length > 1 && (
                 <AirlineLogo iataCode={carrierCodes[1]} airlineName="" size={28} className="absolute bottom-0 right-0 border-2 border-card bg-card shadow-sm" />
