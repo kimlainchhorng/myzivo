@@ -408,28 +408,30 @@ const FlightReview = () => {
           </motion.div>
 
           {/* ============================================ */}
-          {/* SEGMENT TIMELINE — redesigned                */}
+          {/* SEGMENT TIMELINES — outbound + return        */}
           {/* ============================================ */}
-          {segments.length > 0 && (
+          {[
+            { label: isRoundTrip ? "Outbound Segments" : "Flight Segments", segs: outboundSegments, icon: false },
+            ...(returnSegments.length > 0 ? [{ label: "Return Segments", segs: returnSegments, icon: true }] : []),
+          ].map(({ label, segs, icon: rotateIcon }, sliceIdx) => segs.length > 0 && (
             <motion.div
+              key={sliceIdx}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.2 + sliceIdx * 0.08 }}
               className="mt-4"
             >
               <Card className="border-border/30 overflow-hidden">
-                {/* Section header */}
                 <div className="px-4 py-2.5 bg-muted/30 border-b border-border/20 flex items-center gap-2">
                   <div className="w-5 h-5 rounded-md bg-[hsl(var(--flights))]/10 flex items-center justify-center">
-                    <Plane className="w-3 h-3 text-[hsl(var(--flights))]" />
+                    <Plane className={cn("w-3 h-3 text-[hsl(var(--flights))]", rotateIcon && "rotate-180")} />
                   </div>
-                  <p className="text-xs font-bold tracking-wide">Flight Segments</p>
-                  <Badge variant="secondary" className="text-[8px] ml-auto px-1.5 py-0">{segments.length} leg{segments.length > 1 ? "s" : ""}</Badge>
+                  <p className="text-xs font-bold tracking-wide">{label}</p>
+                  <Badge variant="secondary" className="text-[8px] ml-auto px-1.5 py-0">{segs.length} leg{segs.length > 1 ? "s" : ""}</Badge>
                 </div>
                 <CardContent className="p-0">
-                  {segments.map((seg: DuffelSegment, i: number) => (
+                  {segs.map((seg: DuffelSegment, i: number) => (
                     <div key={seg.id || i}>
-                      {/* Layover badge between segments */}
                       {i > 0 && (
                         <div className="flex items-center gap-2.5 px-4 py-2 bg-accent/30 border-y border-dashed border-border/30">
                           <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center">
@@ -441,9 +443,7 @@ const FlightReview = () => {
                           </p>
                         </div>
                       )}
-
                       <div className="px-4 py-3">
-                        {/* Segment header — carrier + duration */}
                         <div className="flex items-center gap-2.5 mb-2.5">
                           <AirlineLogo
                             iataCode={seg.operatingCarrierCode || seg.marketingCarrierCode}
@@ -468,33 +468,22 @@ const FlightReview = () => {
                             </Badge>
                           )}
                         </div>
-
-                        {/* Timeline — vertical dot-line */}
                         <div className="ml-3.5 pl-5 relative">
-                          {/* Vertical connecting line */}
                           <div className="absolute left-0 top-2 bottom-2 w-[2px] bg-gradient-to-b from-[hsl(var(--flights))] via-[hsl(var(--flights))]/30 to-[hsl(var(--flights))]" />
-                          
-                          {/* Departure */}
                           <div className="flex items-start gap-3 relative pb-4">
                             <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm shadow-[hsl(var(--flights))]/30 z-10" />
                             <div>
-                              <p className="text-sm font-bold tabular-nums leading-none">
-                                {formatTime(seg.departingAt) || offer.departure.time}
-                              </p>
+                              <p className="text-sm font-bold tabular-nums leading-none">{formatTime(seg.departingAt)}</p>
                               <p className="text-[10px] text-muted-foreground mt-0.5">
                                 {seg.origin.code} · {seg.origin.city}
                                 {seg.origin.terminal && <span className="text-muted-foreground/60"> · T{seg.origin.terminal}</span>}
                               </p>
                             </div>
                           </div>
-
-                          {/* Arrival */}
                           <div className="flex items-start gap-3 relative">
                             <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-[hsl(var(--flights))] border-2 border-card shadow-sm shadow-[hsl(var(--flights))]/30 z-10" />
                             <div>
-                              <p className="text-sm font-bold tabular-nums leading-none">
-                                {formatTime(seg.arrivingAt) || offer.arrival.time}
-                              </p>
+                              <p className="text-sm font-bold tabular-nums leading-none">{formatTime(seg.arrivingAt)}</p>
                               <p className="text-[10px] text-muted-foreground mt-0.5">
                                 {seg.destination.code} · {seg.destination.city}
                                 {seg.destination.terminal && <span className="text-muted-foreground/60"> · T{seg.destination.terminal}</span>}
@@ -508,7 +497,7 @@ const FlightReview = () => {
                 </CardContent>
               </Card>
             </motion.div>
-          )}
+          ))}
 
           {/* Fare Details */}
           <motion.div
