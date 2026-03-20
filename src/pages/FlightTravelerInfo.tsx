@@ -710,17 +710,18 @@ const FlightTravelerInfo = () => {
                 boxShadow: "0 8px 24px -4px hsl(var(--flights) / 0.4), 0 2px 8px hsl(var(--flights) / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.2)",
               }}
             >
-            {/* Shine sweep */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: "linear-gradient(105deg, transparent 40%, hsl(0 0% 100% / 0.12) 50%, transparent 60%)",
-              }}
-            />
-            <span className="relative z-10">Continue to Checkout</span>
-            <ChevronRight className="w-4 h-4 relative z-10" />
-          </Button>
-        </motion.div>
+              {/* Shine sweep */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: "linear-gradient(105deg, transparent 40%, hsl(0 0% 100% / 0.12) 50%, transparent 60%)",
+                }}
+              />
+              <span className="relative z-10">Continue to Checkout</span>
+              <ChevronRight className="w-4 h-4 relative z-10" />
+            </Button>
+          </motion.div>
+        </div>
       </div>
     </div>
   );
