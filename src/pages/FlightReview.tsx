@@ -199,7 +199,17 @@ const FlightReview = () => {
                     )}>
                       {offer.stops === 0 ? "Nonstop" : `${offer.stops} stop${offer.stops > 1 ? "s" : ""}`}
                     </span>
-                    {offer.stopCities?.length > 0 && (
+                    {offer.stopDetails?.length > 0 ? (
+                      <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 flex-wrap">
+                        {offer.stopDetails.map((s, i) => (
+                          <span key={i} className="flex items-center gap-0.5">
+                            {i > 0 && <ArrowRight className="w-1.5 h-1.5" />}
+                            <span>{s.code}</span>
+                            {s.layoverDuration && <span className="text-muted-foreground/50">({s.layoverDuration})</span>}
+                          </span>
+                        ))}
+                      </span>
+                    ) : offer.stopCities?.length > 0 && (
                       <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
                         <MapPin className="w-2 h-2" />
                         {offer.stopCities.join(", ")}
