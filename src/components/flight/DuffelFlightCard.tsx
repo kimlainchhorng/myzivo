@@ -414,7 +414,7 @@ export default function DuffelFlightCard({
         <div className="flex items-end justify-between gap-2 mt-3">
           <div className="flex gap-1 flex-wrap min-w-0">
             <Badge variant="outline" className="text-[8px] sm:text-[9px] border-border/25 bg-muted/25 capitalize h-[18px] px-1.5 font-medium">
-              {offer.cabinClass.replace("_", " ")}
+              {offer.fareBrandName || offer.cabinClass.replace("_", " ")}
             </Badge>
             {offer.baggageDetails ? (
               <>
