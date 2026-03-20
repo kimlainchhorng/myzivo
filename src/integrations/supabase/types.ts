@@ -15934,7 +15934,7 @@ export type Database = {
           duffel_cost: number | null
           exchange_rate: number | null
           fare_rules: Json | null
-          flight_id: string
+          flight_id: string | null
           id: string
           itinerary_email_sent: boolean | null
           offer_currency: string | null
@@ -15990,7 +15990,7 @@ export type Database = {
           duffel_cost?: number | null
           exchange_rate?: number | null
           fare_rules?: Json | null
-          flight_id: string
+          flight_id?: string | null
           id?: string
           itinerary_email_sent?: boolean | null
           offer_currency?: string | null
@@ -16046,7 +16046,7 @@ export type Database = {
           duffel_cost?: number | null
           exchange_rate?: number | null
           fare_rules?: Json | null
-          flight_id?: string
+          flight_id?: string | null
           id?: string
           itinerary_email_sent?: boolean | null
           offer_currency?: string | null
