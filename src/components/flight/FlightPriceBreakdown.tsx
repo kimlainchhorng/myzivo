@@ -117,7 +117,7 @@ export default function FlightPriceBreakdown({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
-                  Taxes & fees × {passengers} passengers
+                  Taxes & fees (2.9%) × {passengers} passengers
                 </span>
                 <span>{formatPrice(totalTaxesFees, currency)}</span>
               </div>
