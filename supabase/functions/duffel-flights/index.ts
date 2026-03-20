@@ -679,10 +679,8 @@ function transformSegment(segment: Record<string, unknown>) {
   const destination = segment.destination as Record<string, string> | undefined;
   const aircraft = segment.aircraft as Record<string, string> | undefined;
 
-  const duration = segment.duration as string || '';
-  const durationMatch = duration.match(/PT(\d+)H(\d+)?M?/);
-  const hours = durationMatch?.[1] || '0';
-  const mins = durationMatch?.[2] || '0';
+  const rawDuration = segment.duration as string || '';
+  const dur = parseISO8601Duration(rawDuration);
 
   return {
     id: segment.id as string,
@@ -706,15 +704,29 @@ function transformSegment(segment: Record<string, unknown>) {
     marketingCarrierCode: marketingCarrier?.iata_code || '',
     flightNumber: `${marketingCarrier?.iata_code || ''}${segment.marketing_carrier_flight_number || ''}`,
     aircraft: aircraft?.name || 'Unknown',
-    duration: `${hours}h ${mins}m`,
+    duration: `${dur.hours}h ${dur.minutes}m`,
     cabinClass: (segment.passengers as Array<Record<string, string>> | undefined)?.[0]?.cabin_class || 'economy',
   };
 }
 
 function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
-  return offers
+  const transformed = offers
     .map(o => transformOffer(o))
     .filter((o): o is DuffelOfferTransformed => o !== null);
+
+  // Deduplicate by fingerprint: airlineCode + departure time + arrival time + stops + price
+  const seen = new Set<string>();
+  const deduped: DuffelOfferTransformed[] = [];
+  for (const offer of transformed) {
+    const fingerprint = `${offer.airlineCode}-${offer.departure.time}-${offer.arrival.time}-${offer.stops}-${offer.price}`;
+    if (!seen.has(fingerprint)) {
+      seen.add(fingerprint);
+      deduped.push(offer);
+    }
+  }
+
+  console.log(`[Transform] ${offers.length} raw -> ${transformed.length} transformed -> ${deduped.length} after dedup`);
+  return deduped;
 }
 
 function formatTime(dateStr: string): string {
