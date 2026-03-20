@@ -1,18 +1,18 @@
 /**
  * Passenger Details Page — /flights/traveler-info
- * Collects traveler information for each passenger
+ * Premium traveler form with flight summary and sticky CTA
  */
 
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, User, Plane } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, User, Plane, Clock, ChevronRight, Shield, Mail, Phone, Calendar, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,6 +38,227 @@ const emptyPassenger = (): PassengerForm => ({
   phone_number: "",
 });
 
+/* ── Step indicator ────────────────────────── */
+function StepIndicator() {
+  const steps = ["Search", "Review", "Travelers", "Checkout"];
+  const current = 2;
+  return (
+    <div className="flex items-center justify-center gap-1 mb-6">
+      {steps.map((s, i) => (
+        <div key={s} className="flex items-center gap-1">
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+            i < current ? "bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))]" :
+            i === current ? "bg-[hsl(var(--flights))] text-white shadow-md shadow-[hsl(var(--flights))]/25" :
+            "bg-muted text-muted-foreground"
+          }`}>
+            <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+              i < current ? "bg-[hsl(var(--flights))] text-white" :
+              i === current ? "bg-white/20 text-white" :
+              "bg-muted-foreground/20"
+            }`}>{i + 1}</span>
+            <span className="hidden sm:inline">{s}</span>
+          </div>
+          {i < steps.length - 1 && (
+            <ChevronRight className={`w-3 h-3 ${i < current ? "text-[hsl(var(--flights))]" : "text-muted-foreground/40"}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Flight summary card ───────────────────── */
+function FlightSummaryCard({ offer }: { offer: DuffelOffer }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <Card className="mb-6 overflow-hidden border-[hsl(var(--flights))]/15 shadow-sm">
+        {/* Gradient top edge */}
+        <div className="h-1 bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--flights))]/60 to-[hsl(var(--flights))]" />
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[hsl(var(--flights))]/10 flex items-center justify-center">
+                <Plane className="w-4 h-4 text-[hsl(var(--flights))]" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">{offer.airline}</p>
+                <p className="text-[11px] text-muted-foreground">{offer.departure.code} → {offer.arrival.code}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold text-[hsl(var(--flights))]">${Math.round(offer.price)}</p>
+              <p className="text-[10px] text-muted-foreground">/person</p>
+            </div>
+          </div>
+
+          {/* Time row */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-lg font-bold tracking-tight">{offer.departure.time}</p>
+              <p className="text-xs text-muted-foreground">{offer.departure.code}</p>
+            </div>
+            <div className="flex-1 mx-3 flex flex-col items-center">
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1">
+                <Clock className="w-3 h-3" />
+                {offer.duration}
+              </div>
+              <div className="w-full h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--flights))]/30 to-[hsl(var(--flights))] relative rounded-full">
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[hsl(var(--flights))] border border-card" />
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[hsl(var(--flights))] border border-card" />
+              </div>
+              <p className="text-[10px] text-[hsl(var(--flights))] font-medium mt-1">
+                {offer.stops === 0 ? "Direct" : `${offer.stops} stop${offer.stops > 1 ? "s" : ""}`}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold tracking-tight">{offer.arrival.time}</p>
+              <p className="text-xs text-muted-foreground">{offer.arrival.code}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+/* ── Passenger form card ───────────────────── */
+function PassengerFormCard({
+  passenger,
+  index,
+  type,
+  onUpdate,
+}: {
+  passenger: PassengerForm;
+  index: number;
+  type: string;
+  onUpdate: (field: keyof PassengerForm, value: string) => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1, duration: 0.4 }}
+    >
+      <Card className="overflow-hidden border-border/60 shadow-sm">
+        {/* Card header with icon */}
+        <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+          <div className="w-8 h-8 rounded-full bg-[hsl(var(--flights))]/10 flex items-center justify-center">
+            <Users className="w-4 h-4 text-[hsl(var(--flights))]" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold">Passenger {index + 1}</p>
+            <p className="text-[11px] text-muted-foreground">({type})</p>
+          </div>
+        </div>
+
+        <CardContent className="px-4 pb-4 pt-2 space-y-3">
+          {/* Title + Gender row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Title</label>
+              <Select value={passenger.title} onValueChange={(v) => onUpdate("title", v)}>
+                <SelectTrigger className="h-11 rounded-xl bg-muted/50 border-border/60">
+                  <SelectValue placeholder="Title" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mr">Mr</SelectItem>
+                  <SelectItem value="ms">Ms</SelectItem>
+                  <SelectItem value="mrs">Mrs</SelectItem>
+                  <SelectItem value="miss">Miss</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Gender</label>
+              <Select value={passenger.gender} onValueChange={(v) => onUpdate("gender", v)}>
+                <SelectTrigger className={`h-11 rounded-xl bg-muted/50 border-border/60 ${!passenger.gender ? "text-muted-foreground" : ""}`}>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="m">Male</SelectItem>
+                  <SelectItem value="f">Female</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Name row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-medium text-muted-foreground mb-1 block">First name</label>
+              <Input
+                placeholder="As on passport"
+                value={passenger.given_name}
+                onChange={(e) => onUpdate("given_name", e.target.value)}
+                className="h-11 rounded-xl bg-muted/50 border-border/60"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Last name</label>
+              <Input
+                placeholder="As on passport"
+                value={passenger.family_name}
+                onChange={(e) => onUpdate("family_name", e.target.value)}
+                className="h-11 rounded-xl bg-muted/50 border-border/60"
+              />
+            </div>
+          </div>
+
+          {/* Date of birth */}
+          <div>
+            <label className="text-[11px] font-medium text-muted-foreground mb-1 flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              Date of Birth
+            </label>
+            <Input
+              type="date"
+              value={passenger.born_on}
+              onChange={(e) => onUpdate("born_on", e.target.value)}
+              max={new Date().toISOString().split("T")[0]}
+              className="h-11 rounded-xl bg-muted/50 border-border/60"
+            />
+          </div>
+
+          {/* Contact row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                <Mail className="w-3 h-3" />
+                Email
+              </label>
+              <Input
+                type="email"
+                placeholder="email@example.com"
+                value={passenger.email}
+                onChange={(e) => onUpdate("email", e.target.value)}
+                className="h-11 rounded-xl bg-muted/50 border-border/60"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                <Phone className="w-3 h-3" />
+                Phone <span className="text-muted-foreground/60">(optional)</span>
+              </label>
+              <Input
+                type="tel"
+                placeholder="+1 (555) 000-0000"
+                value={passenger.phone_number}
+                onChange={(e) => onUpdate("phone_number", e.target.value)}
+                className="h-11 rounded-xl bg-muted/50 border-border/60"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+/* ── Main page ─────────────────────────────── */
 const FlightTravelerInfo = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -54,7 +275,6 @@ const FlightTravelerInfo = () => {
     const saved = sessionStorage.getItem("zivo_passengers");
     if (saved) return JSON.parse(saved);
     const list = Array.from({ length: totalPassengers }, () => emptyPassenger());
-    // Pre-fill first passenger from auth
     if (user?.email) list[0].email = user.email;
     return list;
   });
@@ -64,6 +284,12 @@ const FlightTravelerInfo = () => {
   }, [offer, navigate]);
 
   if (!offer || !search) return null;
+
+  const getPassengerType = (idx: number): string => {
+    if (idx < (search.adults || 1)) return "Adult";
+    if (idx < (search.adults || 1) + (search.children || 0)) return "Child";
+    return "Infant";
+  };
 
   const updatePassenger = (index: number, field: keyof PassengerForm, value: string) => {
     setPassengers((prev) => {
@@ -103,11 +329,15 @@ const FlightTravelerInfo = () => {
       <SEOHead title="Traveler Details – ZIVO Flights" description="Enter passenger information for your flight booking." />
       <Header />
 
-      <main className="pt-20 pb-20">
+      <main className="pt-20 pb-32">
         <div className="container mx-auto px-4 max-w-2xl">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
+          {/* Back + Title */}
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3 mb-4"
+          >
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0 rounded-xl">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
@@ -116,116 +346,63 @@ const FlightTravelerInfo = () => {
                 {offer.departure.code} → {offer.arrival.code} · {offer.airline}
               </p>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Flight summary mini card */}
-          <Card className="mb-6 border-[hsl(var(--flights))]/20 bg-[hsl(var(--flights-light))]">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Plane className="w-5 h-5 text-[hsl(var(--flights))]" />
-                <div>
-                  <p className="text-sm font-semibold">{offer.departure.time} → {offer.arrival.time}</p>
-                  <p className="text-xs text-muted-foreground">{offer.duration} · {offer.stops === 0 ? "Direct" : `${offer.stops} stop`}</p>
-                </div>
-              </div>
-              <p className="font-bold text-[hsl(var(--flights))]">${Math.round(offer.price)}<span className="text-xs font-normal text-muted-foreground">/person</span></p>
-            </CardContent>
-          </Card>
+          {/* Step indicator */}
+          <StepIndicator />
+
+          {/* Flight summary */}
+          <FlightSummaryCard offer={offer} />
 
           {/* Passenger Forms */}
           <div className="space-y-4">
             {passengers.map((p, idx) => (
-              <motion.div
+              <PassengerFormCard
                 key={idx}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.08 }}
-              >
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <User className="w-4 h-4 text-[hsl(var(--flights))]" />
-                      Passenger {idx + 1}
-                      {idx < (search.adults || 1) ? (
-                        <span className="text-xs text-muted-foreground font-normal">(Adult)</span>
-                      ) : idx < (search.adults || 1) + (search.children || 0) ? (
-                        <span className="text-xs text-muted-foreground font-normal">(Child)</span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground font-normal">(Infant)</span>
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <Select value={p.title} onValueChange={(v) => updatePassenger(idx, "title", v)}>
-                        <SelectTrigger><SelectValue placeholder="Title" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="mr">Mr</SelectItem>
-                          <SelectItem value="ms">Ms</SelectItem>
-                          <SelectItem value="mrs">Mrs</SelectItem>
-                          <SelectItem value="miss">Miss</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Select value={p.gender} onValueChange={(v) => updatePassenger(idx, "gender", v)}>
-                        <SelectTrigger className={!p.gender ? "text-muted-foreground" : ""}>
-                          <SelectValue placeholder="Gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="m">Male</SelectItem>
-                          <SelectItem value="f">Female</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        placeholder="First name"
-                        value={p.given_name}
-                        onChange={(e) => updatePassenger(idx, "given_name", e.target.value)}
-                      />
-                      <Input
-                        placeholder="Last name"
-                        value={p.family_name}
-                        onChange={(e) => updatePassenger(idx, "family_name", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Date of Birth</label>
-                      <Input
-                        type="date"
-                        value={p.born_on}
-                        onChange={(e) => updatePassenger(idx, "born_on", e.target.value)}
-                        max={new Date().toISOString().split("T")[0]}
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <Input
-                        type="email"
-                        placeholder="Email"
-                        value={p.email}
-                        onChange={(e) => updatePassenger(idx, "email", e.target.value)}
-                      />
-                      <Input
-                        type="tel"
-                        placeholder="Phone (optional)"
-                        value={p.phone_number}
-                        onChange={(e) => updatePassenger(idx, "phone_number", e.target.value)}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                passenger={p}
+                index={idx}
+                type={getPassengerType(idx)}
+                onUpdate={(field, value) => updatePassenger(idx, field, value)}
+              />
             ))}
           </div>
 
-          <Button
-            size="lg"
-            onClick={handleContinue}
-            className="w-full mt-6 h-12 text-base font-semibold bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90"
+          {/* Trust signals */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="flex items-center justify-center gap-4 mt-6 text-xs text-muted-foreground"
           >
-            Continue to Checkout
-          </Button>
+            <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure & encrypted</span>
+            <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+            <span className="flex items-center gap-1"><User className="w-3 h-3" /> Data protected</span>
+          </motion.div>
         </div>
       </main>
+
+      {/* Sticky bottom CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-card/80 backdrop-blur-2xl border-t border-[hsl(var(--flights))]/15 safe-area-bottom shadow-[0_-4px_20px_-4px_hsl(var(--flights)/0.1)]">
+        <div className="container mx-auto px-4 max-w-2xl py-3 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[10px] text-muted-foreground">Total price</p>
+            <p className="text-xl font-bold text-[hsl(var(--flights))]">
+              ${Math.round(offer.price * totalPassengers)}
+            </p>
+            <p className="text-[10px] text-muted-foreground">{totalPassengers} traveler{totalPassengers > 1 ? "s" : ""} · USD</p>
+          </div>
+          <motion.div whileTap={{ scale: 0.97 }}>
+            <Button
+              size="lg"
+              onClick={handleContinue}
+              className="h-12 px-8 text-base font-bold rounded-2xl bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 text-white shadow-lg shadow-[hsl(var(--flights))]/25 gap-2"
+            >
+              Continue
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </motion.div>
+        </div>
+      </div>
 
       <Footer />
     </div>
