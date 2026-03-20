@@ -554,11 +554,17 @@ export default function DuffelFlightCard({
 
               {/* Conditions + disclosure */}
               <div className="flex flex-wrap gap-1.5 text-[8px] text-muted-foreground pt-1 border-t border-border/10">
-                {offer.conditions?.changeBeforeDeparture !== null && (
-                  <span>{offer.conditions.changeBeforeDeparture ? "✓ Changes allowed" : "✗ No changes"}</span>
+                {offer.conditions && (
+                  <span>{offer.conditions.changeable ? "✓ Changeable" : "✗ Not changeable"}</span>
                 )}
-                {offer.conditions?.refundBeforeDeparture !== null && (
-                  <span className="ml-2">{offer.conditions.refundBeforeDeparture ? "✓ Refundable" : "✗ Non-refundable"}</span>
+                {offer.conditions && (
+                  <span className="ml-2">{offer.conditions.refundable ? "✓ Refundable" : "✗ Non-refundable"}</span>
+                )}
+                {offer.baggageDetails && (
+                  <span className="ml-2">{offer.baggageDetails.carryOnIncluded ? "✓ Carry-on included" : "✗ No carry-on"}</span>
+                )}
+                {offer.baggageDetails && (
+                  <span className="ml-2">{offer.baggageDetails.checkedBagsIncluded ? `✓ ${offer.baggageDetails.checkedBagQuantity} checked bag${offer.baggageDetails.checkedBagQuantity > 1 ? 's' : ''}` : "✗ No checked bags"}</span>
                 )}
               </div>
 

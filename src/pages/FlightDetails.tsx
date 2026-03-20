@@ -222,7 +222,7 @@ const FlightDetails = () => {
           </motion.div>
 
           {/* Conditions notice */}
-          {(offer.conditions?.changeBeforeDeparture !== null || offer.conditions?.refundBeforeDeparture !== null) && (
+          {offer.conditions && (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -231,17 +231,31 @@ const FlightDetails = () => {
             >
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fare Conditions</p>
               <div className="space-y-1.5 text-xs text-muted-foreground">
-                {offer.conditions?.changeBeforeDeparture !== null && (
-                  <p className="flex items-center gap-1.5">
-                    <RefreshCw className="w-3 h-3 shrink-0" />
-                    Changes before departure: {offer.conditions.changeBeforeDeparture ? "Allowed" : "Not allowed"}
-                  </p>
-                )}
-                {offer.conditions?.refundBeforeDeparture !== null && (
-                  <p className="flex items-center gap-1.5">
-                    <Shield className="w-3 h-3 shrink-0" />
-                    Refund before departure: {offer.conditions.refundBeforeDeparture ? "Allowed" : "Not allowed"}
-                  </p>
+                <p className="flex items-center gap-1.5">
+                  <RefreshCw className="w-3 h-3 shrink-0" />
+                  Changes before departure: {offer.conditions.changeable ? "Allowed" : "Not allowed"}
+                  {offer.conditions.changeable && offer.conditions.changePenalty != null && offer.conditions.changePenalty > 0 && (
+                    <span className="text-muted-foreground/70 ml-1">(fee: {offer.conditions.penaltyCurrency} {offer.conditions.changePenalty})</span>
+                  )}
+                </p>
+                <p className="flex items-center gap-1.5">
+                  <Shield className="w-3 h-3 shrink-0" />
+                  Refund before departure: {offer.conditions.refundable ? "Allowed" : "Not allowed"}
+                  {offer.conditions.refundable && offer.conditions.refundPenalty != null && offer.conditions.refundPenalty > 0 && (
+                    <span className="text-muted-foreground/70 ml-1">(fee: {offer.conditions.penaltyCurrency} {offer.conditions.refundPenalty})</span>
+                  )}
+                </p>
+                {offer.baggageDetails && (
+                  <>
+                    <p className="flex items-center gap-1.5">
+                      <Briefcase className="w-3 h-3 shrink-0" />
+                      Carry-on bag: {offer.baggageDetails.carryOnIncluded ? "Included" : "Not included"}
+                    </p>
+                    <p className="flex items-center gap-1.5">
+                      <Briefcase className="w-3 h-3 shrink-0" />
+                      Checked bags: {offer.baggageDetails.checkedBagsIncluded ? `${offer.baggageDetails.checkedBagQuantity} included` : "Not included"}
+                    </p>
+                  </>
                 )}
               </div>
             </motion.div>
