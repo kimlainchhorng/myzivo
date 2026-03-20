@@ -328,6 +328,12 @@ export default function FlightSearchFormPro({
                           setReturnDate(addDays(date, 7));
                         }
                       }}
+                      onDateConfirmed={(date) => {
+                        if (tripType === "roundtrip") {
+                          setReturnDate((current) => (current && !isBefore(current, date) ? current : addDays(date, 7)));
+                          setReturnSheetOpen(true);
+                        }
+                      }}
                       label="Departure Date"
                       accentColor="sky"
                     />
