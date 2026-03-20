@@ -143,42 +143,55 @@ export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: b
       }
 
       // Build slices (one-way or round-trip)
-      const slices = [
-        {
-          origin: searchParams.origin,
-          destination: searchParams.destination,
-          departure_date: searchParams.departureDate,
-        },
-      ];
+      const buildSlices = (origin: string, destination: string) => {
+        const s = [
+          { origin, destination, departure_date: searchParams.departureDate },
+        ];
+        if (searchParams.returnDate) {
+          s.push({ origin: destination, destination: origin, departure_date: searchParams.returnDate });
+        }
+        return s;
+      };
 
-      if (searchParams.returnDate) {
-        slices.push({
-          origin: searchParams.destination,
-          destination: searchParams.origin,
-          departure_date: searchParams.returnDate,
+      const searchDuffel = async (origin: string, destination: string) => {
+        const slices = buildSlices(origin, destination);
+        const { data, error } = await supabase.functions.invoke('duffel-flights', {
+          body: {
+            action: 'createOfferRequest',
+            slices,
+            passengers,
+            cabin_class: searchParams.cabinClass,
+            max_connections: 2,
+          },
         });
+        if (error) throw new Error(transformFlightError(error.message || 'Failed to search flights'));
+        if (data?.error) throw new Error(transformFlightError(data.error));
+        return data as DuffelSearchResult;
+      };
+
+      // Primary search
+      let result = await searchDuffel(searchParams.origin, searchParams.destination);
+
+      // PNH↔KTI fallback: if no offers, retry with alternate airport code
+      if (result.offers.length === 0) {
+        const altOrigin = getAirportAlternate(searchParams.origin);
+        const altDest = getAirportAlternate(searchParams.destination);
+
+        if (altOrigin) {
+          const altResult = await searchDuffel(altOrigin, searchParams.destination);
+          if (altResult.offers.length > result.offers.length) result = altResult;
+        }
+        if (altDest && result.offers.length === 0) {
+          const altResult = await searchDuffel(searchParams.origin, altDest);
+          if (altResult.offers.length > result.offers.length) result = altResult;
+        }
+        if (altOrigin && altDest && result.offers.length === 0) {
+          const altResult = await searchDuffel(altOrigin, altDest);
+          if (altResult.offers.length > result.offers.length) result = altResult;
+        }
       }
 
-      const { data, error } = await supabase.functions.invoke('duffel-flights', {
-        body: {
-          action: 'createOfferRequest',
-          slices,
-          passengers,
-          cabin_class: searchParams.cabinClass,
-          max_connections: 2,
-        },
-      });
-
-      if (error) {
-        // Transform technical errors to user-friendly messages
-        throw new Error(transformFlightError(error.message || 'Failed to search flights'));
-      }
-
-      if (data?.error) {
-        throw new Error(transformFlightError(data.error));
-      }
-
-      return data as DuffelSearchResult;
+      return result;
     },
     enabled: enabled && !!searchParams.origin && !!searchParams.destination && !!searchParams.departureDate,
     staleTime: 5 * 60 * 1000, // 5 minutes
