@@ -151,15 +151,38 @@ export default function FlightSearchHero({
         <div className="absolute bottom-32 right-[15%] w-40 h-40 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
       </div>
 
-      {/* Floating Decorative Elements - Desktop only */}
-      <div className="absolute top-20 right-10 hidden lg:block animate-float">
-        <div className="w-10 h-10 rounded-xl bg-sky-500/20 backdrop-blur-xl border border-sky-500/30 flex items-center justify-center shadow-lg shadow-sky-500/20">
-          <Plane className="w-4 h-4 text-sky-400" />
+      {/* 3D Floating Elements - Desktop only */}
+      <div className="absolute top-20 right-10 hidden lg:block" style={{ perspective: "600px" }}>
+        <div
+          className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500/25 to-cyan-500/25 backdrop-blur-xl border border-sky-500/30 flex items-center justify-center shadow-xl shadow-sky-500/20"
+          style={{
+            animation: "float3d 6s ease-in-out infinite",
+            transformStyle: "preserve-3d",
+          }}
+        >
+          <Plane className="w-5 h-5 text-sky-400" />
         </div>
       </div>
-      <div className="absolute top-36 right-28 hidden lg:block animate-float" style={{ animationDelay: "0.5s" }}>
-        <div className="w-8 h-8 rounded-md bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 flex items-center justify-center">
-          <Globe className="w-3.5 h-3.5 text-blue-400" />
+      <div className="absolute top-40 right-32 hidden lg:block" style={{ perspective: "600px" }}>
+        <div
+          className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/25 to-indigo-500/25 backdrop-blur-xl border border-blue-500/30 flex items-center justify-center shadow-lg shadow-blue-500/15"
+          style={{
+            animation: "float3d 6s ease-in-out infinite 1s",
+            transformStyle: "preserve-3d",
+          }}
+        >
+          <Globe className="w-4 h-4 text-blue-400" />
+        </div>
+      </div>
+      <div className="absolute bottom-40 left-12 hidden lg:block" style={{ perspective: "600px" }}>
+        <div
+          className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-sky-500/20 backdrop-blur-xl border border-cyan-500/30 flex items-center justify-center shadow-lg shadow-cyan-500/15"
+          style={{
+            animation: "float3d 6s ease-in-out infinite 2s",
+            transformStyle: "preserve-3d",
+          }}
+        >
+          <Star className="w-4 h-4 text-cyan-400" />
         </div>
       </div>
 

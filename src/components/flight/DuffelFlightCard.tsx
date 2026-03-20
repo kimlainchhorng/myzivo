@@ -1,6 +1,6 @@
 /**
  * DuffelFlightCard — Premium OTA-style flight result card
- * With expandable segment details drawer
+ * With expandable segment details drawer + 3D tilt effect
  */
 
 import { useState } from "react";
@@ -14,6 +14,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import SeatMapPreview from "@/components/flight/SeatMapPreview";
+import BoardingPass3D from "@/components/flight/BoardingPass3D";
+import { use3DTilt } from "@/hooks/use3DTilt";
 import { cn } from "@/lib/utils";
 
 interface DuffelFlightCardProps {
@@ -100,6 +102,7 @@ export default function DuffelFlightCard({
 }: DuffelFlightCardProps) {
   const [expanded, setExpanded] = useState(false);
   const isTop = index === 0;
+  const { ref: tiltRef, style: tiltStyle, glareStyle, handleMouseMove, handleMouseLeave } = use3DTilt(4, 1.015);
   const badge = isTop ? sortBadgeConfig[sortBy] : null;
 
   const stopLabel = offer.stops === 0
@@ -118,14 +121,20 @@ export default function DuffelFlightCard({
 
   return (
     <div
+      ref={tiltRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={tiltStyle}
       className={cn(
-        "bg-card rounded-xl sm:rounded-xl border p-0 group transition-all duration-200 overflow-hidden",
-        "hover:shadow-md hover:border-[hsl(var(--flights))]/40",
+        "bg-card rounded-xl sm:rounded-xl border p-0 group overflow-hidden will-change-transform",
+        "hover:shadow-lg hover:shadow-[hsl(var(--flights))]/8 hover:border-[hsl(var(--flights))]/40",
         isTop
           ? "border-[hsl(var(--flights))]/30 shadow-sm shadow-[hsl(var(--flights))]/4"
           : "border-border/30"
       )}
     >
+      {/* 3D Glare overlay */}
+      <div className="absolute inset-0 pointer-events-none z-20 rounded-xl" style={glareStyle} />
       {/* Top badge strip */}
       {(isTop || isLowest || isFastest) && (
         <div className="flex gap-1.5 px-3 pt-2 sm:px-4 sm:pt-3">
@@ -347,6 +356,11 @@ export default function DuffelFlightCard({
                   ))}
                 </div>
               )}
+
+              {/* 3D Boarding Pass */}
+              <div className="mt-2 pt-2 border-t border-border/10">
+                <BoardingPass3D offer={offer} />
+              </div>
 
               {/* Seat map preview */}
               <div className="mt-2 pt-2 border-t border-border/10">
