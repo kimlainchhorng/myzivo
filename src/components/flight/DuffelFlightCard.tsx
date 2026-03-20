@@ -348,6 +348,11 @@ export default function DuffelFlightCard({
                 </div>
               )}
 
+              {/* Seat map preview */}
+              <div className="mt-2 pt-2 border-t border-border/10">
+                <SeatMapPreview cabinClass={offer.cabinClass} />
+              </div>
+
               {/* Conditions summary */}
               <div className="mt-2 flex flex-wrap gap-1.5 text-[8px] text-muted-foreground">
                 {offer.conditions?.changeBeforeDeparture !== null && (
