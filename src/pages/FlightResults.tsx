@@ -478,21 +478,21 @@ const FlightResults = () => {
   const pendingFilterChange = (partial: Partial<FlightFiltersState>) => setPendingFilters(prev => ({ ...prev, ...partial }));
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-background relative overflow-hidden flex flex-col">
       <SEOHead
         title={`Flights ${origin} → ${destination} – ZIVO`}
         description={`Compare flight deals from ${origin} to ${destination}.`}
       />
 
+      {/* Decorative orbs — subtle */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-[hsl(var(--flights))]/6 blur-3xl" />
-        <div className="absolute bottom-0 -left-32 w-64 h-64 rounded-full bg-primary/4 blur-3xl" />
       </div>
 
       <Header />
 
-      <main className="pt-16 pb-20 relative z-10">
-        <div className="container mx-auto px-4 max-w-5xl">
+      <main className="flex-1 pt-14 pb-4 sm:pb-20 relative z-10">
+        <div className="mx-auto px-3 sm:px-4 max-w-5xl">
 
           {/* Sticky summary bar */}
           <div className="sticky top-14 z-20 -mx-4 px-4 mb-4">
