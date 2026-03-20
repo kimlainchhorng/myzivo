@@ -89,10 +89,10 @@ export default function FlightSearchFormPro({
 
   // Date state
   const [departDate, setDepartDate] = useState<Date | undefined>(
-    initialDepartDate || addDays(new Date(), 7)
+    initialDepartDate
   );
   const [returnDate, setReturnDate] = useState<Date | undefined>(
-    initialReturnDate || addDays(new Date(), 14)
+    initialReturnDate
   );
 
   // Passengers & cabin
