@@ -16,94 +16,80 @@ interface AirlineLogoProps {
   showFallbackIcon?: boolean;
 }
 
-const AirlineLogoComponent = forwardRef<HTMLDivElement, AirlineLogoProps>(function AirlineLogoComponent({
-  iataCode,
-  airlineName,
-  size = 48,
-  className,
-  showFallbackIcon = true,
-}, ref) {
-  const normalizedCode = iataCode?.trim().toUpperCase() || '';
+const AirlineLogoComponent = forwardRef<HTMLDivElement, AirlineLogoProps>(
+  function AirlineLogoComponent(
+    { iataCode, airlineName, size = 48, className, showFallbackIcon = true },
+    ref
+  ) {
+    const code = (iataCode || '').trim().toUpperCase();
 
-  const getAirHexSize = (displaySize: number): AirHexSize => {
-    if (displaySize <= 32) return 32;
-    if (displaySize <= 64) return 64;
-    if (displaySize <= 100) return 100;
-    return 200;
-  };
+    const getAirHexSize = (s: number): AirHexSize => {
+      if (s <= 32) return 32;
+      if (s <= 64) return 64;
+      if (s <= 100) return 100;
+      return 200;
+    };
 
-  const airHexSize = getAirHexSize(size);
-  const fallbackChain = normalizedCode ? getLogoFallbackChain(normalizedCode, airHexSize) : [];
+    const fallbackChain = code
+      ? getLogoFallbackChain(code, getAirHexSize(size))
+      : [];
 
-  const [fallbackIndex, setFallbackIndex] = useState(0);
-  const [showIcon, setShowIcon] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
+    const [fallbackIndex, setFallbackIndex] = useState(0);
+    const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
-    setFallbackIndex(0);
-    setShowIcon(!normalizedCode);
-    setImageLoaded(false);
-  }, [normalizedCode]);
+    // Reset when code changes
+    useEffect(() => {
+      setFallbackIndex(0);
+      setFailed(false);
+    }, [code]);
 
-  const currentSrc = fallbackChain[fallbackIndex];
+    const handleError = useCallback(() => {
+      if (fallbackIndex < fallbackChain.length - 1) {
+        setFallbackIndex((i) => i + 1);
+      } else {
+        setFailed(true);
+      }
+    }, [fallbackIndex, fallbackChain.length]);
 
-  const handleError = useCallback(() => {
-    setImageLoaded(false);
+    const currentSrc = fallbackChain[fallbackIndex];
+    const showImage = !failed && !!currentSrc;
 
-    if (fallbackIndex < fallbackChain.length - 1) {
-      setFallbackIndex((prev) => prev + 1);
-      return;
-    }
-
-    setShowIcon(true);
-  }, [fallbackIndex, fallbackChain.length]);
-
-  const fallbackContent = showFallbackIcon ? (
-    <Plane
-      className="text-[hsl(var(--flights))]"
-      style={{ width: size * 0.5, height: size * 0.5 }}
-    />
-  ) : (
-    <span
-      className="font-bold text-[hsl(var(--flights))]"
-      style={{ fontSize: size * 0.35 }}
-    >
-      {normalizedCode || 'FL'}
-    </span>
-  );
-
-  return (
-    <div
-      ref={ref}
-      className={cn(
-        'relative flex items-center justify-center overflow-hidden rounded-lg border border-border/20 bg-card',
-        className
-      )}
-      style={{ width: size, height: size }}
-      title={airlineName || normalizedCode}
-      aria-label={airlineName || `${normalizedCode} airline logo`}
-    >
-      <div className="absolute inset-0 flex items-center justify-center bg-card">
-        {fallbackContent}
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          'flex items-center justify-center overflow-hidden rounded-lg bg-card border border-border/20',
+          className
+        )}
+        style={{ width: size, height: size }}
+        title={airlineName || code}
+      >
+        {showImage ? (
+          <img
+            src={currentSrc}
+            alt={airlineName || `${code} logo`}
+            className="w-full h-full object-contain p-0.5"
+            loading="eager"
+            crossOrigin="anonymous"
+            onError={handleError}
+          />
+        ) : showFallbackIcon ? (
+          <Plane
+            className="text-[hsl(var(--flights))]"
+            style={{ width: size * 0.5, height: size * 0.5 }}
+          />
+        ) : (
+          <span
+            className="font-bold text-[hsl(var(--flights))]"
+            style={{ fontSize: size * 0.35 }}
+          >
+            {code || 'FL'}
+          </span>
+        )}
       </div>
-
-      {!showIcon && currentSrc && (
-        <img
-          src={currentSrc}
-          alt={airlineName || `${normalizedCode} airline logo`}
-          className={cn(
-            'relative z-10 h-full w-full object-contain p-0.5 transition-opacity duration-200',
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          )}
-          loading="lazy"
-          onLoad={() => setImageLoaded(true)}
-          onError={handleError}
-        />
-      )}
-    </div>
-  );
-});
+    );
+  }
+);
 
 export const AirlineLogo = memo(AirlineLogoComponent);
-
 export default AirlineLogo;
