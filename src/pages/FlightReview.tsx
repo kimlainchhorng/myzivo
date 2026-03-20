@@ -100,6 +100,18 @@ const FlightReview = () => {
     return { depTime, arrTime, depCode, arrCode, depCity, arrCity, stops, duration, depDate: first.departingAt };
   };
 
+  // Build carrier info (before early return to avoid hook issues)
+  const carrierNames = (() => {
+    if (!offer?.carriers?.length) return offer?.airline || "";
+    const unique = [...new Set(offer.carriers.map((c: any) => c.name))];
+    return unique.join(" + ");
+  })();
+
+  const carrierCodes = (() => {
+    if (!offer?.carriers?.length) return [offer?.airlineCode || ""];
+    return [...new Set(offer.carriers.map((c: any) => c.code))];
+  })();
+
   if (!offer) {
     return (
       <div className="min-h-screen bg-background">
@@ -143,7 +155,8 @@ const FlightReview = () => {
     } catch { return ""; }
   };
 
-  // carrierNames and carrierCodes already defined above early return
+  const returnInfo = getSliceInfo(returnSegments);
+  const outboundInfo = getSliceInfo(outboundSegments);
 
   return (
     <div className="min-h-[100dvh] bg-background relative overflow-hidden flex flex-col">
