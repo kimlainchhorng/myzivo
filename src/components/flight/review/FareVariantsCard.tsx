@@ -17,8 +17,19 @@ interface FareVariantsCardProps {
   onSelectVariant: (variant: FareVariant) => void;
 }
 
+const CABIN_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
+  economy: { bg: "bg-muted/30", text: "text-foreground", border: "border-border/40", label: "Economy" },
+  premium_economy: { bg: "bg-amber-500/10", text: "text-amber-700", border: "border-amber-400/30", label: "Premium Economy" },
+  business: { bg: "bg-indigo-500/10", text: "text-indigo-700", border: "border-indigo-400/30", label: "Business" },
+  first: { bg: "bg-yellow-500/10", text: "text-yellow-700", border: "border-yellow-500/30", label: "First" },
+};
+
+function getCabinStyle(cabinClass: string) {
+  return CABIN_STYLES[cabinClass] ?? CABIN_STYLES.economy;
+}
+
 function formatCabinClass(cabinClass: string): string {
-  return cabinClass.replace(/_/g, " ");
+  return getCabinStyle(cabinClass).label;
 }
 
 function formatFareName(name: string | null, cabinClass: string): string {
