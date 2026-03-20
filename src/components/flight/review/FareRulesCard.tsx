@@ -1,13 +1,13 @@
 /**
- * Fare Rules & Policies Card — expandable accordion with refund, change, baggage policies
+ * Fare Rules & Policies Card — 3D Spatial premium accordion
+ * Floating glassmorphic card with depth, perspective, and animated expansion
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, RotateCcw, ArrowRightLeft, Luggage, ShieldCheck,
-  AlertCircle, CheckCircle2, XCircle, Package, Briefcase, ShoppingBag
+  AlertCircle, CheckCircle2, XCircle, Package, Briefcase, ShoppingBag,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -17,46 +17,57 @@ interface FareRulesCardProps {
   offer: DuffelOffer;
 }
 
-interface PolicyItemProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  allowed: boolean | null;
-  detail?: string;
-}
-
-function PolicyItem({ icon, label, value, allowed, detail }: PolicyItemProps) {
+function PolicyItem({ icon, label, value, allowed, detail }: {
+  icon: React.ReactNode; label: string; value: string; allowed: boolean | null; detail?: string;
+}) {
   return (
-    <div className="flex items-start gap-3 py-2.5">
-      <div className={cn(
-        "w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
-        allowed === true && "bg-emerald-500/10",
-        allowed === false && "bg-destructive/10",
-        allowed === null && "bg-muted"
-      )}>
+    <div className="flex items-start gap-3 py-3">
+      <div
+        className={cn(
+          "w-9 h-9 rounded-2xl flex items-center justify-center shrink-0",
+          allowed === true && "bg-emerald-500/10",
+          allowed === false && "bg-destructive/10",
+          allowed === null && "bg-muted/40"
+        )}
+        style={{
+          transform: "perspective(200px) rotateX(4deg) rotateY(-2deg)",
+          boxShadow: allowed === true
+            ? "0 6px 14px -6px hsl(140 60% 50%/0.2), inset 0 1px 0 hsl(var(--background)/0.5)"
+            : allowed === false
+              ? "0 6px 14px -6px hsl(0 60% 50%/0.15), inset 0 1px 0 hsl(var(--background)/0.5)"
+              : "inset 0 1px 2px hsl(var(--foreground)/0.04)",
+        }}
+      >
         {icon}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[12px] font-semibold">{label}</p>
+          <p className="text-[12px] font-bold">{label}</p>
           {allowed !== null && (
-            <Badge
-              variant="secondary"
+            <span
               className={cn(
-                "text-[9px] px-2 py-0 h-5 gap-0.5 font-bold",
-                allowed ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-destructive/10 text-destructive"
+                "inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-[9px] font-bold border",
+                allowed
+                  ? "border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  : "border-destructive/20 text-destructive"
               )}
+              style={{
+                background: allowed
+                  ? "linear-gradient(135deg, hsl(140 60% 50%/0.08), transparent)"
+                  : "linear-gradient(135deg, hsl(0 60% 50%/0.06), transparent)",
+                boxShadow: "0 2px 6px -3px hsl(var(--foreground)/0.06)",
+              }}
             >
-              {allowed ? <CheckCircle2 className="w-2.5 h-2.5" /> : <XCircle className="w-2.5 h-2.5" />}
+              {allowed ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
               {value}
-            </Badge>
+            </span>
           )}
           {allowed === null && (
             <span className="text-[10px] text-muted-foreground font-medium">{value}</span>
           )}
         </div>
         {detail && (
-          <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{detail}</p>
+          <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{detail}</p>
         )}
       </div>
     </div>
@@ -68,34 +79,54 @@ export function FareRulesCard({ offer }: FareRulesCardProps) {
 
   const isRefundable = offer.isRefundable ?? false;
   const isChangeable = offer.conditions?.changeable ?? false;
-
-  // Parse baggage info
-  const baggage = offer.baggageIncluded || "Personal item";  
+  const baggage = offer.baggageIncluded || "Personal item";
   const hasCarryOn = offer.baggageDetails?.carryOnIncluded ?? (baggage.toLowerCase().includes("carry") || baggage.toLowerCase().includes("cabin"));
   const hasCheckedBag = offer.baggageDetails?.checkedBagsIncluded ?? (baggage.toLowerCase().includes("check") || baggage.toLowerCase().includes("kg") || baggage.toLowerCase().includes("pc"));
 
   return (
-    <Card className="border-border/30 overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="overflow-hidden rounded-3xl border-[1.5px] border-border/20"
+      style={{
+        background: "hsl(var(--card))",
+        boxShadow: `0 20px 40px -16px hsl(var(--foreground)/0.07),
+                     0 6px 12px -4px hsl(var(--foreground)/0.03),
+                     inset 0 1.5px 0 hsl(var(--background)/0.8),
+                     inset 0 -1px 0 hsl(var(--foreground)/0.03)`,
+        transform: "perspective(600px) rotateX(1deg)",
+      }}
+    >
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-muted/30 transition-colors"
+        className="w-full px-5 py-3.5 flex items-center gap-3 hover:bg-muted/20 transition-colors"
       >
-        <div className="w-8 h-8 rounded-xl bg-[hsl(var(--flights))]/10 flex items-center justify-center shrink-0">
-          <ShieldCheck className="w-4 h-4 text-[hsl(var(--flights))]" />
+        <div
+          className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[hsl(var(--flights))]/15 to-[hsl(var(--flights))]/5 flex items-center justify-center shrink-0 text-[hsl(var(--flights))]"
+          style={{
+            transform: "perspective(200px) rotateX(5deg) rotateY(-3deg)",
+            boxShadow: "0 8px 18px -6px hsl(var(--flights)/0.25), inset 0 1px 0 hsl(var(--background)/0.5)",
+          }}
+        >
+          <ShieldCheck className="w-4 h-4" />
         </div>
         <div className="flex-1 text-left">
-          <p className="text-xs font-bold">Fare Rules & Policies</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[13px] font-extrabold">Fare Rules & Policies</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">
             {isRefundable ? "Refundable" : "Non-refundable"} · {isChangeable ? "Changes allowed" : "No changes"} · {baggage}
           </p>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           {isRefundable && (
-            <Badge className="text-[8px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 px-1.5 py-0 h-4">
+            <span
+              className="inline-flex items-center gap-0.5 text-[8px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-xl px-2 py-0.5"
+              style={{ background: "linear-gradient(135deg, hsl(140 60% 50%/0.08), transparent)" }}
+            >
               Refundable
-            </Badge>
+            </span>
           )}
-          <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.25 }}>
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           </motion.div>
         </div>
@@ -107,11 +138,10 @@ export function FareRulesCard({ offer }: FareRulesCardProps) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 border-t border-border/20">
-              {/* Refund Policy */}
+            <div className="px-5 pb-5 border-t border-border/15">
               <PolicyItem
                 icon={<RotateCcw className={cn("w-4 h-4", isRefundable ? "text-emerald-500" : "text-destructive")} />}
                 label="Cancellation & Refund"
@@ -119,13 +149,11 @@ export function FareRulesCard({ offer }: FareRulesCardProps) {
                 allowed={isRefundable}
                 detail={isRefundable
                   ? "This fare allows cancellation with refund. Airline fees may apply depending on timing."
-                  : "This fare is non-refundable. Taxes may be recoverable depending on the airline."
-                }
+                  : "This fare is non-refundable. Taxes may be recoverable depending on the airline."}
               />
 
-              <Separator className="bg-border/15" />
+              <Separator className="bg-border/10" />
 
-              {/* Change Policy */}
               <PolicyItem
                 icon={<ArrowRightLeft className={cn("w-4 h-4", isChangeable ? "text-emerald-500" : "text-destructive")} />}
                 label="Date & Route Changes"
@@ -133,60 +161,60 @@ export function FareRulesCard({ offer }: FareRulesCardProps) {
                 allowed={isChangeable}
                 detail={isChangeable
                   ? "Date/route changes permitted before departure. Change fees and fare differences may apply."
-                  : "This fare does not allow changes. You would need to cancel and rebook."
-                }
+                  : "This fare does not allow changes. You would need to cancel and rebook."}
               />
 
-              <Separator className="bg-border/15" />
+              <Separator className="bg-border/10" />
 
-              {/* Baggage Breakdown */}
-              <div className="py-2.5">
-                <div className="flex items-center gap-2 mb-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-[hsl(var(--flights))]/10 flex items-center justify-center shrink-0">
+              {/* Baggage Breakdown — 3D cards */}
+              <div className="py-3">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div
+                    className="w-9 h-9 rounded-2xl bg-[hsl(var(--flights))]/10 flex items-center justify-center shrink-0"
+                    style={{
+                      transform: "perspective(200px) rotateX(4deg) rotateY(-2deg)",
+                      boxShadow: "0 6px 14px -6px hsl(var(--flights)/0.2), inset 0 1px 0 hsl(var(--background)/0.5)",
+                    }}
+                  >
                     <Luggage className="w-4 h-4 text-[hsl(var(--flights))]" />
                   </div>
-                  <p className="text-[12px] font-semibold">Baggage Allowance</p>
+                  <p className="text-[12px] font-bold">Baggage Allowance</p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 ml-11">
-                  {/* Personal Item */}
-                  <div className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
-                    <ShoppingBag className="w-5 h-5 text-emerald-500" />
-                    <span className="text-[9px] font-bold text-center leading-tight">Personal Item</span>
-                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                  </div>
-
-                  {/* Carry-on */}
-                  <div className={cn(
-                    "flex flex-col items-center gap-1.5 p-2.5 rounded-xl border",
-                    hasCarryOn ? "bg-emerald-500/5 border-emerald-500/15" : "bg-muted/30 border-border/20"
-                  )}>
-                    <Briefcase className={cn("w-5 h-5", hasCarryOn ? "text-emerald-500" : "text-muted-foreground/40")} />
-                    <span className="text-[9px] font-bold text-center leading-tight">Carry-on</span>
-                    {hasCarryOn
-                      ? <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                      : <XCircle className="w-3 h-3 text-muted-foreground/40" />
-                    }
-                  </div>
-
-                  {/* Checked Bag */}
-                  <div className={cn(
-                    "flex flex-col items-center gap-1.5 p-2.5 rounded-xl border",
-                    hasCheckedBag ? "bg-emerald-500/5 border-emerald-500/15" : "bg-muted/30 border-border/20"
-                  )}>
-                    <Package className={cn("w-5 h-5", hasCheckedBag ? "text-emerald-500" : "text-muted-foreground/40")} />
-                    <span className="text-[9px] font-bold text-center leading-tight">Checked Bag</span>
-                    {hasCheckedBag
-                      ? <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                      : <XCircle className="w-3 h-3 text-muted-foreground/40" />
-                    }
-                  </div>
+                <div className="grid grid-cols-3 gap-2.5 ml-12">
+                  {[
+                    { icon: ShoppingBag, label: "Personal Item", included: true },
+                    { icon: Briefcase, label: "Carry-on", included: hasCarryOn },
+                    { icon: Package, label: "Checked Bag", included: hasCheckedBag },
+                  ].map(({ icon: BagIcon, label, included }) => (
+                    <div
+                      key={label}
+                      className={cn(
+                        "flex flex-col items-center gap-2 p-3 rounded-2xl border-[1.5px]",
+                        included ? "border-emerald-500/20" : "border-border/15"
+                      )}
+                      style={{
+                        background: included
+                          ? "linear-gradient(145deg, hsl(140 60% 50%/0.06), transparent)"
+                          : "linear-gradient(145deg, hsl(var(--muted)/0.3), hsl(var(--muted)/0.1))",
+                        boxShadow: included
+                          ? "0 4px 12px -4px hsl(140 60% 50%/0.12), inset 0 1px 0 hsl(var(--background)/0.5)"
+                          : "inset 0 1px 2px hsl(var(--foreground)/0.03)",
+                        transform: "perspective(300px) rotateX(2deg)",
+                      }}
+                    >
+                      <BagIcon className={cn("w-5 h-5", included ? "text-emerald-500" : "text-muted-foreground/30")} />
+                      <span className="text-[9px] font-bold text-center leading-tight">{label}</span>
+                      {included
+                        ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                        : <XCircle className="w-3.5 h-3.5 text-muted-foreground/30" />}
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <Separator className="bg-border/15" />
+              <Separator className="bg-border/10" />
 
-              {/* Seat Selection */}
               <PolicyItem
                 icon={<AlertCircle className="w-4 h-4 text-muted-foreground" />}
                 label="Seat Selection"
@@ -196,7 +224,13 @@ export function FareRulesCard({ offer }: FareRulesCardProps) {
               />
 
               {/* Airline rules notice */}
-              <div className="mt-2 p-2.5 rounded-lg bg-accent/40 border border-border/20">
+              <div
+                className="mt-2 p-3.5 rounded-2xl border border-border/15"
+                style={{
+                  background: "linear-gradient(145deg, hsl(var(--muted)/0.3), hsl(var(--muted)/0.1))",
+                  boxShadow: "inset 0 2px 4px -1px hsl(var(--foreground)/0.04)",
+                }}
+              >
                 <p className="text-[9px] text-muted-foreground leading-relaxed">
                   <span className="font-bold text-foreground">Important:</span> Fare rules are set by the airline and may vary by route.
                   Fees for changes, cancellations, or excess baggage are determined by the airline's tariff at time of request.
@@ -207,6 +241,6 @@ export function FareRulesCard({ offer }: FareRulesCardProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </Card>
+    </motion.div>
   );
 }
