@@ -54,7 +54,7 @@ export default function FlightPriceBreakdown({
           <span>{formatPrice(totalBaseFare, currency)}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Taxes & fees</span>
+          <span className="text-muted-foreground">Taxes & fees (2.9%)</span>
           <span>{formatPrice(totalTaxesFees, currency)}</span>
         </div>
         <Separator />
@@ -84,7 +84,7 @@ export default function FlightPriceBreakdown({
               <span>{formatPrice(baseFare, currency)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span>Taxes & fees</span>
+              <span>Taxes & fees (2.9%)</span>
               <span>{formatPrice(taxesFees, currency)}</span>
             </div>
             <div className="flex justify-between font-medium pt-2 border-t border-border/50">
@@ -103,7 +103,7 @@ export default function FlightPriceBreakdown({
                 <span>{formatPrice(baseFare, currency)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Taxes & fees</span>
+                <span className="text-muted-foreground">Taxes & fees (2.9%)</span>
                 <span>{formatPrice(taxesFees, currency)}</span>
               </div>
             </>
