@@ -29,7 +29,7 @@ interface FareVariantsCardProps {
 const CABIN_THEMES: Record<string, {
   gradient: string; accent: string; label: string;
   icon: typeof Ticket; glow: string; watermarkOpacity: string;
-  chipActive: string; badgeBorder: string;
+  chipActive: string; badgeBorder: string; cabinImage: string;
 }> = {
   economy: {
     gradient: "from-slate-400/6 to-slate-300/3",
@@ -40,6 +40,7 @@ const CABIN_THEMES: Record<string, {
     watermarkOpacity: "opacity-[0.03]",
     chipActive: "border-[hsl(var(--flights))]/30 text-[hsl(var(--flights))]",
     badgeBorder: "border-border/30",
+    cabinImage: cabinEconomy,
   },
   premium_economy: {
     gradient: "from-amber-400/8 to-orange-300/4",
@@ -50,6 +51,7 @@ const CABIN_THEMES: Record<string, {
     watermarkOpacity: "opacity-[0.04]",
     chipActive: "border-amber-400/40 text-amber-600 dark:text-amber-400",
     badgeBorder: "border-amber-400/25",
+    cabinImage: cabinPremiumEconomy,
   },
   business: {
     gradient: "from-indigo-400/10 to-violet-300/5",
@@ -60,6 +62,7 @@ const CABIN_THEMES: Record<string, {
     watermarkOpacity: "opacity-[0.04]",
     chipActive: "border-indigo-400/40 text-indigo-600 dark:text-indigo-400",
     badgeBorder: "border-indigo-400/25",
+    cabinImage: cabinBusiness,
   },
   first: {
     gradient: "from-yellow-400/10 to-amber-300/5",
@@ -70,6 +73,7 @@ const CABIN_THEMES: Record<string, {
     watermarkOpacity: "opacity-[0.05]",
     chipActive: "border-yellow-400/40 text-yellow-600 dark:text-yellow-400",
     badgeBorder: "border-yellow-400/25",
+    cabinImage: cabinFirst,
   },
 };
 
