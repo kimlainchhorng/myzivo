@@ -1,11 +1,13 @@
 /**
  * Popular Routes Quick Search Section
  * Displays trending flight routes as clickable cards on the homepage
+ * Uses real navigation with default dates so Duffel search triggers
  */
 
-import { Link } from "react-router-dom";
-import { Plane, TrendingUp, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { TrendingUp, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { format, addDays } from "date-fns";
 
 const POPULAR_ROUTES = [
   { from: "New York", fromCode: "JFK", to: "Miami", toCode: "MIA", priceFrom: 89 },
@@ -17,6 +19,16 @@ const POPULAR_ROUTES = [
 ];
 
 export default function PopularRoutesSection() {
+  const navigate = useNavigate();
+
+  const handleRouteClick = (fromCode: string, toCode: string) => {
+    const depart = format(addDays(new Date(), 7), "yyyy-MM-dd");
+    const ret = format(addDays(new Date(), 14), "yyyy-MM-dd");
+    navigate(
+      `/flights/results?origin=${fromCode}&destination=${toCode}&departureDate=${depart}&returnDate=${ret}&adults=1&cabinClass=economy`
+    );
+  };
+
   return (
     <section className="py-16 bg-muted/20" aria-label="Popular flight routes">
       <div className="container mx-auto px-4">
@@ -39,9 +51,9 @@ export default function PopularRoutesSection() {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: i * 0.06, duration: 0.4 }}
             >
-              <Link
-                to={`/flights/results?origin=${route.fromCode}&destination=${route.toCode}&passengers=1&cabinClass=economy`}
-                className="group block p-4 rounded-xl border border-border/60 bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 active:scale-[0.97]"
+              <button
+                onClick={() => handleRouteClick(route.fromCode, route.toCode)}
+                className="group block w-full text-left p-4 rounded-xl border border-border/60 bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 active:scale-[0.97]"
               >
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <span className="font-bold text-sm">{route.fromCode}</span>
@@ -54,7 +66,7 @@ export default function PopularRoutesSection() {
                 <span className="text-sm font-bold text-primary">
                   from ${route.priceFrom}*
                 </span>
-              </Link>
+              </button>
             </motion.div>
           ))}
         </div>
