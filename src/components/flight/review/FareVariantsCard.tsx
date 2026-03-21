@@ -344,7 +344,12 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
       {/* ── Scrollable 3D fare cards ───────────────── */}
       <div
         ref={scrollerRef}
-        className="flex gap-3.5 overflow-x-auto pb-4 pr-4 snap-x snap-mandatory scroll-smooth"
+        className={cn(
+          "flex pb-4 snap-x snap-mandatory scroll-smooth",
+          filteredVariants.length === 1
+            ? "justify-center"
+            : "gap-3.5 overflow-x-auto pr-4"
+        )}
         style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
       >
         {filteredVariants.filter((v, i, arr) => arr.findIndex(x => x.id === v.id) === i).map((variant, index) => {
