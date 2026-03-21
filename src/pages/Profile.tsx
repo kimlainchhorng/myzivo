@@ -69,7 +69,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { t, currentLanguage, changeLanguage } = useI18n();
   const { country, setCountry, countries } = useCountry();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
   const affiliateAttribution = useAffiliateAttribution();
