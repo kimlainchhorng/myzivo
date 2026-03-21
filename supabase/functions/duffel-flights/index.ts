@@ -546,6 +546,40 @@ function calcDurationFromTimestamps(departAt: string, arriveAt: string): { hours
   }
 }
 
+function readFareBrandName(
+  offer: Record<string, unknown>,
+  firstSlice: Record<string, unknown> | undefined,
+  firstSegment: Record<string, unknown> | undefined,
+  passengers: Array<Record<string, unknown>>,
+): string {
+  const firstSlicePassenger = ((firstSlice?.passengers as Array<Record<string, unknown>> | undefined) || [])[0];
+  const firstSegmentPassenger = ((firstSegment?.passengers as Array<Record<string, unknown>> | undefined) || [])[0];
+  const firstOfferPassenger = passengers[0];
+
+  const candidateValues: unknown[] = [
+    offer.fare_brand_name,
+    firstSlice?.fare_brand_name,
+    (firstSlice?.cabin as Record<string, unknown> | undefined)?.marketing_name,
+    firstSlicePassenger?.fare_brand_name,
+    firstSlicePassenger?.cabin_class_marketing_name,
+    (firstSlicePassenger?.cabin as Record<string, unknown> | undefined)?.marketing_name,
+    firstSegmentPassenger?.fare_brand_name,
+    firstSegmentPassenger?.cabin_class_marketing_name,
+    (firstSegmentPassenger?.cabin as Record<string, unknown> | undefined)?.marketing_name,
+    firstOfferPassenger?.fare_brand_name,
+    firstOfferPassenger?.cabin_class_marketing_name,
+    (firstOfferPassenger?.cabin as Record<string, unknown> | undefined)?.marketing_name,
+  ];
+
+  for (const candidate of candidateValues) {
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return '';
+}
+
 // Transform Duffel offer to our format
 function transformOffer(offer: unknown): DuffelOfferTransformed | null {
   if (!offer || typeof offer !== 'object') return null;
@@ -654,7 +688,7 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
   let checkedBagsIncluded = false;
   let checkedBagQuantity = 0;
   let carryOnQuantity = 0;
-  let fareBrandName = '';
+  let fareBrandName = readFareBrandName(o, firstSlice, firstSegment, passengers);
   let checkedBagWeightKg: number | null = null;
   let checkedBagWeightLb: number | null = null;
   let carryOnWeightKg: number | null = null;
@@ -691,8 +725,6 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     const firstSegPax = (firstSegment.passengers as Array<Record<string, unknown>> | undefined);
     if (firstSegPax && firstSegPax.length > 0) {
       const segPaxFirst = firstSegPax[0];
-      // Extract fare brand name
-      fareBrandName = (segPaxFirst.cabin_class_marketing_name as string) || '';
       const segBaggages = segPaxFirst.baggages as Array<Record<string, unknown>> | undefined;
       if (segBaggages && segBaggages.length > 0) {
         foundBaggages = true;
