@@ -1,84 +1,38 @@
 
-Goal: eliminate duplicate selected checks by making fare-card selection derive from one source of truth only, independent of carousel visibility.
 
-What I found:
-- `FareVariantsCard` already computes `isSelected` from local `selectedId`, and the blue check currently renders only from that value.
-- The carousel state (`activeIndex`, scroll position, snap) is only used for progress dots, not selection UI.
-- The likely real bug is state churn between parent and child:
-  - `FlightReview` passes `offer={reviewOffer}` into `FareVariantsCard`
-  - `reviewOffer.id` is overwritten with the selected variant id
-  - `onSelectVariant` also mutates stored offer/session state
-  - this can cause the card list to rehydrate/reconcile in a way that makes selection appear duplicated during animation/re-render
-- Keys are `key={variant.id}` now, but I will harden them to `key={\`fare-\${variant.id}\`}` as requested.
+## Fix: Duplicate Blue Check Icons in Fare Carousel
 
-Implementation plan:
-1. Stabilize the data source for the carousel
-- Pass the base multi-variant offer into `FareVariantsCard`, not `reviewOffer`
-- Keep `reviewOffer` only for downstream summary/checkout display
-- This prevents the carousel’s source object from changing identity/id when the user selects a fare
+### Root Cause Analysis
 
-2. Lift fare selection to a single source of truth
-- Make `FlightReview` own the selected fare id entirely
-- Change `FareVariantsCard` to receive:
-  - `selectedFareId`
-  - `lowestFareId`
-  - `onSelectFare(id or variant)`
-- Remove the component-local `selectedId` state so selection cannot diverge between parent and child
+After auditing the code, the check icon is rendered in exactly one place (line 480-496) and is gated by `isSelected = variant.id === selectedFareId`. The logic is correct. The duplicate check is caused by one of two things:
 
-3. Enforce strict card state model
-- In each card compute only:
-  - `const isSelected = fare.id === selectedFareId`
-  - `const isLowest = fare.id === lowestFareId`
-- Bind all selected UI exclusively to `isSelected`:
-  - blue check
-  - strong border
-  - selected shadow
-  - full opacity
-- Bind “Lowest fare” badge exclusively to `isLowest`
-- No carousel/scroll/active/centered state will affect selection styling
+1. **AnimatePresence exit overlap**: Each card has its own `<AnimatePresence>` wrapping the check. When switching selection, the old card's check plays an exit animation (spring with stiffness 500, damping 22 — can take ~300ms+) while the new card's check plays an enter animation. During this window, two checks are visible simultaneously.
 
-4. Harden rendering against reuse artifacts
-- Use `key={\`fare-\${fare.id}\`}` on slide wrappers
-- Audit the fare-card tree to ensure the blue check is rendered in exactly one place
-- Keep `activeIndex` only for dots/arrows; do not let it influence card visuals
+2. **Possible duplicate variant IDs in the array**: The `mergeFareVariants` dedup has two passes (content-key then ID) but edge cases in the recovery/stored/live merge could still produce duplicates if `buildFareVariantKey` produces different keys for variants that share the same `id`.
 
-5. Fix default and fallback selection behavior
-- In `FlightReview`, compute cheapest fare by numeric `price`
-- Auto-select cheapest on initial load
-- If fare list changes and selected fare no longer exists, reset to cheapest
-- Keep cheapest badge independent from current selection
+### Plan
 
-6. Keep pricing/payload tied to selected fare only
-- Bottom total, sticky footer, session storage, and continue payload should all derive from the parent’s selected variant
-- Each card continues to render its own `variant.price`
-- Delta remains relative only to the cheapest fare
+#### 1. Eliminate AnimatePresence exit overlap on check icon (`FareVariantsCard.tsx`)
+- Remove `AnimatePresence` around the check icon entirely
+- Use a simple conditional render: `{isSelected && <div>...</div>}` — no exit animation
+- This guarantees zero frames where two checks coexist
+- Keep the enter animation if desired via a simple `motion.div` with `initial`/`animate` but no `exit`
 
-7. Add temporary debug validation
-- Add per-card logs during render:
-  - fare id
-  - selectedFareId
-  - isSelected
-  - isLowest
-  - index
-- Add parent log when selected fare changes
-- After confirming the bug is gone, remove the temporary logs
+#### 2. Final dedup safety in the render loop (`FareVariantsCard.tsx`)
+- Before mapping `filteredVariants`, add a final dedup by `variant.id`:
+  ```
+  const uniqueVariants = filteredVariants.filter(
+    (v, i, arr) => arr.findIndex(x => x.id === v.id) === i
+  );
+  ```
+- Map over `uniqueVariants` instead of `filteredVariants`
+- Use `key={`fare-${variant.id}`}` (drop the index suffix since IDs are now guaranteed unique)
 
-Files to update:
-- `src/pages/FlightReview.tsx`
-  - own `selectedFareId` + `lowestFareId`
-  - pass stable base offer to carousel
-  - keep `reviewOffer` derived from selected fare only
-- `src/components/flight/review/FareVariantsCard.tsx`
-  - remove local selection state
-  - consume parent-controlled `selectedFareId`
-  - hard-bind all selection UI to `fare.id === selectedFareId`
-  - use stable `fare-${fare.id}` keys
-  - keep carousel state separate from selection
+#### 3. Also remove AnimatePresence from the shine and glow bar
+- The shine effect (line 413-427) and glow bar (line 430-444) also use AnimatePresence with exit animations
+- These can also briefly show on two cards during transitions
+- Replace with simple conditional renders gated only by `isSelected`
 
-Acceptance criteria:
-- only one blue check is visible at any time
-- swiping does not move the check
-- centered/adjacent slides never appear selected unless their id matches `selectedFareId`
-- lowest fare badge stays on the cheapest fare only
-- clicking another fare moves the single check and updates total/payload correctly
-- no duplicate selection appears during re-render or animation
+#### Files
+- `src/components/flight/review/FareVariantsCard.tsx` — all changes are here
+
