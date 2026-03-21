@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, CheckCircle, AlertTriangle, XCircle, Server, Database, Wifi, Clock } from "lucide-react";
+import { Activity, CheckCircle, AlertTriangle, XCircle, Server, Database, Wifi, Clock, ArrowLeft } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const services = [
   { name: "Web App", status: "operational", uptime: 99.98, latency: 45 },
@@ -25,13 +27,19 @@ const recentIncidents = [
 ];
 
 export default function AdminSystemHealth() {
+  const navigate = useNavigate();
   const operationalCount = services.filter(s => s.status === "operational").length;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">System Health</h1>
-        <p className="text-muted-foreground">Real-time status of all platform services</p>
+      <div className="flex items-center gap-3">
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">System Health</h1>
+          <p className="text-muted-foreground">Real-time status of all platform services</p>
+        </div>
       </div>
 
       {/* Summary Cards */}
