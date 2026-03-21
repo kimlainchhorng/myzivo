@@ -756,8 +756,9 @@ const FlightReview = () => {
           {offer.fareVariants && offer.fareVariants.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }} className="mt-3">
               <FareVariantsCard
-                offer={reviewOffer}
-                onSelectVariant={(variant) => {
+                offer={offer}
+                selectedFareId={selectedVariantId}
+                onSelectFare={(variant) => {
                   setSelectedVariantId(variant.id);
                   const updated = {
                     ...offer,
