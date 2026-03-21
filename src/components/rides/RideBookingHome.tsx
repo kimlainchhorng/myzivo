@@ -773,6 +773,43 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
+  // Check GPS permission on mount
+  useEffect(() => {
+    if (isCambodiaCountry) {
+      setLocationPermission("granted");
+      return;
+    }
+    if ("permissions" in navigator) {
+      navigator.permissions.query({ name: "geolocation" as PermissionName }).then((result) => {
+        if (result.state === "granted") setLocationPermission("granted");
+        else if (result.state === "denied") setLocationPermission("denied");
+        else setLocationPermission("prompt");
+        result.onchange = () => {
+          if (result.state === "granted") setLocationPermission("granted");
+          else if (result.state === "denied") setLocationPermission("denied");
+        };
+      }).catch(() => setLocationPermission("prompt"));
+    } else {
+      // Fallback: try getting location directly
+      setLocationPermission("prompt");
+    }
+  }, [isCambodiaCountry]);
+
+  // Request GPS when user allows
+  const handleAllowLocation = useCallback(() => {
+    setLocationPermission("checking");
+    getCurrentLocation()
+      .then((loc) => {
+        setUserLocation({ lat: loc.lat, lng: loc.lng });
+        setLocationPermission("granted");
+      })
+      .catch(() => {
+        setLocationPermission("denied");
+        setUserLocation(US_DEFAULT_CENTER);
+        toast.error("Location access denied. You can set pickup manually.");
+      });
+  }, [getCurrentLocation]);
+
   // Keep map region aligned to selected language mode + auto-set pickup from GPS
   useEffect(() => {
     let cancelled = false;
@@ -788,18 +825,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       return () => { cancelled = true; };
     }
 
-    getCurrentLocation()
-      .then((loc) => {
-        if (!cancelled) {
-          setUserLocation({ lat: loc.lat, lng: loc.lng });
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
-      });
+    // Only auto-fetch if permission already granted
+    if (locationPermission === "granted") {
+      getCurrentLocation()
+        .then((loc) => {
+          if (!cancelled) {
+            setUserLocation({ lat: loc.lat, lng: loc.lng });
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
+        });
+    }
 
     return () => { cancelled = true; };
-  }, [isCambodiaCountry, getCurrentLocation]);
+  }, [isCambodiaCountry, getCurrentLocation, locationPermission]);
 
   // Fetch real nearby drivers and poll every 10s
   useEffect(() => {
