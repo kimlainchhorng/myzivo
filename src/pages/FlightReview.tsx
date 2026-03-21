@@ -201,7 +201,16 @@ function mergeFareVariants(
     }
   }
 
-  const merged = Array.from(seen.values()).sort(
+  // Deduplicate by variant.id to prevent duplicate React keys
+  const byId = new Map<string, NonNullable<DuffelOffer["fareVariants"]>[number]>();
+  for (const variant of seen.values()) {
+    const existing = byId.get(variant.id);
+    if (!existing || (variant.pricePerPerson ?? variant.price) < (existing.pricePerPerson ?? existing.price)) {
+      byId.set(variant.id, variant);
+    }
+  }
+
+  const merged = Array.from(byId.values()).sort(
     (a, b) => (a.pricePerPerson ?? a.price) - (b.pricePerPerson ?? b.price),
   );
   return merged.length ? merged : undefined;
