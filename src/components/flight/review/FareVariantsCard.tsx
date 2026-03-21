@@ -407,7 +407,6 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                     ? "perspective(600px) rotateX(0deg) translateY(-3px)"
                     : "perspective(600px) rotateX(1.5deg)",
                 }}
-                }}
               >
                 {/* ── Background layers ─────────────── */}
                 <div className="absolute inset-0 bg-background" />
