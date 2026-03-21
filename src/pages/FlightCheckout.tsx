@@ -48,7 +48,7 @@ const FlightCheckout = () => {
   const [isCreatingIntent, setIsCreatingIntent] = useState(false);
   const [intentError, setIntentError] = useState<string | null>(null);
   const intentCreated = useRef(false);
-  const [selectedState, setSelectedState] = useState<string>("");
+  
 
   const offerRaw = sessionStorage.getItem("zivo_selected_offer");
   const searchRaw = sessionStorage.getItem("zivo_search_params");
@@ -65,10 +65,9 @@ const FlightCheckout = () => {
       offer?.price || 0,
       totalPassengers,
       offer?.currency || "USD",
-      selectedState || undefined,
-    ), [offer?.price, totalPassengers, offer?.currency, selectedState]);
+    ), [offer?.price, totalPassengers, offer?.currency]);
 
-  const stateOptions = useMemo(() => getStateOptions(), []);
+  
 
   useEffect(() => {
     if (!offer || !passengers) navigate("/flights", { replace: true });
@@ -100,7 +99,7 @@ const FlightCheckout = () => {
           totalAmount: pricing.totalPerPassenger,
           baseFare: pricing.baseFare,
           taxesFees: pricing.taxesFeesCharges,
-          stateCode: selectedState || null,
+          stateCode: null,
           duffelPrice: pricing.duffelPrice,
           currency: offer.currency || "USD",
           origin: search.origin,
@@ -222,20 +221,6 @@ const FlightCheckout = () => {
             className="mb-4"
           />
 
-          {/* State selector for tax */}
-          <div className="mb-4 space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Your state (for tax calculation)</label>
-            <Select value={selectedState} onValueChange={setSelectedState}>
-              <SelectTrigger className="w-full rounded-xl">
-                <SelectValue placeholder="Select your state…" />
-              </SelectTrigger>
-              <SelectContent className="max-h-60">
-                {stateOptions.map((s) => (
-                  <SelectItem key={s.code} value={s.code}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
           {/* Price Breakdown */}
           <FlightPriceBreakdown
