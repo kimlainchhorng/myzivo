@@ -288,6 +288,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
   if (!variants || variants.length === 0) return null;
 
   const handleSelect = (variant: FareVariant) => {
+    console.log("[FareVariants] selecting:", variant.id, "prev:", selectedId);
     setSelectedId(variant.id);
     onSelectVariant(variant);
   };
