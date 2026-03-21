@@ -5,7 +5,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertTriangle, Lock, Info } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Lock, Info, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -286,21 +286,57 @@ const FlightCheckout = () => {
                 </div>
 
                 {/* SOT Disclosure */}
-                <div className="px-4 py-3">
-                  <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
-                    <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-muted-foreground/60" />
-                    <span>{ZIVO_SOT_REGISTRATION.subAgent} {FLIGHT_MOR_DISCLAIMERS.ticketing}</span>
-                  </p>
-                  <div className="flex items-center gap-3 text-[11px] mt-2 ml-5">
-                    <button type="button" onClick={() => openSheet("Partner Disclosure", FLIGHT_LEGAL_LINKS.partnerDisclosure)} className="text-primary hover:underline">
-                      Partner Disclosure
-                    </button>
-                    <span className="text-border">·</span>
-                    <button type="button" onClick={() => openSheet("Flight Terms", FLIGHT_LEGAL_LINKS.flightTerms)} className="text-primary hover:underline">
-                      Flight Terms
-                    </button>
-                  </div>
-                </div>
+                 {/* Seller Identity & SOT */}
+                 <div className="px-4 py-3 border-b border-border/20">
+                   <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                     <Shield className="w-3.5 h-3.5 shrink-0 mt-0.5 text-muted-foreground/60" />
+                     <span>
+                       <strong>Seller of Travel:</strong> ZIVO LLC. {ZIVO_SOT_REGISTRATION.status}{" "}
+                       {ZIVO_SOT_REGISTRATION.california} · {ZIVO_SOT_REGISTRATION.florida}
+                     </span>
+                   </p>
+                 </div>
+
+                 {/* Sub-agent & ticketing disclosure */}
+                 <div className="px-4 py-3 border-b border-border/20">
+                   <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                     <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-muted-foreground/60" />
+                     <span>{ZIVO_SOT_REGISTRATION.subAgent} {FLIGHT_MOR_DISCLAIMERS.ticketing}</span>
+                   </p>
+                 </div>
+
+                 {/* Refund & cancellation notice */}
+                 <div className="px-4 py-3 border-b border-border/20">
+                   <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                     <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-muted-foreground/60" />
+                     <span>{FLIGHT_MOR_DISCLAIMERS.refund} {FLIGHT_MOR_DISCLAIMERS.support}</span>
+                   </p>
+                 </div>
+
+                 {/* All legal links */}
+                 <div className="px-4 py-3">
+                   <div className="flex items-center gap-3 text-[11px] flex-wrap">
+                     <button type="button" onClick={() => openSheet("Flight Terms", FLIGHT_LEGAL_LINKS.flightTerms)} className="text-primary hover:underline">
+                       Flight Terms
+                     </button>
+                     <span className="text-border">·</span>
+                     <button type="button" onClick={() => openSheet("Partner Disclosure", FLIGHT_LEGAL_LINKS.partnerDisclosure)} className="text-primary hover:underline">
+                       Partner Disclosure
+                     </button>
+                     <span className="text-border">·</span>
+                     <button type="button" onClick={() => openSheet("Terms of Service", FLIGHT_LEGAL_LINKS.terms)} className="text-primary hover:underline">
+                       Terms of Service
+                     </button>
+                     <span className="text-border">·</span>
+                     <button type="button" onClick={() => openSheet("Privacy Policy", FLIGHT_LEGAL_LINKS.privacy)} className="text-primary hover:underline">
+                       Privacy Policy
+                     </button>
+                     <span className="text-border">·</span>
+                     <button type="button" onClick={() => openSheet("Refund Policy", FLIGHT_LEGAL_LINKS.refundPolicy)} className="text-primary hover:underline">
+                       Refund Policy
+                     </button>
+                   </div>
+                 </div>
               </motion.div>
 
               {/* Terms acceptance */}
