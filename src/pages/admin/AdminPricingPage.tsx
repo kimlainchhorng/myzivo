@@ -31,9 +31,14 @@ interface PricingRow {
   updated_at: string | null;
 }
 
-const RIDE_TYPES = [
+const RIDE_TYPES_GLOBAL = [
   "standard", "share", "comfort", "ev", "xl",
-  "black", "black_suv", "luxury_xl", "pet", "wheelchair", "tuktuk",
+  "black", "black_suv", "luxury_xl", "pet", "wheelchair",
+];
+
+const RIDE_TYPES_CAMBODIA = [
+  "standard", "share", "comfort", "ev", "xl", "pet",
+  "tuktuk", "tuktuk_ev", "moto", "share_xl",
 ];
 
 // Country filter presets — map country label to known city names
