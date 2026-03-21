@@ -359,7 +359,7 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
 
           return (
             <motion.div
-              key={`fare-${variant.id}`}
+              key={`fare-${variant.id}-${index}`}
               initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ delay: index * 0.09, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
