@@ -37,6 +37,7 @@ import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { useCustomerActivityFeed } from "@/hooks/useCustomerActivityFeed";
 import ActivityTimeline from "@/components/shared/ActivityTimeline";
 import { destinationPhotos } from "@/config/photos";
+import { useDestinationPrices } from "@/hooks/useDestinationPrices";
 import { getRestaurantPhoto } from "@/config/restaurantPhotos";
 import { formatDistanceToNow, format } from "date-fns";
 import useEmblaCarousel from "embla-carousel-react";
@@ -134,21 +135,14 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
 
 // ─── Popular Destinations (subset) ───
 const popularDestKeysUS = ["miami", "las-vegas", "new-york", "cancun", "los-angeles"] as const;
-const popularDestPricesUS: Record<string, string> = {
-  miami: "$89",
-  "las-vegas": "$79",
-  "new-york": "$99",
-  cancun: "$149",
-  "los-angeles": "$69",
-};
 
 // Cambodia destinations
 const cambodiaDestinations = [
-  { key: "siem-reap", city: "Siem Reap", price: "៛32,000", src: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&q=80&w=400", alt: "Angkor Wat" },
-  { key: "sihanoukville", city: "Sihanoukville", price: "៛45,000", src: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&q=80&w=400", alt: "Sihanoukville Beach" },
-  { key: "kampot", city: "Kampot", price: "៛28,000", src: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=400", alt: "Kampot River" },
-  { key: "battambang", city: "Battambang", price: "៛35,000", src: "https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&q=80&w=400", alt: "Battambang" },
-  { key: "kep", city: "Kep", price: "៛25,000", src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=400", alt: "Kep Beach" },
+  { key: "siem-reap", city: "Siem Reap", src: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&q=80&w=400", alt: "Angkor Wat" },
+  { key: "sihanoukville", city: "Sihanoukville", src: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&q=80&w=400", alt: "Sihanoukville Beach" },
+  { key: "kampot", city: "Kampot", src: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=400", alt: "Kampot River" },
+  { key: "battambang", city: "Battambang", src: "https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&q=80&w=400", alt: "Battambang" },
+  { key: "kep", city: "Kep", src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=400", alt: "Kep Beach" },
 ];
 
 
@@ -208,6 +202,8 @@ const AppHome = () => {
   const { points, getNextTierProgress } = useLoyaltyPoints();
   const { active: activeRewards } = useUserRewards();
   const { referralCode, shareReferral } = useReferrals();
+  const destKeys = isKH ? cambodiaDestinations.map(d => d.key) : [...popularDestKeysUS];
+  const { data: destPrices = {}, isLoading: destPricesLoading } = useDestinationPrices(destKeys, isKH);
   const { data: allBookings = [] } = useScheduledBookingsQuery();
   const upcomingBookings = allBookings.filter((b) => {
     if (b.status !== "scheduled" && b.status !== "confirmed") return false;
@@ -474,7 +470,11 @@ const AppHome = () => {
                         <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
                         <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
                           <Plane className="w-2.5 h-2.5" />
-                          {t("home.from")} {dest.price}
+                          {destPrices[dest.key] != null
+                            ? `${t("home.from")} $${Math.round(destPrices[dest.key]!)}`
+                            : destPricesLoading
+                              ? "..."
+                              : t("home.search_flights")}
                         </div>
                       </div>
                     </div>
@@ -500,7 +500,11 @@ const AppHome = () => {
                           <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
                           <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
                             <Plane className="w-2.5 h-2.5" />
-                            {t("home.from")} {popularDestPricesUS[key]}
+                            {destPrices[key] != null
+                              ? `${t("home.from")} $${Math.round(destPrices[key]!)}`
+                              : destPricesLoading
+                                ? "..."
+                                : t("home.search_flights")}
                           </div>
                         </div>
                       </div>
