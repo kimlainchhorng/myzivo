@@ -495,8 +495,9 @@ const AppHome = () => {
                 })}
               </div>
 
-              {/* More destinations — horizontal scroll */}
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
+              {/* More destinations label + horizontal scroll */}
+              <p className="text-[9px] uppercase font-bold text-muted-foreground/40 tracking-[0.15em] mb-2">More to explore</p>
+              <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {(isKH ? cambodiaDestKeysKH : popularDestKeysUS).slice(4).map((key) => {
                   const dest = destinationPhotos[key as keyof typeof destinationPhotos];
                   if (!dest) return null;
@@ -505,21 +506,17 @@ const AppHome = () => {
                       key={key}
                       whileTap={{ scale: 0.96 }}
                       onClick={() => navigate(`/search?tab=flights&to=${dest.city}`)}
-                      className="shrink-0 w-[140px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative"
+                      className="shrink-0 flex flex-col items-center gap-1.5 touch-manipulation group"
                     >
-                      <div className="relative h-[100px] overflow-hidden">
-                        <img src={dest.src} alt={dest.alt} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                        <div className="absolute bottom-2 left-2 right-2">
-                          <div className="text-[11px] font-bold text-primary-foreground">{dest.city}</div>
-                          <div className="text-[9px] text-primary-foreground/80 font-semibold flex items-center gap-0.5">
-                            <Plane className="w-2 h-2" />
-                            {destPrices[key] != null
-                              ? `${t("home.from")} $${Math.round(destPrices[key]!)}`
-                              : destPricesLoading
-                                ? "..."
-                                : t("home.search_flights")}
-                          </div>
+                      <div className="relative w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-border/30 group-hover:ring-primary/40 transition-all">
+                        <img src={dest.src} alt={dest.alt} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                      </div>
+                      <div className="text-center">
+                        <div className="text-[10px] font-semibold text-foreground leading-tight truncate max-w-[76px]">{dest.city}</div>
+                        <div className="text-[8px] text-muted-foreground font-medium">
+                          {destPrices[key] != null
+                            ? `$${Math.round(destPrices[key]!)}`
+                            : destPricesLoading ? "..." : ""}
                         </div>
                       </div>
                     </motion.button>
