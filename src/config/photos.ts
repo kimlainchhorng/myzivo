@@ -100,6 +100,18 @@ import destBattambang from "@/assets/dest-battambang.jpg";
 import destKep from "@/assets/dest-kep.jpg";
 import destBangkok from "@/assets/dest-bangkok.jpg";
 import destHoChiMinh from "@/assets/dest-hochiminh.jpg";
+import destSeoul from "@/assets/dest-seoul.jpg";
+import destKualaLumpur from "@/assets/dest-kualalumpur.jpg";
+import destBaliNew from "@/assets/dest-bali-new.jpg";
+import destRomeNew from "@/assets/dest-rome-new.jpg";
+import destIstanbulNew from "@/assets/dest-istanbul-new.jpg";
+import destMexicoCity from "@/assets/dest-mexicocity.jpg";
+import destToronto from "@/assets/dest-toronto.jpg";
+import destManila from "@/assets/dest-manila.jpg";
+import destTaipei from "@/assets/dest-taipei.jpg";
+import destMumbai from "@/assets/dest-mumbai.jpg";
+import destPhuket from "@/assets/dest-phuket.jpg";
+import destHanoi from "@/assets/dest-hanoi.jpg";
 
 // Import lifestyle assets
 import lifestyleTravelers from "@/assets/lifestyle-travelers.jpg";
@@ -209,7 +221,7 @@ import cabinFirst from "@/assets/cabin-first.jpg";
 // ============================================
 export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "move" | "extras";
 export type CarCategory = "economy" | "compact" | "midsize" | "suv" | "luxury" | "van" | "electric";
-export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam" | "honolulu" | "nashville" | "denver" | "seattle" | "boston" | "san-juan" | "tampa" | "charlotte" | "minneapolis" | "portland" | "austin" | "fort-lauderdale" | "new-orleans" | "washington" | "siem-reap" | "sihanoukville" | "kampot" | "phnom-penh" | "battambang" | "kep" | "bangkok" | "ho-chi-minh";
+export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam" | "honolulu" | "nashville" | "denver" | "seattle" | "boston" | "san-juan" | "tampa" | "charlotte" | "minneapolis" | "portland" | "austin" | "fort-lauderdale" | "new-orleans" | "washington" | "siem-reap" | "sihanoukville" | "kampot" | "phnom-penh" | "battambang" | "kep" | "bangkok" | "ho-chi-minh" | "seoul" | "kuala-lumpur" | "bali" | "rome" | "istanbul" | "mexico-city" | "toronto" | "manila" | "taipei" | "mumbai" | "phuket" | "hanoi";
 
 // ============================================
 // PREMIUM 2026 HERO PHOTOS (Minimalist Luxury)
@@ -796,6 +808,102 @@ export const destinationPhotos: Record<DestinationCity, { src: string; alt: stri
     src: destHoChiMinh,
     alt: "Ho Chi Minh City, Vietnam - Modern skyline at dusk",
     city: "Ho Chi Minh City",
+    country: "Vietnam",
+    width: 512,
+    height: 512,
+  },
+  "seoul": {
+    src: destSeoul,
+    alt: "Seoul, South Korea - City skyline at golden hour",
+    city: "Seoul",
+    country: "South Korea",
+    width: 512,
+    height: 512,
+  },
+  "kuala-lumpur": {
+    src: destKualaLumpur,
+    alt: "Kuala Lumpur, Malaysia - Petronas Towers at dusk",
+    city: "Kuala Lumpur",
+    country: "Malaysia",
+    width: 512,
+    height: 512,
+  },
+  "bali": {
+    src: destBaliNew,
+    alt: "Bali, Indonesia - Rice terraces and temple at sunset",
+    city: "Bali",
+    country: "Indonesia",
+    width: 512,
+    height: 512,
+  },
+  "rome": {
+    src: destRomeNew,
+    alt: "Rome, Italy - Colosseum at golden hour",
+    city: "Rome",
+    country: "Italy",
+    width: 512,
+    height: 512,
+  },
+  "istanbul": {
+    src: destIstanbulNew,
+    alt: "Istanbul, Turkey - Hagia Sophia at sunset",
+    city: "Istanbul",
+    country: "Turkey",
+    width: 512,
+    height: 512,
+  },
+  "mexico-city": {
+    src: destMexicoCity,
+    alt: "Mexico City, Mexico - Palacio de Bellas Artes at twilight",
+    city: "Mexico City",
+    country: "Mexico",
+    width: 512,
+    height: 512,
+  },
+  "toronto": {
+    src: destToronto,
+    alt: "Toronto, Canada - CN Tower and skyline at dusk",
+    city: "Toronto",
+    country: "Canada",
+    width: 512,
+    height: 512,
+  },
+  "manila": {
+    src: destManila,
+    alt: "Manila, Philippines - Makati skyline at sunset",
+    city: "Manila",
+    country: "Philippines",
+    width: 512,
+    height: 512,
+  },
+  "taipei": {
+    src: destTaipei,
+    alt: "Taipei, Taiwan - Taipei 101 at night",
+    city: "Taipei",
+    country: "Taiwan",
+    width: 512,
+    height: 512,
+  },
+  "mumbai": {
+    src: destMumbai,
+    alt: "Mumbai, India - Gateway of India at sunset",
+    city: "Mumbai",
+    country: "India",
+    width: 512,
+    height: 512,
+  },
+  "phuket": {
+    src: destPhuket,
+    alt: "Phuket, Thailand - Tropical beach with longtail boats",
+    city: "Phuket",
+    country: "Thailand",
+    width: 512,
+    height: 512,
+  },
+  "hanoi": {
+    src: destHanoi,
+    alt: "Hanoi, Vietnam - Hoan Kiem Lake at sunset",
+    city: "Hanoi",
     country: "Vietnam",
     width: 512,
     height: 512,
