@@ -140,10 +140,6 @@ export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRound
             </span>
             <span className="font-medium tabular-nums">${pricing.stateTax.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between text-[10px]">
-            <span className="text-muted-foreground">ZIVO service fee</span>
-            <span className="font-bold text-emerald-600 dark:text-emerald-400">$0.00</span>
-          </div>
         </div>
 
         {/* Total — hero price */}
