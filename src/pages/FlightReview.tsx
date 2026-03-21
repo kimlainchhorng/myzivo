@@ -151,6 +151,52 @@ function buildFareVariantsFromOffers(offers: DuffelOffer[]) {
   return variants.length > 1 ? variants : undefined;
 }
 
+function buildFareVariantKey(variant: NonNullable<DuffelOffer["fareVariants"]>[number]) {
+  const bag = variant.baggageDetails;
+  const conditions = variant.conditions;
+
+  return [
+    variant.cabinClass,
+    (variant.fareBrandName || variant.cabinClass).toLowerCase(),
+    variant.baggageIncluded || "",
+    bag.carryOnIncluded ? "co1" : "co0",
+    bag.carryOnQuantity,
+    bag.carryOnWeightKg ?? "",
+    bag.carryOnWeightLb ?? "",
+    bag.checkedBagsIncluded ? "cb1" : "cb0",
+    bag.checkedBagQuantity,
+    bag.checkedBagWeightKg ?? "",
+    bag.checkedBagWeightLb ?? "",
+    conditions.changeable ? "chg1" : "chg0",
+    conditions.changePenalty ?? "",
+    conditions.refundable ? "ref1" : "ref0",
+    conditions.refundPenalty ?? "",
+    conditions.penaltyCurrency || "",
+  ].join("::");
+}
+
+function mergeFareVariants(
+  ...variantSets: Array<NonNullable<DuffelOffer["fareVariants"]> | undefined>
+): NonNullable<DuffelOffer["fareVariants"]> | undefined {
+  const seen = new Map<string, NonNullable<DuffelOffer["fareVariants"]>[number]>();
+
+  for (const variants of variantSets) {
+    if (!variants?.length) continue;
+
+    for (const variant of variants) {
+      const key = buildFareVariantKey(variant);
+      const existing = seen.get(key);
+
+      if (!existing || variant.price < existing.price || variant.id === existing.id) {
+        seen.set(key, variant);
+      }
+    }
+  }
+
+  const merged = Array.from(seen.values()).sort((a, b) => a.price - b.price);
+  return merged.length ? merged : undefined;
+}
+
 function buildFallbackFareVariant(offer: DuffelOffer): NonNullable<DuffelOffer["fareVariants"]>[number] {
   return {
     id: offer.id,
@@ -511,10 +557,12 @@ const FlightReview = () => {
     if (!base) return null;
     const baseFareVariants = base.fareVariants?.length ? base.fareVariants : undefined;
     const storedFareVariants = storedOffer?.fareVariants?.length ? storedOffer.fareVariants : undefined;
-    const fallbackFareVariants = baseFareVariants || storedFareVariants;
-    const fareVariants = recoveredFareVariants?.length && recoveredFareVariants.length > (fallbackFareVariants?.length ?? 0)
-      ? recoveredFareVariants
-      : fallbackFareVariants;
+    const fareVariants = mergeFareVariants(
+      [buildFallbackFareVariant(base)],
+      baseFareVariants,
+      storedFareVariants,
+      recoveredFareVariants,
+    );
     return { ...base, fareVariants: fareVariants?.length ? fareVariants : [buildFallbackFareVariant(base)] };
   }, [liveOffer, storedOffer, recoveredFareVariants]);
 
