@@ -175,7 +175,13 @@ export default function AdminPricingPage() {
           <div className="flex items-center gap-2">
             <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) closeDialog(); else setDialogOpen(true); }}>
             <DialogTrigger asChild>
-              <Button size="sm" onClick={() => { setEditingId(null); setForm(defaultForm); }}>
+              <Button size="sm" onClick={() => {
+                setEditingId(null);
+                const filter = COUNTRY_FILTERS[countryFilter];
+                const countryCities = filter.cities !== "all" ? filter.cities : [];
+                const defaultCity = cityFilter || (countryCities.length > 0 ? countryCities[0] : "default");
+                setForm({ ...defaultForm, city: defaultCity, ride_type: RIDE_TYPES[0] });
+              }}>
                 <Plus className="w-4 h-4 mr-1.5" /> Add Pricing
               </Button>
             </DialogTrigger>
@@ -187,7 +193,19 @@ export default function AdminPricingPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>City</Label>
-                    <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="default" />
+                    {activeFilter.cities !== "all" && !editingId ? (
+                      <select
+                        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        value={form.city}
+                        onChange={(e) => setForm({ ...form, city: e.target.value })}
+                      >
+                        {(activeFilter.cities as string[]).map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="default" />
+                    )}
                   </div>
                   <div>
                     <Label>Ride Type</Label>
