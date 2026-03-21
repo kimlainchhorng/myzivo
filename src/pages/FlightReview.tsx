@@ -361,11 +361,20 @@ const FlightReview = () => {
     });
   }, []);
 
-  const storedOffer: DuffelOffer | null = useMemo(() => {
+  const [storedOffer, setStoredOffer] = useState<DuffelOffer | null>(() => {
     try {
       const raw = sessionStorage.getItem("zivo_selected_offer");
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
+  });
+
+  // Re-read sessionStorage on every mount (navigation back/forth)
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("zivo_selected_offer");
+      const parsed = raw ? JSON.parse(raw) : null;
+      setStoredOffer(parsed);
+    } catch { /* ignore */ }
   }, []);
 
   const searchParams = useMemo(() => {
