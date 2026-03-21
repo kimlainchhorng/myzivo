@@ -532,35 +532,6 @@ const AppHome = () => {
               </div>
             </div>
 
-            {/* Trending Rides */}
-            <div>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.trending_rides")}</p>
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {trendingRides.map((ride) => (
-                  <motion.button
-                    key={ride.name}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => navigate("/rides")}
-                    className="shrink-0 w-[170px] rounded-2xl bg-card/90 backdrop-blur-sm border border-border/40 p-4 shadow-sm hover:shadow-lg transition-all duration-300 touch-manipulation text-left relative overflow-hidden group"
-                  >
-                    {ride.popular && (
-                      <div className="absolute top-0 right-0">
-                        <div className="bg-primary/90 text-[7px] font-bold text-primary-foreground px-2 py-0.5 rounded-bl-lg">{t("home.popular")}</div>
-                      </div>
-                    )}
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/8 flex items-center justify-center mb-3 border border-primary/10 shadow-inner group-hover:scale-105 transition-transform">
-                      <ride.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="text-xs font-bold text-foreground">{ride.name}</div>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-[10px] text-primary font-bold">{ride.eta}</span>
-                      <span className="text-[10px] text-muted-foreground/40">·</span>
-                      <span className="text-[10px] font-bold text-foreground">{ride.price}</span>
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* ─── PROMO BANNER CAROUSEL (Ultra Premium) ─── */}
@@ -857,70 +828,6 @@ const AppHome = () => {
             </motion.div>
           )}
 
-          {/* ─── WAVE 5: Smart Home Widgets ─── */}
-          <div className="space-y-3">
-            <h2 className="text-xs font-bold text-muted-foreground flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-primary" /> {t("home.smart_insights")}
-            </h2>
-
-            {/* Weekly Spending */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl bg-card border border-border/40 p-4">
-              <p className="text-xs font-bold text-foreground mb-3">{t("home.weekly_spending")}</p>
-              <div className="flex items-end gap-1.5 h-14">
-                {[32, 18, 45, 12, 28, 52, 8].map((val, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-                    <motion.div initial={{ height: 0 }} animate={{ height: `${(val / 60) * 100}%` }} transition={{ duration: 0.6, delay: i * 0.08 }}
-                      className={`w-full rounded-t ${i === new Date().getDay() ? "bg-primary" : "bg-primary/20"}`} />
-                    <span className="text-[8px] text-muted-foreground">{isKH ? ["អា","ច","អ","ព","ព្រ","សុ","ស"][i] : ["S","M","T","W","T","F","S"][i]}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
-                <span>{t("home.total")}: <b className="text-foreground">{isKH ? "៛793,000" : "$195"}</b></span>
-                <span className="text-emerald-500">↓ 12% {t("home.vs_last_week")}</span>
-              </div>
-            </motion.div>
-
-            {/* Travel Streak */}
-            <div className="rounded-2xl bg-gradient-to-r from-amber-500/5 to-orange-500/5 border border-amber-500/20 p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                  <Flame className="w-6 h-6 text-amber-500" />
-                </div>
-                <div className="flex-1">
-                   <p className="text-xs font-bold text-foreground">{t("home.booking_streak")}</p>
-                   <p className="text-[10px] text-muted-foreground">{t("home.streak_desc")}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-amber-500">7</p>
-                  <p className="text-[8px] text-muted-foreground">{t("home.days")}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Nearby Attractions */}
-            <div className="rounded-2xl bg-card border border-border/40 p-4">
-              <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-violet-500" /> {t("home.nearby_attractions")}</p>
-              <div className="space-y-2">
-                {(isKH ? cambodiaAttractions : usAttractions).map(a => (
-                  <div key={a.name} className="flex items-center gap-2 p-2 rounded-xl hover:bg-muted/30 transition-colors">
-                    <div className="flex-1"><p className="text-xs font-bold text-foreground">{a.name}</p><p className="text-[10px] text-muted-foreground">{a.distance} · {a.type}</p></div>
-                    <span className="text-[10px] font-bold text-amber-500">★ {a.rating}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Smart Suggestions */}
-            <div className="rounded-2xl bg-sky-500/5 border border-sky-500/20 p-4">
-              <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 text-sky-500" /> {t("home.smart_suggestions")}</p>
-              <div className="space-y-1.5">
-                 <p className="text-[11px] text-muted-foreground">💡 {t("home.flights_cheaper")}</p>
-                 <p className="text-[11px] text-muted-foreground">🏨 {t("home.hotel_midweek")}</p>
-                 <p className="text-[11px] text-muted-foreground">🚗 {t("home.car_ahead")}</p>
-              </div>
-            </div>
-          </div>
 
           {/* ─── GUEST SIGN-UP CTA ─── */}
           {!user && (
