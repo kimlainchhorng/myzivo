@@ -69,7 +69,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { t, currentLanguage, changeLanguage } = useI18n();
   const { country, setCountry, countries } = useCountry();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
   const affiliateAttribution = useAffiliateAttribution();
@@ -169,6 +169,17 @@ const Profile = () => {
               <p className="text-muted-foreground text-xs">{t("profile.subtitle")}</p>
             </div>
           </div>
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/admin/analytics")}
+              className="gap-2"
+            >
+              <Shield className="h-4 w-4" />
+              Admin Dashboard
+            </Button>
+          )}
         </div>
 
         {/* Language / Translation Selector — single dropdown button */}
