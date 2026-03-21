@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { getAllInPrice } from "@/utils/flightPricing";
+import { calculateFlightPricing } from "@/utils/flightPricing";
 import { useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft, Plane, ChevronRight, Shield, Users, Lock, User,
@@ -658,10 +658,10 @@ const FlightTravelerInfo = () => {
   );
 
   /* Sticky bottom CTA — 3D elevated with price breakdown */
-  const allInPerPerson = getAllInPrice(offer.price);
-  const totalPrice = Math.round(allInPerPerson * totalPassengers);
-  const basePrice = Math.round(allInPerPerson * totalPassengers * 0.85);
-  const taxesFees = totalPrice - basePrice;
+  const stickyPricing = calculateFlightPricing(offer.price, totalPassengers, offer.currency || "USD");
+  const totalPrice = stickyPricing.totalAllPassengers;
+  const basePrice = stickyPricing.baseFare * totalPassengers;
+  const taxesFees = stickyPricing.taxesFeesCharges * totalPassengers;
 
   const stickyCTA = (
     <div
@@ -695,11 +695,11 @@ const FlightTravelerInfo = () => {
               <div className="space-y-1 mb-2.5 pb-2.5 border-b border-border/20">
                 <div className="flex justify-between text-[10px]">
                   <span className="text-muted-foreground">Base fare × {totalPassengers}</span>
-                  <span className="text-foreground tabular-nums">${basePrice.toLocaleString()}</span>
+                  <span className="text-foreground tabular-nums">${basePrice.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-[10px]">
                   <span className="text-muted-foreground">Taxes & fees</span>
-                  <span className="text-foreground tabular-nums">${taxesFees.toLocaleString()}</span>
+                  <span className="text-foreground tabular-nums">${taxesFees.toFixed(2)}</span>
                 </div>
               </div>
             </motion.div>
@@ -713,7 +713,7 @@ const FlightTravelerInfo = () => {
               <ChevronDown className={cn("w-2.5 h-2.5 transition-transform", showBreakdown && "rotate-180")} />
             </p>
             <p className="text-xl font-bold text-[hsl(var(--flights))] tabular-nums leading-tight tracking-tight">
-              ${totalPrice.toLocaleString()}
+              ${totalPrice.toFixed(2)}
             </p>
             <p className="text-[9px] text-muted-foreground">
               {totalPassengers} traveler{totalPassengers > 1 ? "s" : ""} · {offer.currency || "USD"}
