@@ -3080,7 +3080,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         <div
           className="absolute inset-0 z-40 bg-background flex flex-col overflow-hidden"
         >
-          <div className="px-4 pb-0.5 shrink-0 flex items-center gap-3" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}>
+          <div className="px-4 pb-1.5 shrink-0 flex flex-col items-start gap-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}>
             <button
               onClick={() => setViewStep("ride-options")}
               className="w-8 h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0"
@@ -3088,7 +3088,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             >
               <ArrowLeft className="w-4 h-4 text-foreground" />
             </button>
-            <h2 className="text-lg font-black text-foreground tracking-tight">{t("ride.confirm_your_ride")}</h2>
+            <h2 className="text-lg font-black text-foreground tracking-tight leading-none">{t("ride.confirm_your_ride")}</h2>
           </div>
 
           <div className="px-4 flex-1 flex flex-col gap-1.5 overflow-hidden min-h-0">
