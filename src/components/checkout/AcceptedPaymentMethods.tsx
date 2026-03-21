@@ -22,15 +22,18 @@ export default function AcceptedPaymentMethods({
 }: AcceptedPaymentMethodsProps) {
   if (compact) {
     return (
-      <div className={cn("flex items-center gap-2 flex-wrap", className)}>
-        {/* Card Icons */}
-        <div className="flex items-center gap-1 p-1.5 bg-muted/50 rounded">
+      <div className={cn("flex flex-col items-center gap-2", className)}>
+        <div className="flex items-center gap-1.5">
           <VisaIcon className="w-8 h-5" />
           <MastercardIcon className="w-8 h-5" />
           <AmexIcon className="w-8 h-5" />
+          {showApplePay && <ApplePayIcon className="w-10 h-6" />}
+          {showGooglePay && <GooglePayIcon className="w-10 h-6" />}
         </div>
-        {showApplePay && <ApplePayIcon className="w-10 h-6" />}
-        {showGooglePay && <GooglePayIcon className="w-10 h-6" />}
+        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+          <Lock className="w-3 h-3" />
+          Your payment will be processed securely by ZIVO.
+        </p>
       </div>
     );
   }
