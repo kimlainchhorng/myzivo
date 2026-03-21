@@ -39,6 +39,7 @@ import { Tag, Percent, CheckCircle2, Loader2 } from "lucide-react";
 import PlaceLogo from "@/components/rides/PlaceLogo";
 import { useCityPricing } from "@/hooks/useCityPricing";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
+import { useCustomerLocationBroadcast } from "@/hooks/useCustomerLocationBroadcast";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
 
@@ -671,6 +672,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   stopsRef.current = stops;
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [nearbyDriverCount, setNearbyDriverCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [promoInput, setPromoInput] = useState("");
@@ -761,6 +763,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const { location: liveDriverLocation } = useDriverLocation(
     (viewStep === "driver-assigned" || viewStep === "driver-en-route" || viewStep === "trip-in-progress") ? assignedDriver.id || null : null
   );
+
+  // Broadcast customer's live GPS to driver during active ride
+  const isRideLive = ["searching", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep);
+  useCustomerLocationBroadcast({
+    tripId: isRideLive ? activeJobId : null,
+    enabled: isRideLive && Boolean(activeJobId),
+  });
 
   // Sync live driver location to driverCoords
   useEffect(() => {
@@ -919,6 +928,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       }
 
       jobId = jobData.id;
+      setActiveJobId(jobId);
       console.log("[Dispatch] Job created:", jobId);
 
       // 2. Subscribe to job updates (driver acceptance)
@@ -1776,6 +1786,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setPickupDisplay("");
     setDestinationDisplay("");
     setRideRequestId(null);
+    setActiveJobId(null);
     setRouteData(null);
     setDriverCoords(null);
     setDriverEta(0);
