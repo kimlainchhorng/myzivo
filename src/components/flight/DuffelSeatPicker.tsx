@@ -500,10 +500,14 @@ export default function DuffelSeatPicker({
         
         <div className="px-5 py-4 bg-gradient-to-b from-muted/5 to-muted/15 space-y-3">
           {/* Legend - 3D pill style */}
-          <div className="flex flex-wrap gap-3 text-[10px]">
+          <div className="flex flex-wrap gap-2.5 text-[10px]">
+            <span className="flex items-center gap-1.5 bg-card/80 px-2.5 py-1 rounded-lg border border-border/20 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+              <div className="w-4 h-4 rounded bg-emerald-500/10 border border-emerald-400/30" />
+              <span className="text-muted-foreground font-medium">Free</span>
+            </span>
             <span className="flex items-center gap-1.5 bg-card/80 px-2.5 py-1 rounded-lg border border-border/20 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
               <div className="w-4 h-4 rounded bg-card border border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.6)]" />
-              <span className="text-muted-foreground font-medium">Available</span>
+              <span className="text-muted-foreground font-medium">Paid</span>
             </span>
             <span className="flex items-center gap-1.5 bg-card/80 px-2.5 py-1 rounded-lg border border-border/20 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
               <div className="w-4 h-4 rounded-[5px] bg-[hsl(var(--flights))] shadow-[0_2px_6px_-1px_hsl(var(--flights)/0.4)]" />
