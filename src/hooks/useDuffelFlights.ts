@@ -370,8 +370,22 @@ export function useDuffelAvailableServices(offerId: string | null) {
         },
       });
 
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
+      if (error) {
+        console.warn('[useDuffelAvailableServices] Edge function error:', error.message);
+        return {
+          services: [],
+          grouped: {},
+          total: 0,
+        };
+      }
+      if (data?.error) {
+        console.warn('[useDuffelAvailableServices] Duffel error:', data.error);
+        return {
+          services: [],
+          grouped: {},
+          total: 0,
+        };
+      }
 
       return data as {
         services: DuffelAvailableService[];

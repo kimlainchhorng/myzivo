@@ -468,6 +468,12 @@ async function getOffer(params: GetOfferParams) {
   const result = await duffelRequest(`/air/offers/${params.offer_id}`);
 
   if (result.error) {
+    const errStr = typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
+    const isNotFound = errStr.includes('not_found') || errStr.includes('Not found') || errStr.includes('does not exist');
+    if (isNotFound) {
+      console.log('[Duffel] Offer not found (likely expired), returning null offer');
+      return { offer: null, expired: true };
+    }
     return { error: result.error };
   }
 
