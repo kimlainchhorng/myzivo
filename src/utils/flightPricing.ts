@@ -66,13 +66,19 @@ const ZIVO_FEE_PERCENT = 0.05; // 5% if duffel price >= $100
 const ZIVO_FEE_THRESHOLD = 100;
 
 export interface FlightPricingBreakdown {
-  /** The displayed "base fare" = duffel price + card fee + booking fee (bundled) */
+  /** The displayed "base fare" = raw duffel price only */
   baseFare: number;
-  /** State/county tax applied on the baseFare */
+  /** Combined taxes, fees & charges = state tax + card fee + booking fee */
+  taxesFeesCharges: number;
+  /** State/county tax portion (for reference) */
   stateTax: number;
   stateTaxRate: number;
   stateTaxLabel: string;
-  /** Total per passenger = baseFare + stateTax */
+  /** Card processing fee (3.5%) */
+  cardFee: number;
+  /** ZIVO booking fee */
+  bookingFee: number;
+  /** Total per passenger = baseFare + taxesFeesCharges */
   totalPerPassenger: number;
   totalAllPassengers: number;
   passengers: number;
@@ -92,11 +98,14 @@ function calculateZivoBookingFee(duffelPrice: number): number {
   return parseFloat((duffelPrice * ZIVO_FEE_PERCENT).toFixed(2));
 }
 
-/** Quick helper: returns the all-in base fare (duffel + card fee + booking fee) for display on cards */
+/** Quick helper: returns the all-in price for display on cards */
 export function getAllInPrice(duffelPrice: number): number {
   const cardFee = duffelPrice * CARD_PROCESSING_RATE;
   const bookingFee = duffelPrice < ZIVO_FEE_THRESHOLD ? ZIVO_FEE_FLAT : duffelPrice * ZIVO_FEE_PERCENT;
-  return parseFloat((duffelPrice + cardFee + bookingFee).toFixed(2));
+  const baseFareWithFees = duffelPrice + cardFee + bookingFee;
+  const taxInfo = getStateTaxInfo();
+  const stateTax = baseFareWithFees * taxInfo.rate;
+  return parseFloat((baseFareWithFees + stateTax).toFixed(2));
 }
 
 export function calculateFlightPricing(
@@ -105,23 +114,32 @@ export function calculateFlightPricing(
   currency: string = "USD",
   stateCode?: string,
 ): FlightPricingBreakdown {
-  // Card processing + booking fee are folded into "base fare"
+  // Base fare = raw Duffel price
+  const baseFare = parseFloat(duffelPrice.toFixed(2));
+
+  // Fees
   const cardFee = parseFloat((duffelPrice * CARD_PROCESSING_RATE).toFixed(2));
   const bookingFee = calculateZivoBookingFee(duffelPrice);
-  const baseFare = parseFloat((duffelPrice + cardFee + bookingFee).toFixed(2));
 
-  // State tax on the bundled base fare
+  // State tax on the total (duffel + fees)
   const taxInfo = getStateTaxInfo(stateCode);
-  const stateTax = parseFloat((baseFare * taxInfo.rate).toFixed(2));
+  const taxableAmount = duffelPrice + cardFee + bookingFee;
+  const stateTax = parseFloat((taxableAmount * taxInfo.rate).toFixed(2));
 
-  const totalPerPassenger = parseFloat((baseFare + stateTax).toFixed(2));
+  // Combined line: taxes + card fee + booking fee
+  const taxesFeesCharges = parseFloat((stateTax + cardFee + bookingFee).toFixed(2));
+
+  const totalPerPassenger = parseFloat((baseFare + taxesFeesCharges).toFixed(2));
   const totalAllPassengers = parseFloat((totalPerPassenger * passengers).toFixed(2));
 
   return {
     baseFare,
+    taxesFeesCharges,
     stateTax,
     stateTaxRate: taxInfo.rate,
     stateTaxLabel: taxInfo.label,
+    cardFee,
+    bookingFee,
     totalPerPassenger,
     totalAllPassengers,
     passengers,

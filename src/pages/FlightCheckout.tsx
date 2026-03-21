@@ -99,7 +99,7 @@ const FlightCheckout = () => {
           })),
           totalAmount: pricing.totalPerPassenger,
           baseFare: pricing.baseFare,
-          taxesFees: pricing.stateTax,
+          taxesFees: pricing.taxesFeesCharges,
           stateCode: selectedState || null,
           duffelPrice: pricing.duffelPrice,
           currency: offer.currency || "USD",

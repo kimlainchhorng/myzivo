@@ -138,7 +138,7 @@ export function PriceSummaryCard({ offer, searchParams, totalPassengers, isRound
             <span className="text-muted-foreground flex items-center gap-0.5">
               <Building2 className="w-2.5 h-2.5" /> Taxes, Fees & Charges
             </span>
-            <span className="font-medium tabular-nums">${pricing.stateTax.toFixed(2)}</span>
+            <span className="font-medium tabular-nums">${pricing.taxesFeesCharges.toFixed(2)}</span>
           </div>
         </div>
 
