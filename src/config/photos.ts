@@ -209,7 +209,7 @@ import cabinFirst from "@/assets/cabin-first.jpg";
 // ============================================
 export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "move" | "extras";
 export type CarCategory = "economy" | "compact" | "midsize" | "suv" | "luxury" | "van" | "electric";
-export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam" | "honolulu" | "nashville" | "denver" | "seattle" | "boston" | "san-juan" | "tampa" | "charlotte" | "minneapolis" | "portland" | "austin" | "fort-lauderdale" | "new-orleans" | "washington";
+export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam" | "honolulu" | "nashville" | "denver" | "seattle" | "boston" | "san-juan" | "tampa" | "charlotte" | "minneapolis" | "portland" | "austin" | "fort-lauderdale" | "new-orleans" | "washington" | "siem-reap" | "sihanoukville" | "kampot" | "phnom-penh" | "battambang" | "kep" | "bangkok" | "ho-chi-minh";
 
 // ============================================
 // PREMIUM 2026 HERO PHOTOS (Minimalist Luxury)
