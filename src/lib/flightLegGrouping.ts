@@ -66,10 +66,33 @@ function getSliceSummary(segs: DuffelSegment[]): LegSummary | null {
 function buildFareVariants(offers: DuffelOffer[]): NonNullable<DuffelOffer["fareVariants"]> | undefined {
   const seen = new Map<string, NonNullable<DuffelOffer["fareVariants"]>[number]>();
 
+  const buildVariantKey = (variant: NonNullable<DuffelOffer["fareVariants"]>[number]) => {
+    const bag = variant.baggageDetails;
+    const conditions = variant.conditions;
+    return [
+      variant.cabinClass,
+      (variant.fareBrandName || variant.cabinClass).toLowerCase(),
+      variant.baggageIncluded || "",
+      bag.carryOnIncluded ? "co1" : "co0",
+      bag.carryOnQuantity,
+      bag.carryOnWeightKg ?? "",
+      bag.carryOnWeightLb ?? "",
+      bag.checkedBagsIncluded ? "cb1" : "cb0",
+      bag.checkedBagQuantity,
+      bag.checkedBagWeightKg ?? "",
+      bag.checkedBagWeightLb ?? "",
+      conditions.changeable ? "chg1" : "chg0",
+      conditions.changePenalty ?? "",
+      conditions.refundable ? "ref1" : "ref0",
+      conditions.refundPenalty ?? "",
+      conditions.penaltyCurrency || "",
+    ].join("::");
+  };
+
   for (const offer of offers) {
     if (offer.fareVariants?.length) {
       for (const variant of offer.fareVariants) {
-        const key = `${variant.cabinClass}::${(variant.fareBrandName || variant.cabinClass).toLowerCase()}`;
+        const key = buildVariantKey(variant);
         const existing = seen.get(key);
         if (!existing || variant.price < existing.price) {
           seen.set(key, variant);
@@ -78,8 +101,6 @@ function buildFareVariants(offers: DuffelOffer[]): NonNullable<DuffelOffer["fare
       continue;
     }
 
-    const key = `${offer.cabinClass}::${(offer.fareBrandName || offer.cabinClass).toLowerCase()}`;
-    const existing = seen.get(key);
     const fallbackVariant = {
       id: offer.id,
       fareBrandName: offer.fareBrandName,
@@ -90,6 +111,8 @@ function buildFareVariants(offers: DuffelOffer[]): NonNullable<DuffelOffer["fare
       baggageIncluded: offer.baggageIncluded,
       cabinClass: offer.cabinClass,
     };
+    const key = buildVariantKey(fallbackVariant);
+    const existing = seen.get(key);
 
     if (!existing || fallbackVariant.price < existing.price) {
       seen.set(key, fallbackVariant);
