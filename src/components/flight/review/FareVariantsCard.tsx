@@ -2,6 +2,9 @@
  * Fare Variants Card — Ultra-Premium 3D Spatial UI
  * Deep glassmorphic cards with floating watermark icons, animated shine,
  * perspective transforms, scroll progress dots, and tactile depth
+ *
+ * SELECTION IS FULLY CONTROLLED BY PARENT via selectedFareId prop.
+ * No local selection state exists in this component.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,7 +25,8 @@ type FareVariant = NonNullable<DuffelOffer["fareVariants"]>[number];
 
 interface FareVariantsCardProps {
   offer: DuffelOffer;
-  onSelectVariant: (variant: FareVariant) => void;
+  selectedFareId: string | null;
+  onSelectFare: (variant: FareVariant) => void;
 }
 
 /* ── Cabin class 3D theme system ────────────────────── */
@@ -89,28 +93,22 @@ function formatFareName(
 ): string {
   const cabinLabel = getTheme(cabinClass).label;
 
-  // If Duffel provides a real brand name (not just the cabin class), use it
   if (name) {
     const normalizedName = name.includes("_")
       ? name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
       : name;
-
     const strippedCabinPrefix = normalizedName
       .replace(new RegExp(`^${cabinLabel}\\s+`, "i"), "")
       .trim();
-
-    // Only auto-label if the brand name IS the cabin label (generic)
     if (strippedCabinPrefix && strippedCabinPrefix.toLowerCase() !== cabinLabel.toLowerCase()) {
       return strippedCabinPrefix;
     }
   }
 
-  // Auto-label based on conditions & baggage
   if (conditions && baggageDetails) {
     const isRefundable = conditions.refundable;
     const isChangeable = conditions.changeable;
     const hasBags = baggageDetails.carryOnIncluded || baggageDetails.checkedBagsIncluded;
-
     if (isRefundable && isChangeable) return "Flex";
     if (hasBags) return "Standard";
     return "Basic";
@@ -209,18 +207,14 @@ function FloatingIcon3D({ icon: Icon, className, glow, size = "md" }: {
       }}
     >
       <Icon className={iconSizes[size]} />
-      {/* Inner shine */}
       <div className="absolute inset-0 rounded-[inherit] bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
     </div>
   );
 }
 
-/* ── Main Component ─────────────────────────────────── */
-export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardProps) {
+/* ── Main Component (CONTROLLED — no local selection state) ── */
+export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVariantsCardProps) {
   const variants = offer.fareVariants;
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  // Track the original offer fingerprint to avoid re-triggering on variant selection
-  const variantIds = useMemo(() => (variants ?? []).map(v => v.id).sort().join(","), [variants]);
 
   const [cabinFilter, setCabinFilter] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -248,30 +242,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
     [filteredVariants]
   );
 
-  // Auto-select cheapest variant ONLY when the actual set of variants changes (not on variant selection)
-  useEffect(() => {
-    if (!variants || variants.length === 0) return;
-    const sorted = [...variants].sort((a, b) => a.price - b.price);
-    const cheapest = sorted[0];
-    console.log("[FareVariants] auto-selecting cheapest:", cheapest.id, "from", variants.length, "variants");
-    setSelectedId(cheapest.id);
-    onSelectVariant(cheapest);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [variantIds]);
-
-  // Reset selection if current selectedId no longer exists in variants
-  useEffect(() => {
-    if (!selectedId || !variants) return;
-    const exists = variants.some((v) => v.id === selectedId);
-    if (!exists) {
-      const sorted = [...variants].sort((a, b) => a.price - b.price);
-      if (sorted.length > 0) {
-        setSelectedId(sorted[0].id);
-        onSelectVariant(sorted[0]);
-      }
-    }
-  }, [variantIds, selectedId]);
-
+  // Scroll tracking only — does NOT affect selection
   useEffect(() => {
     const node = scrollerRef.current;
     if (!node) return;
@@ -279,7 +250,6 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
       const max = node.scrollWidth - node.clientWidth;
       setCanScrollLeft(node.scrollLeft > 4);
       setCanScrollRight(node.scrollLeft < max - 4);
-      // Track active card index for dots
       const cardWidth = node.scrollWidth / (filteredVariants.length || 1);
       setActiveIndex(Math.round(node.scrollLeft / cardWidth));
     };
@@ -290,12 +260,6 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
   }, [filteredVariants]);
 
   if (!variants || variants.length === 0) return null;
-
-  const handleSelect = (variant: FareVariant) => {
-    console.log("[FareVariants] selecting:", variant.id, "prev:", selectedId);
-    setSelectedId(variant.id);
-    onSelectVariant(variant);
-  };
 
   const scrollByCards = (dir: "left" | "right") => {
     const node = scrollerRef.current;
@@ -384,18 +348,18 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
         style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
       >
         {filteredVariants.map((variant, index) => {
-          const isSelected = variant.id === selectedId;
+          // STRICT: selection derived ONLY from parent-controlled selectedFareId
+          const isSelected = variant.id === selectedFareId;
           const fareName = formatFareName(variant.fareBrandName, variant.cabinClass, variant.conditions, variant.baggageDetails);
           const totalPrice = variant.price;
           const priceDelta = totalPrice - cheapestPrice;
           const theme = getTheme(variant.cabinClass);
           const CabinIcon = theme.icon;
-
           const isLowest = Math.abs(totalPrice - cheapestPrice) < 0.01;
 
           return (
             <motion.div
-              key={variant.id}
+              key={`fare-${variant.id}`}
               initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ delay: index * 0.09, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
@@ -409,7 +373,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                     ? "border-[hsl(var(--flights))]/40"
                     : "border-border/20 hover:border-border/40"
                 )}
-                onClick={() => handleSelect(variant)}
+                onClick={() => onSelectFare(variant)}
                 style={{
                   opacity: isSelected ? 1 : 0.75,
                   boxShadow: isSelected
@@ -436,9 +400,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                     alt={`${theme.label} cabin`}
                     className="w-full h-full object-cover object-center"
                   />
-                  {/* Gradient fade to card background */}
                   <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/60 to-background" />
-                  {/* Subtle vignette for depth */}
                   <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/40" />
                 </div>
 
@@ -515,7 +477,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                       </p>
                     </div>
 
-                    {/* Selection check */}
+                    {/* Selection check — ONLY when isSelected (parent-controlled) */}
                     <AnimatePresence initial={false}>
                       {isSelected && (
                         <motion.div
@@ -624,7 +586,6 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
       {/* ── Scroll progress dots + arrows ──────────── */}
       {filteredVariants.length > 1 && (
       <div className="mt-1 flex items-center justify-between">
-        {/* Progress dots */}
         <div className="flex items-center gap-1.5">
           {filteredVariants.map((_, i) => (
             <motion.div
@@ -647,7 +608,6 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
           ))}
         </div>
 
-        {/* 3D Arrow buttons */}
         <div className="flex items-center gap-2">
           {[
             { dir: "left" as const, disabled: !canScrollLeft, icon: ChevronLeft },
