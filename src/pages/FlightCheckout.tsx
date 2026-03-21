@@ -216,6 +216,7 @@ const FlightCheckout = () => {
                 {i < STEPS.length - 1 && <div className={cn("flex-1 h-px", step.completed ? "bg-emerald-500/40" : "bg-border/40")} />}
               </div>
             ))}
+          </div>
 
           {/* Order summary */}
           <CheckoutOrderSummary
