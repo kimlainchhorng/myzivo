@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
-import { getAllInPrice } from "@/utils/flightPricing";
 
 import cabinEconomy from "@/assets/cabin-economy.jpg";
 import cabinPremiumEconomy from "@/assets/cabin-premium-economy.jpg";
