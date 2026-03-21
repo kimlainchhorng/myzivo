@@ -928,6 +928,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       }
 
       jobId = jobData.id;
+      setActiveJobId(jobId);
       console.log("[Dispatch] Job created:", jobId);
 
       // 2. Subscribe to job updates (driver acceptance)
@@ -1785,6 +1786,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setPickupDisplay("");
     setDestinationDisplay("");
     setRideRequestId(null);
+    setActiveJobId(null);
     setRouteData(null);
     setDriverCoords(null);
     setDriverEta(0);
