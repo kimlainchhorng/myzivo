@@ -194,7 +194,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
   );
 
   const cheapestPrice = useMemo(
-    () => (filteredVariants.length ? Math.min(...filteredVariants.map((v) => v.price)) : 0),
+    () => (filteredVariants.length ? Math.min(...filteredVariants.map((v) => v.pricePerPerson ?? v.price)) : 0),
     [filteredVariants]
   );
 
@@ -313,12 +313,12 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
         {filteredVariants.map((variant, index) => {
           const isSelected = variant.id === selectedId;
           const fareName = formatFareName(variant.fareBrandName, variant.cabinClass);
-          const variantPrice = getAllInPrice(variant.price);
-          const baseFarePrice = variant.price;
-          const cheapestAllInPrice = filteredVariants.length
-            ? Math.min(...filteredVariants.map((v) => getAllInPrice(v.price)))
+          const perPerson = variant.pricePerPerson ?? variant.price;
+          const allInPerPerson = getAllInPrice(perPerson);
+          const cheapestAllIn = filteredVariants.length
+            ? Math.min(...filteredVariants.map((v) => getAllInPrice(v.pricePerPerson ?? v.price)))
             : 0;
-          const priceDelta = variantPrice - cheapestAllInPrice;
+          const priceDelta = allInPerPerson - cheapestAllIn;
           const theme = getTheme(variant.cabinClass);
           const CabinIcon = theme.icon;
 
@@ -497,11 +497,11 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                   {/* 3D Price section */}
                   <div className="mt-4 pt-3 border-t border-border/10">
                     <p className="text-[8px] font-bold text-muted-foreground/50 uppercase tracking-[0.1em]">
-                      total with fees
+                      per person · all-in
                     </p>
                     <div className="mt-1.5 flex items-end justify-between gap-2">
                       <motion.p
-                        key={variant.price}
+                        key={allInPerPerson}
                         initial={{ scale: 0.95, opacity: 0.5 }}
                         animate={{ scale: 1, opacity: 1 }}
                         className={cn(
@@ -512,7 +512,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                           textShadow: isSelected ? "0 3px 16px hsl(var(--flights)/0.25)" : undefined,
                         }}
                       >
-                        US${variant.price.toFixed(2)}
+                        US${allInPerPerson.toFixed(2)}
                       </motion.p>
                       {priceDelta > 0 ? (
                         <span
@@ -537,7 +537,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                       )}
                     </div>
                     <p className="mt-1 text-[9px] text-muted-foreground/70 tabular-nums">
-                      Base fare US${baseFarePrice.toFixed(2)} before taxes, fees & charges
+                      Base fare US${perPerson.toFixed(2)} before taxes & fees
                     </p>
                   </div>
                 </div>
