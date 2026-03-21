@@ -220,23 +220,23 @@ export default function AdminPricingPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label>Base Fare ($)</Label>
+                    <Label>Base Fare ({isCambodia ? "៛ KHR" : "$"})</Label>
                     <Input type="number" step="0.01" value={form.base_fare} onChange={(e) => setForm({ ...form, base_fare: +e.target.value })} />
                   </div>
                   <div>
-                    <Label>Per Mile ($)</Label>
+                    <Label>Per {isCambodia ? "Km" : "Mile"} ({isCambodia ? "៛ KHR" : "$"})</Label>
                     <Input type="number" step="0.01" value={form.per_mile} onChange={(e) => setForm({ ...form, per_mile: +e.target.value })} />
                   </div>
                   <div>
-                    <Label>Per Minute ($)</Label>
+                    <Label>Per Minute ({isCambodia ? "៛ KHR" : "$"})</Label>
                     <Input type="number" step="0.01" value={form.per_minute} onChange={(e) => setForm({ ...form, per_minute: +e.target.value })} />
                   </div>
                   <div>
-                    <Label>Booking Fee ($)</Label>
+                    <Label>Booking Fee ({isCambodia ? "៛ KHR" : "$"})</Label>
                     <Input type="number" step="0.01" value={form.booking_fee} onChange={(e) => setForm({ ...form, booking_fee: +e.target.value })} />
                   </div>
                   <div>
-                    <Label>Minimum Fare ($)</Label>
+                    <Label>Minimum Fare ({isCambodia ? "៛ KHR" : "$"})</Label>
                     <Input type="number" step="0.01" value={form.minimum_fare} onChange={(e) => setForm({ ...form, minimum_fare: +e.target.value })} />
                   </div>
                   <div className="flex items-center gap-2 pt-5">
@@ -311,11 +311,11 @@ export default function AdminPricingPage() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
+                 <TableRow>
                   <TableHead>City</TableHead>
                   <TableHead>Ride Type</TableHead>
                   <TableHead className="text-right">Base</TableHead>
-                  <TableHead className="text-right">/Mile</TableHead>
+                  <TableHead className="text-right">/{isCambodia ? "Km" : "Mile"}</TableHead>
                   <TableHead className="text-right">/Min</TableHead>
                   <TableHead className="text-right">Booking</TableHead>
                   <TableHead className="text-right">Min Fare</TableHead>
@@ -324,15 +324,17 @@ export default function AdminPricingPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRows.map((row) => (
+                {filteredRows.map((row) => {
+                  const sym = isCambodia ? "៛" : "$";
+                  return (
                   <TableRow key={row.id}>
                     <TableCell className="font-medium">{row.city || "default"}</TableCell>
                     <TableCell>{row.ride_type}</TableCell>
-                    <TableCell className="text-right">${(row.base_fare ?? 0).toFixed(2)}</TableCell>
-                    <TableCell className="text-right">${(row.per_mile ?? 0).toFixed(2)}</TableCell>
-                    <TableCell className="text-right">${(row.per_minute ?? 0).toFixed(2)}</TableCell>
-                    <TableCell className="text-right">${(row.booking_fee ?? 0).toFixed(2)}</TableCell>
-                    <TableCell className="text-right">${(row.minimum_fare ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{sym}{(row.base_fare ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{sym}{(row.per_mile ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{sym}{(row.per_minute ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{sym}{(row.booking_fee ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{sym}{(row.minimum_fare ?? 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <span className={row.is_active ? "text-green-500 text-xs font-medium" : "text-muted-foreground text-xs"}>
                         {row.is_active ? "Yes" : "No"}
@@ -349,7 +351,8 @@ export default function AdminPricingPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}
