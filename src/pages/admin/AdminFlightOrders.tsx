@@ -14,26 +14,40 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 
-type FlightOrder = {
+type FlightBooking = {
   id: string;
-  user_id: string | null;
+  customer_id: string;
+  booking_reference: string;
   status: string | null;
-  total_cents: number | null;
+  payment_status: string | null;
+  ticketing_status: string | null;
+  total_amount: number;
   currency: string | null;
+  origin: string | null;
+  destination: string | null;
+  departure_date: string | null;
+  return_date: string | null;
+  cabin_class: string;
+  total_passengers: number;
+  pnr: string | null;
   created_at: string;
-  contact_email: string | null;
-  contact_phone: string | null;
   passengers: any;
-  slices: any;
-  offer_id: string | null;
   stripe_payment_intent_id: string | null;
-  partner_booking_ref: string | null;
-  duffel_order_id: string | null;
+  ticketing_partner_order_id: string | null;
+  zivo_markup: number | null;
+  duffel_cost: number | null;
+  refund_status: string | null;
+  refund_amount: number | null;
+  admin_notes: string | null;
+  dispute_status: string | null;
+  special_requests: string | null;
+  offer_id: string | null;
 };
 
 const STATUS_COLORS: Record<string, string> = {
   confirmed: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
   issued: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
+  ticketed: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
   processing: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
   failed: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
@@ -42,28 +56,18 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function AdminFlightOrders() {
   const [search, setSearch] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState<FlightOrder | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<FlightBooking | null>(null);
 
   const { data: orders, isLoading, refetch } = useQuery({
-    queryKey: ["admin-flight-orders"],
+    queryKey: ["admin-flight-bookings"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .rpc("admin_list_flight_orders" as any);
-      if (error) {
-        // Fallback: direct query via rest
-        const res = await fetch(
-          `https://slirphzzwcogdbkeicff.supabase.co/rest/v1/flight_orders?select=*&order=created_at.desc&limit=200`,
-          {
-            headers: {
-              apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI",
-              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-            },
-          }
-        );
-        if (!res.ok) throw new Error("Failed to load flight orders");
-        return (await res.json()) as FlightOrder[];
-      }
-      return (data || []) as FlightOrder[];
+        .from("flight_bookings")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return (data || []) as unknown as FlightBooking[];
     },
   });
 
@@ -72,17 +76,13 @@ export default function AdminFlightOrders() {
     const q = search.toLowerCase();
     return (
       o.id?.toLowerCase().includes(q) ||
-      o.contact_email?.toLowerCase().includes(q) ||
-      o.partner_booking_ref?.toLowerCase().includes(q) ||
-      o.duffel_order_id?.toLowerCase().includes(q) ||
+      o.booking_reference?.toLowerCase().includes(q) ||
+      o.pnr?.toLowerCase().includes(q) ||
+      o.origin?.toLowerCase().includes(q) ||
+      o.destination?.toLowerCase().includes(q) ||
       o.status?.toLowerCase().includes(q)
     );
   });
-
-  const formatAmount = (cents: number | null, currency: string | null) => {
-    if (!cents) return "—";
-    return `$${(cents / 100).toFixed(2)} ${(currency || "USD").toUpperCase()}`;
-  };
 
   return (
     <AdminLayout title="Flight Orders">
@@ -91,7 +91,7 @@ export default function AdminFlightOrders() {
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search by email, booking ref, order ID…"
+            placeholder="Search by booking ref, route, PNR…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-10 rounded-xl"
@@ -106,9 +106,9 @@ export default function AdminFlightOrders() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
           { label: "Total", value: orders?.length || 0 },
-          { label: "Confirmed", value: orders?.filter((o) => o.status === "confirmed" || o.status === "issued").length || 0 },
-          { label: "Processing", value: orders?.filter((o) => o.status === "processing" || o.status === "pending").length || 0 },
-          { label: "Failed", value: orders?.filter((o) => o.status === "failed" || o.status === "cancelled").length || 0 },
+          { label: "Confirmed", value: orders?.filter((o) => ["confirmed", "issued", "ticketed"].includes(o.status || "")).length || 0 },
+          { label: "Pending", value: orders?.filter((o) => ["pending", "processing"].includes(o.status || "")).length || 0 },
+          { label: "Failed / Cancelled", value: orders?.filter((o) => ["failed", "cancelled"].includes(o.status || "")).length || 0 },
         ].map((s) => (
           <div key={s.label} className="bg-card border border-border rounded-xl p-4 text-center">
             <p className="text-2xl font-bold text-foreground">{s.value}</p>
@@ -131,10 +131,12 @@ export default function AdminFlightOrders() {
             <thead className="bg-muted/50">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Email</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Amount</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Route</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Booking Ref</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Payment</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Amount</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Pax</th>
                 <th className="text-center px-4 py-3 font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
@@ -142,21 +144,29 @@ export default function AdminFlightOrders() {
               {filtered.map((order) => (
                 <tr key={order.id} className="hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3 whitespace-nowrap text-foreground">
-                    {format(new Date(order.created_at), "MMM d, yyyy HH:mm")}
+                    {format(new Date(order.created_at), "MMM d, yyyy")}
                   </td>
-                  <td className="px-4 py-3 text-foreground truncate max-w-[200px]">
-                    {order.contact_email || "—"}
+                  <td className="px-4 py-3 text-foreground font-medium">
+                    {order.origin && order.destination ? `${order.origin} → ${order.destination}` : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground text-xs font-mono">
+                    {order.booking_reference}
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant="secondary" className={STATUS_COLORS[order.status || ""] || "bg-muted text-muted-foreground"}>
                       {order.status || "unknown"}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-right font-medium text-foreground">
-                    {formatAmount(order.total_cents, order.currency)}
+                  <td className="px-4 py-3">
+                    <Badge variant="outline" className="text-xs">
+                      {order.payment_status || "—"}
+                    </Badge>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs font-mono">
-                    {order.partner_booking_ref || order.duffel_order_id || "—"}
+                  <td className="px-4 py-3 text-right font-medium text-foreground">
+                    ${Number(order.total_amount || 0).toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3 text-center text-muted-foreground">
+                    {order.total_passengers}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedOrder(order)}>
@@ -172,34 +182,37 @@ export default function AdminFlightOrders() {
 
       {/* Detail dialog */}
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Flight Order Details</DialogTitle>
+            <DialogTitle>Booking Details</DialogTitle>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-3 text-sm">
-              <Row label="Order ID" value={selectedOrder.id} />
+              <Row label="Booking Ref" value={selectedOrder.booking_reference} />
+              <Row label="Route" value={`${selectedOrder.origin || "?"} → ${selectedOrder.destination || "?"}`} />
+              <Row label="Departure" value={selectedOrder.departure_date || "—"} />
+              {selectedOrder.return_date && <Row label="Return" value={selectedOrder.return_date} />}
+              <Row label="Cabin" value={selectedOrder.cabin_class} />
+              <Row label="Passengers" value={String(selectedOrder.total_passengers)} />
               <Row label="Status" value={selectedOrder.status || "—"} />
-              <Row label="Email" value={selectedOrder.contact_email || "—"} />
-              <Row label="Phone" value={selectedOrder.contact_phone || "—"} />
-              <Row label="Amount" value={formatAmount(selectedOrder.total_cents, selectedOrder.currency)} />
+              <Row label="Payment" value={selectedOrder.payment_status || "—"} />
+              <Row label="Ticketing" value={selectedOrder.ticketing_status || "—"} />
+              <Row label="PNR" value={selectedOrder.pnr || "—"} />
+              <Row label="Total" value={`$${Number(selectedOrder.total_amount).toFixed(2)} ${(selectedOrder.currency || "USD").toUpperCase()}`} />
+              {selectedOrder.zivo_markup != null && <Row label="ZIVO Markup" value={`$${Number(selectedOrder.zivo_markup).toFixed(2)}`} />}
+              {selectedOrder.duffel_cost != null && <Row label="Duffel Cost" value={`$${Number(selectedOrder.duffel_cost).toFixed(2)}`} />}
               <Row label="Stripe PI" value={selectedOrder.stripe_payment_intent_id || "—"} />
-              <Row label="Duffel Order" value={selectedOrder.duffel_order_id || "—"} />
-              <Row label="Partner Ref" value={selectedOrder.partner_booking_ref || "—"} />
+              <Row label="Partner Order" value={selectedOrder.ticketing_partner_order_id || "—"} />
+              {selectedOrder.refund_status && <Row label="Refund" value={`${selectedOrder.refund_status} ($${Number(selectedOrder.refund_amount || 0).toFixed(2)})`} />}
+              {selectedOrder.dispute_status && <Row label="Dispute" value={selectedOrder.dispute_status} />}
+              {selectedOrder.special_requests && <Row label="Special Requests" value={selectedOrder.special_requests} />}
+              {selectedOrder.admin_notes && <Row label="Admin Notes" value={selectedOrder.admin_notes} />}
               <Row label="Created" value={format(new Date(selectedOrder.created_at), "PPpp")} />
               {selectedOrder.passengers && (
                 <div>
                   <p className="font-medium text-muted-foreground mb-1">Passengers</p>
                   <pre className="bg-muted rounded-lg p-3 text-xs overflow-auto max-h-40">
                     {JSON.stringify(selectedOrder.passengers, null, 2)}
-                  </pre>
-                </div>
-              )}
-              {selectedOrder.slices && (
-                <div>
-                  <p className="font-medium text-muted-foreground mb-1">Slices / Segments</p>
-                  <pre className="bg-muted rounded-lg p-3 text-xs overflow-auto max-h-40">
-                    {JSON.stringify(selectedOrder.slices, null, 2)}
                   </pre>
                 </div>
               )}
