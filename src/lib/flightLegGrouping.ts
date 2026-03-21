@@ -103,7 +103,7 @@ function buildFareVariants(offers: DuffelOffer[]): NonNullable<DuffelOffer["fare
 
     const fallbackVariant = {
       id: offer.id,
-      fareBrandName: offer.fareBrandName,
+      fareBrandName: offer.fareBrandName || offer.cabinClass,
       price: offer.price,
       currency: offer.currency,
       conditions: offer.conditions,
