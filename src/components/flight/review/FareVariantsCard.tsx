@@ -81,25 +81,42 @@ function getTheme(cabinClass: string) {
   return CABIN_THEMES[cabinClass] ?? CABIN_THEMES.economy;
 }
 
-function formatFareName(name: string | null, cabinClass: string): string {
+function formatFareName(
+  name: string | null,
+  cabinClass: string,
+  conditions?: FareVariant["conditions"],
+  baggageDetails?: FareVariant["baggageDetails"],
+): string {
   const cabinLabel = getTheme(cabinClass).label;
-  if (!name) return "Standard";
 
-  const normalizedName = name.includes("_")
-    ? name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-    : name;
+  // If Duffel provides a real brand name (not just the cabin class), use it
+  if (name) {
+    const normalizedName = name.includes("_")
+      ? name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      : name;
 
-  // Strip cabin prefix (e.g. "Economy Basic" → "Basic")
-  const strippedCabinPrefix = normalizedName
-    .replace(new RegExp(`^${cabinLabel}\\s+`, "i"), "")
-    .trim();
+    const strippedCabinPrefix = normalizedName
+      .replace(new RegExp(`^${cabinLabel}\\s+`, "i"), "")
+      .trim();
 
-  // If the brand name IS the cabin label (e.g. "Economy" for economy cabin), show "Standard"
-  if (!strippedCabinPrefix || strippedCabinPrefix.toLowerCase() === cabinLabel.toLowerCase()) {
-    return "Standard";
+    // Only auto-label if the brand name IS the cabin label (generic)
+    if (strippedCabinPrefix && strippedCabinPrefix.toLowerCase() !== cabinLabel.toLowerCase()) {
+      return strippedCabinPrefix;
+    }
   }
 
-  return strippedCabinPrefix;
+  // Auto-label based on conditions & baggage
+  if (conditions && baggageDetails) {
+    const isRefundable = conditions.refundable;
+    const isChangeable = conditions.changeable;
+    const hasBags = baggageDetails.carryOnIncluded || baggageDetails.checkedBagsIncluded;
+
+    if (isRefundable && isChangeable) return "Flex";
+    if (hasBags) return "Standard";
+    return "Basic";
+  }
+
+  return "Basic";
 }
 
 function formatFarePrice(amount: number, currency: string = "USD"): string {
@@ -114,27 +131,27 @@ function formatFarePrice(amount: number, currency: string = "USD"): string {
 /* ── Helpers ────────────────────────────────────────── */
 function getCarryOnLabel(v: FareVariant): string {
   const b = v.baggageDetails;
-  if (!b.carryOnIncluded) return "No carry-on bag";
-  const qty = b.carryOnQuantity > 0 ? `${b.carryOnQuantity} carry-on bag${b.carryOnQuantity > 1 ? "s" : ""}` : "Carry-on bag";
+  if (!b.carryOnIncluded) return "Not included";
+  const qty = b.carryOnQuantity > 0 ? `${b.carryOnQuantity} carry-on bag${b.carryOnQuantity > 1 ? "s" : ""}` : "1 carry-on bag";
   const w = b.carryOnWeightKg ? ` · ${b.carryOnWeightKg}kg` : b.carryOnWeightLb ? ` · ${b.carryOnWeightLb}lb` : "";
   return `${qty}${w}`;
 }
 function getCheckedBagLabel(v: FareVariant): string {
   const b = v.baggageDetails;
-  if (!b.checkedBagsIncluded) return "No checked bag";
-  const qty = b.checkedBagQuantity > 0 ? `${b.checkedBagQuantity} checked bag${b.checkedBagQuantity > 1 ? "s" : ""}` : "Checked bag";
+  if (!b.checkedBagsIncluded) return "Not included";
+  const qty = b.checkedBagQuantity > 0 ? `${b.checkedBagQuantity} checked bag${b.checkedBagQuantity > 1 ? "s" : ""}` : "1 checked bag";
   const w = b.checkedBagWeightKg ? ` · ${b.checkedBagWeightKg}kg` : b.checkedBagWeightLb ? ` · ${b.checkedBagWeightLb}lb` : "";
   return `${qty}${w}`;
 }
 function getChangeLabel(v: FareVariant): string {
   const c = v.conditions;
-  if (!c.changeable) return "Not changeable";
-  if (!c.changePenalty || c.changePenalty === 0) return "Changeable";
+  if (!c.changeable) return "No changes allowed";
+  if (!c.changePenalty || c.changePenalty === 0) return "Changes allowed";
   return `Change fee ${c.penaltyCurrency} ${c.changePenalty}`;
 }
 function getRefundLabel(v: FareVariant): string {
   const c = v.conditions;
-  if (!c.refundable) return "Not refundable";
+  if (!c.refundable) return "Non-refundable";
   if (!c.refundPenalty || c.refundPenalty === 0) return "Refundable";
   return `Refund fee ${c.penaltyCurrency} ${c.refundPenalty}`;
 }
@@ -216,15 +233,16 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
     () => ((cabinFilter ? variants?.filter((v) => v.cabinClass === cabinFilter) : variants) ?? [])
       .slice()
       .sort((a, b) => {
-        const priceDiff = (a.pricePerPerson ?? a.price) - (b.pricePerPerson ?? b.price);
+        const priceDiff = a.price - b.price;
         if (priceDiff !== 0) return priceDiff;
-        return formatFareName(a.fareBrandName, a.cabinClass).localeCompare(formatFareName(b.fareBrandName, b.cabinClass));
+        return formatFareName(a.fareBrandName, a.cabinClass, a.conditions, a.baggageDetails)
+          .localeCompare(formatFareName(b.fareBrandName, b.cabinClass, b.conditions, b.baggageDetails));
       }),
     [variants, cabinFilter]
   );
 
   const cheapestPrice = useMemo(
-    () => (filteredVariants.length ? Math.min(...filteredVariants.map((v) => v.pricePerPerson ?? v.price)) : 0),
+    () => (filteredVariants.length ? Math.min(...filteredVariants.map((v) => v.price)) : 0),
     [filteredVariants]
   );
 
@@ -342,9 +360,9 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
       >
         {filteredVariants.map((variant, index) => {
           const isSelected = variant.id === selectedId;
-          const fareName = formatFareName(variant.fareBrandName, variant.cabinClass);
-          const perPerson = variant.pricePerPerson ?? variant.price;
-          const priceDelta = perPerson - cheapestPrice;
+          const fareName = formatFareName(variant.fareBrandName, variant.cabinClass, variant.conditions, variant.baggageDetails);
+          const totalPrice = variant.price;
+          const priceDelta = totalPrice - cheapestPrice;
           const theme = getTheme(variant.cabinClass);
           const CabinIcon = theme.icon;
 
@@ -524,7 +542,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                   <div className="mt-4 pt-3 border-t border-border/10">
                     <div className="mt-1.5 flex items-end justify-between gap-2">
                       <motion.p
-                        key={perPerson}
+                        key={totalPrice}
                         initial={{ scale: 0.95, opacity: 0.5 }}
                         animate={{ scale: 1, opacity: 1 }}
                         className={cn(
@@ -535,7 +553,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                           textShadow: isSelected ? "0 3px 16px hsl(var(--flights)/0.25)" : undefined,
                         }}
                       >
-                        {formatFarePrice(perPerson, variant.currency)}
+                        {formatFarePrice(totalPrice, variant.currency)}
                       </motion.p>
                       {priceDelta > 0 ? (
                         <span
