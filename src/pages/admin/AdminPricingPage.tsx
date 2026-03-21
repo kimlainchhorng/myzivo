@@ -33,7 +33,7 @@ interface PricingRow {
 
 const RIDE_TYPES = [
   "standard", "share", "comfort", "ev", "xl",
-  "black", "black_suv", "luxury_xl", "pet", "wheelchair",
+  "black", "black_suv", "luxury_xl", "pet", "wheelchair", "tuktuk",
 ];
 
 // Country filter presets — map country label to known city names
