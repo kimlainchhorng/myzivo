@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
-import { getAllInPrice } from "@/utils/flightPricing";
 
 import cabinEconomy from "@/assets/cabin-economy.jpg";
 import cabinPremiumEconomy from "@/assets/cabin-premium-economy.jpg";
@@ -194,7 +193,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
   );
 
   const cheapestPrice = useMemo(
-    () => (filteredVariants.length ? Math.min(...filteredVariants.map((v) => getAllInPrice(v.price))) : 0),
+    () => (filteredVariants.length ? Math.min(...filteredVariants.map((v) => v.price)) : 0),
     [filteredVariants]
   );
 
@@ -313,8 +312,8 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
         {filteredVariants.map((variant, index) => {
           const isSelected = variant.id === selectedId;
           const fareName = formatFareName(variant.fareBrandName, variant.cabinClass);
-          const variantAllIn = getAllInPrice(variant.price);
-          const priceDelta = variantAllIn - cheapestPrice;
+          const variantPrice = variant.price;
+          const priceDelta = variantPrice - cheapestPrice;
           const theme = getTheme(variant.cabinClass);
           const CabinIcon = theme.icon;
 
@@ -508,7 +507,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                           textShadow: isSelected ? "0 3px 16px hsl(var(--flights)/0.25)" : undefined,
                         }}
                       >
-                        US${getAllInPrice(variant.price).toFixed(2)}
+                        US${variant.price.toFixed(2)}
                       </motion.p>
                       {priceDelta > 0 ? (
                         <span
