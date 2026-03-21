@@ -414,6 +414,7 @@ const App = () => (
                 <Route path="/admin/flight-searches" element={<ProtectedRoute><AdminFlightSearchAnalytics /></ProtectedRoute>} />
                 <Route path="/admin/flight-api" element={<ProtectedRoute><AdminFlightApiMonitoring /></ProtectedRoute>} />
                 <Route path="/admin/flight-price-alerts" element={<ProtectedRoute><AdminFlightPriceAlerts /></ProtectedRoute>} />
+                <Route path="/admin/system-health" element={<ProtectedRoute><AdminSystemHealth /></ProtectedRoute>} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
                 <Route path="/insurance" element={<PreserveQueryRedirect to="/travel-insurance" />} />
