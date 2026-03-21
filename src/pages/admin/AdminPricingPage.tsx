@@ -134,12 +134,19 @@ export default function AdminPricingPage() {
     upsert.mutate(editingId ? { ...form, id: editingId } : form);
   }
 
+  const activeFilter = COUNTRY_FILTERS[countryFilter];
+  const filteredRows = rows?.filter((r) => {
+    if (activeFilter.cities === "all") return true;
+    const city = (r.city || "default").toLowerCase();
+    return activeFilter.cities.some((c) => c.toLowerCase() === city);
+  });
+
   return (
     <AdminLayout title="Pricing Management">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">
-            Manage ride pricing per city and vehicle type. "default" applies when no city-specific pricing exists.
+            Manage ride pricing per city and vehicle type.
           </p>
           <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) closeDialog(); else setDialogOpen(true); }}>
             <DialogTrigger asChild>
