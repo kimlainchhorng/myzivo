@@ -91,8 +91,8 @@ function formatFareName(name: string | null, cabinClass: string): string {
 function getFareSortRank(variant: FareVariant): number {
   const label = formatFareName(variant.fareBrandName, variant.cabinClass).trim().toLowerCase();
 
-  if (label === "basic" || label.includes("basic economy")) return 0;
-  if (label === "economy" || label.includes("standard") || label.includes("main")) return 1;
+  if (label === "economy" || label.includes("standard") || label.includes("main")) return 0;
+  if (label === "basic" || label.includes("basic economy")) return 1;
   if (label.includes("flex") || label.includes("plus") || label.includes("extra")) return 2;
   return 3;
 }
