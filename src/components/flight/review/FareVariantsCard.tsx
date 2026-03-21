@@ -88,15 +88,6 @@ function formatFareName(name: string | null, cabinClass: string): string {
   return name;
 }
 
-function getFareSortRank(variant: FareVariant): number {
-  const label = formatFareName(variant.fareBrandName, variant.cabinClass).trim().toLowerCase();
-
-  if (label === "economy" || label.includes("standard") || label.includes("main")) return 0;
-  if (label === "basic" || label.includes("basic economy")) return 1;
-  if (label.includes("flex") || label.includes("plus") || label.includes("extra")) return 2;
-  return 3;
-}
-
 /* ── Helpers ────────────────────────────────────────── */
 function getCarryOnLabel(v: FareVariant): string {
   const b = v.baggageDetails;
@@ -201,9 +192,6 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
     () => ((cabinFilter ? variants?.filter((v) => v.cabinClass === cabinFilter) : variants) ?? [])
       .slice()
       .sort((a, b) => {
-        const rankDiff = getFareSortRank(a) - getFareSortRank(b);
-        if (rankDiff !== 0) return rankDiff;
-
         const priceDiff = (a.pricePerPerson ?? a.price) - (b.pricePerPerson ?? b.price);
         if (priceDiff !== 0) return priceDiff;
         return formatFareName(a.fareBrandName, a.cabinClass).localeCompare(formatFareName(b.fareBrandName, b.cabinClass));
