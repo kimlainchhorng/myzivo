@@ -39,6 +39,7 @@ import { Tag, Percent, CheckCircle2, Loader2 } from "lucide-react";
 import PlaceLogo from "@/components/rides/PlaceLogo";
 import { useCityPricing } from "@/hooks/useCityPricing";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
+import { useCustomerLocationBroadcast } from "@/hooks/useCustomerLocationBroadcast";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
 
@@ -671,6 +672,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   stopsRef.current = stops;
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [nearbyDriverCount, setNearbyDriverCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [promoInput, setPromoInput] = useState("");
