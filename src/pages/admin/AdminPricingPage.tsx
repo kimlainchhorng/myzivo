@@ -257,7 +257,7 @@ export default function AdminPricingPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((row) => (
+                {filteredRows.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell className="font-medium">{row.city || "default"}</TableCell>
                     <TableCell>{row.ride_type}</TableCell>
