@@ -246,14 +246,27 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
     [filteredVariants]
   );
 
-  // Auto-select cheapest variant on mount or when offer changes
+  // Auto-select cheapest variant on mount or when offer/variants change
   useEffect(() => {
     if (!variants || variants.length === 0) return;
     const sorted = [...variants].sort((a, b) => a.price - b.price);
     const cheapest = sorted[0];
     setSelectedId(cheapest.id);
     onSelectVariant(cheapest);
-  }, [offer.id]);
+  }, [offer.id, variants]);
+
+  // Reset selection if current selectedId no longer exists in variants
+  useEffect(() => {
+    if (!selectedId || !variants) return;
+    const exists = variants.some((v) => v.id === selectedId);
+    if (!exists) {
+      const sorted = [...variants].sort((a, b) => a.price - b.price);
+      if (sorted.length > 0) {
+        setSelectedId(sorted[0].id);
+        onSelectVariant(sorted[0]);
+      }
+    }
+  }, [variants, selectedId]);
 
   useEffect(() => {
     const node = scrollerRef.current;
