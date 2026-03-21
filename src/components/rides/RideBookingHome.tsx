@@ -551,6 +551,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const navigate = useNavigate();
   const { user } = useAuth();
   const { getCurrentLocation, isGettingLocation } = useCurrentLocation();
+  const [locationPermission, setLocationPermission] = useState<"prompt" | "granted" | "denied" | "checking">("checking");
   const { data: savedLocations = [] } = useSavedLocations(user?.id);
   const { currentLanguage, changeLanguage, t } = useI18n();
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -772,6 +773,43 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [liveDriverLocation, viewStep, pickup, destination]);
 
+  // Check GPS permission on mount
+  useEffect(() => {
+    if (isCambodiaCountry) {
+      setLocationPermission("granted");
+      return;
+    }
+    if ("permissions" in navigator) {
+      navigator.permissions.query({ name: "geolocation" as PermissionName }).then((result) => {
+        if (result.state === "granted") setLocationPermission("granted");
+        else if (result.state === "denied") setLocationPermission("denied");
+        else setLocationPermission("prompt");
+        result.onchange = () => {
+          if (result.state === "granted") setLocationPermission("granted");
+          else if (result.state === "denied") setLocationPermission("denied");
+        };
+      }).catch(() => setLocationPermission("prompt"));
+    } else {
+      // Fallback: try getting location directly
+      setLocationPermission("prompt");
+    }
+  }, [isCambodiaCountry]);
+
+  // Request GPS when user allows
+  const handleAllowLocation = useCallback(() => {
+    setLocationPermission("checking");
+    getCurrentLocation()
+      .then((loc) => {
+        setUserLocation({ lat: loc.lat, lng: loc.lng });
+        setLocationPermission("granted");
+      })
+      .catch(() => {
+        setLocationPermission("denied");
+        setUserLocation(US_DEFAULT_CENTER);
+        toast.error("Location access denied. You can set pickup manually.");
+      });
+  }, [getCurrentLocation]);
+
   // Keep map region aligned to selected language mode + auto-set pickup from GPS
   useEffect(() => {
     let cancelled = false;
@@ -787,18 +825,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       return () => { cancelled = true; };
     }
 
-    getCurrentLocation()
-      .then((loc) => {
-        if (!cancelled) {
-          setUserLocation({ lat: loc.lat, lng: loc.lng });
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
-      });
+    // Only auto-fetch if permission already granted
+    if (locationPermission === "granted") {
+      getCurrentLocation()
+        .then((loc) => {
+          if (!cancelled) {
+            setUserLocation({ lat: loc.lat, lng: loc.lng });
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setUserLocation(US_DEFAULT_CENTER);
+        });
+    }
 
     return () => { cancelled = true; };
-  }, [isCambodiaCountry, getCurrentLocation]);
+  }, [isCambodiaCountry, getCurrentLocation, locationPermission]);
 
   // Fetch real nearby drivers and poll every 10s
   useEffect(() => {
@@ -1772,6 +1813,56 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   return (
     <div className="relative h-full safe-area-top overflow-hidden bg-background flex flex-col">
 
+      {/* ═══════ GPS Permission Prompt ═══════ */}
+      {locationPermission === "prompt" && (
+        <div className="absolute inset-0 z-[100] bg-background/98 backdrop-blur-sm flex flex-col items-center justify-center px-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center text-center max-w-sm"
+          >
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+              <Navigation className="w-10 h-10 text-primary" />
+            </div>
+            <h2 className="text-2xl font-black text-foreground mb-2">Enable Location</h2>
+            <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+              ZIVO needs your location to find nearby drivers, calculate routes, and get you picked up quickly.
+            </p>
+            <Button
+              onClick={handleAllowLocation}
+              className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground shadow-lg"
+              disabled={isGettingLocation}
+            >
+              {isGettingLocation ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                  Getting location...
+                </span>
+              ) : (
+                "Allow Location Access"
+              )}
+            </Button>
+            <button
+              onClick={() => {
+                setLocationPermission("denied");
+                setUserLocation(fallbackPickupCenter);
+              }}
+              className="mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Skip — enter address manually
+            </button>
+          </motion.div>
+        </div>
+      )}
+
+      {locationPermission === "checking" && !isCambodiaCountry && (
+        <div className="absolute inset-0 z-[100] bg-background flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-muted-foreground">Checking location...</span>
+          </div>
+        </div>
+      )}
       {/* ═══════ 1. HEADER — visible on non-home steps ═══════ */}
       {viewStep !== "home" && viewStep !== "trip-complete" && (
         <div className="relative z-20 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
