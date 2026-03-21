@@ -31,7 +31,11 @@ export default function DriverMapPage() {
   const [driverId, setDriverId] = useState<string | null>(null);
   const [activeOffer, setActiveOffer] = useState<RideOffer | null>(null);
   const [isRespondingToOffer, setIsRespondingToOffer] = useState(false);
+  const [acceptedJobId, setAcceptedJobId] = useState<string | null>(null);
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Subscribe to customer's live location after accepting a ride
+  const { location: customerLocation, isConnected: customerConnected } = useCustomerLocation(acceptedJobId);
 
   const fetchPendingOffer = useCallback(async (currentDriverId: string) => {
     const now = new Date().toISOString();
