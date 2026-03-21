@@ -209,6 +209,27 @@ export default function AdminPricingPage() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
+        </div>
+
+        {/* Country filter buttons */}
+        <div className="flex flex-wrap gap-2">
+          {COUNTRY_FILTERS.map((cf, i) => (
+            <Button
+              key={cf.label}
+              variant={countryFilter === i ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCountryFilter(i)}
+              className="gap-1.5"
+            >
+              <span>{cf.flag}</span> {cf.label}
+              {cf.cities !== "all" && rows && (
+                <span className="ml-1 text-xs opacity-70">
+                  ({rows.filter((r) => cf.cities !== "all" && cf.cities.some((c) => c.toLowerCase() === (r.city || "default").toLowerCase())).length})
+                </span>
+              )}
+            </Button>
+          ))}
         </div>
 
         <div className="rounded-xl border border-border bg-card overflow-hidden">
