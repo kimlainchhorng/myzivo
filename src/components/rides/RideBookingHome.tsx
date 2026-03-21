@@ -1712,6 +1712,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           ride_request_id: rideData.id,
           amount_cents: amountCents,
           ride_type: selectedVehicle,
+          city: pickupCity || undefined,
           payment_method_id: paymentMethodId || undefined,
           promo_code: appliedPromo?.code || undefined,
           discount_cents: appliedPromo ? Math.round(promoDiscount * 100) : 0,

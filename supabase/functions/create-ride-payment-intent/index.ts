@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
       ride_request_id,
       amount_cents,
       ride_type,
+      city,
       wallet_credit_cents = 0,
       payment_method_id,
       promo_code,
@@ -82,14 +83,51 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (amount_cents < 50) {
+    // Map frontend vehicle IDs to DB ride_type values
+    const VEHICLE_TO_DB: Record<string, string> = {
+      economy: "standard", share: "share", comfort: "comfort", ev: "ev",
+      xl: "xl", "black-lane": "black", "black-xl": "black_suv",
+      "luxury-xl": "luxury_xl", pet: "pet", wheelchair: "wheelchair",
+      tuktuk: "tuktuk", "tuktuk-ev": "tuktuk_ev", moto: "moto", "share-xl": "share_xl",
+    };
+
+    // Look up card_fee_pct from city_pricing (applies to ALL card payments, not just saved cards)
+    let cardFeePct = 0;
+    if (city && ride_type) {
+      const dbRideType = VEHICLE_TO_DB[ride_type] || ride_type;
+      const serviceAdmin = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      const { data: pricingRows } = await serviceAdmin
+        .from("city_pricing")
+        .select("card_fee_pct")
+        .eq("is_active", true)
+        .ilike("city", city)
+        .eq("ride_type", dbRideType)
+        .limit(1);
+
+      if (pricingRows && pricingRows.length > 0 && pricingRows[0].card_fee_pct > 0) {
+        cardFeePct = pricingRows[0].card_fee_pct;
+      }
+    }
+
+    // Apply card fee surcharge
+    let chargeAmountCents = amount_cents;
+    let cardFeeCents = 0;
+    if (cardFeePct > 0) {
+      cardFeeCents = Math.round(amount_cents * cardFeePct / 100);
+      chargeAmountCents = amount_cents + cardFeeCents;
+    }
+
+    if (chargeAmountCents < 50) {
       return new Response(JSON.stringify({ error: "Amount too low (min 50 cents)" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const netAmount = Math.max(50, amount_cents - (wallet_credit_cents || 0));
+    const netAmount = Math.max(50, chargeAmountCents - (wallet_credit_cents || 0));
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
@@ -126,8 +164,10 @@ Deno.serve(async (req) => {
         original_amount_cents: String(amount_cents + (discount_cents || 0)),
         promo_code: promo_code || "",
         discount_cents: String(discount_cents || 0),
+        card_fee_pct: String(cardFeePct),
+        card_fee_cents: String(cardFeeCents),
       },
-      description: `ZIVO Ride - ${ride_type || "economy"}${promo_code ? ` (promo: ${promo_code})` : ""}`,
+      description: `ZIVO Ride - ${ride_type || "economy"}${promo_code ? ` (promo: ${promo_code})` : ""}${cardFeePct > 0 ? ` (+${cardFeePct}% card fee)` : ""}`,
     };
 
     // If saved payment method provided, auto-confirm off-session
@@ -153,7 +193,7 @@ Deno.serve(async (req) => {
       .eq("id", ride_request_id)
       .eq("user_id", userId);
 
-    console.log(`[ride-payment] Created PI ${paymentIntent.id} for ride ${ride_request_id} ($${(netAmount / 100).toFixed(2)}) status=${paymentIntent.status}`);
+    console.log(`[ride-payment] Created PI ${paymentIntent.id} for ride ${ride_request_id} ($${(netAmount / 100).toFixed(2)}) status=${paymentIntent.status} cardFee=${cardFeePct}%`);
 
     return new Response(JSON.stringify({
       ok: true,
@@ -161,6 +201,8 @@ Deno.serve(async (req) => {
       payment_intent_id: paymentIntent.id,
       customer_id: customerId,
       amount_cents: netAmount,
+      card_fee_pct: cardFeePct,
+      card_fee_cents: cardFeeCents,
       status: paymentIntent.status,
       auto_confirmed: !!payment_method_id,
     }), {
