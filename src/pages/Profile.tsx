@@ -169,6 +169,17 @@ const Profile = () => {
               <p className="text-muted-foreground text-xs">{t("profile.subtitle")}</p>
             </div>
           </div>
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/admin/analytics")}
+              className="gap-2"
+            >
+              <Shield className="h-4 w-4" />
+              Admin Dashboard
+            </Button>
+          )}
         </div>
 
         {/* Language / Translation Selector — single dropdown button */}
