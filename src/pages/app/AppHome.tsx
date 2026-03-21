@@ -472,17 +472,6 @@ const AppHome = () => {
           <div>
             <SectionHeader icon={TrendingUp} iconColor="text-emerald-500" title={t("home.popular_near")} badge="Hot" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/eats")} />
 
-            {/* Popular Restaurants */}
-            {recommended.length > 0 && (
-              <div className="mb-6">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.restaurants")}</p>
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                  {recommended.slice(0, 5).map((r) => (
-                    <RestaurantCard key={r.id} restaurant={r} onNavigate={() => navigate(`/eats/restaurant/${r.id}`)} />
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Popular Destinations */}
             <div className="mb-6">
