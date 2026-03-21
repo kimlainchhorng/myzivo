@@ -1,7 +1,7 @@
 /**
  * Flight Pricing Utility
- * Base fare = Duffel price + card processing (3.5%) + ZIVO booking fee
- * Then state/county tax is applied on top
+ * Base fare = Duffel API price (includes airline taxes)
+ * Taxes, Fees & Charges = card processing (3.5%) + ZIVO booking fee
  */
 
 // US average sales tax rates by state (simplified — top-level state rates)
@@ -102,10 +102,7 @@ function calculateZivoBookingFee(duffelPrice: number): number {
 export function getAllInPrice(duffelPrice: number): number {
   const cardFee = duffelPrice * CARD_PROCESSING_RATE;
   const bookingFee = duffelPrice < ZIVO_FEE_THRESHOLD ? ZIVO_FEE_FLAT : duffelPrice * ZIVO_FEE_PERCENT;
-  const baseFareWithFees = duffelPrice + cardFee + bookingFee;
-  const taxInfo = getStateTaxInfo();
-  const stateTax = baseFareWithFees * taxInfo.rate;
-  return parseFloat((baseFareWithFees + stateTax).toFixed(2));
+  return parseFloat((duffelPrice + cardFee + bookingFee).toFixed(2));
 }
 
 export function calculateFlightPricing(
@@ -114,20 +111,15 @@ export function calculateFlightPricing(
   currency: string = "USD",
   stateCode?: string,
 ): FlightPricingBreakdown {
-  // Base fare = raw Duffel price
+  // Base fare = raw Duffel price (includes airline taxes)
   const baseFare = parseFloat(duffelPrice.toFixed(2));
 
-  // Fees
+  // Fees: card processing + ZIVO booking fee
   const cardFee = parseFloat((duffelPrice * CARD_PROCESSING_RATE).toFixed(2));
   const bookingFee = calculateZivoBookingFee(duffelPrice);
 
-  // State tax on the total (duffel + fees)
-  const taxInfo = getStateTaxInfo(stateCode);
-  const taxableAmount = duffelPrice + cardFee + bookingFee;
-  const stateTax = parseFloat((taxableAmount * taxInfo.rate).toFixed(2));
-
-  // Combined line: taxes + card fee + booking fee
-  const taxesFeesCharges = parseFloat((stateTax + cardFee + bookingFee).toFixed(2));
+  // No separate state tax — Duffel price already includes airline taxes
+  const taxesFeesCharges = parseFloat((cardFee + bookingFee).toFixed(2));
 
   const totalPerPassenger = parseFloat((baseFare + taxesFeesCharges).toFixed(2));
   const totalAllPassengers = parseFloat((totalPerPassenger * passengers).toFixed(2));
@@ -135,9 +127,9 @@ export function calculateFlightPricing(
   return {
     baseFare,
     taxesFeesCharges,
-    stateTax,
-    stateTaxRate: taxInfo.rate,
-    stateTaxLabel: taxInfo.label,
+    stateTax: 0,
+    stateTaxRate: 0,
+    stateTaxLabel: "",
     cardFee,
     bookingFee,
     totalPerPassenger,
