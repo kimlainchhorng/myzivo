@@ -764,6 +764,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     (viewStep === "driver-assigned" || viewStep === "driver-en-route" || viewStep === "trip-in-progress") ? assignedDriver.id || null : null
   );
 
+  // Broadcast customer's live GPS to driver during active ride
+  const isRideLive = ["searching", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep);
+  useCustomerLocationBroadcast({
+    tripId: isRideLive ? activeJobId : null,
+    enabled: isRideLive && Boolean(activeJobId),
+  });
+
   // Sync live driver location to driverCoords
   useEffect(() => {
     if (liveDriverLocation) {
