@@ -131,27 +131,27 @@ function formatFarePrice(amount: number, currency: string = "USD"): string {
 /* ── Helpers ────────────────────────────────────────── */
 function getCarryOnLabel(v: FareVariant): string {
   const b = v.baggageDetails;
-  if (!b.carryOnIncluded) return "No carry-on bag";
-  const qty = b.carryOnQuantity > 0 ? `${b.carryOnQuantity} carry-on bag${b.carryOnQuantity > 1 ? "s" : ""}` : "Carry-on bag";
+  if (!b.carryOnIncluded) return "Not included";
+  const qty = b.carryOnQuantity > 0 ? `${b.carryOnQuantity} carry-on bag${b.carryOnQuantity > 1 ? "s" : ""}` : "1 carry-on bag";
   const w = b.carryOnWeightKg ? ` · ${b.carryOnWeightKg}kg` : b.carryOnWeightLb ? ` · ${b.carryOnWeightLb}lb` : "";
   return `${qty}${w}`;
 }
 function getCheckedBagLabel(v: FareVariant): string {
   const b = v.baggageDetails;
-  if (!b.checkedBagsIncluded) return "No checked bag";
-  const qty = b.checkedBagQuantity > 0 ? `${b.checkedBagQuantity} checked bag${b.checkedBagQuantity > 1 ? "s" : ""}` : "Checked bag";
+  if (!b.checkedBagsIncluded) return "Not included";
+  const qty = b.checkedBagQuantity > 0 ? `${b.checkedBagQuantity} checked bag${b.checkedBagQuantity > 1 ? "s" : ""}` : "1 checked bag";
   const w = b.checkedBagWeightKg ? ` · ${b.checkedBagWeightKg}kg` : b.checkedBagWeightLb ? ` · ${b.checkedBagWeightLb}lb` : "";
   return `${qty}${w}`;
 }
 function getChangeLabel(v: FareVariant): string {
   const c = v.conditions;
-  if (!c.changeable) return "Not changeable";
-  if (!c.changePenalty || c.changePenalty === 0) return "Changeable";
+  if (!c.changeable) return "No changes allowed";
+  if (!c.changePenalty || c.changePenalty === 0) return "Changes allowed";
   return `Change fee ${c.penaltyCurrency} ${c.changePenalty}`;
 }
 function getRefundLabel(v: FareVariant): string {
   const c = v.conditions;
-  if (!c.refundable) return "Not refundable";
+  if (!c.refundable) return "Non-refundable";
   if (!c.refundPenalty || c.refundPenalty === 0) return "Refundable";
   return `Refund fee ${c.penaltyCurrency} ${c.refundPenalty}`;
 }
