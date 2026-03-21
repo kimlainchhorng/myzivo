@@ -202,6 +202,8 @@ const AppHome = () => {
   const { points, getNextTierProgress } = useLoyaltyPoints();
   const { active: activeRewards } = useUserRewards();
   const { referralCode, shareReferral } = useReferrals();
+  const destKeys = isKH ? cambodiaDestinations.map(d => d.key) : [...popularDestKeysUS];
+  const { data: destPrices = {}, isLoading: destPricesLoading } = useDestinationPrices(destKeys, isKH);
   const { data: allBookings = [] } = useScheduledBookingsQuery();
   const upcomingBookings = allBookings.filter((b) => {
     if (b.status !== "scheduled" && b.status !== "confirmed") return false;
@@ -468,7 +470,11 @@ const AppHome = () => {
                         <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
                         <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
                           <Plane className="w-2.5 h-2.5" />
-                          {t("home.from")} {dest.price}
+                          {destPrices[dest.key] != null
+                            ? `${t("home.from")} $${Math.round(destPrices[dest.key]!)}`
+                            : destPricesLoading
+                              ? "..."
+                              : t("home.search_flights")}
                         </div>
                       </div>
                     </div>
@@ -494,7 +500,11 @@ const AppHome = () => {
                           <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
                           <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
                             <Plane className="w-2.5 h-2.5" />
-                            {t("home.from")} {popularDestPricesUS[key]}
+                            {destPrices[key] != null
+                              ? `${t("home.from")} $${Math.round(destPrices[key]!)}`
+                              : destPricesLoading
+                                ? "..."
+                                : t("home.search_flights")}
                           </div>
                         </div>
                       </div>
