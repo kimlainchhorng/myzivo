@@ -237,9 +237,9 @@ export default function AdminPricingPage() {
             <div className="flex items-center justify-center py-16">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : !rows?.length ? (
+          ) : !filteredRows?.length ? (
             <div className="text-center py-16 text-muted-foreground text-sm">
-              No pricing rules configured yet. Add your first one above.
+              {rows?.length ? `No pricing rules for ${activeFilter.label}.` : "No pricing rules configured yet. Add your first one above."}
             </div>
           ) : (
             <Table>
