@@ -243,7 +243,13 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
   );
 
   const cheapestPrice = useMemo(
-    () => (filteredVariants.length ? Math.min(...filteredVariants.map((v) => v.price)) : 0),
+    () => {
+      if (!filteredVariants.length) return 0;
+      return Math.min(...filteredVariants.map((v) => {
+        const p = calculateFlightPricing(v.price, 1, v.currency);
+        return p.totalPerPassenger;
+      }));
+    },
     [filteredVariants]
   );
 
