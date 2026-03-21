@@ -84,6 +84,14 @@ import destDenver from "@/assets/dest-denver.jpg";
 import destSeattle from "@/assets/dest-seattle.jpg";
 import destBoston from "@/assets/dest-boston.jpg";
 import destSanJuan from "@/assets/dest-san-juan.jpg";
+import destTampa from "@/assets/dest-tampa.jpg";
+import destCharlotte from "@/assets/dest-charlotte.jpg";
+import destMinneapolis from "@/assets/dest-minneapolis.jpg";
+import destPortland from "@/assets/dest-portland.jpg";
+import destAustin from "@/assets/dest-austin.jpg";
+import destFortLauderdale from "@/assets/dest-fortlauderdale.jpg";
+import destNewOrleans from "@/assets/dest-neworleans.jpg";
+import destWashington from "@/assets/dest-washington.jpg";
 
 // Import lifestyle assets
 import lifestyleTravelers from "@/assets/lifestyle-travelers.jpg";
@@ -193,7 +201,7 @@ import cabinFirst from "@/assets/cabin-first.jpg";
 // ============================================
 export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "move" | "extras";
 export type CarCategory = "economy" | "compact" | "midsize" | "suv" | "luxury" | "van" | "electric";
-export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam" | "honolulu" | "nashville" | "denver" | "seattle" | "boston" | "san-juan";
+export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam" | "honolulu" | "nashville" | "denver" | "seattle" | "boston" | "san-juan" | "tampa" | "charlotte" | "minneapolis" | "portland" | "austin" | "fort-lauderdale" | "new-orleans" | "washington";
 
 // ============================================
 // PREMIUM 2026 HERO PHOTOS (Minimalist Luxury)
