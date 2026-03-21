@@ -18,7 +18,7 @@ import FlightPriceBreakdown from "@/components/flight/FlightPriceBreakdown";
 import AcceptedPaymentMethods from "@/components/checkout/AcceptedPaymentMethods";
 import { CheckoutTermsAcceptance, useTermsValidation } from "@/components/checkout/CheckoutTermsAcceptance";
 import CheckoutTrustFooter from "@/components/checkout/CheckoutTrustFooter";
-import ImportantBookingNotice from "@/components/checkout/ImportantBookingNotice";
+
 import FlightInlinePaymentForm from "@/components/flight/FlightInlinePaymentForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
