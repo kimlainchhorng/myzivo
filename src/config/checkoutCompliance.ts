@@ -79,7 +79,7 @@ export const CHECKOUT_FOOTER = {
   help: "Need help?",
   contact: "Contact ZIVO support for assistance with your booking.",
   trust: ["Secure payments", "PCI compliant", "24/7 support"],
-  final: "ZIVO is an online travel agency. All travel services are fulfilled by ZIVO or its authorized suppliers.",
+  final: "ZIVO LLC is a registered Seller of Travel. All travel services are fulfilled by ZIVO or its authorized suppliers. Prices include taxes and fees. Airline fare rules and conditions of carriage apply.",
   supportEmail: "support@hizovo.com",
 };
 
