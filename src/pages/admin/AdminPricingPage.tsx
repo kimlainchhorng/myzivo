@@ -1,7 +1,7 @@
 /**
  * Admin Pricing Page — Manage ride pricing (city_pricing table)
  */
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -59,7 +59,8 @@ export default function AdminPricingPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(defaultForm);
-  const [countryFilter, setCountryFilter] = useState(0); // index into COUNTRY_FILTERS
+  const [countryFilter, setCountryFilter] = useState(0);
+  const [cityFilter, setCityFilter] = useState<string | null>(null); // null = All cities
   const { data: rows, isLoading } = useQuery({
     queryKey: ["admin-city-pricing"],
     queryFn: async () => {
@@ -135,11 +136,26 @@ export default function AdminPricingPage() {
   }
 
   const activeFilter = COUNTRY_FILTERS[countryFilter];
-  const filteredRows = rows?.filter((r) => {
+  
+  // Get rows matching the country filter
+  const countryRows = useMemo(() => rows?.filter((r) => {
     if (activeFilter.cities === "all") return true;
     const city = (r.city || "default").toLowerCase();
     return activeFilter.cities.some((c) => c.toLowerCase() === city);
-  });
+  }), [rows, activeFilter]);
+
+  // Extract unique cities from country-filtered rows for sub-filter
+  const availableCities = useMemo(() => {
+    if (!countryRows || activeFilter.cities === "all") return [];
+    const citySet = new Set(countryRows.map((r) => r.city || "default"));
+    return Array.from(citySet).sort();
+  }, [countryRows, activeFilter]);
+
+  // Apply city sub-filter
+  const filteredRows = useMemo(() => {
+    if (!cityFilter) return countryRows;
+    return countryRows?.filter((r) => (r.city || "default") === cityFilter);
+  }, [countryRows, cityFilter]);
 
   return (
     <AdminLayout title="Pricing Management">
@@ -219,7 +235,7 @@ export default function AdminPricingPage() {
               key={cf.label}
               variant={countryFilter === i ? "default" : "outline"}
               size="sm"
-              onClick={() => setCountryFilter(i)}
+              onClick={() => { setCountryFilter(i); setCityFilter(null); }}
               className="gap-1.5"
             >
               <span>{cf.flag}</span> {cf.label}
@@ -231,6 +247,31 @@ export default function AdminPricingPage() {
             </Button>
           ))}
         </div>
+
+        {/* City sub-filter (only for specific country) */}
+        {availableCities.length > 1 && (
+          <div className="flex flex-wrap gap-1.5">
+            <Button
+              variant={cityFilter === null ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setCityFilter(null)}
+            >
+              All Cities ({countryRows?.length})
+            </Button>
+            {availableCities.map((city) => (
+              <Button
+                key={city}
+                variant={cityFilter === city ? "secondary" : "ghost"}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setCityFilter(city)}
+              >
+                {city} ({countryRows?.filter((r) => (r.city || "default") === city).length})
+              </Button>
+            ))}
+          </div>
+        )}
 
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           {isLoading ? (
