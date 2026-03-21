@@ -29,6 +29,9 @@ const DB_TO_VEHICLE_ID: Record<string, string> = {
   pet: "pet",
   wheelchair: "wheelchair",
   tuktuk: "tuktuk",
+  tuktuk_ev: "tuktuk-ev",
+  moto: "moto",
+  share_xl: "share-xl",
 };
 
 export function useCityPricing(city?: string) {
