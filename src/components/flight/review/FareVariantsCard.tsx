@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
+import { calculateFlightPricing } from "@/utils/flightPricing";
 
 import cabinEconomy from "@/assets/cabin-economy.jpg";
 import cabinPremiumEconomy from "@/assets/cabin-premium-economy.jpg";
@@ -570,6 +571,14 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
                         )}
                       </div>
                     </div>
+                    {(() => {
+                      const pricing = calculateFlightPricing(totalPrice, 1, variant.currency);
+                      return (
+                        <p className="mt-1.5 text-[10px] font-medium text-muted-foreground tabular-nums">
+                          +{formatFarePrice(pricing.taxesFeesCharges, variant.currency)} Taxes, Fees &amp; Charges
+                        </p>
+                      );
+                    })()}
                     <p className="mt-1 text-[9px] text-muted-foreground/70 tabular-nums">
                       {priceDelta > 0
                         ? `${formatFarePrice(priceDelta, variant.currency)} more than lowest fare`
