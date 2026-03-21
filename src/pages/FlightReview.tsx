@@ -129,7 +129,7 @@ function buildFareVariantsFromOffers(offers: DuffelOffer[]) {
       ? offer.fareVariants
       : [{
           id: offer.id,
-          fareBrandName: offer.fareBrandName,
+          fareBrandName: offer.fareBrandName || offer.cabinClass,
           price: offer.price,
           pricePerPerson: offer.pricePerPerson,
           currency: offer.currency,
@@ -210,7 +210,7 @@ function mergeFareVariants(
 function buildFallbackFareVariant(offer: DuffelOffer): NonNullable<DuffelOffer["fareVariants"]>[number] {
   return {
     id: offer.id,
-    fareBrandName: offer.fareBrandName,
+    fareBrandName: offer.fareBrandName || offer.cabinClass,
     price: offer.price,
     pricePerPerson: offer.pricePerPerson || offer.price,
     currency: offer.currency,
