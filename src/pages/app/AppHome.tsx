@@ -133,8 +133,12 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
 // ─── Trending Rides (static) ───
 // trendingRides built inside component for translation
 
-// ─── Popular Destinations (subset) ───
-const popularDestKeysUS = ["miami", "las-vegas", "new-york", "cancun", "los-angeles"] as const;
+// ─── Popular Destinations (expanded with real photos) ───
+const popularDestKeysUS = [
+  "miami", "las-vegas", "new-york", "cancun", "los-angeles",
+  "orlando", "san-francisco", "chicago", "barcelona", "paris",
+  "san-diego", "dallas", "atlanta", "phoenix"
+] as const;
 
 // Cambodia destinations
 const cambodiaDestinations = [

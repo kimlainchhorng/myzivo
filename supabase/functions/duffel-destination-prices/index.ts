@@ -20,12 +20,21 @@ const DESTINATION_CODES: Record<string, string> = {
   'new-york': 'JFK',
   cancun: 'CUN',
   'los-angeles': 'LAX',
+  orlando: 'MCO',
+  'san-francisco': 'SFO',
+  chicago: 'ORD',
+  barcelona: 'BCN',
+  paris: 'CDG',
+  'san-diego': 'SAN',
+  dallas: 'DFW',
+  atlanta: 'ATL',
+  phoenix: 'PHX',
   // Cambodia destinations
   'siem-reap': 'REP',
   sihanoukville: 'KOS',
-  kampot: 'PNH', // No airport in Kampot, use PNH
-  battambang: 'PNH', // No airport, use PNH
-  kep: 'PNH', // No airport, use PNH
+  kampot: 'PNH',
+  battambang: 'PNH',
+  kep: 'PNH',
 };
 
 async function fetchLowestFare(
