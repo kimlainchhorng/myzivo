@@ -151,19 +151,6 @@ const cambodiaDestinations = [
   { key: "kep", city: "Kep", price: "៛25,000", src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=400", alt: "Kep Beach" },
 ];
 
-// Cambodia nearby attractions
-const cambodiaAttractions = [
-  { name: "វត្តភ្នំ", nameEn: "Wat Phnom", distance: "0.8 km", rating: 4.7, type: "វត្តអារាម" },
-  { name: "ផ្សារកណ្តាល", nameEn: "Central Market", distance: "1.2 km", rating: 4.6, type: "ផ្សារ" },
-  { name: "វាំងភ្នំពេញ", nameEn: "Royal Palace", distance: "1.5 km", rating: 4.9, type: "ប្រវត្តិសាស្ត្រ" },
-];
-
-// US nearby attractions
-const usAttractions = [
-  { name: "Central Park", distance: "0.5 mi", rating: 4.8, type: "Park" },
-  { name: "Museum of Art", distance: "1.2 mi", rating: 4.9, type: "Museum" },
-  { name: "Broadway District", distance: "0.8 mi", rating: 4.7, type: "Entertainment" },
-];
 
 // ─── Recently viewed type config ───
 
@@ -183,15 +170,6 @@ const AppHome = () => {
     ...(!isKH ? [{ title: "Become a ZIVO Driver", subtitle: "", gradient: "from-sky-500 to-blue-600", icon: Car, cta: "Join ZIVO Today", isDriverPromo: true as const }] : []),
   ];
 
-  const trendingRides = isKH ? [
-    { name: t("home.airport_transfer"), eta: "~១៥ នាទី", price: "៛89,000-៛142,000", icon: Plane, popular: true },
-    { name: t("home.downtown"), eta: "~៨ នាទី", price: "៛49,000-៛73,000", icon: Navigation, popular: false },
-    { name: t("home.beach"), eta: "~២០ នាទី", price: "៛73,000-៛114,000", icon: TrendingUp, popular: false },
-  ] : [
-    { name: t("home.airport_transfer"), eta: "~15 min", price: "$22-35", icon: Plane, popular: true },
-    { name: t("home.downtown"), eta: "~8 min", price: "$12-18", icon: Navigation, popular: false },
-    { name: t("home.beach"), eta: "~20 min", price: "$18-28", icon: TrendingUp, popular: false },
-  ];
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeHomeTab, setActiveHomeTab] = useState<"rides" | "eats" | "flights" | "hotels">("rides");
 
