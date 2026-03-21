@@ -311,11 +311,11 @@ export default function AdminPricingPage() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
+                 <TableRow>
                   <TableHead>City</TableHead>
                   <TableHead>Ride Type</TableHead>
                   <TableHead className="text-right">Base</TableHead>
-                  <TableHead className="text-right">/Mile</TableHead>
+                  <TableHead className="text-right">/{isCambodia ? "Km" : "Mile"}</TableHead>
                   <TableHead className="text-right">/Min</TableHead>
                   <TableHead className="text-right">Booking</TableHead>
                   <TableHead className="text-right">Min Fare</TableHead>
@@ -324,15 +324,17 @@ export default function AdminPricingPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRows.map((row) => (
+                {filteredRows.map((row) => {
+                  const sym = isCambodia ? "៛" : "$";
+                  return (
                   <TableRow key={row.id}>
                     <TableCell className="font-medium">{row.city || "default"}</TableCell>
                     <TableCell>{row.ride_type}</TableCell>
-                    <TableCell className="text-right">${(row.base_fare ?? 0).toFixed(2)}</TableCell>
-                    <TableCell className="text-right">${(row.per_mile ?? 0).toFixed(2)}</TableCell>
-                    <TableCell className="text-right">${(row.per_minute ?? 0).toFixed(2)}</TableCell>
-                    <TableCell className="text-right">${(row.booking_fee ?? 0).toFixed(2)}</TableCell>
-                    <TableCell className="text-right">${(row.minimum_fare ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{sym}{(row.base_fare ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{sym}{(row.per_mile ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{sym}{(row.per_minute ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{sym}{(row.booking_fee ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{sym}{(row.minimum_fare ?? 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <span className={row.is_active ? "text-green-500 text-xs font-medium" : "text-muted-foreground text-xs"}>
                         {row.is_active ? "Yes" : "No"}
