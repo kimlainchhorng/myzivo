@@ -364,7 +364,14 @@ const FlightReview = () => {
   const [storedOffer, setStoredOffer] = useState<DuffelOffer | null>(() => {
     try {
       const raw = sessionStorage.getItem("zivo_selected_offer");
-      return raw ? JSON.parse(raw) : null;
+      const snapshotRaw = sessionStorage.getItem("zivo_selected_offer_snapshot");
+      const parsed = raw ? JSON.parse(raw) : null;
+      const snapshot = snapshotRaw ? JSON.parse(snapshotRaw) : null;
+      return parsed?.fareVariants || !snapshot?.fareVariants
+        ? parsed
+        : parsed
+          ? { ...parsed, fareVariants: snapshot.fareVariants }
+          : snapshot;
     } catch { return null; }
   });
 
@@ -372,8 +379,15 @@ const FlightReview = () => {
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("zivo_selected_offer");
+      const snapshotRaw = sessionStorage.getItem("zivo_selected_offer_snapshot");
       const parsed = raw ? JSON.parse(raw) : null;
-      setStoredOffer(parsed);
+      const snapshot = snapshotRaw ? JSON.parse(snapshotRaw) : null;
+      const merged = parsed?.fareVariants || !snapshot?.fareVariants
+        ? parsed
+        : parsed
+          ? { ...parsed, fareVariants: snapshot.fareVariants }
+          : snapshot;
+      setStoredOffer(merged);
     } catch { /* ignore */ }
   }, []);
 
@@ -393,25 +407,23 @@ const FlightReview = () => {
 
   const { data: liveOffer, isError: liveOfferError } = useDuffelOffer(storedOffer?.id ?? null);
   const offer = useMemo(() => {
-    // If live offer fetch failed or returned null (expired), fall back to stored offer
     if (!liveOffer && !storedOffer) return null;
     const base = liveOffer ?? storedOffer;
     if (!base) return null;
-    if (liveOffer && storedOffer?.fareVariants && !liveOffer.fareVariants) {
-      return { ...liveOffer, fareVariants: storedOffer.fareVariants };
+    if (storedOffer?.fareVariants && !base.fareVariants) {
+      return { ...base, fareVariants: storedOffer.fareVariants };
     }
     return base;
   }, [liveOffer, storedOffer]);
 
   useEffect(() => {
-    if (liveOffer && storedOffer) {
-      // Preserve fareVariants when saving back
-      const toSave = storedOffer.fareVariants && !liveOffer.fareVariants
-        ? { ...liveOffer, fareVariants: storedOffer.fareVariants }
-        : liveOffer;
-      sessionStorage.setItem("zivo_selected_offer", JSON.stringify(toSave));
+    if (offer) {
+      sessionStorage.setItem("zivo_selected_offer", JSON.stringify(offer));
+      if (offer.fareVariants?.length) {
+        sessionStorage.setItem("zivo_selected_offer_snapshot", JSON.stringify(offer));
+      }
     }
-  }, [liveOffer, storedOffer]);
+  }, [offer]);
 
   const totalPassengers = (searchParams.adults || 1) + (searchParams.children || 0) + (searchParams.infants || 0);
   const segments = offer?.segments || [];

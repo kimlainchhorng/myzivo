@@ -127,11 +127,20 @@ const FlightTravelerInfo = () => {
   const isMobile = useIsMobile();
 
   const offerRaw = sessionStorage.getItem("zivo_selected_offer");
+  const snapshotRaw = sessionStorage.getItem("zivo_selected_offer_snapshot");
   const searchRaw = sessionStorage.getItem("zivo_search_params");
-  const storedOffer: DuffelOffer | null = offerRaw ? JSON.parse(offerRaw) : null;
+  const storedOfferBase: DuffelOffer | null = offerRaw ? JSON.parse(offerRaw) : null;
+  const snapshotOffer: DuffelOffer | null = snapshotRaw ? JSON.parse(snapshotRaw) : null;
+  const storedOffer: DuffelOffer | null = storedOfferBase?.fareVariants || !snapshotOffer?.fareVariants
+    ? storedOfferBase
+    : storedOfferBase
+      ? { ...storedOfferBase, fareVariants: snapshotOffer.fareVariants }
+      : snapshotOffer;
   const search = searchRaw ? JSON.parse(searchRaw) : null;
   const { data: liveOffer } = useDuffelOffer(storedOffer?.id ?? null);
-  const offer = liveOffer ?? storedOffer;
+  const offer = liveOffer && storedOffer?.fareVariants && !liveOffer.fareVariants
+    ? { ...liveOffer, fareVariants: storedOffer.fareVariants }
+    : (liveOffer ?? storedOffer);
 
   const totalPassengers = search ? (search.adults || 1) + (search.children || 0) + (search.infants || 0) : 1;
 
@@ -157,14 +166,13 @@ const FlightTravelerInfo = () => {
   const [showBreakdown, setShowBreakdown] = useState(false);
 
   useEffect(() => {
-    if (liveOffer) {
-      // Preserve fareVariants from storedOffer when liveOffer doesn't include them
-      const toSave = storedOffer?.fareVariants && !liveOffer.fareVariants
-        ? { ...liveOffer, fareVariants: storedOffer.fareVariants }
-        : liveOffer;
-      sessionStorage.setItem("zivo_selected_offer", JSON.stringify(toSave));
+    if (offer) {
+      sessionStorage.setItem("zivo_selected_offer", JSON.stringify(offer));
+      if (offer.fareVariants?.length) {
+        sessionStorage.setItem("zivo_selected_offer_snapshot", JSON.stringify(offer));
+      }
     }
-  }, [liveOffer, storedOffer]);
+  }, [offer]);
 
   useEffect(() => {
     if (!offer) navigate("/flights", { replace: true });

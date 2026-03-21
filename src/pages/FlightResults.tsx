@@ -154,6 +154,7 @@ const FlightResults = () => {
   const handleSelectReturn = (group: LegGroup) => {
     const bestOffer = group.representativeOffer;
     sessionStorage.setItem("zivo_selected_offer", JSON.stringify(bestOffer));
+    sessionStorage.setItem("zivo_selected_offer_snapshot", JSON.stringify(bestOffer));
     sessionStorage.setItem("zivo_search_params", JSON.stringify({
       origin, destination, departureDate, returnDate, adults, children, infants, cabinClass,
     }));
@@ -307,6 +308,7 @@ const FlightResults = () => {
 
   const handleSelect = (offer: DuffelOffer) => {
     sessionStorage.setItem("zivo_selected_offer", JSON.stringify(offer));
+    sessionStorage.setItem("zivo_selected_offer_snapshot", JSON.stringify(offer));
     sessionStorage.setItem("zivo_search_params", JSON.stringify({
       origin, destination, departureDate, returnDate, adults, children, infants, cabinClass,
     }));
