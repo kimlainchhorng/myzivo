@@ -218,7 +218,7 @@ function FloatingIcon3D({ icon: Icon, className, glow, size = "md" }: {
 /* ── Main Component ─────────────────────────────────── */
 export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardProps) {
   const variants = offer.fareVariants;
-  const [selectedId, setSelectedId] = useState<string>(offer.id);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [cabinFilter, setCabinFilter] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -246,7 +246,14 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
     [filteredVariants]
   );
 
-  useEffect(() => { setSelectedId(offer.id); }, [offer.id]);
+  // Auto-select cheapest variant on mount or when offer changes
+  useEffect(() => {
+    if (!variants || variants.length === 0) return;
+    const sorted = [...variants].sort((a, b) => a.price - b.price);
+    const cheapest = sorted[0];
+    setSelectedId(cheapest.id);
+    onSelectVariant(cheapest);
+  }, [offer.id]);
 
   useEffect(() => {
     const node = scrollerRef.current;
@@ -366,6 +373,8 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
           const theme = getTheme(variant.cabinClass);
           const CabinIcon = theme.icon;
 
+          const isLowest = Math.abs(totalPrice - cheapestPrice) < 0.01;
+
           return (
             <motion.div
               key={variant.id}
@@ -384,6 +393,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                 )}
                 onClick={() => handleSelect(variant)}
                 style={{
+                  opacity: isSelected ? 1 : 0.75,
                   boxShadow: isSelected
                     ? `0 24px 48px -16px ${theme.glow},
                        0 12px 20px -8px hsl(var(--foreground)/0.05),
@@ -555,32 +565,35 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                       >
                         {formatFarePrice(totalPrice, variant.currency)}
                       </motion.p>
-                      {priceDelta > 0 ? (
-                        <span
-                          className="mb-1 rounded-xl border border-border/15 px-2.5 py-1 text-[9px] font-bold text-muted-foreground tabular-nums"
-                          style={{
-                            background: "linear-gradient(135deg, hsl(var(--muted)/0.3), transparent)",
-                            boxShadow: "0 2px 6px -3px hsl(var(--foreground)/0.06)",
-                          }}
-                        >
-                          +{formatFarePrice(priceDelta, variant.currency)}
-                        </span>
-                      ) : (
-                        <span
-                          className="mb-1 rounded-xl border border-[hsl(var(--flights))]/15 px-2.5 py-1 text-[9px] font-bold text-[hsl(var(--flights))]"
-                          style={{
-                            background: "linear-gradient(135deg, hsl(var(--flights)/0.08), transparent)",
-                            boxShadow: "0 3px 10px -4px hsl(var(--flights)/0.2)",
-                          }}
-                        >
-                          Lowest fare
-                        </span>
-                      )}
+                      <div className="flex flex-col items-end gap-1 mb-1">
+                        {isLowest && (
+                          <span
+                            className="rounded-xl border border-[hsl(var(--flights))]/15 px-2.5 py-1 text-[9px] font-bold text-[hsl(var(--flights))]"
+                            style={{
+                              background: "linear-gradient(135deg, hsl(var(--flights)/0.08), transparent)",
+                              boxShadow: "0 3px 10px -4px hsl(var(--flights)/0.2)",
+                            }}
+                          >
+                            Lowest fare
+                          </span>
+                        )}
+                        {priceDelta > 0 && (
+                          <span
+                            className="rounded-xl border border-border/15 px-2.5 py-1 text-[9px] font-bold text-muted-foreground tabular-nums"
+                            style={{
+                              background: "linear-gradient(135deg, hsl(var(--muted)/0.3), transparent)",
+                              boxShadow: "0 2px 6px -3px hsl(var(--foreground)/0.06)",
+                            }}
+                          >
+                            +{formatFarePrice(priceDelta, variant.currency)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <p className="mt-1 text-[9px] text-muted-foreground/70 tabular-nums">
                       {priceDelta > 0
-                        ? `${formatFarePrice(priceDelta, variant.currency)} more than the lowest Duffel fare`
-                        : "This is the lowest Duffel fare for this flight"}
+                        ? `${formatFarePrice(priceDelta, variant.currency)} more than lowest fare`
+                        : "Lowest available fare for this flight"}
                     </p>
                   </div>
                 </div>
