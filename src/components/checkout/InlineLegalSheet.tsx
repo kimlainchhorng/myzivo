@@ -1,11 +1,21 @@
 /**
- * Inline Legal Sheet — opens legal pages in a bottom sheet overlay
- * Uses an iframe to render the actual React page so content loads properly
+ * Inline Legal Sheet — renders legal page content in a bottom sheet
+ * Uses lazy-loaded React components (not iframes) so content renders properly
  */
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { X, Loader2 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+// Lazy load legal page components
+const legalPages: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
+  "/terms": lazy(() => import("@/pages/Terms")),
+  "/privacy": lazy(() => import("@/pages/Privacy")),
+  "/partner-disclosure": lazy(() => import("@/pages/legal/PartnerDisclosure")),
+  "/legal/partner-disclosure": lazy(() => import("@/pages/legal/PartnerDisclosure")),
+  "/legal/flight-terms": lazy(() => import("@/pages/legal/FlightTerms")),
+};
 
 interface InlineLegalSheetProps {
   open: boolean;
@@ -15,32 +25,41 @@ interface InlineLegalSheetProps {
 }
 
 export default function InlineLegalSheet({ open, onOpenChange, title, url }: InlineLegalSheetProps) {
-  const [loading, setLoading] = useState(true);
+  const PageComponent = legalPages[url];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0 flex flex-col">
-        <SheetHeader className="px-5 pt-5 pb-3 border-b border-border/30 flex-row items-center justify-between shrink-0">
-          <SheetTitle className="text-base font-bold">{title}</SheetTitle>
-          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-8 w-8">
+      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0 flex flex-col [&>button]:hidden">
+        {/* Custom header — single close button */}
+        <div className="px-5 pt-5 pb-3 border-b border-border/30 flex items-center justify-between shrink-0">
+          <h3 className="text-base font-bold">{title}</h3>
+          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-8 w-8 shrink-0">
             <X className="w-4 h-4" />
           </Button>
-        </SheetHeader>
-        <div className="flex-1 relative overflow-hidden">
-          {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
-              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-            </div>
-          )}
-          {open && (
-            <iframe
-              src={url}
-              className="w-full h-full border-0"
-              onLoad={() => setLoading(false)}
-              title={title}
-            />
-          )}
         </div>
+
+        {/* Content area — renders the actual React component */}
+        <ScrollArea className="flex-1">
+          <div className="legal-sheet-content [&_header]:hidden [&_nav]:hidden [&_footer]:hidden [&_.safe-bottom]:hidden [&>div>div>nav]:hidden [&>div>div>header]:hidden">
+            {PageComponent ? (
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center py-20">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                }
+              >
+                <div className="[&>div]:min-h-0 [&>div>nav]:hidden [&>div>header]:hidden [&>div>footer]:hidden [&>div>div>a]:hidden [&_.pt-24]:pt-4 [&_.pt-20]:pt-4 [&_.py-12]:py-4 [&_.mb-8]:mb-2 [&_.mb-12]:mb-4 [&_.text-4xl]:text-xl [&_.text-5xl]:text-xl [&_.text-3xl]:text-lg [&_.lg\:text-4xl]:text-lg">
+                  <PageComponent />
+                </div>
+              </Suspense>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                <p className="text-sm">Content not available</p>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );
