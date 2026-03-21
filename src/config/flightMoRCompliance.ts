@@ -108,6 +108,9 @@ export const FLIGHT_CHECKOUT_CLARITY = {
   /** Pre-payment message - above Pay button */
   prePayment: "Your payment will be processed securely by ZIVO. After payment, your airline ticket will be issued shortly — usually within a few minutes.",
   
+  /** DOT 24-hour cancellation notice */
+  dot24hr: "You can cancel within 24 hours of booking for a full refund (US DOT regulation, for bookings made 7+ days before departure).",
+
   /** Updated consent checkbox */
   consent: "I understand ZIVO sells flights as a sub-agent and airline rules apply.",
   

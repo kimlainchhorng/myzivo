@@ -5,7 +5,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertTriangle, Lock, Info, Shield } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Lock, Info, Shield, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -274,6 +274,14 @@ const FlightCheckout = () => {
                 <div className="px-4 py-3 bg-[hsl(var(--flights))]/[0.04] border-b border-border/20">
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     {FLIGHT_CHECKOUT_CLARITY.prePayment}
+                  </p>
+                </div>
+
+                {/* DOT 24-hour cancellation notice */}
+                <div className="px-4 py-3 border-b border-border/20 bg-emerald-500/[0.04]">
+                  <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                    <Clock className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-600" />
+                    <span><strong className="text-foreground">24-hour free cancellation</strong> — You can cancel within 24 hours of booking for a full refund (US DOT regulation, for bookings made 7+ days before departure).</span>
                   </p>
                 </div>
 
