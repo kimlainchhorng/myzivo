@@ -1,13 +1,15 @@
 /**
  * DriverMapPage - Full-screen driver map with GPS tracking
  * Syncs online status & location to drivers_status table
+ * Shows customer live location after accepting a ride
  */
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useDriverMapState } from "@/hooks/useDriverMapState";
+import { useCustomerLocation } from "@/hooks/useCustomerLocation";
 import DriverMapHeader from "@/components/driver/DriverMapHeader";
 import DriverBottomNav from "@/components/driver/DriverBottomNav";
 import { motion } from "framer-motion";
-import { MapPin, Navigation, Loader2, Car, Check, X } from "lucide-react";
+import { MapPin, Navigation, Loader2, Car, Check, X, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
