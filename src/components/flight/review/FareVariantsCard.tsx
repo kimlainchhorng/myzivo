@@ -522,9 +522,6 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
 
                   {/* 3D Price section */}
                   <div className="mt-4 pt-3 border-t border-border/10">
-                    <p className="text-[8px] font-bold text-muted-foreground/50 uppercase tracking-[0.1em]">
-                      per person · Duffel fare
-                    </p>
                     <div className="mt-1.5 flex items-end justify-between gap-2">
                       <motion.p
                         key={perPerson}
