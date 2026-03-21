@@ -100,6 +100,10 @@ function formatFareName(
     const strippedCabinPrefix = normalizedName
       .replace(new RegExp(`^${cabinLabel}\\s+`, "i"), "")
       .trim();
+    // If the fare brand is just "Basic", use the cabin label (e.g. "Economy") instead
+    if (strippedCabinPrefix.toLowerCase() === "basic" && cabinLabel.toLowerCase() !== "basic") {
+      return cabinLabel;
+    }
     if (strippedCabinPrefix && strippedCabinPrefix.toLowerCase() !== cabinLabel.toLowerCase()) {
       return strippedCabinPrefix;
     }
