@@ -218,7 +218,7 @@ function FloatingIcon3D({ icon: Icon, className, glow, size = "md" }: {
 /* ── Main Component ─────────────────────────────────── */
 export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardProps) {
   const variants = offer.fareVariants;
-  const [selectedId, setSelectedId] = useState<string>(offer.id);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [cabinFilter, setCabinFilter] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -246,7 +246,14 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
     [filteredVariants]
   );
 
-  useEffect(() => { setSelectedId(offer.id); }, [offer.id]);
+  // Auto-select cheapest variant on mount or when offer changes
+  useEffect(() => {
+    if (!variants || variants.length === 0) return;
+    const sorted = [...variants].sort((a, b) => a.price - b.price);
+    const cheapest = sorted[0];
+    setSelectedId(cheapest.id);
+    onSelectVariant(cheapest);
+  }, [offer.id]);
 
   useEffect(() => {
     const node = scrollerRef.current;
