@@ -34,7 +34,7 @@ export default function FlightPriceBreakdown({
   showNoHiddenFees = false,
 }: FlightPriceBreakdownProps) {
   const {
-    baseFare, stateTax, stateTaxRate, stateTaxLabel,
+    baseFare, taxesFeesCharges,
     totalPerPassenger, totalAllPassengers, passengers, currency,
   } = pricing;
 
@@ -46,8 +46,8 @@ export default function FlightPriceBreakdown({
           <span>{formatPrice(baseFare * passengers, currency)}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Taxes, Fees & Charges ({(stateTaxRate * 100).toFixed(1)}%)</span>
-          <span>{formatPrice(stateTax * passengers, currency)}</span>
+          <span className="text-muted-foreground">Taxes, fees, and charges</span>
+          <span>{formatPrice(taxesFeesCharges * passengers, currency)}</span>
         </div>
         <Separator />
         <div className="flex justify-between font-bold text-lg">
@@ -78,7 +78,7 @@ export default function FlightPriceBreakdown({
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Taxes, fees, and charges</span>
-            <span>{formatPrice(stateTax * passengers, currency)}</span>
+            <span>{formatPrice(taxesFeesCharges * passengers, currency)}</span>
           </div>
         </div>
 
