@@ -3,16 +3,12 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 
 /**
  * AI Smart Deal Finder Edge Function
- * 
- * Uses Duffel API to find real flight deals, then uses Lovable AI
- * to generate smart descriptions, travel tips, and deal ratings.
- * Returns curated, AI-enhanced deals for the customer.
+ * Uses Duffel API for real flight deals + Lovable AI for smart descriptions.
  */
 
 const DUFFEL_API_URL = 'https://api.duffel.com';
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 
-// Cache for 2 hours
 const cache = new Map<string, { data: unknown; expires: number }>();
 const CACHE_TTL = 2 * 60 * 60 * 1000;
 
@@ -32,46 +28,83 @@ interface SmartDeal {
   duration: string;
   aiDescription: string;
   aiTip: string;
-  dealScore: number; // 1-100
+  dealScore: number;
   dealTag: string;
   savingsPercent: number;
   category: 'beach' | 'city' | 'adventure' | 'culture' | 'nightlife' | 'family';
 }
 
-// Extended route list with categories
+// Expanded routes with categories
 const SMART_ROUTES = [
+  // Beach destinations
   { origin: 'JFK', destination: 'MIA', destName: 'Miami', destKey: 'miami', category: 'beach' as const },
   { origin: 'JFK', destination: 'CUN', destName: 'Cancún', destKey: 'cancun', category: 'beach' as const },
   { origin: 'JFK', destination: 'SJU', destName: 'San Juan', destKey: 'san-juan', category: 'beach' as const },
-  { origin: 'LAX', destination: 'LAS', destName: 'Las Vegas', destKey: 'las-vegas', category: 'nightlife' as const },
+  { origin: 'JFK', destination: 'FLL', destName: 'Fort Lauderdale', destKey: 'fort-lauderdale', category: 'beach' as const },
+  { origin: 'JFK', destination: 'TPA', destName: 'Tampa', destKey: 'tampa', category: 'beach' as const },
   { origin: 'LAX', destination: 'HNL', destName: 'Honolulu', destKey: 'honolulu', category: 'beach' as const },
-  { origin: 'ORD', destination: 'MCO', destName: 'Orlando', destKey: 'orlando', category: 'family' as const },
-  { origin: 'ORD', destination: 'DEN', destName: 'Denver', destKey: 'denver', category: 'adventure' as const },
+  { origin: 'ATL', destination: 'FLL', destName: 'Fort Lauderdale', destKey: 'fort-lauderdale', category: 'beach' as const },
   { origin: 'ATL', destination: 'SAN', destName: 'San Diego', destKey: 'san-diego', category: 'beach' as const },
-  { origin: 'DFW', destination: 'SFO', destName: 'San Francisco', destKey: 'san-francisco', category: 'city' as const },
-  { origin: 'DFW', destination: 'BNA', destName: 'Nashville', destKey: 'nashville', category: 'nightlife' as const },
+  { origin: 'BOS', destination: 'MIA', destName: 'Miami', destKey: 'miami', category: 'beach' as const },
+  { origin: 'BOS', destination: 'FLL', destName: 'Fort Lauderdale', destKey: 'fort-lauderdale', category: 'beach' as const },
+  { origin: 'ORD', destination: 'CUN', destName: 'Cancún', destKey: 'cancun', category: 'beach' as const },
+  { origin: 'MIA', destination: 'SJU', destName: 'San Juan', destKey: 'san-juan', category: 'beach' as const },
+  { origin: 'MIA', destination: 'CUN', destName: 'Cancún', destKey: 'cancun', category: 'beach' as const },
+  { origin: 'SEA', destination: 'HNL', destName: 'Honolulu', destKey: 'honolulu', category: 'beach' as const },
   { origin: 'MSY', destination: 'MIA', destName: 'Miami', destKey: 'miami', category: 'beach' as const },
   { origin: 'MSY', destination: 'CUN', destName: 'Cancún', destKey: 'cancun', category: 'beach' as const },
-  { origin: 'MSY', destination: 'LAS', destName: 'Las Vegas', destKey: 'las-vegas', category: 'nightlife' as const },
-  { origin: 'MSY', destination: 'MCO', destName: 'Orlando', destKey: 'orlando', category: 'family' as const },
+  // City destinations
+  { origin: 'DFW', destination: 'SFO', destName: 'San Francisco', destKey: 'san-francisco', category: 'city' as const },
+  { origin: 'SEA', destination: 'LAX', destName: 'Los Angeles', destKey: 'los-angeles', category: 'city' as const },
   { origin: 'MSY', destination: 'ATL', destName: 'Atlanta', destKey: 'atlanta', category: 'city' as const },
   { origin: 'MSY', destination: 'DFW', destName: 'Dallas', destKey: 'dallas', category: 'city' as const },
-  { origin: 'BOS', destination: 'MIA', destName: 'Miami', destKey: 'miami', category: 'beach' as const },
-  { origin: 'SEA', destination: 'LAX', destName: 'Los Angeles', destKey: 'los-angeles', category: 'city' as const },
+  { origin: 'ORD', destination: 'SEA', destName: 'Seattle', destKey: 'seattle', category: 'city' as const },
+  { origin: 'DFW', destination: 'AUS', destName: 'Austin', destKey: 'austin', category: 'city' as const },
+  { origin: 'ATL', destination: 'CLT', destName: 'Charlotte', destKey: 'charlotte', category: 'city' as const },
+  { origin: 'BOS', destination: 'DCA', destName: 'Washington DC', destKey: 'washington', category: 'city' as const },
+  { origin: 'JFK', destination: 'ORD', destName: 'Chicago', destKey: 'chicago', category: 'city' as const },
+  { origin: 'LAX', destination: 'PDX', destName: 'Portland', destKey: 'portland', category: 'city' as const },
+  { origin: 'ORD', destination: 'MSP', destName: 'Minneapolis', destKey: 'minneapolis', category: 'city' as const },
+  // Nightlife destinations
+  { origin: 'LAX', destination: 'LAS', destName: 'Las Vegas', destKey: 'las-vegas', category: 'nightlife' as const },
+  { origin: 'DFW', destination: 'BNA', destName: 'Nashville', destKey: 'nashville', category: 'nightlife' as const },
+  { origin: 'MSY', destination: 'LAS', destName: 'Las Vegas', destKey: 'las-vegas', category: 'nightlife' as const },
+  { origin: 'ATL', destination: 'MSY', destName: 'New Orleans', destKey: 'new-orleans', category: 'nightlife' as const },
+  { origin: 'ORD', destination: 'BNA', destName: 'Nashville', destKey: 'nashville', category: 'nightlife' as const },
+  { origin: 'ORD', destination: 'LAS', destName: 'Las Vegas', destKey: 'las-vegas', category: 'nightlife' as const },
+  // Family destinations
+  { origin: 'ORD', destination: 'MCO', destName: 'Orlando', destKey: 'orlando', category: 'family' as const },
+  { origin: 'MSY', destination: 'MCO', destName: 'Orlando', destKey: 'orlando', category: 'family' as const },
+  { origin: 'JFK', destination: 'MCO', destName: 'Orlando', destKey: 'orlando', category: 'family' as const },
+  { origin: 'BOS', destination: 'MCO', destName: 'Orlando', destKey: 'orlando', category: 'family' as const },
+  { origin: 'ATL', destination: 'TPA', destName: 'Tampa', destKey: 'tampa', category: 'family' as const },
+  // Adventure destinations
+  { origin: 'ORD', destination: 'DEN', destName: 'Denver', destKey: 'denver', category: 'adventure' as const },
+  { origin: 'DEN', destination: 'PHX', destName: 'Phoenix', destKey: 'phoenix', category: 'adventure' as const },
+  { origin: 'DEN', destination: 'LAS', destName: 'Las Vegas', destKey: 'las-vegas', category: 'adventure' as const },
+  { origin: 'DFW', destination: 'DEN', destName: 'Denver', destKey: 'denver', category: 'adventure' as const },
+  { origin: 'SEA', destination: 'DEN', destName: 'Denver', destKey: 'denver', category: 'adventure' as const },
+  // Culture destinations
   { origin: 'JFK', destination: 'CDG', destName: 'Paris', destKey: 'paris', category: 'culture' as const },
   { origin: 'JFK', destination: 'BCN', destName: 'Barcelona', destKey: 'barcelona', category: 'culture' as const },
   { origin: 'LAX', destination: 'BOS', destName: 'Boston', destKey: 'boston', category: 'culture' as const },
-  { origin: 'ORD', destination: 'SEA', destName: 'Seattle', destKey: 'seattle', category: 'city' as const },
+  { origin: 'MSY', destination: 'CLT', destName: 'Charlotte', destKey: 'charlotte', category: 'culture' as const },
+  { origin: 'DEN', destination: 'AUS', destName: 'Austin', destKey: 'austin', category: 'culture' as const },
 ];
 
 // Average prices for savings calculation
 const AVG_PRICES: Record<string, number> = {
-  'JFK-MIA': 220, 'JFK-CUN': 380, 'JFK-SJU': 280, 'LAX-LAS': 120,
-  'LAX-HNL': 450, 'ORD-MCO': 200, 'ORD-DEN': 180, 'ATL-SAN': 280,
-  'DFW-SFO': 250, 'DFW-BNA': 160, 'MSY-MIA': 180, 'MSY-CUN': 320,
-  'MSY-LAS': 250, 'MSY-MCO': 160, 'MSY-ATL': 130, 'MSY-DFW': 140,
-  'BOS-MIA': 230, 'SEA-LAX': 170, 'JFK-CDG': 650, 'JFK-BCN': 600,
-  'LAX-BOS': 280, 'ORD-SEA': 240,
+  'JFK-MIA': 220, 'JFK-CUN': 380, 'JFK-SJU': 280, 'JFK-FLL': 200, 'JFK-TPA': 210,
+  'JFK-MCO': 190, 'JFK-CDG': 650, 'JFK-BCN': 600, 'JFK-ORD': 180,
+  'LAX-LAS': 120, 'LAX-HNL': 450, 'LAX-SFO': 140, 'LAX-PDX': 160, 'LAX-SEA': 170, 'LAX-CUN': 400, 'LAX-BOS': 280,
+  'ORD-MCO': 200, 'ORD-MIA': 230, 'ORD-DEN': 180, 'ORD-LAS': 200, 'ORD-MSP': 120, 'ORD-BNA': 150, 'ORD-SEA': 240, 'ORD-CUN': 350,
+  'ATL-SAN': 280, 'ATL-FLL': 180, 'ATL-TPA': 160, 'ATL-MSY': 140, 'ATL-CUN': 320, 'ATL-CLT': 100,
+  'DFW-SFO': 250, 'DFW-MIA': 250, 'DFW-LAS': 180, 'DFW-AUS': 120, 'DFW-DEN': 170, 'DFW-BNA': 160,
+  'MSY-MIA': 180, 'MSY-CUN': 320, 'MSY-LAS': 250, 'MSY-MCO': 160, 'MSY-ATL': 130, 'MSY-DFW': 140, 'MSY-CLT': 190,
+  'BOS-MIA': 230, 'BOS-FLL': 210, 'BOS-DCA': 140, 'BOS-MCO': 200,
+  'SEA-LAX': 170, 'SEA-LAS': 200, 'SEA-HNL': 420, 'SEA-DEN': 210,
+  'DEN-PHX': 140, 'DEN-LAS': 130, 'DEN-AUS': 200,
+  'MIA-SJU': 180, 'MIA-CUN': 220,
 };
 
 async function searchRoute(
@@ -104,7 +137,6 @@ async function searchRoute(
     for (const o of offers) {
       if (parseFloat(o.total_amount) < parseFloat(cheapest.total_amount)) cheapest = o;
     }
-
     const slice = cheapest.slices?.[0];
     const segments = slice?.segments || [];
     const carrier = cheapest.owner || segments[0]?.operating_carrier || {};
@@ -113,7 +145,6 @@ async function searchRoute(
       const m = s.duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
       return m ? a + (parseInt(m[1] || '0') * 60) + parseInt(m[2] || '0') : a;
     }, 0);
-
     return {
       price: parseFloat(cheapest.total_amount),
       airline: carrier.name || 'Airline',
@@ -126,22 +157,16 @@ async function searchRoute(
 
 async function getAIEnhancements(deals: SmartDeal[], aiKey: string): Promise<SmartDeal[]> {
   try {
-    const dealSummary = deals.map(d => 
+    const dealSummary = deals.map(d =>
       `${d.originCode}->${d.destination}: $${Math.round(d.price)}, ${d.stops === 0 ? 'nonstop' : d.stops + ' stop'}, ${d.duration}, ${d.departureDate}, category: ${d.category}`
     ).join('\n');
 
     const resp = await fetch(AI_GATEWAY_URL, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${aiKey}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': `Bearer ${aiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages: [
-          {
-            role: 'system',
-            content: 'You are a travel deal expert. For each flight deal, provide a short enticing description (max 15 words) and a quick travel tip (max 12 words). Also rate the deal 1-100 and give a short tag like "Best Value", "Lowest Price", "Weekend Getaway", "Last Minute". Return JSON array with objects: {index, description, tip, score, tag}'
-          },
+          { role: 'system', content: 'You are a travel deal expert. For each flight deal, provide a short enticing description (max 15 words) and a quick travel tip (max 12 words). Also rate the deal 1-100 and give a short tag like "Best Value", "Lowest Price", "Weekend Getaway", "Last Minute". Return JSON array with objects: {index, description, tip, score, tag}' },
           { role: 'user', content: `Rate and describe these deals:\n${dealSummary}` }
         ],
         tools: [{
@@ -174,16 +199,10 @@ async function getAIEnhancements(deals: SmartDeal[], aiKey: string): Promise<Sma
         tool_choice: { type: 'function', function: { name: 'enhance_deals' } },
       }),
     });
-
-    if (!resp.ok) {
-      console.error('AI gateway error:', resp.status);
-      return deals;
-    }
-
+    if (!resp.ok) return deals;
     const json = await resp.json();
     const toolCall = json.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) return deals;
-
     const enhanced = JSON.parse(toolCall.function.arguments);
     for (const e of enhanced.deals) {
       if (e.index >= 0 && e.index < deals.length) {
@@ -227,7 +246,6 @@ serve(async (req: Request) => {
       });
     }
 
-    // Filter routes
     let routes = SMART_ROUTES;
     if (userOrigin) {
       const filtered = routes.filter(r => r.origin === userOrigin);
@@ -245,7 +263,7 @@ serve(async (req: Request) => {
       return dt.toISOString().split('T')[0];
     });
 
-    const selectedRoutes = routes.slice(0, 8);
+    const selectedRoutes = routes.slice(0, 10);
     const rawDeals: SmartDeal[] = [];
     const seen = new Set<string>();
 
@@ -253,7 +271,6 @@ serve(async (req: Request) => {
       dates.slice(0, 3).map(async (date) => {
         const result = await searchRoute(route.origin, route.destination, date, duffelKey);
         if (!result) return;
-
         const routeKey = `${route.origin}-${route.destination}`;
         if (seen.has(routeKey)) {
           const existing = rawDeals.find(d => d.originCode === route.origin && d.destinationCode === route.destination);
@@ -262,30 +279,18 @@ serve(async (req: Request) => {
           if (idx >= 0) rawDeals.splice(idx, 1);
         }
         seen.add(routeKey);
-
         const avgPrice = AVG_PRICES[routeKey] || result.price * 1.2;
         const savings = Math.max(0, Math.round(((avgPrice - result.price) / avgPrice) * 100));
-
         rawDeals.push({
           id: `${route.origin}-${route.destination}-${date}`,
-          origin: route.origin,
-          originCode: route.origin,
-          destination: route.destName,
-          destinationCode: route.destination,
-          destinationKey: route.destKey,
-          price: result.price,
-          departureDate: date,
-          returnDate: null,
-          airline: result.airline,
-          airlineLogo: result.airlineLogo,
-          stops: result.stops,
-          duration: result.duration,
-          aiDescription: `Great deal to ${route.destName}`,
-          aiTip: 'Book soon — prices may increase',
-          dealScore: Math.min(100, 50 + savings),
-          dealTag: savings > 20 ? 'Hot Deal' : 'Good Price',
-          savingsPercent: savings,
-          category: route.category,
+          origin: route.origin, originCode: route.origin,
+          destination: route.destName, destinationCode: route.destination, destinationKey: route.destKey,
+          price: result.price, departureDate: date, returnDate: null,
+          airline: result.airline, airlineLogo: result.airlineLogo,
+          stops: result.stops, duration: result.duration,
+          aiDescription: `Great deal to ${route.destName}`, aiTip: 'Book soon — prices may increase',
+          dealScore: Math.min(100, 50 + savings), dealTag: savings > 20 ? 'Hot Deal' : 'Good Price',
+          savingsPercent: savings, category: route.category,
         });
       })
     );
@@ -293,8 +298,7 @@ serve(async (req: Request) => {
     await Promise.all(promises);
     rawDeals.sort((a, b) => b.savingsPercent - a.savingsPercent || a.price - b.price);
 
-    // AI enhance top deals
-    const topDeals = rawDeals.slice(0, 10);
+    const topDeals = rawDeals.slice(0, 12);
     const enhanced = aiKey ? await getAIEnhancements(topDeals, aiKey) : topDeals;
 
     const responseData = { deals: enhanced, generatedAt: new Date().toISOString() };
