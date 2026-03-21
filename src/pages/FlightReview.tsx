@@ -442,7 +442,8 @@ const FlightReview = () => {
   }, []);
 
   const recoveryCabinClass = (searchParams.cabinClass === "premium" ? "premium_economy" : (searchParams.cabinClass || "economy")) as "economy" | "premium_economy" | "business" | "first";
-  const shouldRecoverFareVariants = !storedOffer?.fareVariants?.length && !!storedOffer?.segments?.length && !!searchParams.origin && !!searchParams.destination && !!searchParams.departureDate;
+  const storedFareVariantCount = storedOffer?.fareVariants?.length ?? 0;
+  const shouldRecoverFareVariants = storedFareVariantCount <= 1 && !!storedOffer?.segments?.length && !!searchParams.origin && !!searchParams.destination && !!searchParams.departureDate;
 
   const { data: recoverySearchData } = useDuffelFlightSearch({
     origin: searchParams.origin || "",
@@ -471,7 +472,12 @@ const FlightReview = () => {
     if (!liveOffer && !storedOffer) return null;
     const base = liveOffer ?? storedOffer;
     if (!base) return null;
-    const fareVariants = base.fareVariants || storedOffer?.fareVariants || recoveredFareVariants;
+    const baseFareVariants = base.fareVariants?.length ? base.fareVariants : undefined;
+    const storedFareVariants = storedOffer?.fareVariants?.length ? storedOffer.fareVariants : undefined;
+    const fallbackFareVariants = baseFareVariants || storedFareVariants;
+    const fareVariants = recoveredFareVariants?.length && recoveredFareVariants.length > (fallbackFareVariants?.length ?? 0)
+      ? recoveredFareVariants
+      : fallbackFareVariants;
     return fareVariants ? { ...base, fareVariants } : base;
   }, [liveOffer, storedOffer, recoveredFareVariants]);
 
