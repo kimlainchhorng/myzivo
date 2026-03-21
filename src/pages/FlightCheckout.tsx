@@ -25,8 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FLIGHT_MOR_DISCLAIMERS, FLIGHT_CHECKOUT_CLARITY, ZIVO_SOT_REGISTRATION, FLIGHT_LEGAL_LINKS } from "@/config/flightMoRCompliance";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
-import { calculateFlightPricing, getStateOptions, type FlightPricingBreakdown } from "@/utils/flightPricing";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { calculateFlightPricing, type FlightPricingBreakdown } from "@/utils/flightPricing";
 
 const STEPS = [
   { label: "Search", completed: true, active: false },
