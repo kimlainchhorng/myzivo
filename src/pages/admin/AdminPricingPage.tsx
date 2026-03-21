@@ -59,7 +59,7 @@ export default function AdminPricingPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(defaultForm);
-
+  const [countryFilter, setCountryFilter] = useState(0); // index into COUNTRY_FILTERS
   const { data: rows, isLoading } = useQuery({
     queryKey: ["admin-city-pricing"],
     queryFn: async () => {
