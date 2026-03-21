@@ -15,6 +15,13 @@ export default function RideTrackingPage() {
   const navigate = useNavigate();
   const [tripData, setTripData] = useState<any>(null);
 
+  // Broadcast customer's live GPS to the driver while ride is active
+  const isRideActive = tripData?.status && ["driver_assigned", "en_route", "arrived", "in_progress"].includes(tripData.status);
+  useCustomerLocationBroadcast({
+    tripId: isRideActive ? tripId ?? null : null,
+    enabled: Boolean(isRideActive),
+  });
+
   useEffect(() => {
     if (!tripId) return;
 
