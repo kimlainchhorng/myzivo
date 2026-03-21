@@ -36,6 +36,13 @@ const RIDE_TYPES = [
   "black", "black_suv", "luxury_xl", "pet", "wheelchair",
 ];
 
+// Country filter presets — map country label to known city names
+const COUNTRY_FILTERS: { label: string; flag: string; cities: string[] | "all" }[] = [
+  { label: "All", flag: "🌍", cities: "all" },
+  { label: "USA", flag: "🇺🇸", cities: ["default", "Baton Rouge", "New York", "Los Angeles", "Chicago", "Houston", "Dallas", "Miami", "Atlanta", "San Francisco", "Seattle", "Denver", "Boston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Austin", "Jacksonville", "Columbus", "Charlotte", "Indianapolis", "Washington", "Nashville", "Portland", "Las Vegas", "Memphis", "Louisville", "Baltimore", "Milwaukee", "Albuquerque", "Tucson", "Fresno", "Sacramento", "Mesa", "Kansas City", "Omaha", "Cleveland", "Virginia Beach", "Raleigh", "Minneapolis", "Tampa", "New Orleans", "Orlando", "Detroit", "St. Louis", "Pittsburgh", "Cincinnati", "Honolulu", "Anchorage"] },
+  { label: "Cambodia", flag: "🇰🇭", cities: ["Phnom Penh", "Siem Reap", "Battambang", "Sihanoukville", "Kampong Cham", "Poipet", "Kampot"] },
+];
+
 const defaultForm = {
   city: "default",
   ride_type: "standard",
