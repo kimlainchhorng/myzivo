@@ -11,9 +11,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
-import CheckoutStepIndicator from "@/components/checkout/CheckoutStepIndicator";
+import { cn } from "@/lib/utils";
 import CheckoutOrderSummary from "@/components/checkout/CheckoutOrderSummary";
-import CheckoutSecurityStrip from "@/components/checkout/CheckoutSecurityStrip";
 import FlightPriceBreakdown from "@/components/flight/FlightPriceBreakdown";
 import AcceptedPaymentMethods from "@/components/checkout/AcceptedPaymentMethods";
 import { CheckoutTermsAcceptance, useTermsValidation } from "@/components/checkout/CheckoutTermsAcceptance";
@@ -182,35 +181,41 @@ const FlightCheckout = () => {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <SEOHead title="Secure Checkout – ZIVO Flights" description="Complete your flight booking securely with ZIVO." />
 
-      {/* Decorative gradient orbs */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-24 right-0 w-80 h-80 rounded-full bg-[hsl(var(--flights))]/5 blur-3xl" />
-        <div className="absolute bottom-20 -left-10 w-60 h-60 rounded-full bg-emerald-500/4 blur-3xl" />
+      {/* Website header — hidden on mobile for app feel */}
+      <div className="hidden md:block">
+        <Header />
       </div>
 
-      <Header />
-
-      <main className="pt-20 pb-36 md:pb-24 relative z-10">
+      <main className="pt-2 md:pt-20 pb-36 md:pb-24 relative z-10">
         <div className="container mx-auto px-4 max-w-lg">
-          {/* Back + title */}
-          <div className="flex items-center gap-3 mb-4">
-            <Button variant="ghost" size="icon" onClick={() => showPaymentForm ? handlePaymentCancel() : navigate(-1)} disabled={isCreatingIntent} className="shrink-0 rounded-xl">
+          {/* App-style top bar */}
+          <div className="flex items-center gap-3 mb-3">
+            <Button variant="ghost" size="icon" onClick={() => showPaymentForm ? handlePaymentCancel() : navigate(-1)} disabled={isCreatingIntent} className="shrink-0 rounded-xl h-10 w-10">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="text-xl font-bold flex items-center gap-2">
-                <Lock className="w-5 h-5 text-emerald-500" />
-                Secure Checkout
-              </h1>
-              <p className="text-xs text-muted-foreground">Your booking is encrypted and secure</p>
+            <h1 className="text-lg font-bold flex-1">Secure Checkout</h1>
+            <div className="flex items-center gap-1 text-emerald-500">
+              <Lock className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-medium">Encrypted</span>
             </div>
           </div>
 
-          {/* Steps */}
-          <CheckoutStepIndicator steps={STEPS} className="mb-5" />
-
-          {/* Security strip */}
-          <CheckoutSecurityStrip className="mb-5" />
+          {/* Compact step dots */}
+          <div className="flex items-center gap-1.5 mb-4 px-1">
+            {STEPS.map((step, i) => (
+              <div key={step.label} className="flex items-center gap-1.5 flex-1">
+                <div className={cn(
+                  "w-2 h-2 rounded-full shrink-0 transition-all",
+                  step.completed ? "bg-emerald-500" : step.active ? "bg-[hsl(var(--flights))] ring-2 ring-[hsl(var(--flights))]/20" : "bg-muted"
+                )} />
+                <span className={cn(
+                  "text-[10px] font-medium",
+                  step.active ? "text-foreground" : "text-muted-foreground/60"
+                )}>{step.label}</span>
+                {i < STEPS.length - 1 && <div className={cn("flex-1 h-px", step.completed ? "bg-emerald-500/40" : "bg-border/40")} />}
+              </div>
+            ))}
+          </div>
 
           {/* Order summary */}
           <CheckoutOrderSummary
@@ -341,8 +346,9 @@ const FlightCheckout = () => {
             </>
           )}
 
-          {/* Trust footer */}
-          <CheckoutTrustFooter className="mt-8" />
+          {/* Trust footer — compact on mobile */}
+          <CheckoutTrustFooter compact className="mt-6 md:hidden" />
+          <CheckoutTrustFooter className="mt-8 hidden md:block" />
         </div>
       </main>
 
@@ -377,7 +383,10 @@ const FlightCheckout = () => {
         </div>
       )}
 
-      <Footer />
+      {/* Footer — hidden on mobile for app feel */}
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   );
 };
