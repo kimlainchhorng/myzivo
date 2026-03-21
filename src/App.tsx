@@ -69,6 +69,9 @@ const AdminAnalyticsDashboard = lazy(() => import("./pages/admin/AdminAnalyticsD
 const AdminUsersPage = lazy(() => import("./pages/admin/AdminUsersPage"));
 const AdminPricingPage = lazy(() => import("./pages/admin/AdminPricingPage"));
 const AdminFlightOrders = lazy(() => import("./pages/admin/AdminFlightOrders"));
+const AdminFlightSearchAnalytics = lazy(() => import("./pages/admin/AdminFlightSearchAnalytics"));
+const AdminFlightApiMonitoring = lazy(() => import("./pages/admin/AdminFlightApiMonitoring"));
+const AdminFlightPriceAlerts = lazy(() => import("./pages/admin/AdminFlightPriceAlerts"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"));
 const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
