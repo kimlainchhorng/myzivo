@@ -64,7 +64,7 @@ const AISmartDeals = () => {
       </div>
 
       {/* Category Filter Chips */}
-      <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide -mx-4 px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
         {categories.map(([key, label]) => {
           const Icon = categoryIcons[key] || Sparkles;
           const isActive = activeCategory === key;
