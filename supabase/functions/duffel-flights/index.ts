@@ -945,6 +945,7 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
       id: g.id,
       fareBrandName: g.fareBrandName || g.cabinClass,
       price: g.price,
+      pricePerPerson: g.pricePerPerson,
       currency: g.currency,
       conditions: g.conditions,
       baggageDetails: g.baggageDetails,
