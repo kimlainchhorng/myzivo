@@ -59,103 +59,39 @@ export default function FlightPriceBreakdown({
   }
 
   return (
-    <Card className={cn("border-primary/20", className)}>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Receipt className="w-5 h-5 text-primary" />
-          Price Breakdown
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Per Person Breakdown (multi-pax) */}
-        {passengers > 1 && (
-          <div className="space-y-2 p-3 rounded-lg bg-muted/30">
-            <p className="text-sm font-medium text-muted-foreground">Per passenger</p>
-            <div className="flex justify-between text-sm">
-              <span>Base fare</span>
-              <span>{formatPrice(baseFare, currency)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="flex items-center gap-1">
-                <Building2 className="w-3 h-3" /> Taxes, Fees & Charges ({(stateTaxRate * 100).toFixed(1)}%)
-              </span>
-              <span>{formatPrice(stateTax, currency)}</span>
-            </div>
-            <div className="flex justify-between font-medium pt-2 border-t border-border/50">
-              <span>Subtotal</span>
-              <span>{formatPrice(totalPerPassenger, currency)}</span>
-            </div>
-          </div>
-        )}
+    <Card className={cn("border-border/40", className)}>
+      <CardContent className="p-5 space-y-3">
+        {/* Header */}
+        <h3 className="text-base font-bold">Price details</h3>
 
-        {/* Total Breakdown */}
-        <div className="space-y-2">
-          {passengers === 1 ? (
-            <>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Base fare</span>
-                <span>{formatPrice(baseFare, currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Building2 className="w-3.5 h-3.5" /> Taxes, Fees & Charges ({(stateTaxRate * 100).toFixed(1)}%)
-                </span>
-                <span>{formatPrice(stateTax, currency)}</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Base fare × {passengers}</span>
-                <span>{formatPrice(baseFare * passengers, currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  Taxes, Fees & Charges ({(stateTaxRate * 100).toFixed(1)}%) × {passengers}
-                </span>
-                <span>{formatPrice(stateTax * passengers, currency)}</span>
-              </div>
-            </>
-          )}
+        {/* Traveler line */}
+        <div className="flex justify-between text-sm font-semibold">
+          <span>Traveler {passengers > 1 ? `1–${passengers}` : '1'}: Adult</span>
+          <span>{formatPrice(totalAllPassengers, currency)}</span>
+        </div>
+
+        {/* Sub-items */}
+        <div className="space-y-1.5 pl-0">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Flight</span>
+            <span>{formatPrice(baseFare * passengers, currency)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Taxes, fees, and charges</span>
+            <span>{formatPrice(stateTax * passengers, currency)}</span>
+          </div>
         </div>
 
         <Separator />
 
-        {/* Grand Total */}
-        <div className="flex justify-between items-center">
-          <div>
-            <span className="text-lg font-bold">Total</span>
-            <p className="text-xs text-muted-foreground">
-              {passengers} passenger{passengers > 1 ? 's' : ''}
-            </p>
-          </div>
-          <span className="text-2xl font-bold text-primary">
-            {formatPrice(totalAllPassengers, currency)}
-          </span>
+        {/* Trip total */}
+        <div className="flex justify-between items-baseline">
+          <span className="text-base font-bold">Trip total</span>
+          <span className="text-xl font-bold">{formatPrice(totalAllPassengers, currency)}</span>
         </div>
 
-        {/* Trust Indicators */}
-        <div className="flex flex-wrap gap-2 pt-2">
-          <Badge variant="outline" className="text-xs gap-1 text-emerald-600 border-emerald-500/30">
-            <Check className="w-3 h-3" />
-            Final price
-          </Badge>
-          <Badge variant="outline" className="text-xs gap-1 text-emerald-600 border-emerald-500/30">
-            <Shield className="w-3 h-3" />
-            All fees included
-          </Badge>
-        </div>
-
-        {showNoHiddenFees && (
-          <div className="pt-2 text-center">
-            <p className="text-xs text-emerald-600 font-medium">
-              {CHECKOUT_PRICE.noHiddenFees}
-            </p>
-          </div>
-        )}
-
-        <p className="text-[10px] text-muted-foreground leading-relaxed">
-          Base fare includes card processing and booking fees breakdown. {FLIGHT_MOR_DISCLAIMERS.priceBreakdown}
+        <p className="text-xs text-muted-foreground">
+          Rates are shown in {currency}
         </p>
       </CardContent>
     </Card>
