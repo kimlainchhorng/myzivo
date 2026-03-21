@@ -145,14 +145,11 @@ const popularDestKeysUS = [
   "fort-lauderdale", "new-orleans", "washington"
 ] as const;
 
-// Cambodia destinations
-const cambodiaDestinations = [
-  { key: "siem-reap", city: "Siem Reap", src: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&q=80&w=400", alt: "Angkor Wat" },
-  { key: "sihanoukville", city: "Sihanoukville", src: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&q=80&w=400", alt: "Sihanoukville Beach" },
-  { key: "kampot", city: "Kampot", src: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=400", alt: "Kampot River" },
-  { key: "battambang", city: "Battambang", src: "https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&q=80&w=400", alt: "Battambang" },
-  { key: "kep", city: "Kep", src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=400", alt: "Kep Beach" },
-];
+// Cambodia destinations (using local photos from config)
+const cambodiaDestKeysKH = [
+  "phnom-penh", "siem-reap", "sihanoukville", "kampot", "battambang", "kep",
+  "bangkok", "ho-chi-minh"
+] as const;
 
 
 // ─── Recently viewed type config ───
@@ -211,7 +208,7 @@ const AppHome = () => {
   const { points, getNextTierProgress } = useLoyaltyPoints();
   const { active: activeRewards } = useUserRewards();
   const { referralCode, shareReferral } = useReferrals();
-  const destKeys = isKH ? cambodiaDestinations.map(d => d.key) : [...popularDestKeysUS];
+  const destKeys = isKH ? [...cambodiaDestKeysKH] : [...popularDestKeysUS];
   const { data: destPrices = {}, isLoading: destPricesLoading } = useDestinationPrices(destKeys, isKH);
   const { data: hotDeals = [], isLoading: hotDealsLoading } = useHotDeals();
   const { data: allBookings = [] } = useScheduledBookingsQuery();
@@ -461,36 +458,9 @@ const AppHome = () => {
             <div className="mb-6">
               <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.destinations")}</p>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {isKH ? cambodiaDestinations.map((dest, i) => (
-                  <motion.button
-                    key={dest.key}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => navigate(`/search?tab=flights&to=${dest.city}`)}
-                    className="shrink-0 w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative"
-                  >
-                    <div className="relative h-[120px] overflow-hidden">
-                      <img src={dest.src} alt={dest.alt} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      {i < 2 && (
-                        <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
-                          <span className="text-[8px] font-bold text-primary-foreground uppercase tracking-wider">{t("home.trending")}</span>
-                        </div>
-                      )}
-                      <div className="absolute bottom-3 left-3 right-3">
-                        <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
-                        <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
-                          <Plane className="w-2.5 h-2.5" />
-                          {destPrices[dest.key] != null
-                            ? `${t("home.from")} $${Math.round(destPrices[dest.key]!)}`
-                            : destPricesLoading
-                              ? "..."
-                              : t("home.search_flights")}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.button>
-                )) : popularDestKeysUS.map((key, i) => {
-                  const dest = destinationPhotos[key];
+                {(isKH ? cambodiaDestKeysKH : popularDestKeysUS).map((key, i) => {
+                  const dest = destinationPhotos[key as keyof typeof destinationPhotos];
+                  if (!dest) return null;
                   return (
                     <motion.button
                       key={key}

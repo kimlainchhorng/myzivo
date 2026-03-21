@@ -47,8 +47,12 @@ const DESTINATION_CODES: Record<string, string> = {
   'siem-reap': 'REP',
   sihanoukville: 'KOS',
   kampot: 'PNH',
-  battambang: 'PNH',
+  'phnom-penh': 'PNH',
+  battambang: 'BBM',
   kep: 'PNH',
+  // Asia destinations
+  bangkok: 'BKK',
+  'ho-chi-minh': 'SGN',
 };
 
 async function fetchLowestFare(

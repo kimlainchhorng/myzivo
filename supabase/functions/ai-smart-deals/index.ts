@@ -90,6 +90,15 @@ const SMART_ROUTES = [
   { origin: 'LAX', destination: 'BOS', destName: 'Boston', destKey: 'boston', category: 'culture' as const },
   { origin: 'MSY', destination: 'CLT', destName: 'Charlotte', destKey: 'charlotte', category: 'culture' as const },
   { origin: 'DEN', destination: 'AUS', destName: 'Austin', destKey: 'austin', category: 'culture' as const },
+  // Cambodia / Asia routes
+  { origin: 'PNH', destination: 'REP', destName: 'Siem Reap', destKey: 'siem-reap', category: 'culture' as const },
+  { origin: 'PNH', destination: 'BKK', destName: 'Bangkok', destKey: 'bangkok', category: 'city' as const },
+  { origin: 'PNH', destination: 'SGN', destName: 'Ho Chi Minh City', destKey: 'ho-chi-minh', category: 'city' as const },
+  { origin: 'PNH', destination: 'KOS', destName: 'Sihanoukville', destKey: 'sihanoukville', category: 'beach' as const },
+  { origin: 'REP', destination: 'BKK', destName: 'Bangkok', destKey: 'bangkok', category: 'city' as const },
+  { origin: 'REP', destination: 'SGN', destName: 'Ho Chi Minh City', destKey: 'ho-chi-minh', category: 'city' as const },
+  { origin: 'BKK', destination: 'REP', destName: 'Siem Reap', destKey: 'siem-reap', category: 'culture' as const },
+  { origin: 'BKK', destination: 'PNH', destName: 'Phnom Penh', destKey: 'phnom-penh', category: 'city' as const },
 ];
 
 // Average prices for savings calculation
@@ -105,6 +114,9 @@ const AVG_PRICES: Record<string, number> = {
   'SEA-LAX': 170, 'SEA-LAS': 200, 'SEA-HNL': 420, 'SEA-DEN': 210,
   'DEN-PHX': 140, 'DEN-LAS': 130, 'DEN-AUS': 200,
   'MIA-SJU': 180, 'MIA-CUN': 220,
+  // Cambodia / Asia
+  'PNH-REP': 80, 'PNH-BKK': 120, 'PNH-SGN': 90, 'PNH-KOS': 70,
+  'REP-BKK': 110, 'REP-SGN': 100, 'BKK-REP': 110, 'BKK-PNH': 120,
 };
 
 async function searchRoute(

@@ -92,6 +92,14 @@ import destAustin from "@/assets/dest-austin.jpg";
 import destFortLauderdale from "@/assets/dest-fortlauderdale.jpg";
 import destNewOrleans from "@/assets/dest-neworleans.jpg";
 import destWashington from "@/assets/dest-washington.jpg";
+import destSiemReap from "@/assets/dest-siemreap.jpg";
+import destSihanoukville from "@/assets/dest-sihanoukville.jpg";
+import destKampot from "@/assets/dest-kampot.jpg";
+import destPhnomPenh from "@/assets/dest-phnompenh.jpg";
+import destBattambang from "@/assets/dest-battambang.jpg";
+import destKep from "@/assets/dest-kep.jpg";
+import destBangkok from "@/assets/dest-bangkok.jpg";
+import destHoChiMinh from "@/assets/dest-hochiminh.jpg";
 
 // Import lifestyle assets
 import lifestyleTravelers from "@/assets/lifestyle-travelers.jpg";
@@ -201,7 +209,7 @@ import cabinFirst from "@/assets/cabin-first.jpg";
 // ============================================
 export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "move" | "extras";
 export type CarCategory = "economy" | "compact" | "midsize" | "suv" | "luxury" | "van" | "electric";
-export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam" | "honolulu" | "nashville" | "denver" | "seattle" | "boston" | "san-juan" | "tampa" | "charlotte" | "minneapolis" | "portland" | "austin" | "fort-lauderdale" | "new-orleans" | "washington";
+export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam" | "honolulu" | "nashville" | "denver" | "seattle" | "boston" | "san-juan" | "tampa" | "charlotte" | "minneapolis" | "portland" | "austin" | "fort-lauderdale" | "new-orleans" | "washington" | "siem-reap" | "sihanoukville" | "kampot" | "phnom-penh" | "battambang" | "kep" | "bangkok" | "ho-chi-minh";
 
 // ============================================
 // PREMIUM 2026 HERO PHOTOS (Minimalist Luxury)
@@ -725,6 +733,70 @@ export const destinationPhotos: Record<DestinationCity, { src: string; alt: stri
     alt: "Washington DC - Capitol Building at sunset",
     city: "Washington DC",
     country: "USA",
+    width: 512,
+    height: 512,
+  },
+  "siem-reap": {
+    src: destSiemReap,
+    alt: "Siem Reap, Cambodia - Angkor Wat at sunrise",
+    city: "Siem Reap",
+    country: "Cambodia",
+    width: 512,
+    height: 512,
+  },
+  "sihanoukville": {
+    src: destSihanoukville,
+    alt: "Sihanoukville, Cambodia - Tropical beach paradise",
+    city: "Sihanoukville",
+    country: "Cambodia",
+    width: 512,
+    height: 512,
+  },
+  "kampot": {
+    src: destKampot,
+    alt: "Kampot, Cambodia - Riverside town at sunset",
+    city: "Kampot",
+    country: "Cambodia",
+    width: 512,
+    height: 512,
+  },
+  "phnom-penh": {
+    src: destPhnomPenh,
+    alt: "Phnom Penh, Cambodia - Royal Palace and Mekong River",
+    city: "Phnom Penh",
+    country: "Cambodia",
+    width: 512,
+    height: 512,
+  },
+  "battambang": {
+    src: destBattambang,
+    alt: "Battambang, Cambodia - Temples and bamboo train",
+    city: "Battambang",
+    country: "Cambodia",
+    width: 512,
+    height: 512,
+  },
+  "kep": {
+    src: destKep,
+    alt: "Kep, Cambodia - Coastal crab market and beach",
+    city: "Kep",
+    country: "Cambodia",
+    width: 512,
+    height: 512,
+  },
+  "bangkok": {
+    src: destBangkok,
+    alt: "Bangkok, Thailand - Wat Arun and river at night",
+    city: "Bangkok",
+    country: "Thailand",
+    width: 512,
+    height: 512,
+  },
+  "ho-chi-minh": {
+    src: destHoChiMinh,
+    alt: "Ho Chi Minh City, Vietnam - Modern skyline at dusk",
+    city: "Ho Chi Minh City",
+    country: "Vietnam",
     width: 512,
     height: 512,
   },
