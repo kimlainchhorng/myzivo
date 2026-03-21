@@ -138,7 +138,7 @@ export const FLIGHT_LEGAL_LINKS = {
   privacy: "/privacy",
   flightTerms: "/legal/flight-terms",
   refundPolicy: "/legal/flight-terms#refunds",
-  partnerDisclosure: "/partner-disclosure",
+  partnerDisclosure: "/legal/partner-disclosure",
 } as const;
 
 // ============================================
