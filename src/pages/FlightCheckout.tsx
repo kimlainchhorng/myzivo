@@ -39,6 +39,7 @@ const FlightCheckout = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [termsValid, handleTermsChange, triggerValidation] = useTermsValidation();
+  const { sheet, openSheet, setOpen } = useLegalSheet();
 
   // Payment intent state
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -291,13 +292,13 @@ const FlightCheckout = () => {
                     <span>{ZIVO_SOT_REGISTRATION.subAgent} {FLIGHT_MOR_DISCLAIMERS.ticketing}</span>
                   </p>
                   <div className="flex items-center gap-3 text-[11px] mt-2 ml-5">
-                    <Link to={FLIGHT_LEGAL_LINKS.partnerDisclosure} className="text-primary hover:underline">
+                    <button type="button" onClick={() => openSheet("Partner Disclosure", FLIGHT_LEGAL_LINKS.partnerDisclosure)} className="text-primary hover:underline">
                       Partner Disclosure
-                    </Link>
+                    </button>
                     <span className="text-border">·</span>
-                    <Link to={FLIGHT_LEGAL_LINKS.flightTerms} className="text-primary hover:underline">
+                    <button type="button" onClick={() => openSheet("Flight Terms", FLIGHT_LEGAL_LINKS.flightTerms)} className="text-primary hover:underline">
                       Flight Terms
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </motion.div>
