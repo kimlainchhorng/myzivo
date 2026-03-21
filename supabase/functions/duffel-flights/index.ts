@@ -944,7 +944,7 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
 
     const primary = dedupedGroup[0];
     // Attach all fare variants (including primary) as fareVariants
-    primary.fareVariants = dedupedGroup.map(g => ({
+    const rawVariants = dedupedGroup.map(g => ({
       id: g.id,
       fareBrandName: g.fareBrandName || g.cabinClass,
       price: g.price,
@@ -955,6 +955,29 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
       baggageIncluded: g.baggageIncluded,
       cabinClass: g.cabinClass,
     }));
+
+    // Smart-label variants that share the same fareBrandName
+    if (rawVariants.length > 1) {
+      const nameCount = new Map<string, number>();
+      for (const v of rawVariants) {
+        const n = (v.fareBrandName || '').toLowerCase();
+        nameCount.set(n, (nameCount.get(n) || 0) + 1);
+      }
+      // For duplicated names, assign tiered labels based on features
+      const nameIndex = new Map<string, number>();
+      for (const v of rawVariants) {
+        const n = (v.fareBrandName || '').toLowerCase();
+        if ((nameCount.get(n) || 0) > 1) {
+          const idx = nameIndex.get(n) || 0;
+          nameIndex.set(n, idx + 1);
+          // Derive label from features: cheapest with least features = Basic, next = Standard, etc.
+          const tierLabels = ['Basic', 'Standard', 'Flexible', 'Premium'];
+          v.fareBrandName = tierLabels[idx] || `${v.fareBrandName} ${idx + 1}`;
+        }
+      }
+    }
+
+    primary.fareVariants = rawVariants;
     result.push(primary);
   }
 
