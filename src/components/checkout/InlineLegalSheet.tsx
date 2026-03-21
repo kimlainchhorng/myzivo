@@ -2,7 +2,7 @@
  * Inline Legal Sheet — renders legal page content in a bottom sheet
  * Uses lazy-loaded React components (not iframes) so content renders properly
  */
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useState, useMemo } from "react";
 import { X, Loader2 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 const legalPages: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
   "/terms": lazy(() => import("@/pages/Terms")),
   "/privacy": lazy(() => import("@/pages/Privacy")),
+  "/cookies": lazy(() => import("@/pages/Cookies")),
   "/partner-disclosure": lazy(() => import("@/pages/legal/PartnerDisclosure")),
   "/legal/partner-disclosure": lazy(() => import("@/pages/legal/PartnerDisclosure")),
   "/legal/flight-terms": lazy(() => import("@/pages/legal/FlightTerms")),
@@ -25,7 +26,9 @@ interface InlineLegalSheetProps {
 }
 
 export default function InlineLegalSheet({ open, onOpenChange, title, url }: InlineLegalSheetProps) {
-  const PageComponent = legalPages[url];
+  // Strip hash fragments so "/legal/flight-terms#refunds" resolves to "/legal/flight-terms"
+  const basePath = url.split("#")[0];
+  const PageComponent = legalPages[basePath];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
