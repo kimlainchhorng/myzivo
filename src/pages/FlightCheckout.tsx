@@ -17,6 +17,7 @@ import FlightPriceBreakdown from "@/components/flight/FlightPriceBreakdown";
 import AcceptedPaymentMethods from "@/components/checkout/AcceptedPaymentMethods";
 import { CheckoutTermsAcceptance, useTermsValidation } from "@/components/checkout/CheckoutTermsAcceptance";
 import CheckoutTrustFooter from "@/components/checkout/CheckoutTrustFooter";
+import InlineLegalSheet, { useLegalSheet } from "@/components/checkout/InlineLegalSheet";
 
 import FlightInlinePaymentForm from "@/components/flight/FlightInlinePaymentForm";
 import { useAuth } from "@/contexts/AuthContext";
