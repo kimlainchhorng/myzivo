@@ -186,8 +186,8 @@ const AppHome = () => {
   ] as const;
 
   const suggestions = [
-    { label: t("home.ride"), icon: null, image: zivoRideIcon, href: "/rides", badge: "10% Off", badgeVariant: "discount" as const },
-    { label: t("home.flights"), icon: null, image: zivoFlightsIcon, href: "/flights", badge: "Promo", badgeVariant: "promo" as const },
+    { label: t("home.ride"), icon: null, image: zivoRideIcon, href: "/rides", badge: "Hot Deal", badgeVariant: "promo" as const },
+    { label: t("home.flights"), icon: null, image: zivoFlightsIcon, href: "/flights", badge: "Discount", badgeVariant: "discount" as const },
     { label: t("home.rental_cars"), icon: null, image: zivoRentalCarIcon, href: "/rent-car", badge: "Promo", badgeVariant: "promo" as const },
     { label: t("home.shopping"), icon: null, image: zivoShoppingIcon, href: "/rides", badge: null, badgeVariant: null },
   ];
