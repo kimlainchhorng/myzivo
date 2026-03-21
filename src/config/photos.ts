@@ -92,6 +92,14 @@ import destAustin from "@/assets/dest-austin.jpg";
 import destFortLauderdale from "@/assets/dest-fortlauderdale.jpg";
 import destNewOrleans from "@/assets/dest-neworleans.jpg";
 import destWashington from "@/assets/dest-washington.jpg";
+import destSiemReap from "@/assets/dest-siemreap.jpg";
+import destSihanoukville from "@/assets/dest-sihanoukville.jpg";
+import destKampot from "@/assets/dest-kampot.jpg";
+import destPhnomPenh from "@/assets/dest-phnompenh.jpg";
+import destBattambang from "@/assets/dest-battambang.jpg";
+import destKep from "@/assets/dest-kep.jpg";
+import destBangkok from "@/assets/dest-bangkok.jpg";
+import destHoChiMinh from "@/assets/dest-hochiminh.jpg";
 
 // Import lifestyle assets
 import lifestyleTravelers from "@/assets/lifestyle-travelers.jpg";
