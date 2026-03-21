@@ -813,7 +813,7 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     currency: o.total_currency as string || 'USD',
     pricePerPerson: parseFloat(o.total_amount as string) / Math.max(passengers.length, 1),
     cabinClass,
-    fareBrandName: fareBrandName || null,
+    fareBrandName: fareBrandName || cabinClass,
     baggageIncluded: baggageInfo,
     isRefundable,
     conditions: {
