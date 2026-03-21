@@ -866,14 +866,26 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
     }
   }
 
-  // For each group, pick cheapest as primary and attach fare variants
+  // For each group, deduplicate by cabinClass+fareBrandName (keep cheapest), then attach as fare variants
   const result: DuffelOfferTransformed[] = [];
   for (const group of groups.values()) {
     // Sort by price ascending
     group.sort((a, b) => a.price - b.price);
-    const primary = group[0];
+
+    // Deduplicate: keep only the cheapest offer per cabinClass + fareBrandName combo
+    const seen = new Map<string, DuffelOfferTransformed>();
+    for (const g of group) {
+      const key = `${g.cabinClass}::${(g.fareBrandName || g.cabinClass).toLowerCase()}`;
+      if (!seen.has(key)) {
+        seen.set(key, g);
+      }
+    }
+    const dedupedGroup = [...seen.values()];
+    dedupedGroup.sort((a, b) => a.price - b.price);
+
+    const primary = dedupedGroup[0];
     // Attach all fare variants (including primary) as fareVariants
-    primary.fareVariants = group.map(g => ({
+    primary.fareVariants = dedupedGroup.map(g => ({
       id: g.id,
       fareBrandName: g.fareBrandName || g.cabinClass,
       price: g.price,
