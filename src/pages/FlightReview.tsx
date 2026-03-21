@@ -377,11 +377,18 @@ const FlightReview = () => {
     } catch { /* ignore */ }
   }, []);
 
-  const searchParams = useMemo(() => {
+  const [searchParams, setSearchParams] = useState<Record<string, any>>(() => {
     try {
       const raw = sessionStorage.getItem("zivo_search_params");
       return raw ? JSON.parse(raw) : {};
     } catch { return {}; }
+  });
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("zivo_search_params");
+      setSearchParams(raw ? JSON.parse(raw) : {});
+    } catch { /* ignore */ }
   }, []);
 
   const { data: liveOffer, isError: liveOfferError } = useDuffelOffer(storedOffer?.id ?? null);
