@@ -73,6 +73,15 @@ const DEAL_ROUTES = [
   // MIA routes
   { origin: 'MIA', destination: 'CUN', destName: 'Cancún', destKey: 'cancun' },
   { origin: 'MIA', destination: 'SJU', destName: 'San Juan', destKey: 'san-juan' },
+  // Cambodia / Asia routes (from PNH hub)
+  { origin: 'PNH', destination: 'REP', destName: 'Siem Reap', destKey: 'siem-reap' },
+  { origin: 'PNH', destination: 'BKK', destName: 'Bangkok', destKey: 'bangkok' },
+  { origin: 'PNH', destination: 'SGN', destName: 'Ho Chi Minh City', destKey: 'ho-chi-minh' },
+  { origin: 'PNH', destination: 'KOS', destName: 'Sihanoukville', destKey: 'sihanoukville' },
+  { origin: 'REP', destination: 'BKK', destName: 'Bangkok', destKey: 'bangkok' },
+  { origin: 'REP', destination: 'SGN', destName: 'Ho Chi Minh City', destKey: 'ho-chi-minh' },
+  { origin: 'BKK', destination: 'REP', destName: 'Siem Reap', destKey: 'siem-reap' },
+  { origin: 'BKK', destination: 'PNH', destName: 'Phnom Penh', destKey: 'phnom-penh' },
 ];
 
 interface DealResult {
