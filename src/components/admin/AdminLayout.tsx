@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   BarChart3, Users, ShoppingBag, Settings, LogOut, Shield,
-  ChevronLeft, Menu, Home, Activity
+  ChevronLeft, Menu, Home, Activity, DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ const navItems = [
   { label: "Overview", icon: BarChart3, path: "/admin/analytics" },
   { label: "Users", icon: Users, path: "/admin/users" },
   { label: "Orders", icon: ShoppingBag, path: "/admin/shopping-orders" },
+  { label: "Pricing", icon: DollarSign, path: "/admin/pricing" },
   { label: "System Health", icon: Activity, path: "/admin/system-health" },
 ];
 

@@ -1,0 +1,257 @@
+/**
+ * Admin Pricing Page — Manage ride pricing (city_pricing table)
+ */
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import AdminLayout from "@/components/admin/AdminLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+
+interface PricingRow {
+  id: string;
+  city: string | null;
+  ride_type: string | null;
+  base_fare: number | null;
+  per_mile: number | null;
+  per_minute: number | null;
+  booking_fee: number | null;
+  minimum_fare: number | null;
+  is_active: boolean | null;
+  updated_at: string | null;
+}
+
+const RIDE_TYPES = [
+  "standard", "share", "comfort", "ev", "xl",
+  "black", "black_suv", "luxury_xl", "pet", "wheelchair",
+];
+
+const defaultForm = {
+  city: "default",
+  ride_type: "standard",
+  base_fare: 3.5,
+  per_mile: 1.75,
+  per_minute: 0.35,
+  booking_fee: 2.5,
+  minimum_fare: 7,
+  is_active: true,
+};
+
+export default function AdminPricingPage() {
+  const queryClient = useQueryClient();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(defaultForm);
+
+  const { data: rows, isLoading } = useQuery({
+    queryKey: ["admin-city-pricing"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("city_pricing")
+        .select("*")
+        .order("city")
+        .order("ride_type");
+      if (error) throw error;
+      return data as PricingRow[];
+    },
+  });
+
+  const upsert = useMutation({
+    mutationFn: async (values: typeof form & { id?: string }) => {
+      if (values.id) {
+        const { error } = await supabase
+          .from("city_pricing")
+          .update({ ...values, updated_at: new Date().toISOString() })
+          .eq("id", values.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("city_pricing")
+          .insert({ ...values, updated_at: new Date().toISOString() });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-city-pricing"] });
+      toast.success(editingId ? "Pricing updated" : "Pricing added");
+      closeDialog();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("city_pricing").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-city-pricing"] });
+      toast.success("Pricing deleted");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  function openEdit(row: PricingRow) {
+    setEditingId(row.id);
+    setForm({
+      city: row.city || "default",
+      ride_type: row.ride_type || "standard",
+      base_fare: row.base_fare ?? 0,
+      per_mile: row.per_mile ?? 0,
+      per_minute: row.per_minute ?? 0,
+      booking_fee: row.booking_fee ?? 0,
+      minimum_fare: row.minimum_fare ?? 0,
+      is_active: row.is_active ?? true,
+    });
+    setDialogOpen(true);
+  }
+
+  function closeDialog() {
+    setDialogOpen(false);
+    setEditingId(null);
+    setForm(defaultForm);
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    upsert.mutate(editingId ? { ...form, id: editingId } : form);
+  }
+
+  return (
+    <AdminLayout title="Pricing Management">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Manage ride pricing per city and vehicle type. "default" applies when no city-specific pricing exists.
+          </p>
+          <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) closeDialog(); else setDialogOpen(true); }}>
+            <DialogTrigger asChild>
+              <Button size="sm" onClick={() => { setEditingId(null); setForm(defaultForm); }}>
+                <Plus className="w-4 h-4 mr-1.5" /> Add Pricing
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>{editingId ? "Edit Pricing" : "Add Pricing"}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>City</Label>
+                    <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="default" />
+                  </div>
+                  <div>
+                    <Label>Ride Type</Label>
+                    <select
+                      className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      value={form.ride_type}
+                      onChange={(e) => setForm({ ...form, ride_type: e.target.value })}
+                    >
+                      {RIDE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Base Fare ($)</Label>
+                    <Input type="number" step="0.01" value={form.base_fare} onChange={(e) => setForm({ ...form, base_fare: +e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Per Mile ($)</Label>
+                    <Input type="number" step="0.01" value={form.per_mile} onChange={(e) => setForm({ ...form, per_mile: +e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Per Minute ($)</Label>
+                    <Input type="number" step="0.01" value={form.per_minute} onChange={(e) => setForm({ ...form, per_minute: +e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Booking Fee ($)</Label>
+                    <Input type="number" step="0.01" value={form.booking_fee} onChange={(e) => setForm({ ...form, booking_fee: +e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Minimum Fare ($)</Label>
+                    <Input type="number" step="0.01" value={form.minimum_fare} onChange={(e) => setForm({ ...form, minimum_fare: +e.target.value })} />
+                  </div>
+                  <div className="flex items-center gap-2 pt-5">
+                    <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
+                    <Label>Active</Label>
+                  </div>
+                </div>
+                <Button type="submit" className="w-full" disabled={upsert.isPending}>
+                  {upsert.isPending && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
+                  {editingId ? "Update" : "Create"}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !rows?.length ? (
+            <div className="text-center py-16 text-muted-foreground text-sm">
+              No pricing rules configured yet. Add your first one above.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>City</TableHead>
+                  <TableHead>Ride Type</TableHead>
+                  <TableHead className="text-right">Base</TableHead>
+                  <TableHead className="text-right">/Mile</TableHead>
+                  <TableHead className="text-right">/Min</TableHead>
+                  <TableHead className="text-right">Booking</TableHead>
+                  <TableHead className="text-right">Min Fare</TableHead>
+                  <TableHead>Active</TableHead>
+                  <TableHead className="w-20" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="font-medium">{row.city || "default"}</TableCell>
+                    <TableCell>{row.ride_type}</TableCell>
+                    <TableCell className="text-right">${(row.base_fare ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${(row.per_mile ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${(row.per_minute ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${(row.booking_fee ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${(row.minimum_fare ?? 0).toFixed(2)}</TableCell>
+                    <TableCell>
+                      <span className={row.is_active ? "text-green-500 text-xs font-medium" : "text-muted-foreground text-xs"}>
+                        {row.is_active ? "Yes" : "No"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(row)}>
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteMut.mutate(row.id)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+      </div>
+    </AdminLayout>
+  );
+}
