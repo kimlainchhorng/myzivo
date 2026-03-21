@@ -65,7 +65,10 @@ export default function AdminPricingPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(defaultForm);
   const [countryFilter, setCountryFilter] = useState(0);
-  const [cityFilter, setCityFilter] = useState<string | null>(null); // null = All cities
+  const [cityFilter, setCityFilter] = useState<string | null>(null);
+
+  const isCambodia = COUNTRY_FILTERS[countryFilter]?.label === "Cambodia";
+  const RIDE_TYPES = isCambodia ? RIDE_TYPES_CAMBODIA : RIDE_TYPES_GLOBAL;
   const { data: rows, isLoading } = useQuery({
     queryKey: ["admin-city-pricing"],
     queryFn: async () => {
