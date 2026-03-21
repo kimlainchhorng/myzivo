@@ -81,25 +81,42 @@ function getTheme(cabinClass: string) {
   return CABIN_THEMES[cabinClass] ?? CABIN_THEMES.economy;
 }
 
-function formatFareName(name: string | null, cabinClass: string): string {
+function formatFareName(
+  name: string | null,
+  cabinClass: string,
+  conditions?: FareVariant["conditions"],
+  baggageDetails?: FareVariant["baggageDetails"],
+): string {
   const cabinLabel = getTheme(cabinClass).label;
-  if (!name) return "Standard";
 
-  const normalizedName = name.includes("_")
-    ? name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-    : name;
+  // If Duffel provides a real brand name (not just the cabin class), use it
+  if (name) {
+    const normalizedName = name.includes("_")
+      ? name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      : name;
 
-  // Strip cabin prefix (e.g. "Economy Basic" → "Basic")
-  const strippedCabinPrefix = normalizedName
-    .replace(new RegExp(`^${cabinLabel}\\s+`, "i"), "")
-    .trim();
+    const strippedCabinPrefix = normalizedName
+      .replace(new RegExp(`^${cabinLabel}\\s+`, "i"), "")
+      .trim();
 
-  // If the brand name IS the cabin label (e.g. "Economy" for economy cabin), show "Standard"
-  if (!strippedCabinPrefix || strippedCabinPrefix.toLowerCase() === cabinLabel.toLowerCase()) {
-    return "Standard";
+    // Only auto-label if the brand name IS the cabin label (generic)
+    if (strippedCabinPrefix && strippedCabinPrefix.toLowerCase() !== cabinLabel.toLowerCase()) {
+      return strippedCabinPrefix;
+    }
   }
 
-  return strippedCabinPrefix;
+  // Auto-label based on conditions & baggage
+  if (conditions && baggageDetails) {
+    const isRefundable = conditions.refundable;
+    const isChangeable = conditions.changeable;
+    const hasBags = baggageDetails.carryOnIncluded || baggageDetails.checkedBagsIncluded;
+
+    if (isRefundable && isChangeable) return "Flex";
+    if (hasBags) return "Standard";
+    return "Basic";
+  }
+
+  return "Basic";
 }
 
 function formatFarePrice(amount: number, currency: string = "USD"): string {
