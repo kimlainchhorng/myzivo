@@ -68,6 +68,7 @@ const AdminShoppingOrders = lazy(() => import("./pages/admin/AdminShoppingOrders
 const AdminAnalyticsDashboard = lazy(() => import("./pages/admin/AdminAnalyticsDashboard"));
 const AdminUsersPage = lazy(() => import("./pages/admin/AdminUsersPage"));
 const AdminPricingPage = lazy(() => import("./pages/admin/AdminPricingPage"));
+const AdminFlightOrders = lazy(() => import("./pages/admin/AdminFlightOrders"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"));
 const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
@@ -405,6 +406,7 @@ const App = () => (
                 <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalyticsDashboard /></ProtectedRoute>} />
                 <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
                 <Route path="/admin/pricing" element={<ProtectedRoute><AdminPricingPage /></ProtectedRoute>} />
+                <Route path="/admin/flight-orders" element={<ProtectedRoute><AdminFlightOrders /></ProtectedRoute>} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
                 <Route path="/insurance" element={<PreserveQueryRedirect to="/travel-insurance" />} />
