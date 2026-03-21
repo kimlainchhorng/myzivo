@@ -83,9 +83,18 @@ function getTheme(cabinClass: string) {
 }
 
 function formatFareName(name: string | null, cabinClass: string): string {
-  if (!name) return getTheme(cabinClass).label;
-  if (name.includes("_")) return name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-  return name;
+  const cabinLabel = getTheme(cabinClass).label;
+  if (!name) return cabinLabel;
+
+  const normalizedName = name.includes("_")
+    ? name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : name;
+
+  const strippedCabinPrefix = normalizedName
+    .replace(new RegExp(`^${cabinLabel}\s+`, "i"), "")
+    .trim();
+
+  return strippedCabinPrefix || cabinLabel;
 }
 
 /* ── Helpers ────────────────────────────────────────── */
