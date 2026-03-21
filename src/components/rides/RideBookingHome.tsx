@@ -3080,7 +3080,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         <div
           className="absolute inset-0 z-40 bg-background flex flex-col overflow-hidden"
         >
-          <div className="px-4 pb-1.5 shrink-0 flex flex-col items-start gap-2 safe-area-top pt-3">
+          <div
+            className="px-4 pb-1.5 shrink-0 flex flex-col items-start gap-2"
+            style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 1rem), 72px)" }}
+          >
             <button
               onClick={() => setViewStep("ride-options")}
               className="w-10 h-10 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0 active:scale-95 touch-manipulation"
