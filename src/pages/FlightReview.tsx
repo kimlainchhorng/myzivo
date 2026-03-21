@@ -100,6 +100,30 @@ function buildOfferFingerprint(offer?: Pick<DuffelOffer, "segments"> | null) {
 function buildFareVariantsFromOffers(offers: DuffelOffer[]) {
   const seen = new Map<string, NonNullable<DuffelOffer["fareVariants"]>[number]>();
 
+  const buildVariantKey = (variant: NonNullable<DuffelOffer["fareVariants"]>[number]) => {
+    const bag = variant.baggageDetails;
+    const conditions = variant.conditions;
+
+    return [
+      variant.cabinClass,
+      (variant.fareBrandName || variant.cabinClass).toLowerCase(),
+      variant.baggageIncluded || "",
+      bag.carryOnIncluded ? "co1" : "co0",
+      bag.carryOnQuantity,
+      bag.carryOnWeightKg ?? "",
+      bag.carryOnWeightLb ?? "",
+      bag.checkedBagsIncluded ? "cb1" : "cb0",
+      bag.checkedBagQuantity,
+      bag.checkedBagWeightKg ?? "",
+      bag.checkedBagWeightLb ?? "",
+      conditions.changeable ? "chg1" : "chg0",
+      conditions.changePenalty ?? "",
+      conditions.refundable ? "ref1" : "ref0",
+      conditions.refundPenalty ?? "",
+      conditions.penaltyCurrency || "",
+    ].join("::");
+  };
+
   for (const offer of offers) {
     const sourceVariants = offer.fareVariants?.length
       ? offer.fareVariants
@@ -115,7 +139,7 @@ function buildFareVariantsFromOffers(offers: DuffelOffer[]) {
         }];
 
     for (const variant of sourceVariants) {
-      const key = `${variant.cabinClass}::${(variant.fareBrandName || variant.cabinClass).toLowerCase()}`;
+      const key = buildVariantKey(variant);
       const existing = seen.get(key);
       if (!existing || variant.price < existing.price) {
         seen.set(key, variant);

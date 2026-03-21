@@ -881,8 +881,9 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
     const segFP = offer.segments.map(s => `${s.marketingCarrierCode}${s.flightNumber}-${s.departingAt}`).join('|');
     const flightFP = `${offer.airlineCode}-${segFP}`;
     const group = groups.get(flightFP) || [];
-    // Avoid exact duplicates (same price too)
-    const exactDup = group.some(g => g.price === offer.price && g.fareBrandName === offer.fareBrandName);
+    // Avoid only truly identical duplicates; preserve same-price Duffel fare bundles with different bags/rules
+    const offerVariantKey = buildFareVariantKey(offer);
+    const exactDup = group.some((g) => g.id === offer.id || buildFareVariantKey(g) === offerVariantKey);
     if (!exactDup) {
       group.push(offer);
       groups.set(flightFP, group);
