@@ -142,13 +142,18 @@ const popularDestKeysUS = [
   "san-diego", "dallas", "atlanta", "phoenix",
   "honolulu", "nashville", "denver", "seattle", "boston", "san-juan",
   "tampa", "charlotte", "minneapolis", "portland", "austin",
-  "fort-lauderdale", "new-orleans", "washington"
+  "fort-lauderdale", "new-orleans", "washington",
+  "toronto", "mexico-city", "london", "tokyo", "dubai",
+  "rome", "istanbul", "seoul", "kuala-lumpur", "bali",
+  "singapore", "sydney", "manila", "taipei", "mumbai",
+  "phuket", "hanoi", "bangkok", "amsterdam",
 ] as const;
 
 // Cambodia destinations (using local photos from config)
 const cambodiaDestKeysKH = [
   "phnom-penh", "siem-reap", "sihanoukville", "kampot", "battambang", "kep",
-  "bangkok", "ho-chi-minh"
+  "bangkok", "ho-chi-minh", "hanoi", "phuket", "kuala-lumpur", "bali",
+  "seoul", "tokyo", "singapore", "manila", "taipei", "mumbai",
 ] as const;
 
 
