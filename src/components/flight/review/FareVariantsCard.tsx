@@ -219,6 +219,8 @@ function FloatingIcon3D({ icon: Icon, className, glow, size = "md" }: {
 export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardProps) {
   const variants = offer.fareVariants;
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Track the original offer fingerprint to avoid re-triggering on variant selection
+  const variantIds = useMemo(() => (variants ?? []).map(v => v.id).sort().join(","), [variants]);
 
   const [cabinFilter, setCabinFilter] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -246,14 +248,29 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
     [filteredVariants]
   );
 
-  // Auto-select cheapest variant on mount or when offer changes
+  // Auto-select cheapest variant ONLY when the actual set of variants changes (not on variant selection)
   useEffect(() => {
     if (!variants || variants.length === 0) return;
     const sorted = [...variants].sort((a, b) => a.price - b.price);
     const cheapest = sorted[0];
+    console.log("[FareVariants] auto-selecting cheapest:", cheapest.id, "from", variants.length, "variants");
     setSelectedId(cheapest.id);
     onSelectVariant(cheapest);
-  }, [offer.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variantIds]);
+
+  // Reset selection if current selectedId no longer exists in variants
+  useEffect(() => {
+    if (!selectedId || !variants) return;
+    const exists = variants.some((v) => v.id === selectedId);
+    if (!exists) {
+      const sorted = [...variants].sort((a, b) => a.price - b.price);
+      if (sorted.length > 0) {
+        setSelectedId(sorted[0].id);
+        onSelectVariant(sorted[0]);
+      }
+    }
+  }, [variantIds, selectedId]);
 
   useEffect(() => {
     const node = scrollerRef.current;
@@ -275,6 +292,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
   if (!variants || variants.length === 0) return null;
 
   const handleSelect = (variant: FareVariant) => {
+    console.log("[FareVariants] selecting:", variant.id, "prev:", selectedId);
     setSelectedId(variant.id);
     onSelectVariant(variant);
   };
