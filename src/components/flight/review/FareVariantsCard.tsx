@@ -7,7 +7,7 @@
  * No local selection state exists in this component.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Check, ChevronLeft, ChevronRight, Ticket, X,
   Briefcase, ShieldCheck, ArrowLeftRight, Luggage,
@@ -347,7 +347,7 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
         className="flex gap-3.5 overflow-x-auto pb-4 pr-4 snap-x snap-mandatory scroll-smooth"
         style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
       >
-        {filteredVariants.map((variant, index) => {
+        {filteredVariants.filter((v, i, arr) => arr.findIndex(x => x.id === v.id) === i).map((variant, index) => {
           // STRICT: selection derived ONLY from parent-controlled selectedFareId
           const isSelected = variant.id === selectedFareId;
           const fareName = formatFareName(variant.fareBrandName, variant.cabinClass, variant.conditions, variant.baggageDetails);
@@ -359,7 +359,7 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
 
           return (
             <motion.div
-              key={`fare-${variant.id}-${index}`}
+              key={`fare-${variant.id}`}
               initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ delay: index * 0.09, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
@@ -409,39 +409,33 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
                   <CabinIcon className="h-28 w-28 text-foreground" strokeWidth={0.5} />
                 </div>
 
-                {/* Animated shine on selected */}
-                <AnimatePresence>
-                  {isSelected && (
-                    <motion.div
-                      initial={{ x: "-120%", opacity: 0 }}
-                      animate={{ x: "200%", opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 1.2, ease: "easeInOut" }}
-                      className="absolute inset-0 pointer-events-none z-[2]"
-                      style={{
-                        background: "linear-gradient(105deg, transparent 30%, hsl(var(--background)/0.3) 45%, hsl(var(--background)/0.5) 50%, hsl(var(--background)/0.3) 55%, transparent 70%)",
-                        width: "50%",
-                      }}
-                    />
-                  )}
-                </AnimatePresence>
+                {/* Animated shine on selected — no AnimatePresence to prevent exit overlap */}
+                {isSelected && (
+                  <motion.div
+                    initial={{ x: "-120%", opacity: 0 }}
+                    animate={{ x: "200%", opacity: 1 }}
+                    transition={{ duration: 1.2, ease: "easeInOut" }}
+                    className="absolute inset-0 pointer-events-none z-[2]"
+                    style={{
+                      background: "linear-gradient(105deg, transparent 30%, hsl(var(--background)/0.3) 45%, hsl(var(--background)/0.5) 50%, hsl(var(--background)/0.3) 55%, transparent 70%)",
+                      width: "50%",
+                    }}
+                  />
+                )}
 
-                {/* Selection top glow bar */}
-                <AnimatePresence>
-                  {isSelected && (
-                    <motion.div
-                      initial={{ scaleX: 0, opacity: 0 }}
-                      animate={{ scaleX: 1, opacity: 1 }}
-                      exit={{ scaleX: 0, opacity: 0 }}
-                      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute left-3 right-3 top-0 h-[2.5px] rounded-full origin-center z-[3]"
-                      style={{
-                        background: `linear-gradient(90deg, transparent, hsl(var(--flights)), transparent)`,
-                        boxShadow: "0 0 12px 2px hsl(var(--flights)/0.3)",
-                      }}
-                    />
-                  )}
-                </AnimatePresence>
+                {/* Selection top glow bar — no AnimatePresence to prevent exit overlap */}
+                {isSelected && (
+                  <motion.div
+                    initial={{ scaleX: 0, opacity: 0 }}
+                    animate={{ scaleX: 1, opacity: 1 }}
+                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute left-3 right-3 top-0 h-[2.5px] rounded-full origin-center z-[3]"
+                    style={{
+                      background: `linear-gradient(90deg, transparent, hsl(var(--flights)), transparent)`,
+                      boxShadow: "0 0 12px 2px hsl(var(--flights)/0.3)",
+                    }}
+                  />
+                )}
 
                 {/* ── Card content ──────────────────── */}
                 <div className="relative z-10 flex h-full flex-col p-4 pt-[5.5rem]">
@@ -477,23 +471,20 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
                       </p>
                     </div>
 
-                    {/* Selection check — ONLY when isSelected (parent-controlled) */}
-                    <AnimatePresence initial={false}>
-                      {isSelected && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.5, rotate: -120 }}
-                          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                          exit={{ opacity: 0, scale: 0.5, rotate: 120 }}
-                          transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--flights))]"
-                          style={{
-                            boxShadow: "0 6px 16px -4px hsl(var(--flights)/0.4), inset 0 1px 0 hsl(var(--background)/0.2)",
-                          }}
-                        >
-                          <Check className="h-3.5 w-3.5 text-[hsl(var(--background))]" strokeWidth={3} />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    {/* Selection check — ONLY when isSelected, no AnimatePresence to prevent dual-check overlap */}
+                    {isSelected && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--flights))]"
+                        style={{
+                          boxShadow: "0 6px 16px -4px hsl(var(--flights)/0.4), inset 0 1px 0 hsl(var(--background)/0.2)",
+                        }}
+                      >
+                        <Check className="h-3.5 w-3.5 text-[hsl(var(--background))]" strokeWidth={3} />
+                      </motion.div>
+                    )}
                   </div>
 
                   {/* Divider */}
