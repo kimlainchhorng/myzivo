@@ -78,6 +78,12 @@ import destLosAngeles from "@/assets/dest-losangeles.jpg";
 import destSanFrancisco from "@/assets/dest-sanfrancisco.jpg";
 import destDallas from "@/assets/dest-dallas.jpg";
 import destAtlanta from "@/assets/dest-atlanta.jpg";
+import destHonolulu from "@/assets/dest-honolulu.jpg";
+import destNashville from "@/assets/dest-nashville.jpg";
+import destDenver from "@/assets/dest-denver.jpg";
+import destSeattle from "@/assets/dest-seattle.jpg";
+import destBoston from "@/assets/dest-boston.jpg";
+import destSanJuan from "@/assets/dest-san-juan.jpg";
 
 // Import lifestyle assets
 import lifestyleTravelers from "@/assets/lifestyle-travelers.jpg";
@@ -187,7 +193,7 @@ import cabinFirst from "@/assets/cabin-first.jpg";
 // ============================================
 export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "move" | "extras";
 export type CarCategory = "economy" | "compact" | "midsize" | "suv" | "luxury" | "van" | "electric";
-export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam";
+export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam" | "honolulu" | "nashville" | "denver" | "seattle" | "boston" | "san-juan";
 
 // ============================================
 // PREMIUM 2026 HERO PHOTOS (Minimalist Luxury)
@@ -599,6 +605,54 @@ export const destinationPhotos: Record<DestinationCity, { src: string; alt: stri
     alt: "Amsterdam, Netherlands - Canal houses",
     city: "Amsterdam",
     country: "Netherlands",
+    width: 512,
+    height: 512,
+  },
+  "honolulu": {
+    src: destHonolulu,
+    alt: "Honolulu, Hawaii - Waikiki Beach and Diamond Head",
+    city: "Honolulu",
+    country: "Hawaii",
+    width: 512,
+    height: 512,
+  },
+  "nashville": {
+    src: destNashville,
+    alt: "Nashville, Tennessee - Broadway neon lights",
+    city: "Nashville",
+    country: "Tennessee",
+    width: 512,
+    height: 512,
+  },
+  "denver": {
+    src: destDenver,
+    alt: "Denver, Colorado - Rocky Mountains skyline",
+    city: "Denver",
+    country: "Colorado",
+    width: 512,
+    height: 512,
+  },
+  "seattle": {
+    src: destSeattle,
+    alt: "Seattle, Washington - Space Needle and Mount Rainier",
+    city: "Seattle",
+    country: "Washington",
+    width: 512,
+    height: 512,
+  },
+  "boston": {
+    src: destBoston,
+    alt: "Boston, Massachusetts - Historic waterfront skyline",
+    city: "Boston",
+    country: "Massachusetts",
+    width: 512,
+    height: 512,
+  },
+  "san-juan": {
+    src: destSanJuan,
+    alt: "San Juan, Puerto Rico - Colorful colonial streets",
+    city: "San Juan",
+    country: "Puerto Rico",
     width: 512,
     height: 512,
   },

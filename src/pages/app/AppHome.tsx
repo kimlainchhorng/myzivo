@@ -46,6 +46,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
 import { useDeviceIntegrityCheck } from "@/hooks/useDeviceIntegrityCheck";
 import LiveTripTracker from "@/components/home/widgets/LiveTripTracker";
+import AISmartDeals from "@/components/home/AISmartDeals";
 import PriceAlertsWidget from "@/components/home/widgets/PriceAlertsWidget";
 import TravelItineraryCard from "@/components/home/widgets/TravelItineraryCard";
 import QuickReorderCarousel from "@/components/home/widgets/QuickReorderCarousel";
@@ -138,7 +139,8 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
 const popularDestKeysUS = [
   "miami", "las-vegas", "new-york", "cancun", "los-angeles",
   "orlando", "san-francisco", "chicago", "barcelona", "paris",
-  "san-diego", "dallas", "atlanta", "phoenix"
+  "san-diego", "dallas", "atlanta", "phoenix",
+  "honolulu", "nashville", "denver", "seattle", "boston", "san-juan"
 ] as const;
 
 // Cambodia destinations
@@ -522,6 +524,9 @@ const AppHome = () => {
 
           </div>
 
+          {/* ─── AI SMART DEALS ─── */}
+          <AISmartDeals />
+
           {/* ─── HOT DEALS ─── */}
           <div>
             <SectionHeader icon={Flame} iconColor="text-orange-500" title="Hot Deals" badge="LIVE" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/flights")} />
@@ -551,19 +556,16 @@ const AppHome = () => {
                           loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                        {/* Hot Deal badge */}
                         <div className="absolute top-2 left-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-full px-2.5 py-0.5 shadow-lg">
                           <span className="text-[8px] font-bold text-white uppercase tracking-wider flex items-center gap-1">
                             <Flame className="w-2.5 h-2.5" /> HOT DEAL
                           </span>
                         </div>
-                        {/* Date badge */}
                         <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-full px-2 py-0.5">
                           <span className="text-[8px] font-semibold text-white flex items-center gap-0.5">
                             <Calendar className="w-2 h-2" /> {formattedDate}
                           </span>
                         </div>
-                        {/* Bottom info */}
                         <div className="absolute bottom-3 left-3 right-3">
                           <div className="flex items-end justify-between">
                             <div>
