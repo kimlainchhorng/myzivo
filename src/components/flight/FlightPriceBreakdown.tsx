@@ -1,15 +1,11 @@
 /**
  * Flight Price Breakdown Component
- * Shows: base fare (includes card + booking fees) + state tax = total
+ * Clean, focused price details: base fare + fees = total
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Receipt, Shield, Check, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { FLIGHT_MOR_DISCLAIMERS } from '@/config/flightMoRCompliance';
-import { CHECKOUT_PRICE } from '@/config/checkoutCompliance';
 import type { FlightPricingBreakdown } from '@/utils/flightPricing';
 
 interface FlightPriceBreakdownProps {
@@ -31,22 +27,23 @@ export default function FlightPriceBreakdown({
   pricing,
   className,
   compact = false,
-  showNoHiddenFees = false,
 }: FlightPriceBreakdownProps) {
   const {
     baseFare, taxesFeesCharges,
-    totalPerPassenger, totalAllPassengers, passengers, currency,
+    totalAllPassengers, passengers, currency,
   } = pricing;
+
+  const isMultiPax = passengers > 1;
 
   if (compact) {
     return (
       <div className={cn("space-y-2", className)}>
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Base fare ({passengers} pax)</span>
+          <span className="text-muted-foreground">Flight{isMultiPax ? ` (×${passengers})` : ''}</span>
           <span>{formatPrice(baseFare * passengers, currency)}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Taxes, fees, and charges</span>
+          <span className="text-muted-foreground">Taxes, fees & charges</span>
           <span>{formatPrice(taxesFeesCharges * passengers, currency)}</span>
         </div>
         <Separator />
@@ -59,38 +56,33 @@ export default function FlightPriceBreakdown({
   }
 
   return (
-    <Card className={cn("border-border/40", className)}>
+    <Card className={cn("border-border/30 shadow-sm", className)}>
       <CardContent className="p-5 space-y-3">
-        {/* Header */}
         <h3 className="text-base font-bold">Price details</h3>
 
-        {/* Traveler line */}
-        <div className="flex justify-between text-sm font-semibold">
-          <span>Traveler {passengers > 1 ? `1–${passengers}` : '1'}: Adult</span>
-          <span>{formatPrice(totalAllPassengers, currency)}</span>
-        </div>
-
-        {/* Sub-items */}
-        <div className="space-y-1.5 pl-0">
+        {/* Line items */}
+        <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Flight</span>
-            <span>{formatPrice(baseFare * passengers, currency)}</span>
+            <span className="text-muted-foreground">
+              Flight{isMultiPax ? ` (${passengers} travelers)` : ''}
+            </span>
+            <span className="font-medium tabular-nums">{formatPrice(baseFare * passengers, currency)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Taxes, fees, and charges</span>
-            <span>{formatPrice(taxesFeesCharges * passengers, currency)}</span>
+            <span className="text-muted-foreground">Taxes, fees & charges</span>
+            <span className="font-medium tabular-nums">{formatPrice(taxesFeesCharges * passengers, currency)}</span>
           </div>
         </div>
 
-        <Separator />
+        <Separator className="bg-border/40" />
 
         {/* Trip total */}
         <div className="flex justify-between items-baseline">
           <span className="text-base font-bold">Trip total</span>
-          <span className="text-xl font-bold">{formatPrice(totalAllPassengers, currency)}</span>
+          <span className="text-xl font-bold tabular-nums">{formatPrice(totalAllPassengers, currency)}</span>
         </div>
 
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[10px] text-muted-foreground/60">
           Rates are shown in {currency}
         </p>
       </CardContent>
