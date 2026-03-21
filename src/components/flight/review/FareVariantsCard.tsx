@@ -84,17 +84,23 @@ function getTheme(cabinClass: string) {
 
 function formatFareName(name: string | null, cabinClass: string): string {
   const cabinLabel = getTheme(cabinClass).label;
-  if (!name) return cabinLabel;
+  if (!name) return "Standard";
 
   const normalizedName = name.includes("_")
     ? name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     : name;
 
+  // Strip cabin prefix (e.g. "Economy Basic" → "Basic")
   const strippedCabinPrefix = normalizedName
-    .replace(new RegExp(`^${cabinLabel}\s+`, "i"), "")
+    .replace(new RegExp(`^${cabinLabel}\\s+`, "i"), "")
     .trim();
 
-  return strippedCabinPrefix || cabinLabel;
+  // If the brand name IS the cabin label (e.g. "Economy" for economy cabin), show "Standard"
+  if (!strippedCabinPrefix || strippedCabinPrefix.toLowerCase() === cabinLabel.toLowerCase()) {
+    return "Standard";
+  }
+
+  return strippedCabinPrefix;
 }
 
 /* ── Helpers ────────────────────────────────────────── */
