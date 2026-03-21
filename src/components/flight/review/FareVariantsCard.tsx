@@ -313,12 +313,12 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
         {filteredVariants.map((variant, index) => {
           const isSelected = variant.id === selectedId;
           const fareName = formatFareName(variant.fareBrandName, variant.cabinClass);
-          const variantPrice = getAllInPrice(variant.price);
-          const baseFarePrice = variant.price;
-          const cheapestAllInPrice = filteredVariants.length
-            ? Math.min(...filteredVariants.map((v) => getAllInPrice(v.price)))
+          const perPerson = variant.pricePerPerson ?? variant.price;
+          const allInPerPerson = getAllInPrice(perPerson);
+          const cheapestAllIn = filteredVariants.length
+            ? Math.min(...filteredVariants.map((v) => getAllInPrice(v.pricePerPerson ?? v.price)))
             : 0;
-          const priceDelta = variantPrice - cheapestAllInPrice;
+          const priceDelta = allInPerPerson - cheapestAllIn;
           const theme = getTheme(variant.cabinClass);
           const CabinIcon = theme.icon;
 
