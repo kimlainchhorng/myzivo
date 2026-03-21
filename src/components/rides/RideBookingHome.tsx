@@ -551,6 +551,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const navigate = useNavigate();
   const { user } = useAuth();
   const { getCurrentLocation, isGettingLocation } = useCurrentLocation();
+  const [locationPermission, setLocationPermission] = useState<"prompt" | "granted" | "denied" | "checking">("checking");
   const { data: savedLocations = [] } = useSavedLocations(user?.id);
   const { currentLanguage, changeLanguage, t } = useI18n();
   const [showLangMenu, setShowLangMenu] = useState(false);
