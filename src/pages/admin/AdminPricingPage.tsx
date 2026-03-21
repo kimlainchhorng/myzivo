@@ -27,6 +27,7 @@ interface PricingRow {
   per_minute: number | null;
   booking_fee: number | null;
   minimum_fare: number | null;
+  card_fee_pct: number | null;
   is_active: boolean | null;
   updated_at: string | null;
 }
@@ -56,6 +57,7 @@ const defaultForm = {
   per_minute: 0.35,
   booking_fee: 2.5,
   minimum_fare: 7,
+  card_fee_pct: 0,
   is_active: true,
 };
 
@@ -127,6 +129,7 @@ export default function AdminPricingPage() {
       per_minute: row.per_minute ?? 0,
       booking_fee: row.booking_fee ?? 0,
       minimum_fare: row.minimum_fare ?? 0,
+      card_fee_pct: row.card_fee_pct ?? 0,
       is_active: row.is_active ?? true,
     });
     setDialogOpen(true);
@@ -239,10 +242,14 @@ export default function AdminPricingPage() {
                     <Label>Minimum Fare ({isCambodia ? "៛ KHR" : "$"})</Label>
                     <Input type="number" step="0.01" value={form.minimum_fare || ""} onChange={(e) => setForm({ ...form, minimum_fare: e.target.value === "" ? 0 : +e.target.value })} />
                   </div>
-                  <div className="flex items-center gap-2 pt-5">
-                    <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
-                    <Label>Active</Label>
+                  <div>
+                    <Label>Card Fee (%)</Label>
+                    <Input type="number" step="0.1" min="0" max="100" value={form.card_fee_pct || ""} onChange={(e) => setForm({ ...form, card_fee_pct: e.target.value === "" ? 0 : +e.target.value })} placeholder="e.g. 3" />
                   </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
+                  <Label>Active</Label>
                 </div>
                 <Button type="submit" className="w-full" disabled={upsert.isPending}>
                   {upsert.isPending && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
@@ -311,7 +318,7 @@ export default function AdminPricingPage() {
           ) : (
             <Table>
               <TableHeader>
-                 <TableRow>
+                <TableRow>
                   <TableHead>City</TableHead>
                   <TableHead>Ride Type</TableHead>
                   <TableHead className="text-right">Base</TableHead>
@@ -319,6 +326,7 @@ export default function AdminPricingPage() {
                   <TableHead className="text-right">/Min</TableHead>
                   <TableHead className="text-right">Booking</TableHead>
                   <TableHead className="text-right">Min Fare</TableHead>
+                  <TableHead className="text-right">Card %</TableHead>
                   <TableHead>Active</TableHead>
                   <TableHead className="w-20" />
                 </TableRow>
@@ -335,6 +343,7 @@ export default function AdminPricingPage() {
                     <TableCell className="text-right">{sym}{(row.per_minute ?? 0).toFixed(2)}</TableCell>
                     <TableCell className="text-right">{sym}{(row.booking_fee ?? 0).toFixed(2)}</TableCell>
                     <TableCell className="text-right">{sym}{(row.minimum_fare ?? 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{(row.card_fee_pct ?? 0)}%</TableCell>
                     <TableCell>
                       <span className={row.is_active ? "text-green-500 text-xs font-medium" : "text-muted-foreground text-xs"}>
                         {row.is_active ? "Yes" : "No"}

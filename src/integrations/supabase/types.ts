@@ -6973,6 +6973,7 @@ export type Database = {
         Row: {
           base_fare: number | null
           booking_fee: number | null
+          card_fee_pct: number | null
           city: string | null
           id: string
           is_active: boolean | null
@@ -6985,6 +6986,7 @@ export type Database = {
         Insert: {
           base_fare?: number | null
           booking_fee?: number | null
+          card_fee_pct?: number | null
           city?: string | null
           id?: string
           is_active?: boolean | null
@@ -6997,6 +6999,7 @@ export type Database = {
         Update: {
           base_fare?: number | null
           booking_fee?: number | null
+          card_fee_pct?: number | null
           city?: string | null
           id?: string
           is_active?: boolean | null
