@@ -208,7 +208,7 @@ const AppHome = () => {
   const { points, getNextTierProgress } = useLoyaltyPoints();
   const { active: activeRewards } = useUserRewards();
   const { referralCode, shareReferral } = useReferrals();
-  const destKeys = isKH ? cambodiaDestinations.map(d => d.key) : [...popularDestKeysUS];
+  const destKeys = isKH ? [...cambodiaDestKeysKH] : [...popularDestKeysUS];
   const { data: destPrices = {}, isLoading: destPricesLoading } = useDestinationPrices(destKeys, isKH);
   const { data: hotDeals = [], isLoading: hotDealsLoading } = useHotDeals();
   const { data: allBookings = [] } = useScheduledBookingsQuery();
