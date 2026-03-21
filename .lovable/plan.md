@@ -1,50 +1,49 @@
 
 
-## Upgrade Flight Card: Real Airlines, Route Details, Visual Differentiation
+## Fix Duffel Fare Options Parsing and UI
 
-### What Changes
+### Problem
+The fare variant cards have issues:
+1. **Labels**: `formatFareName` returns "Standard" when fareBrandName matches cabin class, but the backend already sets `fareBrandName` to the cabin class as fallback (line 949: `g.fareBrandName || g.cabinClass`), causing all unlabeled fares to show "Standard" instead of being intelligently labeled (Basic/Standard/Flex).
+2. **Baggage display**: Shows "No carry-on bag" / "No checked bag" even when data is just missing — should say "Not included" for clarity.
+3. **Price**: Currently using `pricePerPerson` which is `total_amount / passengers`. The user wants `total_amount` (the full Duffel offer price) shown directly.
+4. **No "Fare Options" section header after price** — user wants a clear comparison layout matching the reference image.
 
-**1. Edge function: Rich airline data instead of "Multiple airlines" (backend)**
+### Plan
 
-In `supabase/functions/duffel-flights/index.ts`, the `transformOffer` function currently sets `airline: "Multiple airlines"` when carriers differ. Instead:
+#### 1. Smart fare auto-labeling (FareVariantsCard.tsx)
+Update `formatFareName` to auto-label based on fare conditions instead of just name manipulation:
+- If refundable AND changeable → "Flex"
+- If carry-on OR checked bag included → "Standard"  
+- Else → "Basic"
 
-- Build an array of unique carrier objects from all segments: `[{ name, code }]`
-- Set `airline` to formatted string: `"Qatar Airways + Alaska Airlines"` (max 2 names, then "+ N more")
-- Add new fields to the offer response:
-  - `carriers: [{ name, code, isOperating }]` — all unique airlines
-  - `operatedBy: string | null` — if marketing carrier differs from operating carrier on any segment, e.g. "Operated by QantasLink"
-  - `stopDetails: [{ code, city, layoverDuration }]` — layover city + duration between segments
-- Compute layover durations by diffing `segments[i+1].departing_at - segments[i].arriving_at`
+Only apply auto-labeling when the fareBrandName is generic (equals cabin class or null). If Duffel provides a real brand name (e.g., "Economy Light", "Main Cabin"), keep it.
 
-**2. Update DuffelOffer type (frontend)**
+#### 2. Fix baggage display labels (FareVariantsCard.tsx)
+Update `getCarryOnLabel` and `getCheckedBagLabel`:
+- When not included: show "No carry-on bag" / "No checked bag" (current behavior is fine per the reference image which shows exactly this)
+- Remove any "No data" text — replace with "Not included" anywhere it appears
 
-In `src/hooks/useDuffelFlights.ts`, add to `DuffelOffer`:
-```
-carriers: { name: string; code: string; isOperating: boolean }[]
-operatedBy: string | null
-stopDetails: { code: string; city: string; layoverDuration: string }[]
-```
+#### 3. Fix price display (FareVariantsCard.tsx)
+- Use `variant.price` (total Duffel offer amount) as the displayed price, not `pricePerPerson`
+- "Lowest fare" badge on the cheapest variant
+- Delta shows difference from cheapest: `+$X.XX`
+- Add subline: "This is the lowest Duffel fare for this flight" on cheapest, price delta text on others
 
-**3. Redesign DuffelFlightCard (frontend)**
+#### 4. Ensure backend passes correct data (duffel-flights edge function)
+The backend parsing at lines 690-840 already correctly:
+- Reads `conditions.change_before_departure.allowed` and `conditions.refund_before_departure.allowed`
+- Reads baggage from `segment.passengers[0].baggages` with type `checked` / `carry_on`
+- Falls back to `Personal item only` when no bags found
 
-In `src/components/flight/DuffelFlightCard.tsx`:
+No backend changes needed — the parsing is correct. The issue is purely frontend labeling.
 
-- **Airline row**: Show stacked logos (max 2) using existing `AirlineLogo` component side-by-side with slight overlap. Display real carrier names (e.g. "Qatar Airways + Alaska Airlines"). Show "Operated by X" in small muted text if codeshare.
-- **Route timeline**: Replace the simple stop dots with labeled stop cities. Show the full route as `MSY → SEA → DOH → KTI` with layover durations below each stop (e.g. "2h 15m").
-- **Tags row**: Already shows cabin class, baggage, refundable badges. Add a non-refundable badge when `isRefundable` is false. Add "Codeshare" or "Operated by" badge when applicable.
-- **Visual differentiation**: The card already receives `isLowest` and `isFastest` props with badge rendering. No additional highlighting logic needed — the existing badge system handles cheapest/fastest/best.
+#### 5. Files to modify
 
-### Files Changed
-
-| File | Change |
-|------|--------|
-| `supabase/functions/duffel-flights/index.ts` | Replace "Multiple airlines" with real carrier names array, add `carriers`, `operatedBy`, `stopDetails` with layover durations |
-| `src/hooks/useDuffelFlights.ts` | Add `carriers`, `operatedBy`, `stopDetails` to `DuffelOffer` interface |
-| `src/components/flight/DuffelFlightCard.tsx` | Stacked airline logos, real carrier names, route city labels with layover times, codeshare badge, non-refundable badge |
-
-### Scope
-
-- No new components needed — extends existing card and types
-- Edge function redeploy required after changes
-- Mobile-first (390px viewport) — all layout fits current card width
+**`src/components/flight/review/FareVariantsCard.tsx`**:
+- Rewrite `formatFareName` to accept the variant's conditions and baggageDetails, auto-label as Basic/Standard/Flex when brand name is generic
+- Update price display to use `variant.price` (total amount) instead of `pricePerPerson`
+- Update cheapest price calculation accordingly
+- Ensure "No data" text never appears — use "Not included" as fallback
+- Keep the existing 3D card layout, feature rows, and baggage summary panel
 
