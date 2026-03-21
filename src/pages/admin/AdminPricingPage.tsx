@@ -235,7 +235,7 @@ export default function AdminPricingPage() {
               key={cf.label}
               variant={countryFilter === i ? "default" : "outline"}
               size="sm"
-              onClick={() => setCountryFilter(i)}
+              onClick={() => { setCountryFilter(i); setCityFilter(null); }}
               className="gap-1.5"
             >
               <span>{cf.flag}</span> {cf.label}
@@ -246,6 +246,32 @@ export default function AdminPricingPage() {
               )}
             </Button>
           ))}
+        </div>
+
+        {/* City sub-filter (only for specific country) */}
+        {availableCities.length > 1 && (
+          <div className="flex flex-wrap gap-1.5">
+            <Button
+              variant={cityFilter === null ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setCityFilter(null)}
+            >
+              All Cities ({countryRows?.length})
+            </Button>
+            {availableCities.map((city) => (
+              <Button
+                key={city}
+                variant={cityFilter === city ? "secondary" : "ghost"}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setCityFilter(city)}
+              >
+                {city} ({countryRows?.filter((r) => (r.city || "default") === city).length})
+              </Button>
+            ))}
+          </div>
+        )}
         </div>
 
         <div className="rounded-xl border border-border bg-card overflow-hidden">
