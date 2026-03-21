@@ -6,22 +6,35 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   BarChart3, Users, ShoppingBag, Settings, LogOut, Shield,
-  ChevronLeft, Menu, Home, Activity, DollarSign, Plane,
+  ChevronLeft, ChevronDown, Menu, Home, Activity, DollarSign, Plane,
   Search as SearchIcon, Server, Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
+import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
-const navItems = [
+type NavItem = { label: string; icon: any; path: string };
+type NavGroup = { label: string; icon: any; children: NavItem[] };
+type NavEntry = NavItem | NavGroup;
+
+const isGroup = (entry: NavEntry): entry is NavGroup => "children" in entry;
+
+const navEntries: NavEntry[] = [
   { label: "Overview", icon: BarChart3, path: "/admin/analytics" },
   { label: "Users", icon: Users, path: "/admin/users" },
   { label: "Orders", icon: ShoppingBag, path: "/admin/shopping-orders" },
-  { label: "Flight Orders", icon: Plane, path: "/admin/flight-orders" },
-  { label: "Flight Searches", icon: SearchIcon, path: "/admin/flight-searches" },
-  { label: "Flight API", icon: Server, path: "/admin/flight-api" },
-  { label: "Price Alerts", icon: Bell, path: "/admin/flight-price-alerts" },
+  {
+    label: "Flights", icon: Plane, children: [
+      { label: "Flight Orders", icon: Plane, path: "/admin/flight-orders" },
+      { label: "Search Analytics", icon: SearchIcon, path: "/admin/flight-searches" },
+      { label: "API Monitoring", icon: Server, path: "/admin/flight-api" },
+      { label: "Price Alerts", icon: Bell, path: "/admin/flight-price-alerts" },
+    ],
+  },
   { label: "Pricing", icon: DollarSign, path: "/admin/pricing" },
   { label: "System Health", icon: Activity, path: "/admin/system-health" },
 ];
@@ -80,20 +93,51 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
           {/* Nav */}
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            {navItems.map((item) => {
+            {navEntries.map((entry) => {
+              if (isGroup(entry)) {
+                const isGroupActive = entry.children.some((c) => location.pathname === c.path);
+                return (
+                  <Collapsible key={entry.label} defaultOpen={isGroupActive}>
+                    <CollapsibleTrigger className={cn(
+                      "w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                      isGroupActive ? "text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}>
+                      <div className="flex items-center gap-3">
+                        <entry.icon className="w-4.5 h-4.5 shrink-0" />
+                        {entry.label}
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pl-4 space-y-0.5 mt-0.5">
+                      {entry.children.map((child) => {
+                        const isActive = location.pathname === child.path;
+                        return (
+                          <button
+                            key={child.path}
+                            onClick={() => { navigate(child.path); setSidebarOpen(false); }}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all",
+                              isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                          >
+                            <child.icon className="w-4 h-4 shrink-0" />
+                            {child.label}
+                          </button>
+                        );
+                      })}
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              }
+              const item = entry as NavItem;
               const isActive = location.pathname === item.path;
               return (
                 <button
                   key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                    setSidebarOpen(false);
-                  }}
+                  onClick={() => { navigate(item.path); setSidebarOpen(false); }}
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
                   <item.icon className="w-4.5 h-4.5 shrink-0" />
