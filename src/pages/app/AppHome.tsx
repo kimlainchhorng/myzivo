@@ -454,11 +454,13 @@ const AppHome = () => {
             <SectionHeader icon={TrendingUp} iconColor="text-emerald-500" title={t("home.popular_near")} badge="Hot" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/eats")} />
 
 
-            {/* Popular Destinations */}
+            {/* Popular Destinations — Top 4 Grid + Scroll for more */}
             <div className="mb-6">
               <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.destinations")}</p>
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
-                {(isKH ? cambodiaDestKeysKH : popularDestKeysUS).map((key, i) => {
+              
+              {/* Top 4 in 2x2 grid */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                {(isKH ? cambodiaDestKeysKH : popularDestKeysUS).slice(0, 4).map((key, i) => {
                   const dest = destinationPhotos[key as keyof typeof destinationPhotos];
                   if (!dest) return null;
                   return (
@@ -466,7 +468,7 @@ const AppHome = () => {
                       key={key}
                       whileTap={{ scale: 0.96 }}
                       onClick={() => navigate(`/search?tab=flights&to=${dest.city}`)}
-                      className="shrink-0 w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative"
+                      className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative"
                     >
                       <div className="relative h-[120px] overflow-hidden">
                         <img src={dest.src} alt={dest.alt} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
@@ -480,6 +482,38 @@ const AppHome = () => {
                           <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
                           <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
                             <Plane className="w-2.5 h-2.5" />
+                            {destPrices[key] != null
+                              ? `${t("home.from")} $${Math.round(destPrices[key]!)}`
+                              : destPricesLoading
+                                ? "..."
+                                : t("home.search_flights")}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              {/* More destinations — horizontal scroll */}
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
+                {(isKH ? cambodiaDestKeysKH : popularDestKeysUS).slice(4).map((key) => {
+                  const dest = destinationPhotos[key as keyof typeof destinationPhotos];
+                  if (!dest) return null;
+                  return (
+                    <motion.button
+                      key={key}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => navigate(`/search?tab=flights&to=${dest.city}`)}
+                      className="shrink-0 w-[140px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative"
+                    >
+                      <div className="relative h-[100px] overflow-hidden">
+                        <img src={dest.src} alt={dest.alt} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute bottom-2 left-2 right-2">
+                          <div className="text-[11px] font-bold text-primary-foreground">{dest.city}</div>
+                          <div className="text-[9px] text-primary-foreground/80 font-semibold flex items-center gap-0.5">
+                            <Plane className="w-2 h-2" />
                             {destPrices[key] != null
                               ? `${t("home.from")} $${Math.round(destPrices[key]!)}`
                               : destPricesLoading
