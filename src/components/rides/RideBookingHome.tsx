@@ -3083,10 +3083,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="px-4 pb-1.5 shrink-0 flex flex-col items-start gap-2 safe-area-top pt-3">
             <button
               onClick={() => setViewStep("ride-options")}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0 active:scale-95 touch-manipulation"
               aria-label="Go back"
             >
-              <ArrowLeft className="w-4 h-4 text-foreground" />
+              <ArrowLeft className="w-5 h-5 text-foreground" />
             </button>
             <h2 className="text-lg font-black text-foreground tracking-tight leading-none">{t("ride.confirm_your_ride")}</h2>
           </div>
