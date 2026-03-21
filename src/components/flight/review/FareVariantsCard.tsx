@@ -367,7 +367,8 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
           // STRICT: selection derived ONLY from parent-controlled selectedFareId
           const isSelected = variant.id === selectedFareId;
           const fareName = formatFareName(variant.fareBrandName, variant.cabinClass, variant.conditions, variant.baggageDetails);
-          const totalPrice = variant.price;
+          const pricing = calculateFlightPricing(variant.price, 1, variant.currency);
+          const totalPrice = pricing.totalPerPassenger;
           const priceDelta = totalPrice - cheapestPrice;
           const theme = getTheme(variant.cabinClass);
           const CabinIcon = theme.icon;
