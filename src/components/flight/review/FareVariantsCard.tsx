@@ -188,6 +188,11 @@ function FloatingIcon3D({ icon: Icon, className, glow, size = "md" }: {
 export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardProps) {
   const variants = offer.fareVariants;
   const [selectedId, setSelectedId] = useState<string>(offer.id);
+
+  // DEBUG: trace variant data
+  console.log('[FareVariantsCard] offer.id:', offer.id, 'offer.fareBrandName:', offer.fareBrandName);
+  console.log('[FareVariantsCard] variants:', variants?.map(v => ({ id: v.id?.slice(-8), brand: v.fareBrandName, cabin: v.cabinClass, price: v.pricePerPerson ?? v.price })));
+
   const [cabinFilter, setCabinFilter] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
