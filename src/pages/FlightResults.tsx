@@ -576,9 +576,9 @@ const FlightResults = () => {
   const routeSummary = `${originAirport?.city || origin} → ${destAirport?.city || destination}`;
 
   const resultsContent = (
-    <div className="mx-auto px-3 sm:px-4 max-w-5xl">
+    <div className="mx-auto px-2.5 sm:px-4 max-w-5xl">
       {/* Sticky summary bar — compact nav */}
-      <div className={cn("sticky z-20 -mx-3 sm:-mx-4 px-3 sm:px-4 mb-3", isMobile ? "top-0" : "top-14")}>
+      <div className={cn("sticky z-20 -mx-2.5 sm:-mx-4 px-2.5 sm:px-4 mb-2", isMobile ? "top-0" : "top-14")}>
             <motion.div
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -714,10 +714,10 @@ const FlightResults = () => {
           {/* Quick Stats Bar */}
           {!isLoading && quickStats && filtered.length > 3 && (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="mb-3"
+              className="mb-2"
             >
               <QuickStatsBar
                 cheapest={quickStats.cheapest}
@@ -732,7 +732,7 @@ const FlightResults = () => {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="mb-2.5 -mx-3 sm:mx-0 px-3 sm:px-0 space-y-2"
+              className="mb-2 -mx-2.5 sm:mx-0 px-2.5 sm:px-0 space-y-1.5"
             >
               {/* Sort tabs + Filter */}
               <div
@@ -1052,7 +1052,7 @@ const FlightResults = () => {
               )}
 
               {/* Results list — Two-step for round-trip, single-step for one-way */}
-              <div className="space-y-2">
+                <div className="space-y-1.5">
                 <AnimatePresence mode="popLayout">
                   {isRoundTrip && selectionStep === "outbound" && sortedOutboundGroups.map((group, idx) => (
                     <motion.div
@@ -1139,8 +1139,8 @@ const FlightResults = () => {
             </div>
           </div>
 
-          {/* Cross-sell: Hotels & Cars */}
-          {!isLoading && filtered.length > 0 && (
+          {/* Cross-sell: Hotels & Cars — desktop only */}
+          {!isMobile && !isLoading && filtered.length > 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1151,8 +1151,8 @@ const FlightResults = () => {
             </motion.div>
           )}
 
-          {/* FAQ section for SEO */}
-          {!isLoading && offers.length > 0 && (
+          {/* FAQ section for SEO — desktop only */}
+          {!isMobile && !isLoading && offers.length > 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1173,11 +1173,8 @@ const FlightResults = () => {
           description={`Compare flight deals from ${origin} to ${destination}.`}
         />
         <AppLayout hideHeader hideNav>
-          <div className="relative overflow-hidden min-h-[100dvh]">
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-[hsl(var(--flights))]/6 blur-3xl" />
-            </div>
-            <div className="relative z-10 pb-6">
+          <div className="min-h-[100dvh] bg-background">
+            <div className="pb-4">
               {resultsContent}
             </div>
           </div>
