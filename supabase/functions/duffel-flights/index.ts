@@ -556,18 +556,21 @@ function readFareBrandName(
   const firstSegmentPassenger = ((firstSegment?.passengers as Array<Record<string, unknown>> | undefined) || [])[0];
   const firstOfferPassenger = passengers[0];
 
+  // Prefer the most specific passenger-level fare brand first.
+  // Duffel often exposes generic cabin marketing labels like "Economy"
+  // alongside the actual branded fare like "Basic" or "Main".
   const candidateValues: unknown[] = [
+    firstSlicePassenger?.fare_brand_name,
+    firstSegmentPassenger?.fare_brand_name,
+    firstOfferPassenger?.fare_brand_name,
     offer.fare_brand_name,
     firstSlice?.fare_brand_name,
-    (firstSlice?.cabin as Record<string, unknown> | undefined)?.marketing_name,
-    firstSlicePassenger?.fare_brand_name,
     firstSlicePassenger?.cabin_class_marketing_name,
-    (firstSlicePassenger?.cabin as Record<string, unknown> | undefined)?.marketing_name,
-    firstSegmentPassenger?.fare_brand_name,
-    firstSegmentPassenger?.cabin_class_marketing_name,
-    (firstSegmentPassenger?.cabin as Record<string, unknown> | undefined)?.marketing_name,
-    firstOfferPassenger?.fare_brand_name,
     firstOfferPassenger?.cabin_class_marketing_name,
+    firstSegmentPassenger?.cabin_class_marketing_name,
+    (firstSlice?.cabin as Record<string, unknown> | undefined)?.marketing_name,
+    (firstSlicePassenger?.cabin as Record<string, unknown> | undefined)?.marketing_name,
+    (firstSegmentPassenger?.cabin as Record<string, unknown> | undefined)?.marketing_name,
     (firstOfferPassenger?.cabin as Record<string, unknown> | undefined)?.marketing_name,
   ];
 
