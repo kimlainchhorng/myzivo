@@ -568,8 +568,9 @@ const FlightReview = () => {
     if (!base) return null;
     const baseFareVariants = base.fareVariants?.length ? base.fareVariants : undefined;
     const storedFareVariants = storedOffer?.fareVariants?.length ? storedOffer.fareVariants : undefined;
+    const hasRealFareVariants = Boolean(baseFareVariants?.length || storedFareVariants?.length || recoveredFareVariants?.length);
     const fareVariants = mergeFareVariants(
-      [buildFallbackFareVariant(base)],
+      hasRealFareVariants ? undefined : [buildFallbackFareVariant(base)],
       baseFareVariants,
       storedFareVariants,
       recoveredFareVariants,
