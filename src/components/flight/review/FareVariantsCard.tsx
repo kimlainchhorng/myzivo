@@ -7,7 +7,7 @@
  * No local selection state exists in this component.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Check, ChevronLeft, ChevronRight, Ticket, X,
   Briefcase, ShieldCheck, ArrowLeftRight, Luggage,
