@@ -219,6 +219,8 @@ function FloatingIcon3D({ icon: Icon, className, glow, size = "md" }: {
 export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardProps) {
   const variants = offer.fareVariants;
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Track the original offer fingerprint to avoid re-triggering on variant selection
+  const variantIds = useMemo(() => (variants ?? []).map(v => v.id).sort().join(","), [variants]);
 
   const [cabinFilter, setCabinFilter] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -246,14 +248,16 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
     [filteredVariants]
   );
 
-  // Auto-select cheapest variant on mount or when offer/variants change
+  // Auto-select cheapest variant ONLY when the actual set of variants changes (not on variant selection)
   useEffect(() => {
     if (!variants || variants.length === 0) return;
     const sorted = [...variants].sort((a, b) => a.price - b.price);
     const cheapest = sorted[0];
+    console.log("[FareVariants] auto-selecting cheapest:", cheapest.id, "from", variants.length, "variants");
     setSelectedId(cheapest.id);
     onSelectVariant(cheapest);
-  }, [offer.id, variants]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variantIds]);
 
   // Reset selection if current selectedId no longer exists in variants
   useEffect(() => {
@@ -266,7 +270,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
         onSelectVariant(sorted[0]);
       }
     }
-  }, [variants, selectedId]);
+  }, [variantIds, selectedId]);
 
   useEffect(() => {
     const node = scrollerRef.current;
