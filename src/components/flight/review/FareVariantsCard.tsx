@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
+import { getAllInPrice } from "@/utils/flightPricing";
 
 import cabinEconomy from "@/assets/cabin-economy.jpg";
 import cabinPremiumEconomy from "@/assets/cabin-premium-economy.jpg";
@@ -312,8 +313,12 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
         {filteredVariants.map((variant, index) => {
           const isSelected = variant.id === selectedId;
           const fareName = formatFareName(variant.fareBrandName, variant.cabinClass);
-          const variantPrice = variant.price;
-          const priceDelta = variantPrice - cheapestPrice;
+          const variantPrice = getAllInPrice(variant.price);
+          const baseFarePrice = variant.price;
+          const cheapestAllInPrice = filteredVariants.length
+            ? Math.min(...filteredVariants.map((v) => getAllInPrice(v.price)))
+            : 0;
+          const priceDelta = variantPrice - cheapestAllInPrice;
           const theme = getTheme(variant.cabinClass);
           const CabinIcon = theme.icon;
 
@@ -492,7 +497,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                   {/* 3D Price section */}
                   <div className="mt-4 pt-3 border-t border-border/10">
                     <p className="text-[8px] font-bold text-muted-foreground/50 uppercase tracking-[0.1em]">
-                      total amount from
+                      total with fees
                     </p>
                     <div className="mt-1.5 flex items-end justify-between gap-2">
                       <motion.p
@@ -531,6 +536,9 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                         </span>
                       )}
                     </div>
+                    <p className="mt-1 text-[9px] text-muted-foreground/70 tabular-nums">
+                      Base fare US${baseFarePrice.toFixed(2)} before taxes, fees & charges
+                    </p>
                   </div>
                 </div>
               </motion.div>
