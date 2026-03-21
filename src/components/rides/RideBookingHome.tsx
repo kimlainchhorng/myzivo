@@ -635,8 +635,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   // Merge DB pricing into vehicle options (admin rates override defaults)
   const vehicleOptions = useMemo(() => {
     const isCambodia = isCambodiaCountry;
+    const hasDbPricing = cityPricingMap && Object.keys(cityPricingMap).length > 0;
     let options = DEFAULT_VEHICLE_OPTIONS;
-    if (cityPricingMap && Object.keys(cityPricingMap).length > 0) {
+
+    if (hasDbPricing) {
+      // Use admin-configured DB pricing (source of truth)
       options = DEFAULT_VEHICLE_OPTIONS.map((v) => {
         const dbPricing = cityPricingMap[v.id];
         if (!dbPricing) return v;
@@ -649,8 +652,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           minimumFare: dbPricing.minimum_fare ?? v.minimumFare,
         };
       });
-    }
-    if (isCambodia) {
+    } else if (isCambodia) {
+      // Fallback: hardcoded Cambodia defaults (only when no DB pricing)
       options = options.map((v) => ({
         ...v,
         basePrice: 0,
