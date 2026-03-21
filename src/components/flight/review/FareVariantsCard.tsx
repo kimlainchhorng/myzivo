@@ -216,7 +216,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
     return () => { node.removeEventListener("scroll", update); window.removeEventListener("resize", update); };
   }, [filteredVariants]);
 
-  if (!variants || variants.length <= 1) return null;
+  if (!variants || variants.length === 0) return null;
 
   const handleSelect = (variant: FareVariant) => {
     setSelectedId(variant.id);
@@ -540,6 +540,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
       </div>
 
       {/* ── Scroll progress dots + arrows ──────────── */}
+      {filteredVariants.length > 1 && (
       <div className="mt-1 flex items-center justify-between">
         {/* Progress dots */}
         <div className="flex items-center gap-1.5">
@@ -597,6 +598,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
           ))}
         </div>
       </div>
+      )}
     </section>
   );
 }
