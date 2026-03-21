@@ -63,6 +63,57 @@ function getSliceSummary(segs: DuffelSegment[]): LegSummary | null {
   return { depTime, arrTime, depCode, arrCode, duration, stops, stopDetails, dayDiff };
 }
 
+function buildFareVariants(offers: DuffelOffer[]): NonNullable<DuffelOffer["fareVariants"]> | undefined {
+  const seen = new Map<string, NonNullable<DuffelOffer["fareVariants"]>[number]>();
+
+  for (const offer of offers) {
+    if (offer.fareVariants?.length) {
+      for (const variant of offer.fareVariants) {
+        const key = `${variant.cabinClass}::${(variant.fareBrandName || variant.cabinClass).toLowerCase()}`;
+        const existing = seen.get(key);
+        if (!existing || variant.price < existing.price) {
+          seen.set(key, variant);
+        }
+      }
+      continue;
+    }
+
+    const key = `${offer.cabinClass}::${(offer.fareBrandName || offer.cabinClass).toLowerCase()}`;
+    const existing = seen.get(key);
+    const fallbackVariant = {
+      id: offer.id,
+      fareBrandName: offer.fareBrandName,
+      price: offer.price,
+      currency: offer.currency,
+      conditions: offer.conditions,
+      baggageDetails: offer.baggageDetails,
+      baggageIncluded: offer.baggageIncluded,
+      cabinClass: offer.cabinClass,
+    };
+
+    if (!existing || fallbackVariant.price < existing.price) {
+      seen.set(key, fallbackVariant);
+    }
+  }
+
+  const variants = Array.from(seen.values()).sort((a, b) => a.price - b.price);
+  return variants.length > 1 ? variants : undefined;
+}
+
+function getRepresentativeOffer(offers: DuffelOffer[]): DuffelOffer {
+  const cheapest = offers.reduce((min, offer) => offer.price < min.price ? offer : min, offers[0]);
+  const fareVariants = buildFareVariants(offers);
+
+  if (!fareVariants) {
+    return cheapest;
+  }
+
+  return {
+    ...cheapest,
+    fareVariants,
+  };
+}
+
 /** Split an offer's segments into outbound and return */
 export function splitSegments(segments: DuffelSegment[], destCode: string) {
   if (!segments?.length || !destCode) return { outbound: segments || [], returnSegs: [] };
@@ -100,10 +151,9 @@ export function groupByOutbound(offers: DuffelOffer[], destCode: string): LegGro
     if (!summary) continue;
     const prices = data.offers.map(o => o.price);
     const fromPrice = Math.min(...prices);
-    const cheapest = data.offers.reduce((min, o) => o.price < min.price ? o : min, data.offers[0]);
     groups.push({
       fingerprint: fp,
-      representativeOffer: cheapest,
+      representativeOffer: getRepresentativeOffer(data.offers),
       offers: data.offers,
       segments: data.segments,
       summary,
@@ -138,10 +188,9 @@ export function groupByReturn(offers: DuffelOffer[], destCode: string): LegGroup
     if (!summary) continue;
     const prices = data.offers.map(o => o.price);
     const fromPrice = Math.min(...prices);
-    const cheapest = data.offers.reduce((min, o) => o.price < min.price ? o : min, data.offers[0]);
     groups.push({
       fingerprint: fp,
-      representativeOffer: cheapest,
+      representativeOffer: getRepresentativeOffer(data.offers),
       offers: data.offers,
       segments: data.segments,
       summary,
