@@ -373,6 +373,8 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
           const theme = getTheme(variant.cabinClass);
           const CabinIcon = theme.icon;
 
+          const isLowest = Math.abs(totalPrice - cheapestPrice) < 0.01;
+
           return (
             <motion.div
               key={variant.id}
@@ -391,6 +393,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                 )}
                 onClick={() => handleSelect(variant)}
                 style={{
+                  opacity: isSelected ? 1 : 0.75,
                   boxShadow: isSelected
                     ? `0 24px 48px -16px ${theme.glow},
                        0 12px 20px -8px hsl(var(--foreground)/0.05),
@@ -403,6 +406,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                   transform: isSelected
                     ? "perspective(600px) rotateX(0deg) translateY(-3px)"
                     : "perspective(600px) rotateX(1.5deg)",
+                }}
                 }}
               >
                 {/* ── Background layers ─────────────── */}
