@@ -36,6 +36,13 @@ const RIDE_TYPES = [
   "black", "black_suv", "luxury_xl", "pet", "wheelchair",
 ];
 
+// Country filter presets — map country label to known city names
+const COUNTRY_FILTERS: { label: string; flag: string; cities: string[] | "all" }[] = [
+  { label: "All", flag: "🌍", cities: "all" },
+  { label: "USA", flag: "🇺🇸", cities: ["default", "Baton Rouge", "New York", "Los Angeles", "Chicago", "Houston", "Dallas", "Miami", "Atlanta", "San Francisco", "Seattle", "Denver", "Boston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Austin", "Jacksonville", "Columbus", "Charlotte", "Indianapolis", "Washington", "Nashville", "Portland", "Las Vegas", "Memphis", "Louisville", "Baltimore", "Milwaukee", "Albuquerque", "Tucson", "Fresno", "Sacramento", "Mesa", "Kansas City", "Omaha", "Cleveland", "Virginia Beach", "Raleigh", "Minneapolis", "Tampa", "New Orleans", "Orlando", "Detroit", "St. Louis", "Pittsburgh", "Cincinnati", "Honolulu", "Anchorage"] },
+  { label: "Cambodia", flag: "🇰🇭", cities: ["Phnom Penh", "Siem Reap", "Battambang", "Sihanoukville", "Kampong Cham", "Poipet", "Kampot"] },
+];
+
 const defaultForm = {
   city: "default",
   ride_type: "standard",
@@ -52,7 +59,7 @@ export default function AdminPricingPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(defaultForm);
-
+  const [countryFilter, setCountryFilter] = useState(0); // index into COUNTRY_FILTERS
   const { data: rows, isLoading } = useQuery({
     queryKey: ["admin-city-pricing"],
     queryFn: async () => {
@@ -127,14 +134,22 @@ export default function AdminPricingPage() {
     upsert.mutate(editingId ? { ...form, id: editingId } : form);
   }
 
+  const activeFilter = COUNTRY_FILTERS[countryFilter];
+  const filteredRows = rows?.filter((r) => {
+    if (activeFilter.cities === "all") return true;
+    const city = (r.city || "default").toLowerCase();
+    return activeFilter.cities.some((c) => c.toLowerCase() === city);
+  });
+
   return (
     <AdminLayout title="Pricing Management">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">
-            Manage ride pricing per city and vehicle type. "default" applies when no city-specific pricing exists.
+            Manage ride pricing per city and vehicle type.
           </p>
-          <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) closeDialog(); else setDialogOpen(true); }}>
+          <div className="flex items-center gap-2">
+            <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) closeDialog(); else setDialogOpen(true); }}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => { setEditingId(null); setForm(defaultForm); }}>
                 <Plus className="w-4 h-4 mr-1.5" /> Add Pricing
@@ -194,6 +209,27 @@ export default function AdminPricingPage() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
+        </div>
+
+        {/* Country filter buttons */}
+        <div className="flex flex-wrap gap-2">
+          {COUNTRY_FILTERS.map((cf, i) => (
+            <Button
+              key={cf.label}
+              variant={countryFilter === i ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCountryFilter(i)}
+              className="gap-1.5"
+            >
+              <span>{cf.flag}</span> {cf.label}
+              {cf.cities !== "all" && rows && (
+                <span className="ml-1 text-xs opacity-70">
+                  ({rows.filter((r) => cf.cities !== "all" && cf.cities.some((c) => c.toLowerCase() === (r.city || "default").toLowerCase())).length})
+                </span>
+              )}
+            </Button>
+          ))}
         </div>
 
         <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -201,9 +237,9 @@ export default function AdminPricingPage() {
             <div className="flex items-center justify-center py-16">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : !rows?.length ? (
+          ) : !filteredRows?.length ? (
             <div className="text-center py-16 text-muted-foreground text-sm">
-              No pricing rules configured yet. Add your first one above.
+              {rows?.length ? `No pricing rules for ${activeFilter.label}.` : "No pricing rules configured yet. Add your first one above."}
             </div>
           ) : (
             <Table>
@@ -221,7 +257,7 @@ export default function AdminPricingPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((row) => (
+                {filteredRows.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell className="font-medium">{row.city || "default"}</TableCell>
                     <TableCell>{row.ride_type}</TableCell>
