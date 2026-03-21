@@ -415,12 +415,13 @@ export default function DuffelSeatPicker({
                                         "hover:shadow-[0_2px_8px_-2px_hsl(var(--flights)/0.15)]",
                                         "shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.6)]",
                                       ],
-                                      // Available free
+                                      // Available free — green tinted
                                       !isSelected && !isOtherPassengerSeat && isAvail && isFree && [
-                                        "bg-muted/30 border border-border/30",
-                                        "text-muted-foreground",
-                                        "hover:border-[hsl(var(--flights))]/30 hover:bg-[hsl(var(--flights))]/5",
-                                        "shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]",
+                                        "bg-emerald-500/10 border border-emerald-400/30",
+                                        "text-emerald-600 dark:text-emerald-400",
+                                        "hover:bg-emerald-500/20 hover:border-emerald-400/50",
+                                        "hover:shadow-[0_2px_8px_-2px_rgba(16,185,129,0.2)]",
+                                        "shadow-[0_1px_3px_rgba(0,0,0,0.03),inset_0_1px_0_rgba(255,255,255,0.4)]",
                                       ],
                                       // Unavailable
                                       !isSelected && !isOtherPassengerSeat && !isAvail && [
