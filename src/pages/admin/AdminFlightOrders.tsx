@@ -48,11 +48,21 @@ export default function AdminFlightOrders() {
     queryKey: ["admin-flight-orders"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("flight_orders")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (error) throw error;
+        .rpc("admin_list_flight_orders" as any);
+      if (error) {
+        // Fallback: direct query via rest
+        const res = await fetch(
+          `https://slirphzzwcogdbkeicff.supabase.co/rest/v1/flight_orders?select=*&order=created_at.desc&limit=200`,
+          {
+            headers: {
+              apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI",
+              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            },
+          }
+        );
+        if (!res.ok) throw new Error("Failed to load flight orders");
+        return (await res.json()) as FlightOrder[];
+      }
       return (data || []) as FlightOrder[];
     },
   });
