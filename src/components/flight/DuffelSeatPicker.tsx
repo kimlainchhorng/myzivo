@@ -463,7 +463,7 @@ export default function DuffelSeatPicker({
                                         {isFree ? (
                                           <span className="text-[8px]">Free</span>
                                         ) : (
-                                          <span className="text-[7.5px]">${svc!.price}</span>
+                                          <span className="text-[7.5px]">${svc?.price ?? 0}</span>
                                         )}
                                       </span>
                                     )}
