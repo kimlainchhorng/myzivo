@@ -578,7 +578,7 @@ const FlightResults = () => {
   const resultsContent = (
     <div className="mx-auto px-2.5 sm:px-4 max-w-5xl">
       {/* Sticky summary bar — compact nav */}
-      <div className={cn("sticky z-20 -mx-3 sm:-mx-4 px-3 sm:px-4 mb-3", isMobile ? "top-0" : "top-14")}>
+      <div className={cn("sticky z-20 -mx-2.5 sm:-mx-4 px-2.5 sm:px-4 mb-2", isMobile ? "top-0" : "top-14")}>
             <motion.div
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -714,10 +714,10 @@ const FlightResults = () => {
           {/* Quick Stats Bar */}
           {!isLoading && quickStats && filtered.length > 3 && (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="mb-3"
+              className="mb-2"
             >
               <QuickStatsBar
                 cheapest={quickStats.cheapest}
@@ -732,7 +732,7 @@ const FlightResults = () => {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="mb-2.5 -mx-3 sm:mx-0 px-3 sm:px-0 space-y-2"
+              className="mb-2 -mx-2.5 sm:mx-0 px-2.5 sm:px-0 space-y-1.5"
             >
               {/* Sort tabs + Filter */}
               <div
@@ -1052,7 +1052,7 @@ const FlightResults = () => {
               )}
 
               {/* Results list — Two-step for round-trip, single-step for one-way */}
-              <div className="space-y-2">
+                <div className="space-y-1.5">
                 <AnimatePresence mode="popLayout">
                   {isRoundTrip && selectionStep === "outbound" && sortedOutboundGroups.map((group, idx) => (
                     <motion.div
