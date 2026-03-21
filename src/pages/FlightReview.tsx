@@ -17,7 +17,7 @@ import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { type DuffelOffer, type DuffelSegment, type DuffelAvailableService, useDuffelOffer } from "@/hooks/useDuffelFlights";
+import { type DuffelOffer, type DuffelSegment, type DuffelAvailableService, useDuffelOffer, useDuffelFlightSearch } from "@/hooks/useDuffelFlights";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import BoardingPass3D from "@/components/flight/BoardingPass3D";
 import { StepIndicator } from "@/components/flight/review/StepIndicator";
@@ -88,6 +88,43 @@ function getSliceInfo(segs: DuffelSegment[]) {
     carriers: [...new Set(segs.map(s => s.operatingCarrier || s.marketingCarrier))],
     carrierCodes: [...new Set(segs.map(s => s.operatingCarrierCode || s.marketingCarrierCode))],
   };
+}
+
+function buildOfferFingerprint(offer?: Pick<DuffelOffer, "segments"> | null) {
+  if (!offer?.segments?.length) return "";
+  return offer.segments
+    .map((segment) => `${segment.marketingCarrierCode}${segment.flightNumber}-${segment.departingAt}-${segment.arrivingAt}`)
+    .join("|");
+}
+
+function buildFareVariantsFromOffers(offers: DuffelOffer[]) {
+  const seen = new Map<string, NonNullable<DuffelOffer["fareVariants"]>[number]>();
+
+  for (const offer of offers) {
+    const sourceVariants = offer.fareVariants?.length
+      ? offer.fareVariants
+      : [{
+          id: offer.id,
+          fareBrandName: offer.fareBrandName,
+          price: offer.price,
+          currency: offer.currency,
+          conditions: offer.conditions,
+          baggageDetails: offer.baggageDetails,
+          baggageIncluded: offer.baggageIncluded,
+          cabinClass: offer.cabinClass,
+        }];
+
+    for (const variant of sourceVariants) {
+      const key = `${variant.cabinClass}::${(variant.fareBrandName || variant.cabinClass).toLowerCase()}`;
+      const existing = seen.get(key);
+      if (!existing || variant.price < existing.price) {
+        seen.set(key, variant);
+      }
+    }
+  }
+
+  const variants = Array.from(seen.values()).sort((a, b) => a.price - b.price);
+  return variants.length > 1 ? variants : undefined;
 }
 
 /* ── 3D Slice Overview Card ───────────────────────────── */
@@ -375,7 +412,6 @@ const FlightReview = () => {
     } catch { return null; }
   });
 
-  // Re-read sessionStorage on every mount (navigation back/forth)
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("zivo_selected_offer");
@@ -405,16 +441,39 @@ const FlightReview = () => {
     } catch { /* ignore */ }
   }, []);
 
-  const { data: liveOffer, isError: liveOfferError } = useDuffelOffer(storedOffer?.id ?? null);
+  const recoveryCabinClass = (searchParams.cabinClass === "premium" ? "premium_economy" : (searchParams.cabinClass || "economy")) as "economy" | "premium_economy" | "business" | "first";
+  const shouldRecoverFareVariants = !storedOffer?.fareVariants?.length && !!storedOffer?.segments?.length && !!searchParams.origin && !!searchParams.destination && !!searchParams.departureDate;
+
+  const { data: recoverySearchData } = useDuffelFlightSearch({
+    origin: searchParams.origin || "",
+    destination: searchParams.destination || "",
+    departureDate: searchParams.departureDate || "",
+    returnDate: searchParams.returnDate || undefined,
+    passengers: {
+      adults: searchParams.adults || 1,
+      children: searchParams.children || 0,
+      infants: searchParams.infants || 0,
+    },
+    cabinClass: recoveryCabinClass,
+    enabled: shouldRecoverFareVariants,
+  });
+
+  const recoveredFareVariants = useMemo(() => {
+    if (!shouldRecoverFareVariants || !storedOffer || !recoverySearchData?.offers?.length) return undefined;
+    const targetFingerprint = buildOfferFingerprint(storedOffer);
+    if (!targetFingerprint) return undefined;
+    const matchingOffers = recoverySearchData.offers.filter((candidate) => buildOfferFingerprint(candidate) === targetFingerprint);
+    return matchingOffers.length ? buildFareVariantsFromOffers(matchingOffers) : undefined;
+  }, [shouldRecoverFareVariants, storedOffer, recoverySearchData]);
+
+  const { data: liveOffer } = useDuffelOffer(storedOffer?.id ?? null);
   const offer = useMemo(() => {
     if (!liveOffer && !storedOffer) return null;
     const base = liveOffer ?? storedOffer;
     if (!base) return null;
-    if (storedOffer?.fareVariants && !base.fareVariants) {
-      return { ...base, fareVariants: storedOffer.fareVariants };
-    }
-    return base;
-  }, [liveOffer, storedOffer]);
+    const fareVariants = base.fareVariants || storedOffer?.fareVariants || recoveredFareVariants;
+    return fareVariants ? { ...base, fareVariants } : base;
+  }, [liveOffer, storedOffer, recoveredFareVariants]);
 
   useEffect(() => {
     if (offer) {
