@@ -300,8 +300,8 @@ export default function DuffelFlightCard({
 
   const hasVariants = offer.fareVariants && offer.fareVariants.length > 1;
   const activeVariant = hasVariants ? offer.fareVariants![selectedVariantIdx] : null;
-  // Use active variant's data for display when a variant is selected
-  const displayPrice = getAllInPrice(activeVariant?.price ?? offer.price);
+  const activeVariantPricePerPerson = activeVariant?.pricePerPerson ?? activeVariant?.price ?? offer.pricePerPerson ?? offer.price;
+  const displayPrice = getAllInPrice(activeVariantPricePerPerson);
   const displayConditions = activeVariant?.conditions ?? offer.conditions;
   const displayBaggage = activeVariant?.baggageDetails ?? offer.baggageDetails;
   const displayFareName = activeVariant?.fareBrandName ?? offer.fareBrandName;
@@ -460,7 +460,7 @@ export default function DuffelFlightCard({
                 >
                   <span className="text-[8px] text-muted-foreground uppercase tracking-wide">{variant.cabinClass.replace("_", " ")}</span>
                   <span className="text-[10px] font-bold leading-tight mt-0.5 capitalize">{variant.fareBrandName || variant.cabinClass.replace("_", " ")}</span>
-                  <span className="text-[11px] font-extrabold text-[hsl(var(--flights))] tabular-nums mt-1">${Math.round(getAllInPrice(variant.price))}</span>
+                  <span className="text-[11px] font-extrabold text-[hsl(var(--flights))] tabular-nums mt-1">${Math.round(getAllInPrice(variant.pricePerPerson ?? variant.price))}</span>
                   <div className="flex flex-col gap-0.5 mt-1.5 text-[8px]">
                     <span className={variant.baggageDetails.carryOnIncluded ? "text-primary" : "text-muted-foreground"}>
                       {variant.baggageDetails.carryOnIncluded ? "✓ Carry-on" : "✗ No carry-on"}
@@ -537,7 +537,21 @@ export default function DuffelFlightCard({
               "h-8 px-4 text-[11px] font-bold shadow-sm active:scale-95 transition-all gap-1 shrink-0",
               "bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 text-primary-foreground"
             )}
-            onClick={(e) => { e.stopPropagation(); onSelect({ ...offer, id: displayOfferId, price: activeVariant?.price ?? offer.price, conditions: displayConditions, baggageDetails: displayBaggage }); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect({
+                ...offer,
+                id: displayOfferId,
+                price: activeVariant?.price ?? offer.price,
+                pricePerPerson: activeVariantPricePerPerson,
+                currency: activeVariant?.currency ?? offer.currency,
+                fareBrandName: displayFareName,
+                cabinClass: activeVariant?.cabinClass ?? offer.cabinClass,
+                conditions: displayConditions,
+                baggageDetails: displayBaggage,
+                baggageIncluded: activeVariant?.baggageIncluded ?? offer.baggageIncluded,
+              });
+            }}
           >
             Select
             <ChevronRight className="w-3.5 h-3.5" />

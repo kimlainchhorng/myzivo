@@ -670,7 +670,7 @@ const FlightTravelerInfo = () => {
   );
 
   /* Sticky bottom CTA — 3D elevated with price breakdown */
-  const stickyPricing = calculateFlightPricing(offer.price, totalPassengers, offer.currency || "USD");
+  const stickyPricing = calculateFlightPricing(offer.pricePerPerson || offer.price, totalPassengers, offer.currency || "USD");
   const totalPrice = stickyPricing.totalAllPassengers;
   const basePrice = stickyPricing.baseFare * totalPassengers;
   const taxesFees = stickyPricing.taxesFeesCharges * totalPassengers;

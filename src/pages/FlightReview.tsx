@@ -131,6 +131,7 @@ function buildFareVariantsFromOffers(offers: DuffelOffer[]) {
           id: offer.id,
           fareBrandName: offer.fareBrandName,
           price: offer.price,
+          pricePerPerson: offer.pricePerPerson,
           currency: offer.currency,
           conditions: offer.conditions,
           baggageDetails: offer.baggageDetails,
@@ -141,13 +142,18 @@ function buildFareVariantsFromOffers(offers: DuffelOffer[]) {
     for (const variant of sourceVariants) {
       const key = buildVariantKey(variant);
       const existing = seen.get(key);
-      if (!existing || variant.price < existing.price) {
+      const variantUnitPrice = variant.pricePerPerson ?? variant.price;
+      const existingUnitPrice = existing?.pricePerPerson ?? existing?.price ?? Number.POSITIVE_INFINITY;
+
+      if (!existing || variantUnitPrice < existingUnitPrice) {
         seen.set(key, variant);
       }
     }
   }
 
-  const variants = Array.from(seen.values()).sort((a, b) => a.price - b.price);
+  const variants = Array.from(seen.values()).sort(
+    (a, b) => (a.pricePerPerson ?? a.price) - (b.pricePerPerson ?? b.price),
+  );
   return variants.length > 1 ? variants : undefined;
 }
 
@@ -186,14 +192,18 @@ function mergeFareVariants(
     for (const variant of variants) {
       const key = buildFareVariantKey(variant);
       const existing = seen.get(key);
+      const variantUnitPrice = variant.pricePerPerson ?? variant.price;
+      const existingUnitPrice = existing?.pricePerPerson ?? existing?.price ?? Number.POSITIVE_INFINITY;
 
-      if (!existing || variant.price < existing.price || variant.id === existing.id) {
+      if (!existing || variantUnitPrice < existingUnitPrice || variant.id === existing.id) {
         seen.set(key, variant);
       }
     }
   }
 
-  const merged = Array.from(seen.values()).sort((a, b) => a.price - b.price);
+  const merged = Array.from(seen.values()).sort(
+    (a, b) => (a.pricePerPerson ?? a.price) - (b.pricePerPerson ?? b.price),
+  );
   return merged.length ? merged : undefined;
 }
 
@@ -201,7 +211,8 @@ function buildFallbackFareVariant(offer: DuffelOffer): NonNullable<DuffelOffer["
   return {
     id: offer.id,
     fareBrandName: offer.fareBrandName,
-    price: offer.pricePerPerson || offer.price,
+    price: offer.price,
+    pricePerPerson: offer.pricePerPerson || offer.price,
     currency: offer.currency,
     conditions: offer.conditions,
     baggageDetails: offer.baggageDetails,
@@ -706,14 +717,14 @@ const FlightReview = () => {
               <FareVariantsCard
                 offer={offer}
                 onSelectVariant={(variant) => {
-                  setVariantPrice(variant.price);
+                  const selectedPricePerPerson = variant.pricePerPerson ?? variant.price;
+                  setVariantPrice(selectedPricePerPerson);
                   setVariantCurrency(variant.currency);
-                  // Update sessionStorage with the selected fare variant
                   const updated = {
                     ...offer,
                     id: variant.id,
                     price: variant.price,
-                    pricePerPerson: variant.price,
+                    pricePerPerson: selectedPricePerPerson,
                     currency: variant.currency,
                     fareBrandName: variant.fareBrandName,
                     cabinClass: variant.cabinClass,
@@ -721,6 +732,7 @@ const FlightReview = () => {
                     baggageDetails: variant.baggageDetails,
                     baggageIncluded: variant.baggageIncluded,
                   };
+                  setStoredOffer(updated);
                   sessionStorage.setItem("zivo_selected_offer", JSON.stringify(updated));
                 }}
               />
@@ -738,7 +750,7 @@ const FlightReview = () => {
 
           {/* Price Summary */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.33 }} className="mt-3">
-            <PriceSummaryCard offer={variantPrice != null ? { ...offer, price: variantPrice, pricePerPerson: variantPrice, currency: variantCurrency || offer.currency } : offer} searchParams={searchParams} totalPassengers={totalPassengers} isRoundTrip={isRoundTrip} />
+            <PriceSummaryCard offer={variantPrice != null ? { ...offer, pricePerPerson: variantPrice, currency: variantCurrency || offer.currency } : offer} searchParams={searchParams} totalPassengers={totalPassengers} isRoundTrip={isRoundTrip} />
           </motion.div>
 
           {/* Partner disclosure — 3D */}
