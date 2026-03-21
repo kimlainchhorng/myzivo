@@ -346,8 +346,9 @@ const FlightCheckout = () => {
             </>
           )}
 
-          {/* Trust footer */}
-          <CheckoutTrustFooter className="mt-8" />
+          {/* Trust footer — compact on mobile */}
+          <CheckoutTrustFooter compact className="mt-6 md:hidden" />
+          <CheckoutTrustFooter className="mt-8 hidden md:block" />
         </div>
       </main>
 
@@ -382,7 +383,10 @@ const FlightCheckout = () => {
         </div>
       )}
 
-      <Footer />
+      {/* Footer — hidden on mobile for app feel */}
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   );
 };
