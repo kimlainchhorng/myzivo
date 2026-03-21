@@ -194,7 +194,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
   );
 
   const cheapestPrice = useMemo(
-    () => (filteredVariants.length ? Math.min(...filteredVariants.map((v) => v.price)) : 0),
+    () => (filteredVariants.length ? Math.min(...filteredVariants.map((v) => v.pricePerPerson ?? v.price)) : 0),
     [filteredVariants]
   );
 
