@@ -463,18 +463,20 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
                       glow={theme.glow}
                     />
                     <div className="flex-1 min-w-0">
-                      <div
-                        className={cn(
-                          "inline-block rounded-lg px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.14em] border mb-1.5",
-                          theme.badgeBorder,
-                        )}
-                        style={{
-                          background: `linear-gradient(135deg, ${theme.glow}, transparent)`,
-                          color: theme.accent,
-                        }}
-                      >
-                        {theme.label}
-                      </div>
+                      {fareName.toLowerCase() !== theme.label.toLowerCase() && (
+                        <div
+                          className={cn(
+                            "inline-block rounded-lg px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.14em] border mb-1.5",
+                            theme.badgeBorder,
+                          )}
+                          style={{
+                            background: `linear-gradient(135deg, ${theme.glow}, transparent)`,
+                            color: theme.accent,
+                          }}
+                        >
+                          {theme.label}
+                        </div>
+                      )}
                       <p className="text-[15px] font-extrabold leading-tight tracking-tight text-foreground truncate">
                         {fareName}
                       </p>
