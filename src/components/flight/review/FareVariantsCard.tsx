@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
-import { getAllInPrice } from "@/utils/flightPricing";
 
 import cabinEconomy from "@/assets/cabin-economy.jpg";
 import cabinPremiumEconomy from "@/assets/cabin-premium-economy.jpg";
@@ -101,6 +100,15 @@ function formatFareName(name: string | null, cabinClass: string): string {
   }
 
   return strippedCabinPrefix;
+}
+
+function formatFarePrice(amount: number, currency: string = "USD"): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
 }
 
 /* ── Helpers ────────────────────────────────────────── */
@@ -194,10 +202,6 @@ function FloatingIcon3D({ icon: Icon, className, glow, size = "md" }: {
 export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardProps) {
   const variants = offer.fareVariants;
   const [selectedId, setSelectedId] = useState<string>(offer.id);
-
-  // DEBUG: trace variant data
-  console.log('[FareVariantsCard] offer.id:', offer.id, 'offer.fareBrandName:', offer.fareBrandName);
-  console.log('[FareVariantsCard] variants:', variants?.map(v => ({ id: v.id?.slice(-8), brand: v.fareBrandName, cabin: v.cabinClass, price: v.pricePerPerson ?? v.price })));
 
   const [cabinFilter, setCabinFilter] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -340,11 +344,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
           const isSelected = variant.id === selectedId;
           const fareName = formatFareName(variant.fareBrandName, variant.cabinClass);
           const perPerson = variant.pricePerPerson ?? variant.price;
-          const allInPerPerson = getAllInPrice(perPerson);
-          const cheapestAllIn = filteredVariants.length
-            ? Math.min(...filteredVariants.map((v) => getAllInPrice(v.pricePerPerson ?? v.price)))
-            : 0;
-          const priceDelta = allInPerPerson - cheapestAllIn;
+          const priceDelta = perPerson - cheapestPrice;
           const theme = getTheme(variant.cabinClass);
           const CabinIcon = theme.icon;
 
@@ -523,11 +523,11 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                   {/* 3D Price section */}
                   <div className="mt-4 pt-3 border-t border-border/10">
                     <p className="text-[8px] font-bold text-muted-foreground/50 uppercase tracking-[0.1em]">
-                      per person · all-in
+                      per person · Duffel fare
                     </p>
                     <div className="mt-1.5 flex items-end justify-between gap-2">
                       <motion.p
-                        key={allInPerPerson}
+                        key={perPerson}
                         initial={{ scale: 0.95, opacity: 0.5 }}
                         animate={{ scale: 1, opacity: 1 }}
                         className={cn(
@@ -538,7 +538,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                           textShadow: isSelected ? "0 3px 16px hsl(var(--flights)/0.25)" : undefined,
                         }}
                       >
-                        US${allInPerPerson.toFixed(2)}
+                        {formatFarePrice(perPerson, variant.currency)}
                       </motion.p>
                       {priceDelta > 0 ? (
                         <span
@@ -548,7 +548,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                             boxShadow: "0 2px 6px -3px hsl(var(--foreground)/0.06)",
                           }}
                         >
-                          +US${priceDelta.toFixed(2)}
+                          +{formatFarePrice(priceDelta, variant.currency)}
                         </span>
                       ) : (
                         <span
@@ -563,7 +563,9 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                       )}
                     </div>
                     <p className="mt-1 text-[9px] text-muted-foreground/70 tabular-nums">
-                      Base fare US${perPerson.toFixed(2)} before taxes & fees
+                      {priceDelta > 0
+                        ? `${formatFarePrice(priceDelta, variant.currency)} more than the lowest Duffel fare`
+                        : "This is the lowest Duffel fare for this flight"}
                     </p>
                   </div>
                 </div>
