@@ -241,8 +241,9 @@ export default function DriverMapPage() {
       return;
     }
 
+    setAcceptedJobId(activeOffer.jobId);
     setActiveOffer(null);
-    toast.success("Ride accepted");
+    toast.success("Ride accepted — customer location loading");
   }, [activeOffer]);
 
   const handleDeclineOffer = useCallback(async () => {
