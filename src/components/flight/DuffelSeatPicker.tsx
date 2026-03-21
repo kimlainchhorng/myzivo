@@ -244,7 +244,7 @@ export default function DuffelSeatPicker({
             <div className="space-y-[3px]">
               {cabin.rows.map((row, rowIdx) => {
                 const rowNum = row.sections[0]?.elements[0]?.designator?.replace(/\D/g, "") || String(rowIdx + 1);
-                const isWingRow = rowIdx >= cabin.wings.first_row_index && rowIdx <= cabin.wings.last_row_index;
+                const isWingRow = cabin.wings ? (rowIdx >= cabin.wings.first_row_index && rowIdx <= cabin.wings.last_row_index) : false;
 
                 return (
                   <div key={rowIdx} className="flex items-center justify-center gap-0">
