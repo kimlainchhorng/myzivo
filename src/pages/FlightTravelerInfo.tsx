@@ -158,9 +158,13 @@ const FlightTravelerInfo = () => {
 
   useEffect(() => {
     if (liveOffer) {
-      sessionStorage.setItem("zivo_selected_offer", JSON.stringify(liveOffer));
+      // Preserve fareVariants from storedOffer when liveOffer doesn't include them
+      const toSave = storedOffer?.fareVariants && !liveOffer.fareVariants
+        ? { ...liveOffer, fareVariants: storedOffer.fareVariants }
+        : liveOffer;
+      sessionStorage.setItem("zivo_selected_offer", JSON.stringify(toSave));
     }
-  }, [liveOffer]);
+  }, [liveOffer, storedOffer]);
 
   useEffect(() => {
     if (!offer) navigate("/flights", { replace: true });
