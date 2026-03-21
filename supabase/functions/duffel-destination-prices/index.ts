@@ -29,6 +29,12 @@ const DESTINATION_CODES: Record<string, string> = {
   dallas: 'DFW',
   atlanta: 'ATL',
   phoenix: 'PHX',
+  honolulu: 'HNL',
+  nashville: 'BNA',
+  denver: 'DEN',
+  seattle: 'SEA',
+  boston: 'BOS',
+  'san-juan': 'SJU',
   // Cambodia destinations
   'siem-reap': 'REP',
   sihanoukville: 'KOS',
