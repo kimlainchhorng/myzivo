@@ -77,7 +77,6 @@ export default function DuffelSeatPicker({
     if (!element.is_available || !element.designator) return;
     const passengerId = passengerIds[activePassengerIdx];
     const svc = element.available_services.find(s => s.passenger_id === passengerId);
-    if (!svc) return;
 
     const key = `${activeSegmentIdx}-${passengerId}`;
     const newMap = new Map(selectedSeats);
@@ -88,10 +87,10 @@ export default function DuffelSeatPicker({
     } else {
       newMap.set(key, {
         designator: element.designator,
-        serviceId: svc.id,
-        passengerId: svc.passenger_id,
-        price: svc.price,
-        currency: svc.currency,
+        serviceId: svc?.id || "",
+        passengerId: svc?.passenger_id || passengerId,
+        price: svc?.price || 0,
+        currency: svc?.currency || "USD",
       });
     }
 
@@ -383,8 +382,8 @@ export default function DuffelSeatPicker({
                                   );
                                 }
 
-                                const isFree = svc && svc.price === 0;
-                                const isAvail = el.is_available && svc && !isOtherPassengerSeat;
+                                const isFree = !svc || svc.price === 0;
+                                const isAvail = el.is_available && !isOtherPassengerSeat;
 
                                 return (
                                   <motion.button
@@ -464,7 +463,7 @@ export default function DuffelSeatPicker({
                                         {isFree ? (
                                           <span className="text-[8px]">Free</span>
                                         ) : (
-                                          <span className="text-[7.5px]">${svc!.price}</span>
+                                          <span className="text-[7.5px]">${svc?.price ?? 0}</span>
                                         )}
                                       </span>
                                     )}
