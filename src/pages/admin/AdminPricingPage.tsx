@@ -221,23 +221,23 @@ export default function AdminPricingPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>Base Fare ({isCambodia ? "៛ KHR" : "$"})</Label>
-                    <Input type="number" step="0.01" value={form.base_fare} onChange={(e) => setForm({ ...form, base_fare: +e.target.value })} />
+                    <Input type="number" step="0.01" value={form.base_fare || ""} onChange={(e) => setForm({ ...form, base_fare: e.target.value === "" ? 0 : +e.target.value })} />
                   </div>
                   <div>
                     <Label>Per {isCambodia ? "Km" : "Mile"} ({isCambodia ? "៛ KHR" : "$"})</Label>
-                    <Input type="number" step="0.01" value={form.per_mile} onChange={(e) => setForm({ ...form, per_mile: +e.target.value })} />
+                    <Input type="number" step="0.01" value={form.per_mile || ""} onChange={(e) => setForm({ ...form, per_mile: e.target.value === "" ? 0 : +e.target.value })} />
                   </div>
                   <div>
                     <Label>Per Minute ({isCambodia ? "៛ KHR" : "$"})</Label>
-                    <Input type="number" step="0.01" value={form.per_minute} onChange={(e) => setForm({ ...form, per_minute: +e.target.value })} />
+                    <Input type="number" step="0.01" value={form.per_minute || ""} onChange={(e) => setForm({ ...form, per_minute: e.target.value === "" ? 0 : +e.target.value })} />
                   </div>
                   <div>
                     <Label>Booking Fee ({isCambodia ? "៛ KHR" : "$"})</Label>
-                    <Input type="number" step="0.01" value={form.booking_fee} onChange={(e) => setForm({ ...form, booking_fee: +e.target.value })} />
+                    <Input type="number" step="0.01" value={form.booking_fee || ""} onChange={(e) => setForm({ ...form, booking_fee: e.target.value === "" ? 0 : +e.target.value })} />
                   </div>
                   <div>
                     <Label>Minimum Fare ({isCambodia ? "៛ KHR" : "$"})</Label>
-                    <Input type="number" step="0.01" value={form.minimum_fare} onChange={(e) => setForm({ ...form, minimum_fare: +e.target.value })} />
+                    <Input type="number" step="0.01" value={form.minimum_fare || ""} onChange={(e) => setForm({ ...form, minimum_fare: e.target.value === "" ? 0 : +e.target.value })} />
                   </div>
                   <div className="flex items-center gap-2 pt-5">
                     <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
