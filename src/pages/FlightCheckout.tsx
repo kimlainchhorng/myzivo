@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2, AlertTriangle, Lock, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
@@ -17,6 +17,7 @@ import FlightPriceBreakdown from "@/components/flight/FlightPriceBreakdown";
 import AcceptedPaymentMethods from "@/components/checkout/AcceptedPaymentMethods";
 import { CheckoutTermsAcceptance, useTermsValidation } from "@/components/checkout/CheckoutTermsAcceptance";
 import CheckoutTrustFooter from "@/components/checkout/CheckoutTrustFooter";
+import InlineLegalSheet, { useLegalSheet } from "@/components/checkout/InlineLegalSheet";
 
 import FlightInlinePaymentForm from "@/components/flight/FlightInlinePaymentForm";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,6 +39,7 @@ const FlightCheckout = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [termsValid, handleTermsChange, triggerValidation] = useTermsValidation();
+  const { sheet, openSheet, setOpen } = useLegalSheet();
 
   // Payment intent state
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -290,13 +292,13 @@ const FlightCheckout = () => {
                     <span>{ZIVO_SOT_REGISTRATION.subAgent} {FLIGHT_MOR_DISCLAIMERS.ticketing}</span>
                   </p>
                   <div className="flex items-center gap-3 text-[11px] mt-2 ml-5">
-                    <Link to={FLIGHT_LEGAL_LINKS.partnerDisclosure} className="text-primary hover:underline">
+                    <button type="button" onClick={() => openSheet("Partner Disclosure", FLIGHT_LEGAL_LINKS.partnerDisclosure)} className="text-primary hover:underline">
                       Partner Disclosure
-                    </Link>
+                    </button>
                     <span className="text-border">·</span>
-                    <Link to={FLIGHT_LEGAL_LINKS.flightTerms} className="text-primary hover:underline">
+                    <button type="button" onClick={() => openSheet("Flight Terms", FLIGHT_LEGAL_LINKS.flightTerms)} className="text-primary hover:underline">
                       Flight Terms
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -351,6 +353,9 @@ const FlightCheckout = () => {
           <CheckoutTrustFooter className="mt-8 hidden md:block" />
         </div>
       </main>
+
+      {/* Inline legal sheet for all legal links */}
+      <InlineLegalSheet open={sheet.open} onOpenChange={setOpen} title={sheet.title} url={sheet.url} />
 
       {/* Mobile sticky CTA - only show before payment form */}
       {!showPaymentForm && (
