@@ -148,7 +148,8 @@ export default function AdminPricingPage() {
           <p className="text-sm text-muted-foreground">
             Manage ride pricing per city and vehicle type.
           </p>
-          <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) closeDialog(); else setDialogOpen(true); }}>
+          <div className="flex items-center gap-2">
+            <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) closeDialog(); else setDialogOpen(true); }}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => { setEditingId(null); setForm(defaultForm); }}>
                 <Plus className="w-4 h-4 mr-1.5" /> Add Pricing
