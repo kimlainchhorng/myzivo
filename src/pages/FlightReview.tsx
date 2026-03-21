@@ -127,6 +127,19 @@ function buildFareVariantsFromOffers(offers: DuffelOffer[]) {
   return variants.length > 1 ? variants : undefined;
 }
 
+function buildFallbackFareVariant(offer: DuffelOffer): NonNullable<DuffelOffer["fareVariants"]>[number] {
+  return {
+    id: offer.id,
+    fareBrandName: offer.fareBrandName,
+    price: offer.pricePerPerson || offer.price,
+    currency: offer.currency,
+    conditions: offer.conditions,
+    baggageDetails: offer.baggageDetails,
+    baggageIncluded: offer.baggageIncluded,
+    cabinClass: offer.cabinClass,
+  };
+}
+
 /* ── 3D Slice Overview Card ───────────────────────────── */
 function SliceCard({ info, label, rotate, segs }: {
   info: NonNullable<ReturnType<typeof getSliceInfo>>;
@@ -478,7 +491,7 @@ const FlightReview = () => {
     const fareVariants = recoveredFareVariants?.length && recoveredFareVariants.length > (fallbackFareVariants?.length ?? 0)
       ? recoveredFareVariants
       : fallbackFareVariants;
-    return fareVariants ? { ...base, fareVariants } : base;
+    return { ...base, fareVariants: fareVariants?.length ? fareVariants : [buildFallbackFareVariant(base)] };
   }, [liveOffer, storedOffer, recoveredFareVariants]);
 
   useEffect(() => {
@@ -616,12 +629,13 @@ const FlightReview = () => {
           </motion.div>
 
           {/* ── Fare Variants (Basic Economy / Main Cabin / etc.) ── */}
-          {offer.fareVariants && offer.fareVariants.length > 1 && (
+          {offer.fareVariants && offer.fareVariants.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }} className="mt-3">
               <FareVariantsCard
                 offer={offer}
                 onSelectVariant={(variant) => {
                   setVariantPrice(variant.price);
+                  setVariantCurrency(variant.currency);
                   // Update sessionStorage with the selected fare variant
                   const updated = {
                     ...offer,
