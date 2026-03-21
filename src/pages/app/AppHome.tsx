@@ -405,7 +405,7 @@ const AppHome = () => {
           {user && orderAgain.length > 0 && (
             <div>
               <SectionHeader icon={History} iconColor="text-orange-500" title={t("home.order_again")} badge="Quick" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/eats")} />
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {orderAgain.map((r) => (
                   <motion.button
                     key={r.id}
@@ -457,7 +457,7 @@ const AppHome = () => {
             {/* Popular Destinations */}
             <div className="mb-6">
               <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.destinations")}</p>
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {(isKH ? cambodiaDestKeysKH : popularDestKeysUS).map((key, i) => {
                   const dest = destinationPhotos[key as keyof typeof destinationPhotos];
                   if (!dest) return null;
@@ -503,13 +503,13 @@ const AppHome = () => {
           <div>
             <SectionHeader icon={Flame} iconColor="text-orange-500" title="Hot Deals" badge="LIVE" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/flights")} />
             {hotDealsLoading ? (
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {[1, 2, 3].map(i => (
                   <div key={i} className="shrink-0 w-[220px] h-[140px] rounded-2xl bg-muted/40 animate-pulse" />
                 ))}
               </div>
             ) : hotDeals.length > 0 ? (
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {hotDeals.map((deal, i) => {
                   const destPhoto = destinationPhotos[deal.destinationKey as keyof typeof destinationPhotos];
                   const formattedDate = new Date(deal.departureDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
