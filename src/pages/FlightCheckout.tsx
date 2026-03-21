@@ -257,36 +257,44 @@ const FlightCheckout = () => {
             </motion.div>
           ) : (
             <>
-              {/* Pre-payment notice */}
+              {/* Consolidated notices card */}
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 rounded-xl bg-[hsl(var(--flights))]/5 border border-[hsl(var(--flights))]/15"
+                className="mb-5 rounded-2xl border border-border/30 bg-card overflow-hidden"
               >
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {FLIGHT_CHECKOUT_CLARITY.prePayment}
-                </p>
-              </motion.div>
-
-              {/* Important booking notice */}
-              <ImportantBookingNotice variant="flights" compact className="mb-4" />
-
-              {/* Seller of Travel Disclosure */}
-              <div className="mb-4 p-3 rounded-xl bg-muted/30 border border-border/30 space-y-2">
-                <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
-                  <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                  {ZIVO_SOT_REGISTRATION.subAgent} {FLIGHT_MOR_DISCLAIMERS.ticketing}
-                </p>
-                <div className="flex items-center gap-3 text-[11px]">
-                  <Link to={FLIGHT_LEGAL_LINKS.partnerDisclosure} className="text-primary hover:underline">
-                    Partner Disclosure
-                  </Link>
-                  <span className="text-border">·</span>
-                  <Link to={FLIGHT_LEGAL_LINKS.flightTerms} className="text-primary hover:underline">
-                    Flight Terms
-                  </Link>
+                {/* Pre-payment notice */}
+                <div className="px-4 py-3 bg-[hsl(var(--flights))]/[0.04] border-b border-border/20">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {FLIGHT_CHECKOUT_CLARITY.prePayment}
+                  </p>
                 </div>
-              </div>
+
+                {/* Important booking notice */}
+                <div className="px-4 py-3 border-b border-border/20">
+                  <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                    <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-muted-foreground/60" />
+                    <span>Ticket rules, baggage, and refund policies vary by fare and airline.</span>
+                  </p>
+                </div>
+
+                {/* SOT Disclosure */}
+                <div className="px-4 py-3">
+                  <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                    <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-muted-foreground/60" />
+                    <span>{ZIVO_SOT_REGISTRATION.subAgent} {FLIGHT_MOR_DISCLAIMERS.ticketing}</span>
+                  </p>
+                  <div className="flex items-center gap-3 text-[11px] mt-2 ml-5">
+                    <Link to={FLIGHT_LEGAL_LINKS.partnerDisclosure} className="text-primary hover:underline">
+                      Partner Disclosure
+                    </Link>
+                    <span className="text-border">·</span>
+                    <Link to={FLIGHT_LEGAL_LINKS.flightTerms} className="text-primary hover:underline">
+                      Flight Terms
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
 
               {/* Terms acceptance */}
               <CheckoutTermsAcceptance
