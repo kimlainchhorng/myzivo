@@ -1312,11 +1312,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   const isSameLocation = useCallback((a: PlaceData | null, b: PlaceData | null) => {
     if (!a || !b) return false;
-    const sameCoords = Math.abs(a.lat - b.lat) < 0.002 && Math.abs(a.lng - b.lng) < 0.002; // ~200m
+    // Very tight radius (~50m) for coordinate match
+    const sameCoords = Math.abs(a.lat - b.lat) < 0.0005 && Math.abs(a.lng - b.lng) < 0.0005;
+    if (sameCoords) return true;
+    // Only match addresses if they're essentially identical (not substring)
     const normA = a.address.trim().toLowerCase().replace(/[,.\s]+/g, " ");
     const normB = b.address.trim().toLowerCase().replace(/[,.\s]+/g, " ");
-    const sameAddress = normA === normB || normA.includes(normB) || normB.includes(normA);
-    return sameCoords || sameAddress;
+    return normA === normB;
   }, []);
 
   const handlePickupSelect = useCallback((place: PlaceData) => {
