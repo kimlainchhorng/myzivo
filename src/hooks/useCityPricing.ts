@@ -28,6 +28,7 @@ const DB_TO_VEHICLE_ID: Record<string, string> = {
   luxury_xl: "luxury-xl",
   pet: "pet",
   wheelchair: "wheelchair",
+  tuktuk: "tuktuk",
 };
 
 export function useCityPricing(city?: string) {
