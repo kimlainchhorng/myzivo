@@ -303,6 +303,48 @@ export default function DriverMapPage() {
           )}
         </div>
 
+        {/* Customer live location indicator */}
+        {acceptedJobId && customerLocation && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute top-20 left-4 right-4 z-20"
+          >
+            <div className="rounded-2xl border border-primary/20 bg-card/95 backdrop-blur shadow-lg p-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-foreground">Customer Location</span>
+                    {customerConnected && (
+                      <span className="flex items-center gap-1 text-[10px] text-emerald-500 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Live
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {customerLocation.lat.toFixed(5)}, {customerLocation.lng.toFixed(5)}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-xl text-xs h-8"
+                  onClick={() => {
+                    const url = `https://www.google.com/maps/dir/?api=1&destination=${customerLocation.lat},${customerLocation.lng}`;
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  }}
+                >
+                  <Navigation className="w-3 h-3 mr-1" /> Navigate
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         <DriverMapHeader
           isOnline={isOnline}
           onToggleOnline={handleToggleOnline}
