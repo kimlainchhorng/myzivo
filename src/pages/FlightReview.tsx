@@ -478,8 +478,7 @@ const FlightReview = () => {
   const navigate = useNavigate();
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [selectedServices, setSelectedServices] = useState<DuffelAvailableService[]>([]);
-  const [variantPrice, setVariantPrice] = useState<number | null>(null);
-  const [variantCurrency, setVariantCurrency] = useState<string | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 
   const handleToggleService = useCallback((svc: DuffelAvailableService) => {
     setSelectedServiceIds(prev => {
@@ -578,17 +577,58 @@ const FlightReview = () => {
     return { ...base, fareVariants: fareVariants?.length ? fareVariants : [buildFallbackFareVariant(base)] };
   }, [liveOffer, storedOffer, recoveredFareVariants]);
 
+  const selectedVariant = useMemo(() => {
+    if (!offer?.fareVariants?.length) return undefined;
+
+    return offer.fareVariants.find((variant) => variant.id === selectedVariantId)
+      ?? offer.fareVariants.find((variant) => variant.id === storedOffer?.id)
+      ?? offer.fareVariants[0];
+  }, [offer, selectedVariantId, storedOffer?.id]);
+
+  const reviewOffer = useMemo(() => {
+    if (!offer) return null;
+    if (!selectedVariant) return offer;
+
+    return {
+      ...offer,
+      id: selectedVariant.id,
+      price: selectedVariant.price,
+      pricePerPerson: selectedVariant.pricePerPerson ?? selectedVariant.price,
+      currency: selectedVariant.currency,
+      fareBrandName: selectedVariant.fareBrandName,
+      cabinClass: selectedVariant.cabinClass,
+      conditions: selectedVariant.conditions,
+      baggageDetails: selectedVariant.baggageDetails,
+      baggageIncluded: selectedVariant.baggageIncluded,
+    };
+  }, [offer, selectedVariant]);
+
   useEffect(() => {
-    if (offer) {
-      sessionStorage.setItem("zivo_selected_offer", JSON.stringify(offer));
-      if (offer.fareVariants?.length) {
-        sessionStorage.setItem("zivo_selected_offer_snapshot", JSON.stringify(offer));
+    if (!offer?.fareVariants?.length) {
+      setSelectedVariantId(null);
+      return;
+    }
+
+    const nextSelectedId = offer.fareVariants.some((variant) => variant.id === selectedVariantId)
+      ? selectedVariantId
+      : (offer.fareVariants.find((variant) => variant.id === storedOffer?.id)?.id ?? offer.fareVariants[0]?.id ?? null);
+
+    if (nextSelectedId !== selectedVariantId) {
+      setSelectedVariantId(nextSelectedId);
+    }
+  }, [offer, selectedVariantId, storedOffer?.id]);
+
+  useEffect(() => {
+    if (reviewOffer) {
+      sessionStorage.setItem("zivo_selected_offer", JSON.stringify(reviewOffer));
+      if (reviewOffer.fareVariants?.length) {
+        sessionStorage.setItem("zivo_selected_offer_snapshot", JSON.stringify(reviewOffer));
       }
     }
-  }, [offer]);
+  }, [reviewOffer]);
 
   const totalPassengers = (searchParams.adults || 1) + (searchParams.children || 0) + (searchParams.infants || 0);
-  const segments = offer?.segments || [];
+  const segments = reviewOffer?.segments || [];
   const isRoundTrip = !!searchParams.returnDate;
 
   const { outboundSegments, returnSegments } = useMemo(() => {
@@ -608,9 +648,9 @@ const FlightReview = () => {
     }
     if (splitIdx === -1) return { outboundSegments: segments, returnSegments: [] as DuffelSegment[] };
     return { outboundSegments: segments.slice(0, splitIdx), returnSegments: segments.slice(splitIdx) };
-  }, [segments, isRoundTrip, searchParams, offer?.arrival?.code]);
+  }, [segments, isRoundTrip, searchParams, reviewOffer?.arrival?.code]);
 
-  if (!offer) {
+  if (!reviewOffer) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -637,8 +677,8 @@ const FlightReview = () => {
   return (
     <div className="min-h-[100dvh] bg-background relative overflow-hidden flex flex-col">
       <SEOHead
-        title={`Review Flight ${offer.departure.code} → ${offer.arrival.code} – ZIVO`}
-        description={`Review your ${offer.airline} flight from ${offer.departure.city} to ${offer.arrival.city}.`}
+        title={`Review Flight ${reviewOffer.departure.code} → ${reviewOffer.arrival.code} – ZIVO`}
+        description={`Review your ${reviewOffer.airline} flight from ${reviewOffer.departure.city} to ${reviewOffer.arrival.city}.`}
       />
 
       {/* Decorative orbs */}
@@ -698,7 +738,7 @@ const FlightReview = () => {
 
           {/* 3D Boarding Pass */}
           <motion.div initial={{ opacity: 0, y: 16, rotateX: -8 }} animate={{ opacity: 1, y: 0, rotateX: 0 }} transition={{ delay: 0.15, duration: 0.5 }} className="mt-4">
-            <BoardingPass3D offer={offer} />
+            <BoardingPass3D offer={reviewOffer} />
           </motion.div>
 
           {/* Segment timelines */}
@@ -709,23 +749,21 @@ const FlightReview = () => {
 
           {/* Fare Rules & Policies */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-3">
-            <FareRulesCard offer={offer} />
+            <FareRulesCard offer={reviewOffer} />
           </motion.div>
 
           {/* ── Fare Variants (Basic Economy / Main Cabin / etc.) ── */}
           {offer.fareVariants && offer.fareVariants.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }} className="mt-3">
               <FareVariantsCard
-                offer={offer}
+                offer={reviewOffer}
                 onSelectVariant={(variant) => {
-                  const selectedPricePerPerson = variant.pricePerPerson ?? variant.price;
-                  setVariantPrice(selectedPricePerPerson);
-                  setVariantCurrency(variant.currency);
+                  setSelectedVariantId(variant.id);
                   const updated = {
                     ...offer,
                     id: variant.id,
                     price: variant.price,
-                    pricePerPerson: selectedPricePerPerson,
+                    pricePerPerson: variant.pricePerPerson ?? variant.price,
                     currency: variant.currency,
                     fareBrandName: variant.fareBrandName,
                     cabinClass: variant.cabinClass,
@@ -743,7 +781,7 @@ const FlightReview = () => {
           {/* ── Real Available Services from Duffel ───── */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.27 }} className="mt-3">
             <DuffelServicesCard
-              offerId={offer.id}
+                offerId={reviewOffer.id}
               selectedServiceIds={selectedServiceIds}
               onToggleService={handleToggleService}
             />
@@ -751,7 +789,7 @@ const FlightReview = () => {
 
           {/* Price Summary */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.33 }} className="mt-3">
-            <PriceSummaryCard offer={variantPrice != null ? { ...offer, pricePerPerson: variantPrice, currency: variantCurrency || offer.currency } : offer} searchParams={searchParams} totalPassengers={totalPassengers} isRoundTrip={isRoundTrip} />
+            <PriceSummaryCard offer={reviewOffer} searchParams={searchParams} totalPassengers={totalPassengers} isRoundTrip={isRoundTrip} />
           </motion.div>
 
           {/* Partner disclosure — 3D */}
@@ -841,16 +879,16 @@ const FlightReview = () => {
             <div>
               <p className="text-[10px] text-muted-foreground font-medium">Total price</p>
               <motion.p
-                key={variantPrice ?? offer.price}
+                  key={reviewOffer.id}
                 initial={{ scale: 0.95, opacity: 0.6 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="text-xl font-extrabold text-[hsl(var(--flights))] tabular-nums leading-none"
                 style={{ textShadow: "0 3px 12px hsl(var(--flights)/0.2)" }}
               >
-                ${calculateFlightPricing(variantPrice ?? offer.pricePerPerson ?? offer.price, totalPassengers, variantCurrency || offer.currency || "USD").totalAllPassengers.toFixed(2)}
+                  ${calculateFlightPricing(reviewOffer.pricePerPerson ?? reviewOffer.price, totalPassengers, reviewOffer.currency || "USD").totalAllPassengers.toFixed(2)}
               </motion.p>
               <p className="text-[9px] text-muted-foreground mt-0.5">
-                {totalPassengers > 1 ? `${totalPassengers} travelers` : "1 traveler"} · {isRoundTrip ? "Round trip" : "One way"} · {variantCurrency || offer.currency || "USD"}
+                  {totalPassengers > 1 ? `${totalPassengers} travelers` : "1 traveler"} · {isRoundTrip ? "Round trip" : "One way"} · {reviewOffer.currency || "USD"}
               </p>
             </div>
             <Button
