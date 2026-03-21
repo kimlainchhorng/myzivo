@@ -850,6 +850,29 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
     .map(o => transformOffer(o))
     .filter((o): o is DuffelOfferTransformed => o !== null);
 
+  const buildFareVariantKey = (offer: DuffelOfferTransformed) => {
+    const bag = offer.baggageDetails;
+    const conditions = offer.conditions;
+    return [
+      offer.cabinClass,
+      (offer.fareBrandName || offer.cabinClass).toLowerCase(),
+      offer.baggageIncluded || '',
+      bag.carryOnIncluded ? 'co1' : 'co0',
+      bag.carryOnQuantity,
+      bag.carryOnWeightKg ?? '',
+      bag.carryOnWeightLb ?? '',
+      bag.checkedBagsIncluded ? 'cb1' : 'cb0',
+      bag.checkedBagQuantity,
+      bag.checkedBagWeightKg ?? '',
+      bag.checkedBagWeightLb ?? '',
+      conditions.changeable ? 'chg1' : 'chg0',
+      conditions.changePenalty ?? '',
+      conditions.refundable ? 'ref1' : 'ref0',
+      conditions.refundPenalty ?? '',
+      conditions.penaltyCurrency || '',
+    ].join('::');
+  };
+
   // Group by flight fingerprint (same itinerary, different fares)
   // For round-trips, include ALL segment flight numbers so different return legs stay separate
   const groups = new Map<string, DuffelOfferTransformed[]>();
@@ -872,10 +895,10 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
     // Sort by price ascending
     group.sort((a, b) => a.price - b.price);
 
-    // Deduplicate: keep only the cheapest offer per cabinClass + fareBrandName combo
+    // Deduplicate: keep only the cheapest offer per materially distinct fare bundle
     const seen = new Map<string, DuffelOfferTransformed>();
     for (const g of group) {
-      const key = `${g.cabinClass}::${(g.fareBrandName || g.cabinClass).toLowerCase()}`;
+      const key = buildFareVariantKey(g);
       if (!seen.has(key)) {
         seen.set(key, g);
       }
