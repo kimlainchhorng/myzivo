@@ -497,11 +497,11 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                   {/* 3D Price section */}
                   <div className="mt-4 pt-3 border-t border-border/10">
                     <p className="text-[8px] font-bold text-muted-foreground/50 uppercase tracking-[0.1em]">
-                      total with fees
+                      per person · all-in
                     </p>
                     <div className="mt-1.5 flex items-end justify-between gap-2">
                       <motion.p
-                        key={variant.price}
+                        key={allInPerPerson}
                         initial={{ scale: 0.95, opacity: 0.5 }}
                         animate={{ scale: 1, opacity: 1 }}
                         className={cn(
@@ -512,7 +512,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                           textShadow: isSelected ? "0 3px 16px hsl(var(--flights)/0.25)" : undefined,
                         }}
                       >
-                        US${variant.price.toFixed(2)}
+                        US${allInPerPerson.toFixed(2)}
                       </motion.p>
                       {priceDelta > 0 ? (
                         <span
@@ -537,7 +537,7 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
                       )}
                     </div>
                     <p className="mt-1 text-[9px] text-muted-foreground/70 tabular-nums">
-                      Base fare US${baseFarePrice.toFixed(2)} before taxes, fees & charges
+                      Base fare US${perPerson.toFixed(2)} before taxes & fees
                     </p>
                   </div>
                 </div>
