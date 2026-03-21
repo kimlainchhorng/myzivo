@@ -272,7 +272,6 @@ export default function AdminPricingPage() {
             ))}
           </div>
         )}
-        </div>
 
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           {isLoading ? (
