@@ -1831,7 +1831,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <Button
               onClick={handleAllowLocation}
               className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground shadow-lg"
-              disabled={locationPermission === "checking"}
+              disabled={isGettingLocation}
             >
               {isGettingLocation ? (
                 <span className="flex items-center gap-2">
