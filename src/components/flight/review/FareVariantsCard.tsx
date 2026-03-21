@@ -189,7 +189,13 @@ export function FareVariantsCard({ offer, onSelectVariant }: FareVariantsCardPro
   const hasMultipleCabins = cabinClasses.length > 1;
 
   const filteredVariants = useMemo(
-    () => (cabinFilter ? variants?.filter((v) => v.cabinClass === cabinFilter) : variants) ?? [],
+    () => ((cabinFilter ? variants?.filter((v) => v.cabinClass === cabinFilter) : variants) ?? [])
+      .slice()
+      .sort((a, b) => {
+        const priceDiff = (a.pricePerPerson ?? a.price) - (b.pricePerPerson ?? b.price);
+        if (priceDiff !== 0) return priceDiff;
+        return formatFareName(a.fareBrandName, a.cabinClass).localeCompare(formatFareName(b.fareBrandName, b.cabinClass));
+      }),
     [variants, cabinFilter]
   );
 
