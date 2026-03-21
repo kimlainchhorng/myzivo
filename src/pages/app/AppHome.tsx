@@ -38,6 +38,7 @@ import { useCustomerActivityFeed } from "@/hooks/useCustomerActivityFeed";
 import ActivityTimeline from "@/components/shared/ActivityTimeline";
 import { destinationPhotos } from "@/config/photos";
 import { useDestinationPrices } from "@/hooks/useDestinationPrices";
+import { useHotDeals, type HotDeal } from "@/hooks/useHotDeals";
 import { getRestaurantPhoto } from "@/config/restaurantPhotos";
 import { formatDistanceToNow, format } from "date-fns";
 import useEmblaCarousel from "embla-carousel-react";
@@ -133,8 +134,12 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
 // ─── Trending Rides (static) ───
 // trendingRides built inside component for translation
 
-// ─── Popular Destinations (subset) ───
-const popularDestKeysUS = ["miami", "las-vegas", "new-york", "cancun", "los-angeles"] as const;
+// ─── Popular Destinations (expanded with real photos) ───
+const popularDestKeysUS = [
+  "miami", "las-vegas", "new-york", "cancun", "los-angeles",
+  "orlando", "san-francisco", "chicago", "barcelona", "paris",
+  "san-diego", "dallas", "atlanta", "phoenix"
+] as const;
 
 // Cambodia destinations
 const cambodiaDestinations = [
@@ -204,6 +209,7 @@ const AppHome = () => {
   const { referralCode, shareReferral } = useReferrals();
   const destKeys = isKH ? cambodiaDestinations.map(d => d.key) : [...popularDestKeysUS];
   const { data: destPrices = {}, isLoading: destPricesLoading } = useDestinationPrices(destKeys, isKH);
+  const { data: hotDeals = [], isLoading: hotDealsLoading } = useHotDeals();
   const { data: allBookings = [] } = useScheduledBookingsQuery();
   const upcomingBookings = allBookings.filter((b) => {
     if (b.status !== "scheduled" && b.status !== "confirmed") return false;
@@ -516,6 +522,74 @@ const AppHome = () => {
 
           </div>
 
+          {/* ─── HOT DEALS ─── */}
+          <div>
+            <SectionHeader icon={Flame} iconColor="text-orange-500" title="Hot Deals" badge="LIVE" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/flights")} />
+            {hotDealsLoading ? (
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="shrink-0 w-[220px] h-[140px] rounded-2xl bg-muted/40 animate-pulse" />
+                ))}
+              </div>
+            ) : hotDeals.length > 0 ? (
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {hotDeals.map((deal, i) => {
+                  const destPhoto = destinationPhotos[deal.destinationKey as keyof typeof destinationPhotos];
+                  const formattedDate = new Date(deal.departureDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  return (
+                    <motion.button
+                      key={`${deal.originCode}-${deal.destinationCode}-${i}`}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => navigate(`/flights?from=${deal.originCode}&to=${deal.destinationCode}&date=${deal.departureDate}`)}
+                      className="shrink-0 w-[220px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative border border-border/20"
+                    >
+                      <div className="relative h-[140px] overflow-hidden">
+                        <img
+                          src={destPhoto?.src || `https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=400`}
+                          alt={deal.destination}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                        {/* Hot Deal badge */}
+                        <div className="absolute top-2 left-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-full px-2.5 py-0.5 shadow-lg">
+                          <span className="text-[8px] font-bold text-white uppercase tracking-wider flex items-center gap-1">
+                            <Flame className="w-2.5 h-2.5" /> HOT DEAL
+                          </span>
+                        </div>
+                        {/* Date badge */}
+                        <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-full px-2 py-0.5">
+                          <span className="text-[8px] font-semibold text-white flex items-center gap-0.5">
+                            <Calendar className="w-2 h-2" /> {formattedDate}
+                          </span>
+                        </div>
+                        {/* Bottom info */}
+                        <div className="absolute bottom-3 left-3 right-3">
+                          <div className="flex items-end justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-white">{deal.destination}</div>
+                              <div className="text-[9px] text-white/70 font-medium mt-0.5">
+                                {deal.originCode} → {deal.destinationCode} · {deal.stops === 0 ? "Nonstop" : `${deal.stops} stop`} · {deal.duration}
+                              </div>
+                              {deal.airline && (
+                                <div className="text-[8px] text-white/60 mt-0.5">{deal.airline}</div>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-black text-white leading-none">${Math.round(deal.price)}</div>
+                              <div className="text-[8px] text-white/60">one way</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No deals available right now. Check back soon!</p>
+            )}
+          </div>
 
           {/* ─── GUEST SIGN-UP CTA ─── */}
           {!user && (
