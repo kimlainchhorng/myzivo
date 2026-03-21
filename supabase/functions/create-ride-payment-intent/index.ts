@@ -83,10 +83,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Look up card_fee_pct from city_pricing (only applies to card payments)
+    // Map frontend vehicle IDs to DB ride_type values
+    const VEHICLE_TO_DB: Record<string, string> = {
+      economy: "standard", share: "share", comfort: "comfort", ev: "ev",
+      xl: "xl", "black-lane": "black", "black-xl": "black_suv",
+      "luxury-xl": "luxury_xl", pet: "pet", wheelchair: "wheelchair",
+      tuktuk: "tuktuk", "tuktuk-ev": "tuktuk_ev", moto: "moto", "share-xl": "share_xl",
+    };
+
+    // Look up card_fee_pct from city_pricing (applies to ALL card payments, not just saved cards)
     let cardFeePct = 0;
-    const isCardPayment = !!payment_method_id; // card payment when a payment method is provided
-    if (isCardPayment && city && ride_type) {
+    if (city && ride_type) {
+      const dbRideType = VEHICLE_TO_DB[ride_type] || ride_type;
       const serviceAdmin = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -96,7 +104,7 @@ Deno.serve(async (req) => {
         .select("card_fee_pct")
         .eq("is_active", true)
         .ilike("city", city)
-        .eq("ride_type", ride_type)
+        .eq("ride_type", dbRideType)
         .limit(1);
 
       if (pricingRows && pricingRows.length > 0 && pricingRows[0].card_fee_pct > 0) {
