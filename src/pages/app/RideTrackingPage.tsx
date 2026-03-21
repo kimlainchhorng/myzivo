@@ -1,5 +1,6 @@
 /**
  * RideTrackingPage - Live driver en-route tracking with real-time location
+ * Also broadcasts customer's live GPS so the driver can see pickup location
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -7,11 +8,19 @@ import AppLayout from "@/components/app/AppLayout";
 import DriverEnRouteTracker from "@/components/rides/DriverEnRouteTracker";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useCustomerLocationBroadcast } from "@/hooks/useCustomerLocationBroadcast";
 
 export default function RideTrackingPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
   const [tripData, setTripData] = useState<any>(null);
+
+  // Broadcast customer's live GPS to the driver while ride is active
+  const isRideActive = tripData?.status && ["driver_assigned", "en_route", "arrived", "in_progress"].includes(tripData.status);
+  useCustomerLocationBroadcast({
+    tripId: isRideActive ? tripId ?? null : null,
+    enabled: Boolean(isRideActive),
+  });
 
   useEffect(() => {
     if (!tripId) return;

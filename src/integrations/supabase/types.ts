@@ -8687,6 +8687,39 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_locations: {
+        Row: {
+          heading: number | null
+          id: string
+          lat: number
+          lng: number
+          speed: number | null
+          trip_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          heading?: number | null
+          id?: string
+          lat: number
+          lng: number
+          speed?: number | null
+          trip_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          heading?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          speed?: number | null
+          trip_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       customer_order_items: {
         Row: {
           created_at: string
