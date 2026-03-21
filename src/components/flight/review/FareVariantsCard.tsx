@@ -243,7 +243,13 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
   );
 
   const cheapestPrice = useMemo(
-    () => (filteredVariants.length ? Math.min(...filteredVariants.map((v) => v.price)) : 0),
+    () => {
+      if (!filteredVariants.length) return 0;
+      return Math.min(...filteredVariants.map((v) => {
+        const p = calculateFlightPricing(v.price, 1, v.currency);
+        return p.totalPerPassenger;
+      }));
+    },
     [filteredVariants]
   );
 
@@ -361,7 +367,8 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
           // STRICT: selection derived ONLY from parent-controlled selectedFareId
           const isSelected = variant.id === selectedFareId;
           const fareName = formatFareName(variant.fareBrandName, variant.cabinClass, variant.conditions, variant.baggageDetails);
-          const totalPrice = variant.price;
+          const pricing = calculateFlightPricing(variant.price, 1, variant.currency);
+          const totalPrice = pricing.totalPerPassenger;
           const priceDelta = totalPrice - cheapestPrice;
           const theme = getTheme(variant.cabinClass);
           const CabinIcon = theme.icon;
@@ -571,14 +578,9 @@ export function FareVariantsCard({ offer, selectedFareId, onSelectFare }: FareVa
                         )}
                       </div>
                     </div>
-                    {(() => {
-                      const pricing = calculateFlightPricing(totalPrice, 1, variant.currency);
-                      return (
-                        <p className="mt-1.5 text-[10px] font-medium text-muted-foreground tabular-nums">
-                          +{formatFarePrice(pricing.taxesFeesCharges, variant.currency)} Taxes, Fees &amp; Charges
-                        </p>
-                      );
-                    })()}
+                    <p className="mt-1.5 text-[10px] font-medium text-muted-foreground tabular-nums">
+                      Incl. {formatFarePrice(pricing.taxesFeesCharges, variant.currency)} Taxes, Fees &amp; Charges
+                    </p>
                     <p className="mt-1 text-[9px] text-muted-foreground/70 tabular-nums">
                       {priceDelta > 0
                         ? `${formatFarePrice(priceDelta, variant.currency)} more than lowest fare`
