@@ -84,10 +84,6 @@ const FlightMobileAppPromo = () => {
                 <Download className="w-4 h-4 mr-2" />
                 App Store
               </Button>
-              <Button size="lg" className="bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 text-primary-foreground">
-                <Download className="w-4 h-4 mr-2" />
-                Google Play
-              </Button>
             </div>
           </div>
         </div>

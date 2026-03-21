@@ -11,6 +11,7 @@ import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
+import { Capacitor } from "@capacitor/core";
 import SEOHead from "@/components/SEOHead";
 import { useI18n } from "@/hooks/useI18n";
 import { cn } from "@/lib/utils";
@@ -216,6 +217,12 @@ const Login = () => {
     if (error) {
       toast.error(error.message || `Failed to sign in with ${provider}`);
       setSocialLoading(null);
+      return;
+    }
+
+    if (provider === "apple" && Capacitor.isNativePlatform()) {
+      setSocialLoading(null);
+      navigate("/auth-callback", { replace: true });
     }
   };
 
