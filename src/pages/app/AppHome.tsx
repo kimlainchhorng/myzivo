@@ -140,7 +140,9 @@ const popularDestKeysUS = [
   "miami", "las-vegas", "new-york", "cancun", "los-angeles",
   "orlando", "san-francisco", "chicago", "barcelona", "paris",
   "san-diego", "dallas", "atlanta", "phoenix",
-  "honolulu", "nashville", "denver", "seattle", "boston", "san-juan"
+  "honolulu", "nashville", "denver", "seattle", "boston", "san-juan",
+  "tampa", "charlotte", "minneapolis", "portland", "austin",
+  "fort-lauderdale", "new-orleans", "washington"
 ] as const;
 
 // Cambodia destinations

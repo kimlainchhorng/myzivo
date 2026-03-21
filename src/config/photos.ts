@@ -84,6 +84,14 @@ import destDenver from "@/assets/dest-denver.jpg";
 import destSeattle from "@/assets/dest-seattle.jpg";
 import destBoston from "@/assets/dest-boston.jpg";
 import destSanJuan from "@/assets/dest-san-juan.jpg";
+import destTampa from "@/assets/dest-tampa.jpg";
+import destCharlotte from "@/assets/dest-charlotte.jpg";
+import destMinneapolis from "@/assets/dest-minneapolis.jpg";
+import destPortland from "@/assets/dest-portland.jpg";
+import destAustin from "@/assets/dest-austin.jpg";
+import destFortLauderdale from "@/assets/dest-fortlauderdale.jpg";
+import destNewOrleans from "@/assets/dest-neworleans.jpg";
+import destWashington from "@/assets/dest-washington.jpg";
 
 // Import lifestyle assets
 import lifestyleTravelers from "@/assets/lifestyle-travelers.jpg";
@@ -193,7 +201,7 @@ import cabinFirst from "@/assets/cabin-first.jpg";
 // ============================================
 export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "move" | "extras";
 export type CarCategory = "economy" | "compact" | "midsize" | "suv" | "luxury" | "van" | "electric";
-export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam" | "honolulu" | "nashville" | "denver" | "seattle" | "boston" | "san-juan";
+export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam" | "honolulu" | "nashville" | "denver" | "seattle" | "boston" | "san-juan" | "tampa" | "charlotte" | "minneapolis" | "portland" | "austin" | "fort-lauderdale" | "new-orleans" | "washington";
 
 // ============================================
 // PREMIUM 2026 HERO PHOTOS (Minimalist Luxury)
@@ -653,6 +661,70 @@ export const destinationPhotos: Record<DestinationCity, { src: string; alt: stri
     alt: "San Juan, Puerto Rico - Colorful colonial streets",
     city: "San Juan",
     country: "Puerto Rico",
+    width: 512,
+    height: 512,
+  },
+  "tampa": {
+    src: destTampa,
+    alt: "Tampa, Florida - Waterfront skyline at sunset",
+    city: "Tampa",
+    country: "Florida",
+    width: 512,
+    height: 512,
+  },
+  "charlotte": {
+    src: destCharlotte,
+    alt: "Charlotte, North Carolina - Modern skyline at dusk",
+    city: "Charlotte",
+    country: "North Carolina",
+    width: 512,
+    height: 512,
+  },
+  "minneapolis": {
+    src: destMinneapolis,
+    alt: "Minneapolis, Minnesota - River bridges and skyline",
+    city: "Minneapolis",
+    country: "Minnesota",
+    width: 512,
+    height: 512,
+  },
+  "portland": {
+    src: destPortland,
+    alt: "Portland, Oregon - City with Mount Hood",
+    city: "Portland",
+    country: "Oregon",
+    width: 512,
+    height: 512,
+  },
+  "austin": {
+    src: destAustin,
+    alt: "Austin, Texas - Downtown skyline at night",
+    city: "Austin",
+    country: "Texas",
+    width: 512,
+    height: 512,
+  },
+  "fort-lauderdale": {
+    src: destFortLauderdale,
+    alt: "Fort Lauderdale, Florida - Beach and yachts",
+    city: "Fort Lauderdale",
+    country: "Florida",
+    width: 512,
+    height: 512,
+  },
+  "new-orleans": {
+    src: destNewOrleans,
+    alt: "New Orleans, Louisiana - French Quarter at night",
+    city: "New Orleans",
+    country: "Louisiana",
+    width: 512,
+    height: 512,
+  },
+  "washington": {
+    src: destWashington,
+    alt: "Washington DC - Capitol Building at sunset",
+    city: "Washington DC",
+    country: "USA",
     width: 512,
     height: 512,
   },
