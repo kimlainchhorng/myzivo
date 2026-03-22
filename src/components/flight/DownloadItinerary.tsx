@@ -174,9 +174,7 @@ export default function DownloadItinerary({ booking }: { booking: ItineraryData 
       a.download = `ZIVO-Itinerary-${booking.booking_reference}.html`;
       document.body.appendChild(a);
       a.click();
-      {
-        document.body.removeChild(a);
-      }
+      document.body.removeChild(a);
 
       URL.revokeObjectURL(url);
       toast.success('Itinerary opened — use Print > Save as PDF to download');
