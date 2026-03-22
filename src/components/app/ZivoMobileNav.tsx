@@ -9,11 +9,11 @@ import { motion } from "framer-motion";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useI18n } from "@/hooks/useI18n";
-import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
-import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
-import tabCarsBg from "@/assets/tab-cars-bg.jpg";
-import tabRidesBg from "@/assets/tab-rides-bg.jpg";
-import tabEatsBg from "@/assets/tab-eats-bg.jpg";
+import navHomeBg from "@/assets/nav-home-bg.jpg";
+import navSearchBg from "@/assets/nav-search-bg.jpg";
+import navTripsBg from "@/assets/nav-trips-bg.jpg";
+import navAlertsBg from "@/assets/nav-alerts-bg.jpg";
+import navAccountBg from "@/assets/nav-account-bg.jpg";
 
 interface NavTab {
   id: string;
