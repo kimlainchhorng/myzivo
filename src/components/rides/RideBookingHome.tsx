@@ -2064,8 +2064,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                   {t("ride.calculating_route") || "Calculating..."}
                 </span>
+              ) : destination ? (
+                t("ride.confirm_dropoff") || "Confirm drop-off"
               ) : (
-                t("ride.search_destination") || "Search"
+                t("ride.search_destination") || "Search destination"
               )}
             </Button>
           </div>
