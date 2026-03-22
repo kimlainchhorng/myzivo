@@ -2134,11 +2134,26 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
                   {pinPlacementMode === "destination" ? "Drag map to set drop-off" : "Drag map to set stop"}
                 </p>
-                <p className="text-sm font-medium text-foreground truncate mb-3">
-                  {pinPlacementMode === "destination"
-                    ? (destinationDisplay || "Move the map...")
-                    : (stops.find(s => s.id === placingStopId)?.display || "Move the map...")}
-                </p>
+
+                {/* Address display + search input */}
+                {pinPlacementMode === "destination" ? (
+                  <AddressAutocomplete
+                    placeholder="Search or drag map..."
+                    value={destinationDisplay}
+                    onSelect={(place) => {
+                      setDestination(place);
+                      setDestinationDisplay(place.address);
+                      lastGeocodedCoordsRef.current = `${place.lat.toFixed(4)},${place.lng.toFixed(4)}`;
+                      setMapPanTarget({ lat: place.lat, lng: place.lng });
+                    }}
+                    className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30 mb-3"
+                  />
+                ) : (
+                  <p className="text-sm font-medium text-foreground truncate mb-3">
+                    {stops.find(s => s.id === placingStopId)?.display || "Move the map..."}
+                  </p>
+                )}
+
                 <div className="flex gap-2">
                   {pinPlacementMode === "destination" && destination && stops.length < MAX_STOPS && (
                     <Button variant="outline" onClick={handleAddStop} className="flex-1 h-12 rounded-2xl text-sm font-bold border-border/30">
