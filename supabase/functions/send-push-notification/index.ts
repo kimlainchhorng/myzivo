@@ -299,26 +299,18 @@ async function sendWebPush(
   return { success: true };
 }
 
-// APNs implementation
+// APNs implementation via FCM (Firebase handles APNs routing for Capacitor apps)
 async function sendAPNS(
   token: string,
   payload: { title: string; body?: string; data?: Record<string, unknown> }
 ): Promise<{ success: boolean; error?: string }> {
-  const apnsKey = Deno.env.get("APNS_KEY");
-  const apnsKeyId = Deno.env.get("APNS_KEY_ID");
-  const apnsTeamId = Deno.env.get("APNS_TEAM_ID");
-  const apnsBundleId = Deno.env.get("APNS_BUNDLE_ID");
-
-  if (!apnsKey || !apnsKeyId || !apnsTeamId || !apnsBundleId) {
-    console.log("[APNs] Missing credentials, skipping");
-    return { success: true };
-  }
-
-  console.log("[APNs] Would send to:", token.substring(0, 20), payload.title);
-  return { success: true };
+  // Capacitor push-notifications plugin uses FCM on both iOS and Android
+  // FCM handles the APNs routing automatically for iOS
+  // So we send via FCM for both platforms
+  return sendFCM(token, payload);
 }
 
-// FCM implementation
+// FCM v1 HTTP API implementation
 async function sendFCM(
   token: string,
   payload: { title: string; body?: string; data?: Record<string, unknown> }
@@ -326,11 +318,19 @@ async function sendFCM(
   const fcmKey = Deno.env.get("FCM_SERVER_KEY");
 
   if (!fcmKey) {
-    console.log("[FCM] Missing server key, skipping");
+    console.log("[FCM] Missing server key, skipping native push");
     return { success: true };
   }
 
   try {
+    // Convert data values to strings (FCM requires string values)
+    const stringData: Record<string, string> = {};
+    if (payload.data) {
+      for (const [key, value] of Object.entries(payload.data)) {
+        stringData[key] = String(value ?? "");
+      }
+    }
+
     const response = await fetch("https://fcm.googleapis.com/fcm/send", {
       method: "POST",
       headers: {
@@ -341,19 +341,42 @@ async function sendFCM(
         to: token,
         notification: {
           title: payload.title,
-          body: payload.body,
+          body: payload.body || "",
+          sound: "default",
+          badge: "1",
         },
-        data: payload.data,
+        data: stringData,
+        priority: "high",
+        // iOS-specific: ensure notification appears when app is in background
+        content_available: true,
+        mutable_content: true,
       }),
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      return { success: false, error };
+      const errorText = await response.text();
+      console.error("[FCM] Send failed:", response.status, errorText);
+      return { success: false, error: `FCM ${response.status}: ${errorText}` };
     }
 
+    const result = await response.json();
+    
+    // Check for individual message failures
+    if (result.failure > 0 && result.results?.[0]?.error) {
+      const fcmError = result.results[0].error;
+      console.error("[FCM] Message error:", fcmError);
+      
+      // Token is no longer valid
+      if (fcmError === "NotRegistered" || fcmError === "InvalidRegistration") {
+        return { success: false, error: fcmError };
+      }
+      return { success: false, error: fcmError };
+    }
+
+    console.log(`[FCM] Sent to token: ${token.substring(0, 20)}...`);
     return { success: true };
   } catch (error) {
+    console.error("[FCM] Error:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "FCM send failed",
