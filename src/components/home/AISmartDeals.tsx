@@ -343,7 +343,7 @@ const AITipBanner = ({ deal }: { deal: SmartDeal }) => {
 const AISmartDeals = () => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const { data: response, isLoading } = useAISmartDeals(
+  const { data: response, isLoading, isFetching } = useAISmartDeals(
     activeCategory === "all" ? undefined : activeCategory
   );
 
@@ -421,7 +421,7 @@ const AISmartDeals = () => {
       </div>
 
       {/* Deals Content */}
-      {isLoading ? (
+      {isLoading && deals.length === 0 ? (
         <div className="space-y-3">
           <div className="h-[220px] rounded-3xl bg-muted/30 animate-pulse" />
           <div className="h-12 rounded-2xl bg-muted/20 animate-pulse" />
@@ -434,9 +434,10 @@ const AISmartDeals = () => {
           <motion.div
             key={activeCategory}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            animate={{ opacity: isFetching ? 0.6 : 1 }}
             exit={{ opacity: 0 }}
-            className="space-y-3"
+            transition={{ duration: 0.3 }}
+            className="space-y-3 relative"
           >
             {featuredDeal && <FeaturedDealCard deal={featuredDeal} />}
             {featuredDeal && <AITipBanner deal={featuredDeal} />}
@@ -460,21 +461,9 @@ const AISmartDeals = () => {
           </motion.div>
         </AnimatePresence>
       ) : (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-10"
-        >
-          <motion.div
-            animate={{ rotate: [0, 360] }}
-            transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-            className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-primary/15 to-purple-500/10 flex items-center justify-center"
-          >
-            <Brain className="w-6 h-6 text-primary/40" />
-          </motion.div>
-          <p className="text-xs text-muted-foreground font-medium">AI is scanning real-time fares...</p>
-          
-        </motion.div>
+        <div className="text-center py-8">
+          <p className="text-xs text-muted-foreground">No deals available right now</p>
+        </div>
       )}
     </div>
   );
