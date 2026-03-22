@@ -276,9 +276,7 @@ const AppHome = () => {
 
   return (
     <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30 perspective-container overflow-x-hidden" role="main">
-      {/* 3D Ambient orbs */}
-      <div className="orb-3d-1 top-[-5%] right-[-10%] opacity-40 z-0" />
-      <div className="orb-3d-2 top-[40%] left-[-15%] opacity-25 z-0" />
+      {/* 3D Ambient orbs — contained within scrollable area only */}
 
       {/* Scrollable content */}
       <div className="overflow-y-auto pb-24 scroll-momentum relative z-10">
