@@ -33,11 +33,12 @@ export const usePushNotifications = () => {
   });
   const [notifications, setNotifications] = useState<PushNotificationSchema[]>([]);
 
-  // Check if push notifications are supported
+  // Check if push notifications are supported (native or web with service worker)
   const checkSupport = useCallback(() => {
     const isNative = Capacitor.isNativePlatform();
-    setState(prev => ({ ...prev, isSupported: isNative }));
-    return isNative;
+    const hasWebPush = !isNative && "serviceWorker" in navigator && "PushManager" in window;
+    setState(prev => ({ ...prev, isSupported: isNative || hasWebPush }));
+    return isNative || hasWebPush;
   }, []);
 
   // Request permission and register for push notifications
