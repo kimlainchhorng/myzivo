@@ -205,6 +205,7 @@ function MapSection({
   compact = false,
   panToCoords,
   suppressAutoViewport = false,
+  mapInteractive = true,
   onMapReadyExtra,
   children,
 }: {
@@ -222,6 +223,7 @@ function MapSection({
   compact?: boolean;
   panToCoords?: { lat: number; lng: number } | null;
   suppressAutoViewport?: boolean;
+  mapInteractive?: boolean;
   onMapReadyExtra?: (map: google.maps.Map) => void;
   children?: React.ReactNode;
 }) {
@@ -273,6 +275,7 @@ function MapSection({
           onMapReady={(map) => { mapRef.current = map; onMapReadyExtra?.(map); }}
           onCenterChanged={onCenterChanged}
           suppressAutoViewport={suppressAutoViewport}
+          mapInteractive={mapInteractive}
           className="absolute inset-0 h-full w-full"
         />
       </div>
@@ -2100,6 +2103,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               routePolyline={viewStep === "search" && pinPlacementMode ? null : (routeData?.polyline || null)}
               onCenterChanged={handleMapCenterChanged}
               suppressAutoViewport={viewStep === "search" && !!pinPlacementMode}
+              mapInteractive={!(viewStep === "search" && !pinPlacementMode)}
               onMapReadyExtra={(map) => {
                 map.addListener("dragstart", () => {
                   userHasDraggedPinRef.current = true;
