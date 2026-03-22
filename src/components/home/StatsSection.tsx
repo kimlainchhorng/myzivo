@@ -1,5 +1,5 @@
 /**
- * Stats Section - Dramatic counters with accent-colored icon rings
+ * Stats Section - 3D floating counters with depth and parallax
  */
 import { useEffect, useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
@@ -44,9 +44,14 @@ function AnimatedCounter({ value, suffix, decimals = 0 }: { value: number; suffi
 
 export default function StatsSection() {
   return (
-    <section className="py-16 sm:py-24 relative overflow-hidden" aria-label="Platform statistics">
-      {/* Background accent */}
+    <section className="py-16 sm:py-24 relative overflow-hidden perspective-container" aria-label="Platform statistics">
+      {/* 3D Background mesh */}
+      <div className="absolute inset-0 bg-mesh-3d pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-muted/30 pointer-events-none" />
+
+      {/* Floating orbs */}
+      <div className="orb-3d-1 top-[-10%] left-[20%] opacity-30" />
+      <div className="orb-3d-2 bottom-[-10%] right-[15%] opacity-20" />
 
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
@@ -61,29 +66,46 @@ export default function StatsSection() {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto preserve-3d">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 30, rotateX: -15 }}
+              whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="text-center group"
+              transition={{ duration: 0.6, delay: i * 0.12, type: "spring", stiffness: 100 }}
+              whileHover={{
+                y: -10,
+                rotateX: 5,
+                rotateY: -3,
+                transition: { type: "spring", stiffness: 300, damping: 20 }
+              }}
+              className="text-center group card-3d rounded-2xl p-6 bg-card/50 backdrop-blur-sm border border-border/20"
+              style={{ transformStyle: "preserve-3d" }}
             >
-              <div
-                className="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center border group-hover:scale-110 transition-transform duration-200"
+              <motion.div
+                className="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center border icon-3d-pop"
                 style={{
                   backgroundColor: `hsl(var(${stat.colorVar}) / 0.1)`,
                   borderColor: `hsl(var(${stat.colorVar}) / 0.2)`,
+                  transform: "translateZ(20px)",
                 }}
+                whileHover={{ scale: 1.15, rotateY: 10 }}
               >
                 <stat.icon className="w-7 h-7" style={{ color: `hsl(var(${stat.colorVar}))` }} />
-              </div>
-              <p className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground tracking-tighter mb-2 counter-tick">
+              </motion.div>
+              <p
+                className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground tracking-tighter mb-2 counter-tick"
+                style={{ transform: "translateZ(15px)" }}
+              >
                 <AnimatedCounter value={stat.value} suffix={stat.suffix} decimals={stat.decimals} />
               </p>
-              <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>
+              <p
+                className="text-sm text-muted-foreground font-medium uppercase tracking-wider"
+                style={{ transform: "translateZ(5px)" }}
+              >
+                {stat.label}
+              </p>
             </motion.div>
           ))}
         </div>

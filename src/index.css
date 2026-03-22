@@ -1708,29 +1708,153 @@ html[lang="km"] textarea {
 }
 
 /* =============================================
-   3D ANIMATIONS
+   3D SPATIAL UI SYSTEM — 2026 Alive UX
    ============================================= */
 
-@keyframes float3d {
-  0%, 100% {
-    transform: translateY(0) rotateX(0deg) rotateY(0deg);
-  }
-  25% {
-    transform: translateY(-12px) rotateX(8deg) rotateY(-6deg);
-  }
-  50% {
-    transform: translateY(-6px) rotateX(-4deg) rotateY(8deg);
-  }
-  75% {
-    transform: translateY(-14px) rotateX(6deg) rotateY(-4deg);
-  }
+.perspective-container {
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease;
+  will-change: transform;
+}
+
+.card-3d:hover {
+  transform: translateY(-8px) translateZ(20px) rotateX(2deg);
+  box-shadow: 0 25px 50px -12px hsl(var(--primary) / 0.15), 0 12px 24px -8px hsl(0 0% 0% / 0.1);
+}
+
+.card-3d:active {
+  transform: translateY(-2px) translateZ(5px) scale(0.98);
+}
+
+.btn-3d {
+  transform-style: preserve-3d;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow:
+    0 4px 0 hsl(var(--primary) / 0.4),
+    0 6px 20px hsl(var(--primary) / 0.2);
+}
+
+.btn-3d:hover {
+  transform: translateY(-2px) translateZ(8px);
+  box-shadow:
+    0 6px 0 hsl(var(--primary) / 0.4),
+    0 10px 30px hsl(var(--primary) / 0.3);
+}
+
+.btn-3d:active {
+  transform: translateY(2px) translateZ(0px);
+  box-shadow:
+    0 1px 0 hsl(var(--primary) / 0.4),
+    0 2px 8px hsl(var(--primary) / 0.15);
+}
+
+.icon-3d-pop {
+  transform-style: preserve-3d;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-3d-pop:hover {
+  transform: translateY(-6px) translateZ(15px) scale(1.1);
+  filter: drop-shadow(0 8px 16px hsl(var(--primary) / 0.2));
+}
+
+@keyframes orb-float-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.1); }
+  50% { transform: translate(-20px, -40px) scale(0.95); }
+  75% { transform: translate(15px, -10px) scale(1.05); }
+}
+
+@keyframes orb-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-40px, 20px) scale(1.15); }
+  66% { transform: translate(25px, -30px) scale(0.9); }
+}
+
+.orb-3d-1 {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, hsl(var(--primary) / 0.12), transparent 70%);
+  filter: blur(60px);
+  animation: orb-float-1 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.orb-3d-2 {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: radial-gradient(circle, hsl(var(--flights) / 0.1), transparent 70%);
+  filter: blur(50px);
+  animation: orb-float-2 10s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.bg-mesh-3d {
+  background:
+    radial-gradient(ellipse at 20% 50%, hsl(var(--primary) / 0.06), transparent 50%),
+    radial-gradient(ellipse at 80% 20%, hsl(var(--flights) / 0.05), transparent 50%),
+    radial-gradient(ellipse at 50% 80%, hsl(var(--hotels) / 0.04), transparent 50%);
+}
+
+.glass-3d {
+  background: hsl(var(--card) / 0.7);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid hsl(var(--border) / 0.3);
+  box-shadow:
+    0 8px 32px hsl(0 0% 0% / 0.06),
+    inset 0 1px 0 hsl(0 0% 100% / 0.1);
+  transform-style: preserve-3d;
+}
+
+.tab-3d {
+  transform-style: preserve-3d;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tab-3d.active {
+  transform: translateY(-3px) translateZ(10px);
+  box-shadow: 0 8px 24px hsl(var(--primary) / 0.3);
+}
+
+.tab-3d:not(.active):hover {
+  transform: translateY(-1px) translateZ(5px);
+}
+
+@keyframes breathe-glow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+.breathe-glow {
+  animation: breathe-glow 4s ease-in-out infinite;
 }
 
 @keyframes foilShimmer {
-  0%, 100% {
-    background-position: 200% 200%;
+  0%, 100% { background-position: 200% 200%; }
+  50% { background-position: 0% 0%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-3d, .btn-3d, .tab-3d, .icon-3d-pop {
+    transform: none !important;
+    transition: opacity 0.2s ease !important;
   }
-  50% {
-    background-position: 0% 0%;
+  .orb-3d-1, .orb-3d-2, .breathe-glow {
+    animation: none !important;
   }
 }

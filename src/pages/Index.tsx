@@ -46,7 +46,7 @@ const DesktopHomePage = () => {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background perspective-container">
       <OGImageMeta pageType="homepage" />
       <OrganizationSchema />
       <WebsiteSearchSchema />

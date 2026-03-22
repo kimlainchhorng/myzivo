@@ -78,8 +78,10 @@ const savedPlaceIconMap: Record<string, LucideIcon> = {
 const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant; onNavigate: () => void }) => (
   <motion.button
     onClick={onNavigate}
-    whileTap={{ scale: 0.96 }}
-    className="shrink-0 w-[170px] rounded-2xl overflow-hidden bg-card border border-border/40 shadow-sm hover:shadow-xl transition-all duration-300 touch-manipulation text-left group"
+    whileTap={{ scale: 0.94, rotateX: 5 }}
+    whileHover={{ y: -6, rotateX: -2 }}
+    className="shrink-0 w-[170px] rounded-2xl overflow-hidden bg-card border border-border/40 shadow-sm hover:shadow-xl transition-all duration-300 touch-manipulation text-left group card-3d"
+    style={{ transformStyle: "preserve-3d" }}
   >
     <div className="relative h-[120px] overflow-hidden">
       <img
@@ -99,7 +101,7 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
         <Heart className="w-3.5 h-3.5 text-primary-foreground" />
       </div>
     </div>
-    <div className="p-3">
+    <div className="p-3" style={{ transform: "translateZ(8px)" }}>
       <div className="text-xs font-bold text-foreground truncate">{restaurant.name}</div>
       {restaurant.cuisine_type && (
         <div className="text-[10px] text-muted-foreground truncate mt-0.5">{restaurant.cuisine_type}</div>
@@ -112,9 +114,12 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
 const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSeeAll }: { icon: LucideIcon; iconColor: string; title: string; badge?: string; actionLabel?: string; onSeeAll: () => void }) => (
   <div className="flex items-center justify-between mb-4">
     <h2 className="text-sm font-bold text-foreground flex items-center gap-2.5">
-      <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-muted/80 to-muted/40 flex items-center justify-center shadow-sm">
+      <motion.div
+        whileHover={{ scale: 1.1, rotateY: 10 }}
+        className="w-7 h-7 rounded-xl bg-gradient-to-br from-muted/80 to-muted/40 flex items-center justify-center shadow-sm icon-3d-pop"
+      >
         <Icon className={`w-3.5 h-3.5 ${iconColor}`} />
-      </div>
+      </motion.div>
       {title}
       {badge && (
         <Badge variant="secondary" className="text-[9px] font-bold bg-primary/10 text-primary border-0 px-1.5 py-0">
@@ -270,14 +275,18 @@ const AppHome = () => {
   const initials = (profile?.full_name || user?.email || "Z").charAt(0).toUpperCase();
 
   return (
-    <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30" role="main">
+    <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30 perspective-container" role="main">
+      {/* 3D Ambient orbs */}
+      <div className="orb-3d-1 top-[-5%] right-[-10%] opacity-40 z-0" />
+      <div className="orb-3d-2 top-[40%] left-[-15%] opacity-25 z-0" />
+
       {/* Scrollable content */}
-      <div className="overflow-y-auto pb-24 scroll-momentum">
+      <div className="overflow-y-auto pb-24 scroll-momentum relative z-10">
         {/* ─── HEADER ─── */}
         <div className="bg-background relative">
-          {/* Service Tabs — Pill Chips */}
+          {/* Service Tabs — 3D Pill Chips */}
           <div
-            className="flex items-center gap-2 px-4 pb-2 overflow-hidden safe-area-top"
+            className="flex items-center gap-2 px-4 pb-2 overflow-hidden safe-area-top preserve-3d"
           >
             {homeTabs.map((tab) => {
               const isActive = activeHomeTab === tab.id;
@@ -285,13 +294,13 @@ const AppHome = () => {
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveHomeTab(tab.id)}
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.92, rotateX: 5 }}
                   layout
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   className={cn(
-                    "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px]",
+                    "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px] tab-3d",
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 active"
                       : "bg-muted/50 text-muted-foreground hover:bg-muted/70"
                   )}
                 >
@@ -308,10 +317,11 @@ const AppHome = () => {
             })}
           </div>
 
-          {/* Where to? Search Bar */}
+          {/* Where to? Search Bar — 3D Glass */}
           <div className="px-5 pt-4 pb-4">
             <motion.button
-              whileTap={{ scale: 0.985 }}
+              whileTap={{ scale: 0.98, rotateX: 3 }}
+              whileHover={{ y: -2, scale: 1.01 }}
               onClick={() => {
                 const routes: Record<string, string> = {
                   rides: "/rides",
@@ -322,9 +332,10 @@ const AppHome = () => {
                 navigate(routes[activeHomeTab] || "/rides");
               }}
               className="w-full touch-manipulation"
+              style={{ transformStyle: "preserve-3d" }}
             >
-              <div className="bg-muted/40 backdrop-blur-sm rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] border border-border/40 shadow-sm transition-all active:bg-muted/60">
-                <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center">
+              <div className="glass-3d rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] shadow-sm transition-all active:bg-muted/60">
+                <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center icon-3d-pop">
                   <Search className="w-4.5 h-4.5 text-muted-foreground" />
                 </div>
                 <span className="text-muted-foreground font-medium text-[15px] flex-1 text-left">{getSearchPlaceholder(activeHomeTab)}</span>
@@ -343,16 +354,18 @@ const AppHome = () => {
                 <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-3 px-5 pt-3 pb-2">
+            <div className="grid grid-cols-4 gap-3 px-5 pt-3 pb-2 preserve-3d">
               {suggestions.map((s, idx) => (
                 <motion.button
                   key={s.label}
-                  whileTap={{ scale: 0.92 }}
+                  whileTap={{ scale: 0.88, rotateX: 8 }}
+                  whileHover={{ y: -4, rotateX: -3 }}
                   onClick={() => navigate(s.href)}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.06 }}
+                  initial={{ opacity: 0, y: 15, rotateX: -10 }}
+                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                  transition={{ delay: idx * 0.08, type: "spring", stiffness: 200 }}
                   className="flex flex-col items-center gap-2 touch-manipulation relative group"
+                  style={{ transformStyle: "preserve-3d" }}
                 >
                   {/* Badge */}
                   {s.badge && (
@@ -365,8 +378,11 @@ const AppHome = () => {
                       {s.badge}
                     </div>
                   )}
-                  {/* Icon container */}
-                  <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center group-active:scale-95 group-hover:shadow-md group-hover:border-primary/20 transition-all duration-200">
+                  {/* Icon container — 3D depth */}
+                  <div
+                    className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center icon-3d-pop group-active:scale-95 transition-all duration-200"
+                    style={{ transform: "translateZ(10px)" }}
+                  >
                     {s.image ? (
                       <img src={s.image} alt={s.label} className="w-8 h-8 object-contain" />
                     ) : s.icon ? (
@@ -379,19 +395,29 @@ const AppHome = () => {
             </div>
           </div>
 
-          {/* Promo Banner */}
+          {/* Promo Banner — 3D Float */}
           <div className="px-5 pb-3">
-            <img
-              src={zivoPromoBanner}
-              alt="ZIVO - All Services in One Place"
-              className="w-full rounded-2xl shadow-sm"
-              loading="lazy"
-            />
+            <motion.div
+              whileHover={{ y: -3, rotateX: 2 }}
+              whileTap={{ scale: 0.98 }}
+              className="card-3d rounded-2xl overflow-hidden"
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              <img
+                src={zivoPromoBanner}
+                alt="ZIVO - All Services in One Place"
+                className="w-full rounded-2xl shadow-sm"
+                loading="lazy"
+              />
+            </motion.div>
           </div>
 
 
-          {/* Subtle section divider */}
-          <div className="h-2 bg-muted/30" />
+          {/* 3D Section Divider */}
+          <div className="h-3 relative overflow-hidden">
+            <div className="absolute inset-x-4 top-1/2 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-full bg-muted/20" />
+          </div>
         </div>
 
         {/* ─── MAIN CONTENT ─── */}
@@ -604,12 +630,14 @@ const AppHome = () => {
           {/* ─── GUEST SIGN-UP CTA ─── */}
           {!user && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl bg-gradient-to-br from-primary/12 via-sky-500/6 to-primary/10 border border-primary/20 p-6 relative overflow-hidden shadow-sm"
+              initial={{ opacity: 0, y: 15, rotateX: -8 }}
+              animate={{ opacity: 1, y: 0, rotateX: 0 }}
+              whileHover={{ y: -4, rotateX: 2 }}
+              className="rounded-2xl bg-gradient-to-br from-primary/12 via-sky-500/6 to-primary/10 border border-primary/20 p-6 relative overflow-hidden shadow-sm card-3d"
+              style={{ transformStyle: "preserve-3d" }}
             >
-              <div className="absolute -top-10 -right-10 w-28 h-28 bg-primary/10 rounded-full blur-3xl" />
-              <div className="relative z-10">
+              <div className="absolute -top-10 -right-10 w-28 h-28 bg-primary/10 rounded-full blur-3xl breathe-glow" />
+              <div className="relative z-10" style={{ transform: "translateZ(15px)" }}>
                 <h3 className="text-base font-bold text-foreground mb-1">{t("home.join_free")}</h3>
                 <p className="text-xs text-muted-foreground mb-4">
                   {t("home.join_desc")}
@@ -618,7 +646,7 @@ const AppHome = () => {
                   <Button
                     onClick={() => navigate("/signup")}
                     size="sm"
-                    className="flex-1 h-11 rounded-xl font-bold shadow-md shadow-primary/20"
+                    className="flex-1 h-11 rounded-xl font-bold shadow-md shadow-primary/20 btn-3d"
                   >
                     {t("home.sign_up_free")}
                   </Button>
@@ -626,7 +654,7 @@ const AppHome = () => {
                     onClick={() => navigate("/login")}
                     variant="outline"
                     size="sm"
-                    className="h-11 px-5 rounded-xl font-medium"
+                    className="h-11 px-5 rounded-xl font-medium card-3d"
                   >
                     {t("home.log_in")}
                   </Button>
