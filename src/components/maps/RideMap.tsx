@@ -432,12 +432,17 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   const realDriverMarkersRef = useRef<google.maps.Marker[]>([]);
   const driverNavLineRef = useRef<google.maps.Polyline | null>(null);
   const onCenterChangedRef = useRef<RideMapProps["onCenterChanged"]>(onCenterChanged);
+  const mapInteractiveRef = useRef(mapInteractive);
   const [mapReady, setMapReady] = useState(false);
   const hasPannedToUserRef = useRef(false);
 
   useEffect(() => {
     onCenterChangedRef.current = onCenterChanged;
   }, [onCenterChanged]);
+
+  useEffect(() => {
+    mapInteractiveRef.current = mapInteractive;
+  }, [mapInteractive]);
 
   // ─── Update map interactivity dynamically ───
   useEffect(() => {
@@ -527,7 +532,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       // Use 300ms throttle to avoid excessive React re-renders that cause map jank
       let dragThrottleTimer: ReturnType<typeof setTimeout> | null = null;
       map.addListener("drag", () => {
-        if (!mapInteractive) return;
+        if (!mapInteractiveRef.current) return;
         if (dragThrottleTimer) return;
         dragThrottleTimer = setTimeout(() => {
           dragThrottleTimer = null;
