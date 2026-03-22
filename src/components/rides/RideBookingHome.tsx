@@ -2017,7 +2017,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 null
               }
               userLocation={userLocation}
-              nearbyDrivers={driverCoords || pinPlacementMode ? [] : realNearbyDrivers}
+              nearbyDrivers={driverCoords ? [] : realNearbyDrivers}
               showUserLocationDot={!pickup}
               onLocateUser={handleLocateUser}
               routePolyline={viewStep === "search" && pinPlacementMode ? null : (routeData?.polyline || null)}
