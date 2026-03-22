@@ -124,16 +124,14 @@ const Footer = ({ className }: { className?: string }) => {
             {/* Social */}
             <div className="flex items-center gap-2">
               {socialLinks.map((social) => (
-                <a
+                <button
                   key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(social.href))}
                   className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-lg bg-primary-foreground/10 flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground hover:bg-primary/20 hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)] active:scale-90 transition-all touch-manipulation"
                   aria-label={social.label}
                 >
                   {social.icon}
-                </a>
+                </button>
               ))}
             </div>
           </div>

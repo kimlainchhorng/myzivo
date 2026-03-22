@@ -168,23 +168,13 @@ export default function DownloadItinerary({ booking }: { booking: ItineraryData 
       const blob = new Blob([html], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
 
-      // Open in new tab for printing/saving as PDF
-      const newWindow = window.open(url, '_blank');
-      if (newWindow) {
-        newWindow.addEventListener('load', () => {
-          setTimeout(() => {
-            newWindow.print();
-          }, 500);
-        });
-      } else {
-        // Fallback: download as HTML file
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `ZIVO-Itinerary-${booking.booking_reference}.html`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
+      // Download as HTML file (works on native + web)
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ZIVO-Itinerary-${booking.booking_reference}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
 
       URL.revokeObjectURL(url);
       toast.success('Itinerary opened — use Print > Save as PDF to download');
