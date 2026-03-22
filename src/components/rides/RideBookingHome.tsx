@@ -2965,9 +2965,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
           <h3 className="text-base font-bold text-foreground mb-0.5">{t("ride.heading_to_destination")}</h3>
-          {routeData && (
+          {driverEta > 0 ? (
+            <p className="text-xs text-muted-foreground mb-2">{t("ride.eta")}: {driverEta} {t("ride.min_unit")}</p>
+          ) : routeData ? (
             <p className="text-xs text-muted-foreground mb-2">{t("ride.eta")}: {routeData.duration_minutes} {t("ride.min_unit")}</p>
-          )}
+          ) : null}
 
           <div className="flex items-center gap-2 mb-3 text-sm">
             <Car className="w-4 h-4 text-muted-foreground shrink-0" />
