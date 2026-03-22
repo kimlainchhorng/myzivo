@@ -1509,7 +1509,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [pinPlacementMode, placingStopId]);
 
-
+  const handleSavedPlace = (address: string, lat: number, lng: number) => {
     setDestinationDisplay(address);
     setDestination({ address, lat, lng });
 
