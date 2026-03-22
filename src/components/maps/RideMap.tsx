@@ -439,6 +439,19 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     onCenterChangedRef.current = onCenterChanged;
   }, [onCenterChanged]);
 
+  // ─── Update map interactivity dynamically ───
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.setOptions({
+      gestureHandling: mapInteractive ? "greedy" : "none",
+      draggable: mapInteractive,
+      keyboardShortcuts: mapInteractive,
+      scrollwheel: mapInteractive,
+      disableDoubleClickZoom: !mapInteractive,
+    });
+  }, [mapInteractive, mapReady]);
+
   // ─── Pan to user's GPS location once it becomes available ───
   useEffect(() => {
     const map = mapRef.current;
