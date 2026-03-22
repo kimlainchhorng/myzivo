@@ -444,6 +444,23 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     mapInteractiveRef.current = mapInteractive;
   }, [mapInteractive]);
 
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    if (!container) return;
+
+    const touchAction = mapInteractive ? "none" : "auto";
+    container.style.touchAction = touchAction;
+    container.style.pointerEvents = "auto";
+    container.style.userSelect = "none";
+    container.style.webkitUserSelect = "none";
+
+    const firstLayer = container.firstElementChild as HTMLElement | null;
+    if (firstLayer) {
+      firstLayer.style.touchAction = touchAction;
+      firstLayer.style.pointerEvents = "auto";
+    }
+  }, [mapInteractive, mapReady]);
+
   // ─── Update map interactivity dynamically ───
   useEffect(() => {
     const map = mapRef.current;
@@ -550,6 +567,17 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         if (!mapRef.current) return;
         google.maps.event.trigger(mapRef.current, "resize");
         mapRef.current.setCenter(center);
+
+        const root = mapContainerRef.current;
+        const firstLayer = root?.firstElementChild as HTMLElement | null;
+        if (root) {
+          root.style.pointerEvents = "auto";
+          root.style.touchAction = mapInteractiveRef.current ? "none" : "auto";
+        }
+        if (firstLayer) {
+          firstLayer.style.pointerEvents = "auto";
+          firstLayer.style.touchAction = mapInteractiveRef.current ? "none" : "auto";
+        }
       }, 300);
     };
 
