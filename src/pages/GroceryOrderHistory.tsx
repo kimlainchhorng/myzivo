@@ -297,16 +297,14 @@ function OrderCard({ order, onReorder, onRate, onTrack }: {
 
               {/* Receipt photo */}
               {order.receipt_photo_url && (
-                <a
-                  href={order.receipt_photo_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2.5 p-2.5 rounded-xl bg-muted/20 border border-border/10 hover:bg-muted/30 transition-colors"
+                <button
+                  onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(order.receipt_photo_url))}
+                  className="flex items-center gap-2.5 p-2.5 rounded-xl bg-muted/20 border border-border/10 hover:bg-muted/30 transition-colors w-full text-left"
                 >
                   <Receipt className="h-4 w-4 text-primary" />
                   <span className="text-[11px] font-semibold text-foreground flex-1">View Store Receipt</span>
                   <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                </a>
+                </button>
               )}
 
               {/* Rate order — persisted */}
