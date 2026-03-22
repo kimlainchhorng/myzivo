@@ -125,19 +125,19 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 <ZivoLogo size="md" />
               </motion.div>
 
-              {/* Center: 3D Service Tabs — Colorful */}
+              {/* Center: 3D Service Tabs — Always Colorful */}
               <nav
-                className="hidden lg:flex items-center gap-0.5 rounded-full px-1.5 py-1"
+                className="hidden lg:flex items-center gap-1.5 rounded-2xl px-2 py-1.5"
                 role="tablist"
                 aria-label="Travel services"
                 style={{
                   background: scrolled
-                    ? "hsl(var(--muted) / 0.5)"
+                    ? "hsl(var(--card) / 0.6)"
                     : isHomePage
-                      ? "hsl(var(--foreground) / 0.05)"
-                      : "hsl(var(--muted) / 0.35)",
-                  backdropFilter: "blur(16px) saturate(1.3)",
-                  boxShadow: "inset 0 1px 2px hsl(var(--background) / 0.7), 0 2px 8px hsl(var(--foreground) / 0.05), 0 0 0 1px hsl(var(--border) / 0.15)",
+                      ? "hsl(var(--background) / 0.5)"
+                      : "hsl(var(--card) / 0.5)",
+                  backdropFilter: "blur(20px) saturate(1.4)",
+                  boxShadow: "inset 0 1px 2px hsl(var(--background) / 0.8), 0 4px 16px hsl(var(--foreground) / 0.06), 0 0 0 1px hsl(var(--border) / 0.12)",
                   transformStyle: "preserve-3d",
                 }}
               >
@@ -146,54 +146,42 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   return (
                     <motion.div
                       key={item.href}
-                      whileHover={{ y: -2, z: 10, scale: 1.03 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ y: -3, z: 12, scale: 1.06 }}
+                      whileTap={{ scale: 0.94 }}
                       style={{ transformStyle: "preserve-3d" }}
                     >
                       <Link
                         to={item.href}
-                        className={cn(
-                          "relative flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 group",
-                          isActive
-                            ? "text-white"
-                            : scrolled || !isHomePage
-                              ? "text-muted-foreground hover:text-foreground"
-                              : "text-foreground/70 hover:text-foreground"
-                        )}
+                        className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold tracking-wide transition-all duration-300 group"
                       >
-                        {/* Active 3D pill — service-colored */}
-                        {isActive && (
-                          <motion.span
-                            layoutId="nav-3d-pill"
-                            className="absolute inset-0 rounded-full"
-                            style={{
-                              background: `linear-gradient(135deg, hsl(${item.cssVar}), hsl(${item.cssVar} / 0.85))`,
-                              boxShadow: `0 6px 20px -3px hsl(${item.cssVar} / 0.5), 0 10px 36px -8px hsl(${item.cssVar} / 0.3), inset 0 1px 2px hsl(var(--background) / 0.25)`,
-                              transform: "translateZ(6px)",
-                            }}
-                            transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                          />
-                        )}
-                        {/* Hover glow ring */}
-                        {!isActive && (
-                          <span
-                            className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                            style={{
-                              background: `hsl(${item.cssVar} / 0.08)`,
-                              boxShadow: `inset 0 0 0 1px hsl(${item.cssVar} / 0.15)`,
-                            }}
-                          />
-                        )}
+                        {/* Always-visible colored pill background */}
+                        <span
+                          className="absolute inset-0 rounded-xl transition-all duration-300"
+                          style={{
+                            background: isActive
+                              ? `linear-gradient(135deg, hsl(${item.cssVar}), hsl(${item.cssVar} / 0.8))`
+                              : `hsl(${item.cssVar} / 0.08)`,
+                            boxShadow: isActive
+                              ? `0 6px 24px -4px hsl(${item.cssVar} / 0.5), 0 12px 40px -8px hsl(${item.cssVar} / 0.25), inset 0 1px 2px hsl(var(--background) / 0.3)`
+                              : `inset 0 0 0 1px hsl(${item.cssVar} / 0.12)`,
+                            transform: isActive ? "translateZ(6px)" : "translateZ(0px)",
+                          }}
+                        />
                         <span className="relative z-10 flex items-center gap-2">
                           <item.icon
-                            className="w-[15px] h-[15px] transition-all duration-300"
+                            className="w-4 h-4 transition-all duration-300"
                             style={{
                               color: isActive ? "white" : `hsl(${item.cssVar})`,
-                              filter: isActive ? "drop-shadow(0 1px 2px rgba(0,0,0,0.2))" : "none",
-                              opacity: isActive ? 1 : 0.7,
+                              filter: isActive ? "drop-shadow(0 1px 3px rgba(0,0,0,0.25))" : `drop-shadow(0 1px 2px hsl(${item.cssVar} / 0.3))`,
                             }}
                           />
-                          <span style={{ textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none" }}>
+                          <span
+                            className="transition-colors duration-300"
+                            style={{
+                              color: isActive ? "white" : `hsl(${item.cssVar})`,
+                              textShadow: isActive ? "0 1px 3px rgba(0,0,0,0.2)" : "none",
+                            }}
+                          >
                             {item.label}
                           </span>
                         </span>
@@ -201,7 +189,6 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                     </motion.div>
                   );
                 })}
-
                 {/* More Dropdown */}
                 <div ref={moreRef} className="relative">
                   <motion.button
