@@ -2001,6 +2001,23 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   placeholder={t("ride.destination") || "Where to?"}
                   value={destinationDisplay}
                   onSelect={handleDestinationSelect}
+                  onFocus={() => {
+                    // Auto-confirm pickup when user focuses destination input
+                    if (!pickupConfirmed) {
+                      if (!pickup) {
+                        const coords = mapCenterRef.current ?? userLocation ?? fallbackPickupCenter;
+                        const autoPickup = {
+                          address: pickupDisplay || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+                          lat: coords.lat,
+                          lng: coords.lng,
+                        };
+                        setPickup(autoPickup);
+                        setPickupDisplay(autoPickup.address);
+                      }
+                      pickupManuallySet.current = true;
+                      setPickupConfirmed(true);
+                    }
+                  }}
                   proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
                   country={rideCountry}
                   className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30"
