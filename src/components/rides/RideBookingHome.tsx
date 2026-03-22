@@ -1496,6 +1496,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setViewStep("search");
     setPinPlacementMode("destination");
     userHasDraggedPinRef.current = false; // reset — require user to drag before updating
+    setDestinationDisplay("");
 
     // Pan map to destination so user can fine-tune with the "D" pin
     setMapPanTarget({ lat: place.lat, lng: place.lng });
@@ -2194,6 +2195,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                           setViewStep("search");
                           setPinPlacementMode("destination");
                           userHasDraggedPinRef.current = false;
+                          setDestinationDisplay("");
                           setMapPanTarget({ lat: destination.lat, lng: destination.lng });
                         }
                       }}
