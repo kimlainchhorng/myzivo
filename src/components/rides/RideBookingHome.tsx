@@ -2194,6 +2194,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                         if (destination) {
                           setViewStep("search");
                           setPinPlacementMode("destination");
+                          userHasDraggedPinRef.current = false;
                           setMapPanTarget({ lat: destination.lat, lng: destination.lng });
                         }
                       }}
