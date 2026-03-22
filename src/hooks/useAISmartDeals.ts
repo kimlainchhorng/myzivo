@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { airports } from "@/data/airports";
 
@@ -94,5 +94,6 @@ export function useAISmartDeals(category?: string, autoDetectOrigin = false) {
     staleTime: 90 * 60 * 1000,
     gcTime: 3 * 60 * 60 * 1000,
     retry: 1,
+    placeholderData: keepPreviousData,
   });
 }
