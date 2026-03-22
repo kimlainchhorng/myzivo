@@ -137,9 +137,11 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Deferred non-critical scripts -->
+    <!-- Deferred non-critical scripts (web only, skipped on Capacitor native) -->
     <script defer data-noptimize="1" data-cfasync="false" data-wpfc-render="false">
       (function () {
+        // Skip third-party tracking scripts on native Capacitor apps
+        if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) return;
         var script = document.createElement("script");
         script.async = 1;
         script.src = 'https://emrld.ltd/NDkzNzQ1.js?t=493745';
