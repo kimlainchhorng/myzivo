@@ -94,7 +94,7 @@ const FeaturedDealCard = ({ deal }: { deal: SmartDeal }) => {
       initial={{ opacity: 0, y: 20, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       whileTap={{ scale: 0.97 }}
-      onClick={() => navigate(`/flights?from=${deal.originCode}&to=${deal.destinationCode}&date=${deal.departureDate}`)}
+      onClick={() => navigate(`/flights/results?origin=${deal.originCode}&destination=${deal.destinationCode}&departureDate=${deal.departureDate}&adults=1&cabinClass=economy`)}
       className="w-full rounded-3xl overflow-hidden relative touch-manipulation text-left group h-[220px]"
     >
       <img
@@ -216,7 +216,7 @@ const SmartDealCard = ({ deal, index }: { deal: SmartDeal; index: number }) => {
       exit={{ opacity: 0, x: 12 }}
       transition={{ delay: index * 0.06 }}
       whileTap={{ scale: 0.97 }}
-      onClick={() => navigate(`/flights?from=${deal.originCode}&to=${deal.destinationCode}&date=${deal.departureDate}`)}
+      onClick={() => navigate(`/flights/results?origin=${deal.originCode}&destination=${deal.destinationCode}&departureDate=${deal.departureDate}&adults=1&cabinClass=economy`)}
       className="w-full flex rounded-2xl overflow-hidden bg-card border border-border/20 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 touch-manipulation text-left group"
     >
       {/* Image */}
