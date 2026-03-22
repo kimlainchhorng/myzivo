@@ -378,36 +378,6 @@ serve(async (req: Request) => {
       const batch = searchTasks.slice(i, i + batchSize);
       const results = await Promise.all(batch.map(async ({ route, date }) => {
         const result = await searchRoute(route.origin, route.destination, date, duffelKey);
-        if (!result) return;
-        const routeKey = `${route.origin}-${route.destination}`;
-        if (seen.has(routeKey)) {
-          const existing = rawDeals.find(d => d.originCode === route.origin && d.destinationCode === route.destination);
-          if (existing && existing.price <= result.price) return;
-          const idx = rawDeals.indexOf(existing!);
-          if (idx >= 0) rawDeals.splice(idx, 1);
-        }
-        seen.add(routeKey);
-        const avgPrice = AVG_PRICES[routeKey] || result.price * 1.2;
-        const savings = Math.max(0, Math.round(((avgPrice - result.price) / avgPrice) * 100));
-
-        rawDeals.push({
-          id: `${route.origin}-${route.destination}-${date}`,
-          origin: route.origin, originCode: route.origin,
-          destination: route.destName, destinationCode: route.destination, destinationKey: route.destKey,
-          price: result.price, departureDate: date, returnDate: null,
-          airline: result.airline, airlineCode: result.airlineCode, airlineLogo: result.airlineLogo,
-          flightNumber: result.flightNumber,
-          stops: result.stops, duration: result.duration,
-          departureTime: result.departureTime, arrivalTime: result.arrivalTime,
-          cabin: result.cabin, baggageIncluded: result.baggageIncluded,
-          offersCount: result.offersCount,
-          aiDescription: `Great deal to ${route.destName}`,
-          aiTip: 'Book soon — prices may increase',
-          dealScore: Math.min(100, 50 + savings),
-          dealTag: savings > 20 ? 'Hot Deal' : savings > 10 ? 'Good Price' : 'Available',
-          savingsPercent: savings, category: route.category,
-          fetchedAt: now, expiresAt: result.expiresAt,
-        });
         return { route, date, result };
       }));
 
