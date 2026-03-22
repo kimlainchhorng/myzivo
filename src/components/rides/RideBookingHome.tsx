@@ -2103,6 +2103,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               routePolyline={viewStep === "search" && pinPlacementMode ? null : (routeData?.polyline || null)}
               onCenterChanged={handleMapCenterChanged}
               suppressAutoViewport={viewStep === "search" && !!pinPlacementMode}
+              mapInteractive={!(viewStep === "search" && !pinPlacementMode)}
               onMapReadyExtra={(map) => {
                 map.addListener("dragstart", () => {
                   userHasDraggedPinRef.current = true;
