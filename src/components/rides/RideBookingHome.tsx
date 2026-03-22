@@ -2141,9 +2141,19 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     placeholder="Search or drag map..."
                     value={destinationDisplay}
                     onSelect={(place) => {
+                      // Cancel any pending reverse geocode so it doesn't overwrite the selected address
+                      reverseGeocodeRequestSeqRef.current += 1;
+                      if (reverseGeocodeTimerRef.current) {
+                        clearTimeout(reverseGeocodeTimerRef.current);
+                        reverseGeocodeTimerRef.current = null;
+                      }
+                      setIsReversingGeocode(false);
+
                       setDestination(place);
                       setDestinationDisplay(place.address);
                       lastGeocodedCoordsRef.current = `${place.lat.toFixed(4)},${place.lng.toFixed(4)}`;
+                      // Reset drag flag so the map pan doesn't trigger a new geocode
+                      userHasDraggedPinRef.current = false;
                       setMapPanTarget({ lat: place.lat, lng: place.lng });
                     }}
                     className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30 mb-3"
