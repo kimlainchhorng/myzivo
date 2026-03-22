@@ -10,12 +10,18 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
+import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
+import tabCarsBg from "@/assets/tab-cars-bg.jpg";
+import tabRidesBg from "@/assets/tab-rides-bg.jpg";
+import tabEatsBg from "@/assets/tab-eats-bg.jpg";
+
 const tabs = [
-  { id: "flights", label: "Flights", icon: Plane, color: "text-[hsl(var(--flights))]", border: "border-[hsl(var(--flights))]", bg: "bg-[hsl(var(--flights)/0.05)]" },
-  { id: "hotels", label: "Hotels", icon: Hotel, color: "text-[hsl(var(--hotels))]", border: "border-[hsl(var(--hotels))]", bg: "bg-[hsl(var(--hotels)/0.05)]" },
-  { id: "cars", label: "Cars", icon: CarFront, color: "text-[hsl(var(--cars))]", border: "border-[hsl(var(--cars))]", bg: "bg-[hsl(var(--cars)/0.05)]" },
-  { id: "rides", label: "Rides", icon: Car, color: "text-[hsl(var(--rides))]", border: "border-[hsl(var(--rides))]", bg: "bg-[hsl(var(--rides)/0.05)]" },
-  { id: "eats", label: "Eats", icon: UtensilsCrossed, color: "text-[hsl(var(--eats))]", border: "border-[hsl(var(--eats))]", bg: "bg-[hsl(var(--eats)/0.05)]" },
+  { id: "flights", label: "Flights", icon: Plane, color: "text-[hsl(var(--flights))]", cssVar: "var(--flights)", bg: tabFlightsBg },
+  { id: "hotels", label: "Hotels", icon: Hotel, color: "text-[hsl(var(--hotels))]", cssVar: "var(--hotels)", bg: tabHotelsBg },
+  { id: "cars", label: "Cars", icon: CarFront, color: "text-[hsl(var(--cars))]", cssVar: "var(--cars)", bg: tabCarsBg },
+  { id: "rides", label: "Rides", icon: Car, color: "text-[hsl(var(--rides))]", cssVar: "var(--rides)", bg: tabRidesBg },
+  { id: "eats", label: "Eats", icon: UtensilsCrossed, color: "text-[hsl(var(--eats))]", cssVar: "var(--eats)", bg: tabEatsBg },
 ];
 
 export default function HeroSearchCard() {
