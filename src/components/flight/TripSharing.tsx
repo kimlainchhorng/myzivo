@@ -110,7 +110,7 @@ export const TripSharing = ({
         break;
     }
     
-    if (shareUrl) window.open(shareUrl, '_blank', 'noopener,noreferrer');
+    if (shareUrl) import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(shareUrl));
   };
 
   return (

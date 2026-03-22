@@ -155,7 +155,7 @@ const EmbeddedCheckout = () => {
                   <Button 
                     size="lg" 
                     className="w-full gap-2 mb-4"
-                    onClick={() => window.open(partnerUrl, "_blank", "noopener,noreferrer")}
+                    onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(partnerUrl))}
                   >
                     Continue on Partner Site
                     <ExternalLink className="w-4 h-4" />

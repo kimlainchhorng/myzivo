@@ -41,7 +41,7 @@ export function NotificationBell() {
       if (notification.action_url.startsWith('/')) {
         navigate(notification.action_url);
       } else {
-        window.open(notification.action_url, '_blank', 'noopener,noreferrer');
+        import('@/lib/openExternalUrl').then(({ openExternalUrl: oe }) => oe(notification.action_url));
       }
     }
 

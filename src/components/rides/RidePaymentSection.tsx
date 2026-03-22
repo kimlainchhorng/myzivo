@@ -542,7 +542,7 @@ export default function RidePaymentSection({
               });
               if (error) throw error;
               if (data?.payment_url) {
-                window.open(data.payment_url, "_blank", "noopener,noreferrer");
+                import("@/lib/openExternalUrl").then(({ openExternalUrl: oe }) => oe(data.payment_url));
                 toast.success("ABA Payway checkout opened");
                 onPaymentSuccess();
               } else if (data?.checkout_data) {

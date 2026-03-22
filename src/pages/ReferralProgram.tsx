@@ -202,7 +202,7 @@ export default function ReferralProgram() {
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Join me on ZIVO and get $10 off your first trip! ${shareUrl}`)}`, '_blank', 'noopener,noreferrer')}
+                    onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Join me on ZIVO and get $10 off your first trip! ${shareUrl}`)}`))}
                   >
                     <Twitter className="w-5 h-5" />
                     Twitter
@@ -220,7 +220,7 @@ export default function ReferralProgram() {
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Check out ZIVO for amazing travel deals! ${shareUrl}`)}`, '_blank', 'noopener,noreferrer')}
+                    onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(`https://wa.me/?text=${encodeURIComponent(`Check out ZIVO for amazing travel deals! ${shareUrl}`)}`))}
                   >
                     <MessageCircle className="w-5 h-5" />
                     WhatsApp

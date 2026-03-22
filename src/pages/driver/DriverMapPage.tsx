@@ -413,7 +413,7 @@ export default function DriverMapPage() {
                     className="rounded-xl text-xs h-8"
                     onClick={() => {
                       const url = `https://www.google.com/maps/dir/?api=1&destination=${customerLocation.lat},${customerLocation.lng}`;
-                      window.open(url, "_blank", "noopener,noreferrer");
+                      import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(`https://www.google.com/maps/dir/?api=1&destination=${customerLocation.lat},${customerLocation.lng}`));
                     }}
                   >
                     <Navigation className="w-3 h-3 mr-1" /> Navigate

@@ -69,8 +69,8 @@ export function redirectToFlightPartner(
     serviceType: 'flights',
   });
   
-  // Open in new tab
-  window.open(url, '_blank', 'noopener,noreferrer');
+  // Open in-app browser on native, new tab on web
+  import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(url));
   
   return url;
 }
@@ -101,8 +101,8 @@ export function redirectToHotelPartner(
     serviceType: 'hotels',
   });
   
-  // Open in new tab
-  window.open(url, '_blank', 'noopener,noreferrer');
+  // Open in-app browser on native, new tab on web
+  import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(url));
   
   return url;
 }
@@ -133,8 +133,8 @@ export function redirectToCarPartner(
     serviceType: 'car_rental',
   });
   
-  // Open in new tab
-  window.open(url, '_blank', 'noopener,noreferrer');
+  // Open in-app browser on native, new tab on web
+  import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(url));
   
   return url;
 }
@@ -165,8 +165,8 @@ export function redirectToActivityPartner(
     serviceType: 'activities',
   });
   
-  // Open in new tab
-  window.open(url, '_blank', 'noopener,noreferrer');
+  // Open in-app browser on native, new tab on web
+  import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(url));
   
   return url;
 }
@@ -201,8 +201,8 @@ export function redirectToPartner(
     serviceType: serviceType === 'cars' ? 'car_rental' : serviceType,
   });
   
-  // Open in new tab
-  window.open(link.url, '_blank', 'noopener,noreferrer');
+  // Open in-app browser on native, new tab on web
+  import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(link.url));
   
   return link.url;
 }

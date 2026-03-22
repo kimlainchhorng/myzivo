@@ -59,16 +59,15 @@ export default function OutboundRedirect() {
     processRedirect();
   }, [searchParams]);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     setStatus('redirecting');
-    // Small delay for visual feedback
-    setTimeout(() => {
-      const newWindow = window.open(finalUrl, '_blank', 'noopener,noreferrer');
-      if (!newWindow) {
-        setStatus('error');
-        setErrorMessage('Popup blocked. Click the link below to continue.');
-      }
-    }, 300);
+    try {
+      const { openExternalUrl } = await import("@/lib/openExternalUrl");
+      await openExternalUrl(finalUrl);
+    } catch {
+      setStatus('error');
+      setErrorMessage('Failed to open link. Click the link below to continue.');
+    }
   };
   
   return (

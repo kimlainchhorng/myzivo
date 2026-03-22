@@ -61,7 +61,7 @@ const AppTravel = () => {
   const handleSearch = () => setHasSearched(true);
 
   const handleBookNow = () => {
-    window.open("https://www.skyscanner.com", "_blank", "noopener,noreferrer");
+    import("@/lib/openExternalUrl").then(({ openExternalUrl: oe }) => oe("https://www.skyscanner.com"));
   };
 
   const activeTabConfig = tabs.find(t => t.id === activeTab)!;

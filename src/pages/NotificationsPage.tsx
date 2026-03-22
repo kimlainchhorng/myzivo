@@ -60,7 +60,7 @@ const NotificationsPage = () => {
     if (!notification.is_read) markAsRead([notification.id]);
     if (notification.action_url) {
       if (notification.action_url.startsWith('/')) navigate(notification.action_url);
-      else window.open(notification.action_url, '_blank', 'noopener,noreferrer');
+      else import('@/lib/openExternalUrl').then(({ openExternalUrl: oe }) => oe(notification.action_url));
     }
   };
 
