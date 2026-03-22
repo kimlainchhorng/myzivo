@@ -104,7 +104,8 @@ async function fetchNearbyForType(
   lat: number,
   lng: number,
   type: string,
-  apiKey: string
+  apiKey: string,
+  economyPricing?: { base_fare?: number | null; per_mile?: number | null; per_minute?: number | null; booking_fee?: number | null; minimum_fare?: number | null },
 ): Promise<NearbyPlace[]> {
   // Use the Places API Nearby Search via CORS proxy or directly
   // Google Places Nearby Search requires server-side calls, so we use a text search approach
@@ -160,7 +161,7 @@ async function fetchNearbyForType(
           lng: placeLng,
           distanceMi: dist.toFixed(1),
           timeMin: estimateTime(dist),
-          priceEst: estimatePrice(dist),
+          priceEst: estimatePrice(dist, economyPricing),
           iconUrl,
           placeId: r.place_id ?? "",
         };
@@ -171,7 +172,7 @@ async function fetchNearbyForType(
   });
 }
 
-export function useNearbyPlaces(userLat: number | null, userLng: number | null) {
+export function useNearbyPlaces(userLat: number | null, userLng: number | null, economyPricing?: { base_fare?: number | null; per_mile?: number | null; per_minute?: number | null; booking_fee?: number | null; minimum_fare?: number | null }) {
   const [categories, setCategories] = useState<NearbyCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const fetchedRef = useRef<string>("");
@@ -205,7 +206,7 @@ export function useNearbyPlaces(userLat: number | null, userLng: number | null) 
 
       for (const cat of CATEGORY_CONFIG) {
         if (cancelled) break;
-        const places = await fetchNearbyForType(userLat, userLng, cat.keyword, apiKey);
+        const places = await fetchNearbyForType(userLat, userLng, cat.keyword, apiKey, economyPricing);
         if (places.length > 0) {
           results.push({ label: cat.label, type: cat.type, places });
         }
