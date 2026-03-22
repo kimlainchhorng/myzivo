@@ -504,6 +504,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       });
 
       // Also fire during active dragging for smoother pin placement feedback
+      // Use 300ms throttle to avoid excessive React re-renders that cause map jank
       let dragThrottleTimer: ReturnType<typeof setTimeout> | null = null;
       map.addListener("drag", () => {
         if (dragThrottleTimer) return;
@@ -514,7 +515,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
           if (c && latestOnCenterChanged) {
             latestOnCenterChanged({ lat: c.lat(), lng: c.lng() });
           }
-        }, 150);
+        }, 300);
       });
 
       // Real drivers are rendered by the nearbyDrivers effect
