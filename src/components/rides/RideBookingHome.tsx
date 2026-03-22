@@ -1420,6 +1420,28 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setPickupDisplay(place.address);
   }, []);
 
+  const ensureAutoPickup = useCallback(() => {
+    if (pickup) return pickup;
+
+    const coords = userLocation ?? fallbackPickupCenter;
+    const currentLocationLabel = t("ride.current_location") || "Current Location";
+    const trimmedPickupDisplay = pickupDisplay.trim();
+    const pickupLooksLikeDestination = !!destination && (
+      trimmedPickupDisplay === destination.address ||
+      trimmedPickupDisplay === destinationDisplay
+    );
+
+    const autoPickup = {
+      address: trimmedPickupDisplay && !pickupLooksLikeDestination ? trimmedPickupDisplay : currentLocationLabel,
+      lat: coords.lat,
+      lng: coords.lng,
+    };
+
+    setPickup(autoPickup);
+    setPickupDisplay(autoPickup.address);
+    return autoPickup;
+  }, [pickup, userLocation, fallbackPickupCenter, t, pickupDisplay, destination, destinationDisplay]);
+
   const handleDestinationSelect = useCallback((place: PlaceData) => {
     if (reverseGeocodeTimerRef.current) {
       clearTimeout(reverseGeocodeTimerRef.current);
@@ -1434,21 +1456,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
     // Auto-confirm pickup from existing pickup/GPS — never from the destination-centered map
     if (!pickup) {
-      const coords = userLocation ?? fallbackPickupCenter;
-      const autoPickup = {
-        address: pickupDisplay || t("ride.current_location") || "Current Location",
-        lat: coords.lat,
-        lng: coords.lng,
-      };
-      setPickup(autoPickup);
-      setPickupDisplay(autoPickup.address);
+      ensureAutoPickup();
     }
     setPickupConfirmed(true);
     setPinPlacementMode("destination");
 
     // Pan map to destination so user can fine-tune with the "D" pin
     setMapPanTarget({ lat: place.lat, lng: place.lng });
-  }, [pickup, userLocation, fallbackPickupCenter, pickupDisplay, t]);
+  }, [pickup, ensureAutoPickup]);
   /* ─── Multi-stop management ─── */
   const MAX_STOPS = 1;
   const handleAddStop = useCallback(() => {
@@ -1610,27 +1625,18 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   };
 
   const handleConfirmSearch = () => {
+    const resolvedPickup = pickup ?? ensureAutoPickup();
+
     if (!pickupConfirmed) {
-      // Auto-confirm pickup from current location
-      if (!pickup) {
-        const coords = mapCenterRef.current ?? userLocation ?? fallbackPickupCenter;
-        const autoPickup = {
-          address: pickupDisplay || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
-          lat: coords.lat,
-          lng: coords.lng,
-        };
-        setPickup(autoPickup);
-        setPickupDisplay(autoPickup.address);
-      }
       setPickupConfirmed(true);
     }
-    if (!pickup || !destination) return;
+    if (!resolvedPickup || !destination) return;
     const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-    if (isSameLocation(pickup, destination) && wp.length === 0) {
+    if (isSameLocation(resolvedPickup, destination) && wp.length === 0) {
       toast.error("Add a stop to create a round trip, or choose a different destination");
       return;
     }
-    fetchRoute(pickup, destination, wp);
+    fetchRoute(resolvedPickup, destination, wp);
   };
 
   /* ─── Auto-refresh route data every 30s for live traffic updates ─── */
@@ -2112,14 +2118,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   onFocus={() => {
                     if (!pickupConfirmed) {
                       if (!pickup) {
-                        const coords = userLocation ?? fallbackPickupCenter;
-                        const autoPickup = {
-                          address: pickupDisplay || t("ride.current_location") || "Current Location",
-                          lat: coords.lat,
-                          lng: coords.lng,
-                        };
-                        setPickup(autoPickup);
-                        setPickupDisplay(autoPickup.address);
+                        ensureAutoPickup();
                       }
                       pickupManuallySet.current = true;
                       setPickupConfirmed(true);
@@ -2143,7 +2142,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                     <span className="flex-1 text-xs font-medium text-foreground truncate">{stop.display || "Tap to set stop"}</span>
                     <button
-                      onClick={() => { setPlacingStopId(stop.id); setPinPlacementMode("stop"); lastGeocodedCoordsRef.current = null; if (stop.place) setMapPanTarget({ lat: stop.place.lat, lng: stop.place.lng }); }}
+                      onClick={() => {
+                        ensureAutoPickup();
+                        setPickupConfirmed(true);
+                        setPlacingStopId(stop.id);
+                        setPinPlacementMode("stop");
+                        lastGeocodedCoordsRef.current = null;
+                        if (stop.place) setMapPanTarget({ lat: stop.place.lat, lng: stop.place.lng });
+                      }}
                       className="text-[10px] font-semibold text-primary px-2 py-1 rounded-lg hover:bg-primary/10"
                     >Edit</button>
                     <button onClick={() => handleRemoveStop(stop.id)} className="text-muted-foreground hover:text-destructive">
@@ -2157,7 +2163,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             {/* Add stop button */}
             {pickupConfirmed && destination && stops.length < MAX_STOPS && (
               <button
-                onClick={handleAddStop}
+                onClick={() => {
+                  ensureAutoPickup();
+                  setPickupConfirmed(true);
+                  handleAddStop();
+                }}
                 className="w-full flex items-center justify-center gap-2 px-3 py-2.5 mb-3 rounded-xl border border-dashed border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-all active:scale-[0.98]"
               >
                 <Plus className="w-4 h-4 text-primary" />
