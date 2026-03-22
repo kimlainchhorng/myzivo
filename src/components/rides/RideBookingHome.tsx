@@ -3118,7 +3118,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             </div>
           </div>
 
-          <div className="px-4 flex-1 flex flex-col gap-1.5 overflow-y-auto min-h-0">
+          <div className="flex-1 flex flex-col gap-1.5 overflow-y-auto min-h-0 px-4 overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
             {/* Route card */}
             <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
               <div className="flex items-start gap-2.5">
@@ -3302,7 +3302,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             </div>
 
             {/* Payment Section — fills remaining space */}
-            <div className="flex-1 min-h-0 pb-6">
+            <div className="shrink-0 pb-6">
               <RidePaymentSection
                 price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
                 vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}
