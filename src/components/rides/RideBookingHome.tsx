@@ -42,7 +42,7 @@ import { useDriverLocation } from "@/hooks/useDriverLocation";
 import { useCustomerLocationBroadcast } from "@/hooks/useCustomerLocationBroadcast";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
-import { useUpcomingFlightArrival, buildFlightPickupJobData } from "@/hooks/useFlightArrivalPickup";
+import { useUpcomingFlightArrival, buildFlightPickupJobData, isAirportAddress } from "@/hooks/useFlightArrivalPickup";
 
 /* ─── Types ─── */
 interface PlaceData {
@@ -904,7 +904,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       // 1. Create a job row for the dispatch system
       // Check if this is an airport pickup linked to a flight booking
-      const flightData = upcomingFlight ? buildFlightPickupJobData(upcomingFlight) : {};
+      const flightData = buildFlightPickupJobData(upcomingFlight, pickup.address);
 
       const { data: jobData, error: jobError } = await supabase.from("jobs").insert({
         customer_id: user.id,
