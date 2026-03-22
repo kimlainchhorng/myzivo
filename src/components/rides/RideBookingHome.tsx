@@ -1459,6 +1459,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       ensureAutoPickup();
     }
     setPickupConfirmed(true);
+    setViewStep("search");
     setPinPlacementMode("destination");
 
     // Pan map to destination so user can fine-tune with the "D" pin
@@ -1472,6 +1473,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       return;
     }
     const newId = Date.now().toString();
+    setViewStep("search");
     setStops(prev => [...prev, { id: newId, place: null, display: "" }]);
     setPlacingStopId(newId);
     setPinPlacementMode("stop");
@@ -2124,6 +2126,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     lastGeocodedCoordsRef.current = null;
 
                     if (destination) {
+                      setViewStep("search");
                       setPinPlacementMode("destination");
                       setMapPanTarget({ lat: destination.lat, lng: destination.lng });
                     }
@@ -2148,6 +2151,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       onClick={() => {
                         ensureAutoPickup();
                         setPickupConfirmed(true);
+                        setViewStep("search");
                         setPlacingStopId(stop.id);
                         setPinPlacementMode("stop");
                         lastGeocodedCoordsRef.current = null;
