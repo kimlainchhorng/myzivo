@@ -1194,7 +1194,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     if (lastGeocodedCoordsRef.current === coordKey) return;
 
     if (viewStep === "home") {
-      // In home step, dragging map updates the destination pin
+      // In home step, only update destination if user has actually dragged the map
+      // Skip programmatic pans and initial idle events
+      if (!userHasDraggedHomeMapRef.current) return;
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = setTimeout(async () => {
         const key = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`;
