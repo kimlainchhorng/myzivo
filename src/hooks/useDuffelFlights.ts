@@ -4,7 +4,7 @@
  * Provides real flight search using Duffel API
  * ZIVO is the Merchant of Record - Stripe checkout + Duffel ticketing
  * 
- * Includes rate limiting and abuse protection for production safety
+ * Includes lightweight client-side rate limiting for production safety.
  */
 
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -12,10 +12,127 @@ import { supabase } from "@/integrations/supabase/client";
 import { checkRateLimit, RateLimitError } from "@/lib/security/rateLimiter";
 import { transformFlightError } from "@/lib/errors/flightErrors";
 import { getAirportAlternate } from "@/data/airports";
-...
+
+export interface DuffelSearchParams {
+  origin: string;
+  destination: string;
+  departureDate: string;
+  returnDate?: string;
+  passengers: {
+    adults: number;
+    children?: number;
+    infants?: number;
+  };
+  cabinClass: 'economy' | 'premium_economy' | 'business' | 'first';
+}
+
+export interface DuffelOffer {
+  id: string;
+  airline: string;
+  airlineCode: string;
+  flightNumber: string;
+  departure: {
+    time: string;
+    date: string;
+    city: string;
+    code: string;
+    terminal?: string;
+  };
+  arrival: {
+    time: string;
+    date: string;
+    city: string;
+    code: string;
+    terminal?: string;
+  };
+  duration: string;
+  durationMinutes: number;
+  stops: number;
+  stopCities: string[];
+  stopDetails: { code: string; city: string; layoverDuration: string }[];
+  carriers: { name: string; code: string; isOperating: boolean }[];
+  operatedBy: string | null;
+  price: number;
+  currency: string;
+  pricePerPerson: number;
+  cabinClass: string;
+  fareBrandName: string | null;
+  baggageIncluded: string;
+  isRefundable: boolean;
+  conditions: {
+    changeable: boolean;
+    refundable: boolean;
+    changePenalty: number | null;
+    refundPenalty: number | null;
+    penaltyCurrency: string;
+  };
+  baggageDetails: {
+    carryOnIncluded: boolean;
+    carryOnQuantity: number;
+    carryOnWeightKg: number | null;
+    carryOnWeightLb: number | null;
+    checkedBagsIncluded: boolean;
+    checkedBagQuantity: number;
+    checkedBagWeightKg: number | null;
+    checkedBagWeightLb: number | null;
+  };
+  segments: DuffelSegment[];
+  expiresAt: string;
+  passengers: number;
+  fareVariants?: Array<{
+    id: string;
+    fareBrandName: string | null;
+    price: number;
+    pricePerPerson?: number;
+    currency: string;
+    conditions: { changeable: boolean; refundable: boolean; changePenalty: number | null; refundPenalty: number | null; penaltyCurrency: string };
+    baggageDetails: { carryOnIncluded: boolean; carryOnQuantity: number; carryOnWeightKg: number | null; carryOnWeightLb: number | null; checkedBagsIncluded: boolean; checkedBagQuantity: number; checkedBagWeightKg: number | null; checkedBagWeightLb: number | null };
+    baggageIncluded: string;
+    cabinClass: string;
+  }>;
+}
+
+export interface DuffelSegment {
+  id: string;
+  departingAt: string;
+  arrivingAt: string;
+  origin: {
+    code: string;
+    name: string;
+    city: string;
+    terminal?: string;
+  };
+  destination: {
+    code: string;
+    name: string;
+    city: string;
+    terminal?: string;
+  };
+  operatingCarrier: string;
+  operatingCarrierCode: string;
+  marketingCarrier: string;
+  marketingCarrierCode: string;
+  flightNumber: string;
+  aircraft: string;
+  duration: string;
+  cabinClass: string;
+}
+
+export interface DuffelSearchResult {
+  offer_request_id: string;
+  offers: DuffelOffer[];
+  created_at: string;
+}
+
+/**
+ * Search flights using Duffel API
+ */
+export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: boolean }) {
+  const { enabled = true, ...searchParams } = params;
+
+  return useQuery({
+    queryKey: ['duffel-flights', searchParams],
     queryFn: async (): Promise<DuffelSearchResult> => {
-      // Keep lightweight client-side rate limiting, but do not block legitimate repeated
-      // flight searches before Duffel/cache can respond.
       const rateLimitResult = await checkRateLimit('flights_search');
       if (!rateLimitResult.allowed) {
         throw new RateLimitError(
@@ -24,9 +141,8 @@ import { getAirportAlternate } from "@/data/airports";
         );
       }
 
-      // Build passenger list
       const passengers: Array<{ type: 'adult' | 'child' | 'infant_without_seat' }> = [];
-      
+
       for (let i = 0; i < searchParams.passengers.adults; i++) {
         passengers.push({ type: 'adult' });
       }
@@ -37,7 +153,6 @@ import { getAirportAlternate } from "@/data/airports";
         passengers.push({ type: 'infant_without_seat' });
       }
 
-      // Build slices (one-way or round-trip)
       const buildSlices = (origin: string, destination: string) => {
         const s = [
           { origin, destination, departure_date: searchParams.departureDate },
@@ -64,10 +179,8 @@ import { getAirportAlternate } from "@/data/airports";
         return data as DuffelSearchResult;
       };
 
-      // Primary search
       let result = await searchDuffel(searchParams.origin, searchParams.destination);
 
-      // PNH↔KTI fallback: if no offers, retry with alternate airport code
       if (result.offers.length === 0) {
         const altOrigin = getAirportAlternate(searchParams.origin);
         const altDest = getAirportAlternate(searchParams.destination);
@@ -89,8 +202,8 @@ import { getAirportAlternate } from "@/data/airports";
       return result;
     },
     enabled: enabled && !!searchParams.origin && !!searchParams.destination && !!searchParams.departureDate,
-    staleTime: 2 * 60 * 1000, // 2 minutes - match server cache TTL
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     retry: 1,
   });
 }
