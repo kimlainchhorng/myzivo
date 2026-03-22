@@ -43,36 +43,76 @@ export const usePushNotifications = () => {
 
   // Request permission and register for push notifications
   const register = useCallback(async (): Promise<boolean> => {
-    if (!Capacitor.isNativePlatform()) {
-      return false;
-    }
-
-    try {
-      // Check current permission status
-      const permStatus = await PushNotifications.checkPermissions();
-      
-      if (permStatus.receive === "prompt") {
-        // Request permission
-        const requestResult = await PushNotifications.requestPermissions();
-        if (requestResult.receive !== "granted") {
+    // --- Native (Capacitor) registration ---
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const permStatus = await PushNotifications.checkPermissions();
+        
+        if (permStatus.receive === "prompt") {
+          const requestResult = await PushNotifications.requestPermissions();
+          if (requestResult.receive !== "granted") {
+            setState(prev => ({ ...prev, permission: "denied" }));
+            return false;
+          }
+        } else if (permStatus.receive !== "granted") {
           setState(prev => ({ ...prev, permission: "denied" }));
           return false;
         }
-      } else if (permStatus.receive !== "granted") {
-        setState(prev => ({ ...prev, permission: "denied" }));
+
+        setState(prev => ({ ...prev, permission: "granted" }));
+        await PushNotifications.register();
+        return true;
+      } catch (error) {
+        console.error("[Push] Native registration error:", error);
         return false;
       }
-
-      setState(prev => ({ ...prev, permission: "granted" }));
-
-      // Register with APNs / FCM
-      await PushNotifications.register();
-      
-      return true;
-    } catch (error) {
-      console.error("[Push] Registration error:", error);
-      return false;
     }
+
+    // --- Web Push (VAPID / Service Worker) registration ---
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          setState(prev => ({ ...prev, permission: "denied" }));
+          return false;
+        }
+
+        setState(prev => ({ ...prev, permission: "granted" }));
+
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userApplicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY || undefined,
+          applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY || undefined,
+        });
+
+        // Send subscription to server
+        const subJson = subscription.toJSON();
+        if (subJson.endpoint && subJson.keys) {
+          const { error } = await supabase.functions.invoke("register-web-push", {
+            body: {
+              endpoint: subJson.endpoint,
+              keys: {
+                p256dh: subJson.keys.p256dh,
+                auth: subJson.keys.auth,
+              },
+            },
+          });
+
+          if (error) {
+            console.error("[Push] Web push registration error:", error);
+          } else {
+            setState(prev => ({ ...prev, isRegistered: true, token: subJson.endpoint }));
+            console.log("[Push] Web push subscription registered");
+          }
+        }
+        return true;
+      } catch (error) {
+        console.error("[Push] Web push registration error:", error);
+        return false;
+      }
+    }
+
+    return false;
   }, []);
 
   // Save token to database via edge function
