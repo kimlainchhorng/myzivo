@@ -1405,11 +1405,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     // Update dedup ref so map drag doesn't immediately overwrite the selected destination
     lastGeocodedCoordsRef.current = `${place.lat.toFixed(4)},${place.lng.toFixed(4)}`;
 
-    // Auto-confirm pickup from map center/GPS if not manually set
+    // Auto-confirm pickup from existing pickup/GPS — never from the destination-centered map
     if (!pickup) {
-      const coords = mapCenterRef.current ?? userLocation ?? fallbackPickupCenter;
+      const coords = userLocation ?? fallbackPickupCenter;
       const autoPickup = {
-        address: pickupDisplay || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+        address: pickupDisplay || t("ride.current_location") || "Current Location",
         lat: coords.lat,
         lng: coords.lng,
       };
@@ -1420,8 +1420,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
     // Pan map to destination so user can fine-tune with the "D" pin
     setMapPanTarget({ lat: place.lat, lng: place.lng });
-  }, [pickup, userLocation, fallbackPickupCenter, pickupDisplay]);
-
+  }, [pickup, userLocation, fallbackPickupCenter, pickupDisplay, t]);
   /* ─── Multi-stop management ─── */
   const MAX_STOPS = 1;
   const handleAddStop = useCallback(() => {
@@ -2005,9 +2004,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     // Auto-confirm pickup when user focuses destination input
                     if (!pickupConfirmed) {
                       if (!pickup) {
-                        const coords = mapCenterRef.current ?? userLocation ?? fallbackPickupCenter;
+                        const coords = userLocation ?? fallbackPickupCenter;
                         const autoPickup = {
-                          address: pickupDisplay || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+                          address: pickupDisplay || t("ride.current_location") || "Current Location",
                           lat: coords.lat,
                           lng: coords.lng,
                         };
