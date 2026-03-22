@@ -1497,7 +1497,19 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   };
 
-  const handleSavedPlace = (address: string, lat: number, lng: number) => {
+  /** Confirm the current pin placement (destination or stop) and return to normal search */
+  const handleConfirmPinPlacement = useCallback(() => {
+    if (pinPlacementMode === "stop" && placingStopId) {
+      // Stop was placed — exit pin placement
+      setPinPlacementMode(null);
+      setPlacingStopId(null);
+    } else if (pinPlacementMode === "destination") {
+      // Destination was fine-tuned — exit pin placement
+      setPinPlacementMode(null);
+    }
+  }, [pinPlacementMode, placingStopId]);
+
+
     setDestinationDisplay(address);
     setDestination({ address, lat, lng });
 
