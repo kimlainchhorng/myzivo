@@ -790,6 +790,35 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   const COLLAPSED_SHEET_HEIGHT = 290 + stops.length * 56 + (routeData ? 48 : 0);
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
+  const SEARCH_SHEET_EXPANDED_Y = -20;
+  const SEARCH_SHEET_COLLAPSED_Y = Math.min(Math.max(viewportHeight * 0.18, 96), 180);
+
+  useEffect(() => {
+    if (viewStep === "search" && !pinPlacementMode) {
+      setSearchSheetY(SEARCH_SHEET_EXPANDED_Y);
+    }
+  }, [viewStep, pinPlacementMode]);
+
+  const handleSearchSheetDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const movedDown = info.offset.y > 60 || info.velocity.y > 500;
+    const movedUp = info.offset.y < -60 || info.velocity.y < -500;
+
+    if (movedDown) {
+      setSearchSheetY(SEARCH_SHEET_COLLAPSED_Y);
+      return;
+    }
+
+    if (movedUp) {
+      setSearchSheetY(SEARCH_SHEET_EXPANDED_Y);
+      return;
+    }
+
+    setSearchSheetY(
+      searchSheetY > SEARCH_SHEET_COLLAPSED_Y / 2
+        ? SEARCH_SHEET_COLLAPSED_Y
+        : SEARCH_SHEET_EXPANDED_Y,
+    );
+  };
 
   // Driver tracking - real-time from Supabase
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -2089,169 +2118,189 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
           {/* ═══════ 3b. SEARCH — full bottom sheet (no pin placement active) ═══════ */}
           {viewStep === "search" && !pinPlacementMode && (
-            <div
+            <motion.div
               className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
-              style={{ maxHeight: "65vh", display: "flex", flexDirection: "column" }}
+              drag="y"
+              dragControls={searchDragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={0.08}
+              dragMomentum={false}
+              animate={{ y: searchSheetY }}
+              transition={{ type: "spring", stiffness: 380, damping: 38 }}
+              onDragEnd={handleSearchSheetDragEnd}
+              style={{
+                maxHeight: "65vh",
+                display: "flex",
+                flexDirection: "column",
+                touchAction: "none",
+              }}
             >
-          {/* Drag handle */}
-          <div className="flex justify-center pt-3 pb-2 shrink-0">
-            <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
-          </div>
-
-          <div className="px-5 pt-1 overflow-y-auto min-h-0 flex-1" style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})` }}>
-            {/* Pickup input */}
-            <div className="flex items-start gap-3 mb-3">
-              <div className="flex flex-col items-center mt-3">
-                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center ring-2 ring-primary/20">
-                  <span className="text-[11px] font-black text-primary-foreground leading-none">Z</span>
-                </div>
-                <div className="w-px h-6 border-l-[2px] border-dashed border-muted-foreground/30 my-0.5" />
-                <div className="w-6 h-6 rounded-sm bg-foreground flex items-center justify-center">
-                  <span className="text-[11px] font-black text-background leading-none">D</span>
-                </div>
-              </div>
-              <div className="flex-1 min-w-0 space-y-2">
-                <AddressAutocomplete
-                  placeholder={t("ride.pickup") || "Pickup location"}
-                  value={pickupDisplay}
-                  onSelect={handlePickupSelect}
-                  proximity={userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
-                  country={rideCountry}
-                  className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30"
-                />
-                <AddressAutocomplete
-                  placeholder={t("ride.destination") || "Where to?"}
-                  value={destinationDisplay}
-                  onSelect={handleDestinationSelect}
-                  onFocus={() => {
-                    if (!pickup) {
-                      ensureAutoPickup();
-                    }
-                    pickupManuallySet.current = true;
-                    setPickupConfirmed(true);
-                    lastGeocodedCoordsRef.current = null;
-
-                    if (destination) {
-                      setViewStep("search");
-                      setPinPlacementMode("destination");
-                      setMapPanTarget({ lat: destination.lat, lng: destination.lng });
-                    }
-                  }}
-                  proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
-                  country={rideCountry}
-                  className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30"
-                />
-              </div>
-            </div>
-
-            {/* Stops display */}
-            {stops.length > 0 && (
-              <div className="mb-3 space-y-1">
-                {stops.map((stop) => (
-                  <div key={stop.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                    <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
-                      <span className="text-[9px] font-black text-primary-foreground leading-none">S</span>
-                    </div>
-                    <span className="flex-1 text-xs font-medium text-foreground truncate">{stop.display || "Tap to set stop"}</span>
-                    <button
-                      onClick={() => {
-                        ensureAutoPickup();
-                        setPickupConfirmed(true);
-                        setViewStep("search");
-                        setPlacingStopId(stop.id);
-                        setPinPlacementMode("stop");
-                        lastGeocodedCoordsRef.current = null;
-                        if (stop.place) setMapPanTarget({ lat: stop.place.lat, lng: stop.place.lng });
-                      }}
-                      className="text-[10px] font-semibold text-primary px-2 py-1 rounded-lg hover:bg-primary/10"
-                    >Edit</button>
-                    <button onClick={() => handleRemoveStop(stop.id)} className="text-muted-foreground hover:text-destructive">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Add stop button */}
-            {pickupConfirmed && destination && stops.length < MAX_STOPS && (
+              {/* Drag handle */}
               <button
-                onClick={() => {
-                  ensureAutoPickup();
-                  setPickupConfirmed(true);
-                  handleAddStop();
-                }}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 mb-3 rounded-xl border border-dashed border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-all active:scale-[0.98]"
+                type="button"
+                aria-label="Drag search sheet"
+                onClick={() => setSearchSheetY(searchSheetY === SEARCH_SHEET_EXPANDED_Y ? SEARCH_SHEET_COLLAPSED_Y : SEARCH_SHEET_EXPANDED_Y)}
+                onPointerDown={(event) => searchDragControls.start(event)}
+                className="flex justify-center pt-3 pb-2 shrink-0 touch-none cursor-grab active:cursor-grabbing"
               >
-                <Plus className="w-4 h-4 text-primary" />
-                <span className="text-xs font-semibold text-primary">Add a stop</span>
+                <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
               </button>
-            )}
 
-            {/* Saved places — only when no destination yet */}
-            {savedPlaces.length > 0 && !destination && (
-              <div className="mb-3">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("ride.saved_places") || "Saved places"}</p>
-                <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
-                  {savedPlaces.map((place) => {
-                    const Icon = place.icon;
-                    return (
-                      <button
-                        key={place.id}
-                        onClick={() => handleDestinationSelect({ address: place.address, lat: place.lat, lng: place.lng })}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/15 border border-border/20 hover:border-primary/20 shrink-0 transition-all active:scale-[0.97]"
-                      >
-                        <Icon className="w-4 h-4 text-primary shrink-0" />
-                        <span className="text-xs font-semibold text-foreground whitespace-nowrap">{place.name}</span>
-                      </button>
-                    );
-                  })}
+              <div className="px-5 pt-1 overflow-y-auto min-h-0 flex-1" style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})`, touchAction: "pan-y" }}>
+                {/* Pickup input */}
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="flex flex-col items-center mt-3">
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center ring-2 ring-primary/20">
+                      <span className="text-[11px] font-black text-primary-foreground leading-none">Z</span>
+                    </div>
+                    <div className="w-px h-6 border-l-[2px] border-dashed border-muted-foreground/30 my-0.5" />
+                    <div className="w-6 h-6 rounded-sm bg-foreground flex items-center justify-center">
+                      <span className="text-[11px] font-black text-background leading-none">D</span>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <AddressAutocomplete
+                      placeholder={t("ride.pickup") || "Pickup location"}
+                      value={pickupDisplay}
+                      onSelect={handlePickupSelect}
+                      proximity={userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
+                      country={rideCountry}
+                      className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30"
+                    />
+                    <AddressAutocomplete
+                      placeholder={t("ride.destination") || "Where to?"}
+                      value={destinationDisplay}
+                      onSelect={handleDestinationSelect}
+                      onFocus={() => {
+                        if (!pickup) {
+                          ensureAutoPickup();
+                        }
+                        pickupManuallySet.current = true;
+                        setPickupConfirmed(true);
+                        lastGeocodedCoordsRef.current = null;
+
+                        if (destination) {
+                          setViewStep("search");
+                          setPinPlacementMode("destination");
+                          setMapPanTarget({ lat: destination.lat, lng: destination.lng });
+                        }
+                      }}
+                      proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
+                      country={rideCountry}
+                      className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30"
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
 
-            {/* Recent destinations — only when no destination yet */}
-            {recentDestinations.length > 0 && !destination && (
-              <div className="mb-3">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("ride.recent") || "Recent"}</p>
-                <div className="space-y-1">
-                  {recentDestinations.slice(0, 3).map((dest) => (
-                    <button
-                      key={dest.id}
-                      onClick={() => handleDestinationSelect({ address: dest.address, lat: dest.lat, lng: dest.lng })}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/15 transition-all active:scale-[0.98]"
-                    >
-                      <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0 text-left">
-                        <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
-                        <p className="text-[10px] text-muted-foreground">{dest.time}</p>
+                {/* Stops display */}
+                {stops.length > 0 && (
+                  <div className="mb-3 space-y-1">
+                    {stops.map((stop) => (
+                      <div key={stop.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                        <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
+                          <span className="text-[9px] font-black text-primary-foreground leading-none">S</span>
+                        </div>
+                        <span className="flex-1 text-xs font-medium text-foreground truncate">{stop.display || "Tap to set stop"}</span>
+                        <button
+                          onClick={() => {
+                            ensureAutoPickup();
+                            setPickupConfirmed(true);
+                            setViewStep("search");
+                            setPlacingStopId(stop.id);
+                            setPinPlacementMode("stop");
+                            lastGeocodedCoordsRef.current = null;
+                            if (stop.place) setMapPanTarget({ lat: stop.place.lat, lng: stop.place.lng });
+                          }}
+                          className="text-[10px] font-semibold text-primary px-2 py-1 rounded-lg hover:bg-primary/10"
+                        >Edit</button>
+                        <button onClick={() => handleRemoveStop(stop.id)} className="text-muted-foreground hover:text-destructive">
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+                    ))}
+                  </div>
+                )}
 
-            {/* Search / Confirm button */}
-            <Button
-              onClick={handleConfirmSearch}
-              disabled={!pickup || !destination || isLoadingRoute}
-              className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
-              size="lg"
-            >
-              {isLoadingRoute ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                  {t("ride.calculating_route") || "Calculating..."}
-                </span>
-              ) : destination ? (
-                t("ride.confirm_dropoff") || "Confirm drop-off"
-              ) : (
-                t("ride.search_destination") || "Search destination"
-              )}
-            </Button>
-          </div>
-          </div>
+                {/* Add stop button */}
+                {pickupConfirmed && destination && stops.length < MAX_STOPS && (
+                  <button
+                    onClick={() => {
+                      ensureAutoPickup();
+                      setPickupConfirmed(true);
+                      handleAddStop();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2.5 mb-3 rounded-xl border border-dashed border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-all active:scale-[0.98]"
+                  >
+                    <Plus className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-semibold text-primary">Add a stop</span>
+                  </button>
+                )}
+
+                {/* Saved places — only when no destination yet */}
+                {savedPlaces.length > 0 && !destination && (
+                  <div className="mb-3">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("ride.saved_places") || "Saved places"}</p>
+                    <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+                      {savedPlaces.map((place) => {
+                        const Icon = place.icon;
+                        return (
+                          <button
+                            key={place.id}
+                            onClick={() => handleDestinationSelect({ address: place.address, lat: place.lat, lng: place.lng })}
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/15 border border-border/20 hover:border-primary/20 shrink-0 transition-all active:scale-[0.97]"
+                          >
+                            <Icon className="w-4 h-4 text-primary shrink-0" />
+                            <span className="text-xs font-semibold text-foreground whitespace-nowrap">{place.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recent destinations — only when no destination yet */}
+                {recentDestinations.length > 0 && !destination && (
+                  <div className="mb-3">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("ride.recent") || "Recent"}</p>
+                    <div className="space-y-1">
+                      {recentDestinations.slice(0, 3).map((dest) => (
+                        <button
+                          key={dest.id}
+                          onClick={() => handleDestinationSelect({ address: dest.address, lat: dest.lat, lng: dest.lng })}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/15 transition-all active:scale-[0.98]"
+                        >
+                          <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0 text-left">
+                            <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
+                            <p className="text-[10px] text-muted-foreground">{dest.time}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Search / Confirm button */}
+                <Button
+                  onClick={handleConfirmSearch}
+                  disabled={!pickup || !destination || isLoadingRoute}
+                  className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
+                  size="lg"
+                >
+                  {isLoadingRoute ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                      {t("ride.calculating_route") || "Calculating..."}
+                    </span>
+                  ) : destination ? (
+                    t("ride.confirm_dropoff") || "Confirm drop-off"
+                  ) : (
+                    t("ride.search_destination") || "Search destination"
+                  )}
+                </Button>
+              </div>
+            </motion.div>
           )}
         </div>
       )}
