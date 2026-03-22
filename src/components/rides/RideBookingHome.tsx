@@ -1218,6 +1218,27 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
     if (viewStep !== "search") return;
 
+    // Stop pin placement mode — update the stop being placed
+    if (pinPlacementMode === "stop" && placingStopId) {
+      if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
+      reverseGeocodeTimerRef.current = setTimeout(async () => {
+        const key = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`;
+        if (lastGeocodedCoordsRef.current === key) return;
+        lastGeocodedCoordsRef.current = key;
+        setIsReversingGeocode(true);
+        try {
+          const address = await reverseGeocode(center.lat, center.lng);
+          setStops(prev => prev.map(s => s.id === placingStopId ? { ...s, place: { address, lat: center.lat, lng: center.lng }, display: address } : s));
+        } catch {
+          const fallback = `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`;
+          setStops(prev => prev.map(s => s.id === placingStopId ? { ...s, place: { address: fallback, lat: center.lat, lng: center.lng }, display: fallback } : s));
+        } finally {
+          setIsReversingGeocode(false);
+        }
+      }, 600);
+      return;
+    }
+
     // Once pickup is confirmed, dragging the map updates the DESTINATION, not pickup
     if (pickupManuallySet.current || pickupConfirmed) {
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
