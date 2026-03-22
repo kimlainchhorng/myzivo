@@ -421,9 +421,9 @@ export default function DriverMapPage() {
                         {activeOffer.isAirportPickup ? "✈️ Airport Pickup" : "Incoming ride request"}
                       </p>
                     </div>
-                    {activeOffer.isAirportPickup && activeOffer.flightNumber && (
+                    {activeOffer.isAirportPickup && (
                       <p className="text-xs font-bold text-sky-600">
-                        Flight {activeOffer.flightNumber}
+                        {activeOffer.flightNumber ? `Flight ${activeOffer.flightNumber}` : "Airport terminal pickup"}
                         {activeOffer.flightArrivalTime && (
                           <> · Lands {new Date(activeOffer.flightArrivalTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</>
                         )}
