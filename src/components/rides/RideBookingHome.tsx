@@ -1444,6 +1444,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setPickupDisplay(autoPickup.address);
     }
     setPickupConfirmed(true);
+    setPinPlacementMode("destination");
 
     // Pan map to destination so user can fine-tune with the "D" pin
     setMapPanTarget({ lat: place.lat, lng: place.lng });
@@ -1455,7 +1456,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       toast.error(`Maximum ${MAX_STOPS} stops allowed`);
       return;
     }
-    setStops(prev => [...prev, { id: Date.now().toString(), place: null, display: "" }]);
+    const newId = Date.now().toString();
+    setStops(prev => [...prev, { id: newId, place: null, display: "" }]);
+    setPlacingStopId(newId);
+    setPinPlacementMode("stop");
+    lastGeocodedCoordsRef.current = null; // reset dedup so map drag immediately starts geocoding
   }, [stops.length]);
 
   // Stop management — NOT wrapped in useCallback so they always use latest state
