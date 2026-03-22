@@ -1783,49 +1783,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     toast.success("Payment authorized! Finding your driver...");
   };
 
-  /** Cash ride — create ride_request without Stripe, go straight to searching */
-  const handleCashRideConfirm = async () => {
-    if (!user || !pickup || !destination) {
-      toast.error("Please sign in and select locations");
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      const stopsData = stops.filter(s => s.place).map((s, idx) => ({
-        order: idx + 1, address: s.place!.address, lat: s.place!.lat, lng: s.place!.lng,
-      }));
-      const { data: rideData, error: rideError } = await supabase.from("ride_requests").insert({
-        user_id: user.id,
-        pickup_address: pickup.address, pickup_lat: pickup.lat, pickup_lng: pickup.lng,
-        dropoff_address: destination.address, dropoff_lat: destination.lat, dropoff_lng: destination.lng,
-        ride_type: selectedVehicle,
-        quoted_total: currentPrice,
-        distance_miles: routeData?.distance_miles ?? null,
-        duration_minutes: routeData?.duration_minutes ?? null,
-        status: "searching",
-        payment_status: "cash",
-        customer_name: otherName.trim() || user.user_metadata?.full_name || "",
-        customer_phone: otherPhone.trim() || user.user_metadata?.phone || "",
-        requires_car_seat: currentVehicle.carSeat,
-        car_seat_type: currentVehicle.carSeat ? "standard" : null,
-        notes: ["CASH PAYMENT", stopsData.length > 0 ? `Stops: ${stopsData.map(s => s.address).join(" → ")}` : "",
-          otherName.trim() ? `Rider: ${otherName.trim()}${otherPhone.trim() ? ` (${otherPhone.trim()})` : ""}` : "",
-        ].filter(Boolean).join(" | ") || null,
-      }).select("id").single();
-      if (rideError) throw rideError;
-      setRideRequestId(rideData.id);
-      toast.success("Ride confirmed! Pay cash to your driver.");
-      setPaymentStep("idle");
-      setClientSecret(null);
-      setViewStep("searching");
-    } catch (err: unknown) {
-      console.error("[RideBooking] Cash ride error:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to create ride. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   /* ─── Reset state ─── */
   const handleReset = () => {
     if (trackingIntervalRef.current) clearInterval(trackingIntervalRef.current);
@@ -2076,430 +2033,49 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </MapSection>
             </div>
 
-            <>
-              {/* Confirmed pickup indicator */}
-              {pickup && pickupConfirmed && (
-                <div className="mb-3 rounded-xl bg-muted/10 border border-border/20 px-3 py-2 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-primary shrink-0" />
-                  <p className="text-xs text-foreground truncate flex-1">{pickupDisplay}</p>
-                  <button
-                    onClick={() => { pickupManuallySet.current = false; setPickupConfirmed(false); }}
-                    className="text-xs text-primary font-semibold shrink-0"
-                  >
-                    Change
-                  </button>
-                </div>
-              )}
-
-              {/* Address inputs with ZIVO-style connector */}
-              <div className="rounded-2xl bg-muted/10 border border-border/20 p-3.5">
-                <div className="flex items-center gap-3">
-                  {/* Pickup/Stops/Dropoff indicator dots + dotted lines */}
-                  <div className="flex flex-col items-center py-2">
-                    {/* Pickup Z marker */}
-                    <div className="relative">
-                      <div className="absolute -inset-1 rounded-full bg-primary/20 animate-pulse" />
-                      <div className="relative w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                        <span className="text-[9px] font-black text-primary-foreground leading-none">Z</span>
-                      </div>
-                    </div>
-                    {/* Lines + S markers for each stop */}
-                    {stops.map((stop) => (
-                      <div key={stop.id} className="flex flex-col items-center">
-                        <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/25 my-1" />
-                        <div className="w-5 h-5 rounded-full bg-muted-foreground/60 flex items-center justify-center">
-                          <span className="text-[9px] font-black text-background leading-none">S</span>
-                        </div>
-                      </div>
-                    ))}
-                    {/* Line to destination E marker */}
-                    <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/25 my-1" />
-                    <div className="w-5 h-5 rounded-sm bg-foreground flex items-center justify-center">
-                      <span className="text-[9px] font-black text-background leading-none">E</span>
-                    </div>
-                  </div>
-                  <div className="flex-1 space-y-2">
-                     <AddressAutocomplete
-                      placeholder="Pickup location"
-                      value={pickupDisplay}
-                      onSelect={handlePickupSelect}
-                      onClear={() => {
-                        pickupManuallySet.current = false;
-                        setPickupConfirmed(false);
-                        setPickup(null);
-                        setPickupDisplay("");
-                      }}
-                      country={rideCountry}
-                      className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
-                    />
-                    {/* Stop inputs */}
-                    {stops.map((stop, idx) => (
-                      <div key={stop.id} className="relative">
-                         <AddressAutocomplete
-                          placeholder={`Stop ${idx + 1}`}
-                          value={stop.display}
-                          onSelect={(place) => handleStopSelect(stop.id, place)}
-                          proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
-                          country={rideCountry}
-                          className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0 [&_input]:pr-8"
-                        />
-                        <button
-                          onClick={() => handleRemoveStop(stop.id)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center hover:bg-destructive/20 transition-colors z-10"
-                        >
-                          <X className="w-3 h-3 text-muted-foreground" />
-                        </button>
-                      </div>
-                    ))}
-                     <AddressAutocomplete
-                      placeholder="Where to?"
-                      value={destinationDisplay}
-                      onSelect={handleDestinationSelect}
-                      proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
-                      country={rideCountry}
-                      className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
-                    />
-                  </div>
-                </div>
+            <div
+              className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
+            >
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
               </div>
 
-              {/* Action buttons row */}
-              <div className="flex gap-2 mt-5 pb-1 flex-wrap">
-                <button
-                  onClick={handleAddStop}
-                  disabled={stops.length >= MAX_STOPS}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/30 text-[13px] font-semibold text-foreground whitespace-nowrap hover:border-primary/40 hover:shadow-sm active:scale-95 transition-all duration-200",
-                    stops.length >= MAX_STOPS && "opacity-40 pointer-events-none"
-                  )}
-                >
-                  <div className="w-5 h-5 rounded-full bg-muted/30 flex items-center justify-center">
-                    <Plus className="w-3 h-3" />
-                  </div>
-                  {t("ride.add_stop")}
-                </button>
-                <button
-                  onClick={() => { setShowSchedule(!showSchedule); setShowPickupOther(false); }}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-full border text-[13px] font-semibold whitespace-nowrap active:scale-95 transition-all duration-200",
-                    showSchedule
-                      ? "bg-primary/10 border-primary/40 text-primary shadow-sm shadow-primary/10"
-                      : "bg-card border-border/30 text-foreground hover:border-primary/40 hover:shadow-sm"
-                  )}
-                >
-                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center", showSchedule ? "bg-primary/20" : "bg-muted/30")}>
-                    <CalendarClock className="w-3 h-3" />
-                  </div>
-                  {scheduledDate ? `${scheduledDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${scheduleHour % 12 || 12}:${scheduleMinute.toString().padStart(2, "0")} ${scheduleHour >= 12 ? "PM" : "AM"}` : "Schedule"}
-                </button>
-                <button
-                  onClick={() => { setShowPickupOther(!showPickupOther); setShowSchedule(false); }}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-full border text-[13px] font-semibold whitespace-nowrap active:scale-95 transition-all duration-200",
-                    showPickupOther
-                      ? "bg-primary/10 border-primary/40 text-primary shadow-sm shadow-primary/10"
-                      : "bg-card border-border/30 text-foreground hover:border-primary/40 hover:shadow-sm"
-                  )}
-                >
-                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center", showPickupOther ? "bg-primary/20" : "bg-muted/30")}>
-                    <Users className="w-3 h-3" />
-                  </div>
-                  {otherName ? otherName.split(" ")[0] : "Pick up other"}
-                </button>
-              </div>
-
-              {/* Schedule inline panel */}
-              <AnimatePresence>
-                {showSchedule && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-3 rounded-2xl bg-muted/15 border border-border/30 p-3 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-foreground">Schedule ride</p>
-                        <button
-                          onClick={() => setShowSchedule(false)}
-                          className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
-                        >
-                          <X className="w-3.5 h-3.5 text-muted-foreground" />
-                        </button>
-                      </div>
-                      {/* 2026 Scroll wheel date picker */}
-                      <DateScrollWheelPicker
-                        selectedDate={scheduledDate ?? new Date()}
-                        onDateChange={(d) => setScheduledDate(d)}
-                        compact
-                      />
-                      {/* 2026 Scroll wheel time picker */}
-                      {(() => {
-                        const wheelHours = Array.from({ length: 12 }, (_, i) => i + 1);
-                        const wheelMinutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
-                        const currentAmPm = scheduleHour >= 12 ? "PM" : "AM";
-                        const display12 = scheduleHour % 12 || 12;
-                        const hourIdx = wheelHours.indexOf(display12);
-                        const minIdx = wheelMinutes.indexOf(scheduleMinute);
-                        
-                        return (
-                          <ScrollWheelPicker
-                            hideDays
-                            hours={wheelHours}
-                            selectedHourIdx={hourIdx >= 0 ? hourIdx : 0}
-                            onHourChange={(i) => {
-                              const h12 = wheelHours[i];
-                              const isPM = scheduleHour >= 12;
-                              if (isPM) setScheduleHour(h12 === 12 ? 12 : h12 + 12);
-                              else setScheduleHour(h12 === 12 ? 0 : h12);
-                            }}
-                            minutes={wheelMinutes}
-                            selectedMinIdx={minIdx >= 0 ? minIdx : 0}
-                            onMinChange={(i) => setScheduleMinute(wheelMinutes[i])}
-                            amPm={currentAmPm as "AM" | "PM"}
-                            onAmPmChange={(val) => {
-                              const h12 = scheduleHour % 12;
-                              setScheduleHour(val === "PM" ? h12 + 12 : h12);
-                            }}
-                            compact
-                          />
-                        );
-                      })()}
-                      <Button
-                        className="w-full h-11 rounded-xl text-sm font-bold"
-                        disabled={!scheduledDate}
-                        onClick={() => {
-                          if (scheduledDate) {
-                            const d = new Date(scheduledDate);
-                            d.setHours(scheduleHour, scheduleMinute);
-                            setScheduledDate(d);
-                            setShowSchedule(false);
-                            toast.success(`Ride scheduled for ${d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} at ${scheduleHour % 12 || 12}:${scheduleMinute.toString().padStart(2, "0")} ${scheduleHour >= 12 ? "PM" : "AM"}`);
-                          }
-                        }}
-                      >
-                        <CalendarClock className="w-4 h-4 mr-1.5" />
-                        Set schedule
-                      </Button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Pick up other inline panel */}
-              <AnimatePresence>
-                {showPickupOther && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-3 rounded-2xl bg-muted/15 border border-border/30 p-3 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-foreground">Someone else is riding</p>
-                        <button
-                          onClick={() => setShowPickupOther(false)}
-                          className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
-                        >
-                          <X className="w-3.5 h-3.5 text-muted-foreground" />
-                        </button>
-                      </div>
-                      <div className="space-y-2">
-                        <div>
-                          <label className="text-[10px] text-muted-foreground mb-1 block">Rider's name</label>
-                          <input
-                            type="text"
-                            value={otherName}
-                            onChange={(e) => setOtherName(e.target.value.slice(0, 100))}
-                            placeholder="Full name"
-                            className="w-full h-11 rounded-xl bg-card border border-border/30 px-3 text-sm font-semibold text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-muted-foreground mb-1 block">Phone number</label>
-                          <input
-                            type="tel"
-                            value={otherPhone}
-                            onChange={(e) => setOtherPhone(e.target.value.replace(/[^0-9+\-() ]/g, "").slice(0, 20))}
-                            placeholder="+1 (555) 123-4567"
-                            className="w-full h-11 rounded-xl bg-card border border-border/30 px-3 text-sm font-semibold text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                          />
-                        </div>
-                      </div>
-                      <Button
-                        className="w-full h-11 rounded-xl text-sm font-bold"
-                        disabled={!otherName.trim()}
-                        onClick={() => {
-                          setShowPickupOther(false);
-                          toast.success(`Ride for ${otherName.trim().split(" ")[0]} confirmed`);
-                        }}
-                      >
-                        <Users className="w-4 h-4 mr-1.5" />
-                        Confirm rider
-                      </Button>
-                      <p className="text-[10px] text-muted-foreground text-center">
-                        Driver will contact this person for pickup
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* ── Nearby Places by Category (Live from Google Places API) ── */}
-              {nearbyCategories.length > 0 && (
-                <div className="pt-5 -mx-5 space-y-5">
-                  {nearbyCategories.map((cat) => {
-                    const CatIcon = cat.type === "restaurant" ? UtensilsCrossed : cat.type === "shop" ? ShoppingCart : Fuel;
-                    return (
-                      <div key={cat.label}>
-                        <div className="flex items-center justify-between mb-2.5 px-5">
-                          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                            <CatIcon className="w-3.5 h-3.5 text-primary/60" />
-                            {cat.type === "restaurant" ? t("ride.restaurants") : cat.type === "shop" ? t("ride.shops_grocery") : t("ride.gas_stations")}
-                          </p>
-                          <span className="text-[10px] text-muted-foreground/40">{cat.places.length} {t("ride.nearby")}</span>
-                        </div>
-                        <div
-                          className="flex gap-2.5 overflow-x-auto overflow-y-hidden px-5 pb-2 snap-x snap-mandatory touch-pan-x"
-                          style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
-                        >
-                          {cat.places.map((place, idx) => (
-                            <button
-                              key={place.placeId || idx}
-                              onClick={() => handleSavedPlace(place.address, place.lat, place.lng)}
-                              className="flex flex-col items-center min-w-[100px] w-[100px] rounded-2xl bg-card border border-border/15 py-3 px-2 hover:border-primary/30 hover:shadow-lg transition-all duration-200 active:scale-95 shrink-0 snap-start group"
-                            >
-                              <PlaceLogo
-                                name={place.name}
-                                googlePhotoUrl={place.iconUrl}
-                                categoryType={cat.type}
-                                className="mb-2 group-hover:border-primary/20 group-hover:shadow-sm transition-all duration-200"
-                              />
-                              <p className="text-[11px] font-bold text-foreground text-center leading-tight truncate w-full">{place.name}</p>
-                              <p className="text-[8px] text-muted-foreground/50 text-center leading-snug mt-0.5 truncate w-full">{place.address}</p>
-                              <p className="text-[9px] text-muted-foreground mt-1.5">{useKm ? `${(parseFloat(place.distanceMi) * 1.60934).toFixed(1)} km` : `${place.distanceMi} mi`} · {place.timeMin} min</p>
-                              <p className="text-[13px] font-extrabold text-primary mt-1">{useKm ? dualPrice(parseFloat(place.priceEst.replace(/[^0-9.]/g, "")), true) : place.priceEst}</p>
-                              <p className="text-[8px] text-muted-foreground/40">{t("ride.est")}</p>
-                            </button>
-                          ))}
-                          <div className="min-w-[1px] shrink-0" />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {nearbyLoading && (
-                <div className="pt-5 flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  <span className="text-xs text-muted-foreground">Finding nearby places...</span>
-                </div>
-              )}
-
-              {/* Saved & Recent list */}
-              <div className="pt-5 space-y-5">
-                {/* Saved Places */}
-                <div>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                    <Star className="w-3 h-3 text-primary/60" />
-                    Saved Places
-                  </p>
-                  <div className="space-y-1">
-                    {savedPlaces.length > 0 ? savedPlaces.map((place) => {
-                      const Icon = place.icon;
-                      return (
-                        <button
-                          key={place.id}
-                          onClick={() => handleSavedPlace(place.address, place.lat, place.lng)}
-                          className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 active:scale-[0.98] group"
-                        >
-                          <div className="w-11 h-11 rounded-2xl bg-primary/8 border border-primary/15 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
-                            <Icon className="w-[18px] h-[18px] text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[14px] font-bold text-foreground">{place.name}</p>
-                            <p className="text-xs text-muted-foreground truncate mt-0.5">{place.address}</p>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0 group-hover:text-primary/60 transition-colors" />
-                        </button>
-                      );
-                    }) : (
-                      <button
-                        onClick={() => toast.info("Save a location from your profile")}
-                        className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 group"
-                      >
-                        <div className="w-11 h-11 rounded-2xl bg-primary/5 flex items-center justify-center shrink-0 border border-dashed border-primary/20 group-hover:border-primary/40 transition-colors">
-                          <Plus className="w-4 h-4 text-primary/50 group-hover:text-primary transition-colors" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-muted-foreground">Add a saved place</p>
-                          <p className="text-xs text-muted-foreground/50">Home, work, gym...</p>
-                        </div>
-                      </button>
-                    )}
-                  </div>
+              <div className="px-5 pt-1 pb-24">
+                {/* Title */}
+                <div className="text-center mb-3">
+                  <h2 className="text-lg font-black text-foreground tracking-tight">{t("ride.set_destination")}</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("ride.drag_map_move_pin")}</p>
                 </div>
 
-                {/* Recent */}
-                {recentDestinations.length > 0 && (
-                  <div>
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                      <Clock className="w-3 h-3 text-muted-foreground/60" />
-                      Recent
-                    </p>
-                    <div className="space-y-1">
-                      {recentDestinations.map((dest) => (
-                        <button
-                          key={dest.id}
-                          onClick={() => {
-                            handleSavedPlace(dest.address, dest.lat, dest.lng);
-                          }}
-                          className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 active:scale-[0.98] group"
-                        >
-                          <div className="w-11 h-11 rounded-2xl bg-muted/15 border border-border/20 flex items-center justify-center shrink-0 group-hover:bg-muted/25 transition-colors">
-                            <History className="w-[18px] h-[18px] text-muted-foreground/70" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[14px] font-medium text-foreground truncate">{dest.address}</p>
-                            <p className="text-xs text-muted-foreground/60 mt-0.5">{dest.time}</p>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0 group-hover:text-muted-foreground/60 transition-colors" />
-                        </button>
-                      ))}
-                    </div>
+                {/* Destination input */}
+                <button
+                  onClick={() => setViewStep("search")}
+                  className="w-full flex items-center gap-3 bg-muted/15 border border-border/20 rounded-2xl px-4 py-3 transition-all duration-200 hover:bg-muted/25 hover:border-primary/20 active:scale-[0.98] group"
+                >
+                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                    <span className="text-[10px] font-black text-primary-foreground leading-none">Z</span>
                   </div>
-                )}
-              </div>
-            </div>
-
-            <div className="px-4 pt-2 shrink-0 bg-background border-t border-border/10" style={{ paddingBottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM} + 12px)` }}>
-              <Button
-                className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
-                onClick={() => {
-                  if (pickup && destination) {
-                    handleConfirmSearch();
-                  } else {
-                    setViewStep("search");
-                  }
-                }}
-                disabled={isLoadingRoute || isReversingGeocode}
-              >
-                {isLoadingRoute ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                    Finding route...
+                  <span className="flex-1 text-left text-sm font-medium truncate" style={{ color: destinationDisplay ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
+                    {destinationDisplay || t("ride.book_a_ride")}
                   </span>
-                ) : destination ? (
-                  t("ride.choose_ride")
-                ) : (
-                  t("ride.search_destination")
-                )}
-              </Button>
+                  <Navigation className="w-4 h-4 text-primary/60 shrink-0" />
+                </button>
+              </div>
+
+              {/* Sticky Choose Ride button at bottom */}
+              <div className="shrink-0 px-5 pt-3" style={{ paddingBottom: `calc(12px + ${SAFE_BOTTOM})` }}>
+                <Button
+                  onClick={() => setViewStep("search")}
+                  disabled={isReversingGeocode}
+                  className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
+                  size="lg"
+                >
+                  {isReversingGeocode ? t("ride.locating") : destinationDisplay ? t("ride.choose_ride") : t("ride.search_destination")}
+                </Button>
+              </div>
             </div>
-          </motion.div>
+          </div>
 
         </>
       )}
@@ -3150,8 +2726,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 paymentFailed={paymentStep === "failed"}
                 onClearError={() => setPaymentStep("idle")}
                 isCambodia={useKm}
-                cashAllowed={cashAllowed}
-                onCashConfirm={handleCashRideConfirm}
               />
             </div>
           </div>
