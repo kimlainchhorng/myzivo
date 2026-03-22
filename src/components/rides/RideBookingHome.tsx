@@ -639,6 +639,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const nearbyCenter = pickup ?? userLocation;
   const [pickupDisplay, setPickupDisplay] = useState("");
   const [destinationDisplay, setDestinationDisplay] = useState("");
+  const [mapPanTarget, setMapPanTarget] = useState<{ lat: number; lng: number } | null>(null);
 
   // Extract city from pickup address for pricing lookup
   const pickupCity = useMemo(() => {
