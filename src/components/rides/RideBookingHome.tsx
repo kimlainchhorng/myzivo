@@ -2018,12 +2018,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               routePolyline={routeData?.polyline || null}
               onCenterChanged={handleMapCenterChanged}
               suppressAutoViewport={viewStep === "search" && !!pinPlacementMode}
-              onMapReadyExtra={pinPlacementMode ? (map) => {
-                userHasDraggedPinRef.current = false;
+              onMapReadyExtra={(map) => {
                 map.addListener("dragstart", () => {
                   userHasDraggedPinRef.current = true;
                 });
-              } : undefined}
+              }}
             >
               {/* Center pin for pickup (when not yet confirmed in search step) */}
               {viewStep === "search" && !pickupConfirmed && (
