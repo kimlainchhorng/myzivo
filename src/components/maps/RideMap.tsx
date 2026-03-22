@@ -494,6 +494,20 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         }
       });
 
+      // Also fire during active dragging for smoother pin placement feedback
+      let dragThrottleTimer: ReturnType<typeof setTimeout> | null = null;
+      map.addListener("drag", () => {
+        if (dragThrottleTimer) return;
+        dragThrottleTimer = setTimeout(() => {
+          dragThrottleTimer = null;
+          const c = map.getCenter();
+          const latestOnCenterChanged = onCenterChangedRef.current;
+          if (c && latestOnCenterChanged) {
+            latestOnCenterChanged({ lat: c.lat(), lng: c.lng() });
+          }
+        }, 150);
+      });
+
       // Real drivers are rendered by the nearbyDrivers effect
 
       setTimeout(() => {
