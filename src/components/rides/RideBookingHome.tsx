@@ -1206,6 +1206,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     if (pickupManuallySet.current || pickupConfirmed) {
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = setTimeout(async () => {
+        const key = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`;
+        if (lastGeocodedCoordsRef.current === key) return;
+        lastGeocodedCoordsRef.current = key;
         setIsReversingGeocode(true);
         try {
           const address = await reverseGeocode(center.lat, center.lng);
@@ -1227,6 +1230,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
     reverseGeocodeTimerRef.current = setTimeout(async () => {
       if (pickupManuallySet.current || pickupConfirmed) return;
+
+      const key = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`;
+      if (lastGeocodedCoordsRef.current === key) return;
+      lastGeocodedCoordsRef.current = key;
 
       setIsReversingGeocode(true);
       try {
