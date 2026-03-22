@@ -58,7 +58,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
             <p className="text-sm text-muted-foreground mb-5">
               This page encountered an error. The rest of the app is still working.
             </p>
-            {process.env.NODE_ENV === "development" && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <pre className="text-left text-xs bg-muted/50 rounded-xl p-3 mb-5 overflow-auto max-h-24 text-destructive">
                 {this.state.error.message}
               </pre>
