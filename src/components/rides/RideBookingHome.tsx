@@ -42,6 +42,7 @@ import { useDriverLocation } from "@/hooks/useDriverLocation";
 import { useCustomerLocationBroadcast } from "@/hooks/useCustomerLocationBroadcast";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
+import { useUpcomingFlightArrival, buildFlightPickupJobData } from "@/hooks/useFlightArrivalPickup";
 
 /* ─── Types ─── */
 interface PlaceData {
@@ -558,6 +559,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [showLangMenu, setShowLangMenu] = useState(false);
 
   const { isCambodia: isCambodiaCountry } = useCountry();
+  const { data: upcomingFlight } = useUpcomingFlightArrival();
 
   const LANGS = [
     { code: "en", label: "English", flag: "🇺🇸" },
@@ -901,6 +903,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       if (!pickup || !destination || !user) return;
 
       // 1. Create a job row for the dispatch system
+      // Check if this is an airport pickup linked to a flight booking
+      const flightData = upcomingFlight ? buildFlightPickupJobData(upcomingFlight) : {};
+
       const { data: jobData, error: jobError } = await supabase.from("jobs").insert({
         customer_id: user.id,
         job_type: "ride" as any,
@@ -917,6 +922,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         pricing_total_estimate: currentPrice ?? null,
         requested_at: new Date().toISOString(),
         notes: rideRequestId ? `ride_request:${rideRequestId}` : null,
+        ...flightData,
       } as any).select("id").single();
 
       if (jobError || !jobData) {
