@@ -2036,6 +2036,112 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         </div>
       )}
 
+      {/* ═══════ 3. SEARCH — bottom sheet with address inputs over persistent map ═══════ */}
+      {viewStep === "search" && (
+        <div
+          className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
+        >
+          {/* Drag handle */}
+          <div className="flex justify-center pt-3 pb-2">
+            <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
+          </div>
+
+          <div className="px-5 pt-1" style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})` }}>
+            {/* Pickup input */}
+            <div className="flex items-start gap-3 mb-3">
+              <div className="flex flex-col items-center mt-3">
+                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center ring-2 ring-primary/20">
+                  <span className="text-[11px] font-black text-primary-foreground leading-none">Z</span>
+                </div>
+                <div className="w-px h-6 border-l-[2px] border-dashed border-muted-foreground/30 my-0.5" />
+                <div className="w-6 h-6 rounded-sm bg-foreground flex items-center justify-center">
+                  <span className="text-[11px] font-black text-background leading-none">D</span>
+                </div>
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <AddressAutocomplete
+                  placeholder={t("ride.pickup") || "Pickup location"}
+                  value={pickupDisplay}
+                  onSelect={handlePickupSelect}
+                  proximity={userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
+                  country={rideCountry}
+                  className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30"
+                />
+                <AddressAutocomplete
+                  placeholder={t("ride.destination") || "Where to?"}
+                  value={destinationDisplay}
+                  onSelect={handleDestinationSelect}
+                  proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
+                  country={rideCountry}
+                  className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30"
+                />
+              </div>
+            </div>
+
+            {/* Saved places */}
+            {savedPlaces.length > 0 && (
+              <div className="mb-3">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("ride.saved_places") || "Saved places"}</p>
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+                  {savedPlaces.map((place) => {
+                    const Icon = place.icon;
+                    return (
+                      <button
+                        key={place.id}
+                        onClick={() => handleDestinationSelect({ address: place.address, lat: place.lat, lng: place.lng })}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/15 border border-border/20 hover:border-primary/20 shrink-0 transition-all active:scale-[0.97]"
+                      >
+                        <Icon className="w-4 h-4 text-primary shrink-0" />
+                        <span className="text-xs font-semibold text-foreground whitespace-nowrap">{place.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Recent destinations */}
+            {recentDestinations.length > 0 && (
+              <div className="mb-3">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("ride.recent") || "Recent"}</p>
+                <div className="space-y-1">
+                  {recentDestinations.slice(0, 3).map((dest) => (
+                    <button
+                      key={dest.id}
+                      onClick={() => handleDestinationSelect({ address: dest.address, lat: dest.lat, lng: dest.lng })}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/15 transition-all active:scale-[0.98]"
+                    >
+                      <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
+                        <p className="text-[10px] text-muted-foreground">{dest.time}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Search / Confirm button */}
+            <Button
+              onClick={handleConfirmSearch}
+              disabled={!pickup || !destination || isLoadingRoute}
+              className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
+              size="lg"
+            >
+              {isLoadingRoute ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                  {t("ride.calculating_route") || "Calculating..."}
+                </span>
+              ) : (
+                t("ride.search_destination") || "Search"
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* ═══════ 2. HOME — Full-screen map with floating UI ═══════ */}
       {viewStep === "home" && (
         <>
