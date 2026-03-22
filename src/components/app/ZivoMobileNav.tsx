@@ -33,11 +33,11 @@ const ZivoMobileNav = () => {
   const { t } = useI18n();
 
   const tabs: NavTab[] = [
-    { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: tabRidesBg, cssVar: "var(--primary)" },
-    { id: "search", labelKey: "nav.search", icon: Search, path: "/flights", bg: tabFlightsBg, cssVar: "var(--flights)" },
-    { id: "trips", labelKey: "nav.trips", icon: Briefcase, path: "/my-trips", bg: tabHotelsBg, cssVar: "var(--hotels)" },
-    { id: "alerts", labelKey: "nav.alerts", icon: Bell, path: "/notifications", badge: activeAlertsCount, bg: tabCarsBg, cssVar: "var(--cars)" },
-    { id: "account", labelKey: "nav.account", icon: User, path: "/profile", bg: tabEatsBg, cssVar: "var(--eats)" },
+    { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
+    { id: "search", labelKey: "nav.search", icon: Search, path: "/flights", bg: navSearchBg, cssVar: "var(--flights)" },
+    { id: "trips", labelKey: "nav.trips", icon: Briefcase, path: "/my-trips", bg: navTripsBg, cssVar: "var(--hotels)" },
+    { id: "alerts", labelKey: "nav.alerts", icon: Bell, path: "/notifications", badge: activeAlertsCount, bg: navAlertsBg, cssVar: "var(--cars)" },
+    { id: "account", labelKey: "nav.account", icon: User, path: "/profile", bg: navAccountBg, cssVar: "var(--primary)" },
   ];
 
   const getActiveTab = () => {
