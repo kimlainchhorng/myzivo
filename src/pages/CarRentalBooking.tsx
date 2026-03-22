@@ -288,7 +288,7 @@ const CarRentalBooking = () => {
       returnTime,
       driverAge: parseInt(driverAge),
     });
-    window.open(url, "_blank", "noopener,noreferrer");
+    import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(url));
   };
 
   const handleLocationSelect = (city: string) => {

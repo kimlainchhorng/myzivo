@@ -272,7 +272,7 @@ export default function HotelsPage() {
       city: currentSearch.citySlug, cityName: currentSearch.cityName, checkin: currentSearch.checkIn, checkout: currentSearch.checkOut, adults: String(currentSearch.adults), rooms: String(currentSearch.rooms), hotelId: hotel.id, hotelName: hotel.name, price: String(hotel.pricePerNight), partner: 'booking', product: 'hotels', source: 'result_card',
     });
     trackAffiliateClick({ flightId: hotel.id, airline: 'Booking.com', airlineCode: 'HOTEL', origin: 'ZIVO', destination: currentSearch.cityName, price: hotel.pricePerNight, passengers: currentSearch.adults, cabinClass: 'standard', affiliatePartner: 'booking', referralUrl: `/out?${outParams.toString()}`, source: 'hotel_result_card', ctaType: 'result_card', serviceType: 'hotels' });
-    window.open(`/out?${outParams.toString()}`, "_blank", "noopener,noreferrer");
+    import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(`/out?${outParams.toString()}`));
   };
 
   const pageTitle = currentSearch?.cityName ? `Hotels in ${currentSearch.cityName} | ZIVO` : "Search & Compare Hotels | ZIVO";

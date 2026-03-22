@@ -88,12 +88,14 @@ export default function PartnerConsentModal({
       onOpenChange(false);
       
       // Open partner site
-      window.open(result.finalUrl, '_blank', 'noopener,noreferrer');
+      const { openExternalUrl } = await import("@/lib/openExternalUrl");
+      await openExternalUrl(result.finalUrl);
       
     } catch (err) {
       console.error('[PartnerConsent] Error:', err);
       // Still try to open the URL
-      window.open(destinationUrl, '_blank', 'noopener,noreferrer');
+      const { openExternalUrl } = await import("@/lib/openExternalUrl");
+      await openExternalUrl(destinationUrl);
     } finally {
       setIsRedirecting(false);
     }
