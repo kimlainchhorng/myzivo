@@ -203,6 +203,7 @@ function MapSection({
   onCenterChanged,
   showUserLocationDot = true,
   compact = false,
+  panToCoords,
   children,
 }: {
   pickupCoords?: { lat: number; lng: number } | null;
@@ -217,6 +218,7 @@ function MapSection({
   onCenterChanged?: (center: { lat: number; lng: number }) => void;
   showUserLocationDot?: boolean;
   compact?: boolean;
+  panToCoords?: { lat: number; lng: number } | null;
   children?: React.ReactNode;
 }) {
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -231,9 +233,16 @@ function MapSection({
     }
   }, [userLocation]);
 
+  // Pan to requested coordinates (e.g. after destination autocomplete selection)
+  useEffect(() => {
+    if (panToCoords && mapRef.current) {
+      mapRef.current.panTo(panToCoords);
+      mapRef.current.setZoom(15);
+    }
+  }, [panToCoords?.lat, panToCoords?.lng]);
+
   const handleLocateClick = () => {
     locateRequestedRef.current = true;
-    // If we already have a user location, pan immediately
     if (mapRef.current && userLocation) {
       mapRef.current.panTo(userLocation);
       mapRef.current.setZoom(15);
