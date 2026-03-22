@@ -365,11 +365,27 @@ export default function DriverMapPage() {
             <div className="rounded-3xl border border-border bg-card/95 backdrop-blur shadow-xl p-4 space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Car className="w-5 h-5 text-primary" />
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${activeOffer.isAirportPickup ? "bg-sky-500/10" : "bg-primary/10"}`}>
+                    {activeOffer.isAirportPickup ? (
+                      <Plane className="w-5 h-5 text-sky-500" />
+                    ) : (
+                      <Car className="w-5 h-5 text-primary" />
+                    )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">Incoming ride request</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-foreground">
+                        {activeOffer.isAirportPickup ? "✈️ Airport Pickup" : "Incoming ride request"}
+                      </p>
+                    </div>
+                    {activeOffer.isAirportPickup && activeOffer.flightNumber && (
+                      <p className="text-xs font-bold text-sky-600">
+                        Flight {activeOffer.flightNumber}
+                        {activeOffer.flightArrivalTime && (
+                          <> · Lands {new Date(activeOffer.flightArrivalTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</>
+                        )}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground truncate">{activeOffer.pickupAddress || "Pickup location loading..."}</p>
                     <p className="text-xs text-muted-foreground truncate">To {activeOffer.dropoffAddress || "Destination loading..."}</p>
                   </div>
