@@ -41,11 +41,11 @@ function findNearestAirport(lat: number, lng: number): string {
   return nearest;
 }
 
-export function useHotDeals() {
+export function useHotDeals(autoDetectOrigin = false) {
   const [origin, setOrigin] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!autoDetectOrigin || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const nearest = findNearestAirport(pos.coords.latitude, pos.coords.longitude);
@@ -54,7 +54,7 @@ export function useHotDeals() {
       () => setOrigin(undefined),
       { timeout: 5000 }
     );
-  }, []);
+  }, [autoDetectOrigin]);
 
   return useQuery({
     queryKey: ["hot-deals", origin],

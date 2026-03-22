@@ -33,28 +33,27 @@ function findNearestAirport(lat: number, lng: number): string {
   return nearest;
 }
 
-export function useDestinationPrices(destinations: string[], isKH: boolean) {
+export function useDestinationPrices(destinations: string[], isKH: boolean, autoDetectOrigin = false) {
   const [origin, setOrigin] = useState<string>(isKH ? "PNH" : "LAX");
 
-  // Auto-detect nearest airport from geolocation
+  // Auto-detect nearest airport only when explicitly enabled
   useEffect(() => {
     if (isKH) {
       setOrigin("PNH");
       return;
     }
-    if (!navigator.geolocation) return;
+    if (!autoDetectOrigin || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const nearest = findNearestAirport(pos.coords.latitude, pos.coords.longitude);
         setOrigin(nearest);
       },
       () => {
-        // Fallback to LAX if geolocation denied
         setOrigin("LAX");
       },
       { timeout: 5000 }
     );
-  }, [isKH]);
+  }, [isKH, autoDetectOrigin]);
 
   return useQuery({
     queryKey: ["destination-prices", origin, destinations],
