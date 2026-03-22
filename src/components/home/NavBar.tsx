@@ -125,9 +125,9 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 <ZivoLogo size="md" />
               </motion.div>
 
-              {/* Center: 3D Service Tabs — Transparent, colored text only */}
+              {/* Center: 3D Service Tabs with colored pill backgrounds */}
               <nav
-                className="hidden lg:flex items-center gap-1 px-1 py-1"
+                className="hidden lg:flex items-center gap-1.5 px-1 py-1"
                 role="tablist"
                 aria-label="Travel services"
                 style={{ transformStyle: "preserve-3d" }}
@@ -137,45 +137,60 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   return (
                     <motion.div
                       key={item.href}
-                      whileHover={{ y: -2, scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ y: -3, scale: 1.06 }}
+                      whileTap={{ scale: 0.94 }}
                       transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                      style={{ transformStyle: "preserve-3d" }}
                     >
                       <Link
                         to={item.href}
-                        className="relative flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold tracking-wide transition-all duration-300"
+                        className="relative flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-bold tracking-wide transition-all duration-300"
                       >
-                        {/* Active underline indicator */}
-                        {isActive && (
-                          <motion.span
-                            layoutId="nav-active"
-                            className="absolute bottom-0 left-3 right-3 h-[2.5px] rounded-full"
-                            style={{
-                              background: `hsl(${item.cssVar})`,
-                              boxShadow: `0 2px 8px hsl(${item.cssVar} / 0.5)`,
-                            }}
-                            transition={{ type: "spring", stiffness: 380, damping: 28 }}
-                          />
-                        )}
-                        <item.icon
-                          className="w-4 h-4 transition-all duration-300"
+                        {/* 3D colored pill — always visible */}
+                        <span
+                          className="absolute inset-0 rounded-full transition-all duration-300"
                           style={{
-                            color: `hsl(${item.cssVar})`,
-                            filter: `drop-shadow(0 1px 3px hsl(${item.cssVar} / 0.3))`,
+                            background: isActive
+                              ? `linear-gradient(135deg, hsl(${item.cssVar}), hsl(${item.cssVar} / 0.85))`
+                              : `hsl(${item.cssVar} / 0.12)`,
+                            border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.6" : "0.18"})`,
+                            boxShadow: isActive
+                              ? [
+                                  `0 4px 14px -2px hsl(${item.cssVar} / 0.4)`,
+                                  `0 8px 28px -6px hsl(${item.cssVar} / 0.2)`,
+                                  `inset 0 1px 2px rgba(255,255,255,0.25)`,
+                                ].join(", ")
+                              : `0 2px 8px -3px hsl(${item.cssVar} / 0.15)`,
+                            transform: isActive ? "translateZ(8px)" : "translateZ(0)",
                           }}
                         />
-                        <span
-                          className="transition-colors duration-300"
-                          style={{
-                            color: isActive
-                              ? `hsl(${item.cssVar})`
-                              : scrolled || !isHomePage
-                                ? "hsl(var(--foreground) / 0.7)"
-                                : "hsl(var(--foreground) / 0.65)",
-                            textShadow: isActive ? `0 0 12px hsl(${item.cssVar} / 0.3)` : "none",
-                          }}
-                        >
-                          {item.label}
+                        {/* Top glare on active */}
+                        {isActive && (
+                          <span
+                            className="absolute inset-0 rounded-full pointer-events-none"
+                            style={{
+                              background: "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, transparent 45%)",
+                            }}
+                          />
+                        )}
+                        <span className="relative z-10 flex items-center gap-2">
+                          <item.icon
+                            className="w-4 h-4"
+                            style={{
+                              color: isActive ? "white" : `hsl(${item.cssVar})`,
+                              filter: isActive
+                                ? "drop-shadow(0 1px 2px rgba(0,0,0,0.3))"
+                                : `drop-shadow(0 1px 2px hsl(${item.cssVar} / 0.3))`,
+                            }}
+                          />
+                          <span
+                            style={{
+                              color: isActive ? "white" : `hsl(${item.cssVar})`,
+                              textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.2)" : "none",
+                            }}
+                          >
+                            {item.label}
+                          </span>
                         </span>
                       </Link>
                     </motion.div>
