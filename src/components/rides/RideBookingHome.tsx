@@ -1573,6 +1573,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   /** Confirm the current pin placement (destination or stop) and return to normal search */
   const handleConfirmPinPlacement = useCallback(() => {
+    reverseGeocodeRequestSeqRef.current += 1;
+    if (reverseGeocodeTimerRef.current) {
+      clearTimeout(reverseGeocodeTimerRef.current);
+      reverseGeocodeTimerRef.current = null;
+    }
+    setIsReversingGeocode(false);
+
     if (pinPlacementMode === "stop" && placingStopId) {
       // Stop was placed — exit pin placement
       setPinPlacementMode(null);
