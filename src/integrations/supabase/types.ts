@@ -20135,8 +20135,12 @@ export type Database = {
           final_miles: number | null
           final_minutes: number | null
           final_total: number | null
+          flight_arrival_time: string | null
+          flight_number: string | null
           id: string
+          is_airport_pickup: boolean | null
           job_type: Database["public"]["Enums"]["job_type"]
+          linked_flight_booking_id: string | null
           merchant_id: string | null
           merchant_net: number | null
           notes: string | null
@@ -20184,8 +20188,12 @@ export type Database = {
           final_miles?: number | null
           final_minutes?: number | null
           final_total?: number | null
+          flight_arrival_time?: string | null
+          flight_number?: string | null
           id?: string
+          is_airport_pickup?: boolean | null
           job_type: Database["public"]["Enums"]["job_type"]
+          linked_flight_booking_id?: string | null
           merchant_id?: string | null
           merchant_net?: number | null
           notes?: string | null
@@ -20233,8 +20241,12 @@ export type Database = {
           final_miles?: number | null
           final_minutes?: number | null
           final_total?: number | null
+          flight_arrival_time?: string | null
+          flight_number?: string | null
           id?: string
+          is_airport_pickup?: boolean | null
           job_type?: Database["public"]["Enums"]["job_type"]
+          linked_flight_booking_id?: string | null
           merchant_id?: string | null
           merchant_net?: number | null
           notes?: string | null
@@ -20260,6 +20272,13 @@ export type Database = {
           zone_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "jobs_linked_flight_booking_id_fkey"
+            columns: ["linked_flight_booking_id"]
+            isOneToOne: false
+            referencedRelation: "flight_bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "jobs_zone_id_fkey"
             columns: ["zone_id"]
