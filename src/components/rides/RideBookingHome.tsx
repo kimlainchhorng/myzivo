@@ -2225,7 +2225,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})`, touchAction: "pan-y" }}
                 onPointerDown={(e) => e.stopPropagation()}
               >
-                {/* Pickup input */}
+                {/* Pickup & Destination addresses */}
                 <div className="flex items-start gap-3 mb-3">
                   <div className="flex flex-col items-center mt-3">
                     <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center ring-2 ring-primary/20">
@@ -2237,38 +2237,80 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   </div>
                   <div className="flex-1 min-w-0 space-y-2">
-                    <AddressAutocomplete
-                      placeholder={t("ride.pickup") || "Pickup location"}
-                      value={pickupDisplay}
-                      onSelect={handlePickupSelect}
-                      proximity={userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
-                      country={rideCountry}
-                      className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30"
-                    />
-                    <AddressAutocomplete
-                      placeholder={t("ride.destination") || "Where to?"}
-                      value={destinationDisplay}
-                      onSelect={handleDestinationSelect}
-                      onFocus={() => {
-                        if (!pickup) {
-                          ensureAutoPickup();
-                        }
-                        pickupManuallySet.current = true;
-                        setPickupConfirmed(true);
-                        lastGeocodedCoordsRef.current = null;
+                    {/* Pickup row — tappable to enter pin mode */}
+                    {destination ? (
+                      <div
+                        className="flex items-center h-11 rounded-xl bg-muted/15 border border-border/30 px-3 gap-2 cursor-pointer hover:border-primary/30 transition-colors"
+                        onClick={() => {
+                          setPinPlacementMode("pickup");
+                          userHasDraggedPinRef.current = false;
+                          lastGeocodedCoordsRef.current = null;
+                          if (pickup) setMapPanTarget({ lat: pickup.lat, lng: pickup.lng });
+                        }}
+                      >
+                        <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="flex-1 text-sm font-medium text-foreground truncate">{pickupDisplay || "Pickup location"}</span>
+                        <span className="text-[10px] font-semibold text-primary px-2 py-1 rounded-lg hover:bg-primary/10">Edit</span>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setPickup(null); setPickupDisplay(""); pickupManuallySet.current = false; setPickupConfirmed(false); }}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <AddressAutocomplete
+                        placeholder={t("ride.pickup") || "Pickup location"}
+                        value={pickupDisplay}
+                        onSelect={handlePickupSelect}
+                        proximity={userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
+                        country={rideCountry}
+                        className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30"
+                      />
+                    )}
 
-                        // Only enter pin placement if no destination is set yet
-                        if (!destination) {
-                          setViewStep("search");
+                    {/* Destination row — tappable to enter pin mode */}
+                    {destination ? (
+                      <div
+                        className="flex items-center h-11 rounded-xl bg-muted/15 border border-border/30 px-3 gap-2 cursor-pointer hover:border-primary/30 transition-colors"
+                        onClick={() => {
+                          setPinPlacementMode("destination");
+                          userHasDraggedPinRef.current = false;
+                          lastGeocodedCoordsRef.current = null;
+                          setMapPanTarget({ lat: destination.lat, lng: destination.lng });
+                        }}
+                      >
+                        <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="flex-1 text-sm font-medium text-foreground truncate">{destinationDisplay || "Destination"}</span>
+                        <span className="text-[10px] font-semibold text-primary px-2 py-1 rounded-lg hover:bg-primary/10">Edit</span>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setDestination(null); setDestinationDisplay(""); }}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <AddressAutocomplete
+                        placeholder={t("ride.destination") || "Where to?"}
+                        value={destinationDisplay}
+                        onSelect={handleDestinationSelect}
+                        onFocus={() => {
+                          if (!pickup) ensureAutoPickup();
+                          pickupManuallySet.current = true;
+                          setPickupConfirmed(true);
+                          lastGeocodedCoordsRef.current = null;
                           setPinPlacementMode("destination");
                           userHasDraggedPinRef.current = false;
                           setDestinationDisplay("");
-                        }
-                      }}
-                      proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
-                      country={rideCountry}
-                      className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30"
-                    />
+                        }}
+                        proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
+                        country={rideCountry}
+                        className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30"
+                      />
+                    )}
                   </div>
                 </div>
 
