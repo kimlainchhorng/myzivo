@@ -385,11 +385,19 @@ const AppHome = () => {
               className="w-full touch-manipulation"
               style={{ transformStyle: "preserve-3d" }}
             >
-              <div className="glass-3d rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] shadow-sm transition-all active:bg-muted/60">
-                <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center icon-3d-pop">
+              <div className="relative rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] shadow-sm transition-all overflow-hidden" style={{ border: `1px solid hsl(${tabCssVarMap[activeHomeTab]} / 0.15)` }}>
+                {/* Background image for search bar */}
+                <img
+                  src={tabBgMap[activeHomeTab]}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ opacity: 0.08, transition: "opacity 0.3s" }}
+                />
+                <span className="absolute inset-0" style={{ background: "hsl(var(--card) / 0.85)", backdropFilter: "blur(12px)" }} />
+                <div className="relative z-10 w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center">
                   <Search className="w-4.5 h-4.5 text-muted-foreground" />
                 </div>
-                <span className="text-muted-foreground font-medium text-[15px] flex-1 text-left">{getSearchPlaceholder(activeHomeTab)}</span>
+                <span className="relative z-10 text-muted-foreground font-medium text-[15px] flex-1 text-left">{getSearchPlaceholder(activeHomeTab)}</span>
               </div>
             </motion.button>
           </div>
