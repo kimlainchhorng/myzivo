@@ -1954,9 +1954,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               key={`persistent-map-${locationModeKey}`}
               compact
                 pickupCoords={viewStep === "search" && !pickupConfirmed ? null : pickup}
-                dropoffCoords={viewStep === "search" && pickupConfirmed ? null : destination}
+                dropoffCoords={viewStep === "search" && pinPlacementMode ? null : destination}
               panToCoords={mapPanTarget}
-              stopCoords={stops.filter(s => s.place).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }))}
+              stopCoords={
+                viewStep === "search" && pinPlacementMode === "stop"
+                  ? stops.filter(s => s.place && s.id !== placingStopId).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }))
+                  : stops.filter(s => s.place).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }))
+              }
               driverCoords={driverCoords}
               driverNavigationTarget={
                 viewStep === "driver-en-route" ? (pickup || null) :
@@ -1969,7 +1973,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onLocateUser={handleLocateUser}
               routePolyline={routeData?.polyline || null}
               onCenterChanged={handleMapCenterChanged}
-              suppressAutoViewport={viewStep === "search" && pickupConfirmed}
+              suppressAutoViewport={viewStep === "search" && !!pinPlacementMode}
             >
               {/* Center pin for pickup (when not yet confirmed in search step) */}
               {viewStep === "search" && !pickupConfirmed && (
@@ -1989,8 +1993,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </div>
                 </div>
               )}
-              {/* Center pin for destination (when pickup IS confirmed in search step) */}
-              {viewStep === "search" && pickupConfirmed && (
+              {/* Center pin for destination (pin placement mode) */}
+              {viewStep === "search" && pinPlacementMode === "destination" && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
                   <div className="flex flex-col items-center">
                     <div className="relative w-10 h-10 rounded-lg bg-foreground border-[3px] border-background shadow-xl flex items-center justify-center">
@@ -2002,6 +2006,24 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       <span className="mt-1.5 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm border border-border/30">
                         <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                         Locating drop-off...
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* Center pin for stop (stop pin placement mode) */}
+              {viewStep === "search" && pinPlacementMode === "stop" && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-10 h-10 rounded-full bg-amber-500 border-[3px] border-background shadow-xl flex items-center justify-center">
+                      <span className="text-sm font-black text-primary-foreground leading-none">S</span>
+                    </div>
+                    <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-amber-500 -mt-[2px]" />
+                    <div className="w-3 h-1 rounded-full bg-foreground/15 mt-0.5 blur-[1px]" />
+                    {isReversingGeocode && (
+                      <span className="mt-1.5 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm border border-border/30">
+                        <div className="w-3 h-3 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                        Locating stop...
                       </span>
                     )}
                   </div>
