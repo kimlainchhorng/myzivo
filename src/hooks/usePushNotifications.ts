@@ -33,45 +33,86 @@ export const usePushNotifications = () => {
   });
   const [notifications, setNotifications] = useState<PushNotificationSchema[]>([]);
 
-  // Check if push notifications are supported
+  // Check if push notifications are supported (native or web with service worker)
   const checkSupport = useCallback(() => {
     const isNative = Capacitor.isNativePlatform();
-    setState(prev => ({ ...prev, isSupported: isNative }));
-    return isNative;
+    const hasWebPush = !isNative && "serviceWorker" in navigator && "PushManager" in window;
+    setState(prev => ({ ...prev, isSupported: isNative || hasWebPush }));
+    return isNative || hasWebPush;
   }, []);
 
   // Request permission and register for push notifications
   const register = useCallback(async (): Promise<boolean> => {
-    if (!Capacitor.isNativePlatform()) {
-      return false;
-    }
-
-    try {
-      // Check current permission status
-      const permStatus = await PushNotifications.checkPermissions();
-      
-      if (permStatus.receive === "prompt") {
-        // Request permission
-        const requestResult = await PushNotifications.requestPermissions();
-        if (requestResult.receive !== "granted") {
+    // --- Native (Capacitor) registration ---
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const permStatus = await PushNotifications.checkPermissions();
+        
+        if (permStatus.receive === "prompt") {
+          const requestResult = await PushNotifications.requestPermissions();
+          if (requestResult.receive !== "granted") {
+            setState(prev => ({ ...prev, permission: "denied" }));
+            return false;
+          }
+        } else if (permStatus.receive !== "granted") {
           setState(prev => ({ ...prev, permission: "denied" }));
           return false;
         }
-      } else if (permStatus.receive !== "granted") {
-        setState(prev => ({ ...prev, permission: "denied" }));
+
+        setState(prev => ({ ...prev, permission: "granted" }));
+        await PushNotifications.register();
+        return true;
+      } catch (error) {
+        console.error("[Push] Native registration error:", error);
         return false;
       }
-
-      setState(prev => ({ ...prev, permission: "granted" }));
-
-      // Register with APNs / FCM
-      await PushNotifications.register();
-      
-      return true;
-    } catch (error) {
-      console.error("[Push] Registration error:", error);
-      return false;
     }
+
+    // --- Web Push (VAPID / Service Worker) registration ---
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          setState(prev => ({ ...prev, permission: "denied" }));
+          return false;
+        }
+
+        setState(prev => ({ ...prev, permission: "granted" }));
+
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY || undefined,
+        });
+
+        // Send subscription to server
+        const subJson = subscription.toJSON();
+        if (subJson.endpoint && subJson.keys) {
+          const { error } = await supabase.functions.invoke("register-web-push", {
+            body: {
+              endpoint: subJson.endpoint,
+              keys: {
+                p256dh: subJson.keys.p256dh,
+                auth: subJson.keys.auth,
+              },
+            },
+          });
+
+          if (error) {
+            console.error("[Push] Web push registration error:", error);
+          } else {
+            setState(prev => ({ ...prev, isRegistered: true, token: subJson.endpoint }));
+            console.log("[Push] Web push subscription registered");
+          }
+        }
+        return true;
+      } catch (error) {
+        console.error("[Push] Web push registration error:", error);
+        return false;
+      }
+    }
+
+    return false;
   }, []);
 
   // Save token to database via edge function
@@ -100,11 +141,15 @@ export const usePushNotifications = () => {
 
   // Initialize push notifications
   useEffect(() => {
+    checkSupport();
+
     if (!Capacitor.isNativePlatform()) {
+      // For web: auto-register if user is logged in
+      if (user?.id && "serviceWorker" in navigator && "PushManager" in window) {
+        register();
+      }
       return;
     }
-
-    checkSupport();
 
     // Set up listeners
     const registrationListener = PushNotifications.addListener(
@@ -163,23 +208,55 @@ export const usePushNotifications = () => {
     
     if (data?.type) {
       switch (data.type) {
-        case "booking_confirmation":
-          window.location.href = `/trips/${data.booking_id}`;
-          break;
+        // Ride notifications
+        case "driver_assigned":
+        case "driver_en_route":
+        case "driver_arrived":
+        case "trip_started":
+        case "trip_completed":
         case "driver_status":
-          window.location.href = `/rides/${data.ride_id}`;
+          window.location.href = data.trip_id ? `/rides/tracking/${data.trip_id}` : `/rides`;
           break;
+        case "trip_cancelled":
+          window.location.href = `/rides`;
+          break;
+
+        // Flight notifications
+        case "booking_confirmed":
+        case "booking_confirmation":
+        case "checkin_reminder":
+        case "gate_change":
+        case "flight_delayed":
+        case "flight_cancelled":
+        case "boarding_soon":
+        case "flight_departed":
+        case "flight_landed":
+        case "itinerary_update":
+          window.location.href = data.booking_id ? `/bookings/${data.booking_id}` : `/bookings`;
+          break;
+        case "price_drop":
+          window.location.href = `/flights`;
+          break;
+        case "refund_processed":
+        case "refund_update":
+          window.location.href = `/wallet`;
+          break;
+
+        // Food delivery
         case "delivery_update":
           window.location.href = `/eats/${data.order_id}`;
           break;
         case "pickup_reminder":
           window.location.href = `/p2p/bookings/${data.rental_id}`;
           break;
-        case "refund_update":
-          window.location.href = `/wallet`;
+
+        // Promos
+        case "surge_alert":
+        case "promo_available":
+          window.location.href = `/rides`;
           break;
+
         default:
-          // Navigate to notifications center
           window.location.href = `/notifications`;
       }
     }

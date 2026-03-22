@@ -2,18 +2,21 @@
  * RideTrackingPage - Live driver en-route tracking with real-time location
  * Also broadcasts customer's live GPS so the driver can see pickup location
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/app/AppLayout";
 import DriverEnRouteTracker from "@/components/rides/DriverEnRouteTracker";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerLocationBroadcast } from "@/hooks/useCustomerLocationBroadcast";
+import { useRideNotifications } from "@/hooks/useRideNotifications";
 
 export default function RideTrackingPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
   const [tripData, setTripData] = useState<any>(null);
+  const { notify } = useRideNotifications();
+  const prevStatusRef = useRef<string | null>(null);
 
   // Broadcast customer's live GPS to the driver while ride is active
   const isRideActive = tripData?.status && ["driver_assigned", "en_route", "arrived", "in_progress"].includes(tripData.status);
@@ -21,6 +24,26 @@ export default function RideTrackingPage() {
     tripId: isRideActive ? tripId ?? null : null,
     enabled: Boolean(isRideActive),
   });
+
+  // Send push notifications when ride status changes
+  useEffect(() => {
+    if (!tripData?.status || tripData.status === prevStatusRef.current) return;
+    prevStatusRef.current = tripData.status;
+
+    const statusToEvent: Record<string, string> = {
+      driver_assigned: "driver_assigned",
+      en_route: "driver_en_route",
+      arrived: "driver_arrived",
+      in_progress: "trip_started",
+      completed: "trip_completed",
+      cancelled: "trip_cancelled",
+    };
+
+    const event = statusToEvent[tripData.status];
+    if (event) {
+      notify(event as any);
+    }
+  }, [tripData?.status, notify]);
 
   useEffect(() => {
     if (!tripId) return;
