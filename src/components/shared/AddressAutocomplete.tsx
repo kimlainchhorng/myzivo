@@ -29,6 +29,7 @@ interface AddressAutocompleteProps {
   value?: string;
   onSelect: (place: Place) => void;
   onClear?: () => void;
+  onFocus?: () => void;
   proximity?: { lat: number; lng: number };
   disabled?: boolean;
   className?: string;
