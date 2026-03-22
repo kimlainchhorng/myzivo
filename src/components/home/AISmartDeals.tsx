@@ -1,6 +1,6 @@
 /**
- * AI Smart Deals — Premium AI-curated flight deals with immersive cards
- * 2026 Spatial UI with animated deal scores, glassmorphic overlays, and rich AI insights
+ * AI Smart Deals v2 — Real-Time Duffel-Powered Deal Finder
+ * Live airline data, real-time freshness, flight details, and AI insights
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,7 +8,8 @@ import { useNavigate } from "react-router-dom";
 import {
   Sparkles, Plane, Calendar, Zap, TrendingDown, ArrowRight,
   Palmtree, Building2, Mountain, Landmark, Music, Users,
-  ChevronRight, Lightbulb, Clock, MapPin, Star, Brain
+  ChevronRight, Lightbulb, Clock, MapPin, Brain, Luggage,
+  Radio, Shield, Timer
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -16,22 +17,13 @@ import { useAISmartDeals, type SmartDeal } from "@/hooks/useAISmartDeals";
 import { destinationPhotos } from "@/config/photos";
 
 const categoryIcons: Record<string, typeof Palmtree> = {
-  beach: Palmtree,
-  city: Building2,
-  adventure: Mountain,
-  culture: Landmark,
-  nightlife: Music,
-  family: Users,
+  beach: Palmtree, city: Building2, adventure: Mountain,
+  culture: Landmark, nightlife: Music, family: Users,
 };
 
 const categoryLabels: Record<string, string> = {
-  all: "All Deals",
-  beach: "Beach",
-  city: "City",
-  adventure: "Adventure",
-  culture: "Culture",
-  nightlife: "Nightlife",
-  family: "Family",
+  all: "All Deals", beach: "Beach", city: "City",
+  adventure: "Adventure", culture: "Culture", nightlife: "Nightlife", family: "Family",
 };
 
 /** Animated circular deal score ring */
@@ -69,11 +61,33 @@ const DealScoreRing = ({ score }: { score: number }) => {
   );
 };
 
-/** Featured hero card (first deal — larger, more immersive) */
+/** Live status pulse */
+const LivePulse = () => (
+  <span className="flex items-center gap-1">
+    <span className="relative flex h-2 w-2">
+      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+    </span>
+    <span className="text-[8px] font-bold text-emerald-500 uppercase tracking-wider">Live</span>
+  </span>
+);
+
+/** Freshness indicator */
+const FreshnessTag = ({ generatedAt }: { generatedAt: string }) => {
+  const mins = Math.round((Date.now() - new Date(generatedAt).getTime()) / 60000);
+  const label = mins < 1 ? "Just now" : mins < 60 ? `${mins}m ago` : `${Math.round(mins / 60)}h ago`;
+  return (
+    <span className="text-[8px] text-muted-foreground/60 flex items-center gap-0.5">
+      <Timer className="w-2 h-2" /> {label}
+    </span>
+  );
+};
+
+/** Featured hero card */
 const FeaturedDealCard = ({ deal }: { deal: SmartDeal }) => {
   const navigate = useNavigate();
   const destPhoto = destinationPhotos[deal.destinationKey as keyof typeof destinationPhotos];
-  const formattedDate = new Date(deal.departureDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const formattedDate = new Date(deal.departureDate).toLocaleDateString("en-US", { month: "short", day: "numeric", weekday: "short" });
 
   return (
     <motion.button
@@ -81,22 +95,20 @@ const FeaturedDealCard = ({ deal }: { deal: SmartDeal }) => {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       whileTap={{ scale: 0.97 }}
       onClick={() => navigate(`/flights?from=${deal.originCode}&to=${deal.destinationCode}&date=${deal.departureDate}`)}
-      className="w-full rounded-3xl overflow-hidden relative touch-manipulation text-left group h-[200px]"
+      className="w-full rounded-3xl overflow-hidden relative touch-manipulation text-left group h-[220px]"
     >
-      {/* Background image */}
       <img
         src={destPhoto?.src || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=600"}
         alt={deal.destination}
         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
         loading="lazy"
       />
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
 
       {/* Top badges */}
       <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {deal.savingsPercent > 5 && (
             <motion.div
               initial={{ scale: 0 }}
@@ -114,6 +126,13 @@ const FeaturedDealCard = ({ deal }: { deal: SmartDeal }) => {
               <Brain className="w-2.5 h-2.5" /> AI Pick
             </span>
           </div>
+          {deal.offersCount > 0 && (
+            <div className="bg-white/10 backdrop-blur-md rounded-full px-2 py-0.5">
+              <span className="text-[8px] font-medium text-white/70 flex items-center gap-0.5">
+                <Radio className="w-2 h-2" /> {deal.offersCount} fares
+              </span>
+            </div>
+          )}
         </div>
         <DealScoreRing score={deal.dealScore} />
       </div>
@@ -123,19 +142,49 @@ const FeaturedDealCard = ({ deal }: { deal: SmartDeal }) => {
         <div className="flex items-end justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="text-white font-black text-lg leading-tight">{deal.destination}</div>
-            <div className="text-white/70 text-[11px] mt-0.5 flex items-center gap-1.5 flex-wrap">
-              <span className="flex items-center gap-0.5">
-                <MapPin className="w-2.5 h-2.5" /> {deal.originCode} → {deal.destinationCode}
-              </span>
-              <span className="text-white/40">·</span>
+            
+            {/* Flight details row */}
+            <div className="text-white/70 text-[10px] mt-1 flex items-center gap-1.5 flex-wrap">
+              {deal.airlineLogo ? (
+                <img src={deal.airlineLogo} alt={deal.airline} className="w-4 h-4 rounded-sm bg-white/20 object-contain" />
+              ) : null}
+              <span className="font-semibold text-white/90">{deal.airline}</span>
+              {deal.flightNumber && <span className="text-white/50">{deal.flightNumber}</span>}
+              <span className="text-white/30">·</span>
               <span>{deal.stops === 0 ? "Nonstop" : `${deal.stops} stop`}</span>
-              <span className="text-white/40">·</span>
+              <span className="text-white/30">·</span>
               <span className="flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{deal.duration}</span>
             </div>
-            {/* AI insight */}
-            <div className="mt-2 bg-white/10 backdrop-blur-md rounded-xl px-2.5 py-1.5 inline-flex items-center gap-1.5 max-w-full">
-              <Sparkles className="w-3 h-3 text-primary shrink-0" />
-              <span className="text-[10px] text-white/90 truncate">{deal.aiDescription}</span>
+
+            {/* Time + route */}
+            <div className="text-white/60 text-[10px] mt-0.5 flex items-center gap-1.5">
+              <MapPin className="w-2.5 h-2.5" />
+              <span>{deal.originCode} → {deal.destinationCode}</span>
+              {deal.departureTime && (
+                <>
+                  <span className="text-white/30">·</span>
+                  <span>{deal.departureTime}</span>
+                  {deal.arrivalTime && <span>– {deal.arrivalTime}</span>}
+                </>
+              )}
+            </div>
+
+            {/* AI insight + baggage/cabin tags */}
+            <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+              <div className="bg-white/10 backdrop-blur-md rounded-xl px-2.5 py-1 inline-flex items-center gap-1 max-w-[200px]">
+                <Sparkles className="w-2.5 h-2.5 text-primary shrink-0" />
+                <span className="text-[9px] text-white/90 truncate">{deal.aiDescription}</span>
+              </div>
+              {deal.baggageIncluded && (
+                <div className="bg-emerald-500/20 backdrop-blur-sm rounded-lg px-1.5 py-0.5 flex items-center gap-0.5">
+                  <Luggage className="w-2 h-2 text-emerald-400" />
+                  <span className="text-[7px] text-emerald-300 font-semibold">Bag incl.</span>
+                </div>
+              )}
+              <div className="bg-white/8 backdrop-blur-sm rounded-lg px-1.5 py-0.5 flex items-center gap-0.5">
+                <Shield className="w-2 h-2 text-white/50" />
+                <span className="text-[7px] text-white/50">{deal.cabin}</span>
+              </div>
             </div>
           </div>
           <div className="text-right shrink-0">
@@ -153,11 +202,11 @@ const FeaturedDealCard = ({ deal }: { deal: SmartDeal }) => {
   );
 };
 
-/** Compact deal card */
+/** Compact deal card with real-time flight data */
 const SmartDealCard = ({ deal, index }: { deal: SmartDeal; index: number }) => {
   const navigate = useNavigate();
   const destPhoto = destinationPhotos[deal.destinationKey as keyof typeof destinationPhotos];
-  const formattedDate = new Date(deal.departureDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const formattedDate = new Date(deal.departureDate).toLocaleDateString("en-US", { month: "short", day: "numeric", weekday: "short" });
   const CategoryIcon = categoryIcons[deal.category] || Plane;
 
   return (
@@ -170,7 +219,7 @@ const SmartDealCard = ({ deal, index }: { deal: SmartDeal; index: number }) => {
       onClick={() => navigate(`/flights?from=${deal.originCode}&to=${deal.destinationCode}&date=${deal.departureDate}`)}
       className="w-full flex rounded-2xl overflow-hidden bg-card border border-border/20 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 touch-manipulation text-left group"
     >
-      {/* Image with overlay */}
+      {/* Image */}
       <div className="relative w-[100px] shrink-0 overflow-hidden">
         <img
           src={destPhoto?.src || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=300"}
@@ -179,7 +228,6 @@ const SmartDealCard = ({ deal, index }: { deal: SmartDeal; index: number }) => {
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/30" />
-        {/* Savings badge */}
         {deal.savingsPercent > 5 && (
           <div className="absolute top-1.5 left-1.5 bg-emerald-500/90 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-sm">
             <span className="text-[7px] font-bold text-white flex items-center gap-0.5">
@@ -187,7 +235,6 @@ const SmartDealCard = ({ deal, index }: { deal: SmartDeal; index: number }) => {
             </span>
           </div>
         )}
-        {/* Category badge */}
         <div className="absolute bottom-1.5 left-1.5 w-5 h-5 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
           <CategoryIcon className="w-2.5 h-2.5 text-white" />
         </div>
@@ -197,7 +244,12 @@ const SmartDealCard = ({ deal, index }: { deal: SmartDeal; index: number }) => {
       <div className="flex-1 p-2.5 flex flex-col justify-between min-w-0">
         <div>
           <div className="flex items-center justify-between gap-1.5">
-            <div className="text-xs font-bold text-foreground truncate">{deal.destination}</div>
+            <div className="flex items-center gap-1.5 min-w-0">
+              {deal.airlineLogo && (
+                <img src={deal.airlineLogo} alt={deal.airline} className="w-3.5 h-3.5 rounded-sm object-contain shrink-0" />
+              )}
+              <span className="text-xs font-bold text-foreground truncate">{deal.destination}</span>
+            </div>
             <Badge
               variant="outline"
               className={cn(
@@ -210,26 +262,48 @@ const SmartDealCard = ({ deal, index }: { deal: SmartDeal; index: number }) => {
               <Zap className="w-2 h-2 mr-0.5" /> {deal.dealTag}
             </Badge>
           </div>
-          <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+
+          {/* Airline + route info */}
+          <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
+            <span className="font-medium">{deal.airline}</span>
+            {deal.flightNumber && <span className="text-muted-foreground/50">{deal.flightNumber}</span>}
+            <span className="text-border">·</span>
             <span>{deal.originCode} → {deal.destinationCode}</span>
             <span className="text-border">·</span>
             <span>{deal.stops === 0 ? "Nonstop" : `${deal.stops} stop`}</span>
-            <span className="text-border">·</span>
-            <span>{deal.duration}</span>
           </div>
+
+          {/* Time + duration */}
+          <div className="text-[9px] text-muted-foreground/70 mt-0.5 flex items-center gap-1.5">
+            <Clock className="w-2.5 h-2.5 shrink-0" />
+            <span>{deal.duration}</span>
+            {deal.departureTime && (
+              <>
+                <span className="text-border">·</span>
+                <span>{deal.departureTime}{deal.arrivalTime ? ` – ${deal.arrivalTime}` : ""}</span>
+              </>
+            )}
+          </div>
+
           {/* AI Description */}
           <div className="text-[9px] text-primary/80 mt-1 flex items-start gap-1">
             <Sparkles className="w-2.5 h-2.5 shrink-0 mt-0.5" />
             <span className="line-clamp-1">{deal.aiDescription}</span>
           </div>
         </div>
-        <div className="flex items-end justify-between mt-1">
-          <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
+
+        <div className="flex items-end justify-between mt-1.5">
+          <div className="flex items-center gap-1.5 text-[8px] text-muted-foreground/60 flex-wrap">
             <span className="flex items-center gap-0.5">
               <Calendar className="w-2.5 h-2.5" /> {formattedDate}
             </span>
-            {deal.airline && (
-              <span className="truncate max-w-[70px]">{deal.airline}</span>
+            {deal.baggageIncluded && (
+              <span className="flex items-center gap-0.5 text-emerald-600">
+                <Luggage className="w-2 h-2" /> Bag
+              </span>
+            )}
+            {deal.offersCount > 1 && (
+              <span className="text-muted-foreground/40">{deal.offersCount} fares</span>
             )}
           </div>
           <div className="flex items-center gap-1.5">
@@ -245,7 +319,7 @@ const SmartDealCard = ({ deal, index }: { deal: SmartDeal; index: number }) => {
   );
 };
 
-/** AI Tip Banner — shown after featured card */
+/** AI Tip Banner */
 const AITipBanner = ({ deal }: { deal: SmartDeal }) => {
   if (!deal.aiTip) return null;
   return (
@@ -269,9 +343,13 @@ const AITipBanner = ({ deal }: { deal: SmartDeal }) => {
 const AISmartDeals = () => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const { data: deals = [], isLoading } = useAISmartDeals(
+  const { data: response, isLoading } = useAISmartDeals(
     activeCategory === "all" ? undefined : activeCategory
   );
+
+  const deals = response?.deals || [];
+  const generatedAt = response?.generatedAt || "";
+  const totalDealsFound = response?.totalDealsFound || 0;
 
   const categories = Object.entries(categoryLabels);
   const featuredDeal = deals[0];
@@ -280,8 +358,8 @@ const AISmartDeals = () => {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-bold text-foreground flex items-center gap-2.5">
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
           <motion.div
             animate={{ rotate: [0, 15, -15, 0] }}
             transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
@@ -305,6 +383,17 @@ const AISmartDeals = () => {
         >
           See All <ChevronRight className="w-3.5 h-3.5" />
         </button>
+      </div>
+
+      {/* Live status bar */}
+      <div className="flex items-center gap-3 mb-3">
+        <LivePulse />
+        {generatedAt && <FreshnessTag generatedAt={generatedAt} />}
+        {totalDealsFound > 0 && (
+          <span className="text-[8px] text-muted-foreground/50 flex items-center gap-0.5">
+            <Plane className="w-2 h-2" /> {totalDealsFound} routes scanned
+          </span>
+        )}
       </div>
 
       {/* Category Filter Chips */}
@@ -334,10 +423,10 @@ const AISmartDeals = () => {
       {/* Deals Content */}
       {isLoading ? (
         <div className="space-y-3">
-          <div className="h-[200px] rounded-3xl bg-muted/30 animate-pulse" />
+          <div className="h-[220px] rounded-3xl bg-muted/30 animate-pulse" />
           <div className="h-12 rounded-2xl bg-muted/20 animate-pulse" />
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-[90px] rounded-2xl bg-muted/20 animate-pulse" />
+            <div key={i} className="h-[100px] rounded-2xl bg-muted/20 animate-pulse" />
           ))}
         </div>
       ) : deals.length > 0 ? (
@@ -349,18 +438,11 @@ const AISmartDeals = () => {
             exit={{ opacity: 0 }}
             className="space-y-3"
           >
-            {/* Featured Hero Card */}
             {featuredDeal && <FeaturedDealCard deal={featuredDeal} />}
-
-            {/* AI Tip from featured deal */}
             {featuredDeal && <AITipBanner deal={featuredDeal} />}
-
-            {/* Remaining deals */}
             {remainingDeals.map((deal, i) => (
               <SmartDealCard key={deal.id} deal={deal} index={i} />
             ))}
-
-            {/* View All CTA */}
             {deals.length > 5 && (
               <motion.button
                 initial={{ opacity: 0, y: 10 }}
@@ -390,8 +472,8 @@ const AISmartDeals = () => {
           >
             <Brain className="w-6 h-6 text-primary/40" />
           </motion.div>
-          <p className="text-xs text-muted-foreground font-medium">AI is searching for the best deals...</p>
-          <p className="text-[10px] text-muted-foreground/60 mt-1">Analyzing prices across airlines</p>
+          <p className="text-xs text-muted-foreground font-medium">AI is scanning real-time fares...</p>
+          <p className="text-[10px] text-muted-foreground/60 mt-1">Searching Duffel API across airlines</p>
         </motion.div>
       )}
     </div>
