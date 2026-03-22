@@ -519,7 +519,7 @@ export default function CarResultsPage() {
                       Estimated prices shown while we compare live partner availability.
                     </p>
                     <Button
-                      onClick={() => window.open(getPartners()[0]?.trackingUrl, "_blank", "noopener,noreferrer")}
+                      onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(getPartners()[0]?.trackingUrl))}
                       className="gap-2"
                     >
                       Search on EconomyBookings

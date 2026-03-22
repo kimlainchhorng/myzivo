@@ -31,15 +31,14 @@ export default function DriverQuickActions() {
   };
 
   const handleOpenMaps = () => {
+    const openMap = (url: string) => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(url));
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          window.open(`https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`, "_blank", "noopener,noreferrer");
-        },
-        () => window.open("https://www.google.com/maps", "_blank", "noopener,noreferrer")
+        (pos) => openMap(`https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`),
+        () => openMap("https://www.google.com/maps")
       );
     } else {
-      window.open("https://www.google.com/maps", "_blank", "noopener,noreferrer");
+      openMap("https://www.google.com/maps");
     }
   };
 
