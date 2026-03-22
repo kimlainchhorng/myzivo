@@ -141,11 +141,15 @@ export const usePushNotifications = () => {
 
   // Initialize push notifications
   useEffect(() => {
+    checkSupport();
+
     if (!Capacitor.isNativePlatform()) {
+      // For web: auto-register if user is logged in
+      if (user?.id && "serviceWorker" in navigator && "PushManager" in window) {
+        register();
+      }
       return;
     }
-
-    checkSupport();
 
     // Set up listeners
     const registrationListener = PushNotifications.addListener(
