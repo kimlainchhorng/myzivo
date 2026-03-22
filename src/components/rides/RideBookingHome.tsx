@@ -1392,6 +1392,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setDestination(place);
     setDestinationDisplay(place.address);
 
+    // Update dedup ref so map drag doesn't immediately overwrite the selected destination
+    lastGeocodedCoordsRef.current = `${place.lat.toFixed(4)},${place.lng.toFixed(4)}`;
+
     // Auto-confirm pickup from map center/GPS if not manually set
     if (!pickup) {
       const coords = mapCenterRef.current ?? userLocation ?? fallbackPickupCenter;
@@ -1402,94 +1405,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       };
       setPickup(autoPickup);
       setPickupDisplay(autoPickup.address);
-      setPickupConfirmed(true);
-    } else if (!pickupConfirmed) {
-      setPickupConfirmed(true);
     }
+    setPickupConfirmed(true);
 
-    let pickupData = pickup;
-    if (!pickupData) {
-      const coords = mapCenterRef.current ?? userLocation ?? fallbackPickupCenter;
-      pickupData = {
-        address: pickupDisplay || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
-        lat: coords.lat,
-        lng: coords.lng,
-      };
+    // Pan map to destination so user can fine-tune with the "D" pin
+    // The map's onCenterChanged will update destination if they drag further
+    if (mapCenterRef.current) {
+      // Will be picked up by MapSection to pan
+      mapCenterRef.current = { lat: place.lat, lng: place.lng };
     }
-
-    const hasStops = stopsRef.current.some(s => s.place && s.place.lat && s.place.lng);
-    if (isSameLocation(pickupData, place) && !hasStops) {
-      toast.error("Pickup and destination can't be the same. Add a stop for round trips.");
-      return;
-    }
-
-    setPickup(pickupData);
-    setPickupDisplay(pickupData.address);
-
-    if (pickupData && place.lat && place.lng) {
-      const wp = stopsRef.current
-        .filter(s => s.place && s.place.lat && s.place.lng)
-        .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-      console.log("[handleDestinationSelect] stopsRef.current:", stopsRef.current.length, "waypoints:", wp.length, JSON.stringify(wp));
-      
-      // Call route fetch directly to avoid stale fetchRoute closure
-      setIsLoadingRoute(true);
-      setRouteData(null);
-      
-      supabase.functions.invoke("maps-route", {
-        body: {
-          origin_lat: pickupData.lat,
-          origin_lng: pickupData.lng,
-          dest_lat: place.lat,
-          dest_lng: place.lng,
-          waypoints: wp.length > 0 ? wp : undefined,
-        },
-      }).then(({ data, error }) => {
-        console.log("[handleDestinationSelect] Route response:", data?.ok, data?.distance_miles, data?.duration_minutes);
-        if (!error && data?.ok) {
-          setRouteData({
-            distance_miles: data.distance_miles,
-            duration_minutes: data.duration_minutes,
-            duration_in_traffic_minutes: data.duration_in_traffic_minutes ?? null,
-            polyline: data.polyline,
-            traffic_level: data.traffic_level,
-          });
-        } else {
-          // Fallback: haversine including waypoints
-          const haversine = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLng = (lng2 - lng1) * Math.PI / 180;
-            const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-          };
-          // Build full path: pickup → waypoints → destination
-          const points = [
-            { lat: pickupData.lat, lng: pickupData.lng },
-            ...wp,
-            { lat: place.lat, lng: place.lng },
-          ];
-          let totalKm = 0;
-          for (let i = 0; i < points.length - 1; i++) {
-            totalKm += haversine(points[i].lat, points[i].lng, points[i+1].lat, points[i+1].lng);
-          }
-          const distMiles = totalKm * 0.621371;
-          setRouteData({
-            distance_miles: Math.round(distMiles * 10) / 10,
-            duration_minutes: Math.max(5, Math.round(distMiles * 3)),
-            polyline: null,
-          });
-        }
-        setIsLoadingRoute(false);
-        setSheetExpanded(false);
-        setViewStep("route-preview");
-      }).catch((err) => {
-        console.error("[handleDestinationSelect] Route error:", err);
-        setIsLoadingRoute(false);
-        setViewStep("route-preview");
-      });
-    }
-  }, [pickup, userLocation, isSameLocation, fallbackPickupCenter]);
+  }, [pickup, userLocation, fallbackPickupCenter, pickupDisplay]);
 
   /* ─── Multi-stop management ─── */
   const MAX_STOPS = 1;
