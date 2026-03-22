@@ -28,6 +28,10 @@
 	<string>ZIVO uses your camera to capture a profile photo for your account. For example, when you tap "Change Profile Photo" on your Profile page, your camera opens so you can take a new picture. The photo is stored on your account and may be shown to restaurant partners or drivers to help confirm your orders.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ZIVO accesses your photo library so you can select an existing photo to use as your profile picture on your account.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ZIVO uses your location while you use the app to find nearby airports, estimate pickups, improve delivery and ride tracking, and help drivers navigate to customers.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>ZIVO uses your location to support live trip, delivery, and driver navigation features while you are actively using the app.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
