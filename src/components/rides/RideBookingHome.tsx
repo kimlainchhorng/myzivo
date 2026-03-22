@@ -720,6 +720,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [pickupConfirmed, setPickupConfirmed] = useState(false); // reactive state for GPS confirm UI
   const mapCenterRef = useRef<{ lat: number; lng: number } | null>(null);
   const lastGeocodedCoordsRef = useRef<string | null>(null); // dedup key to prevent repeat geocoding
+  const userHasDraggedHomeMapRef = useRef(false); // tracks if user actually dragged the map in "home" step
   // Pin placement mode: when active, the center pin is used for placing destination or stop
   const [pinPlacementMode, setPinPlacementMode] = useState<"destination" | "stop" | null>(null);
   const [placingStopId, setPlacingStopId] = useState<string | null>(null);
