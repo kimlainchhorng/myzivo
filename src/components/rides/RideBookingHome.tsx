@@ -560,6 +560,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [showLangMenu, setShowLangMenu] = useState(false);
 
   const { isCambodia: isCambodiaCountry } = useCountry();
+  const { cashAllowed } = usePaymentLocationRestriction();
   const { data: upcomingFlight } = useUpcomingFlightArrival();
 
   const LANGS = [
