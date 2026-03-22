@@ -222,6 +222,7 @@ function MapSection({
   compact?: boolean;
   panToCoords?: { lat: number; lng: number } | null;
   suppressAutoViewport?: boolean;
+  onMapReadyExtra?: (map: google.maps.Map) => void;
   children?: React.ReactNode;
 }) {
   const mapRef = useRef<google.maps.Map | null>(null);
