@@ -1,19 +1,34 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Search, Hotel, ArrowDown } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useCallback } from "react";
+import { ArrowRight, Search, Hotel, ArrowDown, Plane, Car, UtensilsCrossed, CarFront } from "lucide-react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { useState, useEffect, useCallback, useRef } from "react";
 
-import heroImg1 from "@/assets/hero-homepage-cinematic.jpg";
-import heroImg2 from "@/assets/hero-travel-2.jpg";
-import heroImg3 from "@/assets/hero-travel-3.jpg";
-import heroImg4 from "@/assets/hero-nav-bg.jpg";
+import heroMaldives from "@/assets/hero-maldives.jpg";
+import heroSantorini from "@/assets/hero-santorini.jpg";
+import heroDubai from "@/assets/hero-dubai.jpg";
+import heroBali from "@/assets/hero-bali.jpg";
+
+import svcFlights from "@/assets/svc-flights-premium.jpg";
+import svcHotels from "@/assets/svc-hotels-premium.jpg";
+import svcCars from "@/assets/svc-cars-premium.jpg";
+import svcRides from "@/assets/svc-rides-premium.jpg";
+import svcEats from "@/assets/svc-eats-premium.jpg";
+import svcBooking from "@/assets/svc-booking-premium.jpg";
 
 const heroSlides = [
-  { src: heroImg1, alt: "Luxury Mediterranean infinity pool at golden hour", tagline: "Your next escape starts here" },
-  { src: heroImg4, alt: "Dramatic mountain peaks at golden hour sunrise", tagline: "Adventure awaits beyond the clouds" },
-  { src: heroImg2, alt: "Premium travel destination cityscape", tagline: "Explore the world's best destinations" },
-  { src: heroImg3, alt: "Stunning travel landscape", tagline: "Unforgettable journeys, unbeatable prices" },
+  { src: heroMaldives, alt: "Luxury Maldives overwater bungalows", tagline: "Paradise awaits you", location: "Maldives" },
+  { src: heroSantorini, alt: "Santorini sunset with blue domes", tagline: "Explore iconic destinations", location: "Santorini" },
+  { src: heroDubai, alt: "Dubai skyline at night", tagline: "Experience the extraordinary", location: "Dubai" },
+  { src: heroBali, alt: "Bali rice terraces at sunrise", tagline: "Discover hidden wonders", location: "Bali" },
+];
+
+const floatingServices = [
+  { icon: Plane, label: "Flights", image: svcFlights, href: "/flights", cssVar: "--flights", delay: 0 },
+  { icon: Hotel, label: "Hotels", image: svcHotels, href: "/hotels", cssVar: "--hotels", delay: 0.15 },
+  { icon: CarFront, label: "Rental", image: svcCars, href: "/rent-car", cssVar: "--cars", delay: 0.3 },
+  { icon: Car, label: "Rides", image: svcRides, href: "/rides", cssVar: "--rides", delay: 0.45 },
+  { icon: UtensilsCrossed, label: "Food", image: svcEats, href: "/eats", cssVar: "--eats", delay: 0.6 },
 ];
 
 const stats = [
@@ -22,11 +37,17 @@ const stats = [
   { value: "2M+", label: "Travelers" },
 ];
 
-const SLIDE_DURATION = 7000;
+const SLIDE_DURATION = 6000;
 
 export default function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [progress, setProgress] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end start"] });
+  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
+  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
+  const overlayOpacity = useTransform(scrollYProgress, [0, 0.5], [0.3, 0.7]);
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
@@ -43,10 +64,7 @@ export default function HeroSection() {
     return () => { clearInterval(interval); clearInterval(progressInterval); };
   }, [nextSlide, currentSlide]);
 
-  const goToSlide = (i: number) => {
-    setCurrentSlide(i);
-    setProgress(0);
-  };
+  const goToSlide = (i: number) => { setCurrentSlide(i); setProgress(0); };
 
   const scrollToSearch = () => {
     const el = document.getElementById("hero-search-card");
@@ -54,16 +72,16 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-background perspective-container" aria-label="Hero banner with travel search">
+    <section ref={containerRef} className="relative overflow-hidden bg-background" aria-label="Hero banner">
       {/* ─── MOBILE ─── */}
-      <div className="lg:hidden relative min-h-[85vh] flex flex-col justify-end preserve-3d">
+      <div className="lg:hidden relative min-h-[85vh] flex flex-col justify-end" style={{ perspective: "1200px" }}>
         <AnimatePresence mode="wait">
           <motion.img
             key={currentSlide}
             src={heroSlides[currentSlide].src}
             alt={heroSlides[currentSlide].alt}
-            initial={{ opacity: 0, scale: 1.12, rotateX: 3 }}
-            animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+            initial={{ opacity: 0, scale: 1.15 }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 1.5, ease: "easeInOut" }}
             className="absolute inset-0 w-full h-full object-cover"
@@ -74,14 +92,10 @@ export default function HeroSection() {
 
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
-        {/* 3D Floating Orbs */}
-        <div className="orb-3d-1 top-[10%] right-[-10%] opacity-60" />
-        <div className="orb-3d-2 bottom-[30%] left-[-15%] opacity-40" />
-
         <div className="relative z-10 px-5 pb-8 pt-20">
           <motion.p
-            initial={{ opacity: 0, y: 12, rotateX: -10 }}
-            animate={{ opacity: 1, y: 0, rotateX: 0 }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-primary text-sm font-semibold tracking-widest uppercase mb-3"
           >
@@ -89,121 +103,148 @@ export default function HeroSection() {
           </motion.p>
 
           <motion.h1
-            initial={{ opacity: 0, y: 30, rotateX: -8 }}
-            animate={{ opacity: 1, y: 0, rotateX: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-3xl sm:text-4xl font-black text-foreground leading-[1.1] tracking-tight mb-4"
-            style={{ transformStyle: "preserve-3d" }}
           >
             Flights. Hotels. Cars.{"\n"}
             <span className="text-primary">All in One Place.</span>
           </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.35 }}
-            className="text-muted-foreground text-sm mb-6 max-w-xs"
-          >
-            Compare prices from 500+ airlines & trusted partners. No fees from ZIVO.
-          </motion.p>
-
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
             className="flex gap-3"
           >
-            <Button
-              size="lg"
-              onClick={scrollToSearch}
-              className="flex-1 h-13 text-base font-semibold rounded-xl gap-2 touch-manipulation btn-3d"
-            >
-              <Search className="w-5 h-5" />
-              Search Now
-              <ArrowDown className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              asChild
-              className="h-13 px-5 rounded-xl font-medium touch-manipulation active:scale-[0.97] bg-background/50 backdrop-blur-sm border-border/50 card-3d"
-            >
-              <Link to="/flights">Flights</Link>
+            <Button size="lg" onClick={scrollToSearch} className="flex-1 h-13 text-base font-semibold rounded-xl gap-2 touch-manipulation">
+              <Search className="w-5 h-5" /> Search Now <ArrowDown className="w-4 h-4" />
             </Button>
           </motion.div>
 
-          {/* Progress indicators */}
           <div className="flex gap-2 mt-6 justify-center">
             {heroSlides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goToSlide(i)}
-                className="relative rounded-full overflow-hidden touch-manipulation min-w-[24px] min-h-[24px] flex items-center justify-center"
-                aria-label={`View slide ${i + 1}`}
-              >
-                <div className={`transition-all duration-300 ${
-                  i === currentSlide ? "w-8 h-2.5 bg-primary/30" : "w-2.5 h-2.5 bg-muted-foreground/30"
-                } rounded-full`} />
-                {i === currentSlide && (
-                  <div
-                    className="absolute left-0 top-0 h-full bg-primary rounded-full transition-none"
-                    style={{ width: `${progress}%` }}
-                  />
-                )}
+              <button key={i} onClick={() => goToSlide(i)} className="relative rounded-full overflow-hidden touch-manipulation min-w-[24px] min-h-[24px] flex items-center justify-center" aria-label={`Slide ${i + 1}`}>
+                <div className={`transition-all duration-300 ${i === currentSlide ? "w-8 h-2.5 bg-primary/30" : "w-2.5 h-2.5 bg-muted-foreground/30"} rounded-full`} />
+                {i === currentSlide && <div className="absolute left-0 top-0 h-full bg-primary rounded-full" style={{ width: `${progress}%` }} />}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ─── DESKTOP ─── */}
-      <div className="hidden lg:block relative min-h-[92vh] preserve-3d">
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={currentSlide}
-            src={heroSlides[currentSlide].src}
-            alt={heroSlides[currentSlide].alt}
-            initial={{ opacity: 0, scale: 1.15, rotateX: 2 }}
-            animate={{ opacity: 1, scale: 1.02, rotateX: 0 }}
-            exit={{ opacity: 0, scale: 1 }}
-            transition={{ opacity: { duration: 1.5 }, scale: { duration: 8, ease: "linear" } }}
-            className="absolute inset-0 w-full h-full object-cover will-change-transform"
-            loading="eager"
-            fetchPriority="high"
-          />
-        </AnimatePresence>
+      {/* ─── DESKTOP — Full 3D Cinematic ─── */}
+      <div className="hidden lg:block relative min-h-[95vh]" style={{ perspective: "1400px" }}>
+        {/* Parallax background layer */}
+        <motion.div className="absolute inset-0" style={{ y: bgY }}>
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={currentSlide}
+              src={heroSlides[currentSlide].src}
+              alt={heroSlides[currentSlide].alt}
+              initial={{ opacity: 0, scale: 1.2 }}
+              animate={{ opacity: 1, scale: 1.05 }}
+              exit={{ opacity: 0, scale: 1 }}
+              transition={{ opacity: { duration: 1.2 }, scale: { duration: 8, ease: "linear" } }}
+              className="absolute inset-0 w-full h-full object-cover will-change-transform"
+              loading="eager"
+              fetchPriority="high"
+            />
+          </AnimatePresence>
+        </motion.div>
 
-        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
-        <div className="absolute inset-0" style={{ boxShadow: "inset 0 0 150px 60px hsl(var(--background) / 0.3)" }} />
+        {/* Multi-layer overlays for depth */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/40 to-transparent" />
+        <motion.div className="absolute inset-0" style={{ opacity: overlayOpacity, background: "linear-gradient(to top, hsl(var(--background)) 0%, transparent 50%)" }} />
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 80% 50%, transparent 30%, hsl(var(--background) / 0.4) 100%)" }} />
 
-        {/* 3D Ambient Orbs */}
-        <div className="orb-3d-1 top-[15%] right-[10%] opacity-50" />
-        <div className="orb-3d-2 bottom-[20%] left-[5%] opacity-30" />
+        {/* Floating 3D service cards — auto-orbit right side */}
+        <div className="absolute right-12 xl:right-24 top-1/2 -translate-y-1/2 z-20 hidden xl:flex flex-col gap-4" style={{ perspective: "800px" }}>
+          {floatingServices.map((svc, i) => (
+            <motion.div
+              key={svc.label}
+              initial={{ opacity: 0, x: 80, rotateY: -25 }}
+              animate={{ opacity: 1, x: 0, rotateY: 0 }}
+              transition={{ duration: 0.7, delay: 0.8 + svc.delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              <Link to={svc.href}>
+                <motion.div
+                  whileHover={{ scale: 1.08, rotateY: 8, z: 30 }}
+                  whileTap={{ scale: 0.95 }}
+                  animate={{
+                    y: [0, -6, 0],
+                    rotateX: [0, 1, 0],
+                  }}
+                  transition={{
+                    y: { duration: 3 + i * 0.5, repeat: Infinity, ease: "easeInOut" },
+                    rotateX: { duration: 4 + i * 0.3, repeat: Infinity, ease: "easeInOut" },
+                    scale: { type: "spring", stiffness: 400, damping: 20 },
+                  }}
+                  className="relative w-[180px] h-[80px] rounded-2xl overflow-hidden cursor-pointer group"
+                  style={{
+                    transformStyle: "preserve-3d",
+                    boxShadow: `0 8px 32px -8px hsl(${svc.cssVar} / 0.35), 0 2px 8px -2px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.2)`,
+                  }}
+                >
+                  <img src={svc.image} alt={svc.label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, hsl(${svc.cssVar} / 0.5), hsl(${svc.cssVar} / 0.25))` }} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  {/* Glass reflection */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%)" }} />
+                  <div className="relative z-10 flex items-center gap-3 p-4 h-full">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(8px)" }}>
+                      <svc.icon className="w-5 h-5 text-white drop-shadow-md" />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-sm drop-shadow-md">{svc.label}</p>
+                      <p className="text-white/70 text-[10px] font-medium">Explore →</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
 
-        <div className="relative z-10 h-full min-h-[92vh] flex items-center">
+        {/* Main content — parallax text layer */}
+        <motion.div className="relative z-10 h-full min-h-[95vh] flex items-center" style={{ y: textY }}>
           <div className="container mx-auto px-8 xl:px-16">
             <div className="max-w-2xl" style={{ transformStyle: "preserve-3d" }}>
-              {/* Tagline pill */}
+              {/* Location pill */}
               <motion.div
-                initial={{ opacity: 0, y: 15, z: -30 }}
-                animate={{ opacity: 1, y: 0, z: 0 }}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-primary/15 border border-primary/25 backdrop-blur-sm mb-8 glass-3d"
+                className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full mb-8"
+                style={{
+                  background: "hsl(var(--primary) / 0.15)",
+                  border: "1px solid hsl(var(--primary) / 0.25)",
+                  backdropFilter: "blur(12px)",
+                }}
               >
-                <span className="relative flex h-2 w-2">
+                <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
                 </span>
-                <span className="text-sm font-medium text-primary tracking-wide">
-                  Trusted by 2M+ travelers worldwide
-                </span>
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={currentSlide}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-sm font-semibold text-primary tracking-wide"
+                  >
+                    📍 {heroSlides[currentSlide].location} — Trending Now
+                  </motion.span>
+                </AnimatePresence>
               </motion.div>
 
-              {/* Main headline — 3D depth */}
+              {/* Headline */}
               <motion.h1
-                initial={{ opacity: 0, y: 40, rotateX: -12 }}
+                initial={{ opacity: 0, y: 40, rotateX: -10 }}
                 animate={{ opacity: 1, y: 0, rotateX: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="text-5xl xl:text-7xl font-black text-foreground leading-[1.05] tracking-tighter mb-6"
@@ -212,17 +253,20 @@ export default function HeroSection() {
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={currentSlide}
-                    initial={{ opacity: 0, y: 20, rotateX: -15, filter: "blur(4px)" }}
-                    animate={{ opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, y: -20, rotateX: 15, filter: "blur(4px)" }}
+                    initial={{ opacity: 0, y: 25, filter: "blur(6px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -25, filter: "blur(6px)" }}
                     transition={{ duration: 0.5 }}
-                    className="block text-primary drop-shadow-lg"
+                    className="block text-primary drop-shadow-lg italic"
                   >
                     {heroSlides[currentSlide].tagline}
                   </motion.span>
                 </AnimatePresence>
                 <span className="block mt-2">
                   Flights. Hotels. Cars.
+                </span>
+                <span className="block text-3xl xl:text-4xl font-bold text-muted-foreground/80 mt-1">
+                  Rides. Food. & More.
                 </span>
               </motion.h1>
 
@@ -234,10 +278,10 @@ export default function HeroSection() {
                 className="text-xl text-muted-foreground leading-relaxed mb-10 max-w-lg"
               >
                 Compare real-time prices from 500+ airlines and trusted travel partners. 
-                No hidden fees — ever.
+                Book rides, order food, rent cars — all in one super app.
               </motion.p>
 
-              {/* CTA buttons — 3D alive */}
+              {/* CTA buttons */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -247,7 +291,10 @@ export default function HeroSection() {
                 <Button
                   size="lg"
                   onClick={scrollToSearch}
-                  className="h-14 px-10 text-lg font-bold rounded-2xl gap-3 btn-3d transition-all duration-300"
+                  className="relative h-14 px-10 text-lg font-bold rounded-2xl gap-3 overflow-hidden transition-all duration-300"
+                  style={{
+                    boxShadow: "0 8px 32px -4px hsl(var(--primary) / 0.4), inset 0 1px 1px rgba(255,255,255,0.2)",
+                  }}
                 >
                   <Search className="w-5 h-5" />
                   Search Flights
@@ -257,7 +304,12 @@ export default function HeroSection() {
                   variant="outline"
                   size="lg"
                   asChild
-                  className="h-14 px-8 text-base font-semibold rounded-2xl bg-background/30 backdrop-blur-md border-border/40 card-3d hover:bg-background/50 transition-all duration-300"
+                  className="h-14 px-8 text-base font-semibold rounded-2xl transition-all duration-300"
+                  style={{
+                    background: "hsl(var(--background) / 0.3)",
+                    backdropFilter: "blur(16px)",
+                    border: "1px solid hsl(var(--border) / 0.4)",
+                  }}
                 >
                   <Link to="/hotels">
                     <Hotel className="w-4 h-4 mr-2" />
@@ -266,7 +318,7 @@ export default function HeroSection() {
                 </Button>
               </motion.div>
 
-              {/* Stats bar — 3D float */}
+              {/* Stats */}
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -277,7 +329,7 @@ export default function HeroSection() {
                   <motion.div
                     key={stat.label}
                     className="flex items-center gap-3"
-                    whileHover={{ y: -4, z: 10 }}
+                    whileHover={{ y: -4 }}
                     transition={{ type: "spring", stiffness: 400, damping: 20 }}
                   >
                     {i > 0 && <div className="w-px h-8 bg-border/30" />}
@@ -290,27 +342,27 @@ export default function HeroSection() {
               </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Progress bar indicators - bottom center */}
+        {/* Progress indicators */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
-          {heroSlides.map((_, i) => (
+          {heroSlides.map((slide, i) => (
             <button
               key={i}
               onClick={() => goToSlide(i)}
-              className="relative rounded-full overflow-hidden touch-manipulation"
-              aria-label={`View slide ${i + 1}`}
+              className="group relative rounded-full overflow-hidden touch-manipulation flex items-center"
+              aria-label={`View ${slide.location}`}
             >
               <div className={`transition-all duration-300 ${
-                i === currentSlide
-                  ? "w-12 h-3 bg-primary/30"
-                  : "w-3 h-3 bg-foreground/20 hover:bg-foreground/40"
+                i === currentSlide ? "w-16 h-3.5 bg-primary/20" : "w-3.5 h-3.5 bg-foreground/20 hover:bg-foreground/40"
               } rounded-full`} />
               {i === currentSlide && (
-                <div
-                  className="absolute left-0 top-0 h-full bg-primary rounded-full shadow-[0_0_12px_hsl(var(--primary)/0.5)]"
-                  style={{ width: `${progress}%`, transition: "none" }}
-                />
+                <>
+                  <div className="absolute left-0 top-0 h-full bg-primary rounded-full shadow-[0_0_12px_hsl(var(--primary)/0.5)]" style={{ width: `${progress}%`, transition: "none" }} />
+                  <span className="absolute -top-7 left-1/2 -translate-x-1/2 text-[10px] font-bold text-primary whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                    {slide.location}
+                  </span>
+                </>
               )}
             </button>
           ))}
