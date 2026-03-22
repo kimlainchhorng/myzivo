@@ -14,15 +14,31 @@ export interface SmartDeal {
   departureDate: string;
   returnDate: string | null;
   airline: string;
+  airlineCode: string;
   airlineLogo: string | null;
+  flightNumber: string;
   stops: number;
   duration: string;
+  departureTime: string;
+  arrivalTime: string;
+  cabin: string;
+  baggageIncluded: boolean;
+  offersCount: number;
   aiDescription: string;
   aiTip: string;
   dealScore: number;
   dealTag: string;
   savingsPercent: number;
   category: 'beach' | 'city' | 'adventure' | 'culture' | 'nightlife' | 'family';
+  fetchedAt: string;
+  expiresAt: string;
+}
+
+export interface SmartDealsResponse {
+  deals: SmartDeal[];
+  generatedAt: string;
+  totalRoutesSearched: number;
+  totalDealsFound: number;
 }
 
 function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -60,18 +76,23 @@ export function useAISmartDeals(category?: string, autoDetectOrigin = false) {
 
   return useQuery({
     queryKey: ["ai-smart-deals", origin, category],
-    queryFn: async () => {
+    queryFn: async (): Promise<SmartDealsResponse> => {
       const { data, error } = await supabase.functions.invoke("ai-smart-deals", {
         body: { origin, category },
       });
       if (error) {
         console.error("Failed to fetch AI smart deals:", error);
-        return [] as SmartDeal[];
+        return { deals: [], generatedAt: new Date().toISOString(), totalRoutesSearched: 0, totalDealsFound: 0 };
       }
-      return (data?.deals || []) as SmartDeal[];
+      return {
+        deals: (data?.deals || []) as SmartDeal[],
+        generatedAt: data?.generatedAt || new Date().toISOString(),
+        totalRoutesSearched: data?.totalRoutesSearched || 0,
+        totalDealsFound: data?.totalDealsFound || 0,
+      };
     },
-    staleTime: 2 * 60 * 60 * 1000,
-    gcTime: 4 * 60 * 60 * 1000,
+    staleTime: 90 * 60 * 1000,
+    gcTime: 3 * 60 * 60 * 1000,
     retry: 1,
   });
 }
