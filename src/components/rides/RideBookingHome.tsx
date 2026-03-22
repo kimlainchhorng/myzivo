@@ -205,6 +205,7 @@ function MapSection({
   compact = false,
   panToCoords,
   suppressAutoViewport = false,
+  onMapReadyExtra,
   children,
 }: {
   pickupCoords?: { lat: number; lng: number } | null;
