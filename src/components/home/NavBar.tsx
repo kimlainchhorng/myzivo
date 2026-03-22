@@ -26,11 +26,11 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const serviceNavItems = [
-  { label: "Flights", href: "/flights", icon: Plane },
-  { label: "Hotels", href: "/hotels", icon: Hotel },
-  { label: "Cars", href: "/rent-car", icon: CarFront },
-  { label: "Rides", href: "/rides", icon: Car },
-  { label: "Eats", href: "/eats", icon: UtensilsCrossed },
+  { label: "Flights", href: "/flights", icon: Plane, cssVar: "--flights" },
+  { label: "Hotels", href: "/hotels", icon: Hotel, cssVar: "--hotels" },
+  { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "--cars" },
+  { label: "Rides", href: "/rides", icon: Car, cssVar: "--rides" },
+  { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "--eats" },
 ];
 
 const moreItems = [
