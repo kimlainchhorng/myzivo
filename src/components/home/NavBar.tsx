@@ -25,12 +25,18 @@ import ZivoLogo from "@/components/ZivoLogo";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
+import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
+import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
+import tabCarsBg from "@/assets/tab-cars-bg.jpg";
+import tabRidesBg from "@/assets/tab-rides-bg.jpg";
+import tabEatsBg from "@/assets/tab-eats-bg.jpg";
+
 const serviceNavItems = [
-  { label: "Flights", href: "/flights", icon: Plane, cssVar: "var(--flights)" },
-  { label: "Hotels", href: "/hotels", icon: Hotel, cssVar: "var(--hotels)" },
-  { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "var(--cars)" },
-  { label: "Rides", href: "/rides", icon: Car, cssVar: "var(--rides)" },
-  { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "var(--eats)" },
+  { label: "Flights", href: "/flights", icon: Plane, cssVar: "var(--flights)", bg: tabFlightsBg },
+  { label: "Hotels", href: "/hotels", icon: Hotel, cssVar: "var(--hotels)", bg: tabHotelsBg },
+  { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "var(--cars)", bg: tabCarsBg },
+  { label: "Rides", href: "/rides", icon: Car, cssVar: "var(--rides)", bg: tabRidesBg },
+  { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "var(--eats)", bg: tabEatsBg },
 ];
 
 const moreItems = [
