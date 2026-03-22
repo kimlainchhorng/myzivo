@@ -287,6 +287,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, route
       onMapReady={handleMapReady}
       onCenterChanged={onCenterChanged}
       suppressAutoViewport={suppressAutoViewport}
+      mapInteractive={mapInteractive}
     />
   );
 }
@@ -491,7 +492,11 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         disableDefaultUI: true,
         zoomControl: true,
         styles: getMapStyle(),
-        gestureHandling: "greedy",
+        gestureHandling: mapInteractive ? "greedy" : "none",
+        draggable: mapInteractive,
+        keyboardShortcuts: mapInteractive,
+        scrollwheel: mapInteractive,
+        disableDoubleClickZoom: !mapInteractive,
       });
 
       mapRef.current = map;
@@ -509,6 +514,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       // Use 300ms throttle to avoid excessive React re-renders that cause map jank
       let dragThrottleTimer: ReturnType<typeof setTimeout> | null = null;
       map.addListener("drag", () => {
+        if (!mapInteractive) return;
         if (dragThrottleTimer) return;
         dragThrottleTimer = setTimeout(() => {
           dragThrottleTimer = null;
