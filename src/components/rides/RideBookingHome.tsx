@@ -1289,6 +1289,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
       const requestSeq = ++reverseGeocodeRequestSeqRef.current;
 
+      // Immediately update coordinates so the confirm button is enabled and UI feels responsive
+      setDestination(prev => ({
+        address: prev?.address || `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`,
+        lat: center.lat,
+        lng: center.lng,
+      }));
+
       reverseGeocodeTimerRef.current = setTimeout(async () => {
         const key = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`;
         if (lastGeocodedCoordsRef.current === key) return;
