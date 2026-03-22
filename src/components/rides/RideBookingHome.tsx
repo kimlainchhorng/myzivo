@@ -1955,6 +1955,70 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         </div>
       )}
 
+      {/* ═══════ PERSISTENT MAP — visible behind search, route-preview, searching, driver-assigned, en-route, trip-in-progress ═══════ */}
+      {["search", "route-preview", "searching", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep) && (
+        <div className="flex-1 relative z-0 min-h-0">
+          <div className="absolute inset-0">
+            <MapSection
+              key={`persistent-map-${locationModeKey}`}
+              compact
+              pickupCoords={pickup}
+              dropoffCoords={destination}
+              stopCoords={stops.filter(s => s.place).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }))}
+              driverCoords={driverCoords}
+              driverNavigationTarget={
+                viewStep === "driver-en-route" ? (pickup || null) :
+                viewStep === "trip-in-progress" ? (destination || null) :
+                null
+              }
+              userLocation={userLocation}
+              nearbyDrivers={driverCoords ? [] : realNearbyDrivers}
+              showUserLocationDot={!pickup}
+              onLocateUser={handleLocateUser}
+              routePolyline={routeData?.polyline || null}
+              onCenterChanged={handleMapCenterChanged}
+            >
+              {/* Center pin for pickup (when not yet confirmed in search step) */}
+              {viewStep === "search" && !pickupConfirmed && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-10 h-10 rounded-full bg-emerald-500 border-[3px] border-background shadow-xl flex items-center justify-center">
+                      <span className="text-sm font-black text-primary-foreground leading-none">Z</span>
+                    </div>
+                    <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-emerald-500 -mt-[2px]" />
+                    <div className="w-3 h-1 rounded-full bg-foreground/15 mt-0.5 blur-[1px]" />
+                    {isReversingGeocode && (
+                      <span className="mt-1.5 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm border border-border/30">
+                        <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        Locating pickup...
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* Center pin for destination (when pickup IS confirmed in search step) */}
+              {viewStep === "search" && pickupConfirmed && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-10 h-10 rounded-lg bg-foreground border-[3px] border-background shadow-xl flex items-center justify-center">
+                      <span className="text-sm font-black text-background leading-none">D</span>
+                    </div>
+                    <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-foreground -mt-[2px]" />
+                    <div className="w-3 h-1 rounded-full bg-foreground/15 mt-0.5 blur-[1px]" />
+                    {isReversingGeocode && (
+                      <span className="mt-1.5 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm border border-border/30">
+                        <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        Locating drop-off...
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </MapSection>
+          </div>
+        </div>
+      )}
+
       {/* ═══════ 2. HOME — Full-screen map with floating UI ═══════ */}
       {viewStep === "home" && (
         <>
@@ -2901,9 +2965,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
           <h3 className="text-base font-bold text-foreground mb-0.5">{t("ride.heading_to_destination")}</h3>
-          {routeData && (
+          {driverEta > 0 ? (
+            <p className="text-xs text-muted-foreground mb-2">{t("ride.eta")}: {driverEta} {t("ride.min_unit")}</p>
+          ) : routeData ? (
             <p className="text-xs text-muted-foreground mb-2">{t("ride.eta")}: {routeData.duration_minutes} {t("ride.min_unit")}</p>
-          )}
+          ) : null}
 
           <div className="flex items-center gap-2 mb-3 text-sm">
             <Car className="w-4 h-4 text-muted-foreground shrink-0" />
