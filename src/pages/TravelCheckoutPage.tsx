@@ -292,13 +292,13 @@ const TravelCheckoutPage = () => {
                     />
                     <Label htmlFor="terms" className="text-sm leading-normal">
                       I agree to the{" "}
-                      <a href="/terms" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                      <Link to="/terms" className="text-primary hover:underline">
                         Terms of Service
-                      </a>{" "}
+                      </Link>{" "}
                       and{" "}
-                      <a href="/privacy" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                      <Link to="/privacy" className="text-primary hover:underline">
                         Privacy Policy
-                      </a>
+                      </Link>
                       , and understand that cancellation policies apply.
                     </Label>
                   </div>
