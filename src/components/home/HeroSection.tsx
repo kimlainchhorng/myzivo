@@ -7,9 +7,11 @@ import { useState, useEffect, useCallback } from "react";
 import heroImg1 from "@/assets/hero-homepage-cinematic.jpg";
 import heroImg2 from "@/assets/hero-travel-2.jpg";
 import heroImg3 from "@/assets/hero-travel-3.jpg";
+import heroImg4 from "@/assets/hero-nav-bg.jpg";
 
 const heroSlides = [
   { src: heroImg1, alt: "Luxury Mediterranean infinity pool at golden hour", tagline: "Your next escape starts here" },
+  { src: heroImg4, alt: "Dramatic mountain peaks at golden hour sunrise", tagline: "Adventure awaits beyond the clouds" },
   { src: heroImg2, alt: "Premium travel destination cityscape", tagline: "Explore the world's best destinations" },
   { src: heroImg3, alt: "Stunning travel landscape", tagline: "Unforgettable journeys, unbeatable prices" },
 ];
