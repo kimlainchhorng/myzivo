@@ -1282,6 +1282,42 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       return;
     }
 
+    // In pin placement mode for pickup, dragging updates the pickup
+    if (pinPlacementMode === "pickup") {
+      if (!userHasDraggedPinRef.current) return;
+      if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
+      const requestSeq = ++reverseGeocodeRequestSeqRef.current;
+
+      setPickup(prev => ({
+        address: prev?.address || `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`,
+        lat: center.lat,
+        lng: center.lng,
+      }));
+
+      reverseGeocodeTimerRef.current = setTimeout(async () => {
+        const key = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`;
+        if (lastGeocodedCoordsRef.current === key) return;
+        lastGeocodedCoordsRef.current = key;
+        setIsReversingGeocode(true);
+        try {
+          const address = await reverseGeocode(center.lat, center.lng);
+          if (reverseGeocodeRequestSeqRef.current !== requestSeq) return;
+          setPickup({ address, lat: center.lat, lng: center.lng });
+          setPickupDisplay(address);
+        } catch {
+          if (reverseGeocodeRequestSeqRef.current !== requestSeq) return;
+          const fallback = `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`;
+          setPickup({ address: fallback, lat: center.lat, lng: center.lng });
+          setPickupDisplay(fallback);
+        } finally {
+          if (reverseGeocodeRequestSeqRef.current === requestSeq) {
+            setIsReversingGeocode(false);
+          }
+        }
+      }, 350);
+      return;
+    }
+
     // In pin placement mode for destination, dragging updates the destination
     if (pinPlacementMode === "destination") {
       if (!userHasDraggedPinRef.current) return;
