@@ -120,7 +120,15 @@ export async function getRoute(
 // ── Reverse Geocode ────────────────────────────────────
 
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {
-  const fallback = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  const fallback = `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
+  
+  // Validate coordinates before calling edge function
+  if (typeof lat !== "number" || typeof lng !== "number" || !isFinite(lat) || !isFinite(lng)
+      || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    console.warn("[reverseGeocode] Invalid coordinates:", { lat, lng });
+    return fallback;
+  }
+  
   try {
     const { data, error } = await supabase.functions.invoke("maps-reverse-geocode", {
       body: { lat, lng },
