@@ -78,8 +78,10 @@ const savedPlaceIconMap: Record<string, LucideIcon> = {
 const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant; onNavigate: () => void }) => (
   <motion.button
     onClick={onNavigate}
-    whileTap={{ scale: 0.96 }}
-    className="shrink-0 w-[170px] rounded-2xl overflow-hidden bg-card border border-border/40 shadow-sm hover:shadow-xl transition-all duration-300 touch-manipulation text-left group"
+    whileTap={{ scale: 0.94, rotateX: 5 }}
+    whileHover={{ y: -6, rotateX: -2 }}
+    className="shrink-0 w-[170px] rounded-2xl overflow-hidden bg-card border border-border/40 shadow-sm hover:shadow-xl transition-all duration-300 touch-manipulation text-left group card-3d"
+    style={{ transformStyle: "preserve-3d" }}
   >
     <div className="relative h-[120px] overflow-hidden">
       <img
@@ -99,7 +101,7 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
         <Heart className="w-3.5 h-3.5 text-primary-foreground" />
       </div>
     </div>
-    <div className="p-3">
+    <div className="p-3" style={{ transform: "translateZ(8px)" }}>
       <div className="text-xs font-bold text-foreground truncate">{restaurant.name}</div>
       {restaurant.cuisine_type && (
         <div className="text-[10px] text-muted-foreground truncate mt-0.5">{restaurant.cuisine_type}</div>
