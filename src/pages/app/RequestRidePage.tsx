@@ -12,6 +12,7 @@ import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useGoogleMapsGeocode, Suggestion } from "@/hooks/useGoogleMapsGeocode";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useRideNotifications } from "@/hooks/useRideNotifications";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
