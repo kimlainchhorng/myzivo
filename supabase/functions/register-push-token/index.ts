@@ -14,6 +14,7 @@ const corsHeaders = {
 interface TokenRequest {
   token: string;
   platform: "ios" | "android" | "web";
+  deactivate?: boolean;
 }
 
 serve(async (req) => {
