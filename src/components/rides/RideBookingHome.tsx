@@ -2102,8 +2102,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onLocateUser={handleLocateUser}
               routePolyline={viewStep === "search" && pinPlacementMode ? null : (routeData?.polyline || null)}
               onCenterChanged={handleMapCenterChanged}
-              suppressAutoViewport={viewStep === "search" && !!pinPlacementMode}
-              mapInteractive={!(viewStep === "search" && !pinPlacementMode)}
+              suppressAutoViewport={viewStep === "search" && (!pickupConfirmed || !!pinPlacementMode)}
+              mapInteractive={viewStep !== "search" || !pickupConfirmed || !!pinPlacementMode}
               onMapReadyExtra={(map) => {
                 map.addListener("dragstart", () => {
                   userHasDraggedPinRef.current = true;
