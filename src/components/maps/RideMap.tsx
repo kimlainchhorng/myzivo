@@ -362,6 +362,8 @@ function animatePolyline(
   path: google.maps.LatLng[] | { lat: number; lng: number }[],
   onDone?: (polyline: google.maps.Polyline) => void
 ) {
+  let cancelled = false;
+
   const bgLine = new google.maps.Polyline({
     path,
     strokeColor: "#22c55e",
@@ -387,6 +389,11 @@ function animatePolyline(
   const startTime = performance.now();
 
   function step(now: number) {
+    if (cancelled) {
+      bgLine.setMap(null);
+      animatedLine.setMap(null);
+      return;
+    }
     const elapsed = now - startTime;
     const progress = Math.min(elapsed / duration, 1);
     const eased = 1 - Math.pow(1 - progress, 3);
@@ -402,7 +409,7 @@ function animatePolyline(
   }
 
   requestAnimationFrame(step);
-  return { bgLine, animatedLine };
+  return { bgLine, animatedLine, cancel: () => { cancelled = true; } };
 }
 
 // Ambient cars removed — only real driver positions are shown on map
@@ -414,6 +421,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   const pulseCircleRef = useRef<google.maps.Circle | null>(null);
   const polylineRef = useRef<google.maps.Polyline | null>(null);
   const bgPolylineRef = useRef<google.maps.Polyline | null>(null);
+  const polylineAnimCancelRef = useRef<(() => void) | null>(null);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
@@ -447,6 +455,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   }, [routePolyline]);
 
   const clearRoute = useCallback(() => {
+    if (polylineAnimCancelRef.current) { polylineAnimCancelRef.current(); polylineAnimCancelRef.current = null; }
     if (polylineRef.current) { polylineRef.current.setMap(null); polylineRef.current = null; }
     if (bgPolylineRef.current) { bgPolylineRef.current.setMap(null); bgPolylineRef.current = null; }
     if (directionsRendererRef.current) { directionsRendererRef.current.setMap(null); directionsRendererRef.current = null; }
@@ -670,11 +679,12 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     clearRoute();
 
     if (decodedRoute && decodedRoute.length > 1) {
-      const { bgLine, animatedLine } = animatePolyline(map, decodedRoute, (finalLine) => {
+      const { bgLine, animatedLine, cancel } = animatePolyline(map, decodedRoute, (finalLine) => {
         polylineRef.current = finalLine;
       });
       bgPolylineRef.current = bgLine;
       polylineRef.current = animatedLine;
+      polylineAnimCancelRef.current = cancel;
       // Snap dropoff marker to actual route endpoint
       const dropoffMarker = (markersRef as any).__dropoffMarker as google.maps.Marker | undefined;
       if (dropoffMarker) {
@@ -706,11 +716,12 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
               if (dm && latLngs.length > 0) {
                 dm.setPosition(latLngs[latLngs.length - 1]);
               }
-              const { bgLine, animatedLine } = animatePolyline(map, latLngs, (finalLine) => {
+              const anim = animatePolyline(map, latLngs, (finalLine) => {
                 polylineRef.current = finalLine;
               });
-              bgPolylineRef.current = bgLine;
-              polylineRef.current = animatedLine;
+              bgPolylineRef.current = anim.bgLine;
+              polylineRef.current = anim.animatedLine;
+              polylineAnimCancelRef.current = anim.cancel;
             } else {
               const renderer = new google.maps.DirectionsRenderer({
                 map, directions: result, suppressMarkers: true,
