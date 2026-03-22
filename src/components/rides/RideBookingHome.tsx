@@ -1443,7 +1443,15 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   /* ─── Back navigation ─── */
   const handleBack = () => {
-    if (viewStep === "search") setViewStep("home");
+    if (viewStep === "search") {
+      // If in pin placement mode, exit it first instead of going all the way back to home
+      if (pinPlacementMode) {
+        setPinPlacementMode(null);
+        setPlacingStopId(null);
+        return;
+      }
+      setViewStep("home");
+    }
     else if (viewStep === "route-preview") setViewStep("search");
     else if (viewStep === "ride-options") setViewStep("route-preview");
     else if (viewStep === "confirm-ride") setViewStep("ride-options");
