@@ -320,17 +320,48 @@ const AppHome = () => {
                   className={cn(
                     "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px] tab-3d",
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 active"
-                      : "bg-muted/50 text-muted-foreground hover:bg-muted/70"
+                      ? "text-white shadow-lg"
+                      : "text-muted-foreground"
                   )}
+                  style={{ overflow: "hidden" }}
                 >
+                  {/* Background image */}
+                  <img
+                    src={tabBgMap[tab.id]}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover rounded-full"
+                    style={{
+                      opacity: isActive ? 0.75 : 0.15,
+                      transition: "opacity 0.3s ease",
+                    }}
+                  />
+                  {/* Color overlay */}
+                  <span
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: isActive
+                        ? `linear-gradient(135deg, hsl(${tabCssVarMap[tab.id]} / 0.55), hsl(${tabCssVarMap[tab.id]} / 0.35))`
+                        : "hsl(var(--muted) / 0.3)",
+                      transition: "background 0.3s ease",
+                    }}
+                  />
+                  {/* Border */}
+                  <span
+                    className="absolute inset-0 rounded-full pointer-events-none"
+                    style={{
+                      border: `1.5px solid hsl(${tabCssVarMap[tab.id]} / ${isActive ? "0.5" : "0.12"})`,
+                      boxShadow: isActive
+                        ? `0 4px 12px -2px hsl(${tabCssVarMap[tab.id]} / 0.35), inset 0 1px 2px rgba(255,255,255,0.15)`
+                        : "none",
+                    }}
+                  />
                   <span className="relative z-10 flex items-center gap-1.5">
                     {tab.image ? (
-                      <img src={tab.image} alt={tab.label} className="w-5 h-5 object-contain" />
+                      <img src={tab.image} alt={tab.label} className="w-5 h-5 object-contain" style={{ filter: isActive ? "brightness(10)" : "none" }} />
                     ) : tab.icon ? (
                       <tab.icon className="w-4.5 h-4.5" />
                     ) : null}
-                    <span className="text-[13px]">{tab.label}</span>
+                    <span className="text-[13px]" style={{ textShadow: isActive ? "0 1px 3px rgba(0,0,0,0.3)" : "none" }}>{tab.label}</span>
                   </span>
                 </motion.button>
               );
