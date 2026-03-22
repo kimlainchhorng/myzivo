@@ -146,40 +146,60 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   return (
                     <motion.div
                       key={item.href}
-                      whileHover={{ y: -3, z: 12, scale: 1.06 }}
+                      whileHover={{ y: -3, scale: 1.06 }}
                       whileTap={{ scale: 0.94 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
                       style={{ transformStyle: "preserve-3d" }}
                     >
                       <Link
                         to={item.href}
-                        className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold tracking-wide transition-all duration-300 group"
+                        className="relative flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-bold tracking-wide transition-all duration-300 group"
                       >
-                        {/* Always-visible colored pill background */}
+                        {/* 3D colored pill background — always tinted */}
                         <span
-                          className="absolute inset-0 rounded-xl transition-all duration-300"
+                          className="absolute inset-0 rounded-full transition-all duration-300"
                           style={{
                             background: isActive
-                              ? `linear-gradient(135deg, hsl(${item.cssVar}), hsl(${item.cssVar} / 0.8))`
-                              : `hsl(${item.cssVar} / 0.08)`,
+                              ? `linear-gradient(135deg, hsl(${item.cssVar}), hsl(${item.cssVar} / 0.85))`
+                              : `hsl(${item.cssVar} / 0.1)`,
                             boxShadow: isActive
-                              ? `0 6px 24px -4px hsl(${item.cssVar} / 0.5), 0 12px 40px -8px hsl(${item.cssVar} / 0.25), inset 0 1px 2px hsl(var(--background) / 0.3)`
-                              : `inset 0 0 0 1px hsl(${item.cssVar} / 0.12)`,
-                            transform: isActive ? "translateZ(6px)" : "translateZ(0px)",
+                              ? [
+                                  `0 4px 16px -2px hsl(${item.cssVar} / 0.45)`,
+                                  `0 8px 32px -6px hsl(${item.cssVar} / 0.25)`,
+                                  `inset 0 1px 2px hsl(var(--background) / 0.3)`,
+                                  `inset 0 -1px 2px hsl(${item.cssVar} / 0.2)`,
+                                ].join(", ")
+                              : [
+                                  `inset 0 0 0 1.5px hsl(${item.cssVar} / 0.15)`,
+                                  `0 2px 8px -2px hsl(${item.cssVar} / 0.08)`,
+                                ].join(", "),
+                            transform: isActive ? "translateZ(8px)" : "translateZ(0px)",
                           }}
                         />
+                        {/* Glare highlight on active */}
+                        {isActive && (
+                          <span
+                            className="absolute inset-0 rounded-full pointer-events-none"
+                            style={{
+                              background: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%)",
+                            }}
+                          />
+                        )}
                         <span className="relative z-10 flex items-center gap-2">
                           <item.icon
                             className="w-4 h-4 transition-all duration-300"
                             style={{
                               color: isActive ? "white" : `hsl(${item.cssVar})`,
-                              filter: isActive ? "drop-shadow(0 1px 3px rgba(0,0,0,0.25))" : `drop-shadow(0 1px 2px hsl(${item.cssVar} / 0.3))`,
+                              filter: isActive
+                                ? "drop-shadow(0 1px 3px rgba(0,0,0,0.3))"
+                                : `drop-shadow(0 1px 2px hsl(${item.cssVar} / 0.25))`,
                             }}
                           />
                           <span
                             className="transition-colors duration-300"
                             style={{
                               color: isActive ? "white" : `hsl(${item.cssVar})`,
-                              textShadow: isActive ? "0 1px 3px rgba(0,0,0,0.2)" : "none",
+                              textShadow: isActive ? "0 1px 3px rgba(0,0,0,0.25)" : "none",
                             }}
                           >
                             {item.label}
