@@ -3150,6 +3150,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 paymentFailed={paymentStep === "failed"}
                 onClearError={() => setPaymentStep("idle")}
                 isCambodia={useKm}
+                cashAllowed={cashAllowed}
+                onCashConfirm={handleCashRideConfirm}
               />
             </div>
           </div>
