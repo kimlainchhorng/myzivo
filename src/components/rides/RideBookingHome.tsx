@@ -2016,6 +2016,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       }
                       pickupManuallySet.current = true;
                       setPickupConfirmed(true);
+                      // Reset dedup ref so map drag immediately starts geocoding for destination
+                      lastGeocodedCoordsRef.current = null;
                     }
                   }}
                   proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
