@@ -2020,7 +2020,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               nearbyDrivers={driverCoords ? [] : realNearbyDrivers}
               showUserLocationDot={!pickup}
               onLocateUser={handleLocateUser}
-              routePolyline={routeData?.polyline || null}
+              routePolyline={viewStep === "search" && pinPlacementMode ? null : (routeData?.polyline || null)}
               onCenterChanged={handleMapCenterChanged}
               suppressAutoViewport={viewStep === "search" && !!pinPlacementMode}
               onMapReadyExtra={(map) => {
