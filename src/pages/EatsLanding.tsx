@@ -254,6 +254,7 @@ function PrepTimeBar({ prepTime }: { prepTime: number }) {
 
 export default function EatsLanding() {
   const navigate = useNavigate();
+  const { notify: notifyEats } = useEatsNotifications();
   const [active, setActive] = useState("All");
   const [selectedRestaurant, setSelectedRestaurant] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);

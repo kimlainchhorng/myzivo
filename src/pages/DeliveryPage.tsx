@@ -170,6 +170,7 @@ function PriceEstimate({ basePrice, speed, fragile, signature, insurance, packag
 
 export default function DeliveryPage() {
   const navigate = useNavigate();
+  const { notify: notifyEats } = useEatsNotifications();
   const [step, setStep] = useState<"address" | "package" | "review" | "confirmation">("address");
 
   // Address
