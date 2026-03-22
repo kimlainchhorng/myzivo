@@ -648,6 +648,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   // Fetch admin-configured pricing from city_pricing table
   const { data: cityPricingMap } = useCityPricing(pickupCity);
 
+  // Nearby places with DB-aware economy pricing
+  const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(nearbyCenter?.lat ?? null, nearbyCenter?.lng ?? null, cityPricingMap?.["economy"]);
+
   // Merge DB pricing into vehicle options (admin rates override defaults)
   const vehicleOptions = useMemo(() => {
     const isCambodia = isCambodiaCountry;
