@@ -41,14 +41,13 @@ function haversineMi(lat1: number, lng1: number, lat2: number, lng2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Estimate ride price from distance (uses standard/economy pricing from city_pricing defaults)
-// base_fare=3.50, per_mile=1.75, per_minute=0.35, booking_fee=2.50, minimum_fare=7.00
-function estimatePrice(distMi: number): string {
-  const baseFare = 3.50;
-  const perMile = 1.75;
-  const perMinute = 0.35;
-  const bookingFee = 2.50;
-  const minimumFare = 7.00;
+// Estimate ride price from distance using optional DB pricing, with safe fallbacks
+function estimatePrice(distMi: number, pricing?: { base_fare?: number | null; per_mile?: number | null; per_minute?: number | null; booking_fee?: number | null; minimum_fare?: number | null }): string {
+  const baseFare = pricing?.base_fare ?? 3.50;
+  const perMile = pricing?.per_mile ?? 1.75;
+  const perMinute = pricing?.per_minute ?? 0.35;
+  const bookingFee = pricing?.booking_fee ?? 2.50;
+  const minimumFare = pricing?.minimum_fare ?? 7.00;
   const estMinutes = Math.max(3, Math.round(distMi * 3));
   const raw = baseFare + perMile * distMi + perMinute * estMinutes + bookingFee;
   const total = Math.max(raw, minimumFare);
