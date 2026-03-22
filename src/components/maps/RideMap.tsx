@@ -86,6 +86,8 @@ interface RideMapProps {
   onMapReady?: (map: google.maps.Map) => void;
   /** Fires with center lat/lng when the map stops moving (idle event) */
   onCenterChanged?: (center: { lat: number; lng: number }) => void;
+  /** Prevent automatic pan/fit while the user is manually positioning a pin */
+  suppressAutoViewport?: boolean;
 }
 
 // Singleton script loader
@@ -146,7 +148,7 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
   return googleMapsPromise;
 }
 
-export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
+export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers, showUserLocationDot = true, className, onMapReady, onCenterChanged, suppressAutoViewport = false }: RideMapProps) {
   const [isReady, setIsReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failedReason, setFailedReason] = useState<string>("");
@@ -282,6 +284,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, route
       className={className}
       onMapReady={handleMapReady}
       onCenterChanged={onCenterChanged}
+      suppressAutoViewport={suppressAutoViewport}
     />
   );
 }
@@ -402,7 +405,7 @@ function animatePolyline(
 
 // Ambient cars removed — only real driver positions are shown on map
 
-function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers = [], showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
+function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers = [], showUserLocationDot = true, className, onMapReady, onCenterChanged, suppressAutoViewport = false }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -606,23 +609,26 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       markersRef.current.push(stopMarker);
     });
 
-    // Fit bounds with generous padding — only on initial render or route changes (not driver movement)
-    if (pickupCoords && dropoffCoords) {
-      const bounds = new google.maps.LatLngBounds();
-      bounds.extend(pickupCoords);
-      bounds.extend(dropoffCoords);
-      stopCoords.forEach((c) => bounds.extend(c));
-      if (driverCoords) bounds.extend(driverCoords);
-      map.fitBounds(bounds, { top: 80, bottom: 340, left: 80, right: 80 });
-      google.maps.event.addListenerOnce(map, "idle", () => {
-        if ((map.getZoom() || 20) > 15) map.setZoom(15);
-      });
-    } else if (pickupCoords) {
-      map.panTo(pickupCoords);
-      map.setZoom(15);
-    } else if (dropoffCoords) {
-      map.panTo(dropoffCoords);
-      map.setZoom(15);
+    // Fit / pan only when auto viewport is enabled.
+    // During manual destination pin placement, keep the user's dragged camera position.
+    if (!suppressAutoViewport) {
+      if (pickupCoords && dropoffCoords) {
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend(pickupCoords);
+        bounds.extend(dropoffCoords);
+        stopCoords.forEach((c) => bounds.extend(c));
+        if (driverCoords) bounds.extend(driverCoords);
+        map.fitBounds(bounds, { top: 80, bottom: 340, left: 80, right: 80 });
+        google.maps.event.addListenerOnce(map, "idle", () => {
+          if ((map.getZoom() || 20) > 15) map.setZoom(15);
+        });
+      } else if (pickupCoords) {
+        map.panTo(pickupCoords);
+        map.setZoom(15);
+      } else if (dropoffCoords) {
+        map.panTo(dropoffCoords);
+        map.setZoom(15);
+      }
     }
 
     // Real drivers rendered by nearbyDrivers effect
@@ -630,7 +636,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     return () => {
       if ((pulseCircleRef as any).__interval) clearInterval((pulseCircleRef as any).__interval);
     };
-  }, [pickupCoords, dropoffCoords, stopCoords, clearAmbientCars, mapReady]);
+  }, [pickupCoords, dropoffCoords, stopCoords, clearAmbientCars, mapReady, driverCoords, suppressAutoViewport]);
 
   // Update driver marker position without resetting zoom/bounds
   useEffect(() => {

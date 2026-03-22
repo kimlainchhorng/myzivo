@@ -204,6 +204,7 @@ function MapSection({
   showUserLocationDot = true,
   compact = false,
   panToCoords,
+  suppressAutoViewport = false,
   children,
 }: {
   pickupCoords?: { lat: number; lng: number } | null;
@@ -219,6 +220,7 @@ function MapSection({
   showUserLocationDot?: boolean;
   compact?: boolean;
   panToCoords?: { lat: number; lng: number } | null;
+  suppressAutoViewport?: boolean;
   children?: React.ReactNode;
 }) {
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -268,6 +270,7 @@ function MapSection({
           routePolyline={routePolyline || null}
           onMapReady={(map) => { mapRef.current = map; }}
           onCenterChanged={onCenterChanged}
+          suppressAutoViewport={suppressAutoViewport}
           className="absolute inset-0 h-full w-full"
         />
       </div>
@@ -1925,6 +1928,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onLocateUser={handleLocateUser}
               routePolyline={routeData?.polyline || null}
               onCenterChanged={handleMapCenterChanged}
+              suppressAutoViewport={viewStep === "search" && pickupConfirmed}
             >
               {/* Center pin for pickup (when not yet confirmed in search step) */}
               {viewStep === "search" && !pickupConfirmed && (
