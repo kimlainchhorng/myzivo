@@ -630,12 +630,14 @@ const AppHome = () => {
           {/* ─── GUEST SIGN-UP CTA ─── */}
           {!user && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl bg-gradient-to-br from-primary/12 via-sky-500/6 to-primary/10 border border-primary/20 p-6 relative overflow-hidden shadow-sm"
+              initial={{ opacity: 0, y: 15, rotateX: -8 }}
+              animate={{ opacity: 1, y: 0, rotateX: 0 }}
+              whileHover={{ y: -4, rotateX: 2 }}
+              className="rounded-2xl bg-gradient-to-br from-primary/12 via-sky-500/6 to-primary/10 border border-primary/20 p-6 relative overflow-hidden shadow-sm card-3d"
+              style={{ transformStyle: "preserve-3d" }}
             >
-              <div className="absolute -top-10 -right-10 w-28 h-28 bg-primary/10 rounded-full blur-3xl" />
-              <div className="relative z-10">
+              <div className="absolute -top-10 -right-10 w-28 h-28 bg-primary/10 rounded-full blur-3xl breathe-glow" />
+              <div className="relative z-10" style={{ transform: "translateZ(15px)" }}>
                 <h3 className="text-base font-bold text-foreground mb-1">{t("home.join_free")}</h3>
                 <p className="text-xs text-muted-foreground mb-4">
                   {t("home.join_desc")}
@@ -644,7 +646,7 @@ const AppHome = () => {
                   <Button
                     onClick={() => navigate("/signup")}
                     size="sm"
-                    className="flex-1 h-11 rounded-xl font-bold shadow-md shadow-primary/20"
+                    className="flex-1 h-11 rounded-xl font-bold shadow-md shadow-primary/20 btn-3d"
                   >
                     {t("home.sign_up_free")}
                   </Button>
@@ -652,7 +654,7 @@ const AppHome = () => {
                     onClick={() => navigate("/login")}
                     variant="outline"
                     size="sm"
-                    className="h-11 px-5 rounded-xl font-medium"
+                    className="h-11 px-5 rounded-xl font-medium card-3d"
                   >
                     {t("home.log_in")}
                   </Button>
