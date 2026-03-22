@@ -1,6 +1,6 @@
 /**
  * NavBar - ZIVO Desktop Navigation
- * Premium transparent header with glass effect on scroll
+ * Premium 3D spatial header with glass depth + floating elevation
  */
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { forwardRef } from "react";
@@ -80,245 +80,348 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
 
   return (
     <>
-      <header
-        ref={ref}
-        className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
-          scrolled
-            ? "bg-background/80 backdrop-blur-2xl shadow-[0_1px_30px_hsl(var(--foreground)/0.06)] border-b border-border/30"
-            : isHomePage
-              ? "bg-transparent"
-              : "bg-background/95 backdrop-blur-xl border-b border-border/20"
-        )}
-      >
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between h-[72px]">
-            {/* Logo */}
-            <motion.div
-              className="cursor-pointer shrink-0"
-              onClick={() => navigate("/")}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <ZivoLogo size="md" />
-            </motion.div>
+      {/* 3D Perspective wrapper */}
+      <div className="fixed top-0 left-0 right-0 z-50" style={{ perspective: "1200px" }}>
+        <motion.header
+          ref={ref}
+          initial={{ rotateX: -3, y: -10, opacity: 0 }}
+          animate={{ rotateX: 0, y: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 25, delay: 0.1 }}
+          className={cn(
+            "transition-all duration-500 origin-top",
+            scrolled
+              ? [
+                  "bg-background/70 backdrop-blur-3xl",
+                  "shadow-[0_8px_40px_-8px_hsl(var(--foreground)/0.08),0_2px_12px_-2px_hsl(var(--primary)/0.06)]",
+                  "border-b border-border/20",
+                ].join(" ")
+              : isHomePage
+                ? "bg-transparent"
+                : "bg-background/90 backdrop-blur-2xl border-b border-border/15 shadow-[0_4px_20px_-4px_hsl(var(--foreground)/0.04)]"
+          )}
+          style={{
+            transformStyle: "preserve-3d",
+          }}
+        >
+          <div className="container mx-auto px-6">
+            <div className="flex items-center justify-between h-[72px]">
+              {/* Logo — 3D float */}
+              <motion.div
+                className="cursor-pointer shrink-0"
+                onClick={() => navigate("/")}
+                whileHover={{ scale: 1.05, z: 20, rotateY: 3 }}
+                whileTap={{ scale: 0.95 }}
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                <ZivoLogo size="md" />
+              </motion.div>
 
-            {/* Center: Service Tabs */}
-            <nav className="hidden lg:flex items-center gap-0.5" role="tablist" aria-label="Travel services">
-              {serviceNavItems.map((item) => {
-                const isActive = location.pathname.startsWith(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
+              {/* Center: 3D Service Tabs */}
+              <nav
+                className="hidden lg:flex items-center gap-1 rounded-full px-1.5 py-1"
+                role="tablist"
+                aria-label="Travel services"
+                style={{
+                  background: scrolled
+                    ? "hsl(var(--muted) / 0.4)"
+                    : isHomePage
+                      ? "hsl(var(--foreground) / 0.04)"
+                      : "hsl(var(--muted) / 0.3)",
+                  backdropFilter: "blur(12px)",
+                  boxShadow: "inset 0 1px 1px hsl(var(--background) / 0.6), 0 1px 3px hsl(var(--foreground) / 0.04)",
+                  transformStyle: "preserve-3d",
+                }}
+              >
+                {serviceNavItems.map((item) => {
+                  const isActive = location.pathname.startsWith(item.href);
+                  return (
+                    <motion.div
+                      key={item.href}
+                      whileHover={{ y: -2, z: 8 }}
+                      whileTap={{ scale: 0.96 }}
+                      style={{ transformStyle: "preserve-3d" }}
+                    >
+                      <Link
+                        to={item.href}
+                        className={cn(
+                          "relative flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 group",
+                          isActive
+                            ? "text-primary-foreground"
+                            : scrolled || !isHomePage
+                              ? "text-muted-foreground hover:text-foreground"
+                              : "text-foreground/70 hover:text-foreground"
+                        )}
+                      >
+                        {/* Active 3D pill background */}
+                        {isActive && (
+                          <motion.span
+                            layoutId="nav-3d-pill"
+                            className="absolute inset-0 rounded-full bg-primary"
+                            style={{
+                              boxShadow: "0 4px 14px -2px hsl(var(--primary) / 0.4), inset 0 1px 1px hsl(var(--background) / 0.15)",
+                              transform: "translateZ(4px)",
+                            }}
+                            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                          />
+                        )}
+                        <span className="relative z-10 flex items-center gap-2">
+                          <item.icon
+                            className={cn(
+                              "w-[15px] h-[15px] transition-all duration-300",
+                              isActive
+                                ? "text-primary-foreground"
+                                : "opacity-50 group-hover:opacity-100 group-hover:text-primary"
+                            )}
+                          />
+                          {item.label}
+                        </span>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+
+                {/* More Dropdown */}
+                <div ref={moreRef} className="relative">
+                  <motion.button
+                    onClick={() => setMoreOpen(!moreOpen)}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.96 }}
                     className={cn(
-                      "relative flex items-center gap-2 px-4 py-2.5 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 group",
-                      isActive
-                        ? "text-primary bg-primary/8"
+                      "flex items-center gap-1 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300",
+                      moreOpen
+                        ? "text-foreground"
                         : scrolled || !isHomePage
-                          ? "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                          : "text-foreground/80 hover:text-foreground hover:bg-foreground/5"
+                          ? "text-muted-foreground hover:text-foreground"
+                          : "text-foreground/70 hover:text-foreground"
                     )}
                   >
-                    <item.icon
-                      className={cn(
-                        "w-[15px] h-[15px] transition-all duration-300",
-                        isActive
-                          ? "text-primary"
-                          : "opacity-60 group-hover:opacity-100 group-hover:text-primary"
-                      )}
-                    />
-                    {item.label}
-                    {isActive && (
-                      <motion.span
-                        layoutId="nav-active-pill"
-                        className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 h-[2px] w-6 bg-primary rounded-full"
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                      />
-                    )}
-                  </Link>
-                );
-              })}
+                    More
+                    <ChevronDown className={cn("w-3 h-3 transition-transform duration-300", moreOpen && "rotate-180")} />
+                  </motion.button>
 
-              {/* More Dropdown */}
-              <div ref={moreRef} className="relative">
-                <button
-                  onClick={() => setMoreOpen(!moreOpen)}
-                  className={cn(
-                    "flex items-center gap-1 px-4 py-2.5 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300",
-                    moreOpen
-                      ? "text-foreground bg-muted/60"
-                      : scrolled || !isHomePage
-                        ? "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                        : "text-foreground/80 hover:text-foreground hover:bg-foreground/5"
-                  )}
-                >
-                  More
-                  <ChevronDown className={cn("w-3 h-3 transition-transform duration-300", moreOpen && "rotate-180")} />
-                </button>
+                  <AnimatePresence>
+                    {moreOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 12, rotateX: -8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 12, rotateX: -8, scale: 0.95 }}
+                        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+                        className="absolute top-full right-0 mt-3 w-[280px] p-2 overflow-hidden rounded-2xl"
+                        style={{
+                          background: "hsl(var(--card) / 0.85)",
+                          backdropFilter: "blur(40px) saturate(1.5)",
+                          border: "1px solid hsl(var(--border) / 0.25)",
+                          boxShadow: [
+                            "0 24px 80px -12px hsl(var(--foreground) / 0.12)",
+                            "0 8px 24px -4px hsl(var(--primary) / 0.06)",
+                            "inset 0 1px 1px hsl(var(--background) / 0.5)",
+                          ].join(", "),
+                          transformStyle: "preserve-3d",
+                        }}
+                      >
+                        {moreItems.map((item) => (
+                          <Link
+                            key={item.href}
+                            to={item.href}
+                            onClick={() => setMoreOpen(false)}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-all duration-200 group"
+                          >
+                            <div
+                              className={cn(
+                                "w-9 h-9 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200",
+                                item.color
+                              )}
+                              style={{
+                                background: "hsl(var(--muted) / 0.6)",
+                                boxShadow: "0 2px 8px -2px hsl(var(--foreground) / 0.06), inset 0 1px 1px hsl(var(--background) / 0.4)",
+                              }}
+                            >
+                              <item.icon className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-[13px]">{item.label}</p>
+                              <p className="text-[11px] text-muted-foreground">{item.description}</p>
+                            </div>
+                          </Link>
+                        ))}
 
-                <AnimatePresence>
-                  {moreOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="absolute top-full right-0 mt-3 w-[280px] bg-card/95 backdrop-blur-2xl border border-border/40 rounded-2xl shadow-[0_20px_60px_-15px_hsl(var(--foreground)/0.15)] p-2 overflow-hidden"
-                    >
-                      {moreItems.map((item) => (
+                        <div className="border-t border-border/30 my-1.5" />
+
                         <Link
-                          key={item.href}
-                          to={item.href}
+                          to="/help"
                           onClick={() => setMoreOpen(false)}
-                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-all duration-200 group"
+                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-all duration-200"
                         >
-                          <div className={cn("w-9 h-9 rounded-xl bg-muted/80 flex items-center justify-center group-hover:scale-110 transition-transform duration-200", item.color)}>
-                            <item.icon className="w-4 h-4" />
+                          <div
+                            className="w-9 h-9 rounded-xl flex items-center justify-center"
+                            style={{
+                              background: "hsl(var(--muted) / 0.6)",
+                              boxShadow: "0 2px 8px -2px hsl(var(--foreground) / 0.06)",
+                            }}
+                          >
+                            <HelpCircle className="w-4 h-4 text-muted-foreground" />
                           </div>
                           <div>
-                            <p className="font-semibold text-[13px]">{item.label}</p>
-                            <p className="text-[11px] text-muted-foreground">{item.description}</p>
+                            <p className="font-semibold text-[13px]">Help Center</p>
+                            <p className="text-[11px] text-muted-foreground">FAQs & support</p>
                           </div>
                         </Link>
-                      ))}
 
-                      <div className="border-t border-border/40 my-1.5" />
+                        <div className="border-t border-border/30 my-1.5" />
 
-                      <Link
-                        to="/help"
-                        onClick={() => setMoreOpen(false)}
-                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-all duration-200"
-                      >
-                        <div className="w-9 h-9 rounded-xl bg-muted/80 flex items-center justify-center">
-                          <HelpCircle className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-[13px]">Help Center</p>
-                          <p className="text-[11px] text-muted-foreground">FAQs & support</p>
-                        </div>
-                      </Link>
-
-                      <div className="border-t border-border/40 my-1.5" />
-
-                      <div className="px-3 py-2">
-                        <p className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground/70 mb-2 font-medium">Legal</p>
-                        <div className="flex flex-wrap gap-x-3 gap-y-1">
-                          {legalItems.map((item) => (
-                            <Link
-                              key={item.href}
-                              to={item.href}
-                              onClick={() => setMoreOpen(false)}
-                              className="text-[11px] text-muted-foreground hover:text-primary transition-all duration-200"
-                            >
-                              {item.label}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </nav>
-
-            {/* Right: Auth */}
-            <div className="hidden md:flex items-center gap-2">
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-muted/50 transition-all duration-200 group">
-                      <div className="relative">
-                        <div className={cn(
-                          "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300",
-                          isMember
-                            ? "bg-gradient-to-br from-amber-400/20 to-amber-600/20 border-2 border-amber-400/40"
-                            : "bg-primary/10 border-2 border-primary/20 group-hover:border-primary/40"
-                        )}>
-                          <User className={cn("h-4 w-4", isMember ? "text-amber-600" : "text-primary")} />
-                        </div>
-                        {isMember && (
-                          <div className="absolute -top-1 -right-1">
-                            <ZivoPlusBadge variant="small" className="w-4 h-4" />
+                        <div className="px-3 py-2">
+                          <p className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground/70 mb-2 font-medium">Legal</p>
+                          <div className="flex flex-wrap gap-x-3 gap-y-1">
+                            {legalItems.map((item) => (
+                              <Link
+                                key={item.href}
+                                to={item.href}
+                                onClick={() => setMoreOpen(false)}
+                                className="text-[11px] text-muted-foreground hover:text-primary transition-all duration-200"
+                              >
+                                {item.label}
+                              </Link>
+                            ))}
                           </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </nav>
+
+              {/* Right: Auth — 3D elevated */}
+              <div className="hidden md:flex items-center gap-2" style={{ transformStyle: "preserve-3d" }}>
+                {user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <motion.button
+                        whileHover={{ scale: 1.05, z: 10 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-full transition-all duration-200 group"
+                        style={{
+                          background: "hsl(var(--muted) / 0.3)",
+                          boxShadow: "0 2px 10px -2px hsl(var(--foreground) / 0.06), inset 0 1px 1px hsl(var(--background) / 0.4)",
+                        }}
+                      >
+                        <div className="relative">
+                          <div className={cn(
+                            "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300",
+                            isMember
+                              ? "bg-gradient-to-br from-amber-400/20 to-amber-600/20 border-2 border-amber-400/40"
+                              : "bg-primary/10 border-2 border-primary/20 group-hover:border-primary/40"
+                          )}
+                            style={{ boxShadow: isMember ? "0 0 12px hsl(45 90% 50% / 0.15)" : "0 0 8px hsl(var(--primary) / 0.1)" }}
+                          >
+                            <User className={cn("h-4 w-4", isMember ? "text-amber-600" : "text-primary")} />
+                          </div>
+                          {isMember && (
+                            <div className="absolute -top-1 -right-1">
+                              <ZivoPlusBadge variant="small" className="w-4 h-4" />
+                            </div>
+                          )}
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                      </motion.button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-52 rounded-2xl p-1.5"
+                      style={{
+                        boxShadow: [
+                          "0 24px 80px -12px hsl(var(--foreground) / 0.12)",
+                          "0 8px 24px -4px hsl(var(--primary) / 0.06)",
+                          "inset 0 1px 1px hsl(var(--background) / 0.5)",
+                        ].join(", "),
+                        backdropFilter: "blur(40px)",
+                        background: "hsl(var(--card) / 0.9)",
+                      }}
+                    >
+                      <div className="px-3 py-2.5 mb-1">
+                        <p className="text-sm font-semibold text-foreground truncate">{user.email}</p>
+                        {isMember && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 mt-0.5">
+                            <Crown className="w-3 h-3" /> ZIVO+ Member
+                          </span>
                         )}
                       </div>
-                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1.5 shadow-[0_20px_60px_-15px_hsl(var(--foreground)/0.15)]">
-                    {/* User info header */}
-                    <div className="px-3 py-2.5 mb-1">
-                      <p className="text-sm font-semibold text-foreground truncate">{user.email}</p>
-                      {isMember && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 mt-0.5">
-                          <Crown className="w-3 h-3" /> ZIVO+ Member
-                        </span>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                        <UserCircle className="w-4 h-4 text-muted-foreground" /> My Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/trips")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                        <Briefcase className="w-4 h-4 text-muted-foreground" /> My Trips
+                      </DropdownMenuItem>
+                      {!isMember && (
+                        <DropdownMenuItem onClick={() => navigate("/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-amber-600">
+                          <Crown className="w-4 h-4" /> Join ZIVO+
+                        </DropdownMenuItem>
                       )}
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
-                      <UserCircle className="w-4 h-4 text-muted-foreground" /> My Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/trips")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
-                      <Briefcase className="w-4 h-4 text-muted-foreground" /> My Trips
-                    </DropdownMenuItem>
-                    {!isMember && (
-                      <DropdownMenuItem onClick={() => navigate("/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-amber-600">
-                        <Crown className="w-4 h-4" /> Join ZIVO+
+                      {isMember && (
+                        <DropdownMenuItem onClick={() => navigate("/account/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                          <Crown className="w-4 h-4 text-amber-500" /> Membership
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => signOut()}
+                        className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-destructive focus:text-destructive"
+                      >
+                        <LogOut className="w-4 h-4" /> Sign out
                       </DropdownMenuItem>
-                    )}
-                    {isMember && (
-                      <DropdownMenuItem onClick={() => navigate("/account/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
-                        <Crown className="w-4 h-4 text-amber-500" /> Membership
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => signOut()}
-                      className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-destructive focus:text-destructive"
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.96 }}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate("/login")}
+                        className={cn(
+                          "rounded-full font-semibold text-[13px] px-5 h-9 transition-all duration-300",
+                          scrolled || !isHomePage
+                            ? "text-foreground hover:bg-muted/60"
+                            : "text-foreground/90 hover:text-foreground hover:bg-foreground/5"
+                        )}
+                      >
+                        Log in
+                      </Button>
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ y: -2, scale: 1.03 }}
+                      whileTap={{ scale: 0.96 }}
+                      style={{ transformStyle: "preserve-3d" }}
                     >
-                      <LogOut className="w-4 h-4" /> Sign out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate("/login")}
-                    className={cn(
-                      "rounded-full font-semibold text-[13px] px-5 h-9 transition-all duration-300",
-                      scrolled || !isHomePage
-                        ? "text-foreground hover:bg-muted/60"
-                        : "text-foreground/90 hover:text-foreground hover:bg-foreground/5"
-                    )}
-                  >
-                    Log in
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => navigate("/signup")}
-                    className="rounded-full font-bold text-[13px] px-6 h-9 shadow-[0_2px_20px_hsl(var(--primary)/0.35)] hover:shadow-[0_4px_30px_hsl(var(--primary)/0.45)] hover:scale-[1.02] transition-all duration-300"
-                  >
-                    Sign up
-                  </Button>
-                </div>
-              )}
-            </div>
+                      <Button
+                        size="sm"
+                        onClick={() => navigate("/signup")}
+                        className="rounded-full font-bold text-[13px] px-6 h-9 transition-all duration-300"
+                        style={{
+                          boxShadow: "0 4px 20px -4px hsl(var(--primary) / 0.4), 0 1px 3px hsl(var(--primary) / 0.2), inset 0 1px 1px hsl(var(--background) / 0.15)",
+                        }}
+                      >
+                        Sign up
+                      </Button>
+                    </motion.div>
+                  </div>
+                )}
+              </div>
 
-            {/* Mobile Menu Button */}
-            <button
-              className="md:hidden p-2 -mr-2 text-foreground hover:bg-muted rounded-xl transition-all touch-manipulation active:scale-90 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              onClick={() => setIsMobileMenuOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
+              {/* Mobile Menu Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.9 }}
+                className="md:hidden p-2 -mr-2 text-foreground hover:bg-muted rounded-xl transition-all touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                onClick={() => setIsMobileMenuOpen(true)}
+                aria-label="Open menu"
+              >
+                <Menu className="w-6 h-6" />
+              </motion.button>
+            </div>
           </div>
-        </div>
-      </header>
+        </motion.header>
+      </div>
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
@@ -337,9 +440,14 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute right-0 top-0 h-full w-72 max-w-[85vw] bg-card border-l border-border/30 shadow-2xl safe-area-top safe-area-bottom"
+              className="absolute right-0 top-0 h-full w-72 max-w-[85vw] border-l border-border/20 safe-area-top safe-area-bottom"
+              style={{
+                background: "hsl(var(--card) / 0.9)",
+                backdropFilter: "blur(40px) saturate(1.4)",
+                boxShadow: "-20px 0 80px -20px hsl(var(--foreground) / 0.1)",
+              }}
             >
-              <div className="p-4 border-b border-border/30 flex items-center justify-between">
+              <div className="p-4 border-b border-border/20 flex items-center justify-between">
                 <ZivoLogo size="sm" />
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -363,7 +471,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   </Link>
                 ))}
 
-                <div className="border-t border-border/30 my-3" />
+                <div className="border-t border-border/20 my-3" />
 
                 <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-medium px-4 py-2">More</p>
                 {moreItems.map((link) => (
@@ -378,7 +486,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   </Link>
                 ))}
 
-                <div className="border-t border-border/30 my-3" />
+                <div className="border-t border-border/20 my-3" />
 
                 <Link
                   to="/help"
@@ -390,7 +498,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 </Link>
               </nav>
 
-              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/30 bg-card">
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/20 bg-card/80 backdrop-blur-xl">
                 {user ? (
                   <Button
                     variant="outline"
@@ -406,6 +514,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   <div className="space-y-2">
                     <Button
                       className="w-full rounded-xl font-bold"
+                      style={{ boxShadow: "0 4px 14px -2px hsl(var(--primary) / 0.35)" }}
                       onClick={() => {
                         navigate("/signup");
                         setIsMobileMenuOpen(false);
