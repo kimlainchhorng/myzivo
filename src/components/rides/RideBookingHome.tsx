@@ -3118,7 +3118,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col gap-1.5 overflow-y-auto min-h-0 px-4 overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
+          <div className="flex-1 flex flex-col gap-1.5 overflow-y-auto min-h-0 px-4 overscroll-contain scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
             {/* Route card */}
             <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
               <div className="flex items-start gap-2.5">
