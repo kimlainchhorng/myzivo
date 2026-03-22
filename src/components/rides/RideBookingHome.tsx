@@ -1421,51 +1421,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     // Pan map to destination so user can fine-tune with the "D" pin
     setMapPanTarget({ lat: place.lat, lng: place.lng });
   }, [pickup, userLocation, fallbackPickupCenter, pickupDisplay, t]);
-...
-  const handleConfirmSearch = () => {
-    if (!pickupConfirmed) {
-      // Auto-confirm pickup from current GPS/default location, not the destination-centered map
-      if (!pickup) {
-        const coords = userLocation ?? fallbackPickupCenter;
-        const autoPickup = {
-          address: pickupDisplay || t("ride.current_location") || "Current Location",
-          lat: coords.lat,
-          lng: coords.lng,
-        };
-        setPickup(autoPickup);
-        setPickupDisplay(autoPickup.address);
-      }
-      setPickupConfirmed(true);
-    }
-    if (!pickup || !destination) return;
-    const wp = stops.filter(s => s.place && s.place.lat && s.place.lng).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
-    if (isSameLocation(pickup, destination) && wp.length === 0) {
-      toast.error("Add a stop to create a round trip, or choose a different destination");
-      return;
-    }
-    fetchRoute(pickup, destination, wp);
-  };
-...
-                  onFocus={() => {
-                    // Auto-confirm pickup when user focuses destination input
-                    if (!pickupConfirmed) {
-                      if (!pickup) {
-                        const coords = userLocation ?? fallbackPickupCenter;
-                        const autoPickup = {
-                          address: pickupDisplay || t("ride.current_location") || "Current Location",
-                          lat: coords.lat,
-                          lng: coords.lng,
-                        };
-                        setPickup(autoPickup);
-                        setPickupDisplay(autoPickup.address);
-                      }
-                      pickupManuallySet.current = true;
-                      setPickupConfirmed(true);
-                      // Reset dedup ref so map drag immediately starts geocoding for destination
-                      lastGeocodedCoordsRef.current = null;
-                    }
-                  }}
-
   /* ─── Multi-stop management ─── */
   const MAX_STOPS = 1;
   const handleAddStop = useCallback(() => {
