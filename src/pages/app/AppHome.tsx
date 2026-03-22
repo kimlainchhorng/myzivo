@@ -349,16 +349,18 @@ const AppHome = () => {
                 <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-3 px-5 pt-3 pb-2">
+            <div className="grid grid-cols-4 gap-3 px-5 pt-3 pb-2 preserve-3d">
               {suggestions.map((s, idx) => (
                 <motion.button
                   key={s.label}
-                  whileTap={{ scale: 0.92 }}
+                  whileTap={{ scale: 0.88, rotateX: 8 }}
+                  whileHover={{ y: -4, rotateX: -3 }}
                   onClick={() => navigate(s.href)}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.06 }}
+                  initial={{ opacity: 0, y: 15, rotateX: -10 }}
+                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                  transition={{ delay: idx * 0.08, type: "spring", stiffness: 200 }}
                   className="flex flex-col items-center gap-2 touch-manipulation relative group"
+                  style={{ transformStyle: "preserve-3d" }}
                 >
                   {/* Badge */}
                   {s.badge && (
@@ -371,8 +373,11 @@ const AppHome = () => {
                       {s.badge}
                     </div>
                   )}
-                  {/* Icon container */}
-                  <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center group-active:scale-95 group-hover:shadow-md group-hover:border-primary/20 transition-all duration-200">
+                  {/* Icon container — 3D depth */}
+                  <div
+                    className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center icon-3d-pop group-active:scale-95 transition-all duration-200"
+                    style={{ transform: "translateZ(10px)" }}
+                  >
                     {s.image ? (
                       <img src={s.image} alt={s.label} className="w-8 h-8 object-contain" />
                     ) : s.icon ? (
