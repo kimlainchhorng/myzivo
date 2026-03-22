@@ -368,6 +368,7 @@ function animatePolyline(
     strokeWeight: 4,
     strokeOpacity: 0.15,
     geodesic: true,
+    zIndex: 10,
     map,
   });
 
@@ -377,6 +378,7 @@ function animatePolyline(
     strokeWeight: 4,
     strokeOpacity: 0.9,
     geodesic: true,
+    zIndex: 11,
     map,
   });
 
