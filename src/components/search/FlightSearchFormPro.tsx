@@ -204,14 +204,23 @@ export default function FlightSearchFormPro({
 
   return (
     <div className={cn(
-      "relative bg-card/80 backdrop-blur-2xl border border-border/20 rounded-3xl p-5 sm:p-7",
+      "relative bg-card/80 backdrop-blur-2xl border border-border/20 rounded-3xl p-5 sm:p-7 overflow-hidden",
       "shadow-[0_8px_40px_-8px_hsl(var(--primary)/0.12),0_2px_12px_-4px_hsl(var(--primary)/0.08)]",
       "before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-b before:from-white/[0.06] before:to-transparent before:pointer-events-none",
       className
     )} style={{ transformStyle: "preserve-3d" }}>
+      {/* Background image */}
+      <img
+        src={tabFlightsBg}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        style={{ opacity: 0.12 }}
+      />
+      <span className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, hsl(var(--card) / 0.7) 0%, hsl(var(--card) / 0.85) 50%, hsl(var(--card) / 0.75) 100%)" }} />
+
       {/* Accent bar with 3D lift */}
       <div
-        className="h-1.5 bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 rounded-t-3xl mb-5 sm:mb-6 shadow-[0_2px_12px_hsl(var(--primary)/0.3)]"
+        className="relative h-1.5 bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 rounded-t-3xl mb-5 sm:mb-6 shadow-[0_2px_12px_hsl(var(--primary)/0.3)]"
         style={{ transform: "translateZ(4px)" }}
       />
 
