@@ -581,7 +581,7 @@ const AppHome = () => {
                     <motion.button
                       key={`${deal.originCode}-${deal.destinationCode}-${i}`}
                       whileTap={{ scale: 0.96 }}
-                      onClick={() => navigate(`/flights?from=${deal.originCode}&to=${deal.destinationCode}&date=${deal.departureDate}`)}
+                      onClick={() => navigate(`/flights/results?origin=${deal.originCode}&destination=${deal.destinationCode}&departureDate=${deal.departureDate}&adults=1&cabinClass=economy`)}
                       className="shrink-0 w-[220px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative border border-border/20"
                     >
                       <div className="relative h-[140px] overflow-hidden">
