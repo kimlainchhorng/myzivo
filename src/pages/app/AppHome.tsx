@@ -114,9 +114,12 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
 const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSeeAll }: { icon: LucideIcon; iconColor: string; title: string; badge?: string; actionLabel?: string; onSeeAll: () => void }) => (
   <div className="flex items-center justify-between mb-4">
     <h2 className="text-sm font-bold text-foreground flex items-center gap-2.5">
-      <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-muted/80 to-muted/40 flex items-center justify-center shadow-sm">
+      <motion.div
+        whileHover={{ scale: 1.1, rotateY: 10 }}
+        className="w-7 h-7 rounded-xl bg-gradient-to-br from-muted/80 to-muted/40 flex items-center justify-center shadow-sm icon-3d-pop"
+      >
         <Icon className={`w-3.5 h-3.5 ${iconColor}`} />
-      </div>
+      </motion.div>
       {title}
       {badge && (
         <Badge variant="secondary" className="text-[9px] font-bold bg-primary/10 text-primary border-0 px-1.5 py-0">
