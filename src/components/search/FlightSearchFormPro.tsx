@@ -13,6 +13,7 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
+import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { 
   Plane, 
@@ -203,19 +204,28 @@ export default function FlightSearchFormPro({
 
   return (
     <div className={cn(
-      "relative bg-card/80 backdrop-blur-2xl border border-border/20 rounded-3xl p-5 sm:p-7",
+      "relative bg-card/80 backdrop-blur-2xl border border-border/20 rounded-3xl p-5 sm:p-7 overflow-hidden",
       "shadow-[0_8px_40px_-8px_hsl(var(--primary)/0.12),0_2px_12px_-4px_hsl(var(--primary)/0.08)]",
       "before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-b before:from-white/[0.06] before:to-transparent before:pointer-events-none",
       className
     )} style={{ transformStyle: "preserve-3d" }}>
+      {/* Background image */}
+      <img
+        src={tabFlightsBg}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        style={{ opacity: 0.12 }}
+      />
+      <span className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, hsl(var(--card) / 0.7) 0%, hsl(var(--card) / 0.85) 50%, hsl(var(--card) / 0.75) 100%)" }} />
+
       {/* Accent bar with 3D lift */}
       <div
-        className="h-1.5 bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 rounded-t-3xl mb-5 sm:mb-6 shadow-[0_2px_12px_hsl(var(--primary)/0.3)]"
+        className="relative h-1.5 bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 rounded-t-3xl mb-5 sm:mb-6 shadow-[0_2px_12px_hsl(var(--primary)/0.3)]"
         style={{ transform: "translateZ(4px)" }}
       />
 
       {/* Trip Type Toggle */}
-      <div className="flex gap-2 mb-5 flex-wrap" style={{ transform: "translateZ(8px)" }}>
+      <div className="relative flex gap-2 mb-5 flex-wrap" style={{ transform: "translateZ(8px)" }}>
         {[
           { id: "roundtrip" as TripType, label: t("flights.roundtrip"), icon: RefreshCw },
           { id: "oneway" as TripType, label: t("flights.oneway"), icon: Plane },
@@ -225,15 +235,21 @@ export default function FlightSearchFormPro({
             key={type.id}
             onClick={() => setTripType(type.id)}
             className={cn(
-              "px-3.5 sm:px-5 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm",
+              "relative px-3.5 sm:px-5 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm overflow-hidden",
               tripType === type.id
-                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-primary-foreground shadow-[0_4px_16px_hsl(var(--primary)/0.35),inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-[0.96] active:shadow-[0_2px_8px_hsl(var(--primary)/0.25)]"
+                ? "text-primary-foreground shadow-[0_4px_16px_hsl(var(--primary)/0.35),inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-[0.96]"
                 : "bg-muted/60 text-muted-foreground hover:bg-muted/80 hover:shadow-md active:scale-[0.97] border border-border/30"
             )}
             style={tripType === type.id ? { transform: "translateZ(6px)" } : {}}
           >
-            <type.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            {type.label}
+            {tripType === type.id && (
+              <>
+                <img src={tabFlightsBg} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: 0.5 }} />
+                <span className="absolute inset-0" style={{ background: "linear-gradient(135deg, hsl(var(--flights) / 0.7), hsl(var(--flights) / 0.5))" }} />
+              </>
+            )}
+            <type.icon className="relative z-10 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="relative z-10">{type.label}</span>
           </button>
         ))}
       </div>
@@ -244,7 +260,7 @@ export default function FlightSearchFormPro({
       ) : (
         <>
           {/* Search Fields Grid */}
-          <div className="space-y-4">
+          <div className="relative space-y-4">
             {/* Row 1: From / Swap / To */}
             <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-3 items-end">
               <LocationAutocomplete
@@ -593,14 +609,13 @@ export default function FlightSearchFormPro({
             </div>
           </div>
 
-          {/* Search Button — 3D elevated */}
+          {/* Search Button — 3D with photo background */}
           <Button
             onClick={handleSearch}
             disabled={!isFormValid}
             size="lg"
             className={cn(
-              "w-full h-13 sm:h-14 mt-6 font-bold text-base sm:text-lg rounded-2xl",
-              "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-400 hover:via-blue-500 hover:to-sky-400",
+              "relative w-full h-13 sm:h-14 mt-6 font-bold text-base sm:text-lg rounded-2xl overflow-hidden",
               "text-primary-foreground",
               "shadow-[0_6px_24px_-4px_hsl(var(--primary)/0.4),0_2px_8px_-2px_hsl(var(--primary)/0.3),inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.1)]",
               "hover:shadow-[0_8px_32px_-4px_hsl(var(--primary)/0.5),0_4px_12px_-2px_hsl(var(--primary)/0.35)]",
@@ -608,13 +623,15 @@ export default function FlightSearchFormPro({
               "transition-all duration-200 active:translate-y-0 active:scale-[0.98] active:shadow-[0_2px_8px_-2px_hsl(var(--primary)/0.3)]",
               "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
             )}
-            style={{ transform: "translateZ(12px)" }}
+            style={{ transform: "translateZ(12px)", background: "transparent" }}
           >
-            <Search className="w-5 h-5 mr-2" />
-            {t("flights.search_title")}
+            <img src={tabFlightsBg} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: 0.6 }} />
+            <span className="absolute inset-0" style={{ background: "linear-gradient(135deg, hsl(var(--flights) / 0.75), hsl(var(--flights) / 0.55))" }} />
+            <Search className="relative z-10 w-5 h-5 mr-2" />
+            <span className="relative z-10">{t("flights.search_title")}</span>
           </Button>
           
-          <p className="text-xs text-muted-foreground text-center mt-3">
+          <p className="relative text-xs text-muted-foreground text-center mt-3">
             Payment completed securely on ZIVO. Tickets issued by licensed partners.
           </p>
         </>
