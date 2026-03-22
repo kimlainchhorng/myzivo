@@ -103,6 +103,15 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
             transformStyle: "preserve-3d",
           }}
         >
+          {/* Holographic rainbow accent line */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-[2px] opacity-60"
+            style={{
+              background: "linear-gradient(90deg, hsl(var(--flights)), hsl(var(--hotels)), hsl(var(--cars)), hsl(var(--rides)), hsl(var(--eats)), hsl(var(--flights)))",
+              backgroundSize: "200% 100%",
+              animation: "shimmer 4s linear infinite",
+            }}
+          />
           <div className="container mx-auto px-6">
             <div className="flex items-center justify-between h-[72px]">
               {/* Logo — 3D float */}
