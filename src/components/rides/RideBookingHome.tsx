@@ -720,6 +720,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [pickupConfirmed, setPickupConfirmed] = useState(false); // reactive state for GPS confirm UI
   const mapCenterRef = useRef<{ lat: number; lng: number } | null>(null);
   const lastGeocodedCoordsRef = useRef<string | null>(null); // dedup key to prevent repeat geocoding
+  // Pin placement mode: when active, the center pin is used for placing destination or stop
+  const [pinPlacementMode, setPinPlacementMode] = useState<"destination" | "stop" | null>(null);
+  const [placingStopId, setPlacingStopId] = useState<string | null>(null);
 
   // New state for enhanced flow
   const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
@@ -1215,6 +1218,27 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
     if (viewStep !== "search") return;
 
+    // Stop pin placement mode — update the stop being placed
+    if (pinPlacementMode === "stop" && placingStopId) {
+      if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
+      reverseGeocodeTimerRef.current = setTimeout(async () => {
+        const key = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`;
+        if (lastGeocodedCoordsRef.current === key) return;
+        lastGeocodedCoordsRef.current = key;
+        setIsReversingGeocode(true);
+        try {
+          const address = await reverseGeocode(center.lat, center.lng);
+          setStops(prev => prev.map(s => s.id === placingStopId ? { ...s, place: { address, lat: center.lat, lng: center.lng }, display: address } : s));
+        } catch {
+          const fallback = `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`;
+          setStops(prev => prev.map(s => s.id === placingStopId ? { ...s, place: { address: fallback, lat: center.lat, lng: center.lng }, display: fallback } : s));
+        } finally {
+          setIsReversingGeocode(false);
+        }
+      }, 600);
+      return;
+    }
+
     // Once pickup is confirmed, dragging the map updates the DESTINATION, not pickup
     if (pickupManuallySet.current || pickupConfirmed) {
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
@@ -1264,7 +1288,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         setIsReversingGeocode(false);
       }
     }, 600);
-  }, [viewStep, pickupConfirmed]);
+  }, [viewStep, pickupConfirmed, pinPlacementMode, placingStopId]);
 
   const handleConfirmPickupFromPin = useCallback(async () => {
     const coords = mapCenterRef.current ?? pickup ?? userLocation ?? fallbackPickupCenter;
@@ -1420,6 +1444,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setPickupDisplay(autoPickup.address);
     }
     setPickupConfirmed(true);
+    setPinPlacementMode("destination");
 
     // Pan map to destination so user can fine-tune with the "D" pin
     setMapPanTarget({ lat: place.lat, lng: place.lng });
@@ -1431,7 +1456,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       toast.error(`Maximum ${MAX_STOPS} stops allowed`);
       return;
     }
-    setStops(prev => [...prev, { id: Date.now().toString(), place: null, display: "" }]);
+    const newId = Date.now().toString();
+    setStops(prev => [...prev, { id: newId, place: null, display: "" }]);
+    setPlacingStopId(newId);
+    setPinPlacementMode("stop");
+    lastGeocodedCoordsRef.current = null; // reset dedup so map drag immediately starts geocoding
   }, [stops.length]);
 
   // Stop management — NOT wrapped in useCallback so they always use latest state
@@ -1467,6 +1496,18 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       fetchRoute(pickup, destination, wp);
     }
   };
+
+  /** Confirm the current pin placement (destination or stop) and return to normal search */
+  const handleConfirmPinPlacement = useCallback(() => {
+    if (pinPlacementMode === "stop" && placingStopId) {
+      // Stop was placed — exit pin placement
+      setPinPlacementMode(null);
+      setPlacingStopId(null);
+    } else if (pinPlacementMode === "destination") {
+      // Destination was fine-tuned — exit pin placement
+      setPinPlacementMode(null);
+    }
+  }, [pinPlacementMode, placingStopId]);
 
   const handleSavedPlace = (address: string, lat: number, lng: number) => {
     setDestinationDisplay(address);
@@ -1913,9 +1954,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               key={`persistent-map-${locationModeKey}`}
               compact
                 pickupCoords={viewStep === "search" && !pickupConfirmed ? null : pickup}
-                dropoffCoords={viewStep === "search" && pickupConfirmed ? null : destination}
+                dropoffCoords={viewStep === "search" && pinPlacementMode ? null : destination}
               panToCoords={mapPanTarget}
-              stopCoords={stops.filter(s => s.place).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }))}
+              stopCoords={
+                viewStep === "search" && pinPlacementMode === "stop"
+                  ? stops.filter(s => s.place && s.id !== placingStopId).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }))
+                  : stops.filter(s => s.place).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }))
+              }
               driverCoords={driverCoords}
               driverNavigationTarget={
                 viewStep === "driver-en-route" ? (pickup || null) :
@@ -1928,7 +1973,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onLocateUser={handleLocateUser}
               routePolyline={routeData?.polyline || null}
               onCenterChanged={handleMapCenterChanged}
-              suppressAutoViewport={viewStep === "search" && pickupConfirmed}
+              suppressAutoViewport={viewStep === "search" && !!pinPlacementMode}
             >
               {/* Center pin for pickup (when not yet confirmed in search step) */}
               {viewStep === "search" && !pickupConfirmed && (
@@ -1948,8 +1993,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </div>
                 </div>
               )}
-              {/* Center pin for destination (when pickup IS confirmed in search step) */}
-              {viewStep === "search" && pickupConfirmed && (
+              {/* Center pin for destination (pin placement mode) */}
+              {viewStep === "search" && pinPlacementMode === "destination" && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
                   <div className="flex flex-col items-center">
                     <div className="relative w-10 h-10 rounded-lg bg-foreground border-[3px] border-background shadow-xl flex items-center justify-center">
@@ -1966,11 +2011,71 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </div>
                 </div>
               )}
+              {/* Center pin for stop (stop pin placement mode) */}
+              {viewStep === "search" && pinPlacementMode === "stop" && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-10 h-10 rounded-full bg-amber-500 border-[3px] border-background shadow-xl flex items-center justify-center">
+                      <span className="text-sm font-black text-primary-foreground leading-none">S</span>
+                    </div>
+                    <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-amber-500 -mt-[2px]" />
+                    <div className="w-3 h-1 rounded-full bg-foreground/15 mt-0.5 blur-[1px]" />
+                    {isReversingGeocode && (
+                      <span className="mt-1.5 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm border border-border/30">
+                        <div className="w-3 h-3 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                        Locating stop...
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </MapSection>
           </div>
 
-          {/* ═══════ 3. SEARCH — bottom sheet with address inputs over persistent map ═══════ */}
-          {viewStep === "search" && (
+          {/* ═══════ 3a. SEARCH — compact bar during pin placement ═══════ */}
+          {viewStep === "search" && pinPlacementMode && (
+            <div className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[20px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.10)]">
+              <div className="flex justify-center pt-2 pb-1">
+                <div className="h-1 w-8 rounded-full bg-muted-foreground/20" />
+              </div>
+              <div className="px-5 pt-1" style={{ paddingBottom: `calc(12px + ${SAFE_BOTTOM})` }}>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                  {pinPlacementMode === "destination" ? "Drag map to set drop-off" : "Drag map to set stop"}
+                </p>
+                <p className="text-sm font-medium text-foreground truncate mb-3">
+                  {pinPlacementMode === "destination"
+                    ? (destinationDisplay || "Move the map...")
+                    : (stops.find(s => s.id === placingStopId)?.display || "Move the map...")}
+                </p>
+                <div className="flex gap-2">
+                  {pinPlacementMode === "destination" && destination && stops.length < MAX_STOPS && (
+                    <Button variant="outline" onClick={handleAddStop} className="flex-1 h-12 rounded-2xl text-sm font-bold border-border/30">
+                      <Plus className="w-4 h-4 mr-1.5" />
+                      Add Stop
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleConfirmPinPlacement}
+                    disabled={pinPlacementMode === "destination" ? !destination : !stops.find(s => s.id === placingStopId)?.place}
+                    className={cn(
+                      "h-12 rounded-2xl text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-primary/20",
+                      pinPlacementMode === "destination" && destination && stops.length < MAX_STOPS ? "flex-1" : "w-full"
+                    )}
+                  >
+                    {isReversingGeocode ? (
+                      <span className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                        Locating...
+                      </span>
+                    ) : pinPlacementMode === "destination" ? "Confirm drop-off" : "Confirm stop"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ═══════ 3b. SEARCH — full bottom sheet (no pin placement active) ═══════ */}
+          {viewStep === "search" && !pinPlacementMode && (
             <div
               className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
             >
@@ -2005,7 +2110,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   value={destinationDisplay}
                   onSelect={handleDestinationSelect}
                   onFocus={() => {
-                    // Auto-confirm pickup when user focuses destination input
                     if (!pickupConfirmed) {
                       if (!pickup) {
                         const coords = userLocation ?? fallbackPickupCenter;
@@ -2019,7 +2123,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       }
                       pickupManuallySet.current = true;
                       setPickupConfirmed(true);
-                      // Reset dedup ref so map drag immediately starts geocoding for destination
                       lastGeocodedCoordsRef.current = null;
                     }
                   }}
@@ -2030,8 +2133,40 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
             </div>
 
-            {/* Saved places */}
-            {savedPlaces.length > 0 && (
+            {/* Stops display */}
+            {stops.length > 0 && (
+              <div className="mb-3 space-y-1">
+                {stops.map((stop) => (
+                  <div key={stop.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                    <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
+                      <span className="text-[9px] font-black text-primary-foreground leading-none">S</span>
+                    </div>
+                    <span className="flex-1 text-xs font-medium text-foreground truncate">{stop.display || "Tap to set stop"}</span>
+                    <button
+                      onClick={() => { setPlacingStopId(stop.id); setPinPlacementMode("stop"); lastGeocodedCoordsRef.current = null; if (stop.place) setMapPanTarget({ lat: stop.place.lat, lng: stop.place.lng }); }}
+                      className="text-[10px] font-semibold text-primary px-2 py-1 rounded-lg hover:bg-primary/10"
+                    >Edit</button>
+                    <button onClick={() => handleRemoveStop(stop.id)} className="text-muted-foreground hover:text-destructive">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add stop button */}
+            {pickupConfirmed && destination && stops.length < MAX_STOPS && (
+              <button
+                onClick={handleAddStop}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 mb-3 rounded-xl border border-dashed border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-all active:scale-[0.98]"
+              >
+                <Plus className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold text-primary">Add a stop</span>
+              </button>
+            )}
+
+            {/* Saved places — only when no destination yet */}
+            {savedPlaces.length > 0 && !destination && (
               <div className="mb-3">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("ride.saved_places") || "Saved places"}</p>
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
@@ -2052,8 +2187,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
             )}
 
-            {/* Recent destinations */}
-            {recentDestinations.length > 0 && (
+            {/* Recent destinations — only when no destination yet */}
+            {recentDestinations.length > 0 && !destination && (
               <div className="mb-3">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("ride.recent") || "Recent"}</p>
                 <div className="space-y-1">
