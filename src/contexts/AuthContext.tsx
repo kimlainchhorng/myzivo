@@ -125,34 +125,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // apple provider — this is required by Apple App Store guidelines
       // (Guideline 4.8 / Sign In with Apple requirement).
       if (isNative && provider === "apple") {
-        // Generate a cryptographically random nonce for replay-attack protection.
-        const rawNonce = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
+        try {
+          // Generate a cryptographically random nonce for replay-attack protection.
+          const rawNonce = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
 
-        // SHA-256 hash the nonce — Apple embeds the hash in the identity token.
-        const hashBuffer = await crypto.subtle.digest(
-          "SHA-256",
-          new TextEncoder().encode(rawNonce)
-        );
-        const hashedNonce = Array.from(new Uint8Array(hashBuffer))
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
+          // SHA-256 hash the nonce — Apple embeds the hash in the identity token.
+          const hashBuffer = await crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode(rawNonce)
+          );
+          const hashedNonce = Array.from(new Uint8Array(hashBuffer))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
 
-        const result = await AppleSignIn.signIn({
-          scopes: [SignInScope.Email, SignInScope.FullName],
-          nonce: hashedNonce,
-        });
+          let result;
+          try {
+            result = await AppleSignIn.signIn({
+              scopes: [SignInScope.Email, SignInScope.FullName],
+              nonce: hashedNonce,
+            });
+          } catch (appleErr: any) {
+            // Error code 1001 = user cancelled the dialog — not a real error
+            if (appleErr?.code === 1001 || appleErr?.message?.includes("cancel")) {
+              console.log("[Auth] Apple Sign In cancelled by user");
+              return { error: null };
+            }
+            console.error("[Auth] Apple Sign In native error:", appleErr);
+            return { error: new Error(appleErr?.message || "Apple Sign In failed") };
+          }
 
-        // Exchange the Apple identity token for a Supabase session.
-        // We pass the raw nonce — Supabase will hash it and verify it
-        // against the nonce claim in the Apple-issued JWT.
-        const { error } = await supabase.auth.signInWithIdToken({
-          provider: "apple",
-          token: result.idToken,
-          nonce: rawNonce,
-        });
-        return { error };
+          // Validate we got an identity token back
+          if (!result?.idToken) {
+            console.error("[Auth] Apple Sign In returned no idToken", result);
+            return { error: new Error("Apple Sign In did not return an identity token") };
+          }
+
+          // Exchange the Apple identity token for a Supabase session.
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: "apple",
+            token: result.idToken,
+            nonce: rawNonce,
+          });
+
+          if (error) {
+            console.error("[Auth] Supabase signInWithIdToken error:", error);
+          }
+          return { error };
+        } catch (unexpectedErr) {
+          console.error("[Auth] Unexpected Apple Sign In error:", unexpectedErr);
+          return { error: unexpectedErr as Error };
+        }
       }
 
       const SAFE_OAUTH_ORIGINS = new Set<string>([
@@ -167,7 +191,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ]);
 
       const currentOrigin = window.location.origin;
-      // On native, redirect to published URL (the Capacitor WebView will handle it)
       const fallbackOrigin = isNative
         ? "https://myzivo.lovable.app"
         : "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app";
@@ -176,8 +199,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const redirectTo = `${redirectOrigin}/auth-callback`;
 
       if (isNative) {
-        // On native, use skipBrowserRedirect so we get the URL back
-        // then open it in an in-app browser (not Safari)
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider,
           options: {
