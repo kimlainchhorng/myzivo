@@ -13,6 +13,7 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
+import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { 
   Plane, 
