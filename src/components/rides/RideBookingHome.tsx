@@ -1358,8 +1358,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       return;
     }
 
-    // No pin placement mode active in search view — don't update anything
-    if (!pinPlacementMode) return;
+    // No pin placement mode active in search view:
+    // still allow pickup dragging until pickup is confirmed.
+    if (!pinPlacementMode && pickupConfirmed) return;
 
     // Pickup not yet confirmed — dragging map updates pickup
     setPickupConfirmed(false);
