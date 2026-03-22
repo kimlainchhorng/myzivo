@@ -1282,10 +1282,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       return;
     }
 
-    // Once pickup is confirmed, dragging the map updates the DESTINATION, not pickup
-    if (pickupManuallySet.current || pickupConfirmed) {
-      // In pin placement mode, only update if user has actually dragged
-      if (pinPlacementMode === "destination" && !userHasDraggedPinRef.current) return;
+    // In pin placement mode for destination, dragging updates the destination
+    if (pinPlacementMode === "destination") {
+      if (!userHasDraggedPinRef.current) return;
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
       const requestSeq = ++reverseGeocodeRequestSeqRef.current;
 
