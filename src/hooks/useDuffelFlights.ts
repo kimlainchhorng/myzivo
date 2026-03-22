@@ -10,151 +10,18 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { checkRateLimit, RateLimitError } from "@/lib/security/rateLimiter";
-import { checkSearchAbuse } from "@/lib/security/searchProtection";
 import { transformFlightError } from "@/lib/errors/flightErrors";
-import { getSearchSessionId } from "@/config/trackingParams";
 import { getAirportAlternate } from "@/data/airports";
-
-export interface DuffelSearchParams {
-  origin: string;
-  destination: string;
-  departureDate: string;
-  returnDate?: string;
-  passengers: {
-    adults: number;
-    children?: number;
-    infants?: number;
-  };
-  cabinClass: 'economy' | 'premium_economy' | 'business' | 'first';
-}
-
-export interface DuffelOffer {
-  id: string;
-  airline: string;
-  airlineCode: string;
-  flightNumber: string;
-  departure: {
-    time: string;
-    date: string;
-    city: string;
-    code: string;
-    terminal?: string;
-  };
-  arrival: {
-    time: string;
-    date: string;
-    city: string;
-    code: string;
-    terminal?: string;
-  };
-  duration: string;
-  durationMinutes: number;
-  stops: number;
-  stopCities: string[];
-  stopDetails: { code: string; city: string; layoverDuration: string }[];
-  carriers: { name: string; code: string; isOperating: boolean }[];
-  operatedBy: string | null;
-  price: number;
-  currency: string;
-  pricePerPerson: number;
-  cabinClass: string;
-  fareBrandName: string | null;
-  baggageIncluded: string;
-  isRefundable: boolean;
-  conditions: {
-    changeable: boolean;
-    refundable: boolean;
-    changePenalty: number | null;
-    refundPenalty: number | null;
-    penaltyCurrency: string;
-  };
-  baggageDetails: {
-    carryOnIncluded: boolean;
-    carryOnQuantity: number;
-    carryOnWeightKg: number | null;
-    carryOnWeightLb: number | null;
-    checkedBagsIncluded: boolean;
-    checkedBagQuantity: number;
-    checkedBagWeightKg: number | null;
-    checkedBagWeightLb: number | null;
-  };
-  segments: DuffelSegment[];
-  expiresAt: string;
-  passengers: number;
-  fareVariants?: Array<{
-    id: string;
-    fareBrandName: string | null;
-    price: number;
-    pricePerPerson?: number;
-    currency: string;
-    conditions: { changeable: boolean; refundable: boolean; changePenalty: number | null; refundPenalty: number | null; penaltyCurrency: string };
-    baggageDetails: { carryOnIncluded: boolean; carryOnQuantity: number; carryOnWeightKg: number | null; carryOnWeightLb: number | null; checkedBagsIncluded: boolean; checkedBagQuantity: number; checkedBagWeightKg: number | null; checkedBagWeightLb: number | null };
-    baggageIncluded: string;
-    cabinClass: string;
-  }>;
-}
-
-export interface DuffelSegment {
-  id: string;
-  departingAt: string;
-  arrivingAt: string;
-  origin: {
-    code: string;
-    name: string;
-    city: string;
-    terminal?: string;
-  };
-  destination: {
-    code: string;
-    name: string;
-    city: string;
-    terminal?: string;
-  };
-  operatingCarrier: string;
-  operatingCarrierCode: string;
-  marketingCarrier: string;
-  marketingCarrierCode: string;
-  flightNumber: string;
-  aircraft: string;
-  duration: string;
-  cabinClass: string;
-}
-
-export interface DuffelSearchResult {
-  offer_request_id: string;
-  offers: DuffelOffer[];
-  created_at: string;
-}
-
-/**
- * Search flights using Duffel API
- */
-export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: boolean }) {
-  const { enabled = true, ...searchParams } = params;
-
-  return useQuery({
-    queryKey: ['duffel-flights', searchParams],
+...
     queryFn: async (): Promise<DuffelSearchResult> => {
-      // PRODUCTION SAFETY: Check rate limits before search
+      // Keep lightweight client-side rate limiting, but do not block legitimate repeated
+      // flight searches before Duffel/cache can respond.
       const rateLimitResult = await checkRateLimit('flights_search');
       if (!rateLimitResult.allowed) {
         throw new RateLimitError(
           'Too many searches. Please wait a moment and try again.',
           rateLimitResult.retryAfter
         );
-      }
-
-      // PRODUCTION SAFETY: Check for abuse patterns
-      const sessionId = getSearchSessionId();
-      const abuseCheck = checkSearchAbuse(
-        searchParams.origin,
-        searchParams.destination,
-        searchParams.departureDate,
-        sessionId
-      );
-
-      if (!abuseCheck.allowed) {
-        throw new Error(abuseCheck.message || 'Please wait before searching again.');
       }
 
       // Build passenger list
