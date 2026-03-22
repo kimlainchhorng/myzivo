@@ -280,6 +280,9 @@ const AppHome = () => {
 
       {/* Scrollable content */}
       <div className="overflow-y-auto pb-24 scroll-momentum relative z-10">
+        {/* 3D Ambient orbs inside scroll container */}
+        <div className="orb-3d-1 top-[-5%] right-[-10%] opacity-40 z-0 pointer-events-none" />
+        <div className="orb-3d-2 top-[40%] left-[-15%] opacity-25 z-0 pointer-events-none" />
         {/* ─── HEADER ─── */}
         <div className="bg-background relative">
           {/* Service Tabs — 3D Pill Chips */}
