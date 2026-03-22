@@ -1925,6 +1925,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               onLocateUser={handleLocateUser}
               routePolyline={routeData?.polyline || null}
               onCenterChanged={handleMapCenterChanged}
+              suppressAutoViewport={viewStep === "search" && pickupConfirmed}
             >
               {/* Center pin for pickup (when not yet confirmed in search step) */}
               {viewStep === "search" && !pickupConfirmed && (
