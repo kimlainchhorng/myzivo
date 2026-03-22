@@ -42,6 +42,7 @@ import { useDriverLocation } from "@/hooks/useDriverLocation";
 import { useCustomerLocationBroadcast } from "@/hooks/useCustomerLocationBroadcast";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
+import { useUpcomingFlightArrival, buildFlightPickupJobData } from "@/hooks/useFlightArrivalPickup";
 
 /* ─── Types ─── */
 interface PlaceData {
