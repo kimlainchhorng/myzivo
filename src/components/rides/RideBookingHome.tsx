@@ -2350,7 +2350,15 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
                 {/* Destination input */}
                 <button
-                  onClick={() => setViewStep("search")}
+                  onClick={() => {
+                    // If destination was auto-set from map center and matches pickup location, clear it
+                    const effectivePickup = pickup ?? (userLocation ? { address: "", lat: userLocation.lat, lng: userLocation.lng } : null);
+                    if (destination && effectivePickup && isSameLocation(destination, effectivePickup)) {
+                      setDestination(null);
+                      setDestinationDisplay("");
+                    }
+                    setViewStep("search");
+                  }}
                   className="w-full flex items-center gap-3 bg-muted/15 border border-border/20 rounded-2xl px-4 py-3 transition-all duration-200 hover:bg-muted/25 hover:border-primary/20 active:scale-[0.98] group"
                 >
                   <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
@@ -2366,7 +2374,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               {/* Sticky Choose Ride button at bottom */}
               <div className="shrink-0 px-5 pt-3" style={{ paddingBottom: `calc(12px + ${SAFE_BOTTOM})` }}>
                 <Button
-                  onClick={() => setViewStep("search")}
+                  onClick={() => {
+                    // If destination was auto-set from map center and matches pickup location, clear it
+                    const effectivePickup = pickup ?? (userLocation ? { address: "", lat: userLocation.lat, lng: userLocation.lng } : null);
+                    if (destination && effectivePickup && isSameLocation(destination, effectivePickup)) {
+                      setDestination(null);
+                      setDestinationDisplay("");
+                    }
+                    // If user actually dragged to a different destination, keep it and go to search
+                    setViewStep("search");
+                  }}
                   disabled={isReversingGeocode}
                   className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
                   size="lg"
