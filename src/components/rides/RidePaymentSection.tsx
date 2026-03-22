@@ -42,6 +42,10 @@ interface RidePaymentSectionProps {
   paymentFailed: boolean;
   onClearError?: () => void;
   isCambodia?: boolean;
+  /** Whether cash payment is allowed (based on IP/location restriction) */
+  cashAllowed?: boolean;
+  /** Handler for cash ride confirmation — creates ride without Stripe */
+  onCashConfirm?: () => void;
 }
 
 const BRAND_LABELS: Record<string, string> = {
