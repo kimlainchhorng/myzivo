@@ -36,6 +36,11 @@ export default function DriverMapPage() {
   const [activeOffer, setActiveOffer] = useState<RideOffer | null>(null);
   const [isRespondingToOffer, setIsRespondingToOffer] = useState(false);
   const [acceptedJobId, setAcceptedJobId] = useState<string | null>(null);
+  const [acceptedJobFlight, setAcceptedJobFlight] = useState<{
+    flightNumber: string | null;
+    flightArrivalTime: string | null;
+    isAirportPickup: boolean;
+  } | null>(null);
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Subscribe to customer's live location after accepting a ride
