@@ -2076,7 +2076,15 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </MapSection>
             </div>
 
-            <>
+            <motion.div
+              className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)]"
+              style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
+              initial={{ y: 100 }}
+              animate={{ y: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <div className="mx-auto mt-2 mb-1 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
+              <div className="px-5 pt-2 pb-3 max-h-[55vh] overflow-y-auto">
               {/* Confirmed pickup indicator */}
               {pickup && pickupConfirmed && (
                 <div className="mb-3 rounded-xl bg-muted/10 border border-border/20 px-3 py-2 flex items-center gap-2">
