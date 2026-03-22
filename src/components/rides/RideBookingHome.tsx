@@ -1276,6 +1276,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       // In pin placement mode, only update if user has actually dragged
       if (pinPlacementMode === "destination" && !userHasDraggedPinRef.current) return;
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
+
+      // Immediately update coordinates so UI feels responsive
+      setDestination({ address: destinationDisplay || `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`, lat: center.lat, lng: center.lng });
+
       reverseGeocodeTimerRef.current = setTimeout(async () => {
         const key = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`;
         if (lastGeocodedCoordsRef.current === key) return;
@@ -1292,7 +1296,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         } finally {
           setIsReversingGeocode(false);
         }
-      }, 600);
+      }, 350);
       return;
     }
 
