@@ -26,11 +26,11 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const serviceNavItems = [
-  { label: "Flights", href: "/flights", icon: Plane },
-  { label: "Hotels", href: "/hotels", icon: Hotel },
-  { label: "Cars", href: "/rent-car", icon: CarFront },
-  { label: "Rides", href: "/rides", icon: Car },
-  { label: "Eats", href: "/eats", icon: UtensilsCrossed },
+  { label: "Flights", href: "/flights", icon: Plane, cssVar: "--flights" },
+  { label: "Hotels", href: "/hotels", icon: Hotel, cssVar: "--hotels" },
+  { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "--cars" },
+  { label: "Rides", href: "/rides", icon: Car, cssVar: "--rides" },
+  { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "--eats" },
 ];
 
 const moreItems = [
@@ -103,6 +103,15 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
             transformStyle: "preserve-3d",
           }}
         >
+          {/* Holographic rainbow accent line */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-[2px] opacity-60"
+            style={{
+              background: "linear-gradient(90deg, hsl(var(--flights)), hsl(var(--hotels)), hsl(var(--cars)), hsl(var(--rides)), hsl(var(--eats)), hsl(var(--flights)))",
+              backgroundSize: "200% 100%",
+              animation: "shimmer 4s linear infinite",
+            }}
+          />
           <div className="container mx-auto px-6">
             <div className="flex items-center justify-between h-[72px]">
               {/* Logo — 3D float */}
@@ -116,19 +125,19 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 <ZivoLogo size="md" />
               </motion.div>
 
-              {/* Center: 3D Service Tabs */}
+              {/* Center: 3D Service Tabs — Colorful */}
               <nav
-                className="hidden lg:flex items-center gap-1 rounded-full px-1.5 py-1"
+                className="hidden lg:flex items-center gap-0.5 rounded-full px-1.5 py-1"
                 role="tablist"
                 aria-label="Travel services"
                 style={{
                   background: scrolled
-                    ? "hsl(var(--muted) / 0.4)"
+                    ? "hsl(var(--muted) / 0.5)"
                     : isHomePage
-                      ? "hsl(var(--foreground) / 0.04)"
-                      : "hsl(var(--muted) / 0.3)",
-                  backdropFilter: "blur(12px)",
-                  boxShadow: "inset 0 1px 1px hsl(var(--background) / 0.6), 0 1px 3px hsl(var(--foreground) / 0.04)",
+                      ? "hsl(var(--foreground) / 0.05)"
+                      : "hsl(var(--muted) / 0.35)",
+                  backdropFilter: "blur(16px) saturate(1.3)",
+                  boxShadow: "inset 0 1px 2px hsl(var(--background) / 0.7), 0 2px 8px hsl(var(--foreground) / 0.05), 0 0 0 1px hsl(var(--border) / 0.15)",
                   transformStyle: "preserve-3d",
                 }}
               >
@@ -137,8 +146,8 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   return (
                     <motion.div
                       key={item.href}
-                      whileHover={{ y: -2, z: 8 }}
-                      whileTap={{ scale: 0.96 }}
+                      whileHover={{ y: -2, z: 10, scale: 1.03 }}
+                      whileTap={{ scale: 0.95 }}
                       style={{ transformStyle: "preserve-3d" }}
                     >
                       <Link
@@ -146,34 +155,47 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                         className={cn(
                           "relative flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 group",
                           isActive
-                            ? "text-primary-foreground"
+                            ? "text-white"
                             : scrolled || !isHomePage
                               ? "text-muted-foreground hover:text-foreground"
                               : "text-foreground/70 hover:text-foreground"
                         )}
                       >
-                        {/* Active 3D pill background */}
+                        {/* Active 3D pill — service-colored */}
                         {isActive && (
                           <motion.span
                             layoutId="nav-3d-pill"
-                            className="absolute inset-0 rounded-full bg-primary"
+                            className="absolute inset-0 rounded-full"
                             style={{
-                              boxShadow: "0 4px 14px -2px hsl(var(--primary) / 0.4), inset 0 1px 1px hsl(var(--background) / 0.15)",
-                              transform: "translateZ(4px)",
+                              background: `linear-gradient(135deg, hsl(${item.cssVar}), hsl(${item.cssVar} / 0.85))`,
+                              boxShadow: `0 6px 20px -3px hsl(${item.cssVar} / 0.5), 0 10px 36px -8px hsl(${item.cssVar} / 0.3), inset 0 1px 2px hsl(var(--background) / 0.25)`,
+                              transform: "translateZ(6px)",
                             }}
-                            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                          />
+                        )}
+                        {/* Hover glow ring */}
+                        {!isActive && (
+                          <span
+                            className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                            style={{
+                              background: `hsl(${item.cssVar} / 0.08)`,
+                              boxShadow: `inset 0 0 0 1px hsl(${item.cssVar} / 0.15)`,
+                            }}
                           />
                         )}
                         <span className="relative z-10 flex items-center gap-2">
                           <item.icon
-                            className={cn(
-                              "w-[15px] h-[15px] transition-all duration-300",
-                              isActive
-                                ? "text-primary-foreground"
-                                : "opacity-50 group-hover:opacity-100 group-hover:text-primary"
-                            )}
+                            className="w-[15px] h-[15px] transition-all duration-300"
+                            style={{
+                              color: isActive ? "white" : `hsl(${item.cssVar})`,
+                              filter: isActive ? "drop-shadow(0 1px 2px rgba(0,0,0,0.2))" : "none",
+                              opacity: isActive ? 1 : 0.7,
+                            }}
                           />
-                          {item.label}
+                          <span style={{ textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none" }}>
+                            {item.label}
+                          </span>
                         </span>
                       </Link>
                     </motion.div>
