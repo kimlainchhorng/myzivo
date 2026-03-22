@@ -7,6 +7,9 @@
 
 const ALLOWED_ORIGINS = new Set([
   // Production
+  "https://hizivo.com",
+  "https://www.hizivo.com",
+  // Legacy typo kept temporarily to avoid breaking old references
   "https://hizovo.com",
   "https://www.hizovo.com",
   // Lovable preview
