@@ -249,7 +249,7 @@ END:VCALENDAR`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `ZIVO-Itinerary-${flight.departureAirport}-${flight.arrivalAirport}.html`;
+      a.download = `ZIVO-Itinerary-${flight.departure.code}-${flight.arrival.code}.html`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

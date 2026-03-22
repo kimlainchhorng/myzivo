@@ -246,7 +246,7 @@ export function useInvoicePdfExport() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `ZIVO-Invoice-${data.invoiceNumber || 'receipt'}.html`;
+      a.download = `ZIVO-Invoice-${data.invoice?.id?.slice(0, 8) || 'receipt'}.html`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
