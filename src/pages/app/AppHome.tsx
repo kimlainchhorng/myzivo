@@ -275,6 +275,7 @@ const AppHome = () => {
   const initials = (profile?.full_name || user?.email || "Z").charAt(0).toUpperCase();
 
   return (
+    <>
     <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30 perspective-container overflow-x-hidden" role="main">
       {/* 3D Ambient orbs — contained within scrollable area only */}
 
@@ -668,10 +669,11 @@ const AppHome = () => {
 
       {/* Search Overlay */}
       <UniversalSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-
-      {/* Bottom Nav */}
-      <ZivoMobileNav />
     </div>
+
+    {/* Bottom Nav — outside perspective container so position:fixed works */}
+    <ZivoMobileNav />
+    </>
   );
 };
 
