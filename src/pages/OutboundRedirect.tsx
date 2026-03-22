@@ -145,15 +145,13 @@ export default function OutboundRedirect() {
                 </p>
                 
                 {searchParams.get('url') && (
-                  <a
-                    href={decodeURIComponent(searchParams.get('url') || '')}
-                    target="_blank"
-                    rel="nofollow sponsored noopener noreferrer"
+                  <button
+                    onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(decodeURIComponent(searchParams.get('url') || '')))}
                     className="inline-flex items-center gap-2 text-primary hover:underline"
                   >
                     <ExternalLink className="w-4 h-4" />
                     Click here to continue to partner site
-                  </a>
+                  </button>
                 )}
               </div>
               

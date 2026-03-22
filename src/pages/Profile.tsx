@@ -468,11 +468,9 @@ const Profile = () => {
 
             {/* Merchant Dashboard Link */}
             {merchantData?.isMerchant && (
-              <a 
-                href={MERCHANT_APP_URL} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="block"
+              <button 
+                onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(MERCHANT_APP_URL))}
+                className="block w-full text-left"
               >
                 <Card className="relative border-0 bg-gradient-to-br from-orange-500/10 to-amber-500/10 shadow-xl overflow-hidden hover:shadow-2xl transition-all cursor-pointer group touch-manipulation active:scale-[0.98]">
                   <CardContent className="p-4 relative">
@@ -495,7 +493,7 @@ const Profile = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </a>
+              </button>
             )}
 
             {/* Account Status */}

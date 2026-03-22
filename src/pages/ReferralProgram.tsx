@@ -211,7 +211,7 @@ export default function ReferralProgram() {
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.open(`mailto:?subject=Join ZIVO&body=${encodeURIComponent(`Hey! Check out ZIVO for amazing travel deals: ${shareUrl}`)}`, '_self')}
+                    onClick={() => import("@/lib/openExternalUrl").then(({ openSystemUrl }) => openSystemUrl(`mailto:?subject=Join ZIVO&body=${encodeURIComponent(`Hey! Check out ZIVO for amazing travel deals: ${shareUrl}`)}`))}
                   >
                     <Mail className="w-5 h-5" />
                     Email
