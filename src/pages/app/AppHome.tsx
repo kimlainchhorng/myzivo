@@ -58,7 +58,25 @@ import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
 import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
 import zivoShoppingIcon from "@/assets/zivo-shopping.png";
 import zivoPromoBanner from "@/assets/zivo-promo-banner.png";
+import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
+import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
+import tabCarsBg from "@/assets/tab-cars-bg.jpg";
+import tabRidesBg from "@/assets/tab-rides-bg.jpg";
+import tabEatsBg from "@/assets/tab-eats-bg.jpg";
 
+const tabBgMap: Record<string, string> = {
+  rides: tabRidesBg,
+  eats: tabEatsBg,
+  flights: tabFlightsBg,
+  hotels: tabHotelsBg,
+};
+
+const tabCssVarMap: Record<string, string> = {
+  rides: "var(--rides)",
+  eats: "var(--eats)",
+  flights: "var(--flights)",
+  hotels: "var(--hotels)",
+};
 // ─── Saved Places Icon Map ───
 // ─── Dynamic search placeholder by tab ───
 // Search placeholder is now handled inside the component with t()
@@ -302,17 +320,48 @@ const AppHome = () => {
                   className={cn(
                     "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px] tab-3d",
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 active"
-                      : "bg-muted/50 text-muted-foreground hover:bg-muted/70"
+                      ? "text-white shadow-lg"
+                      : "text-muted-foreground"
                   )}
+                  style={{ overflow: "hidden" }}
                 >
+                  {/* Background image */}
+                  <img
+                    src={tabBgMap[tab.id]}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover rounded-full"
+                    style={{
+                      opacity: isActive ? 0.75 : 0.15,
+                      transition: "opacity 0.3s ease",
+                    }}
+                  />
+                  {/* Color overlay */}
+                  <span
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: isActive
+                        ? `linear-gradient(135deg, hsl(${tabCssVarMap[tab.id]} / 0.55), hsl(${tabCssVarMap[tab.id]} / 0.35))`
+                        : "hsl(var(--muted) / 0.3)",
+                      transition: "background 0.3s ease",
+                    }}
+                  />
+                  {/* Border */}
+                  <span
+                    className="absolute inset-0 rounded-full pointer-events-none"
+                    style={{
+                      border: `1.5px solid hsl(${tabCssVarMap[tab.id]} / ${isActive ? "0.5" : "0.12"})`,
+                      boxShadow: isActive
+                        ? `0 4px 12px -2px hsl(${tabCssVarMap[tab.id]} / 0.35), inset 0 1px 2px rgba(255,255,255,0.15)`
+                        : "none",
+                    }}
+                  />
                   <span className="relative z-10 flex items-center gap-1.5">
                     {tab.image ? (
-                      <img src={tab.image} alt={tab.label} className="w-5 h-5 object-contain" />
+                      <img src={tab.image} alt={tab.label} className="w-5 h-5 object-contain" style={{ filter: isActive ? "brightness(10)" : "none" }} />
                     ) : tab.icon ? (
                       <tab.icon className="w-4.5 h-4.5" />
                     ) : null}
-                    <span className="text-[13px]">{tab.label}</span>
+                    <span className="text-[13px]" style={{ textShadow: isActive ? "0 1px 3px rgba(0,0,0,0.3)" : "none" }}>{tab.label}</span>
                   </span>
                 </motion.button>
               );
@@ -336,11 +385,19 @@ const AppHome = () => {
               className="w-full touch-manipulation"
               style={{ transformStyle: "preserve-3d" }}
             >
-              <div className="glass-3d rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] shadow-sm transition-all active:bg-muted/60">
-                <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center icon-3d-pop">
+              <div className="relative rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] shadow-sm transition-all overflow-hidden" style={{ border: `1px solid hsl(${tabCssVarMap[activeHomeTab]} / 0.15)` }}>
+                {/* Background image for search bar */}
+                <img
+                  src={tabBgMap[activeHomeTab]}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ opacity: 0.08, transition: "opacity 0.3s" }}
+                />
+                <span className="absolute inset-0" style={{ background: "hsl(var(--card) / 0.85)", backdropFilter: "blur(12px)" }} />
+                <div className="relative z-10 w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center">
                   <Search className="w-4.5 h-4.5 text-muted-foreground" />
                 </div>
-                <span className="text-muted-foreground font-medium text-[15px] flex-1 text-left">{getSearchPlaceholder(activeHomeTab)}</span>
+                <span className="relative z-10 text-muted-foreground font-medium text-[15px] flex-1 text-left">{getSearchPlaceholder(activeHomeTab)}</span>
               </div>
             </motion.button>
           </div>
