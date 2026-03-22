@@ -270,7 +270,7 @@ function MapSection({
           nearbyDrivers={nearbyDrivers}
           showUserLocationDot={showUserLocationDot}
           routePolyline={routePolyline || null}
-          onMapReady={(map) => { mapRef.current = map; }}
+          onMapReady={(map) => { mapRef.current = map; onMapReadyExtra?.(map); }}
           onCenterChanged={onCenterChanged}
           suppressAutoViewport={suppressAutoViewport}
           className="absolute inset-0 h-full w-full"
