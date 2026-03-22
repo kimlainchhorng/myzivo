@@ -628,7 +628,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [destination, setDestination] = useState<PlaceData | null>(null);
 
   const nearbyCenter = pickup ?? userLocation;
-  const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(nearbyCenter?.lat ?? null, nearbyCenter?.lng ?? null);
+  const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(nearbyCenter?.lat ?? null, nearbyCenter?.lng ?? null, cityPricingMap?.["economy"]);
   const [pickupDisplay, setPickupDisplay] = useState("");
   const [destinationDisplay, setDestinationDisplay] = useState("");
 
