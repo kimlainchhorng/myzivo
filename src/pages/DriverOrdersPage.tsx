@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDriverShoppingOrders, ShoppingOrder } from "@/hooks/useDriverShoppingOrders";
 import { toast } from "sonner";
+import { useEatsNotifications } from "@/hooks/useEatsNotifications";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 
@@ -106,6 +107,7 @@ function OrderCard({
 
 export default function DriverOrdersPage() {
   const navigate = useNavigate();
+  const { notify: notifyEats } = useEatsNotifications();
   const { available, assigned, isLoading, acceptOrder, refetch } = useDriverShoppingOrders();
   const [tab, setTab] = useState<"available" | "my">("available");
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
@@ -115,7 +117,7 @@ export default function DriverOrdersPage() {
     const ok = await acceptOrder(orderId);
     setAcceptingId(null);
     if (ok) {
-      toast.success("Order accepted! Head to the store.");
+      notifyEats("new_delivery_driver", { orderId });
       setTab("my");
     } else {
       toast.error("Could not accept — it may have been taken.");

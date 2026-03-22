@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { Capacitor } from "@capacitor/core";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -50,7 +52,7 @@ export const useNotificationCenter = () => {
     enabled: !!user?.id,
   });
 
-  const addNotification = useCallback((notification: Omit<Notification, "id" | "timestamp" | "read">) => {
+  const addNotification = useCallback(async (notification: Omit<Notification, "id" | "timestamp" | "read">) => {
     const newNotification: Notification = {
       ...notification,
       id: crypto.randomUUID(),
@@ -63,6 +65,29 @@ export const useNotificationCenter = () => {
       return updated;
     });
     setUnreadCount(prev => prev + 1);
+
+    // Fire native local notification on iOS/Android so background/lock-screen alerts work
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const perm = await LocalNotifications.checkPermissions();
+        if (perm.display !== "granted") {
+          await LocalNotifications.requestPermissions();
+        }
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: Date.now(),
+            title: notification.title,
+            body: notification.message,
+            schedule: { at: new Date(Date.now() + 100) },
+            sound: undefined,
+            actionTypeId: "",
+            extra: { type: notification.type, ...notification.data },
+          }],
+        });
+      } catch (err) {
+        console.warn("[NotificationCenter] Native notification failed:", err);
+      }
+    }
   }, []);
 
   const markAsRead = useCallback((id: string) => {

@@ -244,7 +244,17 @@ export const usePushNotifications = () => {
 
         // Food delivery
         case "delivery_update":
-          window.location.href = `/eats/${data.order_id}`;
+        case "order_placed":
+        case "order_confirmed":
+        case "order_preparing":
+        case "order_ready":
+        case "driver_pickup":
+        case "out_for_delivery":
+        case "order_delivered":
+        case "order_cancelled":
+        case "new_order_restaurant":
+        case "new_delivery_driver":
+          window.location.href = data.order_id ? `/eats/${data.order_id}` : `/eats`;
           break;
         case "pickup_reminder":
           window.location.href = `/p2p/bookings/${data.rental_id}`;
