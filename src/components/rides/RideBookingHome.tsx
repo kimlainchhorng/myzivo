@@ -2032,8 +2032,50 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             </MapSection>
           </div>
 
-          {/* ═══════ 3. SEARCH — bottom sheet with address inputs over persistent map ═══════ */}
-          {viewStep === "search" && (
+          {/* ═══════ 3a. SEARCH — compact bar during pin placement ═══════ */}
+          {viewStep === "search" && pinPlacementMode && (
+            <div className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[20px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.10)]">
+              <div className="flex justify-center pt-2 pb-1">
+                <div className="h-1 w-8 rounded-full bg-muted-foreground/20" />
+              </div>
+              <div className="px-5 pt-1" style={{ paddingBottom: `calc(12px + ${SAFE_BOTTOM})` }}>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                  {pinPlacementMode === "destination" ? "Drag map to set drop-off" : "Drag map to set stop"}
+                </p>
+                <p className="text-sm font-medium text-foreground truncate mb-3">
+                  {pinPlacementMode === "destination"
+                    ? (destinationDisplay || "Move the map...")
+                    : (stops.find(s => s.id === placingStopId)?.display || "Move the map...")}
+                </p>
+                <div className="flex gap-2">
+                  {pinPlacementMode === "destination" && destination && stops.length < MAX_STOPS && (
+                    <Button variant="outline" onClick={handleAddStop} className="flex-1 h-12 rounded-2xl text-sm font-bold border-border/30">
+                      <Plus className="w-4 h-4 mr-1.5" />
+                      Add Stop
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleConfirmPinPlacement}
+                    disabled={pinPlacementMode === "destination" ? !destination : !stops.find(s => s.id === placingStopId)?.place}
+                    className={cn(
+                      "h-12 rounded-2xl text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-primary/20",
+                      pinPlacementMode === "destination" && destination && stops.length < MAX_STOPS ? "flex-1" : "w-full"
+                    )}
+                  >
+                    {isReversingGeocode ? (
+                      <span className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                        Locating...
+                      </span>
+                    ) : pinPlacementMode === "destination" ? "Confirm drop-off" : "Confirm stop"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ═══════ 3b. SEARCH — full bottom sheet (no pin placement active) ═══════ */}
+          {viewStep === "search" && !pinPlacementMode && (
             <div
               className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
             >
@@ -2068,7 +2110,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   value={destinationDisplay}
                   onSelect={handleDestinationSelect}
                   onFocus={() => {
-                    // Auto-confirm pickup when user focuses destination input
                     if (!pickupConfirmed) {
                       if (!pickup) {
                         const coords = userLocation ?? fallbackPickupCenter;
@@ -2082,7 +2123,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       }
                       pickupManuallySet.current = true;
                       setPickupConfirmed(true);
-                      // Reset dedup ref so map drag immediately starts geocoding for destination
                       lastGeocodedCoordsRef.current = null;
                     }
                   }}
@@ -2093,8 +2133,40 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
             </div>
 
-            {/* Saved places */}
-            {savedPlaces.length > 0 && (
+            {/* Stops display */}
+            {stops.length > 0 && (
+              <div className="mb-3 space-y-1">
+                {stops.map((stop) => (
+                  <div key={stop.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                    <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
+                      <span className="text-[9px] font-black text-primary-foreground leading-none">S</span>
+                    </div>
+                    <span className="flex-1 text-xs font-medium text-foreground truncate">{stop.display || "Tap to set stop"}</span>
+                    <button
+                      onClick={() => { setPlacingStopId(stop.id); setPinPlacementMode("stop"); lastGeocodedCoordsRef.current = null; if (stop.place) setMapPanTarget({ lat: stop.place.lat, lng: stop.place.lng }); }}
+                      className="text-[10px] font-semibold text-primary px-2 py-1 rounded-lg hover:bg-primary/10"
+                    >Edit</button>
+                    <button onClick={() => handleRemoveStop(stop.id)} className="text-muted-foreground hover:text-destructive">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add stop button */}
+            {pickupConfirmed && destination && stops.length < MAX_STOPS && (
+              <button
+                onClick={handleAddStop}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 mb-3 rounded-xl border border-dashed border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-all active:scale-[0.98]"
+              >
+                <Plus className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold text-primary">Add a stop</span>
+              </button>
+            )}
+
+            {/* Saved places — only when no destination yet */}
+            {savedPlaces.length > 0 && !destination && (
               <div className="mb-3">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("ride.saved_places") || "Saved places"}</p>
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
@@ -2115,8 +2187,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
             )}
 
-            {/* Recent destinations */}
-            {recentDestinations.length > 0 && (
+            {/* Recent destinations — only when no destination yet */}
+            {recentDestinations.length > 0 && !destination && (
               <div className="mb-3">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("ride.recent") || "Recent"}</p>
                 <div className="space-y-1">
