@@ -42,6 +42,10 @@ interface RidePaymentSectionProps {
   paymentFailed: boolean;
   onClearError?: () => void;
   isCambodia?: boolean;
+  /** Whether cash payment is allowed (based on IP/location restriction) */
+  cashAllowed?: boolean;
+  /** Handler for cash ride confirmation — creates ride without Stripe */
+  onCashConfirm?: () => void;
 }
 
 const BRAND_LABELS: Record<string, string> = {
@@ -59,15 +63,17 @@ function CambodiaPaymentSelector({
   vehicleName,
   isSubmitting,
   onConfirm,
+  cashAllowed = true,
 }: {
   price: number;
   vehicleName: string;
   isSubmitting: boolean;
   onConfirm: (method: CambodiaPaymentMethod) => void;
+  cashAllowed?: boolean;
 }) {
-  const [selected, setSelected] = useState<CambodiaPaymentMethod>("cash");
+  const [selected, setSelected] = useState<CambodiaPaymentMethod>(cashAllowed ? "cash" : "card");
 
-  const methods = [
+  const allMethods = [
     {
       id: "cash" as CambodiaPaymentMethod,
       label: "សាច់ប្រាក់ (Cash)",
@@ -85,6 +91,9 @@ function CambodiaPaymentSelector({
       bgColor: "bg-amber-500/10",
     },
   ];
+
+  // Filter out cash if not allowed (international customers must pay by card)
+  const methods = cashAllowed ? allMethods : allMethods.filter(m => m.id !== "cash");
 
   const confirmLabels: Record<CambodiaPaymentMethod, string> = {
     aba: `បង់តាម ABA · ${dualPrice(price, true)} · ${vehicleName}`,
@@ -384,6 +393,8 @@ export default function RidePaymentSection({
   paymentFailed,
   onClearError,
   isCambodia = false,
+  cashAllowed = true,
+  onCashConfirm,
 }: RidePaymentSectionProps) {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -516,6 +527,7 @@ export default function RidePaymentSection({
         price={price}
         vehicleName={vehicleName}
         isSubmitting={isSubmitting}
+        cashAllowed={cashAllowed}
         onConfirm={async (method) => {
           if (method === "aba") {
             // Redirect to ABA Payway checkout
@@ -560,8 +572,13 @@ export default function RidePaymentSection({
               console.error("ABA Payway error:", err);
             }
           } else if (method === "cash") {
-            toast.success("Ride confirmed! Pay cash to your driver.");
-            onPaymentSuccess();
+            // Use dedicated cash handler that creates ride_request + job without Stripe
+            if (onCashConfirm) {
+              onCashConfirm();
+            } else {
+              toast.success("Ride confirmed! Pay cash to your driver.");
+              onPaymentSuccess();
+            }
           } else if (method === "qr") {
             toast.success("Ride confirmed! QR code will be shown when driver arrives.");
             onPaymentSuccess();
