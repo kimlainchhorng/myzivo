@@ -9,11 +9,11 @@ import { motion } from "framer-motion";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useI18n } from "@/hooks/useI18n";
-import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
-import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
-import tabCarsBg from "@/assets/tab-cars-bg.jpg";
-import tabRidesBg from "@/assets/tab-rides-bg.jpg";
-import tabEatsBg from "@/assets/tab-eats-bg.jpg";
+import navHomeBg from "@/assets/nav-home-bg.jpg";
+import navSearchBg from "@/assets/nav-search-bg.jpg";
+import navTripsBg from "@/assets/nav-trips-bg.jpg";
+import navAlertsBg from "@/assets/nav-alerts-bg.jpg";
+import navAccountBg from "@/assets/nav-account-bg.jpg";
 
 interface NavTab {
   id: string;
@@ -33,11 +33,11 @@ const ZivoMobileNav = () => {
   const { t } = useI18n();
 
   const tabs: NavTab[] = [
-    { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: tabRidesBg, cssVar: "var(--primary)" },
-    { id: "search", labelKey: "nav.search", icon: Search, path: "/flights", bg: tabFlightsBg, cssVar: "var(--flights)" },
-    { id: "trips", labelKey: "nav.trips", icon: Briefcase, path: "/my-trips", bg: tabHotelsBg, cssVar: "var(--hotels)" },
-    { id: "alerts", labelKey: "nav.alerts", icon: Bell, path: "/notifications", badge: activeAlertsCount, bg: tabCarsBg, cssVar: "var(--cars)" },
-    { id: "account", labelKey: "nav.account", icon: User, path: "/profile", bg: tabEatsBg, cssVar: "var(--eats)" },
+    { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
+    { id: "search", labelKey: "nav.search", icon: Search, path: "/flights", bg: navSearchBg, cssVar: "var(--flights)" },
+    { id: "trips", labelKey: "nav.trips", icon: Briefcase, path: "/my-trips", bg: navTripsBg, cssVar: "var(--hotels)" },
+    { id: "alerts", labelKey: "nav.alerts", icon: Bell, path: "/notifications", badge: activeAlertsCount, bg: navAlertsBg, cssVar: "var(--cars)" },
+    { id: "account", labelKey: "nav.account", icon: User, path: "/profile", bg: navAccountBg, cssVar: "var(--primary)" },
   ];
 
   const getActiveTab = () => {
