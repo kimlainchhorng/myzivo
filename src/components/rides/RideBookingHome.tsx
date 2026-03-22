@@ -1355,6 +1355,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       return;
     }
 
+    // No pin placement mode active in search view — don't update anything
+    if (!pinPlacementMode) return;
+
     // Pickup not yet confirmed — dragging map updates pickup
     setPickupConfirmed(false);
     if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
