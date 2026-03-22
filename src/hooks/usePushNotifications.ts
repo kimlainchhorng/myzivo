@@ -81,7 +81,7 @@ export const usePushNotifications = () => {
 
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.subscribe({
-          userApplicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY || undefined,
+          userVisibleOnly: true,
           applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY || undefined,
         });
 
