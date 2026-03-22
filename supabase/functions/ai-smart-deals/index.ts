@@ -330,6 +330,8 @@ serve(async (req: Request) => {
     }
 
     let routes = SMART_ROUTES;
+    let searchDatesCount = 3; // dates per route to search
+
     if (userOrigin) {
       const filtered = routes.filter(r => r.origin === userOrigin);
       if (filtered.length > 0) routes = filtered;
@@ -337,9 +339,24 @@ serve(async (req: Request) => {
     if (category) {
       const filtered = routes.filter(r => r.category === category);
       if (filtered.length > 0) routes = filtered;
+    } else {
+      // "All Deals": pick 2 routes per category to keep API calls manageable
+      const byCategory = new Map<string, typeof routes>();
+      for (const r of routes) {
+        if (!byCategory.has(r.category)) byCategory.set(r.category, []);
+        byCategory.get(r.category)!.push(r);
+      }
+      const sampled: typeof routes = [];
+      for (const [, catRoutes] of byCategory) {
+        // Shuffle and pick 2
+        const shuffled = catRoutes.sort(() => Math.random() - 0.5);
+        sampled.push(...shuffled.slice(0, 2));
+      }
+      routes = sampled;
+      searchDatesCount = 2; // fewer dates for "all" to reduce calls
     }
 
-    // Search 5 flexible dates: 3, 7, 14, 21, 30 days out
+    // Search flexible dates: 3, 7, 14, 21, 30 days out
     const dates = [3, 7, 14, 21, 30].map(d => {
       const dt = new Date();
       dt.setDate(dt.getDate() + d);
@@ -351,15 +368,25 @@ serve(async (req: Request) => {
     const rawDeals: SmartDeal[] = [];
     const seen = new Set<string>();
 
-    // Search each route across 3 dates for best price
-    const promises = selectedRoutes.flatMap(route =>
-      dates.slice(0, 3).map(async (date) => {
+    // Batch search with controlled concurrency (max 6 at a time)
+    const searchTasks = selectedRoutes.flatMap(route =>
+      dates.slice(0, searchDatesCount).map(date => ({ route, date }))
+    );
+
+    const batchSize = 6;
+    for (let i = 0; i < searchTasks.length; i += batchSize) {
+      const batch = searchTasks.slice(i, i + batchSize);
+      const results = await Promise.all(batch.map(async ({ route, date }) => {
         const result = await searchRoute(route.origin, route.destination, date, duffelKey);
-        if (!result) return;
+        return { route, date, result };
+      }));
+
+      for (const { route, date, result } of results) {
+        if (!result) continue;
         const routeKey = `${route.origin}-${route.destination}`;
         if (seen.has(routeKey)) {
           const existing = rawDeals.find(d => d.originCode === route.origin && d.destinationCode === route.destination);
-          if (existing && existing.price <= result.price) return;
+          if (existing && existing.price <= result.price) continue;
           const idx = rawDeals.indexOf(existing!);
           if (idx >= 0) rawDeals.splice(idx, 1);
         }
@@ -385,10 +412,8 @@ serve(async (req: Request) => {
           savingsPercent: savings, category: route.category,
           fetchedAt: now, expiresAt: result.expiresAt,
         });
-      })
-    );
-
-    await Promise.all(promises);
+      }
+    }
     rawDeals.sort((a, b) => b.savingsPercent - a.savingsPercent || a.price - b.price);
 
     const topDeals = rawDeals.slice(0, 12);
