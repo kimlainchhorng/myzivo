@@ -2075,6 +2075,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 </Button>
               </div>
             </div>
+          </div>
 
         </>
       )}
