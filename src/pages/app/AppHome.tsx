@@ -390,19 +390,29 @@ const AppHome = () => {
             </div>
           </div>
 
-          {/* Promo Banner */}
+          {/* Promo Banner — 3D Float */}
           <div className="px-5 pb-3">
-            <img
-              src={zivoPromoBanner}
-              alt="ZIVO - All Services in One Place"
-              className="w-full rounded-2xl shadow-sm"
-              loading="lazy"
-            />
+            <motion.div
+              whileHover={{ y: -3, rotateX: 2 }}
+              whileTap={{ scale: 0.98 }}
+              className="card-3d rounded-2xl overflow-hidden"
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              <img
+                src={zivoPromoBanner}
+                alt="ZIVO - All Services in One Place"
+                className="w-full rounded-2xl shadow-sm"
+                loading="lazy"
+              />
+            </motion.div>
           </div>
 
 
-          {/* Subtle section divider */}
-          <div className="h-2 bg-muted/30" />
+          {/* 3D Section Divider */}
+          <div className="h-3 relative overflow-hidden">
+            <div className="absolute inset-x-4 top-1/2 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-full bg-muted/20" />
+          </div>
         </div>
 
         {/* ─── MAIN CONTENT ─── */}
