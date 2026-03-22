@@ -205,6 +205,7 @@ function MapSection({
   compact = false,
   panToCoords,
   suppressAutoViewport = false,
+  onMapReadyExtra,
   children,
 }: {
   pickupCoords?: { lat: number; lng: number } | null;
@@ -221,6 +222,7 @@ function MapSection({
   compact?: boolean;
   panToCoords?: { lat: number; lng: number } | null;
   suppressAutoViewport?: boolean;
+  onMapReadyExtra?: (map: google.maps.Map) => void;
   children?: React.ReactNode;
 }) {
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -268,7 +270,7 @@ function MapSection({
           nearbyDrivers={nearbyDrivers}
           showUserLocationDot={showUserLocationDot}
           routePolyline={routePolyline || null}
-          onMapReady={(map) => { mapRef.current = map; }}
+          onMapReady={(map) => { mapRef.current = map; onMapReadyExtra?.(map); }}
           onCenterChanged={onCenterChanged}
           suppressAutoViewport={suppressAutoViewport}
           className="absolute inset-0 h-full w-full"
@@ -720,6 +722,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [pickupConfirmed, setPickupConfirmed] = useState(false); // reactive state for GPS confirm UI
   const mapCenterRef = useRef<{ lat: number; lng: number } | null>(null);
   const lastGeocodedCoordsRef = useRef<string | null>(null); // dedup key to prevent repeat geocoding
+  const userHasDraggedHomeMapRef = useRef(false); // tracks if user actually dragged the map in "home" step
   // Pin placement mode: when active, the center pin is used for placing destination or stop
   const [pinPlacementMode, setPinPlacementMode] = useState<"destination" | "stop" | null>(null);
   const [placingStopId, setPlacingStopId] = useState<string | null>(null);
@@ -1194,7 +1197,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     if (lastGeocodedCoordsRef.current === coordKey) return;
 
     if (viewStep === "home") {
-      // In home step, dragging map updates the destination pin
+      // In home step, only update destination if user has actually dragged the map
+      // Skip programmatic pans and initial idle events
+      if (!userHasDraggedHomeMapRef.current) return;
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = setTimeout(async () => {
         const key = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`;
@@ -2320,6 +2325,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 onLocateUser={handleLocateUser}
                 routePolyline={null}
                 onCenterChanged={handleMapCenterChanged}
+                onMapReadyExtra={(map) => {
+                  userHasDraggedHomeMapRef.current = false;
+                  map.addListener("dragstart", () => {
+                    userHasDraggedHomeMapRef.current = true;
+                  });
+                }}
               >
                 {/* Center destination pin — ZIVO branded */}
                 <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
