@@ -1979,8 +1979,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <MapSection
               key={`persistent-map-${locationModeKey}`}
               compact
-              pickupCoords={pickup}
-              dropoffCoords={destination}
+                pickupCoords={viewStep === "search" && !pickupConfirmed ? null : pickup}
+                dropoffCoords={destination}
               stopCoords={stops.filter(s => s.place).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }))}
               driverCoords={driverCoords}
               driverNavigationTarget={
