@@ -58,7 +58,25 @@ import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
 import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
 import zivoShoppingIcon from "@/assets/zivo-shopping.png";
 import zivoPromoBanner from "@/assets/zivo-promo-banner.png";
+import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
+import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
+import tabCarsBg from "@/assets/tab-cars-bg.jpg";
+import tabRidesBg from "@/assets/tab-rides-bg.jpg";
+import tabEatsBg from "@/assets/tab-eats-bg.jpg";
 
+const tabBgMap: Record<string, string> = {
+  rides: tabRidesBg,
+  eats: tabEatsBg,
+  flights: tabFlightsBg,
+  hotels: tabHotelsBg,
+};
+
+const tabCssVarMap: Record<string, string> = {
+  rides: "var(--rides)",
+  eats: "var(--eats)",
+  flights: "var(--flights)",
+  hotels: "var(--hotels)",
+};
 // ─── Saved Places Icon Map ───
 // ─── Dynamic search placeholder by tab ───
 // Search placeholder is now handled inside the component with t()
