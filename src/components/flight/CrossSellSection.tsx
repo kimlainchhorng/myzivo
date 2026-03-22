@@ -45,7 +45,7 @@ export default function CrossSellSection({
       source: `cross_sell_${partner.type}`,
     });
 
-    window.open(url, '_blank', 'noopener,noreferrer');
+    import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(url));
   };
 
   const handleInternalLink = (path: string, type: 'hotel' | 'car') => {
