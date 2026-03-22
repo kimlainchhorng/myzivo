@@ -1783,6 +1783,49 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     toast.success("Payment authorized! Finding your driver...");
   };
 
+  /** Cash ride — create ride_request without Stripe, go straight to searching */
+  const handleCashRideConfirm = async () => {
+    if (!user || !pickup || !destination) {
+      toast.error("Please sign in and select locations");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const stopsData = stops.filter(s => s.place).map((s, idx) => ({
+        order: idx + 1, address: s.place!.address, lat: s.place!.lat, lng: s.place!.lng,
+      }));
+      const { data: rideData, error: rideError } = await supabase.from("ride_requests").insert({
+        user_id: user.id,
+        pickup_address: pickup.address, pickup_lat: pickup.lat, pickup_lng: pickup.lng,
+        dropoff_address: destination.address, dropoff_lat: destination.lat, dropoff_lng: destination.lng,
+        ride_type: selectedVehicle,
+        quoted_total: currentPrice,
+        distance_miles: routeData?.distance_miles ?? null,
+        duration_minutes: routeData?.duration_minutes ?? null,
+        status: "searching",
+        payment_status: "cash",
+        customer_name: otherName.trim() || user.user_metadata?.full_name || "",
+        customer_phone: otherPhone.trim() || user.user_metadata?.phone || "",
+        requires_car_seat: currentVehicle.carSeat,
+        car_seat_type: currentVehicle.carSeat ? "standard" : null,
+        notes: ["CASH PAYMENT", stopsData.length > 0 ? `Stops: ${stopsData.map(s => s.address).join(" → ")}` : "",
+          otherName.trim() ? `Rider: ${otherName.trim()}${otherPhone.trim() ? ` (${otherPhone.trim()})` : ""}` : "",
+        ].filter(Boolean).join(" | ") || null,
+      }).select("id").single();
+      if (rideError) throw rideError;
+      setRideRequestId(rideData.id);
+      toast.success("Ride confirmed! Pay cash to your driver.");
+      setPaymentStep("idle");
+      setClientSecret(null);
+      setViewStep("searching");
+    } catch (err: unknown) {
+      console.error("[RideBooking] Cash ride error:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to create ride. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   /* ─── Reset state ─── */
   const handleReset = () => {
     if (trackingIntervalRef.current) clearInterval(trackingIntervalRef.current);
