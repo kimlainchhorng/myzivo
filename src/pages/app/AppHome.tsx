@@ -385,19 +385,20 @@ const AppHome = () => {
               className="w-full touch-manipulation"
               style={{ transformStyle: "preserve-3d" }}
             >
-              <div className="relative rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] shadow-sm transition-all overflow-hidden" style={{ border: `1px solid hsl(${tabCssVarMap[activeHomeTab]} / 0.15)` }}>
+              <div className="relative rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] shadow-lg transition-all overflow-hidden" style={{ border: `1.5px solid hsl(${tabCssVarMap[activeHomeTab]} / 0.3)`, boxShadow: `0 4px 20px -4px hsl(${tabCssVarMap[activeHomeTab]} / 0.15)` }}>
                 {/* Background image for search bar */}
                 <img
                   src={tabBgMap[activeHomeTab]}
                   alt=""
                   className="absolute inset-0 w-full h-full object-cover"
-                  style={{ opacity: 0.08, transition: "opacity 0.3s" }}
+                  style={{ opacity: 0.35, transition: "opacity 0.3s" }}
                 />
-                <span className="absolute inset-0" style={{ background: "hsl(var(--card) / 0.85)", backdropFilter: "blur(12px)" }} />
-                <div className="relative z-10 w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center">
-                  <Search className="w-4.5 h-4.5 text-muted-foreground" />
+                <span className="absolute inset-0" style={{ background: `linear-gradient(135deg, hsl(var(--card) / 0.75), hsl(var(--card) / 0.65))`, backdropFilter: "blur(8px)" }} />
+                <span className="absolute inset-0" style={{ background: `linear-gradient(90deg, hsl(${tabCssVarMap[activeHomeTab]} / 0.08), transparent 60%)` }} />
+                <div className="relative z-10 w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `hsl(${tabCssVarMap[activeHomeTab]} / 0.15)` }}>
+                  <Search className="w-4.5 h-4.5" style={{ color: `hsl(${tabCssVarMap[activeHomeTab]})` }} />
                 </div>
-                <span className="relative z-10 text-muted-foreground font-medium text-[15px] flex-1 text-left">{getSearchPlaceholder(activeHomeTab)}</span>
+                <span className="relative z-10 font-medium text-[15px] flex-1 text-left" style={{ color: "hsl(var(--foreground) / 0.7)" }}>{getSearchPlaceholder(activeHomeTab)}</span>
               </div>
             </motion.button>
           </div>
