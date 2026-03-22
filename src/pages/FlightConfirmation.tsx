@@ -98,6 +98,24 @@ const FlightConfirmation = () => {
     }).catch(() => { /* silent — email is best-effort */ });
   }, [isIssued, booking]);
 
+  // Send push notification based on ticketing status
+  useEffect(() => {
+    if (!booking || notifiedRef.current) return;
+    if (isIssued) {
+      notifiedRef.current = true;
+      notifyFlight("booking_confirmed", {
+        bookingId: booking.id,
+        body: `Your flight ${booking.origin} → ${booking.destination} is confirmed! Ref: ${booking.booking_reference}`,
+      });
+    } else if (isFailed) {
+      notifiedRef.current = true;
+      notifyFlight("booking_failed", {
+        bookingId: booking.id,
+        body: "Ticketing failed. Please contact support or try rebooking.",
+      });
+    }
+  }, [isIssued, isFailed, booking, notifyFlight]);
+
   const handleCopyRef = () => {
     if (!booking) return;
     navigator.clipboard.writeText(booking.booking_reference);
