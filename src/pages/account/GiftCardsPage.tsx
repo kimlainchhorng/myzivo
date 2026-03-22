@@ -61,7 +61,7 @@ export default function GiftCardsPage() {
     });
 
     if (result.url) {
-      window.location.href = result.url;
+      import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(result.url));
     }
   };
 
