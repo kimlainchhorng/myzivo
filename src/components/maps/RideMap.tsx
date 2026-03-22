@@ -708,6 +708,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
             polylineRef.current = new google.maps.Polyline({
               path: [pickupCoords, dropoffCoords],
               strokeColor: "#22c55e", strokeWeight: 3, strokeOpacity: 0.6, geodesic: true,
+              zIndex: 10,
               icons: [{ icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 }, offset: "0", repeat: "15px" }],
               map,
             });
