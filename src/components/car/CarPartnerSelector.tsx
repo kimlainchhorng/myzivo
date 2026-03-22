@@ -57,8 +57,8 @@ export default function CarPartnerSelector({
       source: 'car_partner_selector',
     });
 
-    // Open in new tab
-    window.open(url, '_blank', 'noopener,noreferrer');
+    // Open in-app browser on native, new tab on web
+    import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(url));
   };
 
   const topPartners = carAffiliatePartners.slice(0, 6);

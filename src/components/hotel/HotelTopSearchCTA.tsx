@@ -56,7 +56,7 @@ export default function HotelTopSearchCTA({
       serviceType: 'hotels',
     });
 
-    window.open(url, "_blank", "noopener,noreferrer");
+    import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(url));
   };
 
   return (
