@@ -150,32 +150,55 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                     >
                       <Link
                         to={item.href}
-                        className="relative flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-bold tracking-wide transition-all duration-300"
+                        className="relative flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-bold tracking-wide transition-all duration-300 overflow-hidden"
                       >
-                        {/* 3D colored pill — always visible */}
+                        {/* Background image */}
                         <span
-                          className="absolute inset-0 rounded-full transition-all duration-300"
+                          className="absolute inset-0 rounded-full overflow-hidden"
                           style={{
-                            background: isActive
-                              ? `linear-gradient(135deg, hsl(${item.cssVar}), hsl(${item.cssVar} / 0.85))`
-                              : `hsl(${item.cssVar} / 0.12)`,
-                            border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.6" : "0.18"})`,
-                            boxShadow: isActive
-                              ? [
-                                  `0 4px 14px -2px hsl(${item.cssVar} / 0.4)`,
-                                  `0 8px 28px -6px hsl(${item.cssVar} / 0.2)`,
-                                  `inset 0 1px 2px rgba(255,255,255,0.25)`,
-                                ].join(", ")
-                              : `0 2px 8px -3px hsl(${item.cssVar} / 0.15)`,
                             transform: isActive ? "translateZ(8px)" : "translateZ(0)",
                           }}
+                        >
+                          <img
+                            src={item.bg}
+                            alt=""
+                            className="absolute inset-0 w-full h-full object-cover"
+                            style={{
+                              opacity: isActive ? 0.85 : 0.3,
+                              transition: "opacity 0.3s ease",
+                            }}
+                          />
+                          {/* Color overlay */}
+                          <span
+                            className="absolute inset-0"
+                            style={{
+                              background: isActive
+                                ? `linear-gradient(135deg, hsl(${item.cssVar} / 0.55), hsl(${item.cssVar} / 0.35))`
+                                : `hsl(${item.cssVar} / 0.06)`,
+                              transition: "background 0.3s ease",
+                            }}
+                          />
+                        </span>
+                        {/* Border & shadow */}
+                        <span
+                          className="absolute inset-0 rounded-full pointer-events-none"
+                          style={{
+                            border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.5" : "0.2"})`,
+                            boxShadow: isActive
+                              ? [
+                                  `0 4px 16px -2px hsl(${item.cssVar} / 0.4)`,
+                                  `0 8px 28px -6px hsl(${item.cssVar} / 0.2)`,
+                                  `inset 0 1px 2px rgba(255,255,255,0.2)`,
+                                ].join(", ")
+                              : `0 2px 8px -3px hsl(${item.cssVar} / 0.12)`,
+                          }}
                         />
-                        {/* Top glare on active */}
+                        {/* Top glare */}
                         {isActive && (
                           <span
                             className="absolute inset-0 rounded-full pointer-events-none"
                             style={{
-                              background: "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, transparent 45%)",
+                              background: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 40%)",
                             }}
                           />
                         )}
@@ -185,14 +208,14 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                             style={{
                               color: isActive ? "white" : `hsl(${item.cssVar})`,
                               filter: isActive
-                                ? "drop-shadow(0 1px 2px rgba(0,0,0,0.3))"
+                                ? "drop-shadow(0 1px 3px rgba(0,0,0,0.4))"
                                 : `drop-shadow(0 1px 2px hsl(${item.cssVar} / 0.3))`,
                             }}
                           />
                           <span
                             style={{
                               color: isActive ? "white" : `hsl(${item.cssVar})`,
-                              textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.2)" : "none",
+                              textShadow: isActive ? "0 1px 3px rgba(0,0,0,0.35)" : "none",
                             }}
                           >
                             {item.label}
