@@ -41,14 +41,13 @@ function haversineMi(lat1: number, lng1: number, lat2: number, lng2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Estimate ride price from distance (uses standard/economy pricing from city_pricing defaults)
-// base_fare=3.50, per_mile=1.75, per_minute=0.35, booking_fee=2.50, minimum_fare=7.00
-function estimatePrice(distMi: number): string {
-  const baseFare = 3.50;
-  const perMile = 1.75;
-  const perMinute = 0.35;
-  const bookingFee = 2.50;
-  const minimumFare = 7.00;
+// Estimate ride price from distance using optional DB pricing, with safe fallbacks
+function estimatePrice(distMi: number, pricing?: { base_fare?: number | null; per_mile?: number | null; per_minute?: number | null; booking_fee?: number | null; minimum_fare?: number | null }): string {
+  const baseFare = pricing?.base_fare ?? 3.50;
+  const perMile = pricing?.per_mile ?? 1.75;
+  const perMinute = pricing?.per_minute ?? 0.35;
+  const bookingFee = pricing?.booking_fee ?? 2.50;
+  const minimumFare = pricing?.minimum_fare ?? 7.00;
   const estMinutes = Math.max(3, Math.round(distMi * 3));
   const raw = baseFare + perMile * distMi + perMinute * estMinutes + bookingFee;
   const total = Math.max(raw, minimumFare);
@@ -105,7 +104,8 @@ async function fetchNearbyForType(
   lat: number,
   lng: number,
   type: string,
-  apiKey: string
+  apiKey: string,
+  economyPricing?: { base_fare?: number | null; per_mile?: number | null; per_minute?: number | null; booking_fee?: number | null; minimum_fare?: number | null },
 ): Promise<NearbyPlace[]> {
   // Use the Places API Nearby Search via CORS proxy or directly
   // Google Places Nearby Search requires server-side calls, so we use a text search approach
@@ -161,7 +161,7 @@ async function fetchNearbyForType(
           lng: placeLng,
           distanceMi: dist.toFixed(1),
           timeMin: estimateTime(dist),
-          priceEst: estimatePrice(dist),
+          priceEst: estimatePrice(dist, economyPricing),
           iconUrl,
           placeId: r.place_id ?? "",
         };
@@ -172,7 +172,7 @@ async function fetchNearbyForType(
   });
 }
 
-export function useNearbyPlaces(userLat: number | null, userLng: number | null) {
+export function useNearbyPlaces(userLat: number | null, userLng: number | null, economyPricing?: { base_fare?: number | null; per_mile?: number | null; per_minute?: number | null; booking_fee?: number | null; minimum_fare?: number | null }) {
   const [categories, setCategories] = useState<NearbyCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const fetchedRef = useRef<string>("");
@@ -206,7 +206,7 @@ export function useNearbyPlaces(userLat: number | null, userLng: number | null) 
 
       for (const cat of CATEGORY_CONFIG) {
         if (cancelled) break;
-        const places = await fetchNearbyForType(userLat, userLng, cat.keyword, apiKey);
+        const places = await fetchNearbyForType(userLat, userLng, cat.keyword, apiKey, economyPricing);
         if (places.length > 0) {
           results.push({ label: cat.label, type: cat.type, places });
         }

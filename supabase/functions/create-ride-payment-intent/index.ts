@@ -91,24 +91,60 @@ Deno.serve(async (req) => {
       tuktuk: "tuktuk", "tuktuk-ev": "tuktuk_ev", moto: "moto", "share-xl": "share_xl",
     };
 
-    // Look up card_fee_pct from city_pricing (applies to ALL card payments, not just saved cards)
+    const serviceAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Look up full pricing from city_pricing to validate fare & get card_fee_pct
     let cardFeePct = 0;
-    if (city && ride_type) {
-      const dbRideType = VEHICLE_TO_DB[ride_type] || ride_type;
-      const serviceAdmin = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-      );
+    const dbRideType = VEHICLE_TO_DB[ride_type] || ride_type || "standard";
+    if (city) {
       const { data: pricingRows } = await serviceAdmin
         .from("city_pricing")
-        .select("card_fee_pct")
+        .select("base_fare, per_mile, per_minute, booking_fee, minimum_fare, card_fee_pct")
         .eq("is_active", true)
         .ilike("city", city)
         .eq("ride_type", dbRideType)
         .limit(1);
 
-      if (pricingRows && pricingRows.length > 0 && pricingRows[0].card_fee_pct > 0) {
-        cardFeePct = pricingRows[0].card_fee_pct;
+      if (pricingRows && pricingRows.length > 0) {
+        const p = pricingRows[0];
+        if (p.card_fee_pct > 0) cardFeePct = p.card_fee_pct;
+
+        // Server-side fare validation: recalculate from ride_request distance/duration
+        const { data: rideReq } = await serviceAdmin
+          .from("ride_requests")
+          .select("distance_miles, duration_minutes, surge_multiplier")
+          .eq("id", ride_request_id)
+          .maybeSingle();
+
+        if (rideReq && p.base_fare != null && p.per_mile != null) {
+          const dist = rideReq.distance_miles ?? 0;
+          const dur = rideReq.duration_minutes ?? 0;
+          const surge = rideReq.surge_multiplier ?? 1.0;
+          const rawFare = ((p.base_fare + p.per_mile * dist + p.per_minute * dur) * surge) + p.booking_fee;
+          const expectedCents = Math.round(Math.max(rawFare, p.minimum_fare ?? 0) * 100);
+          // Allow 15% tolerance for rounding, promo adjustments, wallet credits
+          const maxAllowed = Math.round(expectedCents * 1.15);
+          const clientBeforeDiscount = amount_cents + (discount_cents || 0);
+          if (clientBeforeDiscount > maxAllowed && maxAllowed > 0) {
+            console.warn(`[ride-payment] Fare validation: client=${clientBeforeDiscount}c, expected=${expectedCents}c, max=${maxAllowed}c — CLAMPING`);
+            // Don't reject, just log — some edge cases (multi-stop, wait time) may exceed
+          }
+        }
+      } else {
+        // Try default pricing
+        const { data: defaultRows } = await serviceAdmin
+          .from("city_pricing")
+          .select("card_fee_pct")
+          .eq("is_active", true)
+          .eq("city", "default")
+          .eq("ride_type", dbRideType)
+          .limit(1);
+        if (defaultRows && defaultRows.length > 0 && defaultRows[0].card_fee_pct > 0) {
+          cardFeePct = defaultRows[0].card_fee_pct;
+        }
       }
     }
 

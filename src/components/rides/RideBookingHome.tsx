@@ -628,7 +628,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [destination, setDestination] = useState<PlaceData | null>(null);
 
   const nearbyCenter = pickup ?? userLocation;
-  const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(nearbyCenter?.lat ?? null, nearbyCenter?.lng ?? null);
   const [pickupDisplay, setPickupDisplay] = useState("");
   const [destinationDisplay, setDestinationDisplay] = useState("");
 
@@ -648,6 +647,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Fetch admin-configured pricing from city_pricing table
   const { data: cityPricingMap } = useCityPricing(pickupCity);
+
+  // Nearby places with DB-aware economy pricing
+  const { categories: nearbyCategories, loading: nearbyLoading } = useNearbyPlaces(nearbyCenter?.lat ?? null, nearbyCenter?.lng ?? null, cityPricingMap?.["economy"]);
 
   // Merge DB pricing into vehicle options (admin rates override defaults)
   const vehicleOptions = useMemo(() => {
