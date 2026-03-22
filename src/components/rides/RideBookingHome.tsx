@@ -221,12 +221,21 @@ function MapSection({
 }) {
   const mapRef = useRef<google.maps.Map | null>(null);
 
+  // Expose map ref so parent can pan after async location update
+  const panToLocation = useCallback((coords: { lat: number; lng: number }) => {
+    if (mapRef.current) {
+      mapRef.current.panTo(coords);
+      mapRef.current.setZoom(15);
+    }
+  }, []);
+
   const handleLocateClick = () => {
-    onLocateUser?.();
+    // If we already have a user location, pan immediately
     if (mapRef.current && userLocation) {
       mapRef.current.panTo(userLocation);
       mapRef.current.setZoom(15);
     }
+    onLocateUser?.();
   };
 
   return (
