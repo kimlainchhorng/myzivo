@@ -208,23 +208,55 @@ export const usePushNotifications = () => {
     
     if (data?.type) {
       switch (data.type) {
-        case "booking_confirmation":
-          window.location.href = `/trips/${data.booking_id}`;
-          break;
+        // Ride notifications
+        case "driver_assigned":
+        case "driver_en_route":
+        case "driver_arrived":
+        case "trip_started":
+        case "trip_completed":
         case "driver_status":
-          window.location.href = `/rides/${data.ride_id}`;
+          window.location.href = data.trip_id ? `/rides/tracking/${data.trip_id}` : `/rides`;
           break;
+        case "trip_cancelled":
+          window.location.href = `/rides`;
+          break;
+
+        // Flight notifications
+        case "booking_confirmed":
+        case "booking_confirmation":
+        case "checkin_reminder":
+        case "gate_change":
+        case "flight_delayed":
+        case "flight_cancelled":
+        case "boarding_soon":
+        case "flight_departed":
+        case "flight_landed":
+        case "itinerary_update":
+          window.location.href = data.booking_id ? `/bookings/${data.booking_id}` : `/bookings`;
+          break;
+        case "price_drop":
+          window.location.href = `/flights`;
+          break;
+        case "refund_processed":
+        case "refund_update":
+          window.location.href = `/wallet`;
+          break;
+
+        // Food delivery
         case "delivery_update":
           window.location.href = `/eats/${data.order_id}`;
           break;
         case "pickup_reminder":
           window.location.href = `/p2p/bookings/${data.rental_id}`;
           break;
-        case "refund_update":
-          window.location.href = `/wallet`;
+
+        // Promos
+        case "surge_alert":
+        case "promo_available":
+          window.location.href = `/rides`;
           break;
+
         default:
-          // Navigate to notifications center
           window.location.href = `/notifications`;
       }
     }
