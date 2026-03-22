@@ -220,16 +220,19 @@ function MapSection({
   children?: React.ReactNode;
 }) {
   const mapRef = useRef<google.maps.Map | null>(null);
+  const locateRequestedRef = useRef(false);
 
-  // Expose map ref so parent can pan after async location update
-  const panToLocation = useCallback((coords: { lat: number; lng: number }) => {
-    if (mapRef.current) {
-      mapRef.current.panTo(coords);
+  // When userLocation updates after a locate request, pan the map
+  useEffect(() => {
+    if (locateRequestedRef.current && mapRef.current && userLocation) {
+      mapRef.current.panTo(userLocation);
       mapRef.current.setZoom(15);
+      locateRequestedRef.current = false;
     }
-  }, []);
+  }, [userLocation]);
 
   const handleLocateClick = () => {
+    locateRequestedRef.current = true;
     // If we already have a user location, pan immediately
     if (mapRef.current && userLocation) {
       mapRef.current.panTo(userLocation);
