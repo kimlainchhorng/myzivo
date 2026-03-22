@@ -2033,7 +2033,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </MapSection>
             </div>
 
-
+            <>
               {/* Confirmed pickup indicator */}
               {pickup && pickupConfirmed && (
                 <div className="mb-3 rounded-xl bg-muted/10 border border-border/20 px-3 py-2 flex items-center gap-2">
