@@ -527,6 +527,7 @@ export default function RidePaymentSection({
         price={price}
         vehicleName={vehicleName}
         isSubmitting={isSubmitting}
+        cashAllowed={cashAllowed}
         onConfirm={async (method) => {
           if (method === "aba") {
             // Redirect to ABA Payway checkout
