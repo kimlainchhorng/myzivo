@@ -677,6 +677,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     const map = mapRef.current;
     if (!map) return;
     clearRoute();
+    let stale = false;
 
     if (decodedRoute && decodedRoute.length > 1) {
       const { bgLine, animatedLine, cancel } = animatePolyline(map, decodedRoute, (finalLine) => {
@@ -707,6 +708,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
           travelMode: google.maps.TravelMode.DRIVING 
         },
         (result, status) => {
+          if (stale) return;
           if (status === google.maps.DirectionsStatus.OK && result) {
             const path = result.routes[0]?.overview_path;
             if (path && path.length > 1) {
@@ -730,6 +732,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
               directionsRendererRef.current = renderer;
             }
           } else {
+            if (stale) return;
             polylineRef.current = new google.maps.Polyline({
               path: [pickupCoords, dropoffCoords],
               strokeColor: "#22c55e", strokeWeight: 3, strokeOpacity: 0.6, geodesic: true,
@@ -741,6 +744,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
         }
       );
     }
+    return () => { stale = true; };
   }, [decodedRoute, pickupCoords, dropoffCoords, stopCoords, clearRoute, mapReady]);
 
   // ─── Driver marker (car icon) ───
