@@ -88,13 +88,42 @@ export default function HeroSearchCard() {
                   whileHover={{ y: -1 }}
                   whileTap={{ scale: 0.97 }}
                   className={cn(
-                    "flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 flex-1 justify-center min-w-0 relative touch-manipulation min-h-[48px]",
-                    isActive
-                      ? `${tab.border} ${tab.color} ${tab.bg}`
-                      : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                    "flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-all duration-300 flex-1 justify-center min-w-0 relative touch-manipulation min-h-[48px] overflow-hidden rounded-xl m-1",
+                    !isActive && "text-muted-foreground hover:text-foreground"
                   )}
                 >
+                  {/* Background image */}
+                  <img
+                    src={tab.bg}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover rounded-xl"
+                    style={{
+                      opacity: isActive ? 0.7 : 0.15,
+                      transition: "opacity 0.3s ease",
+                    }}
+                  />
+                  {/* Color overlay */}
+                  <span
+                    className="absolute inset-0 rounded-xl"
+                    style={{
+                      background: isActive
+                        ? `linear-gradient(135deg, hsl(${tab.cssVar} / 0.5), hsl(${tab.cssVar} / 0.3))`
+                        : "transparent",
+                      transition: "background 0.3s ease",
+                    }}
+                  />
+                  {/* Border */}
+                  <span
+                    className="absolute inset-0 rounded-xl pointer-events-none"
+                    style={{
+                      border: `1.5px solid hsl(${tab.cssVar} / ${isActive ? "0.5" : "0.15"})`,
+                      boxShadow: isActive
+                        ? `0 4px 12px -2px hsl(${tab.cssVar} / 0.3), inset 0 1px 2px rgba(255,255,255,0.15)`
+                        : "none",
+                    }}
+                  />
                   <motion.div
+                    className="relative z-10"
                     animate={{
                       scale: isActive ? 1.15 : 1,
                       rotate: isActive ? -8 : 0,
@@ -102,20 +131,23 @@ export default function HeroSearchCard() {
                     }}
                     transition={{ type: "spring", stiffness: 400, damping: 20 }}
                   >
-                    <tab.icon className={cn("w-4 h-4 shrink-0", isActive ? tab.color : "")} />
-                  </motion.div>
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  {isActive && (
-                    <motion.span
-                      layoutId="search-tab-glow"
-                      className="absolute bottom-0 left-1/4 right-1/4 h-[2px] rounded-full"
+                    <tab.icon
+                      className="w-4 h-4 shrink-0"
                       style={{
-                        boxShadow: `0 0 12px 2px currentColor`,
-                        opacity: 0.4,
+                        color: isActive ? "white" : `hsl(${tab.cssVar})`,
+                        filter: isActive ? "drop-shadow(0 1px 3px rgba(0,0,0,0.4))" : "none",
                       }}
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
-                  )}
+                  </motion.div>
+                  <span
+                    className="hidden sm:inline relative z-10"
+                    style={{
+                      color: isActive ? "white" : undefined,
+                      textShadow: isActive ? "0 1px 3px rgba(0,0,0,0.3)" : "none",
+                    }}
+                  >
+                    {tab.label}
+                  </span>
                 </motion.button>
               );
             })}
