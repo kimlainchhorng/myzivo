@@ -260,7 +260,7 @@ export default function FlightSearchFormPro({
       ) : (
         <>
           {/* Search Fields Grid */}
-          <div className="space-y-4">
+          <div className="relative space-y-4">
             {/* Row 1: From / Swap / To */}
             <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-3 items-end">
               <LocationAutocomplete
@@ -609,14 +609,13 @@ export default function FlightSearchFormPro({
             </div>
           </div>
 
-          {/* Search Button — 3D elevated */}
+          {/* Search Button — 3D with photo background */}
           <Button
             onClick={handleSearch}
             disabled={!isFormValid}
             size="lg"
             className={cn(
-              "w-full h-13 sm:h-14 mt-6 font-bold text-base sm:text-lg rounded-2xl",
-              "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-400 hover:via-blue-500 hover:to-sky-400",
+              "relative w-full h-13 sm:h-14 mt-6 font-bold text-base sm:text-lg rounded-2xl overflow-hidden",
               "text-primary-foreground",
               "shadow-[0_6px_24px_-4px_hsl(var(--primary)/0.4),0_2px_8px_-2px_hsl(var(--primary)/0.3),inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.1)]",
               "hover:shadow-[0_8px_32px_-4px_hsl(var(--primary)/0.5),0_4px_12px_-2px_hsl(var(--primary)/0.35)]",
@@ -624,13 +623,15 @@ export default function FlightSearchFormPro({
               "transition-all duration-200 active:translate-y-0 active:scale-[0.98] active:shadow-[0_2px_8px_-2px_hsl(var(--primary)/0.3)]",
               "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
             )}
-            style={{ transform: "translateZ(12px)" }}
+            style={{ transform: "translateZ(12px)", background: "transparent" }}
           >
-            <Search className="w-5 h-5 mr-2" />
-            {t("flights.search_title")}
+            <img src={tabFlightsBg} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: 0.6 }} />
+            <span className="absolute inset-0" style={{ background: "linear-gradient(135deg, hsl(var(--flights) / 0.75), hsl(var(--flights) / 0.55))" }} />
+            <Search className="relative z-10 w-5 h-5 mr-2" />
+            <span className="relative z-10">{t("flights.search_title")}</span>
           </Button>
           
-          <p className="text-xs text-muted-foreground text-center mt-3">
+          <p className="relative text-xs text-muted-foreground text-center mt-3">
             Payment completed securely on ZIVO. Tickets issued by licensed partners.
           </p>
         </>
