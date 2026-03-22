@@ -4,15 +4,13 @@
  * Provides real flight search using Duffel API
  * ZIVO is the Merchant of Record - Stripe checkout + Duffel ticketing
  * 
- * Includes rate limiting and abuse protection for production safety
+ * Includes lightweight client-side rate limiting for production safety.
  */
 
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { checkRateLimit, RateLimitError } from "@/lib/security/rateLimiter";
-import { checkSearchAbuse } from "@/lib/security/searchProtection";
 import { transformFlightError } from "@/lib/errors/flightErrors";
-import { getSearchSessionId } from "@/config/trackingParams";
 import { getAirportAlternate } from "@/data/airports";
 
 export interface DuffelSearchParams {
@@ -135,7 +133,6 @@ export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: b
   return useQuery({
     queryKey: ['duffel-flights', searchParams],
     queryFn: async (): Promise<DuffelSearchResult> => {
-      // PRODUCTION SAFETY: Check rate limits before search
       const rateLimitResult = await checkRateLimit('flights_search');
       if (!rateLimitResult.allowed) {
         throw new RateLimitError(
@@ -144,22 +141,8 @@ export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: b
         );
       }
 
-      // PRODUCTION SAFETY: Check for abuse patterns
-      const sessionId = getSearchSessionId();
-      const abuseCheck = checkSearchAbuse(
-        searchParams.origin,
-        searchParams.destination,
-        searchParams.departureDate,
-        sessionId
-      );
-
-      if (!abuseCheck.allowed) {
-        throw new Error(abuseCheck.message || 'Please wait before searching again.');
-      }
-
-      // Build passenger list
       const passengers: Array<{ type: 'adult' | 'child' | 'infant_without_seat' }> = [];
-      
+
       for (let i = 0; i < searchParams.passengers.adults; i++) {
         passengers.push({ type: 'adult' });
       }
@@ -170,7 +153,6 @@ export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: b
         passengers.push({ type: 'infant_without_seat' });
       }
 
-      // Build slices (one-way or round-trip)
       const buildSlices = (origin: string, destination: string) => {
         const s = [
           { origin, destination, departure_date: searchParams.departureDate },
@@ -197,10 +179,8 @@ export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: b
         return data as DuffelSearchResult;
       };
 
-      // Primary search
       let result = await searchDuffel(searchParams.origin, searchParams.destination);
 
-      // PNH↔KTI fallback: if no offers, retry with alternate airport code
       if (result.offers.length === 0) {
         const altOrigin = getAirportAlternate(searchParams.origin);
         const altDest = getAirportAlternate(searchParams.destination);
@@ -222,8 +202,8 @@ export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: b
       return result;
     },
     enabled: enabled && !!searchParams.origin && !!searchParams.destination && !!searchParams.departureDate,
-    staleTime: 2 * 60 * 1000, // 2 minutes - match server cache TTL
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     retry: 1,
   });
 }
