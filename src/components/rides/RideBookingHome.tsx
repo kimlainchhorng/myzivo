@@ -1419,11 +1419,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setPickupConfirmed(true);
 
     // Pan map to destination so user can fine-tune with the "D" pin
-    // The map's onCenterChanged will update destination if they drag further
-    if (mapCenterRef.current) {
-      // Will be picked up by MapSection to pan
-      mapCenterRef.current = { lat: place.lat, lng: place.lng };
-    }
+    setMapPanTarget({ lat: place.lat, lng: place.lng });
   }, [pickup, userLocation, fallbackPickupCenter, pickupDisplay]);
 
   /* ─── Multi-stop management ─── */
