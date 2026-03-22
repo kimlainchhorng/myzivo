@@ -127,7 +127,7 @@ export default function MembershipPage() {
       });
 
       if (result.url) {
-        window.location.href = result.url;
+        import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(result.url));
       }
     } catch (error) {
       // Error handled by mutation

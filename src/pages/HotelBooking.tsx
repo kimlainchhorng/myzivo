@@ -91,7 +91,7 @@ const HotelBooking = () => {
       guests: parseInt(guests),
       rooms: parseInt(rooms),
     });
-    window.open(url, "_blank", "noopener,noreferrer");
+    import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(url));
   };
 
   const handleDestinationSelect = (city: string) => {

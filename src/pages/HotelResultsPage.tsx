@@ -236,7 +236,7 @@ export default function HotelResultsPage() {
 
   const handleViewAllOnPartner = () => {
     const bookingUrl = buildBookingUrl({ citySlug, cityName, checkIn, checkOut, adults, rooms });
-    window.open(bookingUrl, "_blank", "noopener,noreferrer");
+    import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(bookingUrl));
   };
 
   const formatDisplayDate = (dateStr: string) => {

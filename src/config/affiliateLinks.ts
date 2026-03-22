@@ -629,19 +629,16 @@ export const AFFILIATE_DISCLOSURE_TEXT = {
 // UTILITY FUNCTIONS
 // ============================================
 
-export function openAffiliateLink(type: keyof typeof AFFILIATE_LINKS): void {
+export async function openAffiliateLink(type: keyof typeof AFFILIATE_LINKS): Promise<void> {
   const link = AFFILIATE_LINKS[type];
-  if (!link) {
-    // Unknown link type - fail silently in production
-    return;
-  }
+  if (!link) return;
   
+  const { openExternalUrl } = await import("@/lib/openExternalUrl");
   try {
-    window.open(link.url, "_blank", "noopener,noreferrer");
-  } catch (error) {
+    await openExternalUrl(link.url);
+  } catch {
     if (link.fallbackUrl) {
-      // Fallback silently in production
-      window.open(link.fallbackUrl, "_blank", "noopener,noreferrer");
+      await openExternalUrl(link.fallbackUrl);
     }
   }
 }
@@ -663,7 +660,7 @@ export function getAffiliateLinkHealth(): Record<string, boolean> {
  * Open a partner link through the /out tracking route
  * This ensures all clicks are logged with SubID tracking
  */
-export function openPartnerLink(
+export async function openPartnerLink(
   url: string, 
   options?: { 
     partnerId?: string; 
@@ -671,10 +668,9 @@ export function openPartnerLink(
     product?: string; 
     pageSource?: string;
   }
-): void {
+): Promise<void> {
   const { partnerId = 'partner', partnerName = 'Partner', product = 'general', pageSource = 'unknown' } = options || {};
   
-  // Build the /out redirect URL
   const params = new URLSearchParams({
     partner: partnerId,
     name: partnerName,
@@ -684,13 +680,15 @@ export function openPartnerLink(
   });
   
   const outboundUrl = `/out?${params.toString()}`;
-  window.open(outboundUrl, "_blank", "noopener,noreferrer");
+  const { openExternalUrl } = await import("@/lib/openExternalUrl");
+  await openExternalUrl(outboundUrl);
 }
 
 /**
  * Legacy function for direct partner link opening (bypasses tracking)
  * Use openPartnerLink for tracked links
  */
-export function openPartnerLinkDirect(url: string): void {
-  window.open(url, "_blank", "noopener,noreferrer");
+export async function openPartnerLinkDirect(url: string): Promise<void> {
+  const { openExternalUrl } = await import("@/lib/openExternalUrl");
+  await openExternalUrl(url);
 }
