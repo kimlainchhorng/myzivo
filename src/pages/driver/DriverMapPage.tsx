@@ -14,6 +14,8 @@ import { MapPin, Navigation, Loader2, Car, Check, X, User, Plane } from "lucide-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Capacitor } from "@capacitor/core";
+import { LocalNotifications } from "@capacitor/local-notifications";
 
 interface RideOffer {
   offerId: string;
