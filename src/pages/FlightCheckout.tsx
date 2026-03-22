@@ -22,6 +22,7 @@ import InlineLegalSheet, { useLegalSheet } from "@/components/checkout/InlineLeg
 import FlightInlinePaymentForm from "@/components/flight/FlightInlinePaymentForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useFlightNotifications } from "@/hooks/useFlightNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { FLIGHT_MOR_DISCLAIMERS, FLIGHT_CHECKOUT_CLARITY, ZIVO_SOT_REGISTRATION, FLIGHT_LEGAL_LINKS } from "@/config/flightMoRCompliance";
 import type { DuffelOffer } from "@/hooks/useDuffelFlights";
@@ -38,6 +39,7 @@ const FlightCheckout = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { notify: notifyFlight } = useFlightNotifications();
   const [termsValid, handleTermsChange, triggerValidation] = useTermsValidation();
   const { sheet, openSheet, setOpen } = useLegalSheet();
 
@@ -155,6 +157,7 @@ const FlightCheckout = () => {
         title: "Booking Confirmed!",
         description: "Your flight has been booked successfully.",
       });
+      notifyFlight("booking_confirmed", { bookingId });
       navigate(`/flights/confirmation/${bookingId}?success=true`, { replace: true });
     } catch (err: any) {
       console.error("Booking confirmation error:", err);
@@ -163,6 +166,7 @@ const FlightCheckout = () => {
         description: err?.message || "Your card was not charged. Please try again.",
         variant: "destructive",
       });
+      notifyFlight("booking_failed", { bookingId, body: err?.message });
       setClientSecret(null);
       intentCreated.current = false;
     } finally {

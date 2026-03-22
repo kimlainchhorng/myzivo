@@ -14,6 +14,8 @@ import { MapPin, Navigation, Loader2, Car, Check, X, User, Plane } from "lucide-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Capacitor } from "@capacitor/core";
+import { LocalNotifications } from "@capacitor/local-notifications";
 
 interface RideOffer {
   offerId: string;
@@ -69,7 +71,7 @@ export default function DriverMapPage() {
       .eq("id", offer.job_id)
       .maybeSingle();
 
-    setActiveOffer({
+    const newOffer = {
       offerId: offer.id,
       jobId: offer.job_id,
       expiresAt: offer.expires_at,
@@ -80,7 +82,34 @@ export default function DriverMapPage() {
       flightNumber: (job as any)?.flight_number ?? null,
       flightArrivalTime: (job as any)?.flight_arrival_time ?? null,
       isAirportPickup: (job as any)?.is_airport_pickup ?? false,
+    };
+    setActiveOffer(newOffer);
+
+    // Notify driver of new ride offer (toast + native local notification)
+    const payoutText = newOffer.estPayout ? ` — $${(newOffer.estPayout / 100).toFixed(2)}` : "";
+    toast.info(`New ride request${payoutText}`, {
+      description: newOffer.pickupAddress ? `Pickup: ${newOffer.pickupAddress}` : "Tap to view details",
     });
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const perm = await LocalNotifications.checkPermissions();
+        if (perm.display !== "granted") await LocalNotifications.requestPermissions();
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: Date.now(),
+            title: `New Ride Request${payoutText}`,
+            body: newOffer.pickupAddress || "A rider is waiting for you!",
+            schedule: { at: new Date(Date.now() + 100) },
+            sound: undefined,
+            actionTypeId: "",
+            extra: { type: "driver_new_offer", job_id: newOffer.jobId },
+          }],
+        });
+      } catch (err) {
+        console.warn("[DriverNotif] Local notification failed:", err);
+      }
+    }
   }, []);
 
   useEffect(() => {

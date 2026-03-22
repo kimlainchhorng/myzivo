@@ -12,6 +12,7 @@ import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useGoogleMapsGeocode, Suggestion } from "@/hooks/useGoogleMapsGeocode";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useRideNotifications } from "@/hooks/useRideNotifications";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -397,6 +398,7 @@ function MultiStopManager({ stops, onAddStop, onRemoveStop }: { stops: string[];
 export default function RequestRidePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { notify: notifyRide } = useRideNotifications();
   const { isChecking: phoneChecking, isVerified: phoneVerified } = usePhoneVerificationGate();
   const [showPhoneVerify, setShowPhoneVerify] = useState(false);
   const pendingActionRef = useRef<(() => void) | null>(null);
@@ -1932,7 +1934,7 @@ export default function RequestRidePage() {
                     className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-border/40 bg-card text-xs font-bold text-foreground hover:bg-muted/50 touch-manipulation active:scale-95">
                     <Share2 className="w-4 h-4 text-primary" /> Share Trip
                   </button>
-                  <button onClick={() => { toast.info("Ride cancelled. Refund will be processed."); navigate("/"); }}
+                  <button onClick={() => { notifyRide("trip_cancelled"); toast.info("Ride cancelled. Refund will be processed."); navigate("/"); }}
                     className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-destructive/30 bg-destructive/5 text-xs font-bold text-destructive hover:bg-destructive/10 touch-manipulation active:scale-95">
                     Cancel
                   </button>

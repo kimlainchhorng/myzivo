@@ -5,6 +5,7 @@
 
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useRef } from "react";
+import { useFlightNotifications } from "@/hooks/useFlightNotifications";
 import {
   CheckCircle, Clock, AlertCircle, Plane, Loader2, Ticket,
   Calendar, Users, CreditCard, Mail, MessageCircle,
@@ -53,8 +54,10 @@ const FlightConfirmation = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const { data: booking, isLoading, error } = useFlightBooking(bookingId || null);
   const { toast } = useToast();
+  const { notify: notifyFlight } = useFlightNotifications();
   const [copied, setCopied] = useState(false);
   const emailSentRef = useRef(false);
+  const notifiedRef = useRef(false);
 
   const statusInfo = booking ? getTicketingStatusInfo(booking.ticketing_status) : null;
   const isIssued = booking?.ticketing_status === "issued";
@@ -94,6 +97,24 @@ const FlightConfirmation = () => {
       },
     }).catch(() => { /* silent — email is best-effort */ });
   }, [isIssued, booking]);
+
+  // Send push notification based on ticketing status
+  useEffect(() => {
+    if (!booking || notifiedRef.current) return;
+    if (isIssued) {
+      notifiedRef.current = true;
+      notifyFlight("booking_confirmed", {
+        bookingId: booking.id,
+        body: `Your flight ${booking.origin} → ${booking.destination} is confirmed! Ref: ${booking.booking_reference}`,
+      });
+    } else if (isFailed) {
+      notifiedRef.current = true;
+      notifyFlight("booking_failed", {
+        bookingId: booking.id,
+        body: "Ticketing failed. Please contact support or try rebooking.",
+      });
+    }
+  }, [isIssued, isFailed, booking, notifyFlight]);
 
   const handleCopyRef = () => {
     if (!booking) return;
