@@ -1288,7 +1288,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         setIsReversingGeocode(false);
       }
     }, 600);
-  }, [viewStep, pickupConfirmed]);
+  }, [viewStep, pickupConfirmed, pinPlacementMode, placingStopId]);
 
   const handleConfirmPickupFromPin = useCallback(async () => {
     const coords = mapCenterRef.current ?? pickup ?? userLocation ?? fallbackPickupCenter;
