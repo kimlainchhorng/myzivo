@@ -77,8 +77,6 @@ export default function SoTDisclosureCheckbox({
           {/* Link to full page */}
           <Link 
             to="/legal/seller-of-travel" 
-            target="_blank"
-            rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
           >
             View full Seller of Travel disclosure

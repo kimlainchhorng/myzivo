@@ -254,11 +254,9 @@ export default function BookingReturnPage() {
 
                   {/* Safe Actions */}
                   <div className="flex flex-col gap-3">
-                    <Button asChild className="w-full h-12 touch-manipulation active:scale-[0.98] gap-2">
-                      <a href="mailto:support@hizivo.com" target="_blank" rel="noopener noreferrer">
+                    <Button onClick={() => import("@/lib/openExternalUrl").then(({ openSystemUrl }) => openSystemUrl("mailto:support@hizivo.com"))} className="w-full h-12 touch-manipulation active:scale-[0.98] gap-2">
                         <Mail className="w-4 h-4" />
                         Check my email
-                      </a>
                     </Button>
                     <Button variant="outline" asChild className="w-full h-12 touch-manipulation gap-2">
                       <Link to="/flights">
@@ -339,11 +337,9 @@ export default function BookingReturnPage() {
 
                   {/* Safe Actions */}
                   <div className="flex flex-col gap-3">
-                    <Button asChild className="w-full h-12 touch-manipulation active:scale-[0.98] gap-2">
-                      <a href="mailto:support@hizivo.com" target="_blank" rel="noopener noreferrer">
+                    <Button onClick={() => import("@/lib/openExternalUrl").then(({ openSystemUrl }) => openSystemUrl("mailto:support@hizivo.com"))} className="w-full h-12 touch-manipulation active:scale-[0.98] gap-2">
                         <Mail className="w-4 h-4" />
                         Check my email
-                      </a>
                     </Button>
                     <Button variant="outline" asChild className="w-full h-12 touch-manipulation gap-2">
                       <Link to="/flights">
@@ -386,11 +382,9 @@ export default function BookingReturnPage() {
 
                   {/* Safe Actions */}
                   <div className="flex flex-col gap-3">
-                    <Button asChild className="w-full h-12 touch-manipulation active:scale-[0.98] gap-2">
-                      <a href="mailto:support@hizivo.com" target="_blank" rel="noopener noreferrer">
+                    <Button onClick={() => import("@/lib/openExternalUrl").then(({ openSystemUrl }) => openSystemUrl("mailto:support@hizivo.com"))} className="w-full h-12 touch-manipulation active:scale-[0.98] gap-2">
                         <Mail className="w-4 h-4" />
                         Check my email
-                      </a>
                     </Button>
                     <Button variant="outline" asChild className="w-full h-12 touch-manipulation gap-2">
                       <Link to="/flights">

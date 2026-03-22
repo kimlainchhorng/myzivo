@@ -232,12 +232,12 @@ const FlightConfirmation = () => {
                     <Separator className="mb-4 bg-destructive/10" />
                     <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Contact Support</p>
                     <div className="space-y-2.5">
-                      <a href="mailto:support@hizovo.com" className="flex items-center gap-3 text-sm hover:text-[hsl(var(--flights))] transition-colors" target="_blank" rel="noopener noreferrer">
+                      <button onClick={() => import("@/lib/openExternalUrl").then(({ openSystemUrl }) => openSystemUrl("mailto:support@hizovo.com"))} className="flex items-center gap-3 text-sm hover:text-[hsl(var(--flights))] transition-colors">
                         <Mail className="w-4 h-4 text-muted-foreground" /> support@hizovo.com
-                      </a>
-                      <a href="https://hizovo.com/help" className="flex items-center gap-3 text-sm hover:text-[hsl(var(--flights))] transition-colors" target="_blank" rel="noopener noreferrer">
+                      </button>
+                      <button onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://hizovo.com/help"))} className="flex items-center gap-3 text-sm hover:text-[hsl(var(--flights))] transition-colors">
                         <MessageCircle className="w-4 h-4 text-muted-foreground" /> Help Center
-                      </a>
+                      </button>
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-3">
                       Reference: <span className="font-mono font-medium">{booking.booking_reference}</span>

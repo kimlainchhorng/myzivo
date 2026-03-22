@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -174,13 +175,13 @@ export default function PartnerConsentModal({
               <p className="text-xs text-muted-foreground">
                 {consentText.description}{" "}
                 View our{" "}
-                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
+                <Link to="/privacy" className="underline hover:text-primary">
                   Privacy Policy
-                </a>{" "}
+                </Link>{" "}
                 and{" "}
-                <a href="/partner-disclosure" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
+                <Link to="/partner-disclosure" className="underline hover:text-primary">
                   Partner Disclosure
-                </a>.
+                </Link>.
               </p>
             </div>
           </div>
