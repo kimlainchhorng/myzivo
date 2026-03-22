@@ -723,6 +723,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const mapCenterRef = useRef<{ lat: number; lng: number } | null>(null);
   const lastGeocodedCoordsRef = useRef<string | null>(null); // dedup key to prevent repeat geocoding
   const userHasDraggedHomeMapRef = useRef(false); // tracks if user actually dragged the map in "home" step
+  const userHasDraggedPinRef = useRef(false); // tracks if user actually dragged the map during pin placement
   // Pin placement mode: when active, the center pin is used for placing destination or stop
   const [pinPlacementMode, setPinPlacementMode] = useState<"destination" | "stop" | null>(null);
   const [placingStopId, setPlacingStopId] = useState<string | null>(null);
@@ -1250,6 +1251,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
     // Stop pin placement mode — update the stop being placed
     if (pinPlacementMode === "stop" && placingStopId) {
+      if (!userHasDraggedPinRef.current) return;
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = setTimeout(async () => {
         const key = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`;
@@ -1271,6 +1273,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
     // Once pickup is confirmed, dragging the map updates the DESTINATION, not pickup
     if (pickupManuallySet.current || pickupConfirmed) {
+      // In pin placement mode, only update if user has actually dragged
+      if (pinPlacementMode === "destination" && !userHasDraggedPinRef.current) return;
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = setTimeout(async () => {
         const key = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`;
@@ -1491,6 +1495,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setPickupConfirmed(true);
     setViewStep("search");
     setPinPlacementMode("destination");
+    userHasDraggedPinRef.current = false; // reset — require user to drag before updating
 
     // Pan map to destination so user can fine-tune with the "D" pin
     setMapPanTarget({ lat: place.lat, lng: place.lng });
@@ -1508,6 +1513,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setPlacingStopId(newId);
     setPinPlacementMode("stop");
     lastGeocodedCoordsRef.current = null; // reset dedup so map drag immediately starts geocoding
+    userHasDraggedPinRef.current = false; // require user to drag before setting stop address
   }, [stops.length]);
 
   // Stop management — NOT wrapped in useCallback so they always use latest state
@@ -2012,6 +2018,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               routePolyline={routeData?.polyline || null}
               onCenterChanged={handleMapCenterChanged}
               suppressAutoViewport={viewStep === "search" && !!pinPlacementMode}
+              onMapReadyExtra={(map) => {
+                map.addListener("dragstart", () => {
+                  userHasDraggedPinRef.current = true;
+                });
+              }}
             >
               {/* Center pin for pickup (when not yet confirmed in search step) */}
               {viewStep === "search" && !pickupConfirmed && (
@@ -2182,6 +2193,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                         if (destination) {
                           setViewStep("search");
                           setPinPlacementMode("destination");
+                          userHasDraggedPinRef.current = false;
                           setMapPanTarget({ lat: destination.lat, lng: destination.lng });
                         }
                       }}
