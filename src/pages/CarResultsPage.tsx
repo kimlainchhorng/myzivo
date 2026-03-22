@@ -257,7 +257,7 @@ export default function CarResultsPage() {
       serviceType: "car_rental",
     });
 
-    window.open(`/out?${outParams.toString()}`, "_blank", "noopener,noreferrer");
+    import("@/lib/openExternalUrl").then(({ openExternalUrl: oe }) => oe(`/out?${outParams.toString()}`));
   };
 
   const formatDisplayDate = (dateStr: string) => {

@@ -261,7 +261,7 @@ export function useOpenCustomerPortal() {
       return data as { url: string };
     },
     onSuccess: (data) => {
-      window.open(data.url, "_blank", "noopener,noreferrer");
+      import("@/lib/openExternalUrl").then(({ openExternalUrl: oe }) => oe(data.url));
     },
     onError: (error: Error) => {
       toast.error(error.message);

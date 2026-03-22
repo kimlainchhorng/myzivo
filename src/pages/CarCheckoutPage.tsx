@@ -37,7 +37,7 @@ export default function CarCheckoutPage() {
   const handleProceedToPartner = () => {
     // This would be replaced with actual partner checkout URL
     const partnerUrl = `https://www.economybookings.com/en?${searchParams.toString()}`;
-    window.open(partnerUrl, "_blank", "noopener,noreferrer");
+    import("@/lib/openExternalUrl").then(({ openExternalUrl: oe }) => oe(partnerUrl));
   };
 
   return (

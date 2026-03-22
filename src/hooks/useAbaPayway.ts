@@ -34,7 +34,7 @@ export function useAbaPayway() {
 
       if (data?.payment_url) {
         // Redirect to ABA Payway checkout
-        window.open(data.payment_url, "_blank", "noopener,noreferrer");
+        import("@/lib/openExternalUrl").then(({ openExternalUrl: oe }) => oe(data.payment_url));
       } else if (data?.checkout_data) {
         // Fallback: build form submission to ABA
         submitAbaForm(data.checkout_data);
