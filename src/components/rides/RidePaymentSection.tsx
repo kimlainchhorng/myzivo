@@ -73,7 +73,7 @@ function CambodiaPaymentSelector({
 }) {
   const [selected, setSelected] = useState<CambodiaPaymentMethod>(cashAllowed ? "cash" : "card");
 
-  const methods = [
+  const allMethods = [
     {
       id: "cash" as CambodiaPaymentMethod,
       label: "សាច់ប្រាក់ (Cash)",
@@ -91,6 +91,9 @@ function CambodiaPaymentSelector({
       bgColor: "bg-amber-500/10",
     },
   ];
+
+  // Filter out cash if not allowed (international customers must pay by card)
+  const methods = cashAllowed ? allMethods : allMethods.filter(m => m.id !== "cash");
 
   const confirmLabels: Record<CambodiaPaymentMethod, string> = {
     aba: `បង់តាម ABA · ${dualPrice(price, true)} · ${vehicleName}`,
