@@ -2352,7 +2352,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <button
                   onClick={() => {
                     // If destination was auto-set from map center and matches pickup location, clear it
-                    if (destination && pickup && isSameLocation(destination, pickup)) {
+                    const effectivePickup = pickup ?? (userLocation ? { address: "", lat: userLocation.lat, lng: userLocation.lng } : null);
+                    if (destination && effectivePickup && isSameLocation(destination, effectivePickup)) {
                       setDestination(null);
                       setDestinationDisplay("");
                     }
@@ -2375,7 +2376,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <Button
                   onClick={() => {
                     // If destination was auto-set from map center and matches pickup location, clear it
-                    if (destination && pickup && isSameLocation(destination, pickup)) {
+                    const effectivePickup = pickup ?? (userLocation ? { address: "", lat: userLocation.lat, lng: userLocation.lng } : null);
+                    if (destination && effectivePickup && isSameLocation(destination, effectivePickup)) {
                       setDestination(null);
                       setDestinationDisplay("");
                     }
