@@ -2325,6 +2325,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 onLocateUser={handleLocateUser}
                 routePolyline={null}
                 onCenterChanged={handleMapCenterChanged}
+                onMapReadyExtra={(map) => {
+                  userHasDraggedHomeMapRef.current = false;
+                  map.addListener("dragstart", () => {
+                    userHasDraggedHomeMapRef.current = true;
+                  });
+                }}
               >
                 {/* Center destination pin — ZIVO branded */}
                 <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
