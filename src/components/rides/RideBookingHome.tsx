@@ -2091,13 +2091,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           {viewStep === "search" && !pinPlacementMode && (
             <div
               className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
+              style={{ maxHeight: "65vh", display: "flex", flexDirection: "column" }}
             >
           {/* Drag handle */}
-          <div className="flex justify-center pt-3 pb-2">
+          <div className="flex justify-center pt-3 pb-2 shrink-0">
             <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
           </div>
 
-          <div className="px-5 pt-1" style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})` }}>
+          <div className="px-5 pt-1 overflow-y-auto min-h-0 flex-1" style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})` }}>
             {/* Pickup input */}
             <div className="flex items-start gap-3 mb-3">
               <div className="flex flex-col items-center mt-3">
