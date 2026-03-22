@@ -726,7 +726,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const userHasDraggedHomeMapRef = useRef(false); // tracks if user actually dragged the map in "home" step
   const userHasDraggedPinRef = useRef(false); // tracks if user actually dragged the map during pin placement
   // Pin placement mode: when active, the center pin is used for placing destination or stop
-  const [pinPlacementMode, setPinPlacementMode] = useState<"destination" | "stop" | null>(null);
+  const [pinPlacementMode, setPinPlacementMode] = useState<"pickup" | "destination" | "stop" | null>(null);
   const [placingStopId, setPlacingStopId] = useState<string | null>(null);
 
   // New state for enhanced flow
