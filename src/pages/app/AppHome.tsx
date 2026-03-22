@@ -312,10 +312,11 @@ const AppHome = () => {
             })}
           </div>
 
-          {/* Where to? Search Bar */}
+          {/* Where to? Search Bar — 3D Glass */}
           <div className="px-5 pt-4 pb-4">
             <motion.button
-              whileTap={{ scale: 0.985 }}
+              whileTap={{ scale: 0.98, rotateX: 3 }}
+              whileHover={{ y: -2, scale: 1.01 }}
               onClick={() => {
                 const routes: Record<string, string> = {
                   rides: "/rides",
@@ -326,9 +327,10 @@ const AppHome = () => {
                 navigate(routes[activeHomeTab] || "/rides");
               }}
               className="w-full touch-manipulation"
+              style={{ transformStyle: "preserve-3d" }}
             >
-              <div className="bg-muted/40 backdrop-blur-sm rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] border border-border/40 shadow-sm transition-all active:bg-muted/60">
-                <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center">
+              <div className="glass-3d rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] shadow-sm transition-all active:bg-muted/60">
+                <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center icon-3d-pop">
                   <Search className="w-4.5 h-4.5 text-muted-foreground" />
                 </div>
                 <span className="text-muted-foreground font-medium text-[15px] flex-1 text-left">{getSearchPlaceholder(activeHomeTab)}</span>
