@@ -46,12 +46,27 @@ serve(async (req) => {
       );
     }
 
-    const { token, platform }: TokenRequest = await req.json();
+    const { token, platform, deactivate }: TokenRequest = await req.json();
 
     if (!token || !platform) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: token, platform" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Handle deactivation request (logout / unregister)
+    if (deactivate) {
+      await supabase
+        .from("device_tokens")
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .eq("token", token);
+
+      console.log(`[register-push-token] Deactivated token for user ${user.id}`);
+      return new Response(
+        JSON.stringify({ success: true, deactivated: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
