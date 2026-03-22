@@ -29,6 +29,7 @@ interface AddressAutocompleteProps {
   value?: string;
   onSelect: (place: Place) => void;
   onClear?: () => void;
+  onFocus?: () => void;
   proximity?: { lat: number; lng: number };
   disabled?: boolean;
   className?: string;
@@ -40,6 +41,7 @@ export function AddressAutocomplete({
   value = "",
   onSelect,
   onClear,
+  onFocus,
   proximity,
   disabled = false,
   className,
@@ -231,7 +233,7 @@ export function AddressAutocomplete({
           value={inputValue}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          onFocus={() => suggestions.length > 0 && setIsOpen(true)}
+          onFocus={() => { suggestions.length > 0 && setIsOpen(true); onFocus?.(); }}
           placeholder={placeholder}
           disabled={disabled}
           className="pl-10 pr-10"
