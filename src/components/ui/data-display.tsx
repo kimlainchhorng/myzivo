@@ -377,7 +377,7 @@ export const DataListItem: React.FC<DataListItemProps> = ({
             variant="ghost"
             size="icon"
             className="w-7 h-7 rounded-xl hover:bg-muted/50"
-            onClick={() => window.open(link, "_blank", "noopener,noreferrer")}
+            onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(link))}
             aria-label="Open link"
           >
             <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
