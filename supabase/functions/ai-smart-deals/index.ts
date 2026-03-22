@@ -2,15 +2,29 @@ import { serve } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 /**
- * AI Smart Deal Finder Edge Function
- * Uses Duffel API for real flight deals + Lovable AI for smart descriptions.
+ * AI Smart Deal Finder v2 — Real-Time Duffel-Powered Deal Engine
+ * • Searches multiple flexible dates for cheapest real fares
+ * • Returns real airline logos, cabin info, and baggage data
+ * • AI enrichment with deal scoring, descriptions, and travel tips
+ * • Real-time timestamps so UI can show freshness
  */
 
 const DUFFEL_API_URL = 'https://api.duffel.com';
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 
 const cache = new Map<string, { data: unknown; expires: number }>();
-const CACHE_TTL = 2 * 60 * 60 * 1000;
+const CACHE_TTL = 90 * 60 * 1000; // 90 min for fresher deals
+
+interface DuffelSegment {
+  origin?: { iata_code?: string; name?: string; city_name?: string };
+  destination?: { iata_code?: string; name?: string; city_name?: string };
+  departing_at?: string;
+  arriving_at?: string;
+  duration?: string;
+  operating_carrier?: { name?: string; logo_symbol_url?: string; logo_lockup_url?: string; iata_code?: string };
+  marketing_carrier?: { name?: string; iata_code?: string };
+  marketing_carrier_flight_number?: string;
+}
 
 interface SmartDeal {
   id: string;
@@ -23,20 +37,29 @@ interface SmartDeal {
   departureDate: string;
   returnDate: string | null;
   airline: string;
+  airlineCode: string;
   airlineLogo: string | null;
+  flightNumber: string;
   stops: number;
   duration: string;
+  departureTime: string;
+  arrivalTime: string;
+  cabin: string;
+  baggageIncluded: boolean;
+  offersCount: number;
   aiDescription: string;
   aiTip: string;
   dealScore: number;
   dealTag: string;
   savingsPercent: number;
   category: 'beach' | 'city' | 'adventure' | 'culture' | 'nightlife' | 'family';
+  fetchedAt: string;
+  expiresAt: string;
 }
 
-// Expanded routes with categories
+// Routes with categories
 const SMART_ROUTES = [
-  // Beach destinations
+  // Beach
   { origin: 'JFK', destination: 'MIA', destName: 'Miami', destKey: 'miami', category: 'beach' as const },
   { origin: 'JFK', destination: 'CUN', destName: 'Cancún', destKey: 'cancun', category: 'beach' as const },
   { origin: 'JFK', destination: 'SJU', destName: 'San Juan', destKey: 'san-juan', category: 'beach' as const },
@@ -53,7 +76,7 @@ const SMART_ROUTES = [
   { origin: 'SEA', destination: 'HNL', destName: 'Honolulu', destKey: 'honolulu', category: 'beach' as const },
   { origin: 'MSY', destination: 'MIA', destName: 'Miami', destKey: 'miami', category: 'beach' as const },
   { origin: 'MSY', destination: 'CUN', destName: 'Cancún', destKey: 'cancun', category: 'beach' as const },
-  // City destinations
+  // City
   { origin: 'DFW', destination: 'SFO', destName: 'San Francisco', destKey: 'san-francisco', category: 'city' as const },
   { origin: 'SEA', destination: 'LAX', destName: 'Los Angeles', destKey: 'los-angeles', category: 'city' as const },
   { origin: 'MSY', destination: 'ATL', destName: 'Atlanta', destKey: 'atlanta', category: 'city' as const },
@@ -65,43 +88,42 @@ const SMART_ROUTES = [
   { origin: 'JFK', destination: 'ORD', destName: 'Chicago', destKey: 'chicago', category: 'city' as const },
   { origin: 'LAX', destination: 'PDX', destName: 'Portland', destKey: 'portland', category: 'city' as const },
   { origin: 'ORD', destination: 'MSP', destName: 'Minneapolis', destKey: 'minneapolis', category: 'city' as const },
-  // Nightlife destinations
+  // Nightlife
   { origin: 'LAX', destination: 'LAS', destName: 'Las Vegas', destKey: 'las-vegas', category: 'nightlife' as const },
   { origin: 'DFW', destination: 'BNA', destName: 'Nashville', destKey: 'nashville', category: 'nightlife' as const },
   { origin: 'MSY', destination: 'LAS', destName: 'Las Vegas', destKey: 'las-vegas', category: 'nightlife' as const },
   { origin: 'ATL', destination: 'MSY', destName: 'New Orleans', destKey: 'new-orleans', category: 'nightlife' as const },
   { origin: 'ORD', destination: 'BNA', destName: 'Nashville', destKey: 'nashville', category: 'nightlife' as const },
   { origin: 'ORD', destination: 'LAS', destName: 'Las Vegas', destKey: 'las-vegas', category: 'nightlife' as const },
-  // Family destinations
+  // Family
   { origin: 'ORD', destination: 'MCO', destName: 'Orlando', destKey: 'orlando', category: 'family' as const },
   { origin: 'MSY', destination: 'MCO', destName: 'Orlando', destKey: 'orlando', category: 'family' as const },
   { origin: 'JFK', destination: 'MCO', destName: 'Orlando', destKey: 'orlando', category: 'family' as const },
   { origin: 'BOS', destination: 'MCO', destName: 'Orlando', destKey: 'orlando', category: 'family' as const },
   { origin: 'ATL', destination: 'TPA', destName: 'Tampa', destKey: 'tampa', category: 'family' as const },
-  // Adventure destinations
+  // Adventure
   { origin: 'ORD', destination: 'DEN', destName: 'Denver', destKey: 'denver', category: 'adventure' as const },
   { origin: 'DEN', destination: 'PHX', destName: 'Phoenix', destKey: 'phoenix', category: 'adventure' as const },
   { origin: 'DEN', destination: 'LAS', destName: 'Las Vegas', destKey: 'las-vegas', category: 'adventure' as const },
   { origin: 'DFW', destination: 'DEN', destName: 'Denver', destKey: 'denver', category: 'adventure' as const },
   { origin: 'SEA', destination: 'DEN', destName: 'Denver', destKey: 'denver', category: 'adventure' as const },
-  // Culture destinations
+  // Culture
   { origin: 'JFK', destination: 'CDG', destName: 'Paris', destKey: 'paris', category: 'culture' as const },
   { origin: 'JFK', destination: 'BCN', destName: 'Barcelona', destKey: 'barcelona', category: 'culture' as const },
   { origin: 'LAX', destination: 'BOS', destName: 'Boston', destKey: 'boston', category: 'culture' as const },
   { origin: 'MSY', destination: 'CLT', destName: 'Charlotte', destKey: 'charlotte', category: 'culture' as const },
   { origin: 'DEN', destination: 'AUS', destName: 'Austin', destKey: 'austin', category: 'culture' as const },
-  // Cambodia / Asia routes
+  // Asia
   { origin: 'PNH', destination: 'REP', destName: 'Siem Reap', destKey: 'siem-reap', category: 'culture' as const },
   { origin: 'PNH', destination: 'BKK', destName: 'Bangkok', destKey: 'bangkok', category: 'city' as const },
   { origin: 'PNH', destination: 'SGN', destName: 'Ho Chi Minh City', destKey: 'ho-chi-minh', category: 'city' as const },
   { origin: 'PNH', destination: 'KOS', destName: 'Sihanoukville', destKey: 'sihanoukville', category: 'beach' as const },
   { origin: 'REP', destination: 'BKK', destName: 'Bangkok', destKey: 'bangkok', category: 'city' as const },
-  { origin: 'REP', destination: 'SGN', destName: 'Ho Chi Minh City', destKey: 'ho-chi-minh', category: 'city' as const },
   { origin: 'BKK', destination: 'REP', destName: 'Siem Reap', destKey: 'siem-reap', category: 'culture' as const },
   { origin: 'BKK', destination: 'PNH', destName: 'Phnom Penh', destKey: 'phnom-penh', category: 'city' as const },
 ];
 
-// Average prices for savings calculation
+// Historical average prices for savings %
 const AVG_PRICES: Record<string, number> = {
   'JFK-MIA': 220, 'JFK-CUN': 380, 'JFK-SJU': 280, 'JFK-FLL': 200, 'JFK-TPA': 210,
   'JFK-MCO': 190, 'JFK-CDG': 650, 'JFK-BCN': 600, 'JFK-ORD': 180,
@@ -114,14 +136,29 @@ const AVG_PRICES: Record<string, number> = {
   'SEA-LAX': 170, 'SEA-LAS': 200, 'SEA-HNL': 420, 'SEA-DEN': 210,
   'DEN-PHX': 140, 'DEN-LAS': 130, 'DEN-AUS': 200,
   'MIA-SJU': 180, 'MIA-CUN': 220,
-  // Cambodia / Asia
   'PNH-REP': 80, 'PNH-BKK': 120, 'PNH-SGN': 90, 'PNH-KOS': 70,
-  'REP-BKK': 110, 'REP-SGN': 100, 'BKK-REP': 110, 'BKK-PNH': 120,
+  'REP-BKK': 110, 'BKK-REP': 110, 'BKK-PNH': 120,
 };
+
+interface SearchResult {
+  price: number;
+  airline: string;
+  airlineCode: string;
+  airlineLogo: string | null;
+  flightNumber: string;
+  stops: number;
+  duration: string;
+  departureTime: string;
+  arrivalTime: string;
+  cabin: string;
+  baggageIncluded: boolean;
+  offersCount: number;
+  expiresAt: string;
+}
 
 async function searchRoute(
   origin: string, destination: string, date: string, apiKey: string
-): Promise<{ price: number; airline: string; airlineLogo: string | null; stops: number; duration: string } | null> {
+): Promise<SearchResult | null> {
   try {
     const resp = await fetch(`${DUFFEL_API_URL}/air/offer_requests`, {
       method: 'POST',
@@ -145,24 +182,55 @@ async function searchRoute(
     const offers = json.data?.offers || [];
     if (!offers.length) return null;
 
+    // Find cheapest offer
     let cheapest = offers[0];
     for (const o of offers) {
       if (parseFloat(o.total_amount) < parseFloat(cheapest.total_amount)) cheapest = o;
     }
+
     const slice = cheapest.slices?.[0];
-    const segments = slice?.segments || [];
+    const segments: DuffelSegment[] = slice?.segments || [];
     const carrier = cheapest.owner || segments[0]?.operating_carrier || {};
-    const totalMin = segments.reduce((a: number, s: { duration?: string }) => {
+    const firstSeg = segments[0] || {};
+    const lastSeg = segments[segments.length - 1] || {};
+
+    // Duration calculation
+    const totalMin = segments.reduce((a: number, s: DuffelSegment) => {
       if (!s.duration) return a;
       const m = s.duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
       return m ? a + (parseInt(m[1] || '0') * 60) + parseInt(m[2] || '0') : a;
     }, 0);
+
+    // Flight number from first segment
+    const flightNum = firstSeg.marketing_carrier?.iata_code && firstSeg.marketing_carrier_flight_number
+      ? `${firstSeg.marketing_carrier.iata_code}${firstSeg.marketing_carrier_flight_number}`
+      : '';
+
+    // Departure/arrival times
+    const depTime = firstSeg.departing_at ? new Date(firstSeg.departing_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+    const arrTime = lastSeg.arriving_at ? new Date(lastSeg.arriving_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+
+    // Cabin class from offer
+    const cabin = cheapest.slices?.[0]?.segments?.[0]?.passengers?.[0]?.cabin_class_marketing_name || 'Economy';
+
+    // Check baggage — look for checked bags
+    const paxBaggage = cheapest.slices?.[0]?.segments?.[0]?.passengers?.[0]?.baggages || [];
+    const hasCheckedBag = paxBaggage.some((b: { type: string; quantity: number }) => b.type === 'checked' && b.quantity > 0);
+
     return {
       price: parseFloat(cheapest.total_amount),
       airline: carrier.name || 'Airline',
+      airlineCode: carrier.iata_code || firstSeg.operating_carrier?.iata_code || '',
       airlineLogo: carrier.logo_symbol_url || carrier.logo_lockup_url || null,
+      flightNumber: flightNum,
       stops: Math.max(0, segments.length - 1),
       duration: `${Math.floor(totalMin / 60)}h ${totalMin % 60}m`,
+      departureTime: depTime,
+      arrivalTime: arrTime,
+      cabin,
+      baggageIncluded: hasCheckedBag,
+      offersCount: offers.length,
+      expiresAt: cheapest.expires_at || new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     };
   } catch { return null; }
 }
@@ -170,7 +238,7 @@ async function searchRoute(
 async function getAIEnhancements(deals: SmartDeal[], aiKey: string): Promise<SmartDeal[]> {
   try {
     const dealSummary = deals.map(d =>
-      `${d.originCode}->${d.destination}: $${Math.round(d.price)}, ${d.stops === 0 ? 'nonstop' : d.stops + ' stop'}, ${d.duration}, ${d.departureDate}, category: ${d.category}`
+      `${d.originCode}->${d.destination}: $${Math.round(d.price)}, ${d.airline} ${d.flightNumber}, ${d.stops === 0 ? 'nonstop' : d.stops + ' stop'}, ${d.duration}, departs ${d.departureTime} on ${d.departureDate}, ${d.cabin}, ${d.baggageIncluded ? 'checked bag included' : 'carry-on only'}, ${d.offersCount} options available, category: ${d.category}, savings: ${d.savingsPercent}%`
     ).join('\n');
 
     const resp = await fetch(AI_GATEWAY_URL, {
@@ -178,8 +246,11 @@ async function getAIEnhancements(deals: SmartDeal[], aiKey: string): Promise<Sma
       headers: { 'Authorization': `Bearer ${aiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages: [
-          { role: 'system', content: 'You are a travel deal expert. For each flight deal, provide a short enticing description (max 15 words) and a quick travel tip (max 12 words). Also rate the deal 1-100 and give a short tag like "Best Value", "Lowest Price", "Weekend Getaway", "Last Minute". Return JSON array with objects: {index, description, tip, score, tag}' },
-          { role: 'user', content: `Rate and describe these deals:\n${dealSummary}` }
+          {
+            role: 'system',
+            content: 'You are a travel deal analyst. For each flight deal, provide: 1) A punchy enticing description (max 15 words, mention specific value like price/timing/route), 2) A practical travel tip (max 15 words, specific to this deal — e.g. "Book by Friday — fares jump 20% on weekends"), 3) A deal score 1-100 based on savings %, route popularity, timing, and value, 4) A catchy tag. Return JSON array: {index, description, tip, score, tag}'
+          },
+          { role: 'user', content: `Analyze and rate these live flight deals:\n${dealSummary}` }
         ],
         tools: [{
           type: 'function',
@@ -220,7 +291,7 @@ async function getAIEnhancements(deals: SmartDeal[], aiKey: string): Promise<Sma
       if (e.index >= 0 && e.index < deals.length) {
         deals[e.index].aiDescription = e.description;
         deals[e.index].aiTip = e.tip;
-        deals[e.index].dealScore = e.score;
+        deals[e.index].dealScore = Math.min(100, Math.max(1, e.score));
         deals[e.index].dealTag = e.tag;
       }
     }
@@ -250,7 +321,7 @@ serve(async (req: Request) => {
       });
     }
 
-    const cacheKey = `smart-deals:${userOrigin || 'all'}:${category || 'all'}`;
+    const cacheKey = `smart-v2:${userOrigin || 'all'}:${category || 'all'}`;
     const cached = cache.get(cacheKey);
     if (cached && cached.expires > Date.now()) {
       return new Response(JSON.stringify(cached.data), {
@@ -268,17 +339,19 @@ serve(async (req: Request) => {
       if (filtered.length > 0) routes = filtered;
     }
 
-    // Search dates: 5, 10, 14, 21, 30 days out
-    const dates = [5, 10, 14, 21, 30].map(d => {
+    // Search 5 flexible dates: 3, 7, 14, 21, 30 days out
+    const dates = [3, 7, 14, 21, 30].map(d => {
       const dt = new Date();
       dt.setDate(dt.getDate() + d);
       return dt.toISOString().split('T')[0];
     });
 
-    const selectedRoutes = routes.slice(0, 10);
+    const now = new Date().toISOString();
+    const selectedRoutes = routes.slice(0, 12);
     const rawDeals: SmartDeal[] = [];
     const seen = new Set<string>();
 
+    // Search each route across 3 dates for best price
     const promises = selectedRoutes.flatMap(route =>
       dates.slice(0, 3).map(async (date) => {
         const result = await searchRoute(route.origin, route.destination, date, duffelKey);
@@ -293,16 +366,24 @@ serve(async (req: Request) => {
         seen.add(routeKey);
         const avgPrice = AVG_PRICES[routeKey] || result.price * 1.2;
         const savings = Math.max(0, Math.round(((avgPrice - result.price) / avgPrice) * 100));
+
         rawDeals.push({
           id: `${route.origin}-${route.destination}-${date}`,
           origin: route.origin, originCode: route.origin,
           destination: route.destName, destinationCode: route.destination, destinationKey: route.destKey,
           price: result.price, departureDate: date, returnDate: null,
-          airline: result.airline, airlineLogo: result.airlineLogo,
+          airline: result.airline, airlineCode: result.airlineCode, airlineLogo: result.airlineLogo,
+          flightNumber: result.flightNumber,
           stops: result.stops, duration: result.duration,
-          aiDescription: `Great deal to ${route.destName}`, aiTip: 'Book soon — prices may increase',
-          dealScore: Math.min(100, 50 + savings), dealTag: savings > 20 ? 'Hot Deal' : 'Good Price',
+          departureTime: result.departureTime, arrivalTime: result.arrivalTime,
+          cabin: result.cabin, baggageIncluded: result.baggageIncluded,
+          offersCount: result.offersCount,
+          aiDescription: `Great deal to ${route.destName}`,
+          aiTip: 'Book soon — prices may increase',
+          dealScore: Math.min(100, 50 + savings),
+          dealTag: savings > 20 ? 'Hot Deal' : savings > 10 ? 'Good Price' : 'Available',
           savingsPercent: savings, category: route.category,
+          fetchedAt: now, expiresAt: result.expiresAt,
         });
       })
     );
@@ -313,7 +394,12 @@ serve(async (req: Request) => {
     const topDeals = rawDeals.slice(0, 12);
     const enhanced = aiKey ? await getAIEnhancements(topDeals, aiKey) : topDeals;
 
-    const responseData = { deals: enhanced, generatedAt: new Date().toISOString() };
+    const responseData = {
+      deals: enhanced,
+      generatedAt: now,
+      totalRoutesSearched: selectedRoutes.length,
+      totalDealsFound: rawDeals.length,
+    };
     cache.set(cacheKey, { data: responseData, expires: Date.now() + CACHE_TTL });
 
     return new Response(JSON.stringify(responseData), {
