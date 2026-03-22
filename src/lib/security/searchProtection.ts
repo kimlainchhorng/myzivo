@@ -11,8 +11,8 @@ interface SearchRecord {
 
 const searchHistory: SearchRecord[] = [];
 const WINDOW_MS = 60_000; // 1 minute
-const MAX_SEARCHES = 20; // max searches per minute
-const IDENTICAL_LIMIT = 5; // max identical searches per minute
+const MAX_SEARCHES = 60; // max searches per minute
+const IDENTICAL_LIMIT = 15; // max identical searches per minute
 
 export function checkSearchAbuse(
   origin: string,
