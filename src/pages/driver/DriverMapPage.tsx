@@ -254,8 +254,17 @@ export default function DriverMapPage() {
     }
 
     setAcceptedJobId(activeOffer.jobId);
+    setAcceptedJobFlight({
+      flightNumber: activeOffer.flightNumber,
+      flightArrivalTime: activeOffer.flightArrivalTime,
+      isAirportPickup: activeOffer.isAirportPickup,
+    });
     setActiveOffer(null);
-    toast.success("Ride accepted — customer location loading");
+    toast.success(
+      activeOffer.isAirportPickup
+        ? "Airport pickup accepted — check flight arrival time"
+        : "Ride accepted — customer location loading"
+    );
   }, [activeOffer]);
 
   const handleDeclineOffer = useCallback(async () => {
