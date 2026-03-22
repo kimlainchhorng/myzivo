@@ -1635,7 +1635,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setPinPlacementMode(null);
       setPlacingStopId(null);
     } else if (pinPlacementMode === "destination") {
-      // Destination was fine-tuned — exit pin placement
+      setPinPlacementMode(null);
+    } else if (pinPlacementMode === "pickup") {
       setPinPlacementMode(null);
     }
   }, [pinPlacementMode, placingStopId]);
@@ -2245,7 +2246,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   )}
                   <Button
                     onClick={handleConfirmPinPlacement}
-                    disabled={pinPlacementMode === "destination" ? !destination : !stops.find(s => s.id === placingStopId)?.place}
+                    disabled={pinPlacementMode === "pickup" ? !pickup : pinPlacementMode === "destination" ? !destination : !stops.find(s => s.id === placingStopId)?.place}
                     className={cn(
                       "h-12 rounded-2xl text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-primary/20",
                       pinPlacementMode === "destination" && destination && stops.length < MAX_STOPS ? "flex-1" : "w-full"
@@ -2256,7 +2257,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                         <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                         Locating...
                       </span>
-                    ) : pinPlacementMode === "destination" ? "Confirm drop-off" : "Confirm stop"}
+                    ) : pinPlacementMode === "pickup" ? "Confirm pickup" : pinPlacementMode === "destination" ? "Confirm drop-off" : "Confirm stop"}
                   </Button>
                 </div>
               </div>
