@@ -3302,7 +3302,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             </div>
 
             {/* Payment Section — fills remaining space */}
-            <div className="flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 min-h-0 pb-6">
               <RidePaymentSection
                 price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
                 vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}
