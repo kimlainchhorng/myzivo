@@ -2461,7 +2461,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 )}
               </Button>
             </div>
-          </motion.div>
+          </div>
 
         </>
       )}
