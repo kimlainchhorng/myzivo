@@ -2049,9 +2049,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     // Auto-confirm pickup when user focuses destination input
                     if (!pickupConfirmed) {
                       if (!pickup) {
-                        const coords = mapCenterRef.current ?? userLocation ?? fallbackPickupCenter;
+                        const coords = userLocation ?? fallbackPickupCenter;
                         const autoPickup = {
-                          address: pickupDisplay || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+                          address: pickupDisplay || t("ride.current_location") || "Current Location",
                           lat: coords.lat,
                           lng: coords.lng,
                         };
