@@ -270,14 +270,18 @@ const AppHome = () => {
   const initials = (profile?.full_name || user?.email || "Z").charAt(0).toUpperCase();
 
   return (
-    <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30" role="main">
+    <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30 perspective-container" role="main">
+      {/* 3D Ambient orbs */}
+      <div className="orb-3d-1 top-[-5%] right-[-10%] opacity-40 z-0" />
+      <div className="orb-3d-2 top-[40%] left-[-15%] opacity-25 z-0" />
+
       {/* Scrollable content */}
-      <div className="overflow-y-auto pb-24 scroll-momentum">
+      <div className="overflow-y-auto pb-24 scroll-momentum relative z-10">
         {/* ─── HEADER ─── */}
         <div className="bg-background relative">
-          {/* Service Tabs — Pill Chips */}
+          {/* Service Tabs — 3D Pill Chips */}
           <div
-            className="flex items-center gap-2 px-4 pb-2 overflow-hidden safe-area-top"
+            className="flex items-center gap-2 px-4 pb-2 overflow-hidden safe-area-top preserve-3d"
           >
             {homeTabs.map((tab) => {
               const isActive = activeHomeTab === tab.id;
@@ -285,13 +289,13 @@ const AppHome = () => {
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveHomeTab(tab.id)}
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.92, rotateX: 5 }}
                   layout
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   className={cn(
-                    "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px]",
+                    "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px] tab-3d",
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 active"
                       : "bg-muted/50 text-muted-foreground hover:bg-muted/70"
                   )}
                 >
