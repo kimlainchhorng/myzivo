@@ -791,7 +791,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const COLLAPSED_SHEET_HEIGHT = 290 + stops.length * 56 + (routeData ? 48 : 0);
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
   const SEARCH_SHEET_EXPANDED_Y = -20;
-  const SEARCH_SHEET_COLLAPSED_Y = Math.min(Math.max(viewportHeight * 0.18, 96), 180);
+  const SEARCH_SHEET_COLLAPSED_Y = Math.min(Math.max(viewportHeight * 0.30, 140), 260);
 
   useEffect(() => {
     if (viewStep === "search" && !pinPlacementMode) {
@@ -799,26 +799,22 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [viewStep, pinPlacementMode]);
 
-  const handleSearchSheetDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const movedDown = info.offset.y > 60 || info.velocity.y > 500;
-    const movedUp = info.offset.y < -60 || info.velocity.y < -500;
-
-    if (movedDown) {
+  const handleSearchSheetDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    // Snap based on velocity first, then position
+    if (info.velocity.y > 300) {
       setSearchSheetY(SEARCH_SHEET_COLLAPSED_Y);
-      return;
-    }
-
-    if (movedUp) {
+    } else if (info.velocity.y < -300) {
       setSearchSheetY(SEARCH_SHEET_EXPANDED_Y);
-      return;
+    } else if (info.offset.y > 40) {
+      setSearchSheetY(SEARCH_SHEET_COLLAPSED_Y);
+    } else if (info.offset.y < -40) {
+      setSearchSheetY(SEARCH_SHEET_EXPANDED_Y);
+    } else {
+      // Snap to nearest
+      const mid = (SEARCH_SHEET_EXPANDED_Y + SEARCH_SHEET_COLLAPSED_Y) / 2;
+      setSearchSheetY(searchSheetY > mid ? SEARCH_SHEET_COLLAPSED_Y : SEARCH_SHEET_EXPANDED_Y);
     }
-
-    setSearchSheetY(
-      searchSheetY > SEARCH_SHEET_COLLAPSED_Y / 2
-        ? SEARCH_SHEET_COLLAPSED_Y
-        : SEARCH_SHEET_EXPANDED_Y,
-    );
-  };
+  }, [searchSheetY, SEARCH_SHEET_COLLAPSED_Y, SEARCH_SHEET_EXPANDED_Y]);
 
   // Driver tracking - real-time from Supabase
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -2122,32 +2118,35 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
               drag="y"
               dragControls={searchDragControls}
-              dragListener={false}
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={0.08}
-              dragMomentum={false}
+              dragListener={true}
+              dragConstraints={{ top: SEARCH_SHEET_EXPANDED_Y, bottom: SEARCH_SHEET_COLLAPSED_Y }}
+              dragElastic={0.15}
               animate={{ y: searchSheetY }}
-              transition={{ type: "spring", stiffness: 380, damping: 38 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
               onDragEnd={handleSearchSheetDragEnd}
               style={{
                 maxHeight: "65vh",
                 display: "flex",
                 flexDirection: "column",
-                touchAction: "none",
+                touchAction: "pan-x",
               }}
             >
               {/* Drag handle */}
-              <button
-                type="button"
-                aria-label="Drag search sheet"
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="Drag to resize"
                 onClick={() => setSearchSheetY(searchSheetY === SEARCH_SHEET_EXPANDED_Y ? SEARCH_SHEET_COLLAPSED_Y : SEARCH_SHEET_EXPANDED_Y)}
-                onPointerDown={(event) => searchDragControls.start(event)}
-                className="flex justify-center pt-3 pb-2 shrink-0 touch-none cursor-grab active:cursor-grabbing"
+                className="flex justify-center pt-3 pb-3 shrink-0 cursor-grab active:cursor-grabbing"
               >
-                <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
-              </button>
+                <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+              </div>
 
-              <div className="px-5 pt-1 overflow-y-auto min-h-0 flex-1" style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})`, touchAction: "pan-y" }}>
+              <div
+                className="px-5 pt-1 overflow-y-auto min-h-0 flex-1 overscroll-contain"
+                style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})`, touchAction: "pan-y" }}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
                 {/* Pickup input */}
                 <div className="flex items-start gap-3 mb-3">
                   <div className="flex flex-col items-center mt-3">
