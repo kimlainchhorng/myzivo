@@ -716,9 +716,9 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
               if (dm && latLngs.length > 0) {
                 dm.setPosition(latLngs[latLngs.length - 1]);
               }
-              const { bgLine, animatedLine } = animatePolyline(map, latLngs, (finalLine) => {
               const anim = animatePolyline(map, latLngs, (finalLine) => {
-                polylineRef.current = finalLine;              });
+                polylineRef.current = finalLine;
+              });
               bgPolylineRef.current = anim.bgLine;
               polylineRef.current = anim.animatedLine;
               polylineAnimCancelRef.current = anim.cancel;
