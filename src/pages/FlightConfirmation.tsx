@@ -5,6 +5,7 @@
 
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useRef } from "react";
+import { useFlightNotifications } from "@/hooks/useFlightNotifications";
 import {
   CheckCircle, Clock, AlertCircle, Plane, Loader2, Ticket,
   Calendar, Users, CreditCard, Mail, MessageCircle,
@@ -53,8 +54,10 @@ const FlightConfirmation = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const { data: booking, isLoading, error } = useFlightBooking(bookingId || null);
   const { toast } = useToast();
+  const { notify: notifyFlight } = useFlightNotifications();
   const [copied, setCopied] = useState(false);
   const emailSentRef = useRef(false);
+  const notifiedRef = useRef(false);
 
   const statusInfo = booking ? getTicketingStatusInfo(booking.ticketing_status) : null;
   const isIssued = booking?.ticketing_status === "issued";
