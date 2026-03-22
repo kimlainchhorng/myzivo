@@ -88,6 +88,8 @@ interface RideMapProps {
   onCenterChanged?: (center: { lat: number; lng: number }) => void;
   /** Prevent automatic pan/fit while the user is manually positioning a pin */
   suppressAutoViewport?: boolean;
+  /** Disable user dragging/gestures when the view is in a locked confirmation state */
+  mapInteractive?: boolean;
 }
 
 // Singleton script loader
@@ -148,7 +150,7 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
   return googleMapsPromise;
 }
 
-export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers, showUserLocationDot = true, className, onMapReady, onCenterChanged, suppressAutoViewport = false }: RideMapProps) {
+export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers, showUserLocationDot = true, className, onMapReady, onCenterChanged, suppressAutoViewport = false, mapInteractive = true }: RideMapProps) {
   const [isReady, setIsReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failedReason, setFailedReason] = useState<string>("");
@@ -414,7 +416,7 @@ function animatePolyline(
 
 // Ambient cars removed — only real driver positions are shown on map
 
-function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers = [], showUserLocationDot = true, className, onMapReady, onCenterChanged, suppressAutoViewport = false }: RideMapProps) {
+function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers = [], showUserLocationDot = true, className, onMapReady, onCenterChanged, suppressAutoViewport = false, mapInteractive = true }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
