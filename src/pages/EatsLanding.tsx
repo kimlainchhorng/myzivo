@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useEatsNotifications } from "@/hooks/useEatsNotifications";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 
@@ -1729,7 +1730,7 @@ export default function EatsLanding() {
                 </div>
               </div>
 
-              <Button onClick={() => setStep("confirmation")} className="w-full h-14 text-base font-bold gap-3 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98]" disabled={!deliveryAddress.trim()}>
+              <Button onClick={() => { notifyEats("order_placed", { orderId: orderNumber, restaurantName: currentRestaurant?.name }); setStep("confirmation"); }} className="w-full h-14 text-base font-bold gap-3 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98]" disabled={!deliveryAddress.trim()}>
                 <CheckCircle className="w-5 h-5" /> Place Order · ${grandTotal.toFixed(2)}
               </Button>
             </div>

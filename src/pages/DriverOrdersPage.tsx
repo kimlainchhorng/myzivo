@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDriverShoppingOrders, ShoppingOrder } from "@/hooks/useDriverShoppingOrders";
 import { toast } from "sonner";
+import { useEatsNotifications } from "@/hooks/useEatsNotifications";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useEatsNotifications } from "@/hooks/useEatsNotifications";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import RideMap from "@/components/maps/RideMap";
 
@@ -388,6 +389,7 @@ export default function DeliveryPage() {
   };
 
   const handlePlaceOrder = () => {
+    notifyEats("order_placed");
     setStep("confirmation");
   };
 
