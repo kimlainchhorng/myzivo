@@ -2120,6 +2120,24 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   </div>
                 </div>
               )}
+              {/* Center pin for pickup (pin placement mode) */}
+              {viewStep === "search" && pinPlacementMode === "pickup" && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-10 h-10 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
+                      <span className="text-sm font-black text-primary-foreground leading-none">Z</span>
+                    </div>
+                    <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-primary -mt-[2px]" />
+                    <div className="w-3 h-1 rounded-full bg-foreground/15 mt-0.5 blur-[1px]" />
+                    {isReversingGeocode && (
+                      <span className="mt-1.5 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm border border-border/30">
+                        <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        Locating pickup...
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
               {/* Center pin for destination (pin placement mode) */}
               {viewStep === "search" && pinPlacementMode === "destination" && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
@@ -2167,11 +2185,30 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
               <div className="px-5 pt-1" style={{ paddingBottom: `calc(12px + ${SAFE_BOTTOM})` }}>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-                  {pinPlacementMode === "destination" ? "Drag map to set drop-off" : "Drag map to set stop"}
+                  {pinPlacementMode === "pickup" ? "Drag map to set pickup" : pinPlacementMode === "destination" ? "Drag map to set drop-off" : "Drag map to set stop"}
                 </p>
 
                 {/* Address display + search input */}
-                {pinPlacementMode === "destination" ? (
+                {pinPlacementMode === "pickup" ? (
+                  <AddressAutocomplete
+                    placeholder="Search or drag map..."
+                    value={pickupDisplay}
+                    onSelect={(place) => {
+                      reverseGeocodeRequestSeqRef.current += 1;
+                      if (reverseGeocodeTimerRef.current) {
+                        clearTimeout(reverseGeocodeTimerRef.current);
+                        reverseGeocodeTimerRef.current = null;
+                      }
+                      setIsReversingGeocode(false);
+                      setPickup(place);
+                      setPickupDisplay(place.address);
+                      lastGeocodedCoordsRef.current = `${place.lat.toFixed(4)},${place.lng.toFixed(4)}`;
+                      userHasDraggedPinRef.current = false;
+                      setMapPanTarget({ lat: place.lat, lng: place.lng });
+                    }}
+                    className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-medium [&_input]:bg-muted/15 [&_input]:border-border/30 mb-3"
+                  />
+                ) : pinPlacementMode === "destination" ? (
                   <AddressAutocomplete
                     placeholder="Search or drag map..."
                     value={destinationDisplay}
