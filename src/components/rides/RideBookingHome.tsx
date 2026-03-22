@@ -706,6 +706,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const pickupManuallySet = useRef(false); // true when user selects pickup via autocomplete
   const [pickupConfirmed, setPickupConfirmed] = useState(false); // reactive state for GPS confirm UI
   const mapCenterRef = useRef<{ lat: number; lng: number } | null>(null);
+  const lastGeocodedCoordsRef = useRef<string | null>(null); // dedup key to prevent repeat geocoding
 
   // New state for enhanced flow
   const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
