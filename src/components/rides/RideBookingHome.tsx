@@ -903,6 +903,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       if (!pickup || !destination || !user) return;
 
       // 1. Create a job row for the dispatch system
+      // Check if this is an airport pickup linked to a flight booking
+      const flightData = upcomingFlight ? buildFlightPickupJobData(upcomingFlight) : {};
+
       const { data: jobData, error: jobError } = await supabase.from("jobs").insert({
         customer_id: user.id,
         job_type: "ride" as any,
@@ -919,6 +922,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         pricing_total_estimate: currentPrice ?? null,
         requested_at: new Date().toISOString(),
         notes: rideRequestId ? `ride_request:${rideRequestId}` : null,
+        ...flightData,
       } as any).select("id").single();
 
       if (jobError || !jobData) {
