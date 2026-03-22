@@ -1911,7 +1911,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               key={`persistent-map-${locationModeKey}`}
               compact
                 pickupCoords={viewStep === "search" && !pickupConfirmed ? null : pickup}
-                dropoffCoords={destination}
+                dropoffCoords={viewStep === "search" && pickupConfirmed ? null : destination}
+              panToCoords={mapPanTarget}
               stopCoords={stops.filter(s => s.place).map(s => ({ lat: s.place!.lat, lng: s.place!.lng }))}
               driverCoords={driverCoords}
               driverNavigationTarget={
