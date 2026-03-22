@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
@@ -26,6 +26,7 @@ const loginSchema = z.object({
 const signupSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
   email: z.string().email("Please enter a valid email address"),
+  phone: z.string().min(7, "Please enter a valid phone number").max(20).regex(/^[+]?[\d\s\-().]+$/, "Invalid phone number format"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -78,6 +79,7 @@ const Login = () => {
     defaultValues: {
       fullName: "",
       email: "",
+      phone: "",
       password: "",
       confirmPassword: "",
     },
@@ -170,7 +172,7 @@ const Login = () => {
       return;
     }
 
-    const { error } = await signUp(data.email, data.password, data.fullName);
+    const { error } = await signUp(data.email, data.password, data.fullName, data.phone);
 
     if (error) {
       setIsLoading(false);
@@ -384,6 +386,29 @@ const Login = () => {
                           <input
                             placeholder="John Doe"
                             autoComplete="name"
+                            className="w-full bg-muted border border-border rounded-xl py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-destructive" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signupForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-muted-foreground text-sm font-medium">Phone Number</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <input
+                            type="tel"
+                            placeholder="+1 (555) 000-0000"
+                            autoComplete="tel"
                             className="w-full bg-muted border border-border rounded-xl py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
                             {...field}
                           />
