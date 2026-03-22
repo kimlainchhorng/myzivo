@@ -727,7 +727,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   // Pin placement mode: when active, the center pin is used for placing destination or stop
   const [pinPlacementMode, setPinPlacementMode] = useState<"destination" | "stop" | null>(null);
   const [placingStopId, setPlacingStopId] = useState<string | null>(null);
-  const [pendingDestinationPreview, setPendingDestinationPreview] = useState<string>("");
 
   // New state for enhanced flow
   const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
@@ -1497,7 +1496,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     setViewStep("search");
     setPinPlacementMode("destination");
     userHasDraggedPinRef.current = false; // reset — require user to drag before updating
-    setPendingDestinationPreview(place.address);
     setDestinationDisplay("");
 
     // Pan map to destination so user can fine-tune with the "D" pin
@@ -2197,7 +2195,6 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                           setViewStep("search");
                           setPinPlacementMode("destination");
                           userHasDraggedPinRef.current = false;
-                          setPendingDestinationPreview(destination.address);
                           setDestinationDisplay("");
                           setMapPanTarget({ lat: destination.lat, lng: destination.lng });
                         }
