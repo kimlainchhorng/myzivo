@@ -2116,13 +2116,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   value={destinationDisplay}
                   onSelect={handleDestinationSelect}
                   onFocus={() => {
-                    if (!pickupConfirmed) {
-                      if (!pickup) {
-                        ensureAutoPickup();
-                      }
-                      pickupManuallySet.current = true;
-                      setPickupConfirmed(true);
-                      lastGeocodedCoordsRef.current = null;
+                    if (!pickup) {
+                      ensureAutoPickup();
+                    }
+                    pickupManuallySet.current = true;
+                    setPickupConfirmed(true);
+                    lastGeocodedCoordsRef.current = null;
+
+                    if (destination) {
+                      setPinPlacementMode("destination");
+                      setMapPanTarget({ lat: destination.lat, lng: destination.lng });
                     }
                   }}
                   proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined}
