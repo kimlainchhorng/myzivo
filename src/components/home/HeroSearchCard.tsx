@@ -1,5 +1,5 @@
 /**
- * HeroSearchCard - Floating tabbed search card for all ZIVO services
+ * HeroSearchCard - 3D Spatial floating tabbed search card
  */
 import { useState } from "react";
 import { Plane, Hotel, CarFront, Car, UtensilsCrossed, Search, MapPin, Calendar, Users, Clock, ArrowLeftRight } from "lucide-react";
@@ -24,181 +24,204 @@ export default function HeroSearchCard() {
   const navigate = useNavigate();
 
   const handleSearch = () => {
-    if (activeTab === "flights") {
-      navigate("/flights");
-      return;
-    }
-    const routes: Record<string, string> = {
-      hotels: "/hotels",
-      cars: "/rent-car",
-      rides: "/rides",
-      eats: "/eats",
-    };
+    if (activeTab === "flights") { navigate("/flights"); return; }
+    const routes: Record<string, string> = { hotels: "/hotels", cars: "/rent-car", rides: "/rides", eats: "/eats" };
     toast.success(`Searching ${activeTab}...`, { duration: 1500 });
     navigate(routes[activeTab] || "/");
   };
 
   return (
     <section id="hero-search-card" className="relative z-20 -mt-8 sm:-mt-12 pb-8 sm:pb-12" aria-label="Search flights, hotels, cars, rides, and restaurants">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4" style={{ perspective: "1200px" }}>
         <motion.div
-          initial={{ opacity: 0, y: 24, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="max-w-4xl mx-auto bg-card rounded-2xl shadow-xl border border-border/50 overflow-hidden border-glow relative"
+          initial={{ opacity: 0, y: 30, rotateX: -6, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="max-w-4xl mx-auto rounded-3xl overflow-hidden relative"
+          style={{
+            transformStyle: "preserve-3d",
+            background: "hsl(var(--card) / 0.75)",
+            backdropFilter: "blur(40px) saturate(1.5)",
+            border: "1px solid hsl(var(--border) / 0.3)",
+            boxShadow: [
+              "0 30px 80px -20px hsl(var(--foreground) / 0.12)",
+              "0 8px 24px -4px hsl(var(--primary) / 0.06)",
+              "inset 0 1px 1px hsl(var(--background) / 0.6)",
+              "inset 0 -1px 2px hsl(var(--foreground) / 0.03)",
+            ].join(", "),
+          }}
         >
-          {/* Gradient top accent */}
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--hotels))] to-[hsl(var(--rides))] opacity-60" />
-          {/* Tabs */}
-          <div className="flex border-b border-border/50 overflow-x-auto scrollbar-hide relative" role="tablist" aria-label="Service type">
-             {tabs.map((tab) => {
+          {/* Holographic top accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-[3px]"
+            style={{
+              background: "linear-gradient(90deg, hsl(var(--flights)), hsl(var(--hotels)), hsl(var(--cars)), hsl(var(--rides)), hsl(var(--eats)))",
+              opacity: 0.7,
+            }}
+          />
+
+          {/* Glass shine overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "linear-gradient(135deg, hsl(var(--background) / 0.15) 0%, transparent 40%, transparent 60%, hsl(var(--background) / 0.08) 100%)",
+            }}
+          />
+
+          {/* Tabs — 3D raised */}
+          <div className="flex border-b border-border/30 overflow-x-auto scrollbar-hide relative" role="tablist" aria-label="Service type">
+            {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
-                <button
+                <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   role="tab"
                   aria-selected={isActive}
                   aria-controls={`search-panel-${tab.id}`}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.97 }}
                   className={cn(
-                    "flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition-all duration-200 border-b-2 flex-1 justify-center min-w-0 relative touch-manipulation active:scale-[0.97] min-h-[48px]",
+                    "flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 flex-1 justify-center min-w-0 relative touch-manipulation min-h-[48px]",
                     isActive
                       ? `${tab.border} ${tab.color} ${tab.bg}`
                       : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30"
                   )}
                 >
                   <motion.div
-                    animate={{ scale: isActive ? 1.1 : 1, rotate: isActive ? -6 : 0 }}
+                    animate={{
+                      scale: isActive ? 1.15 : 1,
+                      rotate: isActive ? -8 : 0,
+                      y: isActive ? -1 : 0,
+                    }}
                     transition={{ type: "spring", stiffness: 400, damping: 20 }}
                   >
                     <tab.icon className={cn("w-4 h-4 shrink-0", isActive ? tab.color : "")} />
                   </motion.div>
                   <span className="hidden sm:inline">{tab.label}</span>
-                </button>
+                  {isActive && (
+                    <motion.span
+                      layoutId="search-tab-glow"
+                      className="absolute bottom-0 left-1/4 right-1/4 h-[2px] rounded-full"
+                      style={{
+                        boxShadow: `0 0 12px 2px currentColor`,
+                        opacity: 0.4,
+                      }}
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                </motion.button>
               );
             })}
           </div>
 
-          {/* Search Forms */}
+          {/* Search Forms — 3D inner */}
           <div id={`search-panel-${activeTab}`} role="tabpanel" aria-label={`${activeTab} search`} className="p-5 sm:p-6">
             {activeTab === "flights" && (
               <div className="space-y-4">
-                {/* Trip type toggle */}
-                 <div className="flex gap-2">
-                  <button
-                    onClick={() => setTripType("round")}
-                    className={cn(tripType === "round" ? "chip-active" : "chip-inactive", "text-xs px-4 py-1.5 touch-manipulation active:scale-95 min-h-[36px]")}
-                  >
-                    Round Trip
-                  </button>
-                  <button
-                    onClick={() => setTripType("oneway")}
-                    className={cn(tripType === "oneway" ? "chip-active" : "chip-inactive", "text-xs px-4 py-1.5 touch-manipulation active:scale-95 min-h-[36px]")}
-                  >
-                    One Way
-                  </button>
+                <div className="flex gap-2">
+                  {(["round", "oneway"] as const).map((type) => (
+                    <motion.button
+                      key={type}
+                      onClick={() => setTripType(type)}
+                      whileHover={{ y: -1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={cn(
+                        tripType === type ? "chip-active" : "chip-inactive",
+                        "text-xs px-4 py-1.5 touch-manipulation min-h-[36px] rounded-full transition-all duration-200"
+                      )}
+                      style={tripType === type ? {
+                        boxShadow: "0 2px 8px -2px hsl(var(--primary) / 0.3), inset 0 1px 1px hsl(var(--background) / 0.15)",
+                      } : {}}
+                    >
+                      {type === "round" ? "Round Trip" : "One Way"}
+                    </motion.button>
+                  ))}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  <InputField icon={MapPin} placeholder="Where from?" />
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Where from?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
-                  </div>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Where to?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
-                    {/* Swap button */}
+                    <InputField icon={MapPin} placeholder="Where to?" />
                     <button
-                      className="absolute -left-5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card border border-border/50 shadow-sm flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 hover:rotate-180 transition-all duration-200 z-10 hidden sm:flex hover:scale-110"
+                      className="absolute -left-5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card border border-border/40 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 hover:rotate-180 transition-all duration-300 z-10 hidden sm:flex hover:scale-110"
+                      style={{ boxShadow: "0 2px 8px -2px hsl(var(--foreground) / 0.08)" }}
                       aria-label="Swap origin and destination"
                     >
                       <ArrowLeftRight className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                   </div>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Dates" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
-                  </div>
-                  <div className="relative">
-                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Passengers" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
-                  </div>
-                  <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
-                    <Search className="w-4 h-4" /> Search
-                  </Button>
+                  <InputField icon={Calendar} placeholder="Dates" />
+                  <InputField icon={Users} placeholder="Passengers" />
+                  <SearchButton onClick={handleSearch} />
                 </div>
               </div>
             )}
-
             {activeTab === "hotels" && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="City, hotel, or destination" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
-                </div>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Check-in / Check-out" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
-                </div>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Guests & rooms" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
-                </div>
-                <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
-                  <Search className="w-4 h-4" /> Search
-                </Button>
+                <InputField icon={MapPin} placeholder="City, hotel, or destination" />
+                <InputField icon={Calendar} placeholder="Check-in / Check-out" />
+                <InputField icon={Users} placeholder="Guests & rooms" />
+                <SearchButton onClick={handleSearch} />
               </div>
             )}
-
             {activeTab === "cars" && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Pickup location" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
-                </div>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Pickup date" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
-                </div>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Return date" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
-                </div>
-                <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
-                  <Search className="w-4 h-4" /> Search
-                </Button>
+                <InputField icon={MapPin} placeholder="Pickup location" />
+                <InputField icon={Calendar} placeholder="Pickup date" />
+                <InputField icon={Clock} placeholder="Return date" />
+                <SearchButton onClick={handleSearch} />
               </div>
             )}
-
             {activeTab === "rides" && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
-                  <Input placeholder="Where are you?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
-                </div>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />
-                  <Input placeholder="Where are you going?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
-                </div>
-                <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
-                  <Search className="w-4 h-4" /> Search
-                </Button>
+                <InputField icon={MapPin} placeholder="Where are you?" iconClass="text-primary" />
+                <InputField icon={MapPin} placeholder="Where are you going?" iconClass="text-destructive" />
+                <SearchButton onClick={handleSearch} />
               </div>
             )}
-
             {activeTab === "eats" && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="relative sm:col-span-2">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Enter your delivery address" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
+                <div className="sm:col-span-2">
+                  <InputField icon={MapPin} placeholder="Enter your delivery address" />
                 </div>
-                <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
-                  <Search className="w-4 h-4" /> Search
-                </Button>
+                <SearchButton onClick={handleSearch} />
               </div>
             )}
           </div>
         </motion.div>
       </div>
     </section>
+  );
+}
+
+function InputField({ icon: Icon, placeholder, iconClass }: { icon: any; placeholder: string; iconClass?: string }) {
+  return (
+    <div className="relative group">
+      <Icon className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary", iconClass)} />
+      <Input
+        placeholder={placeholder}
+        className="pl-10 h-12 rounded-xl border-border/40 transition-all duration-300 focus:border-primary/40"
+        style={{
+          background: "hsl(var(--muted) / 0.25)",
+          boxShadow: "inset 0 1px 3px hsl(var(--foreground) / 0.03)",
+        }}
+      />
+    </div>
+  );
+}
+
+function SearchButton({ onClick }: { onClick: () => void }) {
+  return (
+    <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+      <Button
+        onClick={onClick}
+        className="h-12 w-full rounded-xl font-bold gap-2 text-base transition-all duration-300"
+        style={{
+          boxShadow: "0 4px 16px -2px hsl(var(--primary) / 0.35), inset 0 1px 1px hsl(var(--background) / 0.15)",
+        }}
+      >
+        <Search className="w-4 h-4" /> Search
+      </Button>
+    </motion.div>
   );
 }
