@@ -234,7 +234,7 @@ END:VCALENDAR`;
   const exportToGoogleCalendar = (flight: FlightData) => {
     try {
       const url = generateGoogleCalendarURL(flight);
-      window.open(url, '_blank', 'noopener,noreferrer');
+      import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(url));
       toast.success('Opening Google Calendar...');
     } catch (error) {
       toast.error('Failed to open Google Calendar');
@@ -245,16 +245,16 @@ END:VCALENDAR`;
   const exportToPDF = (flight: FlightData) => {
     try {
       const htmlContent = generatePDFContent(flight);
-      const printWindow = window.open('', '_blank', 'noopener,noreferrer');
-      if (printWindow) {
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(() => {
-          printWindow.print();
-        }, 250);
-        toast.success('Opening print dialog...');
-      }
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ZIVO-Itinerary-${flight.departureAirport}-${flight.arrivalAirport}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Itinerary downloaded!');
     } catch (error) {
       toast.error('Failed to generate PDF');
     }

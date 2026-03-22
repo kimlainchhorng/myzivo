@@ -321,11 +321,9 @@ export default function TravelExtras() {
                     return (
                       <Tooltip key={partner.id}>
                         <TooltipTrigger asChild>
-                          <a
-                            href={outboundUrl}
-                            target="_blank"
-                            rel="nofollow sponsored noopener noreferrer"
-                            className="block"
+                          <button
+                            onClick={(e) => { e.preventDefault(); import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(outboundUrl)); }}
+                            className="block w-full text-left"
                           >
                             <Card
                               className={cn(
@@ -375,7 +373,7 @@ export default function TravelExtras() {
                                 </div>
                               </CardContent>
                             </Card>
-                          </a>
+                          </button>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>You will be redirected to a partner site.</p>
