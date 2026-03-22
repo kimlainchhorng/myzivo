@@ -388,6 +388,8 @@ export default function RidePaymentSection({
   paymentFailed,
   onClearError,
   isCambodia = false,
+  cashAllowed = true,
+  onCashConfirm,
 }: RidePaymentSectionProps) {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
