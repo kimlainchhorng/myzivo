@@ -43,6 +43,7 @@ import { useCustomerLocationBroadcast } from "@/hooks/useCustomerLocationBroadca
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
 import { useUpcomingFlightArrival, buildFlightPickupJobData, isAirportAddress } from "@/hooks/useFlightArrivalPickup";
+import { usePaymentLocationRestriction } from "@/hooks/usePaymentLocationRestriction";
 
 /* ─── Types ─── */
 interface PlaceData {
