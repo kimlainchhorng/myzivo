@@ -74,19 +74,25 @@ export const usePushNotifications = () => {
     }
   }, []);
 
-  // Save token to database (stores in user metadata for now)
+  // Save token to database via edge function
   const saveToken = useCallback(async (token: string) => {
     if (!user?.id) return;
 
     try {
-      const platform = Capacitor.getPlatform();
+      const platform = Capacitor.getPlatform(); // 'ios' | 'android' | 'web'
       
       setState(prev => ({ ...prev, isRegistered: true, token }));
       
-      // Optional: Call edge function to store token
-      // await supabase.functions.invoke("register-push-token", {
-      //   body: { token, platform }
-      // });
+      // Persist token to Supabase so server can send push notifications
+      const { error } = await supabase.functions.invoke("register-push-token", {
+        body: { token, platform }
+      });
+
+      if (error) {
+        console.error("[Push] Error saving token to server:", error);
+      } else {
+        console.log(`[Push] ${platform} token registered successfully`);
+      }
     } catch (error) {
       console.error("[Push] Error saving token:", error);
     }
@@ -184,10 +190,10 @@ export const usePushNotifications = () => {
     if (!user?.id || !state.token) return;
 
     try {
-      // Mark token as inactive via edge function (if implemented)
-      // await supabase.functions.invoke("unregister-push-token", {
-      //   body: { token: state.token }
-      // });
+      // Mark token as inactive on server
+      await supabase.functions.invoke("register-push-token", {
+        body: { token: state.token, platform: Capacitor.getPlatform(), deactivate: true }
+      });
       
       setState(prev => ({ ...prev, isRegistered: false, token: null }));
       
