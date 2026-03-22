@@ -1393,7 +1393,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     ) {
       toast.info("Trip in progress");
     } else {
-      navigate(-1);
+      navigate("/");
     }
   };
 
