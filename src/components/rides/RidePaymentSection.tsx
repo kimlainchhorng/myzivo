@@ -571,8 +571,13 @@ export default function RidePaymentSection({
               console.error("ABA Payway error:", err);
             }
           } else if (method === "cash") {
-            toast.success("Ride confirmed! Pay cash to your driver.");
-            onPaymentSuccess();
+            // Use dedicated cash handler that creates ride_request + job without Stripe
+            if (onCashConfirm) {
+              onCashConfirm();
+            } else {
+              toast.success("Ride confirmed! Pay cash to your driver.");
+              onPaymentSuccess();
+            }
           } else if (method === "qr") {
             toast.success("Ride confirmed! QR code will be shown when driver arrives.");
             onPaymentSuccess();
