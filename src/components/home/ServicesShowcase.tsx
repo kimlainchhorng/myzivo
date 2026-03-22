@@ -1,10 +1,11 @@
 /**
- * ServicesShowcase - Premium bento grid with glassmorphism overlays
+ * ServicesShowcase - 3D Spatial bento grid with depth layers
  */
 import { Plane, Hotel, CarFront, Car, UtensilsCrossed, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { use3DTilt } from "@/hooks/use3DTilt";
 
 import imgFlights from "@/assets/service-flights.jpg";
 import imgHotels from "@/assets/service-hotels.jpg";
@@ -58,9 +59,94 @@ const services = [
   },
 ];
 
+function ServiceCard3D({ service, index }: { service: typeof services[0]; index: number }) {
+  const { ref, style, glareStyle, handleMouseMove, handleMouseLeave } = use3DTilt(8, 1.03);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30, rotateX: -8 }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.08 }}
+      className={cn(service.span)}
+    >
+      <div
+        ref={ref}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={style}
+        className="relative h-full"
+      >
+        <Link
+          to={service.href}
+          className="group relative block h-full rounded-2xl overflow-hidden touch-manipulation active:scale-[0.98] transition-shadow duration-300 hover:shadow-2xl"
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          {/* Background image */}
+          <img
+            src={service.image}
+            alt={`${service.title} — ${service.description}`}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            loading="lazy"
+          />
+
+          {/* Dark gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+
+          {/* 3D Glare effect */}
+          <div
+            className="absolute inset-0 pointer-events-none z-20 rounded-2xl"
+            style={glareStyle}
+          />
+
+          {/* Accent color glow on hover */}
+          <div
+            className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
+            style={{ background: `radial-gradient(ellipse at bottom, hsl(var(${service.accentVar})), transparent 70%)` }}
+          />
+
+          {/* Badge */}
+          {"badge" in service && service.badge && (
+            <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary text-primary-foreground z-10">
+              {service.badge}
+            </span>
+          )}
+
+          {/* Content — 3D depth layer */}
+          <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-6 z-10" style={{ transform: "translateZ(30px)" }}>
+            <div className="flex items-center gap-3 mb-1">
+              <motion.div
+                whileHover={{ rotate: -8, scale: 1.15, z: 20 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                className="w-11 h-11 rounded-xl backdrop-blur-md flex items-center justify-center border icon-3d-pop"
+                style={{
+                  backgroundColor: `hsl(var(${service.accentVar}) / 0.15)`,
+                  borderColor: `hsl(var(${service.accentVar}) / 0.25)`,
+                }}
+              >
+                <service.icon className="w-5 h-5" style={{ color: `hsl(var(${service.accentVar}))` }} />
+              </motion.div>
+              <div>
+                <h3 className="font-bold text-lg text-foreground leading-tight">{service.title}</h3>
+                <p className="text-sm text-muted-foreground">{service.description}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 mt-3 text-sm font-semibold sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 transition-all duration-300" style={{ color: `hsl(var(${service.accentVar}))` }}>
+              Explore <ArrowRight className="w-4 h-4" />
+            </div>
+          </div>
+        </Link>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function ServicesShowcase() {
   return (
-    <section id="services-showcase" className="section-padding relative" aria-label="ZIVO travel services">
+    <section id="services-showcase" className="section-padding relative perspective-container" aria-label="ZIVO travel services">
+      {/* 3D Background mesh */}
+      <div className="absolute inset-0 bg-mesh-3d pointer-events-none" />
+
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -78,70 +164,13 @@ export default function ServicesShowcase() {
           </p>
         </motion.div>
 
-        {/* Bento grid layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto" style={{ gridAutoRows: "200px" }}>
+        {/* 3D Bento grid layout */}
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto preserve-3d"
+          style={{ gridAutoRows: "200px" }}
+        >
           {services.map((service, i) => (
-            <motion.div
-              key={service.title}
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.08 }}
-              className={cn(service.span)}
-            >
-              <Link
-                to={service.href}
-                className="group relative block h-full rounded-2xl overflow-hidden touch-manipulation active:scale-[0.98] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-              >
-                {/* Background image */}
-                <img
-                  src={service.image}
-                  alt={`${service.title} — ${service.description}`}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  loading="lazy"
-                />
-
-                {/* Dark gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
-
-                {/* Accent color glow on hover */}
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
-                  style={{ background: `radial-gradient(ellipse at bottom, hsl(var(${service.accentVar})), transparent 70%)` }}
-                />
-
-                {/* Badge */}
-                {"badge" in service && service.badge && (
-                  <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary text-primary-foreground z-10">
-                    {service.badge}
-                  </span>
-                )}
-
-                {/* Content */}
-                <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-6 z-10">
-                  <div className="flex items-center gap-3 mb-1">
-                    <motion.div
-                      whileHover={{ rotate: -8, scale: 1.15 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                      className="w-11 h-11 rounded-xl backdrop-blur-md flex items-center justify-center border"
-                      style={{
-                        backgroundColor: `hsl(var(${service.accentVar}) / 0.15)`,
-                        borderColor: `hsl(var(${service.accentVar}) / 0.25)`,
-                      }}
-                    >
-                      <service.icon className="w-5 h-5" style={{ color: `hsl(var(${service.accentVar}))` }} />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-bold text-lg text-foreground leading-tight">{service.title}</h3>
-                      <p className="text-sm text-muted-foreground">{service.description}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 mt-3 text-sm font-semibold sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 transition-all duration-300" style={{ color: `hsl(var(${service.accentVar}))` }}>
-                    Explore <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
+            <ServiceCard3D key={service.title} service={service} index={i} />
           ))}
         </div>
       </div>
