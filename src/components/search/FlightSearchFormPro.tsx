@@ -225,7 +225,7 @@ export default function FlightSearchFormPro({
       />
 
       {/* Trip Type Toggle */}
-      <div className="flex gap-2 mb-5 flex-wrap" style={{ transform: "translateZ(8px)" }}>
+      <div className="relative flex gap-2 mb-5 flex-wrap" style={{ transform: "translateZ(8px)" }}>
         {[
           { id: "roundtrip" as TripType, label: t("flights.roundtrip"), icon: RefreshCw },
           { id: "oneway" as TripType, label: t("flights.oneway"), icon: Plane },
@@ -235,15 +235,21 @@ export default function FlightSearchFormPro({
             key={type.id}
             onClick={() => setTripType(type.id)}
             className={cn(
-              "px-3.5 sm:px-5 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm",
+              "relative px-3.5 sm:px-5 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm overflow-hidden",
               tripType === type.id
-                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-primary-foreground shadow-[0_4px_16px_hsl(var(--primary)/0.35),inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-[0.96] active:shadow-[0_2px_8px_hsl(var(--primary)/0.25)]"
+                ? "text-primary-foreground shadow-[0_4px_16px_hsl(var(--primary)/0.35),inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-[0.96]"
                 : "bg-muted/60 text-muted-foreground hover:bg-muted/80 hover:shadow-md active:scale-[0.97] border border-border/30"
             )}
             style={tripType === type.id ? { transform: "translateZ(6px)" } : {}}
           >
-            <type.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            {type.label}
+            {tripType === type.id && (
+              <>
+                <img src={tabFlightsBg} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: 0.5 }} />
+                <span className="absolute inset-0" style={{ background: "linear-gradient(135deg, hsl(var(--flights) / 0.7), hsl(var(--flights) / 0.5))" }} />
+              </>
+            )}
+            <type.icon className="relative z-10 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="relative z-10">{type.label}</span>
           </button>
         ))}
       </div>
