@@ -888,7 +888,13 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     realDriverMarkersRef.current = [];
   }, [clearAmbientCars]);
 
-  return <div ref={mapContainerRef} className={`w-full h-full min-h-[200px] rounded-xl overflow-hidden ${className || ""}`} />;
+  return (
+    <div
+      ref={mapContainerRef}
+      className={`w-full h-full min-h-[200px] rounded-xl overflow-hidden ${className || ""}`}
+      style={{ touchAction: mapInteractive ? "none" : "auto" }}
+    />
+  );
 }
 
 function MapFallback({
