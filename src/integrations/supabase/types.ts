@@ -1216,6 +1216,36 @@ export type Database = {
           },
         ]
       }
+      ai_deals_refresh_log: {
+        Row: {
+          completed_at: string | null
+          deals_cached: number | null
+          error_message: string | null
+          id: string
+          routes_searched: number | null
+          started_at: string | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          deals_cached?: number | null
+          error_message?: string | null
+          id?: string
+          routes_searched?: number | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          deals_cached?: number | null
+          error_message?: string | null
+          id?: string
+          routes_searched?: number | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       ai_faq_responses: {
         Row: {
           answer: string
@@ -1677,6 +1707,36 @@ export type Database = {
           search_params?: Json
           service_type?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_smart_deals_cache: {
+        Row: {
+          category: string
+          created_at: string | null
+          deal_data: Json
+          destination_code: string
+          expires_at: string
+          id: string
+          origin_code: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          deal_data: Json
+          destination_code: string
+          expires_at: string
+          id: string
+          origin_code: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          deal_data?: Json
+          destination_code?: string
+          expires_at?: string
+          id?: string
+          origin_code?: string
         }
         Relationships: []
       }
