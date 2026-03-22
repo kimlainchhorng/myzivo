@@ -42,7 +42,7 @@ import { useDriverLocation } from "@/hooks/useDriverLocation";
 import { useCustomerLocationBroadcast } from "@/hooks/useCustomerLocationBroadcast";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
-import { useUpcomingFlightArrival, buildFlightPickupJobData } from "@/hooks/useFlightArrivalPickup";
+import { useUpcomingFlightArrival, buildFlightPickupJobData, isAirportAddress } from "@/hooks/useFlightArrivalPickup";
 
 /* ─── Types ─── */
 interface PlaceData {
@@ -904,7 +904,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       // 1. Create a job row for the dispatch system
       // Check if this is an airport pickup linked to a flight booking
-      const flightData = upcomingFlight ? buildFlightPickupJobData(upcomingFlight) : {};
+      const flightData = buildFlightPickupJobData(upcomingFlight, pickup.address);
 
       const { data: jobData, error: jobError } = await supabase.from("jobs").insert({
         customer_id: user.id,
@@ -3139,7 +3139,30 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </div>
             </div>
 
-            {/* Vehicle + Fare breakdown */}
+            {/* Flight linked badge — shows when ride is connected to a flight booking */}
+            {(upcomingFlight || isAirportAddress(pickup?.address)) && (
+              <div className="rounded-lg bg-sky-500/5 border border-sky-500/20 px-3 py-2 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">
+                    <Plane className="w-4 h-4 text-sky-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold text-foreground">
+                      {upcomingFlight ? "✈️ Linked to your flight" : "✈️ Airport Pickup"}
+                    </p>
+                    {upcomingFlight && (
+                      <p className="text-[10px] text-muted-foreground">
+                        {upcomingFlight.origin} → {upcomingFlight.destination} · Ref: {upcomingFlight.bookingReference}
+                      </p>
+                    )}
+                    <p className="text-[9px] text-sky-600 font-medium mt-0.5">
+                      {upcomingFlight ? "Driver will see your flight details for timely pickup" : "Driver notified this is an airport pickup"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
               <div className="flex items-center gap-2.5 mb-1.5">
                 <div className="w-[50px] h-[36px] flex items-center justify-center shrink-0 bg-muted/10 rounded-md">
