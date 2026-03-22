@@ -41,6 +41,7 @@ export function AddressAutocomplete({
   value = "",
   onSelect,
   onClear,
+  onFocus,
   proximity,
   disabled = false,
   className,
