@@ -117,7 +117,7 @@ export default function DriverOrdersPage() {
     const ok = await acceptOrder(orderId);
     setAcceptingId(null);
     if (ok) {
-      toast.success("Order accepted! Head to the store.");
+      notifyEats("new_delivery_driver", { orderId });
       setTab("my");
     } else {
       toast.error("Could not accept — it may have been taken.");
