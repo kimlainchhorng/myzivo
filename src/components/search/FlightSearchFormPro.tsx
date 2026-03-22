@@ -214,9 +214,9 @@ export default function FlightSearchFormPro({
         src={tabFlightsBg}
         alt=""
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-        style={{ opacity: 0.12 }}
+        style={{ opacity: 0.3 }}
       />
-      <span className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, hsl(var(--card) / 0.7) 0%, hsl(var(--card) / 0.85) 50%, hsl(var(--card) / 0.75) 100%)" }} />
+      <span className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, hsl(var(--card) / 0.55) 0%, hsl(var(--card) / 0.7) 50%, hsl(var(--card) / 0.6) 100%)" }} />
 
       {/* Accent bar with 3D lift */}
       <div
