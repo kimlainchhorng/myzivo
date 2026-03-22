@@ -259,13 +259,13 @@ export default function AdminShoppingOrders() {
                         <p className="text-xs font-semibold mb-1.5 flex items-center gap-1">
                           <Image className="h-3 w-3" /> Receipt
                         </p>
-                        <a href={order.receipt_photo_url} target="_blank" rel="noopener noreferrer">
+                        <button onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(order.receipt_photo_url))}>
                           <img
                             src={order.receipt_photo_url}
                             alt="Receipt"
                             className="h-32 w-auto rounded-xl border border-border/50 object-cover"
                           />
-                        </a>
+                        </button>
                       </div>
                     )}
                   </motion.div>

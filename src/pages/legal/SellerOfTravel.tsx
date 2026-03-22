@@ -133,14 +133,12 @@ const SellerOfTravel = () => {
                     <p className="text-sm text-muted-foreground">
                       Seller of Travel Registration: Application submitted
                     </p>
-                    <a 
-                      href="https://www.ag.ca.gov/consumers/travel" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
+                    <button 
+                      onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://www.ag.ca.gov/consumers/travel"))}
                       className="text-xs text-primary hover:underline flex items-center gap-1 mt-2"
                     >
                       CA Attorney General <ExternalLink className="w-3 h-3" />
-                    </a>
+                    </button>
                   </div>
                   
                   <div className="p-4 rounded-lg border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
@@ -153,14 +151,12 @@ const SellerOfTravel = () => {
                     <p className="text-sm text-muted-foreground">
                       Seller of Travel Registration: Application submitted
                     </p>
-                    <a 
-                      href="https://www.fdacs.gov/Consumer-Resources/Travel" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
+                    <button 
+                      onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://www.fdacs.gov/Consumer-Resources/Travel"))}
                       className="text-xs text-primary hover:underline flex items-center gap-1 mt-2"
                     >
                       FL DACS <ExternalLink className="w-3 h-3" />
-                    </a>
+                    </button>
                   </div>
                 </div>
               </CardContent>
