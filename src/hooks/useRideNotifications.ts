@@ -1,11 +1,14 @@
 /**
  * useRideNotifications — Ride-specific notification helpers
- * Wraps usePushNotifications with ride lifecycle events
+ * Wraps local + server push for ride lifecycle events
+ * Works on iOS, Android (Capacitor) and Web (PWA)
  */
 import { useCallback } from "react";
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export type RideEvent =
   | "driver_assigned"
@@ -29,14 +32,17 @@ const eventMessages: Record<RideEvent, { title: string; body: string }> = {
 };
 
 export function useRideNotifications() {
-  const notify = useCallback(async (event: RideEvent, extra?: { body?: string }) => {
+  const { user } = useAuth();
+
+  const notify = useCallback(async (event: RideEvent, extra?: { body?: string; userId?: string }) => {
     const msg = eventMessages[event];
     const body = extra?.body || msg.body;
+    const targetUserId = extra?.userId || user?.id;
 
-    // Always show in-app toast
+    // Always show in-app toast (foreground)
     toast.info(msg.title, { description: body });
 
-    // Try native local notification on Capacitor
+    // Try native local notification on Capacitor (immediate, works offline)
     if (Capacitor.isNativePlatform()) {
       try {
         const perm = await LocalNotifications.checkPermissions();
@@ -60,7 +66,24 @@ export function useRideNotifications() {
         console.warn("[RideNotifications] Local notification failed:", err);
       }
     }
-  }, []);
+
+    // Also send server-side push (reaches background/closed app on all platforms)
+    if (targetUserId) {
+      try {
+        await supabase.functions.invoke("send-push-notification", {
+          body: {
+            user_id: targetUserId,
+            notification_type: event,
+            title: msg.title,
+            body,
+            data: { type: event },
+          },
+        });
+      } catch (err) {
+        console.warn("[RideNotifications] Server push failed:", err);
+      }
+    }
+  }, [user?.id]);
 
   return { notify };
 }
