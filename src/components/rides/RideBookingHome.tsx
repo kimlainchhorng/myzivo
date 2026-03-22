@@ -2258,11 +2258,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                         setPickupConfirmed(true);
                         lastGeocodedCoordsRef.current = null;
 
+                        // Always enter pin placement mode for destination
+                        setViewStep("search");
+                        setPinPlacementMode("destination");
+                        userHasDraggedPinRef.current = false;
+                        setDestinationDisplay("");
                         if (destination) {
-                          setViewStep("search");
-                          setPinPlacementMode("destination");
-                          userHasDraggedPinRef.current = false;
-                          setDestinationDisplay("");
                           setMapPanTarget({ lat: destination.lat, lng: destination.lng });
                         }
                       }}
