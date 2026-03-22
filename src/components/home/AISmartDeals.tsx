@@ -473,7 +473,7 @@ const AISmartDeals = () => {
             <Brain className="w-6 h-6 text-primary/40" />
           </motion.div>
           <p className="text-xs text-muted-foreground font-medium">AI is scanning real-time fares...</p>
-          <p className="text-[10px] text-muted-foreground/60 mt-1">Searching Duffel API across airlines</p>
+          
         </motion.div>
       )}
     </div>
