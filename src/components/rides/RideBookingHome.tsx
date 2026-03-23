@@ -1916,8 +1916,63 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     toast.success("Payment authorized! Finding your driver...");
   };
 
-  /** Handle non-card ride (cash or ABA) — creates ride request without Stripe */
-  const handleNonCardRide = async (method: "cash" | "aba") => {
+  /** Handle cash ride — creates ride request without Stripe, dispatches immediately */
+  const handleCashRide = async () => {
+    if (!user || !pickup || !destination) {
+      toast.error("Please sign in and select locations");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const stopsData = stops.filter(s => s.place).map((s, idx) => ({
+        order: idx + 1,
+        address: s.place!.address,
+        lat: s.place!.lat,
+        lng: s.place!.lng,
+      }));
+
+      const { data: rideData, error: rideError } = await supabase.from("ride_requests").insert({
+        user_id: user.id,
+        pickup_address: pickup.address,
+        pickup_lat: pickup.lat,
+        pickup_lng: pickup.lng,
+        dropoff_address: destination.address,
+        dropoff_lat: destination.lat,
+        dropoff_lng: destination.lng,
+        ride_type: selectedVehicle,
+        quoted_total: currentPrice,
+        distance_miles: routeData?.distance_miles ?? null,
+        duration_minutes: routeData?.duration_minutes ?? null,
+        status: "searching",
+        payment_status: "cash",
+        customer_name: otherName.trim() || user.user_metadata?.full_name || "",
+        customer_phone: otherPhone.trim() || user.user_metadata?.phone || "",
+        requires_car_seat: currentVehicle.carSeat,
+        car_seat_type: currentVehicle.carSeat ? "standard" : null,
+        notes: [
+          stopsData.length > 0 ? `Stops: ${stopsData.map(s => s.address).join(" → ")}` : "",
+          otherName.trim() ? `Rider: ${otherName.trim()}${otherPhone.trim() ? ` (${otherPhone.trim()})` : ""}` : "",
+          "Payment: Cash",
+        ].filter(Boolean).join(" | ") || null,
+      }).select("id").single();
+
+      if (rideError) throw rideError;
+      setRideRequestId(rideData.id);
+      setPaymentStep("idle");
+      setClientSecret(null);
+      setViewStep("searching");
+      toast.success("Cash ride confirmed! Finding your driver...");
+    } catch (err: unknown) {
+      console.error("[RideBooking] Cash ride error:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to book ride");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /** Handle ABA Payway ride — pay first, then dispatch */
+  const handleAbaRide = async () => {
     if (!user || !pickup || !destination) {
       toast.error("Please sign in and select locations");
       return;
@@ -1934,7 +1989,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         lng: s.place!.lng,
       }));
 
-      // Create ride request with non-card payment
+      // 1. Create ride request with pending_payment status
       const { data: rideData, error: rideError } = await supabase.from("ride_requests").insert({
         user_id: user.id,
         pickup_address: pickup.address,
@@ -1947,8 +2002,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         quoted_total: currentPrice,
         distance_miles: routeData?.distance_miles ?? null,
         duration_minutes: routeData?.duration_minutes ?? null,
-        status: "searching",
-        payment_status: method,
+        status: "pending_payment",
+        payment_status: "aba_pending",
         customer_name: otherName.trim() || user.user_metadata?.full_name || "",
         customer_phone: otherPhone.trim() || user.user_metadata?.phone || "",
         requires_car_seat: currentVehicle.carSeat,
@@ -1956,26 +2011,86 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         notes: [
           stopsData.length > 0 ? `Stops: ${stopsData.map(s => s.address).join(" → ")}` : "",
           otherName.trim() ? `Rider: ${otherName.trim()}${otherPhone.trim() ? ` (${otherPhone.trim()})` : ""}` : "",
-          method === "aba" ? "Payment: ABA Payway" : "Payment: Cash",
+          "Payment: ABA Payway",
         ].filter(Boolean).join(" | ") || null,
       }).select("id").single();
 
       if (rideError) throw rideError;
       setRideRequestId(rideData.id);
 
-      setPaymentStep("idle");
-      setClientSecret(null);
-      setViewStep("searching");
+      // 2. Call ABA Payway edge function to get checkout URL
+      const returnUrl = `${window.location.origin}/rides/hub?aba_payment=success&ride_id=${rideData.id}`;
+      const { data: abaData, error: abaError } = await supabase.functions.invoke("aba-payway-checkout", {
+        body: {
+          amount: finalPrice,
+          currency: "USD",
+          description: `ZIVO Ride - ${getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}`,
+          return_url: returnUrl,
+          reference: rideData.id,
+        },
+      });
 
-      const label = method === "aba" ? "ABA Payway" : "Cash";
-      toast.success(`${label} ride confirmed! Finding your driver...`);
+      if (abaError) throw abaError;
+
+      // 3. Redirect to ABA checkout
+      if (abaData?.payment_url) {
+        // Store ride ID for return handling
+        sessionStorage.setItem("aba_pending_ride_id", rideData.id);
+        import("@/lib/openExternalUrl").then(({ openExternalUrl: oe }) => oe(abaData.payment_url));
+        toast.info("Redirecting to ABA Payway checkout...");
+        setViewStep("aba-waiting");
+      } else if (abaData?.checkout_data) {
+        // Fallback: form POST to ABA
+        sessionStorage.setItem("aba_pending_ride_id", rideData.id);
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase";
+        form.target = "_blank";
+        for (const [key, value] of Object.entries(abaData.checkout_data)) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = String(value);
+          form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+        toast.info("ABA Payway checkout opened. Complete payment to confirm ride.");
+        setViewStep("aba-waiting");
+      } else {
+        // Cleanup failed ride
+        await supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideData.id);
+        toast.error("Could not create ABA payment link. Please try again.");
+      }
     } catch (err: unknown) {
-      console.error("[RideBooking] Non-card ride error:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to book ride");
+      console.error("[RideBooking] ABA ride error:", err);
+      toast.error(err instanceof Error ? err.message : "ABA payment failed");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  /** Handle ABA payment return — confirms the ride after payment */
+  const handleAbaPaymentReturn = useCallback(async (rideId: string) => {
+    try {
+      // Update ride to searching status
+      await supabase.from("ride_requests").update({
+        status: "searching",
+        payment_status: "aba_paid",
+      }).eq("id", rideId);
+
+      setRideRequestId(rideId);
+      setPaymentStep("idle");
+      setClientSecret(null);
+      setViewStep("searching");
+      sessionStorage.removeItem("aba_pending_ride_id");
+      toast.success("ABA payment confirmed! Finding your driver...");
+    } catch (err) {
+      console.error("[RideBooking] ABA return error:", err);
+      toast.error("Failed to confirm ride after payment");
+    }
+  }, []);
 
   /* ─── Reset state ─── */
   const handleReset = () => {
