@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,16 +7,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle, X } from "lucide-react";
-import InlineLegalSheet, { useLegalSheet } from "@/components/checkout/InlineLegalSheet";
+import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle } from "lucide-react";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import SEOHead from "@/components/SEOHead";
 import { useI18n } from "@/hooks/useI18n";
 import { cn } from "@/lib/utils";
+import InlineLegalSheet, { useLegalSheet } from "@/components/checkout/InlineLegalSheet";
 
 // Login schema
 const loginSchema = z.object({
