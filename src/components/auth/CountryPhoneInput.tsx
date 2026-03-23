@@ -223,15 +223,16 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
       <AnimatePresence>
         {isOpen && (
           <>
-            <div className="fixed inset-0 z-[99]" onClick={() => { setIsOpen(false); setSearch(""); }} />
+            {/* Full-screen opaque backdrop */}
+            <div className="fixed inset-0 z-[99] bg-black/70 backdrop-blur-sm" onClick={() => { setIsOpen(false); setSearch(""); }} />
             <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              initial={{ opacity: 0, y: 20, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.96 }}
+              exit={{ opacity: 0, y: 20, scale: 0.96 }}
               transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] w-[calc(100vw-3rem)] max-w-sm max-h-[70vh] overflow-hidden rounded-2xl border border-white/15 shadow-2xl shadow-black/50"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] w-[calc(100vw-2rem)] max-w-sm max-h-[70vh] overflow-hidden rounded-2xl border border-white/20 shadow-2xl shadow-black/60"
             >
-            <div className="relative bg-black/85 backdrop-blur-2xl overflow-hidden">
+            <div className="relative bg-[#0a0f1a] overflow-hidden">
               {/* Large background flag watermark */}
               <div className="absolute -right-6 -top-6 w-44 h-44 opacity-[0.07] pointer-events-none select-none">
                 <img
