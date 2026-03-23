@@ -342,8 +342,8 @@ const Login = () => {
                 </button>
                 {showLangMenu && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
-                    <div className="absolute right-0 top-10 z-50 bg-black/80 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl py-1 min-w-[200px] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="fixed inset-0 z-[90]" onClick={() => setShowLangMenu(false)} />
+                    <div className="absolute right-0 top-10 z-[100] bg-black/85 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl py-1 min-w-[200px] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
                       <div className="relative px-3 py-2 border-b border-white/10 overflow-hidden">
                         {currentLangItem?.flag && (
                           <img src={currentLangItem.flag} alt="" className="absolute -right-3 -top-3 w-24 h-24 opacity-[0.07] pointer-events-none blur-[1px]" style={{ transform: "rotate(-12deg) scale(1.3)" }} />
