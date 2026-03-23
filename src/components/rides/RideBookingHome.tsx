@@ -1807,6 +1807,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   const handleRequestRide = async (paymentMethodId?: string) => {
     if (!user || !pickup || !destination) {
+      console.error("[handleRequestRide] Missing:", { user: !!user, pickup: !!pickup, destination: !!destination });
       toast.error("Please sign in and select locations");
       return;
     }
