@@ -698,7 +698,7 @@ const FlightReview = () => {
 
       <Header />
 
-      <main className="flex-1 pt-14 pb-32 sm:pb-20 relative z-10">
+      <main className="flex-1 pt-24 pb-32 sm:pb-20 relative z-10">
         <div className="mx-auto px-3 sm:px-4 max-w-2xl">
 
           {/* Step indicator */}
