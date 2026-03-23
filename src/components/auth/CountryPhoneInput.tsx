@@ -184,22 +184,25 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.button
-            type="button"
-            aria-label="Close country picker"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm"
+          <div
+            className="fixed inset-0 z-[9998] bg-black/90"
             onClick={closeDropdown}
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0 }}
           />
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-            className="fixed left-1/2 top-1/2 z-[121] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-white/20 bg-slate-950 shadow-2xl shadow-black/70"
+            className="z-[9999] overflow-hidden rounded-2xl border border-white/20 bg-slate-950 shadow-2xl shadow-black/70"
+            style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "calc(100vw - 2rem)",
+              maxWidth: "24rem",
+            }}
           >
             <div className="relative overflow-hidden bg-slate-950">
               <div className="absolute -right-6 -top-6 h-44 w-44 opacity-[0.07] pointer-events-none select-none">
