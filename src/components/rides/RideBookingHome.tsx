@@ -3568,8 +3568,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   await supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideRequestId);
                 }
                 sessionStorage.removeItem("aba_pending_ride_id");
-                handleReset();
-                toast.info("Ride cancelled");
+                setViewStep("payment");
+                toast.info("Payment cancelled. Choose another payment method.");
               }}
             >
               បោះបង់ / Cancel
