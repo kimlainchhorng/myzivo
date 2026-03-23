@@ -253,7 +253,7 @@ const FlightResults = () => {
 
   const applyFilters = (f: FlightFiltersState, offerList: DuffelOffer[]) => {
     let result = [...offerList];
-    if (f.maxPrice > 0) result = result.filter(o => o.price <= f.maxPrice);
+    if (f.maxPrice > 0) result = result.filter(o => getAllInPrice(o.price) <= f.maxPrice);
     if (f.stops.length > 0) result = result.filter(o => f.stops.some(s => s === 2 ? o.stops >= 2 : o.stops === s));
     if (f.departureTime.length > 0) result = result.filter(o => f.departureTime.includes(getTimeBucket(o.departure.time)));
     if (f.arrivalTime.length > 0) result = result.filter(o => f.arrivalTime.includes(getTimeBucket(o.arrival.time)));
