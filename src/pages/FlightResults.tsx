@@ -138,7 +138,7 @@ const FlightResults = () => {
   const aviasalesMeta = aviasalesData?.meta;
 
   const offers = data?.offers || [];
-  const isRoundTrip = !!returnDate;
+  const isRoundTrip = !!validReturnDate;
 
   // Best prices for comparison
   const bestTpPrice = useMemo(() => {
