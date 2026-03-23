@@ -17,7 +17,20 @@ export async function openExternalUrl(url: string): Promise<void> {
       window.open(url, "_blank", "noopener,noreferrer");
     }
   } else {
-    window.open(url, "_blank", "noopener,noreferrer");
+    const opener = window.top && window.top !== window ? window.top : window;
+    const newTab = opener.open("", "_blank", "noopener,noreferrer");
+
+    if (newTab) {
+      try {
+        newTab.opener = null;
+      } catch {
+        // Ignore browsers that prevent setting opener directly
+      }
+      newTab.location.replace(url);
+      return;
+    }
+
+    window.location.assign(url);
   }
 }
 
