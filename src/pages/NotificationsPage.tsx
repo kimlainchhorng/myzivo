@@ -16,6 +16,7 @@ import NotificationItem from '@/components/notifications/NotificationItem';
 import MobileBottomNav from '@/components/shared/MobileBottomNav';
 import { useI18n } from '@/hooks/useI18n';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 type NotificationCategory = 'all' | 'orders' | 'promos' | 'support' | 'delays';
 
