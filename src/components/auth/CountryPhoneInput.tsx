@@ -316,11 +316,11 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
         <button
           type="button"
           onClick={() => setIsOpen((open) => !open)}
-          className="flex shrink-0 items-center gap-2 rounded-l-xl border border-white/20 border-r-0 bg-white/10 px-3 py-2 text-sm text-white backdrop-blur-sm transition-all touch-manipulation active:scale-[0.97] hover:bg-white/15 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]"
+          className="flex shrink-0 items-center gap-2 rounded-l-xl border border-border bg-muted/50 px-3 py-2 text-sm text-foreground backdrop-blur-sm transition-all touch-manipulation active:scale-[0.97] hover:bg-muted"
         >
           <FlagImg src={selectedCountry.flag} alt={selectedCountry.name} size={24} />
-          <span className="text-xs font-semibold tracking-tight text-white/70">{selectedCountry.dial}</span>
-          <ChevronDown className={cn("h-3 w-3 text-white/50 transition-transform duration-200", isOpen && "rotate-180")} />
+          <span className="text-xs font-semibold tracking-tight text-foreground/70">{selectedCountry.dial}</span>
+          <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform duration-200", isOpen && "rotate-180")} />
         </button>
 
         <input
@@ -331,11 +331,11 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
           value={localNumber}
           onChange={(e) => handleNumberChange(e.target.value)}
           onBlur={onBlur}
-          className="w-full rounded-r-xl border border-white/20 border-l-0 bg-white/10 py-2 pl-2 pr-4 text-sm text-white placeholder:text-white/40 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all backdrop-blur-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]"
+          className="w-full rounded-r-xl border border-border border-l-0 bg-muted/50 py-2 pl-2 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all backdrop-blur-sm"
         />
       </div>
 
-      <p className="ml-1 mt-1 text-[11px] text-white/50">
+      <p className="ml-1 mt-1 text-[11px] text-muted-foreground">
         {selectedCountry.name} • {selectedCountry.digits}
       </p>
 
