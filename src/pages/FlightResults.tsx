@@ -224,7 +224,7 @@ const FlightResults = () => {
   const priceRange = useMemo(() => {
     if (offers.length === 0) return { min: 0, max: 2000 };
     const prices = offers.map((o) => o.price);
-    return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) };
+    return { min: Math.floor(getAllInPrice(Math.min(...prices))), max: Math.ceil(getAllInPrice(Math.max(...prices))) };
   }, [offers]);
 
   const maxDurationRange = useMemo(() => {
@@ -253,7 +253,7 @@ const FlightResults = () => {
 
   const applyFilters = (f: FlightFiltersState, offerList: DuffelOffer[]) => {
     let result = [...offerList];
-    if (f.maxPrice > 0) result = result.filter(o => o.price <= f.maxPrice);
+    if (f.maxPrice > 0) result = result.filter(o => getAllInPrice(o.price) <= f.maxPrice);
     if (f.stops.length > 0) result = result.filter(o => f.stops.some(s => s === 2 ? o.stops >= 2 : o.stops === s));
     if (f.departureTime.length > 0) result = result.filter(o => f.departureTime.includes(getTimeBucket(o.departure.time)));
     if (f.arrivalTime.length > 0) result = result.filter(o => f.arrivalTime.includes(getTimeBucket(o.arrival.time)));
@@ -385,7 +385,7 @@ const FlightResults = () => {
 
   const lowestPrice = useMemo(() => {
     if (filtered.length === 0) return 0;
-    return Math.round(Math.min(...filtered.map(o => o.price)));
+    return Math.round(getAllInPrice(Math.min(...filtered.map(o => o.price))));
   }, [filtered]);
 
   const pendingFiltered = useMemo(() => applyFilters(pendingFilters, offers), [offers, pendingFilters]);
@@ -1061,7 +1061,7 @@ const FlightResults = () => {
                             </div>
                             <div className="text-right shrink-0">
                               <p className="text-lg font-bold text-[hsl(var(--flights))]">
-                                ${Math.round(lowestDuffelPrice)}
+                                ${Math.round(getAllInPrice(lowestDuffelPrice))}
                               </p>
                             </div>
                           </div>
