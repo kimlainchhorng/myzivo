@@ -2034,19 +2034,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       if (abaError) throw abaError;
 
-      // 3. Redirect to ABA checkout
-      if (abaData?.payment_url) {
-        // Store ride ID for return handling
-        sessionStorage.setItem("aba_pending_ride_id", rideData.id);
-        import("@/lib/openExternalUrl").then(({ openExternalUrl: oe }) => oe(abaData.payment_url));
-        toast.info("Redirecting to ABA Payway checkout...");
-        setViewStep("aba-waiting");
-      } else if (abaData?.checkout_data) {
-        // Fallback: form POST to ABA
+      // 3. Submit form POST to ABA checkout (browser-based, not server-to-server)
+      if (abaData?.checkout_data) {
         sessionStorage.setItem("aba_pending_ride_id", rideData.id);
         const form = document.createElement("form");
         form.method = "POST";
-        form.action = "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase";
+        form.action = abaData.payment_url || "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase";
         form.target = "_blank";
         for (const [key, value] of Object.entries(abaData.checkout_data)) {
           const input = document.createElement("input");

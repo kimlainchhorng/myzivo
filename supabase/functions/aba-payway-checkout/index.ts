@@ -84,39 +84,12 @@ Deno.serve(async (req) => {
       payment_option: "abapay cards",
     };
 
-    const formData = new URLSearchParams();
-    for (const [key, value] of Object.entries(abaPayload)) {
-      formData.append(key, String(value));
-    }
-
-    const abaResponse = await fetch(`${ABA_API_BASE}/api/payment-gateway/v1/payments/purchase`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formData.toString(),
-    });
-
-    const abaData = await abaResponse.text();
-
-    if (!abaResponse.ok) {
-      console.error("ABA Payway error:", abaData);
-      return new Response(
-        JSON.stringify({ error: "Payment gateway error", details: abaData }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(abaData);
-    } catch {
-      // ABA may return HTML for checkout redirect — provide the checkout URL directly
-      parsed = { redirect_url: `${ABA_API_BASE}/api/payment-gateway/v1/payments/purchase` };
-    }
-
+    // Return signed form data for client-side form POST to ABA
+    // ABA Payway purchase endpoint only accepts browser form POSTs, not server-to-server calls
     return new Response(
       JSON.stringify({
         success: true,
-        payment_url: parsed.payment_link || parsed.redirect_url || null,
+        payment_url: `${ABA_API_BASE}/api/payment-gateway/v1/payments/purchase`,
         tran_id: abaPayload.tran_id,
         checkout_data: abaPayload,
       }),
