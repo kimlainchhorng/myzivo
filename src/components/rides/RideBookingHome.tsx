@@ -3224,8 +3224,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       <span className="text-[15px] font-bold text-foreground">${price.toFixed(2)}</span>
                     )}
                     {isMinFareApplied && (
-                      <span className="text-[9px] text-amber-500 dark:text-amber-400 font-medium">
-                        {t("ride.minimum_fare_applied")}
+                      <span className="text-[9px] text-amber-500 dark:text-amber-400 font-medium whitespace-nowrap">
+                        Min: {useKm ? `${toKHR(v.minimumFare)}` : `$${v.minimumFare.toFixed(2)}`}
                       </span>
                     )}
                     {isSelected && (
