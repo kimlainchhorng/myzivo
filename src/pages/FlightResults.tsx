@@ -136,6 +136,8 @@ const FlightResults = () => {
 
   const aviasalesResults = aviasalesData?.results || [];
   const aviasalesMeta = aviasalesData?.meta;
+  const hasLiveAviasalesData = aviasalesResults.length > 0;
+  const hasCachedTravelpayoutsData = tpPrices.length > 0;
 
   const offers = data?.offers || [];
   const isRoundTrip = !!validReturnDate;
@@ -1020,11 +1022,15 @@ const FlightResults = () => {
                       {/* Header */}
                       <div className="px-4 pt-3 pb-2 border-b border-border/20 bg-muted/30">
                         <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                          <Star className="w-3.5 h-3.5 text-amber-500" />
+                          <Star className="w-3.5 h-3.5 text-warning" />
                           Price Comparison
                         </p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">
-                          Compare prices across booking platforms for this route
+                          {hasLiveAviasalesData
+                            ? "Live API prices from partner platforms for this route"
+                            : hasCachedTravelpayoutsData
+                              ? "Mixed comparison: ZIVO live price + cached partner pricing"
+                              : "ZIVO live price + partner booking links"}
                         </p>
                       </div>
 
@@ -1039,16 +1045,16 @@ const FlightResults = () => {
                               <div>
                                 <div className="flex items-center gap-1.5">
                                   <p className="text-sm font-bold text-foreground">ZIVO</p>
-                                  {(!bestAviasalesPrice || lowestDuffelPrice <= (bestAviasalesPrice?.price || Infinity)) && 
+                                   {hasLiveAviasalesData && (!bestAviasalesPrice || lowestDuffelPrice <= (bestAviasalesPrice?.price || Infinity)) && 
                                    (!bestTpPrice || lowestDuffelPrice <= bestTpPrice.price) && (
-                                    <Badge className="text-[8px] h-4 px-1.5 bg-emerald-500/15 text-emerald-600 border-0 font-bold">
-                                      Best Price
+                                     <Badge className="text-[8px] h-4 px-1.5 bg-primary/15 text-primary border-0 font-bold">
+                                       Live Best Price
                                     </Badge>
                                   )}
                                 </div>
                                 <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                                   <ShieldCheck className="w-3 h-3" />
-                                  Book directly · Instant tickets
+                                  Book directly · Live ZIVO fare
                                 </p>
                               </div>
                             </div>
@@ -1082,8 +1088,8 @@ const FlightResults = () => {
                               className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group"
                             >
                               <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-9 h-9 rounded-lg bg-[#00B0A0]/10 flex items-center justify-center shrink-0">
-                                  <span className="text-sm font-black text-[#00B0A0]">K</span>
+                                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                  <span className="text-sm font-black text-primary">K</span>
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-1.5">
@@ -1091,7 +1097,7 @@ const FlightResults = () => {
                                     <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                                   </div>
                                   <p className="text-[10px] text-muted-foreground">
-                                    Compare & book · Virtual interlining
+                                    {kiwiPrice ? "Live via Aviasales API" : "Partner link · price opens on partner site"}
                                   </p>
                                 </div>
                               </div>
@@ -1099,7 +1105,7 @@ const FlightResults = () => {
                                 {kiwiPrice ? (
                                   <p className="text-lg font-bold text-foreground">${Math.round(kiwiPrice.price)}</p>
                                 ) : (
-                                  <p className="text-xs font-semibold text-[#00B0A0]">Check price →</p>
+                                  <p className="text-xs font-semibold text-primary">View partner →</p>
                                 )}
                               </div>
                             </a>
@@ -1109,8 +1115,12 @@ const FlightResults = () => {
                         {/* Aviasales — always show with link */}
                         {(() => {
                           const aviasalesLink = TRAVELPAYOUTS_DIRECT_LINKS.flights.backup;
-                          // Best aviasales price or TP cached price
-                          const aviPrice = bestAviasalesPrice?.price || bestTpPrice?.price;
+                          const aviPrice = bestAviasalesPrice?.price;
+                          const agencyCountLabel = hasLiveAviasalesData
+                            ? String(aviasalesMeta?.agentCount || aviasalesResults.length)
+                            : hasCachedTravelpayoutsData
+                              ? 'cached fares'
+                              : 'partner site';
                           
                           return (
                             <a
@@ -1120,8 +1130,8 @@ const FlightResults = () => {
                               className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group"
                             >
                               <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-9 h-9 rounded-lg bg-[#FF6B35]/10 flex items-center justify-center shrink-0">
-                                  <span className="text-sm font-black text-[#FF6B35]">A</span>
+                                <div className="w-9 h-9 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
+                                  <span className="text-sm font-black text-accent">A</span>
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-1.5">
@@ -1129,7 +1139,7 @@ const FlightResults = () => {
                                     <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                                   </div>
                                   <p className="text-[10px] text-muted-foreground">
-                                    Compare {aviasalesMeta?.agentCount || '700+'} agencies
+                                    {aviPrice ? `Live via API · ${agencyCountLabel} agencies` : `Partner link · ${agencyCountLabel}`}
                                   </p>
                                 </div>
                               </div>
@@ -1137,7 +1147,7 @@ const FlightResults = () => {
                                 {aviPrice ? (
                                   <p className="text-lg font-bold text-foreground">${Math.round(aviPrice)}</p>
                                 ) : (
-                                  <p className="text-xs font-semibold text-[#FF6B35]">Check price →</p>
+                                  <p className="text-xs font-semibold text-accent">View partner →</p>
                                 )}
                               </div>
                             </a>
@@ -1181,8 +1191,13 @@ const FlightResults = () => {
 
                       {/* Footer */}
                       <div className="px-4 py-2 border-t border-border/20 bg-muted/20">
-                        <p className="text-[9px] text-muted-foreground text-center">
-                          Prices from partner agencies · <a href="/partner-disclosure" className="underline hover:text-foreground transition-colors">Partner Disclosure</a>
+                          <p className="text-[9px] text-muted-foreground text-center">
+                           {hasLiveAviasalesData
+                             ? 'Live partner fares shown when available. Some links open partner sites for final pricing.'
+                             : hasCachedTravelpayoutsData
+                               ? 'Cached partner fares may differ from final checkout price.'
+                               : 'Partner prices are not live here — use links to check final price on partner sites.'}{' '}
+                           <a href="/partner-disclosure" className="underline hover:text-foreground transition-colors">Partner Disclosure</a>
                         </p>
                       </div>
                     </CardContent>
