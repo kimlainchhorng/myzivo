@@ -1,7 +1,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, User, Search, Sparkles, ChevronDown, Car, ShieldCheck, Plane, Hotel, Globe, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
@@ -15,6 +15,11 @@ import { cn } from "@/lib/utils";
 import ZivoLogo from "./ZivoLogo";
 import CurrencySelector from "./shared/CurrencySelector";
 import BetaBadge from "./shared/BetaBadge";
+
+import svcFlights from "@/assets/svc-flights-premium.jpg";
+import svcHotels from "@/assets/svc-hotels-premium.jpg";
+import svcCars from "@/assets/svc-cars-premium.jpg";
+
 import { NotificationBell } from "./notifications/NotificationBell";
 import { PremiumSearchOverlay } from "@/components/search";
 import { useI18n } from "@/hooks/useI18n";
@@ -51,19 +56,12 @@ const Header = () => {
 
             {/* Desktop Navigation - Simple Links */}
             <nav className="hidden lg:flex items-center gap-1">
-              {[
-                { label: "Flights", href: "/flights", icon: Plane, color: "text-sky-500" },
-                { label: "Hotels", href: "/hotels", icon: Hotel, color: "text-amber-500" },
-                { label: "Car Rental", href: "/car-rental", icon: Car, color: "text-emerald-500" },
-              ].map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
-                >
-                  <item.icon className={cn("w-4 h-4", item.color)} />
-                  {item.label}
-                </Link>
+              {([
+                { label: "Flights", href: "/flights", icon: Plane, bg: svcFlights, gradient: "from-sky-600/80 to-sky-400/60", shadow: "shadow-sky-500/30", ring: "ring-sky-400/40" },
+                { label: "Hotels", href: "/hotels", icon: Hotel, bg: svcHotels, gradient: "from-amber-600/80 to-amber-400/60", shadow: "shadow-amber-500/30", ring: "ring-amber-400/40" },
+                { label: "Car Rental", href: "/car-rental", icon: Car, bg: svcCars, gradient: "from-emerald-600/80 to-emerald-400/60", shadow: "shadow-emerald-500/30", ring: "ring-emerald-400/40" },
+              ] as const).map((item) => (
+                <Nav3DButton key={item.href} item={item} />
               ))}
             </nav>
 
