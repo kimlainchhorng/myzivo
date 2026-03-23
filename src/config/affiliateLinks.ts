@@ -123,8 +123,14 @@ export function buildKiwiDeepLink(params: {
   returnDate?: string;
   locale?: string;
 }): string {
-  // Use the Travelpayouts short link which is whitelisted by Kiwi
-  return TRAVELPAYOUTS_DIRECT_LINKS.flights.kiwi;
+  const localeKey = params.locale?.toLowerCase().split('-')[0] || 'us';
+  const localeSegment = localeKey === 'en' ? 'us' : localeKey;
+  const origin = encodeURIComponent(params.origin.toUpperCase());
+  const destination = encodeURIComponent(params.destination.toUpperCase());
+  const departure = params.departureDate || 'anytime';
+  const arrival = params.returnDate || 'no-return';
+
+  return `https://www.kiwi.com/${localeSegment}/search/results/${origin}/${destination}/${departure}/${arrival}/`;
 }
 
 export const TRAVELPAYOUTS_DIRECT_LINKS = {
