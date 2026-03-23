@@ -27,8 +27,11 @@ const Header = () => {
   const { user, signOut, isAdmin } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  return (
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const { currentLanguage, changeLanguage } = useI18n();
+  const { data: supportedLanguages } = useSupportedLanguages(true);
+  const activeLanguages = (supportedLanguages || []).filter(l => l.is_active);
+  const currentLangData = activeLanguages.find(l => l.code === currentLanguage);
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="container mx-auto px-3 sm:px-4">
