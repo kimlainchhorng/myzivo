@@ -137,7 +137,7 @@ const CurrencySelector = ({ variant = "dropdown", className }: CurrencySelectorP
         </div>
         
         {/* Currency list */}
-        <ScrollArea className="max-h-80">
+        <ScrollArea className="max-h-[360px]">
           <div className="p-2">
             {currencies.map((curr) => (
               <button
