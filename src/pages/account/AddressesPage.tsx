@@ -2,9 +2,9 @@
  * Account Addresses Page
  * Manage saved delivery addresses
  */
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, Home, Briefcase, Pin, Plus, Pencil, Trash2, Star, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Home, Briefcase, Pin, Plus, Pencil, Trash2, Star, Loader2, Navigation } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/hooks/useI18n";
+import { useCountry } from "@/hooks/useCountry";
+import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
+import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import { toast } from "sonner";
 import {
   useSavedLocations,
   useAddSavedLocation,
@@ -44,10 +48,12 @@ export default function AddressesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useI18n();
+  const { country } = useCountry();
   const { data: locations, isLoading } = useSavedLocations(user?.id);
   const addLocation = useAddSavedLocation();
   const updateLocation = useUpdateSavedLocation();
   const deleteLocation = useDeleteSavedLocation();
+  const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
 
   const ICON_OPTIONS = [
     { value: "home", label: t("address.home"), icon: Home },
@@ -59,6 +65,7 @@ export default function AddressesPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<SavedLocation | null>(null);
   const [deletingLocationId, setDeletingLocationId] = useState<string | null>(null);
+  const [isDetectingGPS, setIsDetectingGPS] = useState(false);
 
   const [formData, setFormData] = useState<SavedLocationInput>({
     label: "",
@@ -73,7 +80,26 @@ export default function AddressesPage() {
     return option?.icon || Pin;
   };
 
-  const handleOpenDialog = (location?: SavedLocation) => {
+  const detectCurrentLocation = useCallback(async () => {
+    setIsDetectingGPS(true);
+    try {
+      const loc = await getCurrentLocation();
+      const addr = await reverseGeocode(loc.lat, loc.lng);
+      setFormData((prev) => ({
+        ...prev,
+        address: addr,
+        lat: loc.lat,
+        lng: loc.lng,
+      }));
+      toast.success(t("address.gps_detected") || "Location detected");
+    } catch {
+      toast.error("Could not detect your location");
+    } finally {
+      setIsDetectingGPS(false);
+    }
+  }, [getCurrentLocation, reverseGeocode, t]);
+
+  const handleOpenDialog = async (location?: SavedLocation) => {
     if (location) {
       setEditingLocation(location);
       setFormData({
@@ -83,6 +109,7 @@ export default function AddressesPage() {
         lng: location.lng,
         icon: location.icon,
       });
+      setDialogOpen(true);
     } else {
       setEditingLocation(null);
       setFormData({
@@ -92,8 +119,24 @@ export default function AddressesPage() {
         lng: 0,
         icon: "home",
       });
+      setDialogOpen(true);
+      // Auto-detect GPS for new addresses
+      setIsDetectingGPS(true);
+      try {
+        const loc = await getCurrentLocation();
+        const addr = await reverseGeocode(loc.lat, loc.lng);
+        setFormData((prev) => ({
+          ...prev,
+          address: addr,
+          lat: loc.lat,
+          lng: loc.lng,
+        }));
+      } catch {
+        // Silent fail — user can type manually
+      } finally {
+        setIsDetectingGPS(false);
+      }
     }
-    setDialogOpen(true);
   };
 
   const handleSave = async () => {
@@ -121,6 +164,8 @@ export default function AddressesPage() {
     setDeletingLocationId(id);
     setDeleteDialogOpen(true);
   };
+
+  const countryCode = country === "KH" ? "kh" : "us";
 
   return (
     <div className="min-h-screen bg-background">
@@ -266,16 +311,46 @@ export default function AddressesPage() {
               />
             </div>
             <div>
-              <Label htmlFor="address">{t("address.address")} *</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
-                }
-                placeholder={t("address.address_placeholder")}
-                className="mt-1.5"
-              />
+              <Label>{t("address.address")} *</Label>
+              <div className="mt-1.5 space-y-2">
+                <AddressAutocomplete
+                  value={formData.address}
+                  placeholder={isDetectingGPS ? (t("address.detecting_gps") || "Detecting your location...") : t("address.address_placeholder")}
+                  country={countryCode}
+                  onSelect={(place) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      address: place.address,
+                      lat: place.lat,
+                      lng: place.lng,
+                    }));
+                  }}
+                  onClear={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      address: "",
+                      lat: 0,
+                      lng: 0,
+                    }));
+                  }}
+                  disabled={isDetectingGPS}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={detectCurrentLocation}
+                  disabled={isDetectingGPS || isGettingLocation}
+                  className="gap-1.5 text-xs"
+                >
+                  {isDetectingGPS ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Navigation className="w-3.5 h-3.5" />
+                  )}
+                  {t("address.use_current") || "Use current location"}
+                </Button>
+              </div>
             </div>
             <div>
               <Label className="mb-3 block">{t("address.icon")}</Label>
