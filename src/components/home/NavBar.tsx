@@ -346,6 +346,62 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
 
               {/* Right: Language, Currency, Auth */}
               <div className="hidden md:flex items-center gap-2" style={{ transformStyle: "preserve-3d" }}>
+                <Popover open={isLangOpen} onOpenChange={setIsLangOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "gap-1.5 px-2 h-8 rounded-full transition-all duration-200",
+                        scrolled || !isHomePage
+                          ? "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          : "text-foreground/85 hover:text-foreground hover:bg-foreground/5"
+                      )}
+                    >
+                      <Globe className="w-3.5 h-3.5" />
+                      <span className="text-xs font-medium">{currentLangData?.flag_emoji || "🌐"} {currentLanguage.toUpperCase()}</span>
+                      <ChevronDown className={cn("w-3 h-3 transition-transform duration-200", isLangOpen && "rotate-180")} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-0 bg-card/95 backdrop-blur-xl border-border/50 shadow-xl rounded-2xl overflow-hidden" align="end" sideOffset={8}>
+                    <div className="p-2 border-b border-border/50 bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-muted-foreground" />
+                        <p className="text-sm font-medium">Select Language</p>
+                      </div>
+                    </div>
+                    <div className="overflow-y-auto max-h-[360px] p-1">
+                      {activeLanguages.map((lang) => (
+                        <button
+                          key={lang.code}
+                          onClick={() => { changeLanguage(lang.code); setIsLangOpen(false); }}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors",
+                            currentLanguage === lang.code ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                          )}
+                        >
+                          <span className="text-lg">{lang.flag_emoji}</span>
+                          <div className="flex-1 text-left">
+                            <p className="font-medium text-sm">{lang.name}</p>
+                            <p className="text-xs text-muted-foreground">{lang.native_name}</p>
+                          </div>
+                          {currentLanguage === lang.code && <Check className="w-4 h-4 text-primary" />}
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <CurrencySelector
+                  variant="compact"
+                  className={cn(
+                    "rounded-full transition-all duration-200",
+                    scrolled || !isHomePage
+                      ? "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      : "text-foreground/85 hover:text-foreground hover:bg-foreground/5"
+                  )}
+                />
+
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
