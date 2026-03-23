@@ -26,6 +26,7 @@ const PRESET_AMOUNTS = [
 export default function GiftCardsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useI18n();
   const { myGiftCards, cardsLoading, purchaseGiftCard, redeemGiftCard } = useGiftCards();
 
   // Buy tab state
@@ -152,7 +153,7 @@ export default function GiftCardsPage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="font-bold text-lg">Gift Cards</h1>
+          <h1 className="font-bold text-lg">{t("gift.title")}</h1>
           <div className="w-10" />
         </div>
       </div>
@@ -167,8 +168,8 @@ export default function GiftCardsPage() {
           <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
             <Gift className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-xl font-bold mb-1">ZIVO Gift Cards</h2>
-          <p className="text-sm text-muted-foreground">Give the gift of travel. Redeemable for wallet credits.</p>
+          <h2 className="text-xl font-bold mb-1">{t("gift.hero_title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("gift.hero_desc")}</p>
         </motion.div>
 
         {/* Tabs */}
@@ -176,22 +177,22 @@ export default function GiftCardsPage() {
           <TabsList className="w-full bg-muted border border-border/50 rounded-xl h-12 p-1">
             <TabsTrigger value="buy" className="flex-1 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5">
               <CreditCard className="w-4 h-4" />
-              Buy
+              {t("gift.buy")}
             </TabsTrigger>
             <TabsTrigger value="send" className="flex-1 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5">
               <Send className="w-4 h-4" />
-              Send
+              {t("gift.send")}
             </TabsTrigger>
             <TabsTrigger value="redeem" className="flex-1 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5">
               <Ticket className="w-4 h-4" />
-              Redeem
+              {t("gift.redeem")}
             </TabsTrigger>
           </TabsList>
 
           {/* Buy Tab */}
           <TabsContent value="buy" className="space-y-4">
             <div className="bg-card border border-border/50 rounded-2xl p-5 space-y-5">
-              <h3 className="font-bold">Select Amount</h3>
+              <h3 className="font-bold">{t("gift.select_amount")}</h3>
               <AmountSelector />
               <RecipientFields required={false} />
               <Button
