@@ -75,17 +75,48 @@ export interface ActivityDeepLinkParams {
 // TRAVELPAYOUTS DIRECT LINKS (NEW)
 // ============================================
 
+// ============================================
+// KIWI.COM LOCALE-BASED LINKS (Travelpayouts)
+// ============================================
+
+export const KIWI_LOCALE_LINKS: Record<string, string> = {
+  en: 'https://kiwi.tpo.li/86fSRBiW',
+  us: 'https://kiwi.tpo.li/86fSRBiW',
+  gb: 'https://kiwi.tpo.li/86fSRBiW',
+  fi: 'https://kiwi.tpo.li/FlbrGNAb',
+  it: 'https://kiwi.tpo.li/FkohAWmX',
+  da: 'https://kiwi.tpo.li/hdFvOHv9',
+  de: 'https://kiwi.tpo.li/05w53cIL',
+  fr: 'https://kiwi.tpo.li/9WglCjcd',
+  es: 'https://kiwi.tpo.li/B9nwUGI3',
+  br: 'https://kiwi.tpo.li/kFu9p3mD',
+  pt: 'https://kiwi.tpo.li/kFu9p3mD',
+  pl: 'https://kiwi.tpo.li/rAmlqxKS',
+  nl: 'https://kiwi.tpo.li/pnteIyi2',
+  cs: 'https://kiwi.tpo.li/NCNRQN5B',
+  cz: 'https://kiwi.tpo.li/NCNRQN5B',
+};
+
+/** Get the best Kiwi.com tracking link for a given locale/language code */
+export function getKiwiLink(locale?: string): string {
+  if (!locale) return KIWI_LOCALE_LINKS.en;
+  const key = locale.toLowerCase().split('-')[0];
+  return KIWI_LOCALE_LINKS[key] || KIWI_LOCALE_LINKS.en;
+}
+
 export const TRAVELPAYOUTS_DIRECT_LINKS = {
   // FLIGHTS
   flights: {
     primary: 'https://searadar.tpo.li/iAbLlX9i',
     backup: 'https://aviasales.tpo.li/dSIFIrF9',
+    kiwi: 'https://kiwi.tpo.li/86fSRBiW', // default EN link
     subId: 'zivo_flights',
   },
   
-  // HOTELS (Hotellook)
+  // HOTELS (Hotellook + Hotels.tpo.li)
   hotels: {
     primary: 'https://hotellook.tpo.li',
+    hotelsTpo: 'https://hotels.tpo.li/mszBRRYU',
     subId: 'zivo_hotels',
   },
   
