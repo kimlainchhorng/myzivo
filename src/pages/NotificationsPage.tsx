@@ -5,7 +5,7 @@
 import { useState, useMemo } from 'react';
 import SEOHead from '@/components/SEOHead';
 import { useNavigate } from 'react-router-dom';
-import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft } from 'lucide-react';
+import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft, ShieldCheck, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,6 +16,12 @@ import NotificationItem from '@/components/notifications/NotificationItem';
 import MobileBottomNav from '@/components/shared/MobileBottomNav';
 import { useI18n } from '@/hooks/useI18n';
 import { cn } from '@/lib/utils';
+import { usePhoneVerificationGate } from '@/hooks/usePhoneVerificationGate';
+import { PhoneVerificationDialog } from '@/components/account/PhoneVerificationDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 type NotificationCategory = 'all' | 'orders' | 'promos' | 'support' | 'delays';
 
