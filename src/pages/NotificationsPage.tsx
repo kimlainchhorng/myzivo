@@ -5,7 +5,7 @@
 import { useState, useMemo } from 'react';
 import SEOHead from '@/components/SEOHead';
 import { useNavigate } from 'react-router-dom';
-import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft } from 'lucide-react';
+import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft, ShieldCheck, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,13 +16,40 @@ import NotificationItem from '@/components/notifications/NotificationItem';
 import MobileBottomNav from '@/components/shared/MobileBottomNav';
 import { useI18n } from '@/hooks/useI18n';
 import { cn } from '@/lib/utils';
+import { usePhoneVerificationGate } from '@/hooks/usePhoneVerificationGate';
+import { PhoneVerificationDialog } from '@/components/account/PhoneVerificationDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 type NotificationCategory = 'all' | 'orders' | 'promos' | 'support' | 'delays';
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<NotificationCategory>('all');
+  const [showPhoneVerify, setShowPhoneVerify] = useState(false);
+  
+  // Check phone verification status
+  const { isChecking: phoneChecking, isVerified: phoneVerified } = usePhoneVerificationGate();
+  
+  // Get user's phone number from profile
+  const { data: profilePhone } = useQuery({
+    queryKey: ["profile-phone", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("phone_e164, phone")
+        .eq("user_id", user.id)
+        .single();
+      return data as { phone_e164: string | null; phone: string | null } | null;
+    },
+    enabled: !!user?.id && !phoneVerified,
+  });
+  
   const { 
     notifications, 
     unreadCount, 
@@ -92,6 +119,115 @@ const NotificationsPage = () => {
     { value: 'support', label: t('notif.support'), icon: Headphones },
     { value: 'delays', label: t('notif.delays'), icon: Clock },
   ];
+
+  // Show loading while checking phone status
+  if (phoneChecking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Show phone verification gate if not verified
+  if (!phoneVerified) {
+    const userPhone = profilePhone?.phone_e164 || profilePhone?.phone || '';
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <SEOHead title="Verify Phone – ZIVO" description="Verify your phone number to receive notifications." noIndex={true} />
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-2xl border-b border-border/30">
+          <div className="px-4 py-3 safe-area-top">
+            <div className="flex items-center gap-3">
+              <motion.button
+                whileTap={{ scale: 0.88 }}
+                onClick={() => navigate(-1)}
+                className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </motion.button>
+              <h1 className="text-lg font-bold">Notifications</h1>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center justify-center px-6 pt-16">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", damping: 20 }}
+            className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mb-6"
+          >
+            <ShieldCheck className="w-10 h-10 text-primary" />
+          </motion.div>
+
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="text-center space-y-3 mb-8"
+          >
+            <h2 className="text-xl font-bold text-foreground">Verify Your Phone Number</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+              To receive notifications about your trips, orders, and alerts, please verify your phone number first. This keeps your account secure.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="w-full max-w-xs space-y-3"
+          >
+            {userPhone ? (
+              <>
+                <div className="flex items-center gap-3 p-4 rounded-2xl bg-muted/50 border border-border/40">
+                  <Smartphone className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground">{userPhone}</span>
+                </div>
+                <Button
+                  onClick={() => setShowPhoneVerify(true)}
+                  className="w-full h-12 rounded-xl font-semibold text-base"
+                >
+                  Send Verification Code
+                </Button>
+              </>
+            ) : (
+              <Button
+                onClick={() => navigate('/verify-phone')}
+                className="w-full h-12 rounded-xl font-semibold text-base"
+              >
+                <Smartphone className="w-5 h-5 mr-2" />
+                Add & Verify Phone Number
+              </Button>
+            )}
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-[11px] text-muted-foreground/60 mt-6 text-center max-w-xs"
+          >
+            We'll send a 6-digit code via SMS. Standard messaging rates may apply.
+          </motion.p>
+        </div>
+
+        {userPhone && (
+          <PhoneVerificationDialog
+            open={showPhoneVerify}
+            onOpenChange={setShowPhoneVerify}
+            phoneNumber={userPhone}
+            onVerified={() => {
+              setShowPhoneVerify(false);
+              window.location.reload();
+            }}
+          />
+        )}
+
+        <MobileBottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
