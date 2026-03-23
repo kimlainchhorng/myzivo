@@ -573,9 +573,9 @@ const Login = () => {
                         </FormControl>
                         <label className="text-xs text-muted-foreground leading-tight cursor-pointer" onClick={() => field.onChange(field.value === true ? undefined : true)}>
                           I agree to the{" "}
-                          <Link to="/terms" target="_blank" className="text-primary hover:underline font-medium">Terms of Service</Link>
+                          <Link to="/terms" className="text-primary hover:underline font-medium">Terms of Service</Link>
                           {" "}and{" "}
-                          <Link to="/privacy" target="_blank" className="text-primary hover:underline font-medium">Privacy Policy</Link>
+                          <Link to="/privacy" className="text-primary hover:underline font-medium">Privacy Policy</Link>
                         </label>
                       </div>
                       <FormMessage className="text-destructive text-xs ml-6" />
