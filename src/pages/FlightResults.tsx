@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import FlightResultsSkeleton from "@/components/flight/FlightResultsSkeleton";
 import { useDuffelFlightSearch, type DuffelOffer } from "@/hooks/useDuffelFlights";
+import { useTravelpayoutsPrices, type TravelpayoutsPrice } from "@/hooks/useTravelpayoutsPrices";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
