@@ -154,19 +154,40 @@ function RouteCard3D({ route, index, onRouteClick }: { route: any; index: number
 /* ─── Popular Routes ─── */
 function PopularRoutesSection({ className }: { className?: string }) {
   const navigate = useNavigate();
-  const { data: liveRoutes, isLoading } = usePopularRoutePrices();
-  const handleRouteClick = (from: string, to: string) => {
-    const today = new Date();
-    const dep = new Date(today); dep.setDate(today.getDate() + 7);
-    const ret = new Date(today); ret.setDate(today.getDate() + 14);
-    const fmt = (d: Date) => d.toISOString().split("T")[0];
-    navigate(`/flights/results?origin=${from}&destination=${to}&departureDate=${fmt(dep)}&returnDate=${fmt(ret)}&adults=1&cabinClass=economy`);
+  const { data: liveRoutes, isLoading: duffelLoading } = usePopularRoutePrices();
+  const { data: tpRoutes = [], isLoading: tpLoading } = useTravelpayoutsPopularRoutes();
+  const isLoading = duffelLoading && tpLoading;
+
+  const handleRouteClick = (from: string, to: string, depDate?: string, retDate?: string) => {
+    const dep = depDate || (() => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().split("T")[0]; })();
+    const ret = retDate || (() => { const d = new Date(); d.setDate(d.getDate() + 14); return d.toISOString().split("T")[0]; })();
+    navigate(`/flights/results?origin=${from}&destination=${to}&departureDate=${dep}&returnDate=${ret}&adults=1&cabinClass=economy`);
   };
+
   const routes = fallbackRoutes.map((fr) => {
-    const live = liveRoutes?.find((lr) => lr.origin_code === fr.from && lr.destination_code === fr.to);
-    return { ...fr, price: live ? `$${Math.round(live.lowest_price)}` : null, airline: live?.airline_name || null };
+    // Prefer Travelpayouts
+    const tp = tpRoutes.find((t) => t.origin === fr.from && t.destination === fr.to);
+    const duffel = liveRoutes?.find((lr) => lr.origin_code === fr.from && lr.destination_code === fr.to);
+
+    if (tp) {
+      return {
+        ...fr,
+        price: `$${tp.price}`,
+        airline: tp.airline || null,
+        departureDate: tp.departureAt?.split("T")[0],
+        returnDate: tp.returnAt?.split("T")[0] || undefined,
+        transfers: tp.transfers,
+      };
+    }
+    if (duffel) {
+      return { ...fr, price: `$${Math.round(duffel.lowest_price)}`, airline: duffel.airline_name || null, departureDate: undefined, returnDate: undefined, transfers: undefined };
+    }
+    return { ...fr, price: null, airline: null, departureDate: undefined, returnDate: undefined, transfers: undefined };
   });
+
   const hasLivePrices = routes.some((r) => r.price !== null);
+  const hasTp = tpRoutes.length > 0;
+
   return (
     <div className={className}>
       <motion.div initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="flex items-center gap-3 mb-5">
@@ -183,11 +204,11 @@ function PopularRoutesSection({ className }: { className?: string }) {
       </motion.div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {routes.map((route, i) => (
-          <RouteCard3D key={`${route.from}-${route.to}`} route={route} index={i} onRouteClick={handleRouteClick} />
+          <RouteCard3D key={`${route.from}-${route.to}`} route={route} index={i} onRouteClick={(from, to) => handleRouteClick(from, to, route.departureDate, route.returnDate)} />
         ))}
       </div>
       <p className="text-[9px] text-muted-foreground mt-3 text-center">
-        {hasLivePrices ? "*Live prices from Duffel. Final price confirmed at partner checkout." : "*Prices loading. Final price confirmed at partner checkout."}
+        {hasTp ? "*Live prices from Travelpayouts. Final price confirmed at partner checkout." : hasLivePrices ? "*Live prices from Duffel. Final price confirmed at partner checkout." : "*Prices loading. Final price confirmed at partner checkout."}
       </p>
     </div>
   );
