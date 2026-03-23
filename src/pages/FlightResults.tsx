@@ -107,8 +107,29 @@ const FlightResults = () => {
     enabled: !!origin && !!destination && !!departureDate,
   });
 
+  // Travelpayouts price comparison (runs in parallel, non-blocking)
+  const { data: tpPrices = [] } = useTravelpayoutsPrices({
+    origin,
+    destination,
+    departureDate,
+    returnDate,
+    enabled: !!origin && !!destination && !!departureDate,
+  });
+
   const offers = data?.offers || [];
   const isRoundTrip = !!returnDate;
+
+  // Best Travelpayouts price for this route
+  const bestTpPrice = useMemo(() => {
+    if (!tpPrices.length) return null;
+    return tpPrices.reduce((best, p) => (p.price < best.price ? p : best), tpPrices[0]);
+  }, [tpPrices]);
+
+  // Lowest Duffel price for comparison
+  const lowestDuffelPrice = useMemo(() => {
+    if (!offers.length) return null;
+    return Math.min(...offers.map((o) => o.price));
+  }, [offers]);
 
   // Group offers by outbound leg for step-by-step selection
   const outboundGroups = useMemo(() => {
