@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGiftCards, type GiftCard } from "@/hooks/useGiftCards";
 import { useAuth } from "@/contexts/AuthContext";
 import SEOHead from "@/components/SEOHead";
+import { useI18n } from "@/hooks/useI18n";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { format } from "date-fns";

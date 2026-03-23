@@ -28,6 +28,7 @@ import {
 } from "@/hooks/useLocalPaymentMethods";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/useI18n";
 import { toast } from "sonner";
 
 const PaymentMethodsPage = () => {

@@ -43,6 +43,7 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 // PhishingWarning removed
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n } from "@/hooks/useI18n";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 

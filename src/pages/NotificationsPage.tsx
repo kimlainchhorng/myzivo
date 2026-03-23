@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 import { useNotifications } from '@/hooks/useNotifications';
 import NotificationItem from '@/components/notifications/NotificationItem';
 import MobileBottomNav from '@/components/shared/MobileBottomNav';
+import { useI18n } from '@/hooks/useI18n';
 import { cn } from '@/lib/utils';
 
 type NotificationCategory = 'all' | 'orders' | 'promos' | 'support' | 'delays';
