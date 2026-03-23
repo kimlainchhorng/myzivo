@@ -3516,6 +3516,75 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         </div>
       )}
 
+      {/* ═══════ ABA WAITING — waiting for payment completion ═══════ */}
+      {viewStep === "aba-waiting" && (
+        <div
+          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] px-5 pt-4 pb-6"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, minHeight: 300 }}
+        >
+          <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
+
+          <div className="flex flex-col items-center justify-center gap-4 py-6">
+            {/* ABA icon */}
+            <div className="w-16 h-16 rounded-2xl bg-blue-600/10 flex items-center justify-center">
+              <Building2 className="w-8 h-8 text-blue-600" />
+            </div>
+
+            <div className="text-center space-y-1">
+              <h3 className="text-lg font-bold text-foreground">រង់ចាំការទូទាត់ / Waiting for Payment</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-[280px]">
+                សូមបញ្ចប់ការទូទាត់នៅក្នុង ABA app រួចត្រឡប់មកវិញ
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Complete payment in ABA app, then return here
+              </p>
+            </div>
+
+            {/* Animated waiting indicator */}
+            <div className="flex gap-2">
+              {[0, 1, 2].map((i) => (
+                <motion.span
+                  key={i}
+                  className="w-2.5 h-2.5 rounded-full bg-blue-600"
+                  animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3, ease: "easeInOut" }}
+                />
+              ))}
+            </div>
+
+            {/* Manual confirm button (in case return URL doesn't work) */}
+            <Button
+              className="w-full h-12 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 gap-2"
+              onClick={() => {
+                const pendingId = rideRequestId || sessionStorage.getItem("aba_pending_ride_id");
+                if (pendingId) {
+                  handleAbaPaymentReturn(pendingId);
+                }
+              }}
+            >
+              <Check className="w-4 h-4" />
+              បានបង់រួចហើយ / I've Paid
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive/80"
+              onClick={async () => {
+                if (rideRequestId) {
+                  await supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideRequestId);
+                }
+                sessionStorage.removeItem("aba_pending_ride_id");
+                handleReset();
+                toast.info("Ride cancelled");
+              }}
+            >
+              បោះបង់ / Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* ═══════ SEARCHING — bottom sheet over map ═══════ */}
       {viewStep === "searching" && (
         <div
