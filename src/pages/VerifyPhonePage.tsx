@@ -215,7 +215,7 @@ export default function VerifyPhonePage() {
                   )}
                 </Button>
               </motion.div>
-            ) : (
+            ) : step === "otp" ? (
               <motion.div
                 key="otp-step"
                 initial={{ opacity: 0, x: 20 }}
@@ -282,6 +282,31 @@ export default function VerifyPhonePage() {
                     {isSending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
                   </Button>
                 </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="success-step"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="space-y-6 text-center"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", damping: 12, delay: 0.2 }}
+                  className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto"
+                >
+                  <CheckCircle2 className="w-10 h-10 text-green-500" />
+                </motion.div>
+                <p className="text-sm text-muted-foreground">
+                  Redirecting in a moment…
+                </p>
+                <Button
+                  onClick={() => navigate(from, { replace: true })}
+                  className="w-full h-12 text-base font-semibold rounded-xl"
+                >
+                  Continue Now
+                </Button>
               </motion.div>
             )}
           </AnimatePresence>
