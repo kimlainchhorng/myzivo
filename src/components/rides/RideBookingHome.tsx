@@ -3091,6 +3091,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             {filteredVehiclesByCategory.map((v, index) => {
               const isSelected = selectedVehicle === v.id;
               const price = calcPrice(v, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0);
+              const rawPrice = (() => {
+                const raw = (v.basePrice + v.pricePerMile * (routeData?.distance_miles ?? 0) + v.perMinute * (routeData?.duration_minutes ?? 0)) * 1.0 * v.surgeMultiplier;
+                return raw + v.bookingFee;
+              })();
+              const isMinFareApplied = rawPrice < v.minimumFare;
               const isDiscount = v.surgeMultiplier < 1;
               const originalPrice = isDiscount ? calcPrice({ ...v, surgeMultiplier: 1.0 }, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0) : null;
 
