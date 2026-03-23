@@ -452,6 +452,9 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "address.add_address": "Add Address",
     "address.delete_title": "Delete Address?",
     "address.delete_desc": "This action cannot be undone. The address will be permanently removed.",
+    "address.use_current": "Use current location",
+    "address.detecting_gps": "Detecting your location...",
+    "address.gps_detected": "Location detected",
   },
   km: {
     "flights.roundtrip": "ទៅមក",
