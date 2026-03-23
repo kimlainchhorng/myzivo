@@ -27,6 +27,66 @@ import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+/* ─── 3D Nav Button with photographic background ─── */
+interface Nav3DItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  bg: string;
+  gradient: string;
+  shadow: string;
+  ring: string;
+}
+
+function Nav3DButton({ item }: { item: Nav3DItem }) {
+  const ref = useRef<HTMLAnchorElement>(null);
+
+  const onMouseMove = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.transform = `perspective(500px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) scale3d(1.06,1.06,1.06)`;
+  }, []);
+
+  const onMouseLeave = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = "perspective(500px) rotateY(0) rotateX(0) scale3d(1,1,1)";
+  }, []);
+
+  const Icon = item.icon;
+
+  return (
+    <Link
+      ref={ref}
+      to={item.href}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+      className={cn(
+        "relative flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold text-white overflow-hidden",
+        "transition-all duration-300 ease-out will-change-transform",
+        `shadow-lg ${item.shadow} hover:shadow-xl ring-1 ${item.ring}`
+      )}
+      style={{ transformStyle: "preserve-3d" }}
+    >
+      {/* Photo background */}
+      <img
+        src={item.bg}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover"
+        loading="eager"
+      />
+      {/* Gradient overlay */}
+      <div className={cn("absolute inset-0 bg-gradient-to-r", item.gradient)} />
+      {/* Content */}
+      <Icon className="w-4 h-4 relative z-10 drop-shadow-md" />
+      <span className="relative z-10 drop-shadow-md">{item.label}</span>
+    </Link>
+  );
+}
+
 const Header = () => {
   const navigate = useNavigate();
   const { user, signOut, isAdmin } = useAuth();
