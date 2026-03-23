@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,16 +7,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle, X } from "lucide-react";
-import InlineLegalSheet, { useLegalSheet } from "@/components/checkout/InlineLegalSheet";
+import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle } from "lucide-react";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import SEOHead from "@/components/SEOHead";
 import { useI18n } from "@/hooks/useI18n";
 import { cn } from "@/lib/utils";
+import InlineLegalSheet, { useLegalSheet } from "@/components/checkout/InlineLegalSheet";
 
 // Login schema
 const loginSchema = z.object({
@@ -264,53 +264,91 @@ const Login = () => {
     setIsLogin(!isLogin);
   };
 
+  // 3D tilt effect
+  const cardRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [4, -4]), { stiffness: 200, damping: 30 });
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-4, 4]), { stiffness: 200, damping: 30 });
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
+    mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
+  }, [mouseX, mouseY]);
+
+  const handleMouseLeave = useCallback(() => {
+    mouseX.set(0);
+    mouseY.set(0);
+  }, [mouseX, mouseY]);
+
+  const input3D = "w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2 pl-9 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]";
+  const input3DLg = "w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]";
+
   return (
-    <div className="h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 px-4 safe-area-top safe-area-bottom relative overflow-hidden">
+    <div className="h-[100dvh] flex flex-col items-center justify-center relative overflow-hidden">
       <SEOHead title={isLogin ? "Sign In – ZIVO" : "Create Account – ZIVO"} description="Sign in or create your ZIVO account to search flights, hotels, and car rentals." noIndex={true} />
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 -left-1/3 w-[80%] h-[80%] bg-gradient-to-br from-primary/15 to-transparent rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute -bottom-1/3 -right-1/4 w-[60%] h-[60%] bg-gradient-to-tl from-[hsl(var(--flights))/0.1] to-transparent rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '1.5s' }} />
-        <div className="absolute top-1/3 right-1/4 w-[30%] h-[30%] bg-gradient-to-bl from-[hsl(var(--hotels))/0.08] to-transparent rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '3s' }} />
+
+      {/* 3D Background */}
+      <div className="absolute inset-0">
+        <img src="/images/auth-bg-3d.jpg" alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
       </div>
-      <div className="w-full max-w-md relative z-10">
+
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-primary/40 rounded-full"
+            animate={{ y: [0, -200, 0], x: [0, Math.sin(i) * 50, 0], opacity: [0, 0.8, 0] }}
+            transition={{ duration: 4 + i * 0.8, repeat: Infinity, delay: i * 0.7, ease: "easeInOut" }}
+            style={{ left: `${15 + i * 14}%`, bottom: "10%" }}
+          />
+        ))}
+      </div>
+
+      <div className="w-full max-w-md relative z-10 px-4" style={{ perspective: "1200px" }}>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-card/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl shadow-black/[0.08] p-4 sm:p-5 flex flex-col"
+          ref={cardRef}
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            rotateX, rotateY,
+            transformStyle: "preserve-3d" as const,
+            boxShadow: "0 25px 60px -15px rgba(0,0,0,0.5), 0 10px 25px -10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)",
+          }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl p-4 sm:p-5 flex flex-col overflow-hidden"
         >
+          {/* Glass shimmer */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-white/[0.04] rounded-3xl pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
+
           {/* Header */}
-          <div className="text-center mb-3 relative">
-            {/* Go Home - top left */}
+          <div className="text-center mb-3 relative z-10">
             <div className="absolute left-0 top-0">
-              <button
-                onClick={() => navigate("/")}
-                className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all active:scale-90 touch-manipulation"
-                aria-label="Go to Home"
-              >
-                <Home className="w-4 h-4 text-muted-foreground" />
+              <button onClick={() => navigate("/")} className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation" aria-label="Go to Home">
+                <Home className="w-4 h-4 text-white/70" />
               </button>
             </div>
-            {/* Language toggle - top right */}
             <div className="absolute right-0 top-0">
               <div className="relative">
-                <button
-                  onClick={() => setShowLangMenu(!showLangMenu)}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all active:scale-90 touch-manipulation"
-                  aria-label="Change language"
-                >
-                  <Globe className="w-4 h-4 text-muted-foreground" />
+                <button onClick={() => setShowLangMenu(!showLangMenu)} className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation" aria-label="Change language">
+                  <Globe className="w-4 h-4 text-white/70" />
                 </button>
                 {showLangMenu && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
-                    <div className="absolute right-0 top-10 z-50 bg-card/95 backdrop-blur-2xl border border-border/50 rounded-2xl shadow-2xl py-1 min-w-[200px] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-                      <div className="relative px-3 py-2 border-b border-border/40 overflow-hidden">
+                    <div className="absolute right-0 top-10 z-50 bg-black/80 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl py-1 min-w-[200px] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                      <div className="relative px-3 py-2 border-b border-white/10 overflow-hidden">
                         {currentLangItem?.flag && (
                           <img src={currentLangItem.flag} alt="" className="absolute -right-3 -top-3 w-24 h-24 opacity-[0.07] pointer-events-none blur-[1px]" style={{ transform: "rotate(-12deg) scale(1.3)" }} />
                         )}
-                        <p className="text-xs font-medium text-muted-foreground relative z-10">Select Language</p>
+                        <p className="text-xs font-medium text-white/60 relative z-10">Select Language</p>
                       </div>
                       <div className="max-h-[320px] overflow-y-auto py-1">
                         {LANGS.map(l => (
@@ -319,13 +357,13 @@ const Login = () => {
                             onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
                             className={cn(
                               "w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-all duration-200 relative overflow-hidden group",
-                              currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/60"
+                              currentLanguage === l.code ? "bg-primary/20 text-primary font-semibold" : "text-white/80 hover:bg-white/10"
                             )}
                           >
                             <img src={l.flag} alt="" className="absolute right-0 top-1/2 w-14 h-14 opacity-0 group-hover:opacity-[0.08] transition-opacity duration-300 pointer-events-none blur-[0.5px]" style={{ transform: "translateY(-50%) rotate(-8deg)" }} />
-                            <img src={l.flag} alt={l.label} className="w-6 h-[17px] rounded-[3px] object-cover shadow-sm border border-black/10 shrink-0 relative z-10" />
+                            <img src={l.flag} alt={l.label} className="w-6 h-[17px] rounded-[3px] object-cover shadow-sm border border-white/20 shrink-0 relative z-10" />
                             <span className="relative z-10 flex-1 text-left">{l.label}</span>
-                            <span className="text-[10px] font-mono text-muted-foreground/60 uppercase relative z-10">{l.code}</span>
+                            <span className="text-[10px] font-mono text-white/40 uppercase relative z-10">{l.code}</span>
                             {currentLanguage === l.code && <CheckCircle className="w-3.5 h-3.5 text-primary relative z-10" />}
                           </button>
                         ))}
@@ -335,358 +373,205 @@ const Login = () => {
                 )}
               </div>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
-              ZIVO ID
-            </h1>
-            <motion.p 
-              key={isLogin ? "login" : "signup"}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-muted-foreground mt-0.5 text-xs"
-            >
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight drop-shadow-lg">ZIVO ID</h1>
+            <motion.p key={isLogin ? "login" : "signup"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-white/60 mt-0.5 text-xs">
               {isLogin ? t("auth.welcome_back") : t("auth.get_started")}
             </motion.p>
           </div>
 
           {/* Forms */}
+          <div className="relative z-10">
           {isLogin ? (
             <Form {...loginForm}>
               <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-2.5">
-                <FormField
-                  control={loginForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.email")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <input
-                            type="email"
-                            placeholder="you@example.com"
-                            autoComplete="email"
-                            className="w-full bg-muted border border-border rounded-xl py-2.5 pl-10 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-destructive text-xs" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={loginForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.password")}</FormLabel>
-                        <Link
-                          to="/forgot-password"
-                          className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
-                        >
-                          {t("auth.forgot")}
-                        </Link>
+                <FormField control={loginForm.control} name="email" render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <input type="email" placeholder="you@example.com" autoComplete="email" className={input3DLg} {...field} />
                       </div>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <input
-                            type="password"
-                            placeholder="••••••••"
-                            autoComplete="current-password"
-                            className="w-full bg-muted border border-border rounded-xl py-2.5 pl-10 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-destructive text-xs" />
-                    </FormItem>
-                  )}
-                />
+                    </FormControl>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )} />
 
-                <Button 
-                  type="submit" 
-                  className="w-full h-10 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl touch-manipulation active:scale-[0.98] transition-all" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <>
-                      {t("auth.sign_in")}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
+                <FormField control={loginForm.control} name="password" render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
+                      <Link to="/forgot-password" className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">{t("auth.forgot")}</Link>
+                    </div>
+                    <FormControl>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <input type="password" placeholder="••••••••" autoComplete="current-password" className={input3DLg} {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )} />
+
+                <motion.div whileTap={{ scale: 0.97, y: 2 }} whileHover={{ scale: 1.01 }}>
+                  <Button type="submit" className="w-full h-10 text-sm font-bold rounded-xl touch-manipulation transition-all relative overflow-hidden shadow-[0_6px_20px_-4px_rgba(34,197,94,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]" disabled={isLoading} style={{ background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%)" }}>
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 pointer-events-none rounded-t-xl" />
+                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : <span className="relative z-10 flex items-center gap-2">{t("auth.sign_in")}<ArrowRight className="h-4 w-4" /></span>}
+                  </Button>
+                </motion.div>
               </form>
             </Form>
           ) : (
             <Form {...signupForm}>
               <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-1.5">
                 <div className="grid grid-cols-2 gap-2">
-                  <FormField
-                    control={signupForm.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem className="space-y-0.5">
-                        <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.first_name")}</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                            <input
-                              placeholder="John"
-                              autoComplete="given-name"
-                              className="w-full bg-muted border border-border rounded-xl py-2 pl-9 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-destructive text-xs" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={signupForm.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem className="space-y-0.5">
-                        <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.last_name")}</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                            <input
-                              placeholder="Doe"
-                              autoComplete="family-name"
-                              className="w-full bg-muted border border-border rounded-xl py-2 pl-9 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-destructive text-xs" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={signupForm.control}
-                  name="phone"
-                  render={({ field }) => (
+                  <FormField control={signupForm.control} name="firstName" render={({ field }) => (
                     <FormItem className="space-y-0.5">
-                      <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.phone")}</FormLabel>
-                      <FormControl>
-                        <CountryPhoneInput
-                          value={field.value}
-                          onChange={field.onChange}
-                          onBlur={field.onBlur}
-                          name={field.name}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-destructive text-xs" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={signupForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem className="space-y-0.5">
-                      <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.email")}</FormLabel>
+                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.first_name")}</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                          <input
-                            type="email"
-                            placeholder="you@example.com"
-                            autoComplete="email"
-                            className="w-full bg-muted border border-border rounded-xl py-2 pl-9 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
-                            {...field}
-                          />
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                          <input placeholder="John" autoComplete="given-name" className={input3D} {...field} />
                         </div>
                       </FormControl>
-                      <FormMessage className="text-destructive text-xs" />
+                      <FormMessage className="text-red-400 text-xs" />
                     </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-2">
-                  <FormField
-                    control={signupForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem className="space-y-0.5">
-                        <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.password")}</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                            <input
-                              type="password"
-                              placeholder="••••••••"
-                              autoComplete="new-password"
-                              className="w-full bg-muted border border-border rounded-xl py-2 pl-9 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-destructive text-xs" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={signupForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem className="space-y-0.5">
-                        <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.confirm_password")}</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                            <input
-                              type="password"
-                              placeholder="••••••••"
-                              autoComplete="new-password"
-                              className="w-full bg-muted border border-border rounded-xl py-2 pl-9 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-destructive text-xs" />
-                      </FormItem>
-                    )}
-                  />
+                  )} />
+                  <FormField control={signupForm.control} name="lastName" render={({ field }) => (
+                    <FormItem className="space-y-0.5">
+                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.last_name")}</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                          <input placeholder="Doe" autoComplete="family-name" className={input3D} {...field} />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-400 text-xs" />
+                    </FormItem>
+                  )} />
                 </div>
 
-                <FormField
-                  control={signupForm.control}
-                  name="agreeToTerms"
-                  render={({ field }) => (
-                    <FormItem className="space-y-0">
-                      <div className="flex items-start gap-2">
-                        <FormControl>
-                          <input
-                            type="checkbox"
-                            checked={field.value === true}
-                            onChange={(e) => field.onChange(e.target.checked ? true : undefined)}
-                            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer"
-                          />
-                        </FormControl>
-                        <label className="text-xs text-muted-foreground leading-tight cursor-pointer" onClick={() => field.onChange(field.value === true ? undefined : true)}>
-                          I agree to the{" "}
-                          <button type="button" onClick={(e) => { e.stopPropagation(); openSheet("Terms of Service", "/terms"); }} className="text-primary hover:underline font-medium">Terms of Service</button>
-                          {" "}and{" "}
-                          <button type="button" onClick={(e) => { e.stopPropagation(); openSheet("Privacy Policy", "/privacy"); }} className="text-primary hover:underline font-medium">Privacy Policy</button>
-                        </label>
-                      </div>
-                      <FormMessage className="text-destructive text-xs ml-6" />
-                    </FormItem>
-                  )}
-                />
+                <FormField control={signupForm.control} name="phone" render={({ field }) => (
+                  <FormItem className="space-y-0.5">
+                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.phone")}</FormLabel>
+                    <FormControl>
+                      <CountryPhoneInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
+                    </FormControl>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )} />
 
-                <Button 
-                  type="submit" 
-                  className="w-full h-10 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl touch-manipulation active:scale-[0.98] transition-all" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <>
-                      {t("auth.create_account")}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
+                <FormField control={signupForm.control} name="email" render={({ field }) => (
+                  <FormItem className="space-y-0.5">
+                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                        <input type="email" placeholder="you@example.com" autoComplete="email" className={input3D} {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )} />
+
+                <div className="grid grid-cols-2 gap-2">
+                  <FormField control={signupForm.control} name="password" render={({ field }) => (
+                    <FormItem className="space-y-0.5">
+                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                          <input type="password" placeholder="••••••••" autoComplete="new-password" className={input3D} {...field} />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-400 text-xs" />
+                    </FormItem>
+                  )} />
+                  <FormField control={signupForm.control} name="confirmPassword" render={({ field }) => (
+                    <FormItem className="space-y-0.5">
+                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.confirm_password")}</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                          <input type="password" placeholder="••••••••" autoComplete="new-password" className={input3D} {...field} />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-400 text-xs" />
+                    </FormItem>
+                  )} />
+                </div>
+
+                <FormField control={signupForm.control} name="agreeToTerms" render={({ field }) => (
+                  <FormItem className="space-y-0">
+                    <div className="flex items-start gap-2">
+                      <FormControl>
+                        <input type="checkbox" checked={field.value === true} onChange={(e) => field.onChange(e.target.checked ? true : undefined)} className="mt-0.5 h-4 w-4 rounded border-white/30 bg-white/10 text-primary focus:ring-primary accent-primary cursor-pointer" />
+                      </FormControl>
+                      <label className="text-xs text-white/60 leading-tight cursor-pointer" onClick={() => field.onChange(field.value === true ? undefined : true)}>
+                        I agree to the{" "}
+                        <button type="button" onClick={(e) => { e.stopPropagation(); openSheet("Terms of Service", "/terms"); }} className="text-primary hover:underline font-medium">Terms of Service</button>
+                        {" "}and{" "}
+                        <button type="button" onClick={(e) => { e.stopPropagation(); openSheet("Privacy Policy", "/privacy"); }} className="text-primary hover:underline font-medium">Privacy Policy</button>
+                      </label>
+                    </div>
+                    <FormMessage className="text-red-400 text-xs ml-6" />
+                  </FormItem>
+                )} />
+
+                <motion.div whileTap={{ scale: 0.97, y: 2 }} whileHover={{ scale: 1.01 }}>
+                  <Button type="submit" className="w-full h-10 text-sm font-bold rounded-xl touch-manipulation transition-all relative overflow-hidden shadow-[0_6px_20px_-4px_rgba(34,197,94,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]" disabled={isLoading} style={{ background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%)" }}>
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 pointer-events-none rounded-t-xl" />
+                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : <span className="relative z-10 flex items-center gap-2">{t("auth.create_account")}<ArrowRight className="h-4 w-4" /></span>}
+                  </Button>
+                </motion.div>
               </form>
             </Form>
           )}
+          </div>
 
           {/* Divider */}
-          <div className="relative my-3">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
+          <div className="relative my-3 z-10">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-4 text-muted-foreground">{t("auth.or_continue")}</span>
+              <span className="px-4 text-white/50 bg-transparent">{t("auth.or_continue")}</span>
             </div>
           </div>
 
-          {/* Social Login */}
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              type="button"
-              onClick={() => handleSocialLogin('google')}
-              disabled={socialLoading !== null}
-              className="h-10 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50 text-sm"
-            >
-              {socialLoading === 'google' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Google
-                </>
+          {/* Social Login - 3D */}
+          <div className="grid grid-cols-2 gap-2.5 relative z-10">
+            <motion.button type="button" onClick={() => handleSocialLogin('google')} disabled={socialLoading !== null} whileTap={{ scale: 0.95, y: 1 }} whileHover={{ scale: 1.02 }} className="h-10 flex items-center justify-center bg-white/10 backdrop-blur-sm border border-white/15 hover:bg-white/15 text-white rounded-xl touch-manipulation transition-all disabled:opacity-50 text-sm shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]">
+              {socialLoading === 'google' ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                <><svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Google</>
               )}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSocialLogin('apple')}
-              disabled={socialLoading !== null}
-              className="h-10 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50 text-sm"
-            >
-              {socialLoading === 'apple' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-                  </svg>
-                  Apple
-                </>
+            </motion.button>
+            <motion.button type="button" onClick={() => handleSocialLogin('apple')} disabled={socialLoading !== null} whileTap={{ scale: 0.95, y: 1 }} whileHover={{ scale: 1.02 }} className="h-10 flex items-center justify-center bg-white/10 backdrop-blur-sm border border-white/15 hover:bg-white/15 text-white rounded-xl touch-manipulation transition-all disabled:opacity-50 text-sm shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]">
+              {socialLoading === 'apple' ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                <><svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>Apple</>
               )}
-            </button>
+            </motion.button>
           </div>
 
-          {/* Trust + Toggle + Footer — all inside card */}
-          <div className="flex items-center justify-center gap-3 mt-2.5 text-muted-foreground text-[10px]">
-            <div className="flex items-center gap-1">
-              <Shield className="w-3 h-3" />
-              <span>{t("auth.encrypted")}</span>
-            </div>
-            <div className="w-px h-3 bg-border" />
-            <div className="flex items-center gap-1">
-              <Mail className="w-3 h-3" />
-              <span>{t("auth.no_spam")}</span>
-            </div>
+          {/* Trust */}
+          <div className="flex items-center justify-center gap-3 mt-2.5 text-white/40 text-[10px] relative z-10">
+            <div className="flex items-center gap-1"><Shield className="w-3 h-3" /><span>{t("auth.encrypted")}</span></div>
+            <div className="w-px h-3 bg-white/15" />
+            <div className="flex items-center gap-1"><Mail className="w-3 h-3" /><span>{t("auth.no_spam")}</span></div>
           </div>
 
-          <div className="text-center mt-2">
-            <button
-              type="button"
-              onClick={toggleMode}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
+          {/* Toggle */}
+          <div className="text-center mt-2 relative z-10">
+            <button type="button" onClick={toggleMode} className="text-xs text-white/50 hover:text-white/80 transition-colors">
               {isLogin ? t("auth.no_account") + " " : t("auth.have_account") + " "}
-              <span className="text-primary font-semibold">
-                {isLogin ? t("auth.sign_up") : t("auth.log_in")}
-              </span>
+              <span className="text-primary font-semibold">{isLogin ? t("auth.sign_up") : t("auth.log_in")}</span>
             </button>
           </div>
 
-          <div className="flex items-center justify-center gap-3 mt-2 text-[10px] text-muted-foreground">
+          <div className="flex items-center justify-center gap-3 mt-2 text-[10px] text-white/30 relative z-10">
             <span>{isLogin ? t("auth.protected") : t("auth.terms_agree")}</span>
           </div>
         </motion.div>
       </div>
 
-      {/* Inline legal sheet */}
       <InlineLegalSheet open={sheet.open} onOpenChange={setOpen} title={sheet.title} url={sheet.url} />
     </div>
   );
