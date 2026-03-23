@@ -1,4 +1,5 @@
 import { useEffect, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -8,6 +9,8 @@ import { OGImageMeta } from "@/components/marketing";
 import { WinBackBanner } from "@/components/home/WinBackBanner";
 import LazySection from "@/components/shared/LazySection";
 import { OrganizationSchema, WebsiteSearchSchema } from "@/components/seo/StructuredData";
+import { usePhoneVerificationGate } from "@/hooks/usePhoneVerificationGate";
+import { Loader2 } from "lucide-react";
 import {
   CardGridSkeleton,
   RoutesSkeleton,
@@ -84,6 +87,10 @@ const DesktopHomePage = () => {
 const Index = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Only check phone verification for logged-in users
+  const { isChecking: phoneChecking, isVerified: phoneVerified } = usePhoneVerificationGate(!!user);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -104,6 +111,22 @@ const Index = () => {
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
+
+  // Redirect logged-in users without verified phone
+  useEffect(() => {
+    if (user && !phoneChecking && !phoneVerified) {
+      navigate("/verify-phone", { replace: true });
+    }
+  }, [user, phoneChecking, phoneVerified, navigate]);
+
+  // Show loading while checking phone status for logged-in users
+  if (user && phoneChecking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (isMobile) {
     if (user) {
