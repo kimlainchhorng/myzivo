@@ -9,13 +9,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Phone, ShieldCheck, Loader2, ArrowLeft, AlertCircle, Smartphone } from "lucide-react";
+import { Phone, ShieldCheck, Loader2, ArrowLeft, AlertCircle, Smartphone, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 
-type Step = "phone" | "otp";
+type Step = "phone" | "otp" | "success";
 
 export default function VerifyPhonePage() {
   const navigate = useNavigate();
@@ -96,7 +96,11 @@ export default function VerifyPhonePage() {
       if (data && !data.success) throw new Error(data.error || "Verification failed");
 
       toast.success("Phone verified successfully! 🎉");
-      navigate(from, { replace: true });
+      setStep("success");
+      // Auto-redirect after 3 seconds
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 3000);
     } catch (err: any) {
       console.error("Verify error:", err);
       setError(err.message || "Invalid verification code");
