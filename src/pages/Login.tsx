@@ -31,6 +31,7 @@ const signupSchema = z.object({
   phone: z.string().min(7, "Please enter a valid phone number").max(20).regex(/^[+]?[\d\s\-().]+$/, "Invalid phone number format"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
+  agreeToTerms: z.literal(true, { errorMap: () => ({ message: "You must agree to the Terms of Service" }) }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -109,6 +110,7 @@ const Login = () => {
       phone: "",
       password: "",
       confirmPassword: "",
+      agreeToTerms: undefined as unknown as true,
     },
   });
 
@@ -554,6 +556,32 @@ const Login = () => {
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={signupForm.control}
+                  name="agreeToTerms"
+                  render={({ field }) => (
+                    <FormItem className="space-y-0">
+                      <div className="flex items-start gap-2">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value === true}
+                            onChange={(e) => field.onChange(e.target.checked ? true : undefined)}
+                            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer"
+                          />
+                        </FormControl>
+                        <label className="text-xs text-muted-foreground leading-tight cursor-pointer" onClick={() => field.onChange(field.value === true ? undefined : true)}>
+                          I agree to the{" "}
+                          <Link to="/terms" target="_blank" className="text-primary hover:underline font-medium">Terms of Service</Link>
+                          {" "}and{" "}
+                          <Link to="/privacy" target="_blank" className="text-primary hover:underline font-medium">Privacy Policy</Link>
+                        </label>
+                      </div>
+                      <FormMessage className="text-destructive text-xs ml-6" />
+                    </FormItem>
+                  )}
+                />
 
                 <Button 
                   type="submit" 
