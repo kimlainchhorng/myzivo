@@ -14,17 +14,43 @@ interface CountryCode {
 }
 
 const COUNTRY_CODES: CountryCode[] = [
+  // Popular / Priority
   { code: "US", dial: "+1", name: "United States", flag: "/flags/us.svg", placeholder: "201 555 0123", digits: "10 digits" },
+  { code: "KH", dial: "+855", name: "Cambodia", flag: "/flags/kh.svg", placeholder: "12 345 678", digits: "8-9 digits" },
+  { code: "CN", dial: "+86", name: "China", flag: "/flags/cn.svg", placeholder: "131 2345 6789", digits: "11 digits" },
+  { code: "VN", dial: "+84", name: "Vietnam", flag: "/flags/vn.svg", placeholder: "912 345 678", digits: "9-10 digits" },
+  { code: "TH", dial: "+66", name: "Thailand", flag: "/flags/th.svg", placeholder: "81 234 5678", digits: "9 digits" },
+  { code: "KR", dial: "+82", name: "South Korea", flag: "/flags/kr.svg", placeholder: "10 1234 5678", digits: "10-11 digits" },
+  { code: "JP", dial: "+81", name: "Japan", flag: "/flags/jp.svg", placeholder: "90 1234 5678", digits: "10 digits" },
+  { code: "IN", dial: "+91", name: "India", flag: "/flags/in.svg", placeholder: "91234 56789", digits: "10 digits" },
+  { code: "GB", dial: "+44", name: "United Kingdom", flag: "/flags/gb.svg", placeholder: "7911 123456", digits: "10-11 digits" },
+  { code: "AU", dial: "+61", name: "Australia", flag: "/flags/au.svg", placeholder: "412 345 678", digits: "9 digits" },
+
+  // North America
   { code: "CA", dial: "+1", name: "Canada", flag: "/flags/ca.svg", placeholder: "416 555 0123", digits: "10 digits" },
   { code: "MX", dial: "+52", name: "Mexico", flag: "/flags/mx.svg", placeholder: "55 1234 5678", digits: "10 digits" },
   { code: "DO", dial: "+1", name: "Dominican Republic", flag: "/flags/do.svg", placeholder: "809 234 5678", digits: "10 digits" },
   { code: "JM", dial: "+1", name: "Jamaica", flag: "/flags/jm.svg", placeholder: "876 234 5678", digits: "10 digits" },
-  { code: "BR", dial: "+55", name: "Brazil", flag: "/flags/br.svg", placeholder: "11 91234 5678", digits: "10-11 digits" },
-  { code: "AR", dial: "+54", name: "Argentina", flag: "/flags/ar.svg", placeholder: "11 1234 5678", digits: "10 digits" },
-  { code: "CO", dial: "+57", name: "Colombia", flag: "/flags/co.svg", placeholder: "301 234 5678", digits: "10 digits" },
-  { code: "CL", dial: "+56", name: "Chile", flag: "/flags/cl.svg", placeholder: "9 1234 5678", digits: "9 digits" },
-  { code: "PE", dial: "+51", name: "Peru", flag: "/flags/pe.svg", placeholder: "912 345 678", digits: "9 digits" },
-  { code: "GB", dial: "+44", name: "United Kingdom", flag: "/flags/gb.svg", placeholder: "7911 123456", digits: "10-11 digits" },
+
+  // Southeast Asia
+  { code: "SG", dial: "+65", name: "Singapore", flag: "/flags/sg.svg", placeholder: "9123 4567", digits: "8 digits" },
+  { code: "MY", dial: "+60", name: "Malaysia", flag: "/flags/my.svg", placeholder: "12 345 6789", digits: "9-10 digits" },
+  { code: "ID", dial: "+62", name: "Indonesia", flag: "/flags/id.svg", placeholder: "812 3456 7890", digits: "10-12 digits" },
+  { code: "PH", dial: "+63", name: "Philippines", flag: "/flags/ph.svg", placeholder: "917 123 4567", digits: "10 digits" },
+  { code: "MM", dial: "+95", name: "Myanmar", flag: "/flags/mm.svg", placeholder: "9 123 4567", digits: "7-10 digits" },
+  { code: "LA", dial: "+856", name: "Laos", flag: "/flags/la.svg", placeholder: "20 5678 9012", digits: "8-10 digits" },
+
+  // East Asia
+  { code: "TW", dial: "+886", name: "Taiwan", flag: "/flags/tw.svg", placeholder: "912 345 678", digits: "9 digits" },
+  { code: "HK", dial: "+852", name: "Hong Kong", flag: "/flags/hk.svg", placeholder: "5123 4567", digits: "8 digits" },
+
+  // South Asia
+  { code: "PK", dial: "+92", name: "Pakistan", flag: "/flags/pk.svg", placeholder: "301 234 5678", digits: "10 digits" },
+  { code: "BD", dial: "+880", name: "Bangladesh", flag: "/flags/bd.svg", placeholder: "1712 345678", digits: "10 digits" },
+  { code: "LK", dial: "+94", name: "Sri Lanka", flag: "/flags/lk.svg", placeholder: "71 234 5678", digits: "9 digits" },
+  { code: "NP", dial: "+977", name: "Nepal", flag: "/flags/np.svg", placeholder: "984 123 4567", digits: "10 digits" },
+
+  // Europe
   { code: "FR", dial: "+33", name: "France", flag: "/flags/fr.svg", placeholder: "6 12 34 56 78", digits: "9 digits" },
   { code: "DE", dial: "+49", name: "Germany", flag: "/flags/de.svg", placeholder: "151 2345 6789", digits: "10-11 digits" },
   { code: "IT", dial: "+39", name: "Italy", flag: "/flags/it.svg", placeholder: "312 345 6789", digits: "10 digits" },
@@ -51,6 +77,8 @@ const COUNTRY_CODES: CountryCode[] = [
   { code: "RU", dial: "+7", name: "Russia", flag: "/flags/ru.svg", placeholder: "912 345 67 89", digits: "10 digits" },
   { code: "GR", dial: "+30", name: "Greece", flag: "/flags/gr.svg", placeholder: "691 234 5678", digits: "10 digits" },
   { code: "TR", dial: "+90", name: "Turkey", flag: "/flags/tr.svg", placeholder: "501 234 5678", digits: "10 digits" },
+
+  // Middle East
   { code: "AE", dial: "+971", name: "UAE", flag: "/flags/ae.svg", placeholder: "50 123 4567", digits: "9 digits" },
   { code: "SA", dial: "+966", name: "Saudi Arabia", flag: "/flags/sa.svg", placeholder: "50 123 4567", digits: "9 digits" },
   { code: "QA", dial: "+974", name: "Qatar", flag: "/flags/qa.svg", placeholder: "3312 3456", digits: "8 digits" },
@@ -61,6 +89,8 @@ const COUNTRY_CODES: CountryCode[] = [
   { code: "LB", dial: "+961", name: "Lebanon", flag: "/flags/lb.svg", placeholder: "71 123 456", digits: "7-8 digits" },
   { code: "IL", dial: "+972", name: "Israel", flag: "/flags/il.svg", placeholder: "50 123 4567", digits: "9 digits" },
   { code: "EG", dial: "+20", name: "Egypt", flag: "/flags/eg.svg", placeholder: "100 234 5678", digits: "10 digits" },
+
+  // Africa
   { code: "ZA", dial: "+27", name: "South Africa", flag: "/flags/za.svg", placeholder: "71 234 5678", digits: "9 digits" },
   { code: "NG", dial: "+234", name: "Nigeria", flag: "/flags/ng.svg", placeholder: "802 345 6789", digits: "10 digits" },
   { code: "KE", dial: "+254", name: "Kenya", flag: "/flags/ke.svg", placeholder: "712 345 678", digits: "9 digits" },
@@ -68,26 +98,15 @@ const COUNTRY_CODES: CountryCode[] = [
   { code: "TZ", dial: "+255", name: "Tanzania", flag: "/flags/tz.svg", placeholder: "712 345 678", digits: "9 digits" },
   { code: "ET", dial: "+251", name: "Ethiopia", flag: "/flags/et.svg", placeholder: "91 123 4567", digits: "9 digits" },
   { code: "MA", dial: "+212", name: "Morocco", flag: "/flags/ma.svg", placeholder: "6 12 34 56 78", digits: "9 digits" },
-  { code: "IN", dial: "+91", name: "India", flag: "/flags/in.svg", placeholder: "91234 56789", digits: "10 digits" },
-  { code: "PK", dial: "+92", name: "Pakistan", flag: "/flags/pk.svg", placeholder: "301 234 5678", digits: "10 digits" },
-  { code: "BD", dial: "+880", name: "Bangladesh", flag: "/flags/bd.svg", placeholder: "1712 345678", digits: "10 digits" },
-  { code: "LK", dial: "+94", name: "Sri Lanka", flag: "/flags/lk.svg", placeholder: "71 234 5678", digits: "9 digits" },
-  { code: "NP", dial: "+977", name: "Nepal", flag: "/flags/np.svg", placeholder: "984 123 4567", digits: "10 digits" },
-  { code: "KH", dial: "+855", name: "Cambodia", flag: "/flags/kh.svg", placeholder: "12 345 678", digits: "8-9 digits" },
-  { code: "TH", dial: "+66", name: "Thailand", flag: "/flags/th.svg", placeholder: "81 234 5678", digits: "9 digits" },
-  { code: "VN", dial: "+84", name: "Vietnam", flag: "/flags/vn.svg", placeholder: "912 345 678", digits: "9-10 digits" },
-  { code: "SG", dial: "+65", name: "Singapore", flag: "/flags/sg.svg", placeholder: "9123 4567", digits: "8 digits" },
-  { code: "MY", dial: "+60", name: "Malaysia", flag: "/flags/my.svg", placeholder: "12 345 6789", digits: "9-10 digits" },
-  { code: "ID", dial: "+62", name: "Indonesia", flag: "/flags/id.svg", placeholder: "812 3456 7890", digits: "10-12 digits" },
-  { code: "PH", dial: "+63", name: "Philippines", flag: "/flags/ph.svg", placeholder: "917 123 4567", digits: "10 digits" },
-  { code: "MM", dial: "+95", name: "Myanmar", flag: "/flags/mm.svg", placeholder: "9 123 4567", digits: "7-10 digits" },
-  { code: "LA", dial: "+856", name: "Laos", flag: "/flags/la.svg", placeholder: "20 5678 9012", digits: "8-10 digits" },
-  { code: "JP", dial: "+81", name: "Japan", flag: "/flags/jp.svg", placeholder: "90 1234 5678", digits: "10 digits" },
-  { code: "KR", dial: "+82", name: "South Korea", flag: "/flags/kr.svg", placeholder: "10 1234 5678", digits: "10-11 digits" },
-  { code: "CN", dial: "+86", name: "China", flag: "/flags/cn.svg", placeholder: "131 2345 6789", digits: "11 digits" },
-  { code: "TW", dial: "+886", name: "Taiwan", flag: "/flags/tw.svg", placeholder: "912 345 678", digits: "9 digits" },
-  { code: "HK", dial: "+852", name: "Hong Kong", flag: "/flags/hk.svg", placeholder: "5123 4567", digits: "8 digits" },
-  { code: "AU", dial: "+61", name: "Australia", flag: "/flags/au.svg", placeholder: "412 345 678", digits: "9 digits" },
+
+  // South America
+  { code: "BR", dial: "+55", name: "Brazil", flag: "/flags/br.svg", placeholder: "11 91234 5678", digits: "10-11 digits" },
+  { code: "AR", dial: "+54", name: "Argentina", flag: "/flags/ar.svg", placeholder: "11 1234 5678", digits: "10 digits" },
+  { code: "CO", dial: "+57", name: "Colombia", flag: "/flags/co.svg", placeholder: "301 234 5678", digits: "10 digits" },
+  { code: "CL", dial: "+56", name: "Chile", flag: "/flags/cl.svg", placeholder: "9 1234 5678", digits: "9 digits" },
+  { code: "PE", dial: "+51", name: "Peru", flag: "/flags/pe.svg", placeholder: "912 345 678", digits: "9 digits" },
+
+  // Oceania
   { code: "NZ", dial: "+64", name: "New Zealand", flag: "/flags/nz.svg", placeholder: "21 123 4567", digits: "8-10 digits" },
 ];
 
