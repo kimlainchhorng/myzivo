@@ -555,46 +555,12 @@ export default function RidePaymentSection({
         cashAllowed={cashAllowed}
         onConfirm={async (method) => {
           if (method === "aba") {
-            // Redirect to ABA Payway checkout
-            try {
-              const { data, error } = await supabase.functions.invoke("aba-payway-checkout", {
-                body: {
-                  amount: price,
-                  currency: "USD",
-                  description: `ZIVO Ride - ${vehicleName}`,
-                  return_url: `${window.location.origin}/rides?payment=success`,
-                },
-              });
-              if (error) throw error;
-              if (data?.payment_url) {
-                import("@/lib/openExternalUrl").then(({ openExternalUrl: oe }) => oe(data.payment_url));
-                toast.success("ABA Payway checkout opened");
-                onPaymentSuccess();
-              } else if (data?.checkout_data) {
-                // Fallback: form POST to ABA
-                const form = document.createElement("form");
-                form.method = "POST";
-                form.action = "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase";
-                form.target = "_blank";
-                for (const [key, value] of Object.entries(data.checkout_data)) {
-                  const input = document.createElement("input");
-                  input.type = "hidden";
-                  input.name = key;
-                  input.value = String(value);
-                  form.appendChild(input);
-                }
-                document.body.appendChild(form);
-                form.submit();
-                document.body.removeChild(form);
-                toast.success("Redirecting to ABA Payway...");
-                onPaymentSuccess();
-              } else {
-                toast.error("Could not create ABA payment link");
-              }
-            } catch (err: unknown) {
-              const msg = err instanceof Error ? err.message : "ABA payment failed";
-              toast.error(msg);
-              console.error("ABA Payway error:", err);
+            // Use dedicated ABA handler that creates ride without Stripe
+            if (onAbaConfirm) {
+              onAbaConfirm();
+            } else {
+              toast.success("Ride confirmed! Payment via ABA Payway.");
+              onPaymentSuccess();
             }
           } else if (method === "cash") {
             // Use dedicated cash handler that creates ride_request + job without Stripe
