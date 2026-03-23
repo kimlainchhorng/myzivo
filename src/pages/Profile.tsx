@@ -55,38 +55,40 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 const LANGS = [
-  { code: "en", label: "English", flag: "🇺🇸" },
-  { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
-  { code: "zh", label: "中文", flag: "🇨🇳" },
-  { code: "ko", label: "한국어", flag: "🇰🇷" },
-  { code: "ja", label: "日本語", flag: "🇯🇵" },
-  { code: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
-  { code: "th", label: "ไทย", flag: "🇹🇭" },
-  { code: "es", label: "Español", flag: "🇪🇸" },
-  { code: "fr", label: "Français", flag: "🇫🇷" },
-  { code: "de", label: "Deutsch", flag: "🇩🇪" },
-  { code: "it", label: "Italiano", flag: "🇮🇹" },
-  { code: "pt", label: "Português", flag: "🇵🇹" },
-  { code: "nl", label: "Nederlands", flag: "🇳🇱" },
-  { code: "pl", label: "Polski", flag: "🇵🇱" },
-  { code: "sv", label: "Svenska", flag: "🇸🇪" },
-  { code: "da", label: "Dansk", flag: "🇩🇰" },
-  { code: "fi", label: "Suomi", flag: "🇫🇮" },
-  { code: "el", label: "Ελληνικά", flag: "🇬🇷" },
-  { code: "cs", label: "Čeština", flag: "🇨🇿" },
-  { code: "ro", label: "Română", flag: "🇷🇴" },
-  { code: "hu", label: "Magyar", flag: "🇭🇺" },
-  { code: "hr", label: "Hrvatski", flag: "🇭🇷" },
-  { code: "bg", label: "Български", flag: "🇧🇬" },
-  { code: "sk", label: "Slovenčina", flag: "🇸🇰" },
-  { code: "lt", label: "Lietuvių", flag: "🇱🇹" },
-  { code: "no", label: "Norsk", flag: "🇳🇴" },
-  { code: "ru", label: "Русский", flag: "🇷🇺" },
-  { code: "uk", label: "Українська", flag: "🇺🇦" },
-  { code: "tr", label: "Türkçe", flag: "🇹🇷" },
-  { code: "ar", label: "العربية", flag: "🇸🇦" },
-  { code: "id", label: "Bahasa Indonesia", flag: "🇮🇩" },
+  { code: "en", label: "English", cc: "us" },
+  { code: "km", label: "ខ្មែរ", cc: "kh" },
+  { code: "zh", label: "中文", cc: "cn" },
+  { code: "ko", label: "한국어", cc: "kr" },
+  { code: "ja", label: "日本語", cc: "jp" },
+  { code: "vi", label: "Tiếng Việt", cc: "vn" },
+  { code: "th", label: "ไทย", cc: "th" },
+  { code: "es", label: "Español", cc: "es" },
+  { code: "fr", label: "Français", cc: "fr" },
+  { code: "de", label: "Deutsch", cc: "de" },
+  { code: "it", label: "Italiano", cc: "it" },
+  { code: "pt", label: "Português", cc: "pt" },
+  { code: "nl", label: "Nederlands", cc: "nl" },
+  { code: "pl", label: "Polski", cc: "pl" },
+  { code: "sv", label: "Svenska", cc: "se" },
+  { code: "da", label: "Dansk", cc: "dk" },
+  { code: "fi", label: "Suomi", cc: "fi" },
+  { code: "el", label: "Ελληνικά", cc: "gr" },
+  { code: "cs", label: "Čeština", cc: "cz" },
+  { code: "ro", label: "Română", cc: "ro" },
+  { code: "hu", label: "Magyar", cc: "hu" },
+  { code: "hr", label: "Hrvatski", cc: "hr" },
+  { code: "bg", label: "Български", cc: "bg" },
+  { code: "sk", label: "Slovenčina", cc: "sk" },
+  { code: "lt", label: "Lietuvių", cc: "lt" },
+  { code: "no", label: "Norsk", cc: "no" },
+  { code: "ru", label: "Русский", cc: "ru" },
+  { code: "uk", label: "Українська", cc: "ua" },
+  { code: "tr", label: "Türkçe", cc: "tr" },
+  { code: "ar", label: "العربية", cc: "sa" },
+  { code: "id", label: "Bahasa Indonesia", cc: "id" },
 ];
+
+const getFlagUrl = (cc: string) => `https://flagcdn.com/w40/${cc}.png`;
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -215,13 +217,13 @@ const Profile = () => {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-md shadow-primary/20 touch-manipulation active:scale-95 transition-all"
               >
                 <Globe className="w-3.5 h-3.5" />
-                <span>{currentLang.flag}</span>
+                <img src={getFlagUrl(currentLang.cc)} alt="" className="w-5 h-3.5 rounded-[2px] object-cover" />
                 <span>{currentLang.label}</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showLangPicker ? "rotate-180" : ""}`} />
               </button>
 
               {showLangPicker && (
-                <div className="absolute left-0 top-full mt-2 z-50 bg-card border border-border rounded-2xl shadow-xl p-1.5 min-w-[200px] max-h-[360px] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute left-0 top-full mt-2 z-50 bg-card border border-border rounded-2xl shadow-xl p-1.5 min-w-[220px] max-h-[360px] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
                   {LANGS.map((lang) => (
                     <button
                       key={lang.code}
@@ -229,15 +231,15 @@ const Profile = () => {
                         changeLanguage(lang.code);
                         setShowLangPicker(false);
                       }}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors touch-manipulation active:scale-[0.98] relative overflow-hidden ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors touch-manipulation active:scale-[0.98] relative overflow-hidden ${
                         currentLanguage === lang.code
                           ? "bg-primary/10 text-primary"
                           : "text-foreground hover:bg-muted"
                       }`}
                     >
                       {/* Flag background watermark */}
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-3xl opacity-[0.08] pointer-events-none select-none">{lang.flag}</span>
-                      <span className="text-base relative z-10">{lang.flag}</span>
+                      <img src={getFlagUrl(lang.cc)} alt="" className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-7 rounded object-cover opacity-[0.07] pointer-events-none" />
+                      <img src={getFlagUrl(lang.cc)} alt={lang.label} className="w-6 h-4 rounded-[3px] object-cover shadow-sm border border-border/30 relative z-10 shrink-0" />
                       <span className="relative z-10">{lang.label}</span>
                     </button>
                   ))}
