@@ -37,6 +37,7 @@ import { ResultsFAQ } from "@/components/results/ResultsFAQ";
 import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import { groupByOutbound, groupByReturn, getLegDurationMinutes } from "@/lib/flightLegGrouping";
 import { getAllInPrice } from "@/utils/flightPricing";
+import { buildKiwiDeepLink, TRAVELPAYOUTS_DIRECT_LINKS } from "@/config/affiliateLinks";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
