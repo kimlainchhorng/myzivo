@@ -49,7 +49,21 @@ export interface AviasalesSearchMeta {
   totalProposals: number;
   agentCount: number;
   agents: Array<{ id: string; name: string }>;
+  unavailableReason?: string;
 }
+
+const emptyAviasalesMeta: AviasalesSearchMeta = {
+  searchId: "",
+  resultsUrl: "",
+  totalProposals: 0,
+  agentCount: 0,
+  agents: [],
+};
+
+const emptyAviasalesResponse = {
+  results: [],
+  meta: emptyAviasalesMeta,
+};
 
 interface UseAviasalesSearchParams {
   origin: string;
@@ -77,38 +91,44 @@ export function useAviasalesSearch({
   return useQuery({
     queryKey: ["aviasales-search", origin, destination, departureDate, returnDate, adults, children, infants, cabinClass],
     queryFn: async (): Promise<{ results: AviasalesResult[]; meta: AviasalesSearchMeta }> => {
-      const { data, error } = await supabase.functions.invoke("aviasales-search", {
-        body: {
-          origin,
-          destination,
-          depart_date: departureDate,
-          return_date: returnDate,
-          adults,
-          children,
-          infants,
-          cabin_class: cabinClass,
-        },
-      });
+      try {
+        const { data, error } = await supabase.functions.invoke("aviasales-search", {
+          body: {
+            origin,
+            destination,
+            depart_date: departureDate,
+            return_date: returnDate,
+            adults,
+            children,
+            infants,
+            cabin_class: cabinClass,
+          },
+        });
 
-      if (error) {
-        console.warn("[AviasalesSearch] Fetch failed:", error.message);
-        return { results: [], meta: { searchId: "", resultsUrl: "", totalProposals: 0, agentCount: 0, agents: [] } };
+        if (error) {
+          console.warn("[AviasalesSearch] Fetch failed:", error.message);
+          return emptyAviasalesResponse;
+        }
+
+        if (!data?.success) {
+          console.warn("[AviasalesSearch] API error:", data?.error);
+          return emptyAviasalesResponse;
+        }
+
+        return {
+          results: data.data || [],
+          meta: data.meta || emptyAviasalesMeta,
+        };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        console.warn("[AviasalesSearch] Request threw:", message);
+        return emptyAviasalesResponse;
       }
-
-      if (!data?.success) {
-        console.warn("[AviasalesSearch] API error:", data?.error);
-        return { results: [], meta: { searchId: "", resultsUrl: "", totalProposals: 0, agentCount: 0, agents: [] } };
-      }
-
-      return {
-        results: data.data || [],
-        meta: data.meta || { searchId: "", resultsUrl: "", totalProposals: 0, agentCount: 0, agents: [] },
-      };
     },
     enabled: enabled && !!origin && !!destination && !!departureDate,
     staleTime: 5 * 60 * 1000, // 5 min
     retry: 1,
-    placeholderData: { results: [], meta: { searchId: "", resultsUrl: "", totalProposals: 0, agentCount: 0, agents: [] } },
+    placeholderData: emptyAviasalesResponse,
   });
 }
 

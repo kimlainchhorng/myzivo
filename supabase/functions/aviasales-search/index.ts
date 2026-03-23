@@ -125,6 +125,25 @@ serve(async (req) => {
       startData = JSON.parse(startText);
     } catch {
       console.error(`[aviasales-search] Non-JSON response (${startResponse.status}): ${startText.substring(0, 200)}`);
+
+      if (startResponse.status === 403) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: [],
+            meta: {
+              searchId: '',
+              resultsUrl: '',
+              totalProposals: 0,
+              agentCount: 0,
+              agents: [],
+              unavailableReason: 'access_denied',
+            },
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       return new Response(
         JSON.stringify({ success: false, error: `API returned non-JSON: ${startText.substring(0, 100)}` }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
