@@ -3483,40 +3483,46 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         >
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
-          <div className="flex flex-col items-center justify-center gap-4 py-6">
-            {/* ABA icon */}
-            <div className="w-16 h-16 rounded-2xl bg-blue-600/10 flex items-center justify-center">
-              <Building2 className="w-8 h-8 text-blue-600" />
+          <div className="flex flex-col items-center justify-center gap-3 py-4">
+            {/* KHQR Code Image */}
+            <div className="w-48 h-48 rounded-2xl overflow-hidden border-2 border-border/50 bg-white p-2">
+              <img
+                src="/images/aba-khqr.jpeg"
+                alt="ABA KHQR Payment Code"
+                className="w-full h-full object-contain"
+              />
             </div>
 
             <div className="text-center space-y-1">
-              <h3 className="text-lg font-bold text-foreground">រង់ចាំការទូទាត់ / Waiting for Payment</h3>
+              <h3 className="text-lg font-bold text-foreground">ស្កេន QR ដើម្បីបង់ប្រាក់</h3>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-[280px]">
-                សូមបញ្ចប់ការទូទាត់នៅក្នុង ABA app រួចត្រឡប់មកវិញ
+                Scan this QR code with ABA Mobile app to pay
               </p>
-              <p className="text-xs text-muted-foreground">
-                Complete payment in ABA app, then return here
-              </p>
+              {currentPrice > 0 && (
+                <p className="text-xl font-bold text-foreground mt-1">
+                  ${currentPrice.toFixed(2)}
+                </p>
+              )}
             </div>
 
-            {/* Animated waiting indicator */}
-            <div className="flex gap-2">
-              {[0, 1, 2].map((i) => (
-                <motion.span
-                  key={i}
-                  className="w-2.5 h-2.5 rounded-full bg-blue-600"
-                  animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3, ease: "easeInOut" }}
-                />
-              ))}
-            </div>
-
-            {/* Manual confirm button (in case return URL doesn't work) */}
+            {/* Confirm payment button */}
             <Button
-              className="w-full h-12 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 gap-2"
-              onClick={() => {
+              className="w-full h-12 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+              onClick={async () => {
                 const pendingId = rideRequestId || sessionStorage.getItem("aba_pending_ride_id");
                 if (pendingId) {
+                  // Send Telegram notification (fire-and-forget)
+                  supabase.functions.invoke("notify-aba-payment", {
+                    body: {
+                      ride_request_id: pendingId,
+                      amount: currentPrice,
+                      customer_name: otherName.trim() || user?.user_metadata?.full_name || "",
+                      pickup: pickup?.address || "",
+                      dropoff: destination?.address || "",
+                      vehicle_type: selectedVehicle,
+                    },
+                  }).catch(err => console.warn("[Telegram] Notification failed:", err));
+
                   handleAbaPaymentReturn(pendingId);
                 }
               }}
