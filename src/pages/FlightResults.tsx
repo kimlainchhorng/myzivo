@@ -1003,53 +1003,97 @@ const FlightResults = () => {
                 </Card>
               )}
 
-              {/* Kiwi.com Price Comparison Banner — always show when results loaded */}
-              {!isLoading && !error && offers.length > 0 && (
+              {/* Multi-Agency Price Comparison (Aviasales Real-Time Search) */}
+              {!isLoading && !error && offers.length > 0 && (aviasalesResults.length > 0 || bestTpPrice) && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                   className="mb-3"
                 >
-                  <Card className="border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 via-emerald-500/8 to-emerald-500/5 overflow-hidden">
+                  <Card className="border-[hsl(var(--flights)/0.2)] bg-gradient-to-r from-[hsl(var(--flights)/0.04)] via-[hsl(var(--flights)/0.06)] to-[hsl(var(--flights)/0.04)] overflow-hidden">
                     <CardContent className="p-3 sm:p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center shrink-0">
-                            <Plane className="w-4 h-4 text-emerald-500" />
+                      <p className="text-[10px] font-bold text-muted-foreground mb-2.5 flex items-center gap-1.5">
+                        <Star className="w-3 h-3 text-[hsl(var(--flights))]" />
+                        Compare prices from {aviasalesMeta?.agentCount || 'multiple'} travel agencies
+                      </p>
+                      <div className="space-y-1.5">
+                        {/* ZIVO direct price */}
+                        {lowestDuffelPrice && (
+                          <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[hsl(var(--flights)/0.06)] border border-[hsl(var(--flights)/0.15)]">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="w-6 h-6 rounded-md bg-[hsl(var(--flights)/0.15)] flex items-center justify-center shrink-0">
+                                <Plane className="w-3 h-3 text-[hsl(var(--flights))]" />
+                              </div>
+                              <div>
+                                <p className="text-[11px] font-bold text-foreground">ZIVO Direct</p>
+                                <p className="text-[9px] text-muted-foreground">Book directly · No redirects</p>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-sm font-bold text-[hsl(var(--flights))]">${Math.round(lowestDuffelPrice)}</p>
+                              {bestAviasalesPrice && bestAviasalesPrice.price > lowestDuffelPrice && (
+                                <Badge className="text-[8px] h-3.5 bg-emerald-500/15 text-emerald-600 border-0">Best price</Badge>
+                              )}
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-foreground">
-                              Compare on Kiwi.com
-                            </p>
-                            <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">
-                              {bestTpPrice && lowestDuffelPrice
-                                ? bestTpPrice.price < lowestDuffelPrice
-                                  ? `Found $${bestTpPrice.price} on Kiwi.com (${bestTpPrice.transfers === 0 ? 'direct' : `${bestTpPrice.transfers} stop${bestTpPrice.transfers > 1 ? 's' : ''}`})`
-                                  : `ZIVO best: $${Math.round(lowestDuffelPrice)} · Kiwi.com: $${bestTpPrice.price}`
-                                : 'Check prices on Kiwi.com via Travelpayouts'
-                              }
-                            </p>
+                        )}
+
+                        {/* Aviasales agency prices — top 3 unique agents */}
+                        {aviasalesResults.slice(0, 3).map((result, idx) => {
+                          const topAgent = result.allPrices[0];
+                          if (!topAgent) return null;
+                          return (
+                            <a
+                              key={result.id || idx}
+                              href={`https://${result.resultsUrl}/searches/${result.searchId}/clicks/${result.proposalId}?gate_id=${topAgent.agentId}&marker=${aviasalesMeta?.searchId ? '700031' : ''}`}
+                              target="_blank"
+                              rel="noopener noreferrer nofollow"
+                              className="flex items-center justify-between gap-2 p-2 rounded-lg bg-card/50 border border-border/20 hover:border-[hsl(var(--flights)/0.3)] hover:bg-muted/30 transition-all group"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-6 h-6 rounded-md bg-muted/50 flex items-center justify-center shrink-0 text-[9px] font-bold text-muted-foreground">
+                                  {idx + 1}
+                                </div>
+                                <div>
+                                  <p className="text-[11px] font-semibold text-foreground">{topAgent.agentName}</p>
+                                  <p className="text-[9px] text-muted-foreground">
+                                    {result.segments[0]?.stops === 0 ? 'Direct' : `${result.segments[0]?.stops || 0} stop${(result.segments[0]?.stops || 0) > 1 ? 's' : ''}`}
+                                    {result.airline && ` · ${result.airline}`}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <p className="text-sm font-bold text-foreground">${Math.round(topAgent.price)}</p>
+                                <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            </a>
+                          );
+                        })}
+
+                        {/* Fallback: Show Travelpayouts cached price if no Aviasales results */}
+                        {aviasalesResults.length === 0 && bestTpPrice && (
+                          <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-card/50 border border-border/20">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="w-6 h-6 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
+                                <Plane className="w-3 h-3 text-muted-foreground" />
+                              </div>
+                              <div>
+                                <p className="text-[11px] font-semibold text-foreground">Aviasales</p>
+                                <p className="text-[9px] text-muted-foreground">
+                                  {bestTpPrice.transfers === 0 ? 'Direct' : `${bestTpPrice.transfers} stop${bestTpPrice.transfers > 1 ? 's' : ''}`}
+                                  {bestTpPrice.airline && ` · ${bestTpPrice.airline}`}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-sm font-bold text-foreground shrink-0">${bestTpPrice.price}</p>
                           </div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <a
-                            href={buildKiwiDeepLink({
-                              origin,
-                              destination,
-                              departureDate: departureDate || undefined,
-                              returnDate,
-                              locale: navigator.language,
-                            })}
-                            target="_blank"
-                            rel="noopener noreferrer nofollow"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-600 text-[11px] font-bold hover:bg-emerald-500/25 transition-colors"
-                          >
-                            {bestTpPrice ? `From $${bestTpPrice.price}` : 'Compare'}
-                            <ChevronRight className="w-3 h-3" />
-                          </a>
-                        </div>
+                        )}
                       </div>
+
+                      <p className="text-[8px] text-muted-foreground mt-2 text-center">
+                        Prices from partner agencies via Travelpayouts · <a href="/partner-disclosure" className="underline">Disclosure</a>
+                      </p>
                     </CardContent>
                   </Card>
                 </motion.div>
