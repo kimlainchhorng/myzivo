@@ -1015,7 +1015,7 @@ const FlightResults = () => {
               )}
 
               {/* Multi-Agency Price Comparison (Aviasales Real-Time Search) */}
-              {!isLoading && !error && offers.length > 0 && (
+              {!isLoading && !error && offers.length > 0 && (hasLiveAviasalesData || lowestDuffelPrice) && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1028,14 +1028,10 @@ const FlightResults = () => {
                       <div className="px-4 pt-3 pb-2 border-b border-border/20 bg-muted/30">
                         <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
                           <Star className="w-3.5 h-3.5 text-warning" />
-                          Price Comparison
+                          Live Price Comparison
                         </p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {hasLiveAviasalesData
-                            ? "Live API prices from partner platforms for this route"
-                            : hasCachedTravelpayoutsData
-                              ? "Mixed comparison: ZIVO live price + cached partner pricing"
-                              : "ZIVO live price + partner booking links"}
+                          Real-time prices from live API queries — no cached or estimated fares
                         </p>
                       </div>
 
@@ -1051,7 +1047,7 @@ const FlightResults = () => {
                                 <div className="flex items-center gap-1.5">
                                   <p className="text-sm font-bold text-foreground">ZIVO</p>
                                    {hasLiveAviasalesData && (!bestAviasalesPrice || lowestDuffelPrice <= (bestAviasalesPrice?.price || Infinity)) && 
-                                   (!bestTpPrice || lowestDuffelPrice <= bestTpPrice.price) && (
+                           (
                                      <Badge className="text-[8px] h-4 px-1.5 bg-primary/15 text-primary border-0 font-bold">
                                        Live Best Price
                                     </Badge>
@@ -1071,107 +1067,30 @@ const FlightResults = () => {
                           </div>
                         )}
 
-                        {/* Searadar — flight meta-search partner */}
-                        {(() => {
-                          const searadarLink = TRAVELPAYOUTS_DIRECT_LINKS.flights.primary;
-                          // Find best non-ZIVO price from travelpayouts cached data
-                          const tpBest = tpPrices.length > 0 ? tpPrices[0] : null;
-                          
-                          return (
-                            <button
-                              type="button"
-                              onClick={() => handlePartnerOpen(searadarLink)}
-                              className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group w-full text-left"
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                  <span className="text-sm font-black text-primary">S</span>
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-1.5">
-                                    <p className="text-sm font-bold text-foreground">Searadar</p>
-                                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                  </div>
-                                  <p className="text-[10px] text-muted-foreground">
-                                    {tpBest ? "Cached fare · 728 airlines" : "Partner link · 728 airlines"}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right shrink-0">
-                                {tpBest ? (
-                                  <p className="text-lg font-bold text-foreground">${Math.round(tpBest.price)}</p>
-                                ) : (
-                                  <p className="text-xs font-semibold text-primary">View partner →</p>
-                                )}
-                              </div>
-                            </button>
-                          );
-                        })()}
 
-                        {/* Aviasales — always show with link */}
-                        {(() => {
-                          const aviasalesLink = TRAVELPAYOUTS_DIRECT_LINKS.flights.backup;
-                          const aviPrice = bestAviasalesPrice?.price;
-                          const agencyCountLabel = hasLiveAviasalesData
-                            ? String(aviasalesMeta?.agentCount || aviasalesResults.length)
-                            : hasCachedTravelpayoutsData
-                              ? 'cached fares'
-                              : 'partner site';
-                          
-                          return (
-                            <button
-                              type="button"
-                              onClick={() => handlePartnerOpen(aviasalesLink)}
-                              className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group"
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-9 h-9 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
-                                  <span className="text-sm font-black text-accent">A</span>
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-1.5">
-                                    <p className="text-sm font-bold text-foreground">Aviasales</p>
-                                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                  </div>
-                                  <p className="text-[10px] text-muted-foreground">
-                                    {aviPrice ? `Live via API · ${agencyCountLabel} agencies` : `Partner link · ${agencyCountLabel}`}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right shrink-0">
-                                {aviPrice ? (
-                                  <p className="text-lg font-bold text-foreground">${Math.round(aviPrice)}</p>
-                                ) : (
-                                  <p className="text-xs font-semibold text-accent">View partner →</p>
-                                )}
-                              </div>
-                            </button>
-                          );
-                        })()}
-
-                        {/* Additional Aviasales agency results if available */}
-                        {aviasalesResults.slice(0, 2).map((result, idx) => {
-                          const topAgent = result.allPrices[0];
-                          if (!topAgent || topAgent.agentName.toLowerCase().includes('kiwi')) return null;
+                        {/* Live Aviasales agency results — only real API prices */}
+                        {hasLiveAviasalesData && aviasalesResults.map((result, idx) => {
+                          const topAgent = result.allPrices?.[0];
+                          if (!topAgent || !topAgent.price) return null;
                           return (
                             <button
                               type="button"
                               key={result.id || idx}
                               onClick={() => handlePartnerOpen(`https://${result.resultsUrl}/searches/${result.searchId}/clicks/${result.proposalId}?gate_id=${topAgent.agentId}&marker=700031`)}
-                              className="flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors group"
+                              className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group w-full text-left"
                             >
                               <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                                  <Zap className="w-4 h-4 text-muted-foreground" />
+                                <div className="w-9 h-9 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
+                                  <Zap className="w-4 h-4 text-accent" />
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-1.5">
-                                    <p className="text-sm font-semibold text-foreground">{topAgent.agentName}</p>
+                                    <p className="text-sm font-bold text-foreground">{topAgent.agentName}</p>
                                     <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                                   </div>
                                   <p className="text-[10px] text-muted-foreground">
-                                    {result.segments[0]?.stops === 0 ? 'Direct' : `${result.segments[0]?.stops} stop${(result.segments[0]?.stops || 0) > 1 ? 's' : ''}`}
-                                    {result.airline && ` · ${result.airline}`}
+                                    Live via API
+                                    {result.segments[0]?.stops === 0 ? ' · Direct' : ` · ${result.segments[0]?.stops} stop${(result.segments[0]?.stops || 0) > 1 ? 's' : ''}`}
                                   </p>
                                 </div>
                               </div>
@@ -1186,11 +1105,7 @@ const FlightResults = () => {
                       {/* Footer */}
                       <div className="px-4 py-2 border-t border-border/20 bg-muted/20">
                           <p className="text-[9px] text-muted-foreground text-center">
-                           {hasLiveAviasalesData
-                             ? 'Live partner fares shown when available. Some links open partner sites for final pricing.'
-                             : hasCachedTravelpayoutsData
-                               ? 'Cached partner fares may differ from final checkout price.'
-                               : 'Partner prices are not live here — use links to check final price on partner sites.'}{' '}
+                           All prices are live from real-time API queries. Final price confirmed at checkout.{' '}
                            <a href="/partner-disclosure" className="underline hover:text-foreground transition-colors">Partner Disclosure</a>
                         </p>
                       </div>
