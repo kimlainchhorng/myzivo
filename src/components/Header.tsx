@@ -19,6 +19,7 @@ import BetaBadge from "./shared/BetaBadge";
 import svcFlights from "@/assets/svc-flights-premium.jpg";
 import svcHotels from "@/assets/svc-hotels-premium.jpg";
 import svcCars from "@/assets/svc-cars-premium.jpg";
+import bgLang from "@/assets/bg-language-selector.jpg";
 
 import { NotificationBell } from "./notifications/NotificationBell";
 import { PremiumSearchOverlay } from "@/components/search";
@@ -135,8 +136,8 @@ const Header = () => {
                     size="sm"
                     className="relative gap-1.5 px-3 h-9 text-white font-bold rounded-2xl overflow-hidden shadow-lg shadow-indigo-500/20 ring-1 ring-indigo-400/30 transition-all duration-300 hover:scale-[1.06] hover:shadow-xl active:scale-[0.97]"
                   >
-                    <img src={svcFlights} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-700/80 to-violet-500/70" />
+                    <img src={bgLang} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-800/60 to-violet-600/50" />
                     <Globe className="w-3.5 h-3.5 relative z-10 drop-shadow-md" />
                     <span className="text-xs font-bold relative z-10 drop-shadow-md">{currentLangData?.flag_emoji || "🌐"} {currentLanguage.toUpperCase()}</span>
                     <ChevronDown className={cn("w-3 h-3 transition-transform duration-200 relative z-10 drop-shadow-md", isLangOpen && "rotate-180")} />
