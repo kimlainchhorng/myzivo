@@ -24,6 +24,7 @@ import { useAffiliateAttribution } from "@/hooks/useAffiliateAttribution";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 const profileSchema = z.object({
@@ -383,7 +384,9 @@ const Profile = () => {
                           <FormField control={form.control} name="phone" render={({ field }) => (
                             <FormItem>
                               <FormLabel className="flex items-center gap-2 font-semibold"><Phone className="h-4 w-4 text-primary" />{t("profile.phone")}</FormLabel>
-                              <FormControl><Input placeholder={t("profile.phone_placeholder")} type="tel" className="h-12 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50 focus:shadow-lg focus:shadow-primary/10 transition-shadow" {...field} /></FormControl>
+                              <FormControl>
+                                <CountryPhoneInput value={field.value || ""} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )} />
