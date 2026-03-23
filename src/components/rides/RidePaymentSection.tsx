@@ -46,6 +46,8 @@ interface RidePaymentSectionProps {
   cashAllowed?: boolean;
   /** Handler for cash ride confirmation — creates ride without Stripe */
   onCashConfirm?: () => void;
+  /** Go back from card form to payment method selector (Cambodia) */
+  onBackToMethods?: () => void;
 }
 
 const BRAND_LABELS: Record<string, string> = {
@@ -403,6 +405,7 @@ export default function RidePaymentSection({
   isCambodia = false,
   cashAllowed = true,
   onCashConfirm,
+  onBackToMethods,
 }: RidePaymentSectionProps) {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
