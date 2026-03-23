@@ -30,6 +30,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n } from "@/hooks/useI18n";
 import {
   useSavedLocations,
   useAddSavedLocation,
@@ -39,19 +40,20 @@ import {
   SavedLocationInput,
 } from "@/hooks/useSavedLocations";
 
-const ICON_OPTIONS = [
-  { value: "home", label: "Home", icon: Home },
-  { value: "work", label: "Work", icon: Briefcase },
-  { value: "pin", label: "Other", icon: Pin },
-];
-
 export default function AddressesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useI18n();
   const { data: locations, isLoading } = useSavedLocations(user?.id);
   const addLocation = useAddSavedLocation();
   const updateLocation = useUpdateSavedLocation();
   const deleteLocation = useDeleteSavedLocation();
+
+  const ICON_OPTIONS = [
+    { value: "home", label: t("address.home"), icon: Home },
+    { value: "work", label: t("address.work"), icon: Briefcase },
+    { value: "pin", label: t("address.other"), icon: Pin },
+  ];
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -123,8 +125,8 @@ export default function AddressesPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Saved Addresses — ZIVO"
-        description="Manage your saved delivery addresses"
+        title={`${t("address.title")} — ZIVO`}
+        description={t("address.no_saved_desc")}
       />
 
       {/* Header */}
@@ -136,7 +138,7 @@ export default function AddressesPage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="font-bold text-lg">Saved Addresses</h1>
+          <h1 className="font-bold text-lg">{t("address.title")}</h1>
           <div className="w-10" />
         </div>
       </div>
@@ -148,7 +150,7 @@ export default function AddressesPage() {
           className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-semibold gap-2"
         >
           <Plus className="w-5 h-5" />
-          Add New Address
+          {t("address.add_new")}
         </Button>
 
         {/* Loading */}
@@ -174,9 +176,9 @@ export default function AddressesPage() {
             <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
               <MapPin className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h2 className="text-lg font-bold mb-2">No saved addresses</h2>
+            <h2 className="text-lg font-bold mb-2">{t("address.no_saved")}</h2>
             <p className="text-sm text-muted-foreground">
-              Add addresses for faster checkout
+              {t("address.no_saved_desc")}
             </p>
           </div>
         )}
@@ -206,7 +208,7 @@ export default function AddressesPage() {
                         {isDefault && (
                           <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
                             <Star className="w-3 h-3 fill-amber-500" />
-                            Default
+                            {t("address.default")}
                           </span>
                         )}
                       </div>
@@ -223,7 +225,7 @@ export default function AddressesPage() {
                       className="gap-1.5"
                     >
                       <Pencil className="w-3.5 h-3.5" />
-                      Edit
+                      {t("address.edit")}
                     </Button>
                     <Button
                       variant="outline"
@@ -232,7 +234,7 @@ export default function AddressesPage() {
                       className="gap-1.5 text-destructive hover:text-destructive"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      Delete
+                      {t("address.delete")}
                     </Button>
                   </div>
                 </motion.div>
@@ -247,36 +249,36 @@ export default function AddressesPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingLocation ? "Edit Address" : "Add New Address"}
+              {editingLocation ? t("address.edit_title") : t("address.add_title")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="label">Label *</Label>
+              <Label htmlFor="label">{t("address.label")} *</Label>
               <Input
                 id="label"
                 value={formData.label}
                 onChange={(e) =>
                   setFormData({ ...formData, label: e.target.value })
                 }
-                placeholder="e.g., Home, Work, Mom's House"
+                placeholder={t("address.label_placeholder")}
                 className="mt-1.5"
               />
             </div>
             <div>
-              <Label htmlFor="address">Address *</Label>
+              <Label htmlFor="address">{t("address.address")} *</Label>
               <Input
                 id="address"
                 value={formData.address}
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })
                 }
-                placeholder="123 Main St, City, State ZIP"
+                placeholder={t("address.address_placeholder")}
                 className="mt-1.5"
               />
             </div>
             <div>
-              <Label className="mb-3 block">Icon</Label>
+              <Label className="mb-3 block">{t("address.icon")}</Label>
               <RadioGroup
                 value={formData.icon}
                 onValueChange={(value) =>
@@ -312,7 +314,7 @@ export default function AddressesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {t("address.cancel")}
             </Button>
             <Button
               onClick={handleSave}
@@ -326,7 +328,7 @@ export default function AddressesPage() {
               {addLocation.isPending || updateLocation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : null}
-              {editingLocation ? "Save Changes" : "Add Address"}
+              {editingLocation ? t("address.save_changes") : t("address.add_address")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -336,13 +338,13 @@ export default function AddressesPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Address?</AlertDialogTitle>
+            <AlertDialogTitle>{t("address.delete_title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The address will be permanently removed.
+              {t("address.delete_desc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("address.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -350,7 +352,7 @@ export default function AddressesPage() {
               {deleteLocation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : null}
-              Delete
+              {t("address.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
