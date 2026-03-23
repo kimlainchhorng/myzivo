@@ -3500,7 +3500,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               </p>
               {currentPrice > 0 && (
                 <p className="text-xl font-bold text-foreground mt-1">
-                  ${currentPrice.toFixed(2)}
+                  ${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}
                 </p>
               )}
             </div>
