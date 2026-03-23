@@ -7,7 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
@@ -56,6 +57,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [legalModal, setLegalModal] = useState<"terms" | "privacy" | null>(null);
   const { currentLanguage, changeLanguage, t } = useI18n();
   const LANGS = [
     { code: "en", label: "English", flag: "/flags/us.svg" },
@@ -573,9 +575,9 @@ const Login = () => {
                         </FormControl>
                         <label className="text-xs text-muted-foreground leading-tight cursor-pointer" onClick={() => field.onChange(field.value === true ? undefined : true)}>
                           I agree to the{" "}
-                          <Link to="/terms" className="text-primary hover:underline font-medium">Terms of Service</Link>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setLegalModal("terms"); }} className="text-primary hover:underline font-medium">Terms of Service</button>
                           {" "}and{" "}
-                          <Link to="/privacy" className="text-primary hover:underline font-medium">Privacy Policy</Link>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setLegalModal("privacy"); }} className="text-primary hover:underline font-medium">Privacy Policy</button>
                         </label>
                       </div>
                       <FormMessage className="text-destructive text-xs ml-6" />
@@ -683,6 +685,56 @@ const Login = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Legal Modal */}
+      <Dialog open={legalModal !== null} onOpenChange={(open) => !open && setLegalModal(null)}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="px-5 pt-5 pb-3 border-b border-border shrink-0">
+            <DialogTitle className="text-lg font-bold text-foreground">
+              {legalModal === "terms" ? "Terms of Service" : "Privacy Policy"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto px-5 py-4 text-sm text-muted-foreground leading-relaxed flex-1">
+            {legalModal === "terms" ? (
+              <div className="space-y-3">
+                <p>Last Updated: March 2026</p>
+                <p>Welcome to ZIVO. By creating an account and using our services, you agree to these Terms of Service. Please read them carefully.</p>
+                <h3 className="font-semibold text-foreground">1. Acceptance of Terms</h3>
+                <p>By accessing or using ZIVO's website and services, you agree to be bound by these Terms. If you do not agree, do not use our services.</p>
+                <h3 className="font-semibold text-foreground">2. Service Description</h3>
+                <p>ZIVO is a travel search and referral platform. We do not issue tickets or act as the merchant of record. Payment and ticketing are handled by our licensed travel partners.</p>
+                <h3 className="font-semibold text-foreground">3. User Accounts</h3>
+                <p>You must provide accurate information when creating an account. You are responsible for maintaining the confidentiality of your credentials.</p>
+                <h3 className="font-semibold text-foreground">4. Booking & Payments</h3>
+                <p>All bookings are processed by our travel partners. Final prices and terms are confirmed on the partner checkout. ZIVO does not collect payments for air travel.</p>
+                <h3 className="font-semibold text-foreground">5. Cancellations & Refunds</h3>
+                <p>Cancellation and refund policies are governed by the merchant-of-record travel partner. US DOT 24-hour free cancellation rule (14 CFR §259.5) applies where applicable.</p>
+                <h3 className="font-semibold text-foreground">6. Limitation of Liability</h3>
+                <p>ZIVO is not liable for services provided by third-party partners. Our liability is limited to the extent permitted by law.</p>
+                <p className="pt-2">For the full Terms of Service, visit <a href="/terms" className="text-primary hover:underline">hizovo.com/terms</a>.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p>Last Updated: March 2026</p>
+                <p>Your privacy matters to us. This policy explains how ZIVO collects, uses, and protects your personal information.</p>
+                <h3 className="font-semibold text-foreground">1. Information We Collect</h3>
+                <p>We collect information you provide (name, email, phone number) and usage data (search queries, device info, IP address).</p>
+                <h3 className="font-semibold text-foreground">2. How We Use Your Information</h3>
+                <p>We use your data to provide search results, process bookings through partners, improve our services, and communicate with you.</p>
+                <h3 className="font-semibold text-foreground">3. Information Sharing</h3>
+                <p>We share necessary traveler info with booking partners (with your consent) to complete reservations. We do not sell your personal data.</p>
+                <h3 className="font-semibold text-foreground">4. Data Security</h3>
+                <p>We use 256-bit encryption and industry-standard security measures to protect your information.</p>
+                <h3 className="font-semibold text-foreground">5. Your Rights</h3>
+                <p>You can access, update, or delete your personal data at any time through your account settings or by contacting us.</p>
+                <h3 className="font-semibold text-foreground">6. Cookies</h3>
+                <p>We use cookies to improve your experience. See our Cookie Policy for details.</p>
+                <p className="pt-2">For the full Privacy Policy, visit <a href="/privacy" className="text-primary hover:underline">hizovo.com/privacy</a>.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
