@@ -3223,6 +3223,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     ) : (
                       <span className="text-[15px] font-bold text-foreground">${price.toFixed(2)}</span>
                     )}
+                    {isMinFareApplied && (
+                      <span className="text-[9px] text-amber-500 dark:text-amber-400 font-medium">
+                        {t("ride.minimum_fare_applied")}
+                      </span>
+                    )}
                     {isSelected && (
                       <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                         <CheckCircle className="w-3.5 h-3.5 text-primary-foreground" />
