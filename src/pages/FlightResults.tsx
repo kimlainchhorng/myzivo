@@ -982,49 +982,45 @@ const FlightResults = () => {
                 </Card>
               )}
 
-              {/* Travelpayouts Price Comparison Banner */}
-              {!isLoading && !error && offers.length > 0 && bestTpPrice && lowestDuffelPrice && (
+              {/* Kiwi.com Price Comparison Banner — always show when results loaded */}
+              {!isLoading && !error && offers.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                   className="mb-3"
                 >
-                  <Card className="border-amber-500/20 bg-gradient-to-r from-amber-500/5 via-amber-500/8 to-amber-500/5 overflow-hidden">
+                  <Card className="border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 via-emerald-500/8 to-emerald-500/5 overflow-hidden">
                     <CardContent className="p-3 sm:p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
-                            <svg className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L15 8.5L22 9.5L17 14.5L18 21.5L12 18L6 21.5L7 14.5L2 9.5L9 8.5Z"/></svg>
+                          <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center shrink-0">
+                            <Plane className="w-4 h-4 text-emerald-500" />
                           </div>
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-foreground">
-                              Price Comparison
+                              Compare on Kiwi.com
                             </p>
                             <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">
-                              {bestTpPrice.price < lowestDuffelPrice
-                                ? `Found $${bestTpPrice.price} on partner sites (${bestTpPrice.transfers === 0 ? 'direct' : `${bestTpPrice.transfers} stop${bestTpPrice.transfers > 1 ? 's' : ''}`})`
-                                : `ZIVO has the best price — $${Math.round(lowestDuffelPrice)} vs $${bestTpPrice.price} on partner sites`
+                              {bestTpPrice && lowestDuffelPrice
+                                ? bestTpPrice.price < lowestDuffelPrice
+                                  ? `Found $${bestTpPrice.price} on Kiwi.com (${bestTpPrice.transfers === 0 ? 'direct' : `${bestTpPrice.transfers} stop${bestTpPrice.transfers > 1 ? 's' : ''}`})`
+                                  : `ZIVO best: $${Math.round(lowestDuffelPrice)} · Kiwi.com: $${bestTpPrice.price}`
+                                : 'Check prices on Kiwi.com via Travelpayouts'
                               }
                             </p>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          {bestTpPrice.price < lowestDuffelPrice ? (
-                            <a
-                              href={getKiwiLink(navigator.language)}
-                              target="_blank"
-                              rel="noopener noreferrer nofollow"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-600 text-[11px] font-bold hover:bg-amber-500/25 transition-colors"
-                            >
-                              View on Kiwi ${bestTpPrice.price}
-                              <ChevronRight className="w-3 h-3" />
-                            </a>
-                          ) : (
-                            <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/20 text-[10px]">
-                              Best price here ✓
-                            </Badge>
-                          )}
+                          <a
+                            href={getKiwiLink(navigator.language)}
+                            target="_blank"
+                            rel="noopener noreferrer nofollow"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-600 text-[11px] font-bold hover:bg-emerald-500/25 transition-colors"
+                          >
+                            {bestTpPrice ? `From $${bestTpPrice.price}` : 'Compare'}
+                            <ChevronRight className="w-3 h-3" />
+                          </a>
                         </div>
                       </div>
                     </CardContent>
