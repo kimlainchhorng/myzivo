@@ -33,6 +33,9 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { FlightSearchFormPro } from "@/components/search";
 import { usePopularRoutePrices } from "@/hooks/usePopularRoutePrices";
+import { useTravelpayoutsPopularRoutes } from "@/hooks/useTravelpayoutsPopularRoutes";
+import { format, parseISO } from "date-fns";
+import { Calendar } from "lucide-react";
 
 const ease3D = [0.16, 1, 0.3, 1] as const;
 
@@ -127,6 +130,16 @@ function RouteCard3D({ route, index, onRouteClick }: { route: any; index: number
         </div>
         <div className="absolute bottom-0 left-0 right-0 px-3 pb-3" style={{ transform: "translateZ(12px)" }}>
           <p className="text-[10px] text-muted-foreground truncate">{route.fromCity} → {route.toCity}</p>
+          {route.departureDate && (
+            <p className="text-[9px] text-muted-foreground/70 flex items-center gap-0.5 mt-0.5">
+              <Calendar className="w-2.5 h-2.5" />
+              {format(parseISO(route.departureDate), "MMM d")}
+              {route.returnDate && ` – ${format(parseISO(route.returnDate), "MMM d")}`}
+              {route.transfers !== null && route.transfers !== undefined && (
+                <span className="ml-1">· {route.transfers === 0 ? "Direct" : `${route.transfers} stop${route.transfers > 1 ? "s" : ""}`}</span>
+              )}
+            </p>
+          )}
           {route.price ? (
             <p className="text-sm font-bold text-primary mt-0.5 drop-shadow-sm">from {route.price}*</p>
           ) : (
