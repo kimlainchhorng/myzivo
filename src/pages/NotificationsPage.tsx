@@ -21,6 +21,7 @@ type NotificationCategory = 'all' | 'orders' | 'promos' | 'support' | 'delays';
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<NotificationCategory>('all');
   const { 
     notifications, 
@@ -85,11 +86,11 @@ const NotificationsPage = () => {
   };
 
   const tabs: { value: NotificationCategory; label: string; icon: typeof Bell }[] = [
-    { value: 'all', label: 'All', icon: Bell },
-    { value: 'orders', label: 'Orders', icon: Package },
-    { value: 'promos', label: 'Promos', icon: Gift },
-    { value: 'support', label: 'Support', icon: Headphones },
-    { value: 'delays', label: 'Delays', icon: Clock },
+    { value: 'all', label: t('notif.all'), icon: Bell },
+    { value: 'orders', label: t('notif.orders'), icon: Package },
+    { value: 'promos', label: t('notif.promos'), icon: Gift },
+    { value: 'support', label: t('notif.support'), icon: Headphones },
+    { value: 'delays', label: t('notif.delays'), icon: Clock },
   ];
 
   return (
@@ -108,15 +109,15 @@ const NotificationsPage = () => {
                 <ArrowLeft className="w-5 h-5" />
               </motion.button>
               <div>
-                <h1 className="text-lg font-bold flex items-center gap-2">
-                  Notifications
+                 <h1 className="text-lg font-bold flex items-center gap-2">
+                  {t('notif.title')}
                   {unreadCount > 0 && (
                     <Badge className="bg-destructive text-destructive-foreground text-[10px] font-bold h-5 min-w-[20px] px-1.5">
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </Badge>
                   )}
                 </h1>
-                <p className="text-[10px] text-muted-foreground">Stay up to date</p>
+                <p className="text-[10px] text-muted-foreground">{t('notif.subtitle')}</p>
               </div>
             </div>
             {unreadCount > 0 && (
@@ -127,7 +128,7 @@ const NotificationsPage = () => {
                 onClick={markAllAsRead}
               >
                 <CheckCheck className="h-4 w-4 mr-1" />
-                Read all
+                {t('notif.read_all')}
               </Button>
             )}
           </div>
