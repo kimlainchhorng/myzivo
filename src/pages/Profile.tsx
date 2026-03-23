@@ -88,7 +88,7 @@ const LANGS = [
   { code: "id", label: "Bahasa Indonesia", cc: "id" },
 ];
 
-const getFlagUrl = (cc: string) => `https://hatscripts.github.io/circle-flags/flags/${cc}.svg`;
+const getFlagUrl = (cc: string) => `/flags/${cc}.svg`;
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -217,7 +217,7 @@ const Profile = () => {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-md shadow-primary/20 touch-manipulation active:scale-95 transition-all"
               >
                 <Globe className="w-3.5 h-3.5" />
-                <img src={getFlagUrl(currentLang.cc)} alt="" className="w-5 h-3.5 rounded-[2px] object-cover" />
+                <img src={getFlagUrl(currentLang.cc)} alt="" className="w-5 h-3.5 rounded-[2px] object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 <span>{currentLang.label}</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showLangPicker ? "rotate-180" : ""}`} />
               </button>
@@ -238,8 +238,8 @@ const Profile = () => {
                       }`}
                     >
                       {/* Flag background watermark */}
-                      <img src={getFlagUrl(lang.cc)} alt="" className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-7 rounded object-cover opacity-[0.07] pointer-events-none" />
-                      <img src={getFlagUrl(lang.cc)} alt={lang.label} className="w-6 h-4 rounded-[3px] object-cover shadow-sm border border-border/30 relative z-10 shrink-0" />
+                      <img src={getFlagUrl(lang.cc)} alt="" className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-7 rounded object-cover opacity-[0.07] pointer-events-none" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      <img src={getFlagUrl(lang.cc)} alt={lang.label} className="w-6 h-4 rounded-[3px] object-cover shadow-sm border border-border/30 relative z-10 shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                       <span className="relative z-10">{lang.label}</span>
                     </button>
                   ))}
