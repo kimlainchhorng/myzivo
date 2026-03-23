@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Check, ChevronDown, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-import svcHotels from "@/assets/svc-hotels-premium.jpg";
+import bgCurrency from "@/assets/bg-currency-selector.jpg";
 
 import { useCurrency } from "@/contexts/CurrencyContext";
 import {
@@ -62,8 +62,8 @@ const CurrencySelector = ({ variant = "dropdown", className }: CurrencySelectorP
               className
             )}
           >
-            <img src={svcHotels} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-700/80 to-cyan-500/70" />
+            <img src={bgCurrency} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-800/60 to-teal-600/50" />
             <span className="text-base relative z-10 drop-shadow-md">{currencyConfig.flag}</span>
             <span className="text-xs font-bold relative z-10 drop-shadow-md">{currency}</span>
             <ChevronDown className={cn(
