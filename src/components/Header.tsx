@@ -38,21 +38,6 @@ const Header = () => {
                 <ZivoLogo size="md" />
               </div>
               <BetaBadge variant="compact" className="hidden sm:flex" />
-              {/* Trust Indicators */}
-              <div className="hidden lg:flex items-center gap-4 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  Secure checkout
-                </span>
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  Instant confirmation
-                </span>
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  24/7 support
-                </span>
-              </div>
             </div>
 
             {/* Desktop Navigation - Simple Links */}
