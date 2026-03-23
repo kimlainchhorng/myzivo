@@ -1,6 +1,7 @@
 /**
- * ABA Payway Payment Link Generator
- * Creates a checkout payment link for Cambodian users via ABA Payway API.
+ * ABA Payway Deep Link Generator
+ * Creates an ABA mobile app deep link for Cambodian users via ABA PayWay API.
+ * Uses multipart/form-data and HMAC-SHA512 hash per ABA's spec.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -50,7 +51,6 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { amount, currency, description, return_url, reference } = body;
 
-    // Validate inputs
     if (!amount || typeof amount !== "number" || amount <= 0) {
       return new Response(JSON.stringify({ error: "Invalid amount" }), {
         status: 400,
@@ -58,40 +58,72 @@ Deno.serve(async (req) => {
       });
     }
 
-    const validCurrencies = ["USD", "KHR"];
     const cur = (currency || "USD").toUpperCase();
-    if (!validCurrencies.includes(cur)) {
-      return new Response(JSON.stringify({ error: "Currency must be USD or KHR" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const tranId = (reference || crypto.randomUUID().replace(/-/g, "")).substring(0, 20);
+    const reqTime = formatDate(new Date());
 
-    // Build ABA Payway payment link request
-    const payloadHash = await generateHash(
-      `${merchantId}${reference || ""}${amount.toFixed(2)}`,
-      apiKey
-    );
-
-    const abaPayload = {
-      tran_id: reference || crypto.randomUUID().replace(/-/g, "").substring(0, 20),
-      merchant_id: merchantId,
+    // Build payload fields — ORDER MATTERS for hash
+    const payloadFields: Record<string, string> = {
+      tran_id: tranId,
       amount: amount.toFixed(2),
-      currency: cur,
-      description: description || "ZIVO Payment",
+      payment_option: "abapay_deeplink",
       return_url: return_url ? btoa(return_url) : "",
-      hash: payloadHash,
-      payment_option: "abapay cards",
+      currency: cur,
     };
 
-    // Return signed form data for client-side form POST to ABA
-    // ABA Payway purchase endpoint only accepts browser form POSTs, not server-to-server calls
+    // Hash = HMAC-SHA512(req_time + merchant_id + all payload values in order, api_key)
+    const hashInput = [reqTime, merchantId, ...Object.values(payloadFields)].join("");
+    const hash = await generateHash(hashInput, apiKey);
+
+    // Build multipart/form-data
+    const formData = new FormData();
+    formData.append("req_time", reqTime);
+    formData.append("merchant_id", merchantId);
+    for (const [key, value] of Object.entries(payloadFields)) {
+      formData.append(key, value);
+    }
+    formData.append("hash", hash);
+
+    console.log("[ABA] Sending request to ABA API:", {
+      url: `${ABA_API_BASE}/api/payment-gateway/v1/payments/purchase`,
+      tran_id: tranId,
+      amount: amount.toFixed(2),
+      payment_option: "abapay_deeplink",
+      currency: cur,
+    });
+
+    const abaResponse = await fetch(
+      `${ABA_API_BASE}/api/payment-gateway/v1/payments/purchase`,
+      { method: "POST", body: formData }
+    );
+
+    const abaText = await abaResponse.text();
+    console.log("[ABA] Response status:", abaResponse.status, "body:", abaText);
+
+    if (!abaResponse.ok) {
+      return new Response(
+        JSON.stringify({ error: "ABA API error", status: abaResponse.status, details: abaText }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    let abaData;
+    try {
+      abaData = JSON.parse(abaText);
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid ABA response", details: abaText }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
-        payment_url: `${ABA_API_BASE}/api/payment-gateway/v1/payments/purchase`,
-        tran_id: abaPayload.tran_id,
-        checkout_data: abaPayload,
+        tran_id: tranId,
+        abapay_deeplink: abaData.abapay_deeplink || null,
+        qr_string: abaData.qrString || abaData.qr_string || null,
+        raw: abaData,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -104,6 +136,12 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+/** Format date as yyyyMMddHHmmss */
+function formatDate(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+}
 
 /** Generate HMAC-SHA512 hash for ABA Payway request signing */
 async function generateHash(data: string, key: string): Promise<string> {

@@ -2020,7 +2020,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       if (rideError) throw rideError;
       setRideRequestId(rideData.id);
 
-      // 2. Call ABA Payway edge function to get checkout URL
+      // 2. Call ABA Payway edge function to get deep link
       const returnUrl = `${window.location.origin}/rides/hub?aba_payment=success&ride_id=${rideData.id}`;
       const { data: abaData, error: abaError } = await supabase.functions.invoke("aba-payway-checkout", {
         body: {
@@ -2034,29 +2034,18 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
       if (abaError) throw abaError;
 
-      // 3. Submit form POST to ABA checkout (browser-based, not server-to-server)
-      if (abaData?.checkout_data) {
+      // 3. Open ABA app via deep link
+      if (abaData?.abapay_deeplink) {
         sessionStorage.setItem("aba_pending_ride_id", rideData.id);
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = abaData.payment_url || "https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase";
-        form.target = "_blank";
-        for (const [key, value] of Object.entries(abaData.checkout_data)) {
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = key;
-          input.value = String(value);
-          form.appendChild(input);
-        }
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
-        toast.info("ABA Payway checkout opened. Complete payment to confirm ride.");
+        // Open ABA app deep link
+        window.location.href = abaData.abapay_deeplink;
+        toast.info("Opening ABA app for payment...");
         setViewStep("aba-waiting");
       } else {
+        console.error("[ABA] No deep link in response:", abaData);
         // Cleanup failed ride
         await supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideData.id);
-        toast.error("Could not create ABA payment link. Please try again.");
+        toast.error("Could not create ABA payment. Please try again.");
       }
     } catch (err: unknown) {
       console.error("[RideBooking] ABA ride error:", err);
