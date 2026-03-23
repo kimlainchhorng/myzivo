@@ -512,9 +512,20 @@ export default function RidePaymentSection({
     if (clientSecret) {
       return (
         <div className="flex flex-col h-full gap-2">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
-            វិធីបង់ប្រាក់ / Card Payment
-          </p>
+          <div className="flex items-center gap-2 shrink-0">
+            {onBackToMethods && (
+              <button
+                type="button"
+                onClick={onBackToMethods}
+                className="text-xs font-semibold text-primary hover:underline shrink-0"
+              >
+                ← ផ្សេងទៀត / Other
+              </button>
+            )}
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              វិធីបង់ប្រាក់ / Card Payment
+            </p>
+          </div>
           <div className="rounded-2xl bg-card border border-border/20 p-4 flex-1">
             <Elements
               stripe={getStripe()}
