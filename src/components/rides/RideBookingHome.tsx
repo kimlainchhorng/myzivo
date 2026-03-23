@@ -1916,6 +1916,67 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     toast.success("Payment authorized! Finding your driver...");
   };
 
+  /** Handle non-card ride (cash or ABA) — creates ride request without Stripe */
+  const handleNonCardRide = async (method: "cash" | "aba") => {
+    if (!user || !pickup || !destination) {
+      toast.error("Please sign in and select locations");
+      return;
+    }
+
+    const finalPrice = appliedPromo ? Math.max(currentPrice - promoDiscount, 0) : currentPrice;
+
+    setIsSubmitting(true);
+    try {
+      const stopsData = stops.filter(s => s.place).map((s, idx) => ({
+        order: idx + 1,
+        address: s.place!.address,
+        lat: s.place!.lat,
+        lng: s.place!.lng,
+      }));
+
+      // Create ride request with non-card payment
+      const { data: rideData, error: rideError } = await supabase.from("ride_requests").insert({
+        user_id: user.id,
+        pickup_address: pickup.address,
+        pickup_lat: pickup.lat,
+        pickup_lng: pickup.lng,
+        dropoff_address: destination.address,
+        dropoff_lat: destination.lat,
+        dropoff_lng: destination.lng,
+        ride_type: selectedVehicle,
+        quoted_total: currentPrice,
+        distance_miles: routeData?.distance_miles ?? null,
+        duration_minutes: routeData?.duration_minutes ?? null,
+        status: "searching",
+        payment_status: method,
+        customer_name: otherName.trim() || user.user_metadata?.full_name || "",
+        customer_phone: otherPhone.trim() || user.user_metadata?.phone || "",
+        requires_car_seat: currentVehicle.carSeat,
+        car_seat_type: currentVehicle.carSeat ? "standard" : null,
+        notes: [
+          stopsData.length > 0 ? `Stops: ${stopsData.map(s => s.address).join(" → ")}` : "",
+          otherName.trim() ? `Rider: ${otherName.trim()}${otherPhone.trim() ? ` (${otherPhone.trim()})` : ""}` : "",
+          method === "aba" ? "Payment: ABA Payway" : "Payment: Cash",
+        ].filter(Boolean).join(" | ") || null,
+      }).select("id").single();
+
+      if (rideError) throw rideError;
+      setRideRequestId(rideData.id);
+
+      setPaymentStep("idle");
+      setClientSecret(null);
+      setViewStep("searching");
+
+      const label = method === "aba" ? "ABA Payway" : "Cash";
+      toast.success(`${label} ride confirmed! Finding your driver...`);
+    } catch (err: unknown) {
+      console.error("[RideBooking] Non-card ride error:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to book ride");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   /* ─── Reset state ─── */
   const handleReset = () => {
     if (trackingIntervalRef.current) clearInterval(trackingIntervalRef.current);
