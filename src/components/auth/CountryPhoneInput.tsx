@@ -137,29 +137,35 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
     : COUNTRY_CODES;
 
   return (
-    <div className="relative flex" ref={dropdownRef}>
-      {/* Country selector button */}
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 bg-muted border border-border border-r-0 rounded-l-xl px-3 py-3 text-sm text-foreground hover:bg-muted/80 transition-all shrink-0 touch-manipulation active:scale-[0.97]"
-      >
-        <FlagImg src={selectedCountry.flag} alt={selectedCountry.name} size={24} />
-        <span className="text-xs font-semibold text-muted-foreground tracking-tight">{selectedCountry.dial}</span>
-        <ChevronDown className={cn("w-3 h-3 text-muted-foreground transition-transform duration-200", isOpen && "rotate-180")} />
-      </button>
+    <div className="relative" ref={dropdownRef}>
+      <div className="flex">
+        {/* Country selector button */}
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2 bg-muted border border-border border-r-0 rounded-l-xl px-3 py-3 text-sm text-foreground hover:bg-muted/80 transition-all shrink-0 touch-manipulation active:scale-[0.97]"
+        >
+          <FlagImg src={selectedCountry.flag} alt={selectedCountry.name} size={24} />
+          <span className="text-xs font-semibold text-muted-foreground tracking-tight">{selectedCountry.dial}</span>
+          <ChevronDown className={cn("w-3 h-3 text-muted-foreground transition-transform duration-200", isOpen && "rotate-180")} />
+        </button>
 
-      {/* Phone number input */}
-      <input
-        type="tel"
-        name={name}
-        placeholder="000 000 0000"
-        autoComplete="tel-national"
-        value={localNumber}
-        onChange={(e) => handleNumberChange(e.target.value)}
-        onBlur={onBlur}
-        className="w-full bg-muted border border-border border-l-0 rounded-r-xl py-3 pr-4 pl-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
-      />
+        {/* Phone number input */}
+        <input
+          type="tel"
+          name={name}
+          placeholder={selectedCountry.placeholder}
+          autoComplete="tel-national"
+          value={localNumber}
+          onChange={(e) => handleNumberChange(e.target.value)}
+          onBlur={onBlur}
+          className="w-full bg-muted border border-border border-l-0 rounded-r-xl py-3 pr-4 pl-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
+        />
+      </div>
+      {/* Digit hint */}
+      <p className="text-[11px] text-muted-foreground mt-1 ml-1">
+        {selectedCountry.name} • {selectedCountry.digits}
+      </p>
 
       {/* 3D Glassmorphism Dropdown */}
       <AnimatePresence>
