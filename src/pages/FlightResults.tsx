@@ -1123,7 +1123,13 @@ const FlightResults = () => {
                               </div>
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="text-xs font-semibold text-primary">View prices →</p>
+                              {bestAviasalesPrice?.price ? (
+                                <p className="text-lg font-bold text-foreground">${Math.round(bestAviasalesPrice.price)}</p>
+                              ) : bestTpPrice?.price ? (
+                                <p className="text-lg font-bold text-foreground">~${Math.round(bestTpPrice.price)}</p>
+                              ) : (
+                                <p className="text-xs font-semibold text-primary">View prices →</p>
+                              )}
                             </div>
                           </button>
                         )}
@@ -1157,7 +1163,11 @@ const FlightResults = () => {
                                 </div>
                               </div>
                               <div className="text-right shrink-0">
-                                <p className="text-xs font-semibold text-primary">View prices →</p>
+                                {bestTpPrice?.price ? (
+                                  <p className="text-lg font-bold text-foreground">~${Math.round(bestTpPrice.price)}</p>
+                                ) : (
+                                  <p className="text-xs font-semibold text-primary">View prices →</p>
+                                )}
                               </div>
                             </button>
                           );
