@@ -125,9 +125,7 @@ export function buildKiwiDeepLink(params: {
 }): string {
   // Use Travelpayouts short link to avoid Kiwi.com ERR_BLOCKED_BY_RESPONSE on direct /deep links.
   // The tpo.li redirect handles affiliate tracking and is whitelisted by Kiwi.
-  const localeKey = params.locale?.toLowerCase().split('-')[0] || 'en';
-  const baseLink = getKiwiLocaleLink(localeKey);
-  return baseLink;
+  return getKiwiLink(params.locale);
 }
 
 export const TRAVELPAYOUTS_DIRECT_LINKS = {
