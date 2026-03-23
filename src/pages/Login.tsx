@@ -343,7 +343,8 @@ const Login = () => {
                 {showLangMenu && (
                   <>
                     <div className="fixed inset-0 z-[90]" onClick={() => setShowLangMenu(false)} />
-                    <div className="absolute right-0 top-10 z-[100] bg-black/85 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl py-1 min-w-[200px] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="fixed inset-x-0 top-0 bottom-0 z-[100] flex justify-end pt-28 px-6 pointer-events-none">
+                      <div className="pointer-events-auto w-[260px] max-h-[60vh] bg-black/90 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl py-1 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 h-fit">
                       <div className="relative px-3 py-2 border-b border-white/10 overflow-hidden">
                         {currentLangItem?.flag && (
                           <img src={currentLangItem.flag} alt="" className="absolute -right-3 -top-3 w-24 h-24 opacity-[0.07] pointer-events-none blur-[1px]" style={{ transform: "rotate(-12deg) scale(1.3)" }} />
@@ -367,6 +368,7 @@ const Login = () => {
                             {currentLanguage === l.code && <CheckCircle className="w-3.5 h-3.5 text-primary relative z-10" />}
                           </button>
                         ))}
+                      </div>
                       </div>
                     </div>
                   </>

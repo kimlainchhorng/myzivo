@@ -222,14 +222,15 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
       {/* 3D Glassmorphism Dropdown */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.96, rotateX: -5 }}
-            animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-            exit={{ opacity: 0, y: -6, scale: 0.96, rotateX: -5 }}
-            transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-            className="absolute left-0 top-full mt-1.5 z-[100] w-80 max-h-80 overflow-hidden rounded-2xl border border-white/15 shadow-2xl shadow-black/40"
-            style={{ perspective: "800px", transformOrigin: "top left" }}
-          >
+          <>
+            <div className="fixed inset-0 z-[99]" onClick={() => { setIsOpen(false); setSearch(""); }} />
+            <motion.div
+              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.96 }}
+              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] w-[calc(100vw-3rem)] max-w-sm max-h-[70vh] overflow-hidden rounded-2xl border border-white/15 shadow-2xl shadow-black/50"
+            >
             <div className="relative bg-black/85 backdrop-blur-2xl overflow-hidden">
               {/* Large background flag watermark */}
               <div className="absolute -right-6 -top-6 w-44 h-44 opacity-[0.07] pointer-events-none select-none">
@@ -309,6 +310,7 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
               </div>
             </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
