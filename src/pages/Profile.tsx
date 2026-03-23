@@ -262,7 +262,12 @@ const Profile = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <span className="text-base">{c.flag}</span>
+                <img
+                  src={getFlagUrl(c.code.toLowerCase())}
+                  alt={c.name}
+                  className="w-6 h-4 rounded-[3px] object-cover shadow-sm border border-border/30 shrink-0"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
                 <span>{c.name}</span>
               </button>
             ))}
