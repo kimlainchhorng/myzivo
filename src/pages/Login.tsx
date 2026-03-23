@@ -7,7 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
@@ -56,6 +57,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [legalModal, setLegalModal] = useState<"terms" | "privacy" | null>(null);
   const { currentLanguage, changeLanguage, t } = useI18n();
   const LANGS = [
     { code: "en", label: "English", flag: "/flags/us.svg" },
@@ -573,9 +575,9 @@ const Login = () => {
                         </FormControl>
                         <label className="text-xs text-muted-foreground leading-tight cursor-pointer" onClick={() => field.onChange(field.value === true ? undefined : true)}>
                           I agree to the{" "}
-                          <Link to="/terms" className="text-primary hover:underline font-medium">Terms of Service</Link>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setLegalModal("terms"); }} className="text-primary hover:underline font-medium">Terms of Service</button>
                           {" "}and{" "}
-                          <Link to="/privacy" className="text-primary hover:underline font-medium">Privacy Policy</Link>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setLegalModal("privacy"); }} className="text-primary hover:underline font-medium">Privacy Policy</button>
                         </label>
                       </div>
                       <FormMessage className="text-destructive text-xs ml-6" />
