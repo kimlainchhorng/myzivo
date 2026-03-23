@@ -652,17 +652,23 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Extract city from pickup address for pricing lookup
   const pickupCity = useMemo(() => {
-    if (!pickup?.address) return undefined;
-    const addr = pickup.address.toLowerCase();
-    if (addr.includes("new orleans")) return "New Orleans";
-    if (addr.includes("baton rouge")) return "Baton Rouge";
-    if (addr.includes("phnom penh")) return "Phnom Penh";
-    if (addr.includes("siem reap")) return "Siem Reap";
-    if (addr.includes("sihanoukville")) return "Sihanoukville";
-    if (addr.includes("battambang")) return "Battambang";
-    if (addr.includes("cambodia") || addr.includes("កម្ពុជា")) return "Phnom Penh";
+    const addr = pickup?.address?.toLowerCase();
+    if (addr) {
+      if (addr.includes("new orleans")) return "New Orleans";
+      if (addr.includes("baton rouge")) return "Baton Rouge";
+      if (addr.includes("phnom penh")) return "Phnom Penh";
+      if (addr.includes("siem reap")) return "Siem Reap";
+      if (addr.includes("sihanoukville")) return "Sihanoukville";
+      if (addr.includes("battambang")) return "Battambang";
+      if (addr.includes("cambodia") || addr.includes("កម្ពុជា")) return "Phnom Penh";
+    }
+
+    // On fresh open/reopen, pickup address may not be resolved yet.
+    // Keep Cambodia users on Cambodia pricing instead of falling back to US defaults.
+    if (isCambodiaCountry) return "Phnom Penh";
+
     return undefined; // falls back to "default" pricing
-  }, [pickup?.address]);
+  }, [pickup?.address, isCambodiaCountry]);
 
   // Fetch admin-configured pricing from city_pricing table
   const { data: cityPricingMap } = useCityPricing(pickupCity);
