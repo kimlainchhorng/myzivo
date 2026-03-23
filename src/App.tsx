@@ -91,7 +91,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const VerifyOTP = lazy(() => import("./pages/VerifyOTP"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const VerifyPhonePage = lazy(() => import("./pages/VerifyPhonePage"));
+
 const Profile = lazy(() => import("./pages/Profile"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 
@@ -481,7 +481,7 @@ const App = () => (
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/verify-otp" element={<VerifyOTP />} />
-                <Route path="/verify-phone" element={<ProtectedRoute><VerifyPhonePage /></ProtectedRoute>} />
+                
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
