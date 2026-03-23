@@ -108,10 +108,10 @@ function CambodiaPaymentSelector({
   const methods = cashAllowed ? allMethods : allMethods.filter(m => m.id !== "cash");
 
   const confirmLabels: Record<CambodiaPaymentMethod, string> = {
-    aba: `បង់តាម ABA · ${dualPrice(price, true)} · ${vehicleName}`,
-    cash: `បញ្ជាក់ · ${dualPrice(price, true)} · ${vehicleName}`,
-    qr: `បង់តាម QR · ${dualPrice(price, true)} · ${vehicleName}`,
-    card: `បង់តាមកាត · ${dualPrice(price, true)} · ${vehicleName}`,
+    aba: `បង់ ABA · ${dualPrice(price, true)}`,
+    cash: `បញ្ជាក់ · ${dualPrice(price, true)}`,
+    qr: `បង់ QR · ${dualPrice(price, true)}`,
+    card: `បង់កាត · ${dualPrice(price, true)}`,
   };
 
   const footerLabels: Record<CambodiaPaymentMethod, string> = {
