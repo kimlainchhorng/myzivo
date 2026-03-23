@@ -14,7 +14,8 @@ interface PhoneGateResult {
   isVerified: boolean;
 }
 
-export function usePhoneVerificationGate(enabled = true): PhoneGateResult {
+export function usePhoneVerificationGate(enabled = false): PhoneGateResult {
+  // Phone verification gate is currently disabled for all customers
   const { user } = useAuth();
 
   const { data, isLoading } = useQuery({
