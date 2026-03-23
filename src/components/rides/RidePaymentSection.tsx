@@ -46,6 +46,8 @@ interface RidePaymentSectionProps {
   cashAllowed?: boolean;
   /** Handler for cash ride confirmation — creates ride without Stripe */
   onCashConfirm?: () => void;
+  /** Handler for ABA Payway ride confirmation — creates ride without Stripe */
+  onAbaConfirm?: () => void;
   /** Go back from card form to payment method selector (Cambodia) */
   onBackToMethods?: () => void;
 }
