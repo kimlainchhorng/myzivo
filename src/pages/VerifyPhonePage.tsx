@@ -51,7 +51,7 @@ export default function VerifyPhonePage() {
     try {
       // Step 1: Reserve the phone number via RPC
       const { error: rpcError } = await supabase.rpc("set_customer_phone" as any, {
-        _phone_e164: phoneE164,
+        p_phone_e164: phoneE164,
       });
 
       if (rpcError) {
