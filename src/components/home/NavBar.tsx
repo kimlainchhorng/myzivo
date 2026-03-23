@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Plane, Hotel, CarFront, Car, UtensilsCrossed, Package,
   Menu, X, User, ChevronDown, HelpCircle,
-  Sparkles, Users, Award, Crown, LogOut, UserCircle, Briefcase
+  Sparkles, Users, Award, Crown, LogOut, UserCircle, Briefcase, Globe, Check
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,9 +21,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ZivoLogo from "@/components/ZivoLogo";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import CurrencySelector from "@/components/shared/CurrencySelector";
+import { useI18n } from "@/hooks/useI18n";
+import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
 
 import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
 import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
