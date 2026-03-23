@@ -108,7 +108,7 @@ const FlightResults = () => {
     enabled: !!origin && !!destination && !!departureDate,
   });
 
-  // Travelpayouts price comparison (runs in parallel, non-blocking)
+  // Travelpayouts cached prices (runs in parallel, non-blocking)
   const { data: tpPrices = [] } = useTravelpayoutsPrices({
     origin,
     destination,
@@ -117,14 +117,35 @@ const FlightResults = () => {
     enabled: !!origin && !!destination && !!departureDate,
   });
 
+  // Aviasales Real-Time Search (multi-agency live prices)
+  const { data: aviasalesData } = useAviasalesSearch({
+    origin,
+    destination,
+    departureDate,
+    returnDate,
+    adults,
+    children,
+    infants,
+    cabinClass,
+    enabled: !!origin && !!destination && !!departureDate,
+  });
+
+  const aviasalesResults = aviasalesData?.results || [];
+  const aviasalesMeta = aviasalesData?.meta;
+
   const offers = data?.offers || [];
   const isRoundTrip = !!returnDate;
 
-  // Best Travelpayouts price for this route
+  // Best prices for comparison
   const bestTpPrice = useMemo(() => {
     if (!tpPrices.length) return null;
     return tpPrices.reduce((best, p) => (p.price < best.price ? p : best), tpPrices[0]);
   }, [tpPrices]);
+
+  const bestAviasalesPrice = useMemo(() => {
+    if (!aviasalesResults.length) return null;
+    return aviasalesResults[0]; // already sorted by price
+  }, [aviasalesResults]);
 
   // Lowest Duffel price for comparison
   const lowestDuffelPrice = useMemo(() => {
