@@ -89,6 +89,10 @@ const LANGS = [
 ];
 
 const getFlagUrl = (cc: string) => `/flags/${cc}.svg`;
+const CITY_BG: Record<string, string> = {
+  US: "/flags/city-us.jpg",
+  KH: "/flags/city-kh.jpg",
+};
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -250,28 +254,40 @@ const Profile = () => {
         })()}
 
         {/* Country / Location Selector */}
-        <div className="flex items-center justify-center gap-2 mb-5 animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="flex items-center bg-muted/50 rounded-2xl p-1 gap-1">
-            {countries.map((c) => (
-              <button
-                key={c.code}
-                onClick={() => setCountry(c.code)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all touch-manipulation active:scale-95 ${
-                  country === c.code
-                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <img
-                  src={getFlagUrl(c.code.toLowerCase())}
-                  alt={c.name}
-                  className="w-6 h-4 rounded-[3px] object-cover shadow-sm border border-border/30 shrink-0"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
-                <span>{c.name}</span>
-              </button>
-            ))}
-          </div>
+        <div className="flex items-center justify-center gap-3 mb-5 animate-in fade-in slide-in-from-top-4 duration-300">
+          {countries.map((c) => (
+            <button
+              key={c.code}
+              onClick={() => setCountry(c.code)}
+              className={`relative flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold transition-all touch-manipulation active:scale-95 overflow-hidden min-w-[150px] justify-center ${
+                country === c.code
+                  ? "ring-2 ring-primary shadow-lg shadow-primary/20"
+                  : "ring-1 ring-border/50 opacity-70 hover:opacity-100"
+              }`}
+            >
+              {/* City background */}
+              <img
+                src={CITY_BG[c.code]}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                loading="lazy"
+              />
+              {/* Dark overlay for text readability */}
+              <div className={`absolute inset-0 ${
+                country === c.code
+                  ? "bg-primary/60"
+                  : "bg-slate-900/50"
+              }`} />
+              {/* Content */}
+              <img
+                src={getFlagUrl(c.code.toLowerCase())}
+                alt={c.name}
+                className="w-6 h-4 rounded-[3px] object-cover shadow-sm border border-white/30 shrink-0 relative z-10"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <span className="relative z-10 text-white drop-shadow-md">{c.name}</span>
+            </button>
+          ))}
         </div>
 
         {profileLoading ? (
