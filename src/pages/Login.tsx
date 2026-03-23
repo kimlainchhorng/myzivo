@@ -57,32 +57,33 @@ const Login = () => {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const { currentLanguage, changeLanguage, t } = useI18n();
   const LANGS = [
-    { code: "en", label: "English", flag: "🇺🇸" },
-    { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
-    { code: "zh", label: "中文", flag: "🇨🇳" },
-    { code: "ko", label: "한국어", flag: "🇰🇷" },
-    { code: "ja", label: "日本語", flag: "🇯🇵" },
-    { code: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
-    { code: "th", label: "ไทย", flag: "🇹🇭" },
-    { code: "es", label: "Español", flag: "🇪🇸" },
-    { code: "fr", label: "Français", flag: "🇫🇷" },
-    { code: "de", label: "Deutsch", flag: "🇩🇪" },
-    { code: "it", label: "Italiano", flag: "🇮🇹" },
-    { code: "pt", label: "Português", flag: "🇵🇹" },
-    { code: "nl", label: "Nederlands", flag: "🇳🇱" },
-    { code: "pl", label: "Polski", flag: "🇵🇱" },
-    { code: "sv", label: "Svenska", flag: "🇸🇪" },
-    { code: "da", label: "Dansk", flag: "🇩🇰" },
-    { code: "fi", label: "Suomi", flag: "🇫🇮" },
-    { code: "el", label: "Ελληνικά", flag: "🇬🇷" },
-    { code: "cs", label: "Čeština", flag: "🇨🇿" },
-    { code: "ro", label: "Română", flag: "🇷🇴" },
-    { code: "hu", label: "Magyar", flag: "🇭🇺" },
-    { code: "no", label: "Norsk", flag: "🇳🇴" },
-    { code: "ru", label: "Русский", flag: "🇷🇺" },
-    { code: "tr", label: "Türkçe", flag: "🇹🇷" },
-    { code: "ar", label: "العربية", flag: "🇸🇦" },
+    { code: "en", label: "English", flag: "/flags/us.svg" },
+    { code: "km", label: "ខ្មែរ", flag: "/flags/kh.svg" },
+    { code: "zh", label: "中文", flag: "/flags/cn.svg" },
+    { code: "ko", label: "한국어", flag: "/flags/kr.svg" },
+    { code: "ja", label: "日本語", flag: "/flags/jp.svg" },
+    { code: "vi", label: "Tiếng Việt", flag: "/flags/vn.svg" },
+    { code: "th", label: "ไทย", flag: "/flags/th.svg" },
+    { code: "es", label: "Español", flag: "/flags/es.svg" },
+    { code: "fr", label: "Français", flag: "/flags/fr.svg" },
+    { code: "de", label: "Deutsch", flag: "/flags/de.svg" },
+    { code: "it", label: "Italiano", flag: "/flags/it.svg" },
+    { code: "pt", label: "Português", flag: "/flags/pt.svg" },
+    { code: "nl", label: "Nederlands", flag: "/flags/nl.svg" },
+    { code: "pl", label: "Polski", flag: "/flags/pl.svg" },
+    { code: "sv", label: "Svenska", flag: "/flags/se.svg" },
+    { code: "da", label: "Dansk", flag: "/flags/dk.svg" },
+    { code: "fi", label: "Suomi", flag: "/flags/fi.svg" },
+    { code: "el", label: "Ελληνικά", flag: "/flags/gr.svg" },
+    { code: "cs", label: "Čeština", flag: "/flags/cz.svg" },
+    { code: "ro", label: "Română", flag: "/flags/ro.svg" },
+    { code: "hu", label: "Magyar", flag: "/flags/hu.svg" },
+    { code: "no", label: "Norsk", flag: "/flags/no.svg" },
+    { code: "ru", label: "Русский", flag: "/flags/ru.svg" },
+    { code: "tr", label: "Türkçe", flag: "/flags/tr.svg" },
+    { code: "ar", label: "العربية", flag: "/flags/sa.svg" },
   ];
+  const currentLangItem = LANGS.find(l => l.code === currentLanguage);
   const { signIn, signUp, signInWithProvider } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -290,21 +291,33 @@ const Login = () => {
                 {showLangMenu && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
-                    <div className="absolute right-0 top-10 z-50 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[130px] animate-in fade-in slide-in-from-top-2 duration-150">
-                      {LANGS.map(l => (
-                        <button
-                          key={l.code}
-                          onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
-                          className={cn(
-                            "w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors",
-                            currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted"
-                          )}
-                        >
-                          <span className="text-sm">{l.flag}</span>
-                          <span>{l.label}</span>
-                          {currentLanguage === l.code && <CheckCircle className="w-3.5 h-3.5 ml-auto" />}
-                        </button>
-                      ))}
+                    <div className="absolute right-0 top-10 z-50 bg-card/95 backdrop-blur-2xl border border-border/50 rounded-2xl shadow-2xl py-1 min-w-[200px] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                      {/* Header with background flag watermark */}
+                      <div className="relative px-3 py-2 border-b border-border/40 overflow-hidden">
+                        {currentLangItem?.flag && (
+                          <img src={currentLangItem.flag} alt="" className="absolute -right-3 -top-3 w-24 h-24 opacity-[0.07] pointer-events-none blur-[1px]" style={{ transform: "rotate(-12deg) scale(1.3)" }} />
+                        )}
+                        <p className="text-xs font-medium text-muted-foreground relative z-10">Select Language</p>
+                      </div>
+                      <div className="max-h-[320px] overflow-y-auto py-1">
+                        {LANGS.map(l => (
+                          <button
+                            key={l.code}
+                            onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
+                            className={cn(
+                              "w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-all duration-200 relative overflow-hidden group",
+                              currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/60"
+                            )}
+                          >
+                            {/* Hover background flag watermark */}
+                            <img src={l.flag} alt="" className="absolute right-0 top-1/2 w-14 h-14 opacity-0 group-hover:opacity-[0.08] transition-opacity duration-300 pointer-events-none blur-[0.5px]" style={{ transform: "translateY(-50%) rotate(-8deg)" }} />
+                            <img src={l.flag} alt={l.label} className="w-6 h-[17px] rounded-[3px] object-cover shadow-sm border border-black/10 shrink-0 relative z-10" />
+                            <span className="relative z-10 flex-1 text-left">{l.label}</span>
+                            <span className="text-[10px] font-mono text-muted-foreground/60 uppercase relative z-10">{l.code}</span>
+                            {currentLanguage === l.code && <CheckCircle className="w-3.5 h-3.5 text-primary relative z-10" />}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </>
                 )}
