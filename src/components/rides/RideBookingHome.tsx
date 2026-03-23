@@ -1976,6 +1976,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   /** Handle ABA Payway ride — pay first, then dispatch */
   const handleAbaRide = async () => {
+    console.log("[handleAbaRide] State check:", { user: !!user, pickup: JSON.stringify(pickup), destination: JSON.stringify(destination) });
     if (!user || !pickup || !destination) {
       toast.error("Please sign in and select locations");
       return;
