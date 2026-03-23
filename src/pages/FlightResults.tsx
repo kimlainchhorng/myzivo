@@ -24,7 +24,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import FlightResultsSkeleton from "@/components/flight/FlightResultsSkeleton";
 import { useDuffelFlightSearch, type DuffelOffer } from "@/hooks/useDuffelFlights";
 import { useTravelpayoutsPrices, type TravelpayoutsPrice } from "@/hooks/useTravelpayoutsPrices";
-import { getKiwiLink } from "@/config/affiliateLinks";
+import { getKiwiLink, buildKiwiDeepLink } from "@/config/affiliateLinks";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
@@ -1013,7 +1013,13 @@ const FlightResults = () => {
                         </div>
                         <div className="text-right shrink-0">
                           <a
-                            href={getKiwiLink(navigator.language)}
+                            href={buildKiwiDeepLink({
+                              origin,
+                              destination,
+                              departureDate: departureDate || undefined,
+                              returnDate,
+                              locale: navigator.language,
+                            })}
                             target="_blank"
                             rel="noopener noreferrer nofollow"
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-600 text-[11px] font-bold hover:bg-emerald-500/25 transition-colors"
