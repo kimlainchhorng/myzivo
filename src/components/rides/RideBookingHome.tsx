@@ -893,17 +893,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [getCurrentLocation]);
 
   // Keep map region aligned to selected language mode + auto-set pickup from GPS
+  const hasInitializedRegion = useRef(false);
   useEffect(() => {
     let cancelled = false;
 
     if (isCambodiaCountry) {
-      setUserLocation(CAMBODIA_DEFAULT_CENTER);
-      setPickup(null);
-      setPickupDisplay("");
-      setDestination(null);
-      setDestinationDisplay("");
-      pickupManuallySet.current = false;
-      setPickupConfirmed(false);
+      // Only clear locations on FIRST mount, not on every re-render
+      if (!hasInitializedRegion.current) {
+        hasInitializedRegion.current = true;
+        setUserLocation(CAMBODIA_DEFAULT_CENTER);
+      }
       return () => { cancelled = true; };
     }
 
