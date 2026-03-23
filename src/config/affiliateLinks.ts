@@ -125,14 +125,25 @@ export function buildKiwiDeepLink(params: {
 }): string {
   const { origin, destination, departureDate, returnDate, locale } = params;
   
-  // Build the Kiwi.com deep link URL
+  // Build the Kiwi.com search URL (use /search path instead of /deep to avoid ERR_BLOCKED_BY_RESPONSE)
+  const dateParts: string[] = [];
+  if (departureDate) dateParts.push(departureDate.replace(/-/g, '-'));
+  if (returnDate) dateParts.push(returnDate.replace(/-/g, '-'));
+  
   const kiwiParams = new URLSearchParams();
   kiwiParams.set('from', origin);
   kiwiParams.set('to', destination);
-  if (departureDate) kiwiParams.set('departure', departureDate);
-  if (returnDate) kiwiParams.set('return', returnDate);
+  if (departureDate) {
+    // Kiwi uses DD-MM-YYYY format
+    const [y, m, d] = departureDate.split('-');
+    kiwiParams.set('departure', `${d}-${m}-${y}`);
+  }
+  if (returnDate) {
+    const [y, m, d] = returnDate.split('-');
+    kiwiParams.set('return', `${d}-${m}-${y}`);
+  }
   
-  const kiwiUrl = `https://www.kiwi.com/deep?${kiwiParams.toString()}`;
+  const kiwiUrl = `https://www.kiwi.com/en/search/results/${origin}/${destination}/${departureDate || ''}${returnDate ? `/${returnDate}` : ''}`;
   const encodedKiwiUrl = encodeURIComponent(kiwiUrl);
   
   // Travelpayouts click tracking URL
