@@ -40,7 +40,17 @@ serve(async (req) => {
     });
 
     if (depart_date) params.set('departure_at', depart_date);
-    if (return_date) params.set('return_at', return_date);
+    if (return_date && depart_date) {
+      const diffMs = new Date(return_date).getTime() - new Date(depart_date).getTime();
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      if (diffDays <= 30) {
+        params.set('return_at', return_date);
+      } else {
+        console.log(`[travelpayouts-prices] Skipping return_date (${diffDays} days > 30 day limit)`);
+      }
+    } else if (return_date) {
+      params.set('return_at', return_date);
+    }
     if (TRAVELPAYOUTS_MARKER) params.set('marker', TRAVELPAYOUTS_MARKER);
 
     const url = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?${params.toString()}`;
