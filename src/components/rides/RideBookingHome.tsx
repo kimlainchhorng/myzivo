@@ -876,6 +876,20 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
   }, [isCambodiaCountry]);
 
+  // Handle ABA Payway return URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const abaPayment = params.get("aba_payment");
+    const rideId = params.get("ride_id") || sessionStorage.getItem("aba_pending_ride_id");
+    if (abaPayment === "success" && rideId) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("aba_payment");
+      url.searchParams.delete("ride_id");
+      window.history.replaceState({}, "", url.pathname);
+      handleAbaPaymentReturn(rideId);
+    }
+  }, [handleAbaPaymentReturn]);
+
   // Request GPS when user allows
   const handleAllowLocation = useCallback(() => {
     setLocationPermission("checking");
