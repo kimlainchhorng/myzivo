@@ -975,6 +975,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     let jobId: string | null = null;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
+    // Reset search phase & elapsed timer
+    setSearchPhase("dispatching");
+    setSearchElapsed(0);
+    searchStartRef.current = Date.now();
+    const elapsedTimer = setInterval(() => {
+      setSearchElapsed(Math.floor((Date.now() - searchStartRef.current) / 1000));
+    }, 1000);
+
     const dispatchRide = async () => {
       if (!pickup || !destination || !user) return;
 
