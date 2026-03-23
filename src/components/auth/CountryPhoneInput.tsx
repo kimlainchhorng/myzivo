@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { forwardRef, useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,28 +9,21 @@ interface CountryCode {
   dial: string;
   name: string;
   flag: string;
-  placeholder: string; // example local number format
-  digits: string;      // e.g. "10 digits" hint
+  placeholder: string;
+  digits: string;
 }
 
 const COUNTRY_CODES: CountryCode[] = [
-  // North America
   { code: "US", dial: "+1", name: "United States", flag: "/flags/us.svg", placeholder: "201 555 0123", digits: "10 digits" },
   { code: "CA", dial: "+1", name: "Canada", flag: "/flags/ca.svg", placeholder: "416 555 0123", digits: "10 digits" },
   { code: "MX", dial: "+52", name: "Mexico", flag: "/flags/mx.svg", placeholder: "55 1234 5678", digits: "10 digits" },
-
-  // Central America & Caribbean
   { code: "DO", dial: "+1", name: "Dominican Republic", flag: "/flags/do.svg", placeholder: "809 234 5678", digits: "10 digits" },
   { code: "JM", dial: "+1", name: "Jamaica", flag: "/flags/jm.svg", placeholder: "876 234 5678", digits: "10 digits" },
-
-  // South America
   { code: "BR", dial: "+55", name: "Brazil", flag: "/flags/br.svg", placeholder: "11 91234 5678", digits: "10-11 digits" },
   { code: "AR", dial: "+54", name: "Argentina", flag: "/flags/ar.svg", placeholder: "11 1234 5678", digits: "10 digits" },
   { code: "CO", dial: "+57", name: "Colombia", flag: "/flags/co.svg", placeholder: "301 234 5678", digits: "10 digits" },
   { code: "CL", dial: "+56", name: "Chile", flag: "/flags/cl.svg", placeholder: "9 1234 5678", digits: "9 digits" },
   { code: "PE", dial: "+51", name: "Peru", flag: "/flags/pe.svg", placeholder: "912 345 678", digits: "9 digits" },
-
-  // Western Europe
   { code: "GB", dial: "+44", name: "United Kingdom", flag: "/flags/gb.svg", placeholder: "7911 123456", digits: "10-11 digits" },
   { code: "FR", dial: "+33", name: "France", flag: "/flags/fr.svg", placeholder: "6 12 34 56 78", digits: "9 digits" },
   { code: "DE", dial: "+49", name: "Germany", flag: "/flags/de.svg", placeholder: "151 2345 6789", digits: "10-11 digits" },
@@ -41,14 +35,10 @@ const COUNTRY_CODES: CountryCode[] = [
   { code: "CH", dial: "+41", name: "Switzerland", flag: "/flags/ch.svg", placeholder: "78 123 45 67", digits: "9 digits" },
   { code: "AT", dial: "+43", name: "Austria", flag: "/flags/at.svg", placeholder: "664 123 4567", digits: "10-11 digits" },
   { code: "IE", dial: "+353", name: "Ireland", flag: "/flags/ie.svg", placeholder: "85 123 4567", digits: "9 digits" },
-
-  // Scandinavia
   { code: "SE", dial: "+46", name: "Sweden", flag: "/flags/se.svg", placeholder: "70 123 45 67", digits: "7-10 digits" },
   { code: "DK", dial: "+45", name: "Denmark", flag: "/flags/dk.svg", placeholder: "20 12 34 56", digits: "8 digits" },
   { code: "NO", dial: "+47", name: "Norway", flag: "/flags/no.svg", placeholder: "412 34 567", digits: "8 digits" },
   { code: "FI", dial: "+358", name: "Finland", flag: "/flags/fi.svg", placeholder: "41 234 5678", digits: "7-10 digits" },
-
-  // Eastern Europe
   { code: "PL", dial: "+48", name: "Poland", flag: "/flags/pl.svg", placeholder: "512 345 678", digits: "9 digits" },
   { code: "CZ", dial: "+420", name: "Czech Republic", flag: "/flags/cz.svg", placeholder: "601 123 456", digits: "9 digits" },
   { code: "SK", dial: "+421", name: "Slovakia", flag: "/flags/sk.svg", placeholder: "901 234 567", digits: "9 digits" },
@@ -59,8 +49,6 @@ const COUNTRY_CODES: CountryCode[] = [
   { code: "LT", dial: "+370", name: "Lithuania", flag: "/flags/lt.svg", placeholder: "612 34567", digits: "8 digits" },
   { code: "UA", dial: "+380", name: "Ukraine", flag: "/flags/ua.svg", placeholder: "50 123 4567", digits: "9 digits" },
   { code: "RU", dial: "+7", name: "Russia", flag: "/flags/ru.svg", placeholder: "912 345 67 89", digits: "10 digits" },
-
-  // Mediterranean & Middle East
   { code: "GR", dial: "+30", name: "Greece", flag: "/flags/gr.svg", placeholder: "691 234 5678", digits: "10 digits" },
   { code: "TR", dial: "+90", name: "Turkey", flag: "/flags/tr.svg", placeholder: "501 234 5678", digits: "10 digits" },
   { code: "AE", dial: "+971", name: "UAE", flag: "/flags/ae.svg", placeholder: "50 123 4567", digits: "9 digits" },
@@ -73,8 +61,6 @@ const COUNTRY_CODES: CountryCode[] = [
   { code: "LB", dial: "+961", name: "Lebanon", flag: "/flags/lb.svg", placeholder: "71 123 456", digits: "7-8 digits" },
   { code: "IL", dial: "+972", name: "Israel", flag: "/flags/il.svg", placeholder: "50 123 4567", digits: "9 digits" },
   { code: "EG", dial: "+20", name: "Egypt", flag: "/flags/eg.svg", placeholder: "100 234 5678", digits: "10 digits" },
-
-  // Africa
   { code: "ZA", dial: "+27", name: "South Africa", flag: "/flags/za.svg", placeholder: "71 234 5678", digits: "9 digits" },
   { code: "NG", dial: "+234", name: "Nigeria", flag: "/flags/ng.svg", placeholder: "802 345 6789", digits: "10 digits" },
   { code: "KE", dial: "+254", name: "Kenya", flag: "/flags/ke.svg", placeholder: "712 345 678", digits: "9 digits" },
@@ -82,15 +68,11 @@ const COUNTRY_CODES: CountryCode[] = [
   { code: "TZ", dial: "+255", name: "Tanzania", flag: "/flags/tz.svg", placeholder: "712 345 678", digits: "9 digits" },
   { code: "ET", dial: "+251", name: "Ethiopia", flag: "/flags/et.svg", placeholder: "91 123 4567", digits: "9 digits" },
   { code: "MA", dial: "+212", name: "Morocco", flag: "/flags/ma.svg", placeholder: "6 12 34 56 78", digits: "9 digits" },
-
-  // South Asia
   { code: "IN", dial: "+91", name: "India", flag: "/flags/in.svg", placeholder: "91234 56789", digits: "10 digits" },
   { code: "PK", dial: "+92", name: "Pakistan", flag: "/flags/pk.svg", placeholder: "301 234 5678", digits: "10 digits" },
   { code: "BD", dial: "+880", name: "Bangladesh", flag: "/flags/bd.svg", placeholder: "1712 345678", digits: "10 digits" },
   { code: "LK", dial: "+94", name: "Sri Lanka", flag: "/flags/lk.svg", placeholder: "71 234 5678", digits: "9 digits" },
   { code: "NP", dial: "+977", name: "Nepal", flag: "/flags/np.svg", placeholder: "984 123 4567", digits: "10 digits" },
-
-  // Southeast Asia
   { code: "KH", dial: "+855", name: "Cambodia", flag: "/flags/kh.svg", placeholder: "12 345 678", digits: "8-9 digits" },
   { code: "TH", dial: "+66", name: "Thailand", flag: "/flags/th.svg", placeholder: "81 234 5678", digits: "9 digits" },
   { code: "VN", dial: "+84", name: "Vietnam", flag: "/flags/vn.svg", placeholder: "912 345 678", digits: "9-10 digits" },
@@ -100,22 +82,22 @@ const COUNTRY_CODES: CountryCode[] = [
   { code: "PH", dial: "+63", name: "Philippines", flag: "/flags/ph.svg", placeholder: "917 123 4567", digits: "10 digits" },
   { code: "MM", dial: "+95", name: "Myanmar", flag: "/flags/mm.svg", placeholder: "9 123 4567", digits: "7-10 digits" },
   { code: "LA", dial: "+856", name: "Laos", flag: "/flags/la.svg", placeholder: "20 5678 9012", digits: "8-10 digits" },
-
-  // East Asia
   { code: "JP", dial: "+81", name: "Japan", flag: "/flags/jp.svg", placeholder: "90 1234 5678", digits: "10 digits" },
   { code: "KR", dial: "+82", name: "South Korea", flag: "/flags/kr.svg", placeholder: "10 1234 5678", digits: "10-11 digits" },
   { code: "CN", dial: "+86", name: "China", flag: "/flags/cn.svg", placeholder: "131 2345 6789", digits: "11 digits" },
   { code: "TW", dial: "+886", name: "Taiwan", flag: "/flags/tw.svg", placeholder: "912 345 678", digits: "9 digits" },
   { code: "HK", dial: "+852", name: "Hong Kong", flag: "/flags/hk.svg", placeholder: "5123 4567", digits: "8 digits" },
-
-  // Oceania
   { code: "AU", dial: "+61", name: "Australia", flag: "/flags/au.svg", placeholder: "412 345 678", digits: "9 digits" },
   { code: "NZ", dial: "+64", name: "New Zealand", flag: "/flags/nz.svg", placeholder: "21 123 4567", digits: "8-10 digits" },
 ];
 
-function FlagImg({ src, alt, size = 22 }: { src: string; alt: string; size?: number }) {
+const FlagImg = forwardRef<HTMLImageElement, { src: string; alt: string; size?: number }>(function FlagImg(
+  { src, alt, size = 22 },
+  ref,
+) {
   return (
     <img
+      ref={ref}
       src={src}
       alt={alt}
       className="rounded-[3px] object-cover shadow-sm border border-white/20"
@@ -123,7 +105,7 @@ function FlagImg({ src, alt, size = 22 }: { src: string; alt: string; size?: num
       loading="lazy"
     />
   );
-}
+});
 
 interface CountryPhoneInputProps {
   value: string;
@@ -137,41 +119,50 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
   const [search, setSearch] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<CountryCode>(COUNTRY_CODES[0]);
   const [localNumber, setLocalNumber] = useState("");
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (value && !localNumber) {
-      // Sort by longest dial code first to match +855 before +8
       const sorted = [...COUNTRY_CODES].sort((a, b) => b.dial.length - a.dial.length);
-      const match = sorted.find(c => value.startsWith(c.dial));
+      const match = sorted.find((country) => value.startsWith(country.dial));
       if (match) {
         setSelectedCountry(match);
         setLocalNumber(value.slice(match.dial.length).trim());
       }
     }
-  }, []);
+  }, [value, localNumber]);
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+    if (!isOpen) return;
+
+    searchRef.current?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         setIsOpen(false);
         setSearch("");
       }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
-  useEffect(() => {
-    if (isOpen) searchRef.current?.focus();
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, [isOpen]);
+
+  const closeDropdown = () => {
+    setIsOpen(false);
+    setSearch("");
+  };
 
   const handleCountrySelect = (country: CountryCode) => {
     setSelectedCountry(country);
-    setIsOpen(false);
-    setSearch("");
     onChange(`${country.dial}${localNumber}`);
+    closeDropdown();
   };
 
   const handleNumberChange = (num: string) => {
@@ -181,107 +172,79 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
   };
 
   const filtered = search
-    ? COUNTRY_CODES.filter(c =>
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.dial.includes(search) ||
-        c.code.toLowerCase().includes(search.toLowerCase())
+    ? COUNTRY_CODES.filter(
+        (country) =>
+          country.name.toLowerCase().includes(search.toLowerCase()) ||
+          country.dial.includes(search) ||
+          country.code.toLowerCase().includes(search.toLowerCase()),
       )
     : COUNTRY_CODES;
 
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <div className="flex">
-        {/* Country selector button */}
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 border-r-0 rounded-l-xl px-3 py-2 text-sm text-white hover:bg-white/15 transition-all shrink-0 touch-manipulation active:scale-[0.97] shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]"
-        >
-          <FlagImg src={selectedCountry.flag} alt={selectedCountry.name} size={24} />
-          <span className="text-xs font-semibold text-white/70 tracking-tight">{selectedCountry.dial}</span>
-          <ChevronDown className={cn("w-3 h-3 text-white/50 transition-transform duration-200", isOpen && "rotate-180")} />
-        </button>
-
-        {/* Phone number input */}
-        <input
-          type="tel"
-          name={name}
-          placeholder={selectedCountry.placeholder}
-          autoComplete="tel-national"
-          value={localNumber}
-          onChange={(e) => handleNumberChange(e.target.value)}
-          onBlur={onBlur}
-          className="w-full bg-white/10 backdrop-blur-sm border border-white/20 border-l-0 rounded-r-xl py-2 pr-4 pl-2 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]"
-        />
-      </div>
-      {/* Digit hint */}
-      <p className="text-[11px] text-white/50 mt-1 ml-1">
-        {selectedCountry.name} • {selectedCountry.digits}
-      </p>
-
-      {/* 3D Glassmorphism Dropdown */}
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {/* Full-screen opaque backdrop */}
-            <div className="fixed inset-0 z-[99] bg-black/70 backdrop-blur-sm" onClick={() => { setIsOpen(false); setSearch(""); }} />
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.96 }}
-              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] w-[calc(100vw-2rem)] max-w-sm max-h-[70vh] overflow-hidden rounded-2xl border border-white/20 shadow-2xl shadow-black/60"
-            >
-            <div className="relative bg-[#0a0f1a] overflow-hidden">
-              {/* Large background flag watermark */}
-              <div className="absolute -right-6 -top-6 w-44 h-44 opacity-[0.07] pointer-events-none select-none">
+  const dropdownContent = (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.button
+            type="button"
+            aria-label="Close country picker"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm"
+            onClick={closeDropdown}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.96 }}
+            transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+            className="fixed left-1/2 top-1/2 z-[121] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-white/20 bg-slate-950 shadow-2xl shadow-black/70"
+          >
+            <div className="relative overflow-hidden bg-slate-950">
+              <div className="absolute -right-6 -top-6 h-44 w-44 opacity-[0.07] pointer-events-none select-none">
                 <img
                   src={selectedCountry.flag}
                   alt=""
-                  className="w-full h-full object-cover rounded-3xl blur-[2px]"
+                  className="h-full w-full rounded-3xl object-cover blur-[2px]"
                   style={{ transform: "rotate(-15deg) scale(1.3)" }}
                 />
               </div>
 
-              {/* Search bar */}
-              <div className="p-2.5 border-b border-white/10 relative z-10">
+              <div className="relative z-10 border-b border-white/10 p-2.5">
                 <input
                   ref={searchRef}
                   type="text"
                   placeholder="Search country..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-white/10 border border-white/15 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-primary/40 backdrop-blur-sm"
+                  className="w-full rounded-xl border border-white/15 bg-white/10 px-3 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-primary/40 backdrop-blur-sm"
                 />
               </div>
 
-              {/* Country list */}
-              <div className="overflow-y-auto max-h-60 relative z-10">
-                {filtered.map((c, idx) => {
-                  const isSelected = selectedCountry.code === c.code && selectedCountry.dial === c.dial;
+              <div className="relative z-10 max-h-[65vh] overflow-y-auto overscroll-contain">
+                {filtered.map((country, idx) => {
+                  const isSelected = selectedCountry.code === country.code && selectedCountry.dial === country.dial;
+
                   return (
                     <motion.button
-                      key={`${c.code}-${c.dial}`}
+                      key={`${country.code}-${country.dial}`}
                       type="button"
-                      onClick={() => handleCountrySelect(c)}
+                      onClick={() => handleCountrySelect(country)}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: Math.min(idx * 0.012, 0.18), duration: 0.15 }}
                       className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-all touch-manipulation group relative overflow-hidden",
-                        isSelected
-                          ? "bg-primary/20 text-primary font-semibold"
-                          : "hover:bg-white/10 text-white/90"
+                        "relative flex w-full items-center gap-3 overflow-hidden px-3 py-2.5 text-sm transition-all touch-manipulation group",
+                        isSelected ? "bg-primary/20 text-primary font-semibold" : "text-white/90 hover:bg-white/10",
                       )}
                     >
-                      {/* Per-row background flag on hover */}
-                      <div className="absolute right-1 top-1/2 -translate-y-1/2 w-12 h-12 opacity-0 group-hover:opacity-[0.08] transition-opacity duration-200 pointer-events-none">
-                        <img src={c.flag} alt="" className="w-full h-full object-cover rounded-md" />
+                      <div className="absolute right-1 top-1/2 h-12 w-12 -translate-y-1/2 opacity-0 transition-opacity duration-200 pointer-events-none group-hover:opacity-[0.08]">
+                        <img src={country.flag} alt="" className="h-full w-full rounded-md object-cover" />
                       </div>
 
-                      {/* Flag image */}
-                      <div className="shrink-0 relative">
-                        <FlagImg src={c.flag} alt={c.name} size={26} />
+                      <div className="relative shrink-0">
+                        <FlagImg src={country.flag} alt={country.name} size={26} />
                         {isSelected && (
                           <motion.div
                             layoutId="phoneSelectedFlag"
@@ -291,29 +254,57 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
                         )}
                       </div>
 
-                      {/* Country code badge */}
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 w-6 shrink-0">{c.code}</span>
+                      <span className="w-6 shrink-0 text-[10px] font-bold uppercase tracking-widest text-white/40">{country.code}</span>
 
-                      {/* Name + digits hint */}
-                      <div className="flex-1 text-left min-w-0">
-                        <span className="block truncate">{c.name}</span>
-                        <span className="block text-[10px] text-white/40">{c.digits}</span>
+                      <div className="min-w-0 flex-1 text-left">
+                        <span className="block truncate">{country.name}</span>
+                        <span className="block text-[10px] text-white/40">{country.digits}</span>
                       </div>
 
-                      {/* Dial code */}
-                      <span className="text-xs text-white/60 font-mono tabular-nums">{c.dial}</span>
+                      <span className="text-xs font-mono tabular-nums text-white/60">{country.dial}</span>
                     </motion.button>
                   );
                 })}
-                {filtered.length === 0 && (
-                  <p className="px-3 py-6 text-sm text-white/50 text-center">No country found</p>
-                )}
+
+                {filtered.length === 0 && <p className="px-3 py-6 text-center text-sm text-white/50">No country found</p>}
               </div>
             </div>
           </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+        </>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+    <div className="relative" ref={rootRef}>
+      <div className="flex">
+        <button
+          type="button"
+          onClick={() => setIsOpen((open) => !open)}
+          className="flex shrink-0 items-center gap-2 rounded-l-xl border border-white/20 border-r-0 bg-white/10 px-3 py-2 text-sm text-white backdrop-blur-sm transition-all touch-manipulation active:scale-[0.97] hover:bg-white/15 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]"
+        >
+          <FlagImg src={selectedCountry.flag} alt={selectedCountry.name} size={24} />
+          <span className="text-xs font-semibold tracking-tight text-white/70">{selectedCountry.dial}</span>
+          <ChevronDown className={cn("h-3 w-3 text-white/50 transition-transform duration-200", isOpen && "rotate-180")} />
+        </button>
+
+        <input
+          type="tel"
+          name={name}
+          placeholder={selectedCountry.placeholder}
+          autoComplete="tel-national"
+          value={localNumber}
+          onChange={(e) => handleNumberChange(e.target.value)}
+          onBlur={onBlur}
+          className="w-full rounded-r-xl border border-white/20 border-l-0 bg-white/10 py-2 pl-2 pr-4 text-sm text-white placeholder:text-white/40 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all backdrop-blur-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]"
+        />
+      </div>
+
+      <p className="ml-1 mt-1 text-[11px] text-white/50">
+        {selectedCountry.name} • {selectedCountry.digits}
+      </p>
+
+      {typeof document !== "undefined" ? createPortal(dropdownContent, document.body) : null}
     </div>
   );
 }
