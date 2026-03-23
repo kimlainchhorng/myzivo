@@ -116,6 +116,7 @@ type ViewStep =
   | "driver-en-route"
   | "trip-in-progress"
   | "trip-complete"
+  | "aba-waiting"
   // legacy aliases kept for backward compatibility
   | "vehicle"
   | "pickup-confirm"
