@@ -94,14 +94,6 @@ function CambodiaPaymentSelector({
       iconColor: "text-amber-500",
       bgColor: "bg-amber-500/10",
     },
-    {
-      id: "aba" as CambodiaPaymentMethod,
-      label: "ABA Payway",
-      desc: "បង់តាម ABA · Pay via ABA bank app",
-      icon: Building2,
-      iconColor: "text-blue-600",
-      bgColor: "bg-blue-600/10",
-    },
   ];
 
   // Filter out cash if not allowed (international customers must pay by card)
