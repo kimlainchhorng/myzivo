@@ -167,7 +167,14 @@ serve(async (req) => {
         body: JSON.stringify({ search_id, marker: MARKER }),
       });
 
-      const resultsData = await resultsResponse.json();
+      const resultsText = await resultsResponse.text();
+      let resultsData: any;
+      try {
+        resultsData = JSON.parse(resultsText);
+      } catch {
+        console.warn(`[aviasales-search] Poll ${pollCount} non-JSON: ${resultsText.substring(0, 100)}`);
+        continue;
+      }
 
       if (resultsData.agents) {
         Object.assign(agents, resultsData.agents);
