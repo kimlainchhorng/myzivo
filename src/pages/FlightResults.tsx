@@ -24,6 +24,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import FlightResultsSkeleton from "@/components/flight/FlightResultsSkeleton";
 import { useDuffelFlightSearch, type DuffelOffer } from "@/hooks/useDuffelFlights";
 import { useTravelpayoutsPrices, type TravelpayoutsPrice } from "@/hooks/useTravelpayoutsPrices";
+import { getKiwiLink } from "@/config/affiliateLinks";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
@@ -1011,12 +1012,12 @@ const FlightResults = () => {
                         <div className="text-right shrink-0">
                           {bestTpPrice.price < lowestDuffelPrice ? (
                             <a
-                              href={`https://www.aviasales.com/search/${bestTpPrice.link}`}
+                              href={getKiwiLink(navigator.language)}
                               target="_blank"
                               rel="noopener noreferrer nofollow"
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-600 text-[11px] font-bold hover:bg-amber-500/25 transition-colors"
                             >
-                              View ${bestTpPrice.price}
+                              View on Kiwi ${bestTpPrice.price}
                               <ChevronRight className="w-3 h-3" />
                             </a>
                           ) : (
