@@ -2039,7 +2039,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         sessionStorage.setItem("aba_pending_ride_id", rideData.id);
         const form = document.createElement("form");
         form.method = "POST";
-        form.action = abaData.payment_url || "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase";
+        form.action = abaData.payment_url || "https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase";
         form.target = "_blank";
         for (const [key, value] of Object.entries(abaData.checkout_data)) {
           const input = document.createElement("input");
