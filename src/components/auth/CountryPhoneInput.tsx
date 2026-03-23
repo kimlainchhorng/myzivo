@@ -118,7 +118,7 @@ function FlagImg({ src, alt, size = 22 }: { src: string; alt: string; size?: num
     <img
       src={src}
       alt={alt}
-      className="rounded-[3px] object-cover shadow-sm border border-black/10"
+      className="rounded-[3px] object-cover shadow-sm border border-white/20"
       style={{ width: size, height: Math.round(size * 0.68) }}
       loading="lazy"
     />
@@ -195,11 +195,11 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 bg-muted border border-border border-r-0 rounded-l-xl px-3 py-3 text-sm text-foreground hover:bg-muted/80 transition-all shrink-0 touch-manipulation active:scale-[0.97]"
+          className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 border-r-0 rounded-l-xl px-3 py-2 text-sm text-white hover:bg-white/15 transition-all shrink-0 touch-manipulation active:scale-[0.97] shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]"
         >
           <FlagImg src={selectedCountry.flag} alt={selectedCountry.name} size={24} />
-          <span className="text-xs font-semibold text-muted-foreground tracking-tight">{selectedCountry.dial}</span>
-          <ChevronDown className={cn("w-3 h-3 text-muted-foreground transition-transform duration-200", isOpen && "rotate-180")} />
+          <span className="text-xs font-semibold text-white/70 tracking-tight">{selectedCountry.dial}</span>
+          <ChevronDown className={cn("w-3 h-3 text-white/50 transition-transform duration-200", isOpen && "rotate-180")} />
         </button>
 
         {/* Phone number input */}
@@ -211,11 +211,11 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
           value={localNumber}
           onChange={(e) => handleNumberChange(e.target.value)}
           onBlur={onBlur}
-          className="w-full bg-muted border border-border border-l-0 rounded-r-xl py-3 pr-4 pl-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
+          className="w-full bg-white/10 backdrop-blur-sm border border-white/20 border-l-0 rounded-r-xl py-2 pr-4 pl-2 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]"
         />
       </div>
       {/* Digit hint */}
-      <p className="text-[11px] text-muted-foreground mt-1 ml-1">
+      <p className="text-[11px] text-white/50 mt-1 ml-1">
         {selectedCountry.name} • {selectedCountry.digits}
       </p>
 
@@ -227,10 +227,10 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
             animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
             exit={{ opacity: 0, y: -6, scale: 0.96, rotateX: -5 }}
             transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-            className="absolute left-0 top-full mt-1.5 z-50 w-80 max-h-80 overflow-hidden rounded-2xl border border-border/50 shadow-2xl shadow-black/25"
+            className="absolute left-0 top-full mt-1.5 z-[100] w-80 max-h-80 overflow-hidden rounded-2xl border border-white/15 shadow-2xl shadow-black/40"
             style={{ perspective: "800px", transformOrigin: "top left" }}
           >
-            <div className="relative bg-card/92 backdrop-blur-2xl overflow-hidden">
+            <div className="relative bg-black/85 backdrop-blur-2xl overflow-hidden">
               {/* Large background flag watermark */}
               <div className="absolute -right-6 -top-6 w-44 h-44 opacity-[0.07] pointer-events-none select-none">
                 <img
@@ -242,14 +242,14 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
               </div>
 
               {/* Search bar */}
-              <div className="p-2.5 border-b border-border/40 relative z-10">
+              <div className="p-2.5 border-b border-white/10 relative z-10">
                 <input
                   ref={searchRef}
                   type="text"
                   placeholder="Search country..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-muted/50 border border-border/30 rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 backdrop-blur-sm"
+                  className="w-full bg-white/10 border border-white/15 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-primary/40 backdrop-blur-sm"
                 />
               </div>
 
@@ -268,8 +268,8 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
                       className={cn(
                         "w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-all touch-manipulation group relative overflow-hidden",
                         isSelected
-                          ? "bg-primary/12 text-primary font-semibold"
-                          : "hover:bg-muted/50 text-foreground"
+                          ? "bg-primary/20 text-primary font-semibold"
+                          : "hover:bg-white/10 text-white/90"
                       )}
                     >
                       {/* Per-row background flag on hover */}
@@ -290,21 +290,21 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
                       </div>
 
                       {/* Country code badge */}
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 w-6 shrink-0">{c.code}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 w-6 shrink-0">{c.code}</span>
 
                       {/* Name + digits hint */}
                       <div className="flex-1 text-left min-w-0">
                         <span className="block truncate">{c.name}</span>
-                        <span className="block text-[10px] text-muted-foreground/60">{c.digits}</span>
+                        <span className="block text-[10px] text-white/40">{c.digits}</span>
                       </div>
 
                       {/* Dial code */}
-                      <span className="text-xs text-muted-foreground font-mono tabular-nums">{c.dial}</span>
+                      <span className="text-xs text-white/60 font-mono tabular-nums">{c.dial}</span>
                     </motion.button>
                   );
                 })}
                 {filtered.length === 0 && (
-                  <p className="px-3 py-6 text-sm text-muted-foreground text-center">No country found</p>
+                  <p className="px-3 py-6 text-sm text-white/50 text-center">No country found</p>
                 )}
               </div>
             </div>
