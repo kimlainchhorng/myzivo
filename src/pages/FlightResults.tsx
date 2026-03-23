@@ -99,11 +99,14 @@ const FlightResults = () => {
   const cabinClass = (rawCabinClass === "premium" ? "premium_economy" : rawCabinClass) as 'economy' | 'premium_economy' | 'business' | 'first';
   const totalPassengers = adults + children + infants;
 
+  // Validate return date is after departure date to prevent API errors
+  const validReturnDate = returnDate && departureDate && returnDate > departureDate ? returnDate : undefined;
+
   const originAirport = getAirportByCode(origin);
   const destAirport = getAirportByCode(destination);
 
   const { data, isLoading, error, refetch } = useDuffelFlightSearch({
-    origin, destination, departureDate, returnDate,
+    origin, destination, departureDate, returnDate: validReturnDate,
     passengers: { adults, children, infants },
     cabinClass,
     enabled: !!origin && !!destination && !!departureDate,
@@ -114,7 +117,7 @@ const FlightResults = () => {
     origin,
     destination,
     departureDate,
-    returnDate,
+    returnDate: validReturnDate,
     enabled: !!origin && !!destination && !!departureDate,
   });
 
@@ -123,7 +126,7 @@ const FlightResults = () => {
     origin,
     destination,
     departureDate,
-    returnDate,
+    returnDate: validReturnDate,
     adults,
     children,
     infants,
@@ -135,7 +138,7 @@ const FlightResults = () => {
   const aviasalesMeta = aviasalesData?.meta;
 
   const offers = data?.offers || [];
-  const isRoundTrip = !!returnDate;
+  const isRoundTrip = !!validReturnDate;
 
   // Best prices for comparison
   const bestTpPrice = useMemo(() => {
