@@ -88,7 +88,7 @@ const LANGS = [
   { code: "id", label: "Bahasa Indonesia", cc: "id" },
 ];
 
-const getFlagUrl = (cc: string) => `https://flagcdn.com/w40/${cc}.png`;
+const getFlagUrl = (cc: string) => `https://hatscripts.github.io/circle-flags/flags/${cc}.svg`;
 
 const Profile = () => {
   const navigate = useNavigate();
