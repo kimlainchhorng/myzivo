@@ -310,6 +310,7 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
               </div>
             </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
