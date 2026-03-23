@@ -3562,7 +3562,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 }
               }}
             >
-              <Check className="w-4 h-4" />
+              <CheckCircle className="w-4 h-4" />
               បានបង់រួចហើយ / I've Paid
             </Button>
 
