@@ -116,6 +116,7 @@ type ViewStep =
   | "driver-en-route"
   | "trip-in-progress"
   | "trip-complete"
+  | "aba-waiting"
   // legacy aliases kept for backward compatibility
   | "vehicle"
   | "pickup-confirm"
@@ -874,6 +875,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setLocationPermission("prompt");
     }
   }, [isCambodiaCountry]);
+
 
   // Request GPS when user allows
   const handleAllowLocation = useCallback(() => {
@@ -1916,8 +1918,63 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     toast.success("Payment authorized! Finding your driver...");
   };
 
-  /** Handle non-card ride (cash or ABA) — creates ride request without Stripe */
-  const handleNonCardRide = async (method: "cash" | "aba") => {
+  /** Handle cash ride — creates ride request without Stripe, dispatches immediately */
+  const handleCashRide = async () => {
+    if (!user || !pickup || !destination) {
+      toast.error("Please sign in and select locations");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const stopsData = stops.filter(s => s.place).map((s, idx) => ({
+        order: idx + 1,
+        address: s.place!.address,
+        lat: s.place!.lat,
+        lng: s.place!.lng,
+      }));
+
+      const { data: rideData, error: rideError } = await supabase.from("ride_requests").insert({
+        user_id: user.id,
+        pickup_address: pickup.address,
+        pickup_lat: pickup.lat,
+        pickup_lng: pickup.lng,
+        dropoff_address: destination.address,
+        dropoff_lat: destination.lat,
+        dropoff_lng: destination.lng,
+        ride_type: selectedVehicle,
+        quoted_total: currentPrice,
+        distance_miles: routeData?.distance_miles ?? null,
+        duration_minutes: routeData?.duration_minutes ?? null,
+        status: "searching",
+        payment_status: "cash",
+        customer_name: otherName.trim() || user.user_metadata?.full_name || "",
+        customer_phone: otherPhone.trim() || user.user_metadata?.phone || "",
+        requires_car_seat: currentVehicle.carSeat,
+        car_seat_type: currentVehicle.carSeat ? "standard" : null,
+        notes: [
+          stopsData.length > 0 ? `Stops: ${stopsData.map(s => s.address).join(" → ")}` : "",
+          otherName.trim() ? `Rider: ${otherName.trim()}${otherPhone.trim() ? ` (${otherPhone.trim()})` : ""}` : "",
+          "Payment: Cash",
+        ].filter(Boolean).join(" | ") || null,
+      }).select("id").single();
+
+      if (rideError) throw rideError;
+      setRideRequestId(rideData.id);
+      setPaymentStep("idle");
+      setClientSecret(null);
+      setViewStep("searching");
+      toast.success("Cash ride confirmed! Finding your driver...");
+    } catch (err: unknown) {
+      console.error("[RideBooking] Cash ride error:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to book ride");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /** Handle ABA Payway ride — pay first, then dispatch */
+  const handleAbaRide = async () => {
     if (!user || !pickup || !destination) {
       toast.error("Please sign in and select locations");
       return;
@@ -1934,7 +1991,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         lng: s.place!.lng,
       }));
 
-      // Create ride request with non-card payment
+      // 1. Create ride request with pending_payment status
       const { data: rideData, error: rideError } = await supabase.from("ride_requests").insert({
         user_id: user.id,
         pickup_address: pickup.address,
@@ -1947,8 +2004,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         quoted_total: currentPrice,
         distance_miles: routeData?.distance_miles ?? null,
         duration_minutes: routeData?.duration_minutes ?? null,
-        status: "searching",
-        payment_status: method,
+        status: "pending_payment",
+        payment_status: "aba_pending",
         customer_name: otherName.trim() || user.user_metadata?.full_name || "",
         customer_phone: otherPhone.trim() || user.user_metadata?.phone || "",
         requires_car_seat: currentVehicle.carSeat,
@@ -1956,26 +2013,100 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         notes: [
           stopsData.length > 0 ? `Stops: ${stopsData.map(s => s.address).join(" → ")}` : "",
           otherName.trim() ? `Rider: ${otherName.trim()}${otherPhone.trim() ? ` (${otherPhone.trim()})` : ""}` : "",
-          method === "aba" ? "Payment: ABA Payway" : "Payment: Cash",
+          "Payment: ABA Payway",
         ].filter(Boolean).join(" | ") || null,
       }).select("id").single();
 
       if (rideError) throw rideError;
       setRideRequestId(rideData.id);
 
-      setPaymentStep("idle");
-      setClientSecret(null);
-      setViewStep("searching");
+      // 2. Call ABA Payway edge function to get checkout URL
+      const returnUrl = `${window.location.origin}/rides/hub?aba_payment=success&ride_id=${rideData.id}`;
+      const { data: abaData, error: abaError } = await supabase.functions.invoke("aba-payway-checkout", {
+        body: {
+          amount: finalPrice,
+          currency: "USD",
+          description: `ZIVO Ride - ${getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}`,
+          return_url: returnUrl,
+          reference: rideData.id,
+        },
+      });
 
-      const label = method === "aba" ? "ABA Payway" : "Cash";
-      toast.success(`${label} ride confirmed! Finding your driver...`);
+      if (abaError) throw abaError;
+
+      // 3. Redirect to ABA checkout
+      if (abaData?.payment_url) {
+        // Store ride ID for return handling
+        sessionStorage.setItem("aba_pending_ride_id", rideData.id);
+        import("@/lib/openExternalUrl").then(({ openExternalUrl: oe }) => oe(abaData.payment_url));
+        toast.info("Redirecting to ABA Payway checkout...");
+        setViewStep("aba-waiting");
+      } else if (abaData?.checkout_data) {
+        // Fallback: form POST to ABA
+        sessionStorage.setItem("aba_pending_ride_id", rideData.id);
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase";
+        form.target = "_blank";
+        for (const [key, value] of Object.entries(abaData.checkout_data)) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = String(value);
+          form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+        toast.info("ABA Payway checkout opened. Complete payment to confirm ride.");
+        setViewStep("aba-waiting");
+      } else {
+        // Cleanup failed ride
+        await supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideData.id);
+        toast.error("Could not create ABA payment link. Please try again.");
+      }
     } catch (err: unknown) {
-      console.error("[RideBooking] Non-card ride error:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to book ride");
+      console.error("[RideBooking] ABA ride error:", err);
+      toast.error(err instanceof Error ? err.message : "ABA payment failed");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  /** Handle ABA payment return — confirms the ride after payment */
+  const handleAbaPaymentReturn = useCallback(async (rideId: string) => {
+    try {
+      // Update ride to searching status
+      await supabase.from("ride_requests").update({
+        status: "searching",
+        payment_status: "aba_paid",
+      }).eq("id", rideId);
+
+      setRideRequestId(rideId);
+      setPaymentStep("idle");
+      setClientSecret(null);
+      setViewStep("searching");
+      sessionStorage.removeItem("aba_pending_ride_id");
+      toast.success("ABA payment confirmed! Finding your driver...");
+    } catch (err) {
+      console.error("[RideBooking] ABA return error:", err);
+      toast.error("Failed to confirm ride after payment");
+    }
+  }, []);
+
+  // Handle ABA Payway return URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const abaPayment = params.get("aba_payment");
+    const rideId = params.get("ride_id") || sessionStorage.getItem("aba_pending_ride_id");
+    if (abaPayment === "success" && rideId) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("aba_payment");
+      url.searchParams.delete("ride_id");
+      window.history.replaceState({}, "", url.pathname);
+      handleAbaPaymentReturn(rideId);
+    }
+  }, [handleAbaPaymentReturn]);
 
   /* ─── Reset state ─── */
   const handleReset = () => {
@@ -3376,11 +3507,80 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 onClearError={() => setPaymentStep("idle")}
                 isCambodia={useKm}
                 cashAllowed={cashAllowed}
-                onCashConfirm={() => handleNonCardRide("cash")}
-                onAbaConfirm={() => handleNonCardRide("aba")}
+                onCashConfirm={handleCashRide}
+                onAbaConfirm={handleAbaRide}
                 onBackToMethods={() => { setClientSecret(null); setPaymentStep("idle"); }}
               />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════ ABA WAITING — waiting for payment completion ═══════ */}
+      {viewStep === "aba-waiting" && (
+        <div
+          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] px-5 pt-4 pb-6"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, minHeight: 300 }}
+        >
+          <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
+
+          <div className="flex flex-col items-center justify-center gap-4 py-6">
+            {/* ABA icon */}
+            <div className="w-16 h-16 rounded-2xl bg-blue-600/10 flex items-center justify-center">
+              <Building2 className="w-8 h-8 text-blue-600" />
+            </div>
+
+            <div className="text-center space-y-1">
+              <h3 className="text-lg font-bold text-foreground">រង់ចាំការទូទាត់ / Waiting for Payment</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-[280px]">
+                សូមបញ្ចប់ការទូទាត់នៅក្នុង ABA app រួចត្រឡប់មកវិញ
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Complete payment in ABA app, then return here
+              </p>
+            </div>
+
+            {/* Animated waiting indicator */}
+            <div className="flex gap-2">
+              {[0, 1, 2].map((i) => (
+                <motion.span
+                  key={i}
+                  className="w-2.5 h-2.5 rounded-full bg-blue-600"
+                  animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3, ease: "easeInOut" }}
+                />
+              ))}
+            </div>
+
+            {/* Manual confirm button (in case return URL doesn't work) */}
+            <Button
+              className="w-full h-12 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 gap-2"
+              onClick={() => {
+                const pendingId = rideRequestId || sessionStorage.getItem("aba_pending_ride_id");
+                if (pendingId) {
+                  handleAbaPaymentReturn(pendingId);
+                }
+              }}
+            >
+              <CheckCircle className="w-4 h-4" />
+              បានបង់រួចហើយ / I've Paid
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive/80"
+              onClick={async () => {
+                if (rideRequestId) {
+                  await supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideRequestId);
+                }
+                sessionStorage.removeItem("aba_pending_ride_id");
+                handleReset();
+                toast.info("Ride cancelled");
+              }}
+            >
+              បោះបង់ / Cancel
+            </Button>
           </div>
         </div>
       )}
