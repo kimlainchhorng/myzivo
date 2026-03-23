@@ -224,7 +224,7 @@ const FlightResults = () => {
   const priceRange = useMemo(() => {
     if (offers.length === 0) return { min: 0, max: 2000 };
     const prices = offers.map((o) => o.price);
-    return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) };
+    return { min: Math.floor(getAllInPrice(Math.min(...prices))), max: Math.ceil(getAllInPrice(Math.max(...prices))) };
   }, [offers]);
 
   const maxDurationRange = useMemo(() => {
