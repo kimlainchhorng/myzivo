@@ -135,7 +135,9 @@ export default function VerifyPhonePage() {
           transition={{ type: "spring", damping: 20 }}
           className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5"
         >
-          {step === "phone" ? (
+          {step === "success" ? (
+            <CheckCircle2 className="w-8 h-8 text-green-500" />
+          ) : step === "phone" ? (
             <Smartphone className="w-8 h-8 text-primary" />
           ) : (
             <ShieldCheck className="w-8 h-8 text-primary" />
@@ -149,10 +151,12 @@ export default function VerifyPhonePage() {
           className="text-center space-y-2 mb-8"
         >
           <h2 className="text-xl font-bold text-foreground">
-            {step === "phone" ? "Verify Your Phone Number" : "Enter Verification Code"}
+            {step === "success" ? "Phone Verified!" : step === "phone" ? "Verify Your Phone Number" : "Enter Verification Code"}
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-            {step === "phone"
+            {step === "success"
+              ? "Your phone number has been verified. Redirecting you now…"
+              : step === "phone"
               ? "A verified phone number is required to use ZIVO. This ensures your account security."
               : `We sent a 6-digit code to ${phoneE164}`}
           </p>
