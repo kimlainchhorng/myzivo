@@ -3314,6 +3314,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 paymentFailed={paymentStep === "failed"}
                 onClearError={() => setPaymentStep("idle")}
                 isCambodia={useKm}
+                cashAllowed={cashAllowed}
+                onBackToMethods={() => { setClientSecret(null); setPaymentStep("idle"); }}
               />
             </div>
           </div>
