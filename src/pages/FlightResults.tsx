@@ -1107,8 +1107,6 @@ const FlightResults = () => {
                             destination,
                             departureDate,
                             returnDate: validReturnDate,
-                            adults: totalPassengers,
-                            cabinClass,
                           });
                           return (
                             <button
