@@ -5,9 +5,10 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock, ChevronRight, ArrowRight, Sunrise, Sun, Sunset, Moon, Check, CalendarDays, Users, Pencil } from "lucide-react";
+import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock, ChevronRight, ArrowRight, Sunrise, Sun, Sunset, Moon, Check, CalendarDays, Users, Pencil, ExternalLink, Star } from "lucide-react";
 import FlightSearchFormPro from "@/components/search/FlightSearchFormPro";
 import PriceAlertButton from "@/components/flight/PriceAlertButton";
+import { useAviasalesSearch, type AviasalesResult } from "@/hooks/useAviasalesSearch";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -24,7 +25,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import FlightResultsSkeleton from "@/components/flight/FlightResultsSkeleton";
 import { useDuffelFlightSearch, type DuffelOffer } from "@/hooks/useDuffelFlights";
 import { useTravelpayoutsPrices, type TravelpayoutsPrice } from "@/hooks/useTravelpayoutsPrices";
-import { getKiwiLink, buildKiwiDeepLink } from "@/config/affiliateLinks";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
