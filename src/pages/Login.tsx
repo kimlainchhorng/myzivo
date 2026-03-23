@@ -269,15 +269,15 @@ const Login = () => {
         <div className="absolute -bottom-1/3 -right-1/4 w-[60%] h-[60%] bg-gradient-to-tl from-[hsl(var(--flights))/0.1] to-transparent rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '1.5s' }} />
         <div className="absolute top-1/3 right-1/4 w-[30%] h-[30%] bg-gradient-to-bl from-[hsl(var(--hotels))/0.08] to-transparent rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '3s' }} />
       </div>
-      <div className="w-full max-w-md relative z-10 flex flex-col max-h-full">
+      <div className="w-full max-w-md relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-card/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl shadow-black/[0.08] p-5 sm:p-6 flex-1 min-h-0 overflow-hidden flex flex-col"
+          className="bg-card/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl shadow-black/[0.08] p-4 sm:p-5 flex flex-col"
         >
           {/* Header */}
-          <div className="text-center mb-4 relative">
+          <div className="text-center mb-3 relative">
             {/* Language toggle - top right */}
             <div className="absolute right-0 top-0">
               <div className="relative">
@@ -292,7 +292,6 @@ const Login = () => {
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
                     <div className="absolute right-0 top-10 z-50 bg-card/95 backdrop-blur-2xl border border-border/50 rounded-2xl shadow-2xl py-1 min-w-[200px] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-                      {/* Header with background flag watermark */}
                       <div className="relative px-3 py-2 border-b border-border/40 overflow-hidden">
                         {currentLangItem?.flag && (
                           <img src={currentLangItem.flag} alt="" className="absolute -right-3 -top-3 w-24 h-24 opacity-[0.07] pointer-events-none blur-[1px]" style={{ transform: "rotate(-12deg) scale(1.3)" }} />
@@ -309,7 +308,6 @@ const Login = () => {
                               currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/60"
                             )}
                           >
-                            {/* Hover background flag watermark */}
                             <img src={l.flag} alt="" className="absolute right-0 top-1/2 w-14 h-14 opacity-0 group-hover:opacity-[0.08] transition-opacity duration-300 pointer-events-none blur-[0.5px]" style={{ transform: "translateY(-50%) rotate(-8deg)" }} />
                             <img src={l.flag} alt={l.label} className="w-6 h-[17px] rounded-[3px] object-cover shadow-sm border border-black/10 shrink-0 relative z-10" />
                             <span className="relative z-10 flex-1 text-left">{l.label}</span>
@@ -323,43 +321,42 @@ const Login = () => {
                 )}
               </div>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
               ZIVO ID
             </h1>
             <motion.p 
               key={isLogin ? "login" : "signup"}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-muted-foreground mt-1 text-xs sm:text-sm"
+              className="text-muted-foreground mt-0.5 text-xs"
             >
               {isLogin ? t("auth.welcome_back") : t("auth.get_started")}
             </motion.p>
           </div>
 
           {/* Forms */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
           {isLogin ? (
             <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-3">
+              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-2.5">
                 <FormField
                   control={loginForm.control}
                   name="email"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.email")}</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.email")}</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                           <input
                             type="email"
                             placeholder="you@example.com"
                             autoComplete="email"
-                            className="w-full bg-muted border border-border rounded-xl py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
+                            className="w-full bg-muted border border-border rounded-xl py-2.5 pl-10 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
                             {...field}
                           />
                         </div>
                       </FormControl>
-                      <FormMessage className="text-destructive" />
+                      <FormMessage className="text-destructive text-xs" />
                     </FormItem>
                   )}
                 />
@@ -368,9 +365,9 @@ const Login = () => {
                   control={loginForm.control}
                   name="password"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.password")}</FormLabel>
+                        <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.password")}</FormLabel>
                         <Link
                           to="/forgot-password"
                           className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
@@ -380,24 +377,24 @@ const Login = () => {
                       </div>
                       <FormControl>
                         <div className="relative">
-                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                           <input
                             type="password"
                             placeholder="••••••••"
                             autoComplete="current-password"
-                            className="w-full bg-muted border border-border rounded-xl py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
+                            className="w-full bg-muted border border-border rounded-xl py-2.5 pl-10 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
                             {...field}
                           />
                         </div>
                       </FormControl>
-                      <FormMessage className="text-destructive" />
+                      <FormMessage className="text-destructive text-xs" />
                     </FormItem>
                   )}
                 />
 
                 <Button 
                   type="submit" 
-                  className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-4 touch-manipulation active:scale-[0.98] transition-all" 
+                  className="w-full h-10 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl touch-manipulation active:scale-[0.98] transition-all" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -405,7 +402,7 @@ const Login = () => {
                   ) : (
                     <>
                       {t("auth.sign_in")}
-                      <ArrowRight className="ml-2 h-5 w-5" />
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </>
                   )}
                 </Button>
@@ -413,26 +410,26 @@ const Login = () => {
             </Form>
           ) : (
             <Form {...signupForm}>
-              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-2.5">
-                <div className="grid grid-cols-2 gap-2.5">
+              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-1.5">
+                <div className="grid grid-cols-2 gap-2">
                   <FormField
                     control={signupForm.control}
                     name="firstName"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.first_name") || "First Name"}</FormLabel>
+                      <FormItem className="space-y-0.5">
+                        <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.first_name")}</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                             <input
                               placeholder="John"
                               autoComplete="given-name"
-                              className="w-full bg-muted border border-border rounded-xl py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
+                              className="w-full bg-muted border border-border rounded-xl py-2 pl-9 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
                               {...field}
                             />
                           </div>
                         </FormControl>
-                        <FormMessage className="text-destructive" />
+                        <FormMessage className="text-destructive text-xs" />
                       </FormItem>
                     )}
                   />
@@ -440,20 +437,20 @@ const Login = () => {
                     control={signupForm.control}
                     name="lastName"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.last_name") || "Last Name"}</FormLabel>
+                      <FormItem className="space-y-0.5">
+                        <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.last_name")}</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                             <input
                               placeholder="Doe"
                               autoComplete="family-name"
-                              className="w-full bg-muted border border-border rounded-xl py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
+                              className="w-full bg-muted border border-border rounded-xl py-2 pl-9 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
                               {...field}
                             />
                           </div>
                         </FormControl>
-                        <FormMessage className="text-destructive" />
+                        <FormMessage className="text-destructive text-xs" />
                       </FormItem>
                     )}
                   />
@@ -463,8 +460,8 @@ const Login = () => {
                   control={signupForm.control}
                   name="phone"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">Phone Number</FormLabel>
+                    <FormItem className="space-y-0.5">
+                      <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.phone")}</FormLabel>
                       <FormControl>
                         <CountryPhoneInput
                           value={field.value}
@@ -473,7 +470,7 @@ const Login = () => {
                           name={field.name}
                         />
                       </FormControl>
-                      <FormMessage className="text-destructive" />
+                      <FormMessage className="text-destructive text-xs" />
                     </FormItem>
                   )}
                 />
@@ -482,74 +479,75 @@ const Login = () => {
                   control={signupForm.control}
                   name="email"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.email")}</FormLabel>
+                    <FormItem className="space-y-0.5">
+                      <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.email")}</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                           <input
                             type="email"
                             placeholder="you@example.com"
                             autoComplete="email"
-                            className="w-full bg-muted border border-border rounded-xl py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
+                            className="w-full bg-muted border border-border rounded-xl py-2 pl-9 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
                             {...field}
                           />
                         </div>
                       </FormControl>
-                      <FormMessage className="text-destructive" />
+                      <FormMessage className="text-destructive text-xs" />
                     </FormItem>
                   )}
                 />
 
-                <FormField
-                  control={signupForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.password")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <input
-                            type="password"
-                            placeholder="••••••••"
-                            autoComplete="new-password"
-                            className="w-full bg-muted border border-border rounded-xl py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-destructive" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={signupForm.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.confirm_password")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <input
-                            type="password"
-                            placeholder="••••••••"
-                            autoComplete="new-password"
-                            className="w-full bg-muted border border-border rounded-xl py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-destructive" />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <FormField
+                    control={signupForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem className="space-y-0.5">
+                        <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.password")}</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                            <input
+                              type="password"
+                              placeholder="••••••••"
+                              autoComplete="new-password"
+                              className="w-full bg-muted border border-border rounded-xl py-2 pl-9 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage className="text-destructive text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={signupForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem className="space-y-0.5">
+                        <FormLabel className="text-muted-foreground text-xs font-medium">{t("auth.confirm_password")}</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                            <input
+                              type="password"
+                              placeholder="••••••••"
+                              autoComplete="new-password"
+                              className="w-full bg-muted border border-border rounded-xl py-2 pl-9 pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage className="text-destructive text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <Button 
                   type="submit" 
-                  className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-3 touch-manipulation active:scale-[0.98] transition-all" 
+                  className="w-full h-10 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl touch-manipulation active:scale-[0.98] transition-all" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -557,17 +555,16 @@ const Login = () => {
                   ) : (
                     <>
                       {t("auth.create_account")}
-                      <ArrowRight className="ml-2 h-5 w-5" />
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </>
                   )}
                 </Button>
               </form>
             </Form>
           )}
-          </div>{/* end scrollable forms wrapper */}
 
           {/* Divider */}
-          <div className="relative my-4">
+          <div className="relative my-3">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-border" />
             </div>
@@ -576,19 +573,19 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Social Login - 2 columns only */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Social Login */}
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               type="button"
               onClick={() => handleSocialLogin('google')}
               disabled={socialLoading !== null}
-              className="h-11 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50 text-sm"
+              className="h-10 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50 text-sm"
             >
               {socialLoading === 'google' ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -602,13 +599,13 @@ const Login = () => {
               type="button"
               onClick={() => handleSocialLogin('apple')}
               disabled={socialLoading !== null}
-              className="h-11 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 hover:border-border/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50 text-sm"
+              className="h-10 flex items-center justify-center bg-muted border border-border hover:bg-muted/80 text-foreground rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50 text-sm"
             >
               {socialLoading === 'apple' ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                   </svg>
                   Apple
@@ -617,8 +614,8 @@ const Login = () => {
             </button>
           </div>
 
-          {/* Trust badges */}
-          <div className="flex items-center justify-center gap-4 mt-3 text-muted-foreground text-[10px]">
+          {/* Trust + Toggle + Footer — all inside card */}
+          <div className="flex items-center justify-center gap-3 mt-2.5 text-muted-foreground text-[10px]">
             <div className="flex items-center gap-1">
               <Shield className="w-3 h-3" />
               <span>{t("auth.encrypted")}</span>
@@ -630,12 +627,11 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Toggle Mode */}
-          <div className="text-center mt-3">
+          <div className="text-center mt-2">
             <button
               type="button"
               onClick={toggleMode}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               {isLogin ? t("auth.no_account") + " " : t("auth.have_account") + " "}
               <span className="text-primary font-semibold">
@@ -643,20 +639,19 @@ const Login = () => {
               </span>
             </button>
           </div>
-        </motion.div>
 
-        <div className="flex flex-col items-center gap-2 mt-3 shrink-0">
-          <p className="text-center text-xs text-muted-foreground">
-            {isLogin ? t("auth.protected") : t("auth.terms_agree")}
-          </p>
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
-          >
-            <Home className="h-4 w-4" />
-            {t("auth.go_home")}
-          </button>
-        </div>
+          <div className="flex items-center justify-center gap-3 mt-2 text-[10px] text-muted-foreground">
+            <span>{isLogin ? t("auth.protected") : t("auth.terms_agree")}</span>
+            <span>•</span>
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-1 hover:text-foreground transition-colors"
+            >
+              <Home className="h-3 w-3" />
+              {t("auth.go_home")}
+            </button>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
