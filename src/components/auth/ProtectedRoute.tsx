@@ -1,29 +1,15 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
-import { usePhoneVerificationGate } from "@/hooks/usePhoneVerificationGate";
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
   requireAdmin?: boolean;
-  skipPhoneCheck?: boolean;
 };
 
-/** Routes where phone verification is NOT enforced */
-const PHONE_EXEMPT_ROUTES = [
-  "/verify-phone",
-  "/profile",
-  "/profile/delete-account",
-  "/account/security",
-  "/account/privacy",
-  "/account/notifications",
-];
-
-const ProtectedRoute = ({ children, requireAdmin = false, skipPhoneCheck = false }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
   const { user, isLoading, isAdmin } = useAuth();
   const location = useLocation();
-  const isExempt = skipPhoneCheck || PHONE_EXEMPT_ROUTES.some(r => location.pathname.startsWith(r));
-  const { isChecking: phoneChecking, isVerified: phoneVerified } = usePhoneVerificationGate(!isExempt);
 
   if (isLoading) {
     return (
@@ -50,20 +36,6 @@ const ProtectedRoute = ({ children, requireAdmin = false, skipPhoneCheck = false
         </div>
       </div>
     );
-  }
-
-  // Phone verification gate — redirect to /verify-phone if not verified
-  if (!isExempt) {
-    if (phoneChecking) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      );
-    }
-    if (!phoneVerified) {
-      return <Navigate to="/verify-phone" state={{ from: location }} replace />;
-    }
   }
 
   return <>{children}</>;
