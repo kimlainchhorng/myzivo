@@ -1071,43 +1071,35 @@ const FlightResults = () => {
                           </div>
                         )}
 
-                        {/* Kiwi.com — always show with link */}
+                        {/* Searadar — flight meta-search partner */}
                         {(() => {
-                          const kiwiLink = buildKiwiDeepLink({
-                            origin,
-                            destination,
-                            departureDate,
-                            returnDate,
-                          });
-                          // Find Kiwi price from aviasales results if available
-                          const kiwiResult = aviasalesResults.find(r => 
-                            r.allPrices.some(p => p.agentName.toLowerCase().includes('kiwi'))
-                          );
-                          const kiwiPrice = kiwiResult?.allPrices.find(p => p.agentName.toLowerCase().includes('kiwi'));
+                          const searadarLink = TRAVELPAYOUTS_DIRECT_LINKS.flights.primary;
+                          // Find best non-ZIVO price from travelpayouts cached data
+                          const tpBest = tpPrices.length > 0 ? tpPrices[0] : null;
                           
                           return (
                             <button
                               type="button"
-                              onClick={() => handlePartnerOpen(kiwiLink)}
-                              className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group"
+                              onClick={() => handlePartnerOpen(searadarLink)}
+                              className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group w-full text-left"
                             >
                               <div className="flex items-center gap-3 min-w-0">
                                 <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                  <span className="text-sm font-black text-primary">K</span>
+                                  <span className="text-sm font-black text-primary">S</span>
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-1.5">
-                                    <p className="text-sm font-bold text-foreground">Kiwi.com</p>
+                                    <p className="text-sm font-bold text-foreground">Searadar</p>
                                     <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                                   </div>
                                   <p className="text-[10px] text-muted-foreground">
-                                    {kiwiPrice ? "Live via Aviasales API" : "Partner link · price opens on partner site"}
+                                    {tpBest ? "Cached fare · 728 airlines" : "Partner link · 728 airlines"}
                                   </p>
                                 </div>
                               </div>
                               <div className="text-right shrink-0">
-                                {kiwiPrice ? (
-                                  <p className="text-lg font-bold text-foreground">${Math.round(kiwiPrice.price)}</p>
+                                {tpBest ? (
+                                  <p className="text-lg font-bold text-foreground">${Math.round(tpBest.price)}</p>
                                 ) : (
                                   <p className="text-xs font-semibold text-primary">View partner →</p>
                                 )}
