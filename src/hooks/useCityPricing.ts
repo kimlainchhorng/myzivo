@@ -103,6 +103,7 @@ export function useCityPricing(city?: string) {
       return pricingMap;
     },
     staleTime: 0,
+    gcTime: 0,
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
     refetchInterval: 30 * 1000,
