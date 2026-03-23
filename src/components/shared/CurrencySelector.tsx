@@ -68,38 +68,36 @@ const CurrencySelector = ({ variant = "dropdown", className }: CurrencySelectorP
           </Button>
         </PopoverTrigger>
         <PopoverContent 
-          className="w-56 p-1 bg-card/95 backdrop-blur-xl border-border/50 shadow-xl" 
+          className="w-56 p-1 bg-card/95 backdrop-blur-xl border-border/50 shadow-xl rounded-2xl overflow-hidden" 
           align="end"
           sideOffset={8}
         >
-          <ScrollArea className="max-h-72">
-            <div className="p-1">
-              {currencies.map((curr) => (
-                <button
-                  key={curr.code}
-                  onClick={() => {
-                    setCurrency(curr.code);
-                    setIsOpen(false);
-                  }}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors",
-                    currency === curr.code
-                      ? "bg-primary/10 text-primary"
-                      : "hover:bg-muted"
-                  )}
-                >
-                  <span className="text-lg">{curr.flag}</span>
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-sm">{curr.code}</p>
-                    <p className="text-xs text-muted-foreground">{curr.name}</p>
-                  </div>
-                  {currency === curr.code && (
-                    <Check className="w-4 h-4 text-primary" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </ScrollArea>
+          <div className="overflow-y-auto max-h-[360px] p-1">
+            {currencies.map((curr) => (
+              <button
+                key={curr.code}
+                onClick={() => {
+                  setCurrency(curr.code);
+                  setIsOpen(false);
+                }}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors",
+                  currency === curr.code
+                    ? "bg-primary/10 text-primary"
+                    : "hover:bg-muted"
+                )}
+              >
+                <span className="text-lg">{curr.flag}</span>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-sm">{curr.code}</p>
+                  <p className="text-xs text-muted-foreground">{curr.name}</p>
+                </div>
+                {currency === curr.code && (
+                  <Check className="w-4 h-4 text-primary" />
+                )}
+              </button>
+            ))}
+          </div>
         </PopoverContent>
       </Popover>
     );
