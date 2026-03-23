@@ -13,6 +13,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import trustAirlinesBg from "@/assets/trust-airlines-bg.jpg";
+import trustPartnersBg from "@/assets/trust-partners-bg.jpg";
+import trustPricesBg from "@/assets/trust-prices-bg.jpg";
+import trustSupportBg from "@/assets/trust-support-bg.jpg";
+
 /**
  * TRUST SECTION
  * Premium trust badges and value propositions
@@ -25,6 +30,9 @@ interface TrustPoint {
   icon: LucideIcon;
   title: string;
   description: string;
+  bg: string;
+  gradient: string;
+  iconRing: string;
 }
 
 const serviceContent: Record<ServiceType, {
@@ -39,22 +47,34 @@ const serviceContent: Record<ServiceType, {
       {
         icon: Search,
         title: "500+ Airlines",
-        description: "Search major carriers and budget airlines"
+        description: "Compare all major & low-cost carriers",
+        bg: trustAirlinesBg,
+        gradient: "from-sky-500/20 to-sky-300/10",
+        iconRing: "ring-sky-400/30",
       },
       {
         icon: CreditCard,
-        title: "No Booking Fees",
-        description: "We don't charge extra - you pay partner prices"
+        title: "Trusted Partners",
+        description: "Book through licensed travel partners",
+        bg: trustPartnersBg,
+        gradient: "from-teal-500/20 to-emerald-300/10",
+        iconRing: "ring-teal-400/30",
       },
       {
         icon: Zap,
         title: "Real-Time Prices",
-        description: "Live pricing from our travel partners"
+        description: "Live fares, always up to date",
+        bg: trustPricesBg,
+        gradient: "from-amber-500/20 to-yellow-300/10",
+        iconRing: "ring-amber-400/30",
       },
       {
-        icon: Shield,
-        title: "Secure Booking",
-        description: "Book directly with trusted airlines"
+        icon: Headphones,
+        title: "24/7 Support",
+        description: "Get help with your booking anytime",
+        bg: trustSupportBg,
+        gradient: "from-violet-500/20 to-purple-300/10",
+        iconRing: "ring-violet-400/30",
       },
     ],
   },
@@ -65,22 +85,34 @@ const serviceContent: Record<ServiceType, {
       {
         icon: Search,
         title: "Compare Sites",
-        description: "Booking.com, Hotels.com & more in one search"
+        description: "Booking.com, Hotels.com & more in one search",
+        bg: trustAirlinesBg,
+        gradient: "from-sky-500/20 to-sky-300/10",
+        iconRing: "ring-sky-400/30",
       },
       {
         icon: RefreshCw,
         title: "Free Cancellation",
-        description: "Flexible booking options available"
+        description: "Flexible booking options available",
+        bg: trustPartnersBg,
+        gradient: "from-teal-500/20 to-emerald-300/10",
+        iconRing: "ring-teal-400/30",
       },
       {
         icon: BadgeCheck,
         title: "Verified Reviews",
-        description: "Real guest reviews from trusted sources"
+        description: "Real guest reviews from trusted sources",
+        bg: trustPricesBg,
+        gradient: "from-amber-500/20 to-yellow-300/10",
+        iconRing: "ring-amber-400/30",
       },
       {
         icon: Headphones,
         title: "Partner Support",
-        description: "Customer service from booking partners"
+        description: "Customer service from booking partners",
+        bg: trustSupportBg,
+        gradient: "from-violet-500/20 to-purple-300/10",
+        iconRing: "ring-violet-400/30",
       },
     ],
   },
@@ -91,22 +123,34 @@ const serviceContent: Record<ServiceType, {
       {
         icon: Search,
         title: "Compare Providers",
-        description: "Hertz, Avis, Enterprise & more"
+        description: "Hertz, Avis, Enterprise & more",
+        bg: trustAirlinesBg,
+        gradient: "from-sky-500/20 to-sky-300/10",
+        iconRing: "ring-sky-400/30",
       },
       {
         icon: CreditCard,
         title: "No Hidden Fees",
-        description: "Transparent pricing shown upfront"
+        description: "Transparent pricing shown upfront",
+        bg: trustPartnersBg,
+        gradient: "from-teal-500/20 to-emerald-300/10",
+        iconRing: "ring-teal-400/30",
       },
       {
         icon: Clock,
         title: "24/7 Pickup",
-        description: "Airport and city locations"
+        description: "Airport and city locations",
+        bg: trustPricesBg,
+        gradient: "from-amber-500/20 to-yellow-300/10",
+        iconRing: "ring-amber-400/30",
       },
       {
         icon: Shield,
         title: "Insurance Options",
-        description: "Full protection plans available"
+        description: "Full protection plans available",
+        bg: trustSupportBg,
+        gradient: "from-violet-500/20 to-purple-300/10",
+        iconRing: "ring-violet-400/30",
       },
     ],
   },
@@ -127,24 +171,6 @@ interface TrustSectionProps {
 export default function TrustSection({ service, className = '' }: TrustSectionProps) {
   const content = serviceContent[service];
   
-  const accentClasses = {
-    iconBg: {
-      sky: "bg-sky-500/10",
-      amber: "bg-amber-500/10",
-      violet: "bg-violet-500/10",
-    }[content.accentColor],
-    iconColor: {
-      sky: "text-sky-500",
-      amber: "text-amber-500",
-      violet: "text-violet-500",
-    }[content.accentColor],
-    borderColor: {
-      sky: "border-sky-500/20",
-      amber: "border-amber-500/20",
-      violet: "border-violet-500/20",
-    }[content.accentColor],
-  };
-
   return (
     <section className={cn("py-12 sm:py-16", className)}>
       <div className="container mx-auto px-4">
@@ -159,16 +185,19 @@ export default function TrustSection({ service, className = '' }: TrustSectionPr
             <div 
               key={point.title}
               className={cn(
-                "p-5 sm:p-6 rounded-2xl bg-card border",
-                accentClasses.borderColor,
-                "transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+                "relative p-5 sm:p-6 rounded-2xl bg-card border border-border/30 overflow-hidden",
+                "transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02]",
+                "group"
               )}
             >
+              {/* Icon with photographic background */}
               <div className={cn(
-                "w-12 h-12 rounded-xl flex items-center justify-center mb-4",
-                accentClasses.iconBg
+                "relative w-12 h-12 rounded-xl flex items-center justify-center mb-4 overflow-hidden ring-1 shadow-md transition-transform duration-300 group-hover:scale-110",
+                point.iconRing
               )}>
-                <point.icon className={cn("w-6 h-6", accentClasses.iconColor)} />
+                <img src={point.bg} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                <div className={cn("absolute inset-0 bg-gradient-to-br", point.gradient)} />
+                <point.icon className="w-6 h-6 relative z-10 text-foreground drop-shadow-sm" />
               </div>
               <h3 className="font-bold text-sm sm:text-base mb-1">{point.title}</h3>
               <p className="text-xs sm:text-sm text-muted-foreground">
