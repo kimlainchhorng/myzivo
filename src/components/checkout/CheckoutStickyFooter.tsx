@@ -33,7 +33,7 @@ export default function CheckoutStickyFooter({
 }: CheckoutStickyFooterProps) {
   return (
     <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 md:hidden",
+      "fixed bottom-0 left-0 right-0 z-50 lg:hidden",
       "bg-background/95 backdrop-blur-xl border-t border-border/50",
       "safe-bottom",
       className
