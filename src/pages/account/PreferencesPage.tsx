@@ -180,19 +180,28 @@ const PreferencesPage = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: 0.25 + i * 0.02 }}
                     onClick={() => handleLanguageChange(lang.code)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.98] ${
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.98] relative overflow-hidden group ${
                       currentLanguage === lang.code
                         ? "bg-primary/10 text-primary shadow-[0_0_12px_hsl(var(--primary)/0.1)] ring-1 ring-primary/20"
                         : "hover:bg-muted/60 hover:shadow-md"
                     }`}
                   >
-                    <span className="text-xl">{lang.flag_emoji}</span>
-                    <div className="flex-1 text-left">
+                    {/* Hover background flag watermark */}
+                    {lang.flag_svg && (
+                      <img src={lang.flag_svg} alt="" className="absolute right-1 top-1/2 w-20 h-20 opacity-0 group-hover:opacity-[0.08] transition-opacity duration-300 pointer-events-none blur-[0.5px]" style={{ transform: "translateY(-50%) rotate(-8deg)" }} />
+                    )}
+                    {lang.flag_svg ? (
+                      <img src={lang.flag_svg} alt={lang.name} className="w-7 h-[19px] rounded-[3px] object-cover shadow-sm border border-black/10 shrink-0 relative z-10" />
+                    ) : (
+                      <span className="text-xl">{lang.flag_emoji}</span>
+                    )}
+                    <div className="flex-1 text-left relative z-10">
                       <p className="font-medium text-sm">{lang.name}</p>
                       <p className="text-xs text-muted-foreground">{lang.native_name}</p>
                     </div>
+                    <span className="text-[10px] font-mono text-muted-foreground/60 uppercase relative z-10">{lang.code}</span>
                     {currentLanguage === lang.code && (
-                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500 }}>
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500 }} className="relative z-10">
                         <Check className="w-4 h-4 text-primary" />
                       </motion.div>
                     )}
