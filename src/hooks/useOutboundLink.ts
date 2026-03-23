@@ -18,6 +18,7 @@ import {
   ESIM_PARTNERS,
   LUGGAGE_PARTNERS,
   COMPENSATION_PARTNERS,
+  getKiwiLink,
 } from '@/config/affiliateLinks';
 
 type ServiceType = 'flights' | 'hotels' | 'cars' | 'transfers' | 'activities' | 'esim' | 'luggage' | 'compensation' | 'extras';
@@ -225,6 +226,18 @@ export const EXTRAS_LINKS = {
     name: 'Compensair',
     url: 'https://compensair.tpo.li/npsp8pm0',
     product: 'compensation',
+  },
+  kiwiFlights: {
+    id: 'kiwi',
+    name: 'Kiwi.com',
+    url: 'https://kiwi.tpo.li/86fSRBiW',
+    product: 'flights',
+  },
+  hotelsTpo: {
+    id: 'hotels-tpo',
+    name: 'Hotels',
+    url: 'https://hotels.tpo.li/mszBRRYU',
+    product: 'hotels',
   },
 } as const;
 
