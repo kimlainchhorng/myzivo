@@ -123,19 +123,14 @@ export function buildKiwiDeepLink(params: {
   returnDate?: string;
   locale?: string;
 }): string {
-  const { origin, destination, departureDate, returnDate } = params;
-
-  // Build a standard Kiwi.com search URL (not /deep or /searchDeep which get ERR_BLOCKED_BY_RESPONSE)
-  // Format: /en/search/timetable/JFK/LAX/2026-03-27/2026-03-31
-  let kiwiPath = `/en/search/timetable/${origin}/${destination}`;
-  if (departureDate) kiwiPath += `/${departureDate}`;
-  if (returnDate) kiwiPath += `/${returnDate}`;
-
-  const kiwiUrl = `https://www.kiwi.com${kiwiPath}`;
+  // Kiwi blocks prefilled deep/search result URLs in some browser contexts,
+  // so use the locale homepage as a reliable fallback destination.
+  const localeKey = params.locale?.toLowerCase().split('-')[0] || 'en';
+  const localeSegment = localeKey === 'us' ? 'us' : localeKey;
+  const kiwiUrl = `https://www.kiwi.com/${localeSegment}/`;
   const encodedKiwiUrl = encodeURIComponent(kiwiUrl);
 
-  const langKey = params.locale?.toLowerCase().split('-')[0] || 'en';
-  const promoId = KIWI_PROMO_IDS[langKey] || 3791;
+  const promoId = KIWI_PROMO_IDS[localeKey] || 3791;
 
   return `https://c111.travelpayouts.com/click?shmarker=700031.kiwi_flights&promo_id=${promoId}&source_type=customlink&type=click&custom_url=${encodedKiwiUrl}`;
 }
