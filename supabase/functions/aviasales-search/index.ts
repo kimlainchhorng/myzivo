@@ -102,7 +102,7 @@ serve(async (req) => {
 
     const clientIp = user_ip || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '1.1.1.1';
 
-    console.log(`[aviasales-search] Starting search: ${origin} → ${destination}, depart: ${depart_date}, cabin: ${tripClass}, ip: ${clientIp}`);
+    console.log(`[aviasales-search] Starting search: ${origin} → ${destination}, depart: ${depart_date}, cabin: ${tripClass}, ip: ${clientIp}, marker: ${MARKER}`);
 
     // Step 1: Start search
     const startResponse = await fetch(SEARCH_START_URL, {
@@ -112,13 +112,24 @@ serve(async (req) => {
         'x-real-host': 'hizovo.com',
         'x-user-ip': clientIp,
         'x-signature': signature,
-        'x-affiliate-user-id': TOKEN,
+        'x-affiliate-user-id': MARKER,
         'x-marker': MARKER,
       },
       body: JSON.stringify(requestBody),
     });
 
-    const startData = await startResponse.json();
+    // Handle non-JSON responses (API may return plain text errors)
+    const startText = await startResponse.text();
+    let startData: any;
+    try {
+      startData = JSON.parse(startText);
+    } catch {
+      console.error(`[aviasales-search] Non-JSON response (${startResponse.status}): ${startText.substring(0, 200)}`);
+      return new Response(
+        JSON.stringify({ success: false, error: `API returned non-JSON: ${startText.substring(0, 100)}` }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!startResponse.ok || !startData.search_id) {
       console.error('[aviasales-search] Start failed:', JSON.stringify(startData));
