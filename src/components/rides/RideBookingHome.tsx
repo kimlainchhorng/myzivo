@@ -3091,6 +3091,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             {filteredVehiclesByCategory.map((v, index) => {
               const isSelected = selectedVehicle === v.id;
               const price = calcPrice(v, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0);
+              const rawPrice = (() => {
+                const raw = (v.basePrice + v.pricePerMile * (routeData?.distance_miles ?? 0) + v.perMinute * (routeData?.duration_minutes ?? 0)) * 1.0 * v.surgeMultiplier;
+                return raw + v.bookingFee;
+              })();
+              const isMinFareApplied = rawPrice < v.minimumFare;
               const isDiscount = v.surgeMultiplier < 1;
               const originalPrice = isDiscount ? calcPrice({ ...v, surgeMultiplier: 1.0 }, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0) : null;
 
@@ -3217,6 +3222,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       </>
                     ) : (
                       <span className="text-[15px] font-bold text-foreground">${price.toFixed(2)}</span>
+                    )}
+                    {isMinFareApplied && (
+                      <span className="text-[9px] text-amber-500 dark:text-amber-400 font-medium">
+                        {t("ride.minimum_fare_applied")}
+                      </span>
                     )}
                     {isSelected && (
                       <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
