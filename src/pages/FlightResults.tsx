@@ -385,7 +385,7 @@ const FlightResults = () => {
 
   const lowestPrice = useMemo(() => {
     if (filtered.length === 0) return 0;
-    return Math.round(Math.min(...filtered.map(o => o.price)));
+    return Math.round(getAllInPrice(Math.min(...filtered.map(o => o.price))));
   }, [filtered]);
 
   const pendingFiltered = useMemo(() => applyFilters(pendingFilters, offers), [offers, pendingFilters]);
@@ -1061,7 +1061,7 @@ const FlightResults = () => {
                             </div>
                             <div className="text-right shrink-0">
                               <p className="text-lg font-bold text-[hsl(var(--flights))]">
-                                ${Math.round(lowestDuffelPrice)}
+                                ${Math.round(getAllInPrice(lowestDuffelPrice))}
                               </p>
                             </div>
                           </div>
