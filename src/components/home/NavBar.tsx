@@ -344,7 +344,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 </div>
               </nav>
 
-              {/* Right: Auth — 3D elevated */}
+              {/* Right: Language, Currency, Auth */}
               <div className="hidden md:flex items-center gap-2" style={{ transformStyle: "preserve-3d" }}>
                 {user ? (
                   <DropdownMenu>
