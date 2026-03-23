@@ -3492,8 +3492,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 onClearError={() => setPaymentStep("idle")}
                 isCambodia={useKm}
                 cashAllowed={cashAllowed}
-                onCashConfirm={() => handleNonCardRide("cash")}
-                onAbaConfirm={() => handleNonCardRide("aba")}
+                onCashConfirm={handleCashRide}
+                onAbaConfirm={handleAbaRide}
                 onBackToMethods={() => { setClientSecret(null); setPaymentStep("idle"); }}
               />
             </div>
