@@ -2020,33 +2020,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       if (rideError) throw rideError;
       setRideRequestId(rideData.id);
 
-      // 2. Call ABA Payway edge function to get deep link
-      const returnUrl = `${window.location.origin}/rides/hub?aba_payment=success&ride_id=${rideData.id}`;
-      const { data: abaData, error: abaError } = await supabase.functions.invoke("aba-payway-checkout", {
-        body: {
-          amount: finalPrice,
-          currency: "USD",
-          description: `ZIVO Ride - ${getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}`,
-          return_url: returnUrl,
-          reference: rideData.id,
-        },
-      });
-
-      if (abaError) throw abaError;
-
-      // 3. Open ABA app via deep link
-      if (abaData?.abapay_deeplink) {
-        sessionStorage.setItem("aba_pending_ride_id", rideData.id);
-        // Open ABA app deep link
-        window.location.href = abaData.abapay_deeplink;
-        toast.info("Opening ABA app for payment...");
-        setViewStep("aba-waiting");
-      } else {
-        console.error("[ABA] No deep link in response:", abaData);
-        // Cleanup failed ride
-        await supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideData.id);
-        toast.error("Could not create ABA payment. Please try again.");
-      }
+      // 2. Show KHQR code for customer to scan
+      sessionStorage.setItem("aba_pending_ride_id", rideData.id);
+      setViewStep("aba-waiting");
+      toast.info("Scan the QR code to pay via ABA");
     } catch (err: unknown) {
       console.error("[RideBooking] ABA ride error:", err);
       toast.error(err instanceof Error ? err.message : "ABA payment failed");
