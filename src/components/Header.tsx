@@ -133,11 +133,13 @@ const Header = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="gap-1.5 px-2 h-8 text-muted-foreground hover:text-foreground"
+                    className="relative gap-1.5 px-3 h-9 text-white font-bold rounded-2xl overflow-hidden shadow-lg shadow-indigo-500/20 ring-1 ring-indigo-400/30 transition-all duration-300 hover:scale-[1.06] hover:shadow-xl active:scale-[0.97]"
                   >
-                    <Globe className="w-3.5 h-3.5" />
-                    <span className="text-xs font-medium">{currentLangData?.flag_emoji || "🌐"} {currentLanguage.toUpperCase()}</span>
-                    <ChevronDown className={cn("w-3 h-3 transition-transform duration-200", isLangOpen && "rotate-180")} />
+                    <img src={svcFlights} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-700/80 to-violet-500/70" />
+                    <Globe className="w-3.5 h-3.5 relative z-10 drop-shadow-md" />
+                    <span className="text-xs font-bold relative z-10 drop-shadow-md">{currentLangData?.flag_emoji || "🌐"} {currentLanguage.toUpperCase()}</span>
+                    <ChevronDown className={cn("w-3 h-3 transition-transform duration-200 relative z-10 drop-shadow-md", isLangOpen && "rotate-180")} />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-64 p-0 bg-card/95 backdrop-blur-xl border-border/50 shadow-xl rounded-2xl overflow-hidden" align="end" sideOffset={8}>
