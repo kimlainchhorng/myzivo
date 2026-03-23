@@ -407,6 +407,7 @@ export default function RidePaymentSection({
   isCambodia = false,
   cashAllowed = true,
   onCashConfirm,
+  onAbaConfirm,
   onBackToMethods,
 }: RidePaymentSectionProps) {
   const { user, isLoading: authLoading } = useAuth();
