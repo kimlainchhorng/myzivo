@@ -1,5 +1,8 @@
 /**
  * useCityPricing — Fetch ride pricing from admin-configured city_pricing table
+ * 
+ * Cambodia pricing is stored in KHR and auto-converted to USD for the fare engine.
+ * Cambodia-specific ride types (tuktuk, moto) map to frontend vehicle IDs (economy, share).
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,11 +31,34 @@ const DB_TO_VEHICLE_ID: Record<string, string> = {
   luxury_xl: "luxury-xl",
   pet: "pet",
   wheelchair: "wheelchair",
-  tuktuk: "tuktuk",
-  tuktuk_ev: "tuktuk-ev",
-  moto: "moto",
+  // Cambodia-specific: tuktuk IS the economy vehicle, moto IS share
+  tuktuk: "economy",
+  tuktuk_ev: "share",
+  moto: "share",
   share_xl: "share-xl",
 };
+
+// Cambodia cities where pricing is stored in KHR (Riel)
+const KHR_CITIES = ["phnom penh", "siem reap", "sihanoukville", "battambang"];
+const KHR_RATE = 4062.5;
+
+/** Check if a city stores pricing in KHR */
+function isCambodiaCity(city: string): boolean {
+  return KHR_CITIES.includes(city.toLowerCase());
+}
+
+/** Convert a KHR pricing row to USD for the fare engine */
+function convertKhrToUsd(row: CityPricingRow): CityPricingRow {
+  return {
+    ...row,
+    base_fare: row.base_fare / KHR_RATE,
+    // per_mile in DB is actually per-km in KHR → convert to per-mile USD
+    per_mile: (row.per_mile / KHR_RATE) * 1.60934,
+    per_minute: row.per_minute / KHR_RATE,
+    booking_fee: row.booking_fee / KHR_RATE,
+    minimum_fare: row.minimum_fare / KHR_RATE,
+  };
+}
 
 export function useCityPricing(city?: string) {
   return useQuery({
@@ -52,7 +78,7 @@ export function useCityPricing(city?: string) {
       // Priority: city-specific > default
       const pricingMap: Record<string, CityPricingRow> = {};
       
-      // First, apply defaults
+      // First, apply defaults (stored in USD)
       for (const row of rows) {
         if (row.city === "default") {
           const vehicleId = DB_TO_VEHICLE_ID[row.ride_type];
@@ -65,7 +91,11 @@ export function useCityPricing(city?: string) {
         for (const row of rows) {
           if (row.city?.toLowerCase() === city.toLowerCase()) {
             const vehicleId = DB_TO_VEHICLE_ID[row.ride_type];
-            if (vehicleId) pricingMap[vehicleId] = row;
+            if (!vehicleId) continue;
+            
+            // Cambodia cities store KHR values → convert to USD for fare engine
+            const converted = isCambodiaCity(row.city) ? convertKhrToUsd(row) : row;
+            pricingMap[vehicleId] = converted;
           }
         }
       }
