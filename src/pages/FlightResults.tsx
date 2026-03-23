@@ -9,6 +9,7 @@ import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage
 import FlightSearchFormPro from "@/components/search/FlightSearchFormPro";
 import PriceAlertButton from "@/components/flight/PriceAlertButton";
 import { useAviasalesSearch, type AviasalesResult } from "@/hooks/useAviasalesSearch";
+import zivoLogoPng from "@/assets/zivo-logo.png";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -1040,9 +1041,7 @@ const FlightResults = () => {
                         {lowestDuffelPrice && (
                           <div className="flex items-center justify-between gap-3 px-4 py-3 bg-[hsl(var(--flights)/0.04)]">
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-9 h-9 rounded-lg bg-[hsl(var(--flights)/0.12)] flex items-center justify-center shrink-0">
-                                <Plane className="w-4.5 h-4.5 text-[hsl(var(--flights))]" />
-                              </div>
+                              <img src={zivoLogoPng} alt="ZIVO" className="w-9 h-9 rounded-lg object-contain shrink-0" />
                               <div>
                                 <div className="flex items-center gap-1.5">
                                   <p className="text-sm font-bold text-foreground">ZIVO</p>
