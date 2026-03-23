@@ -87,6 +87,10 @@ const DesktopHomePage = () => {
 const Index = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Only check phone verification for logged-in users
+  const { isChecking: phoneChecking, isVerified: phoneVerified } = usePhoneVerificationGate(!!user);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -107,6 +111,22 @@ const Index = () => {
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
+
+  // Redirect logged-in users without verified phone
+  useEffect(() => {
+    if (user && !phoneChecking && !phoneVerified) {
+      navigate("/verify-phone", { replace: true });
+    }
+  }, [user, phoneChecking, phoneVerified, navigate]);
+
+  // Show loading while checking phone status for logged-in users
+  if (user && phoneChecking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (isMobile) {
     if (user) {
