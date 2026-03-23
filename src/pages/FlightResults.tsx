@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import FlightResultsSkeleton from "@/components/flight/FlightResultsSkeleton";
 import { useDuffelFlightSearch, type DuffelOffer } from "@/hooks/useDuffelFlights";
+import { useTravelpayoutsPrices, type TravelpayoutsPrice } from "@/hooks/useTravelpayoutsPrices";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
@@ -106,8 +107,29 @@ const FlightResults = () => {
     enabled: !!origin && !!destination && !!departureDate,
   });
 
+  // Travelpayouts price comparison (runs in parallel, non-blocking)
+  const { data: tpPrices = [] } = useTravelpayoutsPrices({
+    origin,
+    destination,
+    departureDate,
+    returnDate,
+    enabled: !!origin && !!destination && !!departureDate,
+  });
+
   const offers = data?.offers || [];
   const isRoundTrip = !!returnDate;
+
+  // Best Travelpayouts price for this route
+  const bestTpPrice = useMemo(() => {
+    if (!tpPrices.length) return null;
+    return tpPrices.reduce((best, p) => (p.price < best.price ? p : best), tpPrices[0]);
+  }, [tpPrices]);
+
+  // Lowest Duffel price for comparison
+  const lowestDuffelPrice = useMemo(() => {
+    if (!offers.length) return null;
+    return Math.min(...offers.map((o) => o.price));
+  }, [offers]);
 
   // Group offers by outbound leg for step-by-step selection
   const outboundGroups = useMemo(() => {
@@ -957,6 +979,56 @@ const FlightResults = () => {
                     <Button variant="outline" size="sm" onClick={clearFilters}>Clear Filters</Button>
                   </CardContent>
                 </Card>
+              )}
+
+              {/* Travelpayouts Price Comparison Banner */}
+              {!isLoading && !error && offers.length > 0 && bestTpPrice && lowestDuffelPrice && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mb-3"
+                >
+                  <Card className="border-amber-500/20 bg-gradient-to-r from-amber-500/5 via-amber-500/8 to-amber-500/5 overflow-hidden">
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+                            <svg className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L15 8.5L22 9.5L17 14.5L18 21.5L12 18L6 21.5L7 14.5L2 9.5L9 8.5Z"/></svg>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-foreground">
+                              Price Comparison
+                            </p>
+                            <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">
+                              {bestTpPrice.price < lowestDuffelPrice
+                                ? `Found $${bestTpPrice.price} on partner sites (${bestTpPrice.transfers === 0 ? 'direct' : `${bestTpPrice.transfers} stop${bestTpPrice.transfers > 1 ? 's' : ''}`})`
+                                : `ZIVO has the best price — $${Math.round(lowestDuffelPrice)} vs $${bestTpPrice.price} on partner sites`
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          {bestTpPrice.price < lowestDuffelPrice ? (
+                            <a
+                              href={`https://www.aviasales.com/search/${bestTpPrice.link}`}
+                              target="_blank"
+                              rel="noopener noreferrer nofollow"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-600 text-[11px] font-bold hover:bg-amber-500/25 transition-colors"
+                            >
+                              View ${bestTpPrice.price}
+                              <ChevronRight className="w-3 h-3" />
+                            </a>
+                          ) : (
+                            <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/20 text-[10px]">
+                              Best price here ✓
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               )}
 
               {/* Step indicator for round-trip */}
