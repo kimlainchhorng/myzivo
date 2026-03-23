@@ -717,6 +717,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [nearbyDriverCount, setNearbyDriverCount] = useState(0);
+  const [searchPhase, setSearchPhase] = useState<"dispatching" | "expanding" | "waiting_response" | "retrying">("dispatching");
+  const [searchElapsed, setSearchElapsed] = useState(0);
+  const searchStartRef = useRef<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [promoInput, setPromoInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; description: string } | null>(null);
@@ -972,6 +975,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     let jobId: string | null = null;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
+    // Reset search phase & elapsed timer
+    setSearchPhase("dispatching");
+    setSearchElapsed(0);
+    searchStartRef.current = Date.now();
+    const elapsedTimer = setInterval(() => {
+      setSearchElapsed(Math.floor((Date.now() - searchStartRef.current) / 1000));
+    }, 1000);
+
     const dispatchRide = async () => {
       if (!pickup || !destination || !user) return;
 
@@ -1081,6 +1092,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         .subscribe();
 
       // 3. Call dispatch-start edge function to find and notify a driver
+      if (!cancelled) setSearchPhase("waiting_response");
       const { error: dispatchError } = await supabase.functions.invoke("dispatch-start", {
         body: { job_id: jobId, offer_ttl_seconds: 30, radius_meters: 15000 },
       });
@@ -1112,11 +1124,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           return;
         }
 
-        // Retry dispatch
+        // Retry dispatch with expanded radius
+        if (!cancelled) setSearchPhase("expanding");
         console.log("[Dispatch] Retrying dispatch for job:", jobId);
         await supabase.functions.invoke("dispatch-start", {
           body: { job_id: jobId, offer_ttl_seconds: 30, radius_meters: 25000 },
         });
+        if (!cancelled) setSearchPhase("retrying");
       }, 15000);
 
       // Timeout after 90s
@@ -1135,6 +1149,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
     return () => {
       cancelled = true;
+      clearInterval(elapsedTimer);
       if (channel) supabase.removeChannel(channel);
       if ((window as any).__dispatchRetryInterval) {
         clearInterval((window as any).__dispatchRetryInterval);
@@ -3570,33 +3585,74 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       )}
 
       {/* ═══════ SEARCHING — bottom sheet over map ═══════ */}
-      {viewStep === "searching" && (
+      {viewStep === "searching" && (() => {
+        const phaseConfig = {
+          dispatching: { label: t("ride.search_phase_dispatching"), icon: "🔍", color: "text-primary" },
+          waiting_response: { label: t("ride.search_phase_waiting"), icon: "📡", color: "text-primary" },
+          expanding: { label: t("ride.search_phase_expanding"), icon: "📡", color: "text-amber-500" },
+          retrying: { label: t("ride.search_phase_retrying"), icon: "🔄", color: "text-amber-500" },
+        };
+        const phase = phaseConfig[searchPhase];
+        const mins = Math.floor(searchElapsed / 60);
+        const secs = searchElapsed % 60;
+        const progressPct = Math.min(95, (searchElapsed / 90) * 100);
+
+        return (
         <div
           className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] px-5 pt-4 pb-4"
-          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, height: 260 }}
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
         >
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
-          <div className="flex flex-col items-center justify-center h-[calc(100%-28px)]">
-            {/* Animated dots */}
-            <div className="flex gap-2 mb-4">
-              {[0, 1, 2].map((i) => (
-                <motion.span
-                  key={i}
-                  className="w-3 h-3 rounded-full bg-primary"
-                  animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.3, ease: "easeInOut" }}
-                />
-              ))}
+          <div className="flex flex-col items-center justify-center">
+            {/* Animated pulse ring */}
+            <div className="relative w-16 h-16 mb-4 flex items-center justify-center">
+              <motion.div
+                className="absolute inset-0 rounded-full border-2 border-primary/30"
+                animate={{ scale: [1, 1.6, 1], opacity: [0.6, 0, 0.6] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+              />
+              <motion.div
+                className="absolute inset-1 rounded-full border-2 border-primary/20"
+                animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0, 0.4] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.3 }}
+              />
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-lg">{phase.icon}</span>
+              </div>
             </div>
 
             <h3 className="text-lg font-bold text-foreground mb-1">{t("ride.finding_your_driver")}</h3>
-            <p className="text-sm text-muted-foreground mb-1">{t("ride.searching_nearby_drivers")}</p>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
+            
+            {/* Live status phase */}
+            <motion.p
+              key={searchPhase}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`text-sm font-medium ${phase.color} mb-2`}
+            >
+              {phase.label}
+            </motion.p>
+
+            {/* Progress bar */}
+            <div className="w-full max-w-[220px] h-1.5 rounded-full bg-muted/40 mb-3 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-primary"
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+            </div>
+
+            <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
               <span>{t("ride.drivers_nearby")}: {nearbyDriverCount}</span>
               <span>·</span>
               <span>{t("ride.estimated_pickup")}: {currentVehicle.etaMin} {t("ride.min_unit")}</span>
             </div>
+
+            {/* Elapsed timer */}
+            <p className="text-[11px] text-muted-foreground/60 mb-3">
+              {t("ride.search_elapsed")}: {mins}:{secs.toString().padStart(2, "0")}
+            </p>
 
             <Button
               variant="ghost"
@@ -3608,7 +3664,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             </Button>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ═══════ DRIVER ASSIGNED — bottom sheet over map ═══════ */}
       {viewStep === "driver-assigned" && (
