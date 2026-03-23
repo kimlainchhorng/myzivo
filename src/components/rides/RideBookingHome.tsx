@@ -2181,7 +2181,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       )}
       {/* ═══════ 1. HEADER — visible on non-home steps ═══════ */}
       {viewStep !== "home" && viewStep !== "trip-complete" && (
-        <div className="relative z-20 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
+        <div className="relative z-50 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
           <button
             onClick={handleBack}
             className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
