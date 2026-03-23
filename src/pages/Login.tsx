@@ -278,6 +278,16 @@ const Login = () => {
         >
           {/* Header */}
           <div className="text-center mb-3 relative">
+            {/* Go Home - top left */}
+            <div className="absolute left-0 top-0">
+              <button
+                onClick={() => navigate("/")}
+                className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all active:scale-90 touch-manipulation"
+                aria-label="Go to Home"
+              >
+                <Home className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
             {/* Language toggle - top right */}
             <div className="absolute right-0 top-0">
               <div className="relative">
@@ -642,14 +652,6 @@ const Login = () => {
 
           <div className="flex items-center justify-center gap-3 mt-2 text-[10px] text-muted-foreground">
             <span>{isLogin ? t("auth.protected") : t("auth.terms_agree")}</span>
-            <span>•</span>
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-1 hover:text-foreground transition-colors"
-            >
-              <Home className="h-3 w-3" />
-              {t("auth.go_home")}
-            </button>
           </div>
         </motion.div>
       </div>
