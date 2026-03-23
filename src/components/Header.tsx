@@ -32,6 +32,8 @@ const Header = () => {
   const { data: supportedLanguages } = useSupportedLanguages(true);
   const activeLanguages = (supportedLanguages || []).filter(l => l.is_active);
   const currentLangData = activeLanguages.find(l => l.code === currentLanguage);
+
+  return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="container mx-auto px-3 sm:px-4">
