@@ -1092,6 +1092,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         .subscribe();
 
       // 3. Call dispatch-start edge function to find and notify a driver
+      if (!cancelled) setSearchPhase("waiting_response");
       const { error: dispatchError } = await supabase.functions.invoke("dispatch-start", {
         body: { job_id: jobId, offer_ttl_seconds: 30, radius_meters: 15000 },
       });
@@ -1123,11 +1124,13 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           return;
         }
 
-        // Retry dispatch
+        // Retry dispatch with expanded radius
+        if (!cancelled) setSearchPhase("expanding");
         console.log("[Dispatch] Retrying dispatch for job:", jobId);
         await supabase.functions.invoke("dispatch-start", {
           body: { job_id: jobId, offer_ttl_seconds: 30, radius_meters: 25000 },
         });
+        if (!cancelled) setSearchPhase("retrying");
       }, 15000);
 
       // Timeout after 90s
@@ -1146,6 +1149,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
     return () => {
       cancelled = true;
+      clearInterval(elapsedTimer);
       if (channel) supabase.removeChannel(channel);
       if ((window as any).__dispatchRetryInterval) {
         clearInterval((window as any).__dispatchRetryInterval);
