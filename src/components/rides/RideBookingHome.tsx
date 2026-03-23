@@ -596,6 +596,21 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const LANGS = [
     { code: "en", label: "English", flag: "🇺🇸" },
     { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
+    { code: "zh", label: "中文", flag: "🇨🇳" },
+    { code: "ko", label: "한국어", flag: "🇰🇷" },
+    { code: "ja", label: "日本語", flag: "🇯🇵" },
+    { code: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
+    { code: "th", label: "ไทย", flag: "🇹🇭" },
+    { code: "es", label: "Español", flag: "🇪🇸" },
+    { code: "fr", label: "Français", flag: "🇫🇷" },
+    { code: "de", label: "Deutsch", flag: "🇩🇪" },
+    { code: "it", label: "Italiano", flag: "🇮🇹" },
+    { code: "pt", label: "Português", flag: "🇵🇹" },
+    { code: "nl", label: "Nederlands", flag: "🇳🇱" },
+    { code: "pl", label: "Polski", flag: "🇵🇱" },
+    { code: "no", label: "Norsk", flag: "🇳🇴" },
+    { code: "ru", label: "Русский", flag: "🇷🇺" },
+    { code: "tr", label: "Türkçe", flag: "🇹🇷" },
   ];
   const fallbackPickupCenter = isCambodiaCountry ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER;
 
