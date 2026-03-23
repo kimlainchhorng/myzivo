@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, User, Search, Sparkles, ChevronDown, Car, ShieldCheck, Plane, Hotel } from "lucide-react";
+import { Menu, User, Search, Sparkles, ChevronDown, Car, ShieldCheck, Plane, Hotel, Globe, Check } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -17,6 +17,10 @@ import CurrencySelector from "./shared/CurrencySelector";
 import BetaBadge from "./shared/BetaBadge";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { PremiumSearchOverlay } from "@/components/search";
+import { useI18n } from "@/hooks/useI18n";
+import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Header = () => {
   const navigate = useNavigate();
