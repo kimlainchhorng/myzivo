@@ -38,6 +38,7 @@ import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import { groupByOutbound, groupByReturn, getLegDurationMinutes } from "@/lib/flightLegGrouping";
 import { getAllInPrice } from "@/utils/flightPricing";
 import { buildKiwiDeepLink, TRAVELPAYOUTS_DIRECT_LINKS } from "@/config/affiliateLinks";
+import { openExternalUrl } from "@/lib/openExternalUrl";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
@@ -86,6 +87,10 @@ const FlightResults = () => {
   const [selectionStep, setSelectionStep] = useState<"outbound" | "return">("outbound");
   const [selectedOutboundGroup, setSelectedOutboundGroup] = useState<LegGroup | null>(null);
   const [editMode, setEditMode] = useState(false);
+
+  const handlePartnerOpen = useCallback((url: string) => {
+    void openExternalUrl(url);
+  }, []);
 
   const origin = params.get("origin") || "";
   const destination = params.get("destination") || params.get("dest") || "";
@@ -1081,10 +1086,9 @@ const FlightResults = () => {
                           const kiwiPrice = kiwiResult?.allPrices.find(p => p.agentName.toLowerCase().includes('kiwi'));
                           
                           return (
-                            <a
-                              href={kiwiLink}
-                              target="_blank"
-                              rel="noopener noreferrer nofollow"
+                            <button
+                              type="button"
+                              onClick={() => handlePartnerOpen(kiwiLink)}
                               className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group"
                             >
                               <div className="flex items-center gap-3 min-w-0">
@@ -1108,7 +1112,7 @@ const FlightResults = () => {
                                   <p className="text-xs font-semibold text-primary">View partner →</p>
                                 )}
                               </div>
-                            </a>
+                            </button>
                           );
                         })()}
 
@@ -1123,10 +1127,9 @@ const FlightResults = () => {
                               : 'partner site';
                           
                           return (
-                            <a
-                              href={aviasalesLink}
-                              target="_blank"
-                              rel="noopener noreferrer nofollow"
+                            <button
+                              type="button"
+                              onClick={() => handlePartnerOpen(aviasalesLink)}
                               className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group"
                             >
                               <div className="flex items-center gap-3 min-w-0">
@@ -1150,7 +1153,7 @@ const FlightResults = () => {
                                   <p className="text-xs font-semibold text-accent">View partner →</p>
                                 )}
                               </div>
-                            </a>
+                            </button>
                           );
                         })()}
 
@@ -1159,11 +1162,10 @@ const FlightResults = () => {
                           const topAgent = result.allPrices[0];
                           if (!topAgent || topAgent.agentName.toLowerCase().includes('kiwi')) return null;
                           return (
-                            <a
+                            <button
+                              type="button"
                               key={result.id || idx}
-                              href={`https://${result.resultsUrl}/searches/${result.searchId}/clicks/${result.proposalId}?gate_id=${topAgent.agentId}&marker=700031`}
-                              target="_blank"
-                              rel="noopener noreferrer nofollow"
+                              onClick={() => handlePartnerOpen(`https://${result.resultsUrl}/searches/${result.searchId}/clicks/${result.proposalId}?gate_id=${topAgent.agentId}&marker=700031`)}
                               className="flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors group"
                             >
                               <div className="flex items-center gap-3 min-w-0">
@@ -1184,7 +1186,7 @@ const FlightResults = () => {
                               <div className="text-right shrink-0">
                                 <p className="text-lg font-bold text-foreground">${Math.round(topAgent.price)}</p>
                               </div>
-                            </a>
+                            </button>
                           );
                         })}
                       </div>
