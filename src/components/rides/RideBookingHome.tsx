@@ -594,23 +594,23 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const { data: upcomingFlight } = useUpcomingFlightArrival();
 
   const LANGS = [
-    { code: "en", label: "English", flag: "🇺🇸" },
-    { code: "km", label: "ខ្មែរ", flag: "🇰🇭" },
-    { code: "zh", label: "中文", flag: "🇨🇳" },
-    { code: "ko", label: "한국어", flag: "🇰🇷" },
-    { code: "ja", label: "日本語", flag: "🇯🇵" },
-    { code: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
-    { code: "th", label: "ไทย", flag: "🇹🇭" },
-    { code: "es", label: "Español", flag: "🇪🇸" },
-    { code: "fr", label: "Français", flag: "🇫🇷" },
-    { code: "de", label: "Deutsch", flag: "🇩🇪" },
-    { code: "it", label: "Italiano", flag: "🇮🇹" },
-    { code: "pt", label: "Português", flag: "🇵🇹" },
-    { code: "nl", label: "Nederlands", flag: "🇳🇱" },
-    { code: "pl", label: "Polski", flag: "🇵🇱" },
-    { code: "no", label: "Norsk", flag: "🇳🇴" },
-    { code: "ru", label: "Русский", flag: "🇷🇺" },
-    { code: "tr", label: "Türkçe", flag: "🇹🇷" },
+    { code: "en", label: "English", flag: "🇺🇸", cc: "US", flagImg: "/flags/us.svg" },
+    { code: "km", label: "ខ្មែរ", flag: "🇰🇭", cc: "KH", flagImg: "/flags/kh.svg" },
+    { code: "zh", label: "中文", flag: "🇨🇳", cc: "CN", flagImg: "/flags/cn.svg" },
+    { code: "ko", label: "한국어", flag: "🇰🇷", cc: "KR", flagImg: "/flags/kr.svg" },
+    { code: "ja", label: "日本語", flag: "🇯🇵", cc: "JP", flagImg: "/flags/jp.svg" },
+    { code: "vi", label: "Tiếng Việt", flag: "🇻🇳", cc: "VN", flagImg: "/flags/vn.svg" },
+    { code: "th", label: "ไทย", flag: "🇹🇭", cc: "TH", flagImg: "/flags/th.svg" },
+    { code: "es", label: "Español", flag: "🇪🇸", cc: "ES", flagImg: "/flags/es.svg" },
+    { code: "fr", label: "Français", flag: "🇫🇷", cc: "FR", flagImg: "/flags/fr.svg" },
+    { code: "de", label: "Deutsch", flag: "🇩🇪", cc: "DE", flagImg: "/flags/de.svg" },
+    { code: "it", label: "Italiano", flag: "🇮🇹", cc: "IT", flagImg: "/flags/it.svg" },
+    { code: "pt", label: "Português", flag: "🇵🇹", cc: "PT", flagImg: "/flags/pt.svg" },
+    { code: "nl", label: "Nederlands", flag: "🇳🇱", cc: "NL", flagImg: "/flags/nl.svg" },
+    { code: "pl", label: "Polski", flag: "🇵🇱", cc: "PL", flagImg: "/flags/pl.svg" },
+    { code: "no", label: "Norsk", flag: "🇳🇴", cc: "NO", flagImg: "/flags/no.svg" },
+    { code: "ru", label: "Русский", flag: "🇷🇺", cc: "RU", flagImg: "/flags/ru.svg" },
+    { code: "tr", label: "Türkçe", flag: "🇹🇷", cc: "TR", flagImg: "/flags/tr.svg" },
   ];
   const fallbackPickupCenter = isCambodiaCountry ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER;
 
@@ -2244,13 +2244,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                           key={l.code}
                           onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
                           className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2 text-sm transition-all",
+                            "w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-all relative overflow-hidden",
                             currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/60"
                           )}
                         >
-                          <span className="text-xs font-bold text-muted-foreground uppercase w-5 shrink-0">{l.code === "en" ? "US" : l.code === "km" ? "KH" : l.code === "zh" ? "CN" : l.code === "ko" ? "KR" : l.code === "ja" ? "JP" : l.code === "vi" ? "VN" : l.code === "th" ? "TH" : l.code.toUpperCase()}</span>
-                          <span className="font-medium">{l.label}</span>
-                          {currentLanguage === l.code && <CheckCircle className="w-4 h-4 ml-auto text-primary" />}
+                          <img src={l.flagImg} alt="" className="absolute right-0 top-1/2 -translate-y-1/2 h-[120%] w-auto opacity-[0.07] pointer-events-none" />
+                          <span className="text-xs font-bold text-muted-foreground uppercase w-6 shrink-0">{l.cc}</span>
+                          <span className="font-medium relative z-10">{l.label}</span>
+                          {currentLanguage === l.code && <CheckCircle className="w-4 h-4 ml-auto text-primary relative z-10" />}
                         </button>
                       ))}
                     </div>
@@ -2738,13 +2739,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                             key={l.code}
                             onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
                             className={cn(
-                              "w-full flex items-center gap-3 px-3 py-2 text-sm transition-all",
+                              "w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-all relative overflow-hidden",
                               currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/60"
                             )}
                           >
-                            <span className="text-xs font-bold text-muted-foreground uppercase w-5 shrink-0">{l.code === "en" ? "US" : l.code === "km" ? "KH" : l.code === "zh" ? "CN" : l.code === "ko" ? "KR" : l.code === "ja" ? "JP" : l.code === "vi" ? "VN" : l.code === "th" ? "TH" : l.code.toUpperCase()}</span>
-                            <span className="font-medium">{l.label}</span>
-                            {currentLanguage === l.code && <CheckCircle className="w-4 h-4 ml-auto text-primary" />}
+                            <img src={l.flagImg} alt="" className="absolute right-0 top-1/2 -translate-y-1/2 h-[120%] w-auto opacity-[0.07] pointer-events-none" />
+                            <span className="text-xs font-bold text-muted-foreground uppercase w-6 shrink-0">{l.cc}</span>
+                            <span className="font-medium relative z-10">{l.label}</span>
+                            {currentLanguage === l.code && <CheckCircle className="w-4 h-4 ml-auto text-primary relative z-10" />}
                           </button>
                         ))}
                       </div>
