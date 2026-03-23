@@ -2244,13 +2244,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                           key={l.code}
                           onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
                           className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2 text-sm transition-all",
+                            "w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-all relative overflow-hidden",
                             currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/60"
                           )}
                         >
-                          <span className="text-xs font-bold text-muted-foreground uppercase w-5 shrink-0">{l.code === "en" ? "US" : l.code === "km" ? "KH" : l.code === "zh" ? "CN" : l.code === "ko" ? "KR" : l.code === "ja" ? "JP" : l.code === "vi" ? "VN" : l.code === "th" ? "TH" : l.code.toUpperCase()}</span>
-                          <span className="font-medium">{l.label}</span>
-                          {currentLanguage === l.code && <CheckCircle className="w-4 h-4 ml-auto text-primary" />}
+                          <img src={l.flagImg} alt="" className="absolute right-0 top-1/2 -translate-y-1/2 h-[120%] w-auto opacity-[0.07] pointer-events-none" />
+                          <span className="text-xs font-bold text-muted-foreground uppercase w-6 shrink-0">{l.cc}</span>
+                          <span className="font-medium relative z-10">{l.label}</span>
+                          {currentLanguage === l.code && <CheckCircle className="w-4 h-4 ml-auto text-primary relative z-10" />}
                         </button>
                       ))}
                     </div>
@@ -2738,13 +2739,14 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                             key={l.code}
                             onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
                             className={cn(
-                              "w-full flex items-center gap-3 px-3 py-2 text-sm transition-all",
+                              "w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-all relative overflow-hidden",
                               currentLanguage === l.code ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/60"
                             )}
                           >
-                            <span className="text-xs font-bold text-muted-foreground uppercase w-5 shrink-0">{l.code === "en" ? "US" : l.code === "km" ? "KH" : l.code === "zh" ? "CN" : l.code === "ko" ? "KR" : l.code === "ja" ? "JP" : l.code === "vi" ? "VN" : l.code === "th" ? "TH" : l.code.toUpperCase()}</span>
-                            <span className="font-medium">{l.label}</span>
-                            {currentLanguage === l.code && <CheckCircle className="w-4 h-4 ml-auto text-primary" />}
+                            <img src={l.flagImg} alt="" className="absolute right-0 top-1/2 -translate-y-1/2 h-[120%] w-auto opacity-[0.07] pointer-events-none" />
+                            <span className="text-xs font-bold text-muted-foreground uppercase w-6 shrink-0">{l.cc}</span>
+                            <span className="font-medium relative z-10">{l.label}</span>
+                            {currentLanguage === l.code && <CheckCircle className="w-4 h-4 ml-auto text-primary relative z-10" />}
                           </button>
                         ))}
                       </div>
