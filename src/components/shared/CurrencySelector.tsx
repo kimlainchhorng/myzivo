@@ -6,6 +6,9 @@
 import { useState } from "react";
 import { Check, ChevronDown, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+import svcHotels from "@/assets/svc-hotels-premium.jpg";
+
 import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Popover,
@@ -55,14 +58,16 @@ const CurrencySelector = ({ variant = "dropdown", className }: CurrencySelectorP
             variant="ghost"
             size="sm"
             className={cn(
-              "gap-1.5 px-2 h-8 text-muted-foreground hover:text-foreground",
+              "relative gap-1.5 px-3 h-9 text-white font-bold rounded-2xl overflow-hidden shadow-lg shadow-teal-500/20 ring-1 ring-teal-400/30 transition-all duration-300 hover:scale-[1.06] hover:shadow-xl active:scale-[0.97]",
               className
             )}
           >
-            <span className="text-base">{currencyConfig.flag}</span>
-            <span className="text-xs font-medium">{currency}</span>
+            <img src={svcHotels} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-700/80 to-cyan-500/70" />
+            <span className="text-base relative z-10 drop-shadow-md">{currencyConfig.flag}</span>
+            <span className="text-xs font-bold relative z-10 drop-shadow-md">{currency}</span>
             <ChevronDown className={cn(
-              "w-3 h-3 transition-transform duration-200",
+              "w-3 h-3 transition-transform duration-200 relative z-10 drop-shadow-md",
               isOpen && "rotate-180"
             )} />
           </Button>
