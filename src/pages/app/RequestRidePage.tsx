@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePhoneVerificationGate } from "@/hooks/usePhoneVerificationGate";
-import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useGoogleMapsGeocode, Suggestion } from "@/hooks/useGoogleMapsGeocode";
 import { supabase } from "@/integrations/supabase/client";
@@ -399,9 +397,6 @@ export default function RequestRidePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { notify: notifyRide } = useRideNotifications();
-  const { isChecking: phoneChecking, isVerified: phoneVerified } = usePhoneVerificationGate();
-  const [showPhoneVerify, setShowPhoneVerify] = useState(false);
-  const pendingActionRef = useRef<(() => void) | null>(null);
   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
 
   const [pickupAddress, setPickupAddress] = useState("");
@@ -622,11 +617,6 @@ export default function RequestRidePage() {
 
   const handleGetPrice = async () => {
     if (!user) { toast.error("Please sign in first"); return; }
-    if (!phoneChecking && !phoneVerified) {
-      pendingActionRef.current = () => handleGetPrice();
-      setShowPhoneVerify(true);
-      return;
-    }
     if (!pickupAddress.trim()) { toast.error("Please enter a pickup address"); return; }
     if (!dropoffAddress.trim()) { toast.error("Please enter a dropoff address for pricing"); return; }
     setIsLoadingPrice(true);
@@ -2083,18 +2073,6 @@ export default function RequestRidePage() {
 
       <ZivoMobileNav />
 
-      <PhoneVerificationDialog
-        open={showPhoneVerify}
-        onOpenChange={setShowPhoneVerify}
-        phoneNumber=""
-        onVerified={() => {
-          setShowPhoneVerify(false);
-          if (pendingActionRef.current) {
-            pendingActionRef.current();
-            pendingActionRef.current = null;
-          }
-        }}
-      />
     </div>
   );
 }
