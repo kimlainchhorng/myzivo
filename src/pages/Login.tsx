@@ -24,7 +24,8 @@ const loginSchema = z.object({
 
 // Signup schema (extends login with name + confirm)
 const signupSchema = z.object({
-  fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
+  firstName: z.string().min(1, "First name is required").max(50),
+  lastName: z.string().min(1, "Last name is required").max(50),
   email: z.string().email("Please enter a valid email address"),
   phone: z.string().min(7, "Please enter a valid phone number").max(20).regex(/^[+]?[\d\s\-().]+$/, "Invalid phone number format"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -100,7 +101,8 @@ const Login = () => {
   const signupForm = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      fullName: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phone: "",
       password: "",
@@ -195,7 +197,8 @@ const Login = () => {
       return;
     }
 
-    const { error } = await signUp(data.email, data.password, data.fullName, data.phone);
+    const fullName = `${data.firstName} ${data.lastName}`.trim();
+    const { error } = await signUp(data.email, data.password, fullName, data.phone);
 
     if (error) {
       setIsLoading(false);
@@ -397,27 +400,50 @@ const Login = () => {
           ) : (
             <Form {...signupForm}>
               <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-2.5">
-                <FormField
-                  control={signupForm.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.full_name")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <input
-                            placeholder="John Doe"
-                            autoComplete="name"
-                            className="w-full bg-muted border border-border rounded-xl py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-destructive" />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-2.5">
+                  <FormField
+                    control={signupForm.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.first_name") || "First Name"}</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <input
+                              placeholder="John"
+                              autoComplete="given-name"
+                              className="w-full bg-muted border border-border rounded-xl py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage className="text-destructive" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={signupForm.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-muted-foreground text-sm font-medium">{t("auth.last_name") || "Last Name"}</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <input
+                              placeholder="Doe"
+                              autoComplete="family-name"
+                              className="w-full bg-muted border border-border rounded-xl py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage className="text-destructive" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={signupForm.control}
