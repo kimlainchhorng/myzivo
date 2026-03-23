@@ -3568,7 +3568,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   await supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideRequestId);
                 }
                 sessionStorage.removeItem("aba_pending_ride_id");
-                setViewStep("payment");
+                setViewStep("confirm-ride");
                 toast.info("Payment cancelled. Choose another payment method.");
               }}
             >
