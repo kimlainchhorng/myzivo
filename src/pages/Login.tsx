@@ -322,7 +322,7 @@ const Login = () => {
           }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl p-4 sm:p-5 flex flex-col overflow-visible"
+          className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl p-4 sm:p-5 flex flex-col overflow-hidden"
         >
           {/* Glass shimmer */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-white/[0.04] rounded-3xl pointer-events-none" />
