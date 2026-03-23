@@ -3378,7 +3378,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     </div>
                   </div>
                   {currentPrice <= currentVehicle.minimumFare && (
-                    <p className="text-[9px] text-muted-foreground/60 text-right">{t("ride.minimum_fare_applied")}</p>
+                    <p className="text-[10px] text-muted-foreground/70 text-right">
+                      {t("ride.minimum_fare_applied")} · Min: {useKm ? `${toKHR(currentVehicle.minimumFare)} ($${currentVehicle.minimumFare.toFixed(2)})` : `$${currentVehicle.minimumFare.toFixed(2)}`}
+                    </p>
                   )}
                 </div>
               )}
