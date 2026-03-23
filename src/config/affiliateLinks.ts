@@ -123,16 +123,8 @@ export function buildKiwiDeepLink(params: {
   returnDate?: string;
   locale?: string;
 }): string {
-  // Kiwi blocks prefilled deep/search result URLs in some browser contexts,
-  // so use the locale homepage as a reliable fallback destination.
-  const localeKey = params.locale?.toLowerCase().split('-')[0] || 'en';
-  const localeSegment = localeKey === 'us' ? 'us' : localeKey;
-  const kiwiUrl = `https://www.kiwi.com/${localeSegment}/`;
-  const encodedKiwiUrl = encodeURIComponent(kiwiUrl);
-
-  const promoId = KIWI_PROMO_IDS[localeKey] || 3791;
-
-  return `https://c111.travelpayouts.com/click?shmarker=700031.kiwi_flights&promo_id=${promoId}&source_type=customlink&type=click&custom_url=${encodedKiwiUrl}`;
+  // Use the Travelpayouts short link which is whitelisted by Kiwi
+  return TRAVELPAYOUTS_DIRECT_LINKS.flights.kiwi;
 }
 
 export const TRAVELPAYOUTS_DIRECT_LINKS = {
