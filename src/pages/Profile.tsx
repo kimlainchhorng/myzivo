@@ -221,7 +221,7 @@ const Profile = () => {
               </button>
 
               {showLangPicker && (
-                <div className="absolute left-0 top-full mt-2 z-50 bg-card border border-border rounded-2xl shadow-xl p-1.5 min-w-[180px] animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute left-0 top-full mt-2 z-50 bg-card border border-border rounded-2xl shadow-xl p-1.5 min-w-[200px] max-h-[360px] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
                   {LANGS.map((lang) => (
                     <button
                       key={lang.code}
@@ -229,14 +229,16 @@ const Profile = () => {
                         changeLanguage(lang.code);
                         setShowLangPicker(false);
                       }}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors touch-manipulation active:scale-[0.98] ${
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors touch-manipulation active:scale-[0.98] relative overflow-hidden ${
                         currentLanguage === lang.code
                           ? "bg-primary/10 text-primary"
                           : "text-foreground hover:bg-muted"
                       }`}
                     >
-                      <span className="text-base">{lang.flag}</span>
-                      <span>{lang.label}</span>
+                      {/* Flag background watermark */}
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-3xl opacity-[0.08] pointer-events-none select-none">{lang.flag}</span>
+                      <span className="text-base relative z-10">{lang.flag}</span>
+                      <span className="relative z-10">{lang.label}</span>
                     </button>
                   ))}
                 </div>
