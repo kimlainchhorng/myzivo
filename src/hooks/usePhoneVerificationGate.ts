@@ -37,6 +37,11 @@ export function usePhoneVerificationGate(enabled = false): PhoneGateResult {
     staleTime: 1000 * 60 * 2,
   });
 
+  // When disabled, always return verified = true so no redirect happens
+  if (!enabled) {
+    return { isChecking: false, isVerified: true };
+  }
+
   const isVerified = data?.phone_status === "verified";
 
   return {
