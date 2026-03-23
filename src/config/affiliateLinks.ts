@@ -123,34 +123,11 @@ export function buildKiwiDeepLink(params: {
   returnDate?: string;
   locale?: string;
 }): string {
-  const { origin, destination, departureDate, returnDate, locale } = params;
-  
-  // Build the Kiwi.com search URL (use /search path instead of /deep to avoid ERR_BLOCKED_BY_RESPONSE)
-  const dateParts: string[] = [];
-  if (departureDate) dateParts.push(departureDate.replace(/-/g, '-'));
-  if (returnDate) dateParts.push(returnDate.replace(/-/g, '-'));
-  
-  const kiwiParams = new URLSearchParams();
-  kiwiParams.set('from', origin);
-  kiwiParams.set('to', destination);
-  if (departureDate) {
-    // Kiwi uses DD-MM-YYYY format
-    const [y, m, d] = departureDate.split('-');
-    kiwiParams.set('departure', `${d}-${m}-${y}`);
-  }
-  if (returnDate) {
-    const [y, m, d] = returnDate.split('-');
-    kiwiParams.set('return', `${d}-${m}-${y}`);
-  }
-  
-  const kiwiUrl = `https://www.kiwi.com/en/search/results/${origin}/${destination}/${departureDate || ''}${returnDate ? `/${returnDate}` : ''}`;
-  const encodedKiwiUrl = encodeURIComponent(kiwiUrl);
-  
-  // Travelpayouts click tracking URL
-  const langKey = locale?.toLowerCase().split('-')[0] || 'en';
-  const promoId = KIWI_PROMO_IDS[langKey] || 3791;
-  
-  return `https://c111.travelpayouts.com/click?shmarker=700031.kiwi_flights&promo_id=${promoId}&source_type=customlink&type=click&custom_url=${encodedKiwiUrl}`;
+  // Use Travelpayouts short link to avoid Kiwi.com ERR_BLOCKED_BY_RESPONSE on direct /deep links.
+  // The tpo.li redirect handles affiliate tracking and is whitelisted by Kiwi.
+  const localeKey = params.locale?.toLowerCase().split('-')[0] || 'en';
+  const baseLink = getKiwiLocaleLink(localeKey);
+  return baseLink;
 }
 
 export const TRAVELPAYOUTS_DIRECT_LINKS = {
