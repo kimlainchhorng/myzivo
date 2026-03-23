@@ -240,8 +240,11 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
                       {/* Country code badge */}
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 w-6 shrink-0">{c.code}</span>
 
-                      {/* Name */}
-                      <span className="flex-1 text-left truncate">{c.name}</span>
+                      {/* Name + digits hint */}
+                      <div className="flex-1 text-left min-w-0">
+                        <span className="block truncate">{c.name}</span>
+                        <span className="block text-[10px] text-muted-foreground/60">{c.digits}</span>
+                      </div>
 
                       {/* Dial code */}
                       <span className="text-xs text-muted-foreground font-mono tabular-nums">{c.dial}</span>
