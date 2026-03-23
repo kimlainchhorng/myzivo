@@ -375,11 +375,11 @@ const App = () => (
                 <Route path="/book-hotel" element={<PreserveQueryRedirect to="/hotels" />} />
                 <Route path="/travel-extras" element={<PreserveQueryRedirect to="/extras" />} />
                 <Route path="/rides" element={<PreserveQueryRedirect to="/rides/hub" />} />
-                <Route path="/rides/track/:tripId" element={<RideTrackingPage />} />
-                <Route path="/rides/hub" element={<RideHubPage />} />
+                <Route path="/rides/track/:tripId" element={<ProtectedRoute><RideTrackingPage /></ProtectedRoute>} />
+                <Route path="/rides/hub" element={<ProtectedRoute><RideHubPage /></ProtectedRoute>} />
                 <Route path="/ride" element={<PreserveQueryRedirect to="/rides" />} />
-                <Route path="/eats" element={<EatsLanding />} />
-                <Route path="/eats/restaurant/:id" element={<EatsLanding />} />
+                <Route path="/eats" element={<ProtectedRoute><EatsLanding /></ProtectedRoute>} />
+                <Route path="/eats/restaurant/:id" element={<ProtectedRoute><EatsLanding /></ProtectedRoute>} />
                 <Route path="/food" element={<PreserveQueryRedirect to="/eats" />} />
                 <Route path="/move" element={<PreserveQueryRedirect to="/rides" />} />
                 <Route path="/search" element={<PreserveQueryRedirect to="/flights" />} />
