@@ -24,7 +24,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import FlightResultsSkeleton from "@/components/flight/FlightResultsSkeleton";
 import { useDuffelFlightSearch, type DuffelOffer } from "@/hooks/useDuffelFlights";
 import { useTravelpayoutsPrices, type TravelpayoutsPrice } from "@/hooks/useTravelpayoutsPrices";
-import { getKiwiLink } from "@/config/affiliateLinks";
+import { getKiwiLink, buildKiwiDeepLink } from "@/config/affiliateLinks";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
