@@ -97,11 +97,49 @@ export const KIWI_LOCALE_LINKS: Record<string, string> = {
   cz: 'https://kiwi.tpo.li/NCNRQN5B',
 };
 
+// Kiwi.com promo IDs by locale (from Travelpayouts)
+const KIWI_PROMO_IDS: Record<string, number> = {
+  en: 3791, us: 3791, gb: 3791,
+  fi: 5000, it: 5000, da: 5000, de: 5000,
+  fr: 5000, es: 5000, br: 5000, pt: 5000,
+  pl: 5000, nl: 5000, cs: 5000, cz: 5000,
+};
+
 /** Get the best Kiwi.com tracking link for a given locale/language code */
 export function getKiwiLink(locale?: string): string {
   if (!locale) return KIWI_LOCALE_LINKS.en;
   const key = locale.toLowerCase().split('-')[0];
   return KIWI_LOCALE_LINKS[key] || KIWI_LOCALE_LINKS.en;
+}
+
+/**
+ * Build a Kiwi.com deep link with search parameters via Travelpayouts tracking
+ * Uses the c111.travelpayouts.com/click redirect with custom_url
+ */
+export function buildKiwiDeepLink(params: {
+  origin: string;
+  destination: string;
+  departureDate?: string;
+  returnDate?: string;
+  locale?: string;
+}): string {
+  const { origin, destination, departureDate, returnDate, locale } = params;
+  
+  // Build the Kiwi.com deep link URL
+  const kiwiParams = new URLSearchParams();
+  kiwiParams.set('from', origin);
+  kiwiParams.set('to', destination);
+  if (departureDate) kiwiParams.set('departure', departureDate);
+  if (returnDate) kiwiParams.set('return', returnDate);
+  
+  const kiwiUrl = `https://www.kiwi.com/deep?${kiwiParams.toString()}`;
+  const encodedKiwiUrl = encodeURIComponent(kiwiUrl);
+  
+  // Travelpayouts click tracking URL
+  const langKey = locale?.toLowerCase().split('-')[0] || 'en';
+  const promoId = KIWI_PROMO_IDS[langKey] || 3791;
+  
+  return `https://c111.travelpayouts.com/click?shmarker=700031.kiwi_flights&promo_id=${promoId}&source_type=customlink&type=click&custom_url=${encodedKiwiUrl}`;
 }
 
 export const TRAVELPAYOUTS_DIRECT_LINKS = {
