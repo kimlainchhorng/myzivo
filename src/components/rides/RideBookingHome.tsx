@@ -3515,7 +3515,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   supabase.functions.invoke("notify-aba-payment", {
                     body: {
                       ride_request_id: pendingId,
-                      amount: currentPrice,
+                      amount: appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice,
                       customer_name: otherName.trim() || user?.user_metadata?.full_name || "",
                       pickup: pickup?.address || "",
                       dropoff: destination?.address || "",
