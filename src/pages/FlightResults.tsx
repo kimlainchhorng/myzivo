@@ -5,7 +5,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock, ChevronRight, ArrowRight, Sunrise, Sun, Sunset, Moon, Check, CalendarDays, Users, Pencil, ExternalLink, Star } from "lucide-react";
+import { Plane, ArrowLeft, Filter, X, AlertTriangle, WifiOff, RefreshCw, Luggage, Clock, ChevronRight, ArrowRight, Sunrise, Sun, Sunset, Moon, Check, CalendarDays, Users, Pencil, ExternalLink, Star, ShieldCheck, Zap } from "lucide-react";
 import FlightSearchFormPro from "@/components/search/FlightSearchFormPro";
 import PriceAlertButton from "@/components/flight/PriceAlertButton";
 import { useAviasalesSearch, type AviasalesResult } from "@/hooks/useAviasalesSearch";
