@@ -1101,6 +1101,34 @@ const FlightResults = () => {
                         })}
 
                         {/* Kiwi.com — affiliate partner link */}
+                        {/* Aviasales — affiliate partner link (always visible) */}
+                        {origin && destination && departureDate && (
+                          <button
+                            type="button"
+                            onClick={() => handlePartnerOpen(TRAVELPAYOUTS_DIRECT_LINKS.flights.backup)}
+                            className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group w-full text-left"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-9 h-9 rounded-lg bg-sky-500/12 flex items-center justify-center shrink-0">
+                                <span className="text-base font-black text-sky-600">A</span>
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-sm font-bold text-foreground">Aviasales</p>
+                                  <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">
+                                  Compare on partner site
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-xs font-semibold text-primary">View prices →</p>
+                            </div>
+                          </button>
+                        )}
+
+                        {/* Kiwi.com — affiliate partner link */}
                         {origin && destination && departureDate && (() => {
                           const kiwiLink = buildKiwiDeepLink({
                             origin,
