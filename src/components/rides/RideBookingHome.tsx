@@ -1458,16 +1458,16 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
 
     try {
-      const { data, error } = await supabase.rpc("validate_coupon" as any, {
+      const { data, error } = await supabase.rpc("validate_ride_promo" as any, {
         p_code: code,
         p_user_id: user?.id || "",
-        p_order_total_cents: Math.round(currentPrice * 100),
+        p_fare_amount: currentPrice,
       });
       if (error || !data || !(data as any).valid) {
         setPromoError((data as any)?.error || error?.message || "Invalid promo code");
       } else {
         const d = data as any;
-        const discountAmt = (d.discount_amount_cents || 0) / 100;
+        const discountAmt = Number(d.discount_amount) || 0;
         setAppliedPromo({ code, description: d.description || `${code} applied` });
         setPromoDiscount(Math.min(discountAmt, currentPrice));
         toast.success(`Promo ${code} applied!`);
