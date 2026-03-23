@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, User, Search, Sparkles, ChevronDown, Car, ShieldCheck, Plane, Hotel } from "lucide-react";
+import { Menu, User, Search, Sparkles, ChevronDown, Car, ShieldCheck, Plane, Hotel, Globe, Check } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -17,12 +17,21 @@ import CurrencySelector from "./shared/CurrencySelector";
 import BetaBadge from "./shared/BetaBadge";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { PremiumSearchOverlay } from "@/components/search";
+import { useI18n } from "@/hooks/useI18n";
+import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Header = () => {
   const navigate = useNavigate();
   const { user, signOut, isAdmin } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const { currentLanguage, changeLanguage } = useI18n();
+  const { data: supportedLanguages } = useSupportedLanguages(true);
+  const activeLanguages = (supportedLanguages || []).filter(l => l.is_active);
+  const currentLangData = activeLanguages.find(l => l.code === currentLanguage);
 
   return (
     <>
@@ -60,9 +69,53 @@ const Header = () => {
 
             {/* Desktop Actions - Enhanced */}
             <div className="hidden md:flex items-center gap-1.5">
+              {/* Language Selector */}
+              <Popover open={isLangOpen} onOpenChange={setIsLangOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 px-2 h-8 text-muted-foreground hover:text-foreground"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span className="text-xs font-medium">{currentLangData?.flag_emoji || "🌐"} {currentLanguage.toUpperCase()}</span>
+                    <ChevronDown className={cn("w-3 h-3 transition-transform duration-200", isLangOpen && "rotate-180")} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-1 bg-card/95 backdrop-blur-xl border-border/50 shadow-xl" align="end" sideOffset={8}>
+                  <div className="p-2 border-b border-border/50 bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-muted-foreground" />
+                      <p className="text-sm font-medium">Select Language</p>
+                    </div>
+                  </div>
+                  <ScrollArea className="max-h-80">
+                    <div className="p-1">
+                      {activeLanguages.map((lang) => (
+                        <button
+                          key={lang.code}
+                          onClick={() => { changeLanguage(lang.code); setIsLangOpen(false); }}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors",
+                            currentLanguage === lang.code ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                          )}
+                        >
+                          <span className="text-lg">{lang.flag_emoji}</span>
+                          <div className="flex-1 text-left">
+                            <p className="font-medium text-sm">{lang.name}</p>
+                            <p className="text-xs text-muted-foreground">{lang.native_name}</p>
+                          </div>
+                          {currentLanguage === lang.code && <Check className="w-4 h-4 text-primary" />}
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
+
               {/* Currency Selector */}
               <CurrencySelector variant="compact" />
-              
+
 
               {user ? (
                 <>
