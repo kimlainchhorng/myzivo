@@ -28,7 +28,28 @@ type NotificationCategory = 'all' | 'orders' | 'promos' | 'support' | 'delays';
 const NotificationsPage = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<NotificationCategory>('all');
+  const [showPhoneVerify, setShowPhoneVerify] = useState(false);
+  
+  // Check phone verification status
+  const { isChecking: phoneChecking, isVerified: phoneVerified } = usePhoneVerificationGate();
+  
+  // Get user's phone number from profile
+  const { data: profilePhone } = useQuery({
+    queryKey: ["profile-phone", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("phone_e164, phone")
+        .eq("user_id", user.id)
+        .single();
+      return data as { phone_e164: string | null; phone: string | null } | null;
+    },
+    enabled: !!user?.id && !phoneVerified,
+  });
+  
   const { 
     notifications, 
     unreadCount, 
