@@ -9,13 +9,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Phone, ShieldCheck, Loader2, ArrowLeft, AlertCircle, Smartphone } from "lucide-react";
+import { Phone, ShieldCheck, Loader2, ArrowLeft, AlertCircle, Smartphone, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 
-type Step = "phone" | "otp";
+type Step = "phone" | "otp" | "success";
 
 export default function VerifyPhonePage() {
   const navigate = useNavigate();
@@ -96,7 +96,11 @@ export default function VerifyPhonePage() {
       if (data && !data.success) throw new Error(data.error || "Verification failed");
 
       toast.success("Phone verified successfully! 🎉");
-      navigate(from, { replace: true });
+      setStep("success");
+      // Auto-redirect after 3 seconds
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 3000);
     } catch (err: any) {
       console.error("Verify error:", err);
       setError(err.message || "Invalid verification code");
@@ -131,7 +135,9 @@ export default function VerifyPhonePage() {
           transition={{ type: "spring", damping: 20 }}
           className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5"
         >
-          {step === "phone" ? (
+          {step === "success" ? (
+            <CheckCircle2 className="w-8 h-8 text-green-500" />
+          ) : step === "phone" ? (
             <Smartphone className="w-8 h-8 text-primary" />
           ) : (
             <ShieldCheck className="w-8 h-8 text-primary" />
@@ -145,10 +151,12 @@ export default function VerifyPhonePage() {
           className="text-center space-y-2 mb-8"
         >
           <h2 className="text-xl font-bold text-foreground">
-            {step === "phone" ? "Verify Your Phone Number" : "Enter Verification Code"}
+            {step === "success" ? "Phone Verified!" : step === "phone" ? "Verify Your Phone Number" : "Enter Verification Code"}
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-            {step === "phone"
+            {step === "success"
+              ? "Your phone number has been verified. Redirecting you now…"
+              : step === "phone"
               ? "A verified phone number is required to use ZIVO. This ensures your account security."
               : `We sent a 6-digit code to ${phoneE164}`}
           </p>
@@ -207,7 +215,7 @@ export default function VerifyPhonePage() {
                   )}
                 </Button>
               </motion.div>
-            ) : (
+            ) : step === "otp" ? (
               <motion.div
                 key="otp-step"
                 initial={{ opacity: 0, x: 20 }}
@@ -274,6 +282,31 @@ export default function VerifyPhonePage() {
                     {isSending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
                   </Button>
                 </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="success-step"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="space-y-6 text-center"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", damping: 12, delay: 0.2 }}
+                  className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto"
+                >
+                  <CheckCircle2 className="w-10 h-10 text-green-500" />
+                </motion.div>
+                <p className="text-sm text-muted-foreground">
+                  Redirecting in a moment…
+                </p>
+                <Button
+                  onClick={() => navigate(from, { replace: true })}
+                  className="w-full h-12 text-base font-semibold rounded-xl"
+                >
+                  Continue Now
+                </Button>
               </motion.div>
             )}
           </AnimatePresence>
