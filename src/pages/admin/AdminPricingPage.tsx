@@ -101,6 +101,7 @@ export default function AdminPricingPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-city-pricing"] });
+      queryClient.invalidateQueries({ queryKey: ["city-pricing"] });
       toast.success(editingId ? "Pricing updated" : "Pricing added");
       closeDialog();
     },
@@ -114,6 +115,7 @@ export default function AdminPricingPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-city-pricing"] });
+      queryClient.invalidateQueries({ queryKey: ["city-pricing"] });
       toast.success("Pricing deleted");
     },
     onError: (e) => toast.error(e.message),
