@@ -800,7 +800,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
 
-  const COLLAPSED_SHEET_HEIGHT = 290 + stops.length * 56 + (routeData ? 48 : 0);
+  const COLLAPSED_SHEET_HEIGHT = 330 + stops.length * 56 + (routeData ? 48 : 0);
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
   const SEARCH_SHEET_EXPANDED_Y = -20;
   const SEARCH_SHEET_COLLAPSED_Y = Math.min(Math.max(viewportHeight * 0.30, 140), 260);
