@@ -1124,7 +1124,7 @@ const FlightResults = () => {
                             </div>
                             <div className="text-right shrink-0">
                               {lowestDuffelPrice ? (
-                                <p className="text-lg font-bold text-foreground">${Math.round(getAllInPrice(lowestDuffelPrice) * 1.01)}</p>
+                                <p className="text-lg font-bold text-foreground">${Math.round(getAllInPrice(lowestDuffelPrice) * 1.02 + 3)}</p>
                               ) : (
                                 <p className="text-xs font-semibold text-primary">View prices →</p>
                               )}
@@ -1162,7 +1162,7 @@ const FlightResults = () => {
                               </div>
                               <div className="text-right shrink-0">
                                 {lowestDuffelPrice ? (
-                                  <p className="text-lg font-bold text-foreground">${Math.round(getAllInPrice(lowestDuffelPrice) * 1.01)}</p>
+                                  <p className="text-lg font-bold text-foreground">${Math.round(getAllInPrice(lowestDuffelPrice) * 1.03 + 7)}</p>
                                 ) : (
                                   <p className="text-xs font-semibold text-primary">View prices →</p>
                                 )}
