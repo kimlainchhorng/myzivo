@@ -43,6 +43,7 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 // PhishingWarning removed
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n } from "@/hooks/useI18n";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 
@@ -51,6 +52,7 @@ const activeSessions: { id: string; device: string; location: string; lastActive
 
 export default function AccountSecurity() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -134,9 +136,9 @@ export default function AccountSecurity() {
                 <Shield className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Security Settings</h1>
+               <h1 className="text-2xl font-bold">{t("security.title")}</h1>
                 <p className="text-muted-foreground text-sm">
-                  Manage your account security and privacy
+                  {t("security.subtitle")}
                 </p>
               </div>
             </div>
@@ -152,13 +154,13 @@ export default function AccountSecurity() {
                 Change Password
               </CardTitle>
               <CardDescription>
-                Use a strong, unique password you don't use elsewhere
+                {t("security.change_password_desc")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handlePasswordChange} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="current-password">Current Password</Label>
+                  <Label htmlFor="current-password">{t("security.current_password")}</Label>
                   <div className="relative">
                     <Input
                       id="current-password"
@@ -180,7 +182,7 @@ export default function AccountSecurity() {
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="new-password">New Password</Label>
+                    <Label htmlFor="new-password">{t("security.new_password")}</Label>
                     <div className="relative">
                       <Input
                         id="new-password"
@@ -202,7 +204,7 @@ export default function AccountSecurity() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirm New Password</Label>
+                    <Label htmlFor="confirm-password">{t("security.confirm_password")}</Label>
                     <Input
                       id="confirm-password"
                       type="password"
@@ -216,10 +218,10 @@ export default function AccountSecurity() {
                   {isChangingPassword ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Updating...
+                      {t("security.updating")}
                     </>
                   ) : (
-                    "Update Password"
+                    t("security.update_password")
                   )}
                 </Button>
               </form>
@@ -234,20 +236,20 @@ export default function AccountSecurity() {
                 Two-Factor Authentication
               </CardTitle>
               <CardDescription>
-                Add an extra layer of security to your account
+                {t("security.2fa_desc")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Authenticator App</p>
+                  <p className="font-medium">{t("security.authenticator_app")}</p>
                   <p className="text-sm text-muted-foreground">
-                    Use Google Authenticator, Authy, or similar app
+                    {t("security.authenticator_desc")}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge variant={twoFactorEnabled ? "default" : "secondary"}>
-                    {twoFactorEnabled ? "Enabled" : "Disabled"}
+                    {twoFactorEnabled ? t("security.enabled") : t("security.disabled")}
                   </Badge>
                   <Switch
                     checked={twoFactorEnabled}

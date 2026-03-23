@@ -28,10 +28,12 @@ import {
 } from "@/hooks/useLocalPaymentMethods";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/hooks/useI18n";
 import { toast } from "sonner";
 
 const PaymentMethodsPage = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { methods, addCard, deleteCard, setDefault, isEmpty } = useLocalPaymentMethods();
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -130,8 +132,8 @@ const PaymentMethodsPage = () => {
             <CreditCard className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold">Payment Methods</h1>
-            <p className="text-xs text-muted-foreground">Manage your cards</p>
+            <h1 className="text-lg font-semibold">{t("payment.title")}</h1>
+            <p className="text-xs text-muted-foreground">{t("payment.subtitle")}</p>
           </div>
         </div>
       </header>
@@ -140,7 +142,7 @@ const PaymentMethodsPage = () => {
       <div className="mx-4 mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2">
         <Wifi className="w-4 h-4 text-amber-500" />
         <span className="text-xs text-muted-foreground">
-          Demo mode — cards stored locally, not processed
+          {t("payment.demo_mode")}
         </span>
       </div>
 
@@ -148,15 +150,15 @@ const PaymentMethodsPage = () => {
       <div className="mx-4 mt-3 flex items-center justify-center gap-4 py-2.5 px-4 rounded-xl bg-muted/30 border border-border/50">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Shield className="w-3.5 h-3.5 text-emerald-500" />
-          <span>256-bit encrypted</span>
+          <span>{t("payment.encrypted")}</span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Lock className="w-3.5 h-3.5 text-primary" />
-          <span>PCI compliant</span>
+          <span>{t("payment.pci")}</span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <CheckCircle2 className="w-3.5 h-3.5 text-sky-500" />
-          <span>Secure</span>
+          <span>{t("payment.secure")}</span>
         </div>
       </div>
 
@@ -171,16 +173,16 @@ const PaymentMethodsPage = () => {
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
               <CreditCard className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">No payment methods</h3>
+            <h3 className="text-lg font-semibold mb-2">{t("payment.no_methods")}</h3>
             <p className="text-sm text-muted-foreground mb-6">
-              Add a card to speed up checkout
+              {t("payment.no_methods_desc")}
             </p>
             <Button
               onClick={() => setShowAddForm(true)}
               className="gap-2"
             >
               <Plus className="w-4 h-4" />
-              Add Card
+              {t("payment.add_card")}
             </Button>
           </motion.div>
         ) : (
