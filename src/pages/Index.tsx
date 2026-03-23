@@ -1,4 +1,5 @@
 import { useEffect, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -8,6 +9,8 @@ import { OGImageMeta } from "@/components/marketing";
 import { WinBackBanner } from "@/components/home/WinBackBanner";
 import LazySection from "@/components/shared/LazySection";
 import { OrganizationSchema, WebsiteSearchSchema } from "@/components/seo/StructuredData";
+import { usePhoneVerificationGate } from "@/hooks/usePhoneVerificationGate";
+import { Loader2 } from "lucide-react";
 import {
   CardGridSkeleton,
   RoutesSkeleton,
