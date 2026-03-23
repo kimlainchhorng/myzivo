@@ -1,6 +1,6 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, User, Search, Sparkles, ChevronDown, Car, ShieldCheck } from "lucide-react";
+import { Menu, User, Search, Sparkles, ChevronDown, Car, ShieldCheck, Plane, Hotel } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -10,9 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import MegaMenuDropdown from "./navigation/MegaMenuDropdown";
 import MobileNavMenu from "./navigation/MobileNavMenu";
-import { megaMenuData, moreServicesData } from "./navigation/megaMenuData";
 import { cn } from "@/lib/utils";
 import ZivoLogo from "./ZivoLogo";
 import CurrencySelector from "./shared/CurrencySelector";
@@ -57,12 +55,22 @@ const Header = () => {
               </div>
             </div>
 
-            {/* Desktop Navigation - Mega Menus */}
-            <nav className="hidden lg:flex items-center gap-0.5">
-              {megaMenuData.map((menu) => (
-                <MegaMenuDropdown key={menu.id} data={menu} />
+            {/* Desktop Navigation - Simple Links */}
+            <nav className="hidden lg:flex items-center gap-1">
+              {[
+                { label: "Flights", href: "/flights", icon: Plane, color: "text-sky-500" },
+                { label: "Hotels", href: "/hotels", icon: Hotel, color: "text-amber-500" },
+                { label: "Car Rental", href: "/car-rental", icon: Car, color: "text-emerald-500" },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
+                >
+                  <item.icon className={cn("w-4 h-4", item.color)} />
+                  {item.label}
+                </Link>
               ))}
-              <MegaMenuDropdown data={moreServicesData} />
             </nav>
 
             {/* Desktop Actions - Enhanced */}
