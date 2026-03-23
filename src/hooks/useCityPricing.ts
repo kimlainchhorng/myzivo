@@ -102,6 +102,9 @@ export function useCityPricing(city?: string) {
 
       return pricingMap;
     },
-    staleTime: 5 * 60 * 1000, // cache for 5 min
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 30 * 1000,
   });
 }
