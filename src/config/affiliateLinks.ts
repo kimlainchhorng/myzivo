@@ -123,23 +123,9 @@ export function buildKiwiDeepLink(params: {
   returnDate?: string;
   locale?: string;
 }): string {
-  const { origin, destination, departureDate, returnDate, locale } = params;
-  
-  // Build the Kiwi.com deep link URL
-  const kiwiParams = new URLSearchParams();
-  kiwiParams.set('from', origin);
-  kiwiParams.set('to', destination);
-  if (departureDate) kiwiParams.set('departure', departureDate);
-  if (returnDate) kiwiParams.set('return', returnDate);
-  
-  const kiwiUrl = `https://www.kiwi.com/deep?${kiwiParams.toString()}`;
-  const encodedKiwiUrl = encodeURIComponent(kiwiUrl);
-  
-  // Travelpayouts click tracking URL
-  const langKey = locale?.toLowerCase().split('-')[0] || 'en';
-  const promoId = KIWI_PROMO_IDS[langKey] || 3791;
-  
-  return `https://c111.travelpayouts.com/click?shmarker=700031.kiwi_flights&promo_id=${promoId}&source_type=customlink&type=click&custom_url=${encodedKiwiUrl}`;
+  // Use Travelpayouts short link to avoid Kiwi.com ERR_BLOCKED_BY_RESPONSE on direct /deep links.
+  // The tpo.li redirect handles affiliate tracking and is whitelisted by Kiwi.
+  return getKiwiLink(params.locale);
 }
 
 export const TRAVELPAYOUTS_DIRECT_LINKS = {
