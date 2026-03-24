@@ -70,12 +70,14 @@ function CambodiaPaymentSelector({
   isSubmitting,
   onConfirm,
   cashAllowed = true,
+  onMethodChange,
 }: {
   price: number;
   vehicleName: string;
   isSubmitting: boolean;
   onConfirm: (method: CambodiaPaymentMethod) => void;
   cashAllowed?: boolean;
+  onMethodChange?: (method: string) => void;
 }) {
   const [selected, setSelected] = useState<CambodiaPaymentMethod>(cashAllowed ? "cash" : "card");
 
