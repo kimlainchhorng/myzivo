@@ -323,21 +323,21 @@ const Login = () => {
           }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl p-4 sm:p-5 flex flex-col overflow-hidden"
+          className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl p-4 sm:p-5 flex flex-col"
         >
           {/* Glass shimmer */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-white/[0.04] rounded-3xl pointer-events-none" />
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
 
           {/* Header */}
-          <div className="text-center mb-3 relative z-10">
-            <div className="absolute left-0 top-0">
-              <button onClick={() => navigate("/")} className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation" aria-label="Go to Home">
-                <Home className="w-4 h-4 text-white/70" />
+          <div className="text-center mb-3 relative z-20" style={{ transform: "translateZ(30px)" }}>
+            <div className="absolute -left-2 -top-2">
+              <button onClick={(e) => { e.stopPropagation(); navigate("/"); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Go to Home">
+                <Home className="w-5 h-5 text-white/70" />
               </button>
             </div>
             <div className="absolute -right-2 -top-2">
-              <button onClick={() => setShowLangMenu(!showLangMenu)} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation" aria-label="Change language">
+              <button onClick={(e) => { e.stopPropagation(); setShowLangMenu(!showLangMenu); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Change language">
                 <Globe className="w-5 h-5 text-white/70" />
               </button>
             </div>
