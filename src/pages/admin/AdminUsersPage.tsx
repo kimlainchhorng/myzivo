@@ -67,32 +67,36 @@ export default function AdminUsersPage() {
     return map;
   }, [userRoles]);
 
-  // Filter & paginate
-  const filtered = useMemo(() => {
+  // Filter to customers only (exclude admin/moderator roles) & search
+  const customerProfiles = useMemo(() => {
     if (!profiles) return [];
-    if (!searchQuery.trim()) return profiles;
+    return profiles.filter((p) => {
+      const roles = roleMap[p.user_id] || [];
+      return !roles.some((r) => r === "admin" || r === "moderator");
+    });
+  }, [profiles, roleMap]);
+
+  const filtered = useMemo(() => {
+    if (!searchQuery.trim()) return customerProfiles;
     const q = searchQuery.toLowerCase();
-    return profiles.filter(
+    return customerProfiles.filter(
       (p) =>
         (p.full_name || "").toLowerCase().includes(q) ||
         (p.email || "").toLowerCase().includes(q) ||
         (p.phone || "").toLowerCase().includes(q) ||
         (p.user_id || "").toLowerCase().includes(q)
     );
-  }, [profiles, searchQuery]);
-
-  const totalPages = Math.ceil((filtered?.length || 0) / PAGE_SIZE);
-  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  }, [customerProfiles, searchQuery]);
 
   // Stats
   const stats = useMemo(() => {
-    if (!profiles) return { total: 0, verified: 0, setupComplete: 0 };
+    if (!customerProfiles.length) return { total: 0, verified: 0, setupComplete: 0 };
     return {
-      total: profiles.length,
-      verified: profiles.filter((p) => p.email_verified).length,
-      setupComplete: profiles.filter((p) => p.setup_complete).length,
+      total: customerProfiles.length,
+      verified: customerProfiles.filter((p) => p.email_verified).length,
+      setupComplete: customerProfiles.filter((p) => p.setup_complete).length,
     };
-  }, [profiles]);
+  }, [customerProfiles]);
 
   if (authLoading) {
     return (
@@ -117,7 +121,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <AdminLayout title="User Management">
+    <AdminLayout title="Customer Management">
       <div className="space-y-6 max-w-7xl">
         {/* Stat cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
