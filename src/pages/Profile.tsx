@@ -134,6 +134,8 @@ const GlassCard3D = ({ children, className = "", glow = false }: { children: Rea
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const phoneRequired = (location.state as any)?.phoneRequired === true;
   const { t, currentLanguage, changeLanguage } = useI18n();
   const { country, setCountry, countries } = useCountry();
   const { user, signOut, isAdmin } = useAuth();
