@@ -713,6 +713,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           perMinute: dbPricing.per_minute ?? v.perMinute,
           bookingFee: dbPricing.booking_fee ?? v.bookingFee,
           minimumFare: dbPricing.minimum_fare ?? v.minimumFare,
+          cardFeePct: dbPricing.card_fee_pct ?? 0,
         };
       });
     } else if (useKm) {
