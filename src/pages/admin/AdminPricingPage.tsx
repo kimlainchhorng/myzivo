@@ -42,6 +42,24 @@ const RIDE_TYPES_CAMBODIA = [
   "tuktuk", "tuktuk_ev", "moto", "share_xl",
 ];
 
+// Map ride_type → vehicle thumbnail image
+const RIDE_TYPE_IMAGES: Record<string, string> = {
+  standard: "/vehicles/economy-car-v2.png",
+  share: "/vehicles/share-car-v2.png",
+  comfort: "/vehicles/comfort-car-v2.png",
+  ev: "/vehicles/ev-car-v2.png",
+  xl: "/vehicles/xl-car-v2.png",
+  black: "/vehicles/black-lane-car-v2.png",
+  black_suv: "/vehicles/black-xl-car-v2.png",
+  luxury_xl: "/vehicles/luxury-car-v2.png",
+  pet: "/vehicles/pet-car-v2.png",
+  wheelchair: "/vehicles/wheelchair-car-v2.png",
+  tuktuk: "/vehicles/zivo-tuktuk.png",
+  tuktuk_ev: "/vehicles/zivo-ev-tuktuk.png",
+  moto: "/vehicles/share-car-v2.png",
+  share_xl: "/vehicles/xl-car-v2.png",
+};
+
 // Country filter presets — map country label to known city names
 const COUNTRY_FILTERS: { label: string; flag: string; cities: string[] | "all" }[] = [
   { label: "All", flag: "🌍", cities: "all" },
@@ -339,7 +357,18 @@ export default function AdminPricingPage() {
                   return (
                   <TableRow key={row.id}>
                     <TableCell className="font-medium">{row.city || "default"}</TableCell>
-                    <TableCell>{row.ride_type}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {RIDE_TYPE_IMAGES[row.ride_type || ""] && (
+                          <img
+                            src={RIDE_TYPE_IMAGES[row.ride_type || ""]}
+                            alt={row.ride_type || ""}
+                            className="w-10 h-7 object-contain"
+                          />
+                        )}
+                        <span>{row.ride_type}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">{sym}{(row.base_fare ?? 0).toFixed(2)}</TableCell>
                     <TableCell className="text-right">{sym}{(row.per_mile ?? 0).toFixed(2)}</TableCell>
                     <TableCell className="text-right">{sym}{(row.per_minute ?? 0).toFixed(2)}</TableCell>
