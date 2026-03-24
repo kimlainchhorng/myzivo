@@ -349,7 +349,7 @@ const Login = () => {
                         {currentLangItem?.flag && (
                           <img src={currentLangItem.flag} alt="" className="absolute -right-3 -top-3 w-24 h-24 opacity-[0.07] pointer-events-none blur-[1px]" style={{ transform: "rotate(-12deg) scale(1.3)" }} />
                         )}
-                        <p className="text-xs font-medium text-white/60 relative z-10">Select Language</p>
+                        <p className="text-xs font-medium text-white/60 relative z-10">{t("lang.select")}</p>
                       </div>
                       <div className="max-h-[320px] overflow-y-auto py-1">
                         {LANGS.map(l => (
