@@ -456,35 +456,36 @@ const Profile = () => {
                     <CardContent className="pt-6 pb-8 px-6">
                       <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                          {/* First Name */}
-                          <FormField control={form.control} name="first_name" render={({ field }) => (
-                            <FormItem className="space-y-1.5">
-                              <FormLabel className="flex items-center gap-2 font-semibold text-[13px]"><User className="h-3.5 w-3.5 text-primary" />First Name</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Enter first name"
-                                  className="h-12 rounded-2xl bg-muted/15 border-border/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] focus:border-primary/40 focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.04),0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-300 text-[15px] font-medium"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
+                          {/* First Name & Last Name — side by side */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <FormField control={form.control} name="first_name" render={({ field }) => (
+                              <FormItem className="space-y-1.5">
+                                <FormLabel className="flex items-center gap-1.5 font-semibold text-[13px]"><User className="h-3.5 w-3.5 text-primary" />First Name</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="First name"
+                                    className="h-12 rounded-2xl bg-muted/15 border-border/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] focus:border-primary/40 focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.04),0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-300 text-[15px] font-medium"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
 
-                          {/* Last Name */}
-                          <FormField control={form.control} name="last_name" render={({ field }) => (
-                            <FormItem className="space-y-1.5">
-                              <FormLabel className="flex items-center gap-2 font-semibold text-[13px]"><User className="h-3.5 w-3.5 text-primary" />Last Name</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Enter last name"
-                                  className="h-12 rounded-2xl bg-muted/15 border-border/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] focus:border-primary/40 focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.04),0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-300 text-[15px] font-medium"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
+                            <FormField control={form.control} name="last_name" render={({ field }) => (
+                              <FormItem className="space-y-1.5">
+                                <FormLabel className="flex items-center gap-1.5 font-semibold text-[13px]"><User className="h-3.5 w-3.5 text-primary" />Last Name</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Last name"
+                                    className="h-12 rounded-2xl bg-muted/15 border-border/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] focus:border-primary/40 focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.04),0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-300 text-[15px] font-medium"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                          </div>
 
                           {/* Email — editable with verification */}
                           <div className="space-y-1.5">
