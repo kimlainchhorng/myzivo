@@ -239,7 +239,7 @@ export function useWebPush() {
         body: {
           user_id: user.id,
           notification_type: "test",
-          title: "hiZIVO Push Test",
+          title: "ZIVO Push Test",
           body: "Push notifications are working end-to-end!",
           data: { type: "test", url: "/account" },
         },
