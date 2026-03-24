@@ -336,12 +336,10 @@ const Login = () => {
                 <Home className="w-4 h-4 text-white/70" />
               </button>
             </div>
-            <div className="absolute right-0 top-0">
-              <div className="relative">
-                <button onClick={() => setShowLangMenu(!showLangMenu)} className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation" aria-label="Change language">
-                  <Globe className="w-4 h-4 text-white/70" />
-                </button>
-              </div>
+            <div className="absolute -right-2 -top-2">
+              <button onClick={() => setShowLangMenu(!showLangMenu)} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation" aria-label="Change language">
+                <Globe className="w-5 h-5 text-white/70" />
+              </button>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight drop-shadow-lg">ZIVO ID</h1>
             <motion.p key={isLogin ? "login" : "signup"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-white/60 mt-0.5 text-xs">
