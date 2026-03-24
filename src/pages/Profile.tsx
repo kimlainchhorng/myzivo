@@ -10,6 +10,7 @@ import {
   User, Camera, ArrowLeft, Mail, Phone, Loader2, Save, Sparkles,
   Shield, Star, Clock, ChevronRight, CreditCard, Bell, Lock, Gift,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
+  AlertCircle, CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,10 +26,14 @@ import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const profileSchema = z.object({
-  full_name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters").optional().or(z.literal("")),
+  first_name: z.string().trim().min(1, "First name is required").max(50, "Too long").optional().or(z.literal("")),
+  last_name: z.string().trim().min(1, "Last name is required").max(50, "Too long").optional().or(z.literal("")),
   phone: z.string().trim().max(20, "Phone number too long").optional().or(z.literal("")),
 });
 
@@ -145,6 +150,13 @@ const Profile = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const profileCardRef = useRef<HTMLDivElement>(null);
 
+  // Email change state
+  const [newEmail, setNewEmail] = useState("");
+  const [emailEditMode, setEmailEditMode] = useState(false);
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [emailOtp, setEmailOtp] = useState("");
+  const [emailChanging, setEmailChanging] = useState(false);
+
   const profileTilt = use3DTilt(profileCardRef);
 
   const { scrollYProgress } = useScroll({ container: scrollRef });
@@ -152,11 +164,16 @@ const Profile = () => {
   const headerScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
   const bgParallax = useTransform(scrollYProgress, [0, 1], [0, -80]);
 
+  // Parse first/last from full_name
+  const parsedFirst = profile?.full_name?.split(" ").slice(0, 1).join(" ") || "";
+  const parsedLast = profile?.full_name?.split(" ").slice(1).join(" ") || "";
+
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    defaultValues: { full_name: "", phone: "" },
+    defaultValues: { first_name: "", last_name: "", phone: "" },
     values: {
-      full_name: profile?.full_name || "",
+      first_name: parsedFirst,
+      last_name: parsedLast,
       phone: profile?.phone || "",
     },
   });
@@ -179,10 +196,47 @@ const Profile = () => {
   };
 
   const onSubmit = async (data: ProfileFormData) => {
+    const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ") || null;
     await updateProfile.mutateAsync({
-      full_name: data.full_name || null,
+      full_name: fullName,
       phone: data.phone || null,
     });
+  };
+
+  const handleEmailChangeRequest = async () => {
+    if (!newEmail || newEmail === user?.email) return;
+    setEmailChanging(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+      if (error) throw error;
+      setEmailOtpSent(true);
+      toast.success("Verification email sent to " + newEmail);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send verification");
+    } finally {
+      setEmailChanging(false);
+    }
+  };
+
+  const handleEmailVerifyOtp = async () => {
+    setEmailChanging(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: newEmail,
+        token: emailOtp,
+        type: "email_change",
+      });
+      if (error) throw error;
+      toast.success("Email updated successfully!");
+      setEmailEditMode(false);
+      setEmailOtpSent(false);
+      setNewEmail("");
+      setEmailOtp("");
+    } catch (err: any) {
+      toast.error(err.message || "Invalid verification code");
+    } finally {
+      setEmailChanging(false);
+    }
   };
 
   const getInitials = () => {
