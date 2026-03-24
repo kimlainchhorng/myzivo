@@ -376,7 +376,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       )}
                       <div className="flex items-center gap-2 relative z-10">
                         <Globe className="w-4 h-4 text-muted-foreground" />
-                        <p className="text-sm font-medium">Select Language</p>
+                        <p className="text-sm font-medium">{t("lang.select")}</p>
                       </div>
                     </div>
                     <div className="overflow-y-auto max-h-[360px] p-1">

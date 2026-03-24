@@ -2246,7 +2246,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
                   <div className="absolute right-0 top-11 z-50 bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 min-w-[200px]">
                     <div className="px-3 py-2.5 border-b border-border/30 bg-muted/30">
-                      <p className="text-xs font-bold text-muted-foreground flex items-center gap-1.5"><Globe className="w-3 h-3" /> Select Language</p>
+                      <p className="text-xs font-bold text-muted-foreground flex items-center gap-1.5"><Globe className="w-3 h-3" /> {t("lang.select")}</p>
                     </div>
                     <div className="max-h-[320px] overflow-y-auto py-1">
                       {LANGS.map(l => (
@@ -2741,7 +2741,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
                     <div className="absolute right-0 top-11 z-50 bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 min-w-[200px]">
                       <div className="px-3 py-2.5 border-b border-border/30 bg-muted/30">
-                        <p className="text-xs font-bold text-muted-foreground flex items-center gap-1.5"><Globe className="w-3 h-3" /> Select Language</p>
+                        <p className="text-xs font-bold text-muted-foreground flex items-center gap-1.5"><Globe className="w-3 h-3" /> {t("lang.select")}</p>
                       </div>
                       <div className="max-h-[320px] overflow-y-auto py-1">
                         {LANGS.map(l => (
