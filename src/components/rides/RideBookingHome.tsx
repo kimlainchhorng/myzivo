@@ -585,6 +585,7 @@ function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
 export default function RideBookingHome({ initialSchedule = false }: { initialSchedule?: boolean } = {}) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: userProfile } = useUserProfile();
   const { getCurrentLocation, isGettingLocation } = useCurrentLocation();
   const [locationPermission, setLocationPermission] = useState<"prompt" | "granted" | "denied" | "checking">("checking");
   const { data: savedLocations = [] } = useSavedLocations(user?.id);
@@ -1539,7 +1540,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       setViewStep("home");
     }
     else if (viewStep === "route-preview") setViewStep("search");
-    else if (viewStep === "ride-options") setViewStep("route-preview");
+    else if (viewStep === "rider-info") setViewStep("route-preview");
+    else if (viewStep === "ride-options") setViewStep("rider-info");
     else if (viewStep === "confirm-ride") setViewStep("ride-options");
     else if (
       viewStep === "driver-assigned" ||
