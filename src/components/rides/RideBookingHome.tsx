@@ -713,6 +713,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           perMinute: dbPricing.per_minute ?? v.perMinute,
           bookingFee: dbPricing.booking_fee ?? v.bookingFee,
           minimumFare: dbPricing.minimum_fare ?? v.minimumFare,
+          cardFeePct: dbPricing.card_fee_pct ?? 0,
         };
       });
     } else if (useKm) {
@@ -745,6 +746,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoValidating, setPromoValidating] = useState(false);
   const [promoError, setPromoError] = useState<string | null>(null);
+  const [selectedCambodiaPayment, setSelectedCambodiaPayment] = useState<string>("cash");
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [searchSheetY, setSearchSheetY] = useState(-20); // -20 = full, 0 = half, positive = peek
   const searchDragControls = useDragControls();
@@ -3521,25 +3523,43 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     <span className="text-muted-foreground">{t("ride.booking_fee")}</span>
                     <span className="text-foreground">{dualPrice(currentVehicle.bookingFee, useKm)}</span>
                   </div>
+                  {selectedCambodiaPayment === "card" && (currentVehicle as any).cardFeePct > 0 && (() => {
+                    const baseFare = appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice;
+                    const cardFeeAmt = baseFare * ((currentVehicle as any).cardFeePct / 100);
+                    return (
+                      <div className="flex justify-between text-amber-600 dark:text-amber-400">
+                        <span className="text-muted-foreground">{t("ride.card_fee")} ({(currentVehicle as any).cardFeePct}%)</span>
+                        <span className="text-foreground">{dualPrice(cardFeeAmt, useKm)}</span>
+                      </div>
+                    );
+                  })()}
                   {appliedPromo && promoDiscount > 0 && (
                     <div className="flex justify-between text-primary">
                       <span className="font-medium">{t("ride.promo")} ({appliedPromo.code})</span>
                       <span className="font-medium">-{dualPrice(promoDiscount, useKm)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between border-t border-border/15 pt-1 mt-0.5">
-                    <span className="font-bold text-foreground text-[13px]">{t("ride.total")}</span>
-                    <div className="text-right">
-                      {useKm ? (
-                        <>
-                          <p className="font-bold text-foreground text-[15px]">{toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)}</p>
-                          <p className="text-[10px] text-muted-foreground">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</p>
-                        </>
-                      ) : (
-                        <span className="font-bold text-foreground text-[15px]">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
-                      )}
-                    </div>
-                  </div>
+                  {(() => {
+                    const baseFare = appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice;
+                    const cardFeeAmt = selectedCambodiaPayment === "card" && (currentVehicle as any).cardFeePct > 0
+                      ? baseFare * ((currentVehicle as any).cardFeePct / 100) : 0;
+                    const totalWithCardFee = baseFare + cardFeeAmt;
+                    return (
+                      <div className="flex justify-between border-t border-border/15 pt-1 mt-0.5">
+                        <span className="font-bold text-foreground text-[13px]">{t("ride.total")}</span>
+                        <div className="text-right">
+                          {useKm ? (
+                            <>
+                              <p className="font-bold text-foreground text-[15px]">{toKHR(totalWithCardFee)}</p>
+                              <p className="text-[10px] text-muted-foreground">${totalWithCardFee.toFixed(2)}</p>
+                            </>
+                          ) : (
+                            <span className="font-bold text-foreground text-[15px]">${totalWithCardFee.toFixed(2)}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
               {!routeData && (
@@ -3622,7 +3642,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             {/* Payment Section — fills remaining space */}
             <div className="shrink-0 pb-6">
               <RidePaymentSection
-                price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
+                price={(() => {
+                  const base = appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice;
+                  const cardFee = selectedCambodiaPayment === "card" && (currentVehicle as any).cardFeePct > 0
+                    ? base * ((currentVehicle as any).cardFeePct / 100) : 0;
+                  return base + cardFee;
+                })()}
                 vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}
                 isSubmitting={isSubmitting}
                 onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
@@ -3636,6 +3661,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 onCashConfirm={handleCashRide}
                 onAbaConfirm={handleAbaRide}
                 onBackToMethods={() => { setClientSecret(null); setPaymentStep("idle"); }}
+                onPaymentMethodChange={(m) => setSelectedCambodiaPayment(m)}
               />
             </div>
           </div>

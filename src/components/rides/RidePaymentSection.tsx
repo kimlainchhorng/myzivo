@@ -50,6 +50,8 @@ interface RidePaymentSectionProps {
   onAbaConfirm?: () => void;
   /** Go back from card form to payment method selector (Cambodia) */
   onBackToMethods?: () => void;
+  /** Callback when Cambodia payment method changes */
+  onPaymentMethodChange?: (method: string) => void;
 }
 
 const BRAND_LABELS: Record<string, string> = {
@@ -68,14 +70,20 @@ function CambodiaPaymentSelector({
   isSubmitting,
   onConfirm,
   cashAllowed = true,
+  onMethodChange,
 }: {
   price: number;
   vehicleName: string;
   isSubmitting: boolean;
   onConfirm: (method: CambodiaPaymentMethod) => void;
   cashAllowed?: boolean;
+  onMethodChange?: (method: string) => void;
 }) {
-  const [selected, setSelected] = useState<CambodiaPaymentMethod>(cashAllowed ? "cash" : "card");
+  const [selected, setSelected] = useState<CambodiaPaymentMethod>(() => {
+    const initial = cashAllowed ? "cash" : "card";
+    onMethodChange?.(initial);
+    return initial;
+  });
 
   const allMethods = [
     {
@@ -126,7 +134,7 @@ function CambodiaPaymentSelector({
           return (
             <button
               key={m.id}
-              onClick={() => setSelected(m.id)}
+              onClick={() => { setSelected(m.id); onMethodChange?.(m.id); }}
               className={cn(
                 "w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border transition-all text-left",
                 isSelected
@@ -401,6 +409,7 @@ export default function RidePaymentSection({
   onCashConfirm,
   onAbaConfirm,
   onBackToMethods,
+  onPaymentMethodChange,
 }: RidePaymentSectionProps) {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -545,6 +554,7 @@ export default function RidePaymentSection({
         vehicleName={vehicleName}
         isSubmitting={isSubmitting}
         cashAllowed={cashAllowed}
+        onMethodChange={onPaymentMethodChange}
         onConfirm={async (method) => {
           if (method === "aba") {
             // Use dedicated ABA handler that creates ride without Stripe
