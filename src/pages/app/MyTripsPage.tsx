@@ -208,8 +208,8 @@ export default function MyTripsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <GlassCard3D className="shadow-lg shadow-primary/[0.04]">
-              <div className="flex items-center gap-2 p-3 overflow-x-auto scrollbar-hide">
+            <GlassCard3D className="shadow-lg shadow-primary/[0.04]" allowOverflow>
+              <div className="flex items-center gap-2 p-3 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {serviceFilters.map((filter) => (
                   <motion.button
                     key={filter.id}
