@@ -153,7 +153,7 @@ export default function HotelLanding() {
             {/* Visible disclaimer near search */}
             <div className="mt-6 max-w-2xl mx-auto">
               <p className="text-center text-xs text-primary-foreground/50">
-                Hizivo is not the merchant of record. Hotel bookings are completed with licensed third-party providers.
+                ZIVO is not the merchant of record. Hotel bookings are completed with licensed third-party providers.
               </p>
             </div>
           </div>

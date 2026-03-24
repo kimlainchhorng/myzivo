@@ -41,13 +41,13 @@ export const HOTEL_CTA_TEXT = {
 
 export const HOTEL_DISCLAIMERS = {
   /** Main MoR disclaimer - REQUIRED on all hotel pages */
-  partnerBooking: "Hizivo is not the merchant of record. Hotel bookings are completed with licensed third-party providers.",
+  partnerBooking: "ZIVO is not the merchant of record. Hotel bookings are completed with licensed third-party providers.",
   
   /** Shorter version for inline use */
   partnerBookingShort: "Bookings completed with licensed hotel partners.",
   
   /** Footer disclaimer */
-  footer: "Hizivo is not the merchant of record for hotels. All hotel bookings, payments, and confirmations are handled by licensed third-party providers.",
+  footer: "ZIVO is not the merchant of record for hotels. All hotel bookings, payments, and confirmations are handled by licensed third-party providers.",
   
   /** Partner redirect notice */
   redirect: "You will be redirected to our trusted booking partner to complete your reservation securely.",
@@ -65,7 +65,7 @@ export const HOTEL_DISCLAIMERS = {
   websiteSupport: "For website issues, contact support@hizivo.com.",
   
   /** Payment disclaimer */
-  payment: "Hizivo does not collect or process payments for hotels. All payments are handled by the booking partner.",
+  payment: "ZIVO does not collect or process payments for hotels. All payments are handled by the booking partner.",
   
   /** Results trust copy */
   resultsTrust: "Compare hotel deals from licensed travel partners.",
@@ -89,7 +89,7 @@ export const HOTEL_CONSENT = {
   description: "Your details will be securely transmitted to our licensed hotel partner to complete your booking. By proceeding, you agree to the partner's terms and conditions.",
   
   /** Privacy notice */
-  privacy: "Your data is encrypted and only shared with the booking partner. Hizivo does not store payment information.",
+  privacy: "Your data is encrypted and only shared with the booking partner. ZIVO does not store payment information.",
   
   /** Terms link text */
   termsLink: "View Partner Terms",
@@ -103,7 +103,7 @@ export const HOTEL_TRUST_BADGES = {
   secureCheckout: "Secure partner checkout",
   transparentPricing: "Transparent pricing",
   licensedPartner: "Licensed hotel partner",
-  noHiddenFees: "No hidden fees from Hizivo",
+  noHiddenFees: "No hidden fees from ZIVO",
   dataEncrypted: "Data encrypted in transit",
 } as const;
 
