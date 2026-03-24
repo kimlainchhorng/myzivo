@@ -241,6 +241,17 @@ export default function AdminPricingPage() {
                     </select>
                   </div>
                 </div>
+                {/* Vehicle image preview */}
+                {RIDE_TYPE_IMAGES[form.ride_type] && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border/50">
+                    <img
+                      src={RIDE_TYPE_IMAGES[form.ride_type]}
+                      alt={form.ride_type}
+                      className="w-16 h-10 object-contain"
+                    />
+                    <span className="text-sm font-medium capitalize text-foreground">{form.ride_type.replace(/_/g, " ")}</span>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>Base Fare ({isCambodia ? "៛ KHR" : "$"})</Label>
