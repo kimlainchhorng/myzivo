@@ -2721,6 +2721,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "ride.payment_required_note": "ต้องมีวิธีการชำระเงินเพื่อจองการเดินทาง บัตรของคุณจะถูกอนุมัติล่วงหน้าเท่านั้น — ค่าใช้จ่ายสุดท้ายจะเรียกเก็บหลังการเดินทาง",
     "ride.preauthorized_note": "อนุมัติล่วงหน้าแล้ว · เรียกเก็บค่าใช้จ่ายสุดท้ายหลังการเดินทาง",
     "ride.stripe_not_loaded": "Stripe ยังไม่โหลด กรุณารอสักครู่",
+    "lang.select": "เลือกภาษา",
   },
   es: {
     "flights.roundtrip": "Ida y vuelta",
@@ -3102,6 +3103,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "profile.partner": "Socio",
     "profile.referred_by": "Referido por socio",
     "profile.joined_through": "Te uniste a través de",
+    "lang.select": "Seleccionar idioma",
   },
   ar: {
     "nav.home": "الرئيسية",
