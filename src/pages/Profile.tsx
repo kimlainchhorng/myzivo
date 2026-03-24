@@ -10,6 +10,7 @@ import {
   User, Camera, ArrowLeft, Mail, Phone, Loader2, Save, Sparkles,
   Shield, Star, Clock, ChevronRight, CreditCard, Bell, Lock, Gift,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
+  AlertCircle, CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,10 +26,13 @@ import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const profileSchema = z.object({
-  full_name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters").optional().or(z.literal("")),
+  first_name: z.string().trim().min(1, "First name is required").max(50, "Too long").optional().or(z.literal("")),
+  last_name: z.string().trim().min(1, "Last name is required").max(50, "Too long").optional().or(z.literal("")),
   phone: z.string().trim().max(20, "Phone number too long").optional().or(z.literal("")),
 });
 
@@ -145,6 +149,13 @@ const Profile = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const profileCardRef = useRef<HTMLDivElement>(null);
 
+  // Email change state
+  const [newEmail, setNewEmail] = useState("");
+  const [emailEditMode, setEmailEditMode] = useState(false);
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [emailOtp, setEmailOtp] = useState("");
+  const [emailChanging, setEmailChanging] = useState(false);
+
   const profileTilt = use3DTilt(profileCardRef);
 
   const { scrollYProgress } = useScroll({ container: scrollRef });
@@ -152,11 +163,16 @@ const Profile = () => {
   const headerScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
   const bgParallax = useTransform(scrollYProgress, [0, 1], [0, -80]);
 
+  // Parse first/last from full_name
+  const parsedFirst = profile?.full_name?.split(" ").slice(0, 1).join(" ") || "";
+  const parsedLast = profile?.full_name?.split(" ").slice(1).join(" ") || "";
+
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    defaultValues: { full_name: "", phone: "" },
+    defaultValues: { first_name: "", last_name: "", phone: "" },
     values: {
-      full_name: profile?.full_name || "",
+      first_name: parsedFirst,
+      last_name: parsedLast,
       phone: profile?.phone || "",
     },
   });
@@ -179,10 +195,47 @@ const Profile = () => {
   };
 
   const onSubmit = async (data: ProfileFormData) => {
+    const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ") || null;
     await updateProfile.mutateAsync({
-      full_name: data.full_name || null,
+      full_name: fullName,
       phone: data.phone || null,
     });
+  };
+
+  const handleEmailChangeRequest = async () => {
+    if (!newEmail || newEmail === user?.email) return;
+    setEmailChanging(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+      if (error) throw error;
+      setEmailOtpSent(true);
+      toast.success("Verification email sent to " + newEmail);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send verification");
+    } finally {
+      setEmailChanging(false);
+    }
+  };
+
+  const handleEmailVerifyOtp = async () => {
+    setEmailChanging(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: newEmail,
+        token: emailOtp,
+        type: "email_change",
+      });
+      if (error) throw error;
+      toast.success("Email updated successfully!");
+      setEmailEditMode(false);
+      setEmailOtpSent(false);
+      setNewEmail("");
+      setEmailOtp("");
+    } catch (err: any) {
+      toast.error(err.message || "Invalid verification code");
+    } finally {
+      setEmailChanging(false);
+    }
   };
 
   const getInitials = () => {
@@ -403,13 +456,13 @@ const Profile = () => {
                     <CardContent className="pt-6 pb-8 px-6">
                       <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                          {/* Full Name — 3D carved input */}
-                          <FormField control={form.control} name="full_name" render={({ field }) => (
+                          {/* First Name */}
+                          <FormField control={form.control} name="first_name" render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="flex items-center gap-2 font-semibold text-sm"><User className="h-4 w-4 text-primary" />{t("profile.full_name")}</FormLabel>
+                              <FormLabel className="flex items-center gap-2 font-semibold text-sm"><User className="h-4 w-4 text-primary" />First Name</FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder={t("profile.full_name_placeholder")}
+                                  placeholder="Enter first name"
                                   className="h-13 rounded-2xl bg-muted/20 border-border/40 shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] focus:border-primary/50 focus:shadow-[inset_0_2px_6px_rgba(0,0,0,0.06),0_0_0_3px_hsl(var(--primary)/0.12)] transition-all duration-300"
                                   {...field}
                                 />
@@ -418,11 +471,102 @@ const Profile = () => {
                             </FormItem>
                           )} />
 
-                          {/* Email — carved disabled */}
+                          {/* Last Name */}
+                          <FormField control={form.control} name="last_name" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="flex items-center gap-2 font-semibold text-sm"><User className="h-4 w-4 text-primary" />Last Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter last name"
+                                  className="h-13 rounded-2xl bg-muted/20 border-border/40 shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] focus:border-primary/50 focus:shadow-[inset_0_2px_6px_rgba(0,0,0,0.06),0_0_0_3px_hsl(var(--primary)/0.12)] transition-all duration-300"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+
+                          {/* Email — editable with verification */}
                           <div className="space-y-2">
                             <label className="flex items-center gap-2 text-sm font-semibold"><Mail className="h-4 w-4 text-primary" />{t("profile.email")}</label>
-                            <Input value={user?.email || ""} disabled className="h-13 rounded-2xl bg-muted/30 border-border/30 text-muted-foreground shadow-[inset_0_2px_6px_rgba(0,0,0,0.04)]" />
-                            <p className="text-xs text-muted-foreground/70">{t("profile.email_note")}</p>
+                            
+                            {!emailEditMode ? (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Input value={user?.email || ""} disabled className="h-13 rounded-2xl bg-muted/30 border-border/30 text-muted-foreground shadow-[inset_0_2px_6px_rgba(0,0,0,0.04)] flex-1" />
+                                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => { setEmailEditMode(true); setNewEmail(user?.email || ""); }}
+                                      className="rounded-2xl h-13 px-4 border-border/40 bg-card/50 backdrop-blur-xl shadow-md"
+                                    >
+                                      Change
+                                    </Button>
+                                  </motion.div>
+                                </div>
+                              </div>
+                            ) : (
+                              <AnimatePresence mode="wait">
+                                <motion.div
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -10 }}
+                                  className="space-y-3"
+                                >
+                                  {!emailOtpSent ? (
+                                    <>
+                                      <Input
+                                        type="email"
+                                        value={newEmail}
+                                        onChange={(e) => setNewEmail(e.target.value)}
+                                        placeholder="Enter new email"
+                                        className="h-13 rounded-2xl bg-muted/20 border-border/40 shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] focus:border-primary/50 focus:shadow-[inset_0_2px_6px_rgba(0,0,0,0.06),0_0_0_3px_hsl(var(--primary)/0.12)] transition-all duration-300"
+                                      />
+                                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                        <AlertCircle className="w-3 h-3" />
+                                        <span>A verification link will be sent to your new email</span>
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <Button
+                                          type="button"
+                                          onClick={handleEmailChangeRequest}
+                                          disabled={emailChanging || !newEmail || newEmail === user?.email}
+                                          className="flex-1 h-11 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25"
+                                        >
+                                          {emailChanging ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
+                                          Send Verification
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          onClick={() => { setEmailEditMode(false); setNewEmail(""); }}
+                                          className="h-11 rounded-2xl border-border/40"
+                                        >
+                                          Cancel
+                                        </Button>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center gap-2 text-xs text-emerald-500 font-medium">
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        <span>Verification email sent to {newEmail}. Check your inbox and click the link to confirm.</span>
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => { setEmailEditMode(false); setEmailOtpSent(false); setNewEmail(""); setEmailOtp(""); }}
+                                        className="w-full h-11 rounded-2xl border-border/40"
+                                      >
+                                        Done
+                                      </Button>
+                                    </>
+                                  )}
+                                </motion.div>
+                              </AnimatePresence>
+                            )}
                           </div>
 
                           {/* Phone — Country selector */}
