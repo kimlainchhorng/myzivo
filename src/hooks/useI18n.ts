@@ -81,6 +81,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "ride.fare_breakdown": "Fare Breakdown",
     "ride.base_fare": "Base fare",
     "ride.booking_fee": "Booking fee",
+    "ride.card_fee": "Card fee",
     "ride.total": "Total",
     "ride.title": "Zivo Ride",
     "ride.tab_book": "Book",
