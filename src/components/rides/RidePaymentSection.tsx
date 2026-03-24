@@ -554,6 +554,7 @@ export default function RidePaymentSection({
         vehicleName={vehicleName}
         isSubmitting={isSubmitting}
         cashAllowed={cashAllowed}
+        onMethodChange={onPaymentMethodChange}
         onConfirm={async (method) => {
           if (method === "aba") {
             // Use dedicated ABA handler that creates ride without Stripe
