@@ -60,6 +60,26 @@ const RIDE_TYPE_IMAGES: Record<string, string> = {
   share_xl: "/vehicles/xl-car-v2.png",
 };
 
+// ZIVO-branded display names for Cambodia ride types
+const CAMBODIA_RIDE_LABELS: Record<string, string> = {
+  tuktuk: "ZIVO Tuk Tuk",
+  tuktuk_ev: "ZIVO EV Tuk Tuk",
+  moto: "ZIVO Moto",
+  standard: "ZIVO Comfort",
+  comfort: "ZIVO Comfort+",
+  ev: "ZIVO EV",
+  xl: "ZIVO XL",
+  share: "ZIVO Share",
+  share_xl: "ZIVO Share XL",
+  pet: "ZIVO Pet",
+};
+
+/** Get display label for ride type */
+function getRideTypeLabel(rideType: string, cambodia: boolean): string {
+  if (cambodia && CAMBODIA_RIDE_LABELS[rideType]) return CAMBODIA_RIDE_LABELS[rideType];
+  return rideType.replace(/_/g, " ");
+}
+
 // Country filter presets — map country label to known city names
 const COUNTRY_FILTERS: { label: string; flag: string; cities: string[] | "all" }[] = [
   { label: "All", flag: "🌍", cities: "all" },
