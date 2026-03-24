@@ -36,6 +36,7 @@ import { reverseGeocode } from "@/services/mapsApi";
 import RidePaymentSection from "@/components/rides/RidePaymentSection";
 import CancelRideModal from "@/components/rides/CancelRideModal";
 import { Input } from "@/components/ui/input";
+import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { Tag, Percent, CheckCircle2, Loader2 } from "lucide-react";
 import PlaceLogo from "@/components/rides/PlaceLogo";
 import { useCityPricing } from "@/hooks/useCityPricing";
@@ -1541,7 +1542,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
     else if (viewStep === "route-preview") setViewStep("search");
     else if (viewStep === "rider-info") setViewStep("route-preview");
-    else if (viewStep === "ride-options") setViewStep("rider-info");
+    else if (viewStep === "ride-options") setViewStep(isCambodia ? "rider-info" : "route-preview");
     else if (viewStep === "confirm-ride") setViewStep("ride-options");
     else if (
       viewStep === "driver-assigned" ||
@@ -3068,7 +3069,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 ) : (
                   <Button
                     className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
-                    onClick={() => { setRiderName(userProfile?.full_name || ""); setRiderPhone(userProfile?.phone || ""); setViewStep("rider-info"); }}
+                    onClick={() => { if (isCambodia) { setRiderName(userProfile?.full_name || ""); setRiderPhone(userProfile?.phone || ""); setViewStep("rider-info"); } else { setViewStep("ride-options"); } }}
                   >
                     {t("ride.choose_ride")}
                   </Button>
@@ -3088,7 +3089,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <p className="text-sm text-muted-foreground mb-4">{t("ride.browse_available_rides")}</p>
                   <Button
                     className="w-full h-12 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90"
-                    onClick={() => { setRiderName(userProfile?.full_name || ""); setRiderPhone(userProfile?.phone || ""); setViewStep("rider-info"); }}
+                    onClick={() => { if (isCambodia) { setRiderName(userProfile?.full_name || ""); setRiderPhone(userProfile?.phone || ""); setViewStep("rider-info"); } else { setViewStep("ride-options"); } }}
                   >
                     {t("ride.see_ride_options")}
                   </Button>
@@ -3131,12 +3132,9 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <Phone className="w-4 h-4 text-primary" />
                 {t("ride.your_phone") || "Phone Number"}
               </label>
-              <Input
+              <CountryPhoneInput
                 value={riderPhone}
-                onChange={(e) => setRiderPhone(e.target.value)}
-                placeholder={t("ride.your_phone_placeholder") || "Enter your phone number"}
-                type="tel"
-                className="h-12 rounded-2xl bg-muted/30 border-border/40 text-base shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]"
+                onChange={(val) => setRiderPhone(val)}
               />
             </div>
 
