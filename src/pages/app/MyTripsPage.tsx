@@ -208,25 +208,30 @@ export default function MyTripsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <GlassCard3D className="shadow-lg shadow-primary/[0.04]" allowOverflow>
-              <div className="flex items-center gap-2 p-3 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-                {serviceFilters.map((filter) => (
-                  <motion.button
-                    key={filter.id}
-                    whileHover={{ scale: 1.06 }}
-                    whileTap={{ scale: 0.92 }}
-                    onClick={() => setServiceFilter(filter.id)}
-                    className={cn(
-                      "shrink-0 flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 touch-manipulation",
-                      serviceFilter === filter.id
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                        : "bg-transparent border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
-                    )}
-                  >
-                    {filter.icon && <filter.icon className="w-3.5 h-3.5" />}
-                    {filter.label}
-                  </motion.button>
-                ))}
+            <GlassCard3D className="shadow-lg shadow-primary/[0.04]">
+              <div
+                className="overflow-x-auto overflow-y-hidden scrollbar-hide"
+                style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+              >
+                <div className="inline-flex min-w-max items-center gap-2 p-3">
+                  {serviceFilters.map((filter) => (
+                    <motion.button
+                      key={filter.id}
+                      whileHover={{ scale: 1.06 }}
+                      whileTap={{ scale: 0.92 }}
+                      onClick={() => setServiceFilter(filter.id)}
+                      className={cn(
+                        "shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold transition-all duration-300 touch-manipulation",
+                        serviceFilter === filter.id
+                          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                          : "bg-transparent border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
+                      )}
+                    >
+                      {filter.icon && <filter.icon className="w-3.5 h-3.5" />}
+                      {filter.label}
+                    </motion.button>
+                  ))}
+                </div>
               </div>
             </GlassCard3D>
           </motion.div>
