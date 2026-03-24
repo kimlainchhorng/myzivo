@@ -3106,7 +3106,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           style={{ top: HEADER_HEIGHT }}
         >
           <div className="px-5 pt-5 pb-3 shrink-0">
-            <h2 className="text-xl font-black text-foreground tracking-tight">{t("ride.rider_info") || "Rider Information"}</h2>
+            <h2 className="text-xl font-black text-foreground tracking-tight">{t("ride.rider_info_title") || "Rider Information"}</h2>
             <p className="text-sm text-muted-foreground mt-1">{t("ride.rider_info_desc") || "Confirm your details before choosing a ride"}</p>
           </div>
 
