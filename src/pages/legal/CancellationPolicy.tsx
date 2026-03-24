@@ -15,8 +15,8 @@ const CancellationPolicy = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title="Cancellation Policy – Hizivo Travel"
-        description="Understand cancellation terms for Hotels, Car Rentals, and Flights booked through Hizivo. Different policies apply based on service type."
+        title="Cancellation Policy – ZIVO Travel"
+        description="Understand cancellation terms for Hotels, Car Rentals, and Flights booked through ZIVO. Different policies apply based on service type."
         canonical="https://hizivo.com/cancellation-policy"
       />
       <NavBar />
@@ -45,7 +45,7 @@ const CancellationPolicy = () => {
           <Card className="mb-8">
             <CardContent className="p-6">
               <p className="text-muted-foreground leading-relaxed">
-                Hizivo operates a hybrid business model. Cancellation policies differ based on the service type. 
+                ZIVO operates a hybrid business model. Cancellation policies differ based on the service type. 
                 Please review the relevant section for your booking.
               </p>
             </CardContent>
@@ -56,12 +56,12 @@ const CancellationPolicy = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-amber-500" />
-                Hotels (Hizivo is Merchant of Record)
+                Hotels (ZIVO is Merchant of Record)
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <p className="text-muted-foreground">
-                For hotel bookings, Hizivo processes cancellations directly. Cancellation terms depend on the 
+                For hotel bookings, ZIVO processes cancellations directly. Cancellation terms depend on the 
                 rate type selected at booking:
               </p>
               
@@ -102,7 +102,7 @@ const CancellationPolicy = () => {
                   How to Cancel
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Log in to your Hizivo account → My Trips → Select booking → Cancel Reservation. 
+                  Log in to your ZIVO account → My Trips → Select booking → Cancel Reservation. 
                   Or contact support@hizivo.com.
                 </p>
               </div>
@@ -114,12 +114,12 @@ const CancellationPolicy = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Car className="h-5 w-5 text-emerald-500" />
-                Car Rentals (Hizivo is Merchant of Record)
+                Car Rentals (ZIVO is Merchant of Record)
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <p className="text-muted-foreground">
-                For car rental bookings, Hizivo processes cancellations. Refund amounts depend on timing:
+                For car rental bookings, ZIVO processes cancellations. Refund amounts depend on timing:
               </p>
               
               <div className="space-y-3">
@@ -177,7 +177,7 @@ const CancellationPolicy = () => {
                   Important
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Hizivo does NOT issue airline tickets. Flight cancellations are handled by the airline 
+                  ZIVO does NOT issue airline tickets. Flight cancellations are handled by the airline 
                   partner who issued your ticket. Contact the airline partner listed in your confirmation email.
                 </p>
               </div>
@@ -228,7 +228,7 @@ const CancellationPolicy = () => {
             <CardContent className="p-6 text-center">
               <h3 className="font-bold text-lg mb-2">Need Help?</h3>
               <p className="text-muted-foreground mb-4">
-                For hotel and car rental cancellations, contact Hizivo support. 
+                For hotel and car rental cancellations, contact ZIVO support. 
                 For flight cancellations, contact your airline partner.
               </p>
               <a 

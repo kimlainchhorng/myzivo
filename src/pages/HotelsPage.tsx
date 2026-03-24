@@ -325,7 +325,7 @@ export default function HotelsPage() {
                 <ExternalLink className="w-4 h-4" /> Final booking completed on partner site.
               </p>
               <div className="mt-6 max-w-2xl mx-auto">
-                <p className="text-center text-xs text-primary-foreground/50">Hizivo is not the merchant of record. Hotel bookings are completed with licensed third-party providers.</p>
+                <p className="text-center text-xs text-primary-foreground/50">ZIVO is not the merchant of record. Hotel bookings are completed with licensed third-party providers.</p>
               </div>
             </div>
           </div>

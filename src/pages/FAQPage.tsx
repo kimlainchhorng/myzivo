@@ -20,12 +20,12 @@ const faqSections = [
     icon: HelpCircle,
     faqs: [
       {
-        question: "What is Hizivo?",
-        answer: "Hizivo is an online platform that helps you search and compare travel options like flights, hotels, and car rentals, and discover mobility services such as rides, food delivery, and moving."
+        question: "What is ZIVO??",
+        answer: "ZIVO is an online platform that helps you search and compare travel options like flights, hotels, and car rentals, and discover mobility services such as rides, food delivery, and moving."
       },
       {
-        question: "Does Hizivo sell flights, hotels, or car rentals?",
-        answer: "No. Hizivo is not the merchant of record. We help you find options and then connect you to licensed third-party providers who complete your booking."
+        question: "Does ZIVO sell flights, hotels, or car rentals?",
+        answer: "No. ZIVO is not the merchant of record. We help you find options and then connect you to licensed third-party providers who complete your booking."
       }
     ]
   },
@@ -42,8 +42,8 @@ const faqSections = [
         answer: "For security and compliance reasons, bookings are completed on our partner's secure checkout. This ensures your payment and reservation are handled by the licensed provider."
       },
       {
-        question: "Does Hizivo charge extra fees?",
-        answer: "Hizivo does not add hidden fees. Final prices, taxes, and fees are shown by the travel partner during checkout."
+        question: "Does ZIVO charge extra fees?",
+        answer: "ZIVO does not add hidden fees. Final prices, taxes, and fees are shown by the travel partner during checkout."
       },
       {
         question: "Can prices change after I click an offer?",
@@ -64,7 +64,7 @@ const faqSections = [
         answer: "ZIVO Rides lets you request a ride anywhere, anytime with upfront pricing. ZIVO Eats lets you order food delivery from local restaurants. Both are available directly on hizovo.com."
       },
       {
-        question: "Can I book rides or food directly on Hizivo?",
+        question: "Can I book rides or food directly on ZIVO??",
         answer: "Yes! You can book rides at hizovo.com/rides and order food at hizovo.com/eats. Payments for rides and deliveries are handled by our driver partners."
       }
     ]
@@ -88,15 +88,15 @@ const faqSections = [
     icon: Shield,
     faqs: [
       {
-        question: "Is Hizivo a travel agency?",
-        answer: "No. Hizivo is a travel search and referral platform. We do not act as an airline, hotel, rental company, or travel agency."
+        question: "Is ZIVO a travel agency?",
+        answer: "No. ZIVO is a travel search and referral platform. We do not act as an airline, hotel, rental company, or travel agency."
       },
       {
         question: "What does \"not the merchant of record\" mean?",
-        answer: "It means Hizivo does not process payments or issue tickets. The travel partner you book with is responsible for your reservation."
+        answer: "It means ZIVO does not process payments or issue tickets. The travel partner you book with is responsible for your reservation."
       },
       {
-        question: "How can I contact Hizivo?",
+        question: "How can I contact ZIVO??",
         answer: "For website or technical issues, contact us at support@hizivo.com. For booking issues, please contact your travel partner directly."
       }
     ]
@@ -126,7 +126,7 @@ export default function FAQPage() {
               Frequently Asked Questions
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-              Find answers to common questions about using Hizivo for travel search and bookings.
+              Find answers to common questions about using ZIVO for travel search and bookings.
             </p>
           </motion.div>
 
@@ -175,7 +175,7 @@ export default function FAQPage() {
                       Important Disclaimer
                     </h3>
                     <p className="text-amber-700 dark:text-amber-300 text-sm">
-                      Hizivo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.
+                      ZIVO is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.
                     </p>
                   </div>
                 </div>

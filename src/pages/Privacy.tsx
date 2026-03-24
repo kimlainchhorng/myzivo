@@ -10,8 +10,8 @@ const Privacy = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Privacy Policy - Hizivo | Travel Platform"
-        description="Learn how Hizivo handles your data for Hotels, Car Rentals (direct sale), and Flights (partner referral). We protect your information."
+        title="Privacy Policy - ZIVO | Travel Platform"
+        description="Learn how ZIVO handles your data for Hotels, Car Rentals (direct sale), and Flights (partner referral). We protect your information."
         canonical="https://hizivo.com/privacy"
       />
       
@@ -48,7 +48,7 @@ const Privacy = () => {
           {/* Introduction */}
           <section className="bg-card/50 rounded-2xl p-6 border border-border">
             <p className="text-foreground leading-relaxed text-lg">
-              Hizivo respects your privacy. This policy explains how we collect, use, and protect your information when you use our travel platform.
+              ZIVO respects your privacy. This policy explains how we collect, use, and protect your information when you use our travel platform.
             </p>
           </section>
 
@@ -62,12 +62,12 @@ const Privacy = () => {
             </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
               <p className="text-foreground leading-relaxed mb-4">
-                Hizivo operates a hybrid business model which affects how your data is handled:
+                ZIVO operates a hybrid business model which affects how your data is handled:
               </p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3 text-foreground">
                   <Building2 className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
-                  <span><strong>Hotels & Car Rentals:</strong> Hizivo is the merchant of record. We collect and process your payment and booking information directly.</span>
+                  <span><strong>Hotels & Car Rentals:</strong> ZIVO is the merchant of record. We collect and process your payment and booking information directly.</span>
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
                   <Plane className="w-5 h-5 text-sky-500 mt-0.5 shrink-0" />
