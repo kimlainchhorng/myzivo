@@ -60,6 +60,26 @@ const RIDE_TYPE_IMAGES: Record<string, string> = {
   share_xl: "/vehicles/xl-car-v2.png",
 };
 
+// ZIVO-branded display names for Cambodia ride types
+const CAMBODIA_RIDE_LABELS: Record<string, string> = {
+  tuktuk: "ZIVO Tuk Tuk",
+  tuktuk_ev: "ZIVO EV Tuk Tuk",
+  moto: "ZIVO Moto",
+  standard: "ZIVO Comfort",
+  comfort: "ZIVO Comfort+",
+  ev: "ZIVO EV",
+  xl: "ZIVO XL",
+  share: "ZIVO Share",
+  share_xl: "ZIVO Share XL",
+  pet: "ZIVO Pet",
+};
+
+/** Get display label for ride type */
+function getRideTypeLabel(rideType: string, cambodia: boolean): string {
+  if (cambodia && CAMBODIA_RIDE_LABELS[rideType]) return CAMBODIA_RIDE_LABELS[rideType];
+  return rideType.replace(/_/g, " ");
+}
+
 // Country filter presets — map country label to known city names
 const COUNTRY_FILTERS: { label: string; flag: string; cities: string[] | "all" }[] = [
   { label: "All", flag: "🌍", cities: "all" },
@@ -237,7 +257,7 @@ export default function AdminPricingPage() {
                       value={form.ride_type}
                       onChange={(e) => setForm({ ...form, ride_type: e.target.value })}
                     >
-                      {RIDE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                      {RIDE_TYPES.map((t) => <option key={t} value={t}>{getRideTypeLabel(t, isCambodia)}</option>)}
                     </select>
                   </div>
                 </div>
@@ -249,7 +269,7 @@ export default function AdminPricingPage() {
                       alt={form.ride_type}
                       className="w-16 h-10 object-contain"
                     />
-                    <span className="text-sm font-medium capitalize text-foreground">{form.ride_type.replace(/_/g, " ")}</span>
+                    <span className="text-sm font-medium text-foreground">{getRideTypeLabel(form.ride_type, isCambodia)}</span>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-3">
@@ -377,7 +397,7 @@ export default function AdminPricingPage() {
                             className="w-10 h-7 object-contain"
                           />
                         )}
-                        <span>{row.ride_type}</span>
+                        <span>{getRideTypeLabel(row.ride_type || "", isCambodia)}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">{sym}{(row.base_fare ?? 0).toFixed(2)}</TableCell>
