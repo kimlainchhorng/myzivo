@@ -43,6 +43,7 @@ const serviceFilters: Array<{ id: ServiceType | "all"; label: string; icon?: Rea
   { id: "flights", label: "Flights", icon: Plane },
   { id: "hotels", label: "Hotels", icon: BedDouble },
   { id: "p2p_cars", label: "Cars", icon: CarFront },
+  { id: "rides", label: "Rides", icon: CarTaxiFront },
 ];
 
 const statusFilters = [
