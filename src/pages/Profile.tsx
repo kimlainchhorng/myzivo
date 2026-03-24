@@ -29,7 +29,6 @@ import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const profileSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required").max(50, "Too long").optional().or(z.literal("")),
