@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
@@ -146,6 +147,7 @@ const Profile = () => {
   const updateProfile = useUpdateUserProfile();
   const uploadAvatar = useUploadAvatar();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const langTriggerRef = useRef<HTMLButtonElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -317,48 +319,18 @@ const Profile = () => {
           <ParallaxSection index={0}>
             <div className="relative mb-4">
               <motion.button
+                ref={langTriggerRef}
                 whileHover={{ scale: 1.05, y: -2, rotateX: 3 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowLangPicker(prev => !prev)}
-                className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-primary text-primary-foreground text-xs font-bold shadow-xl shadow-primary/30 touch-manipulation transition-all"
-                style={{ perspective: "800px", transformStyle: "preserve-3d" }}
+                className="relative z-20 flex min-h-12 items-center gap-2 px-5 py-3 rounded-2xl bg-primary text-primary-foreground text-xs font-bold shadow-xl shadow-primary/30 touch-manipulation transition-all"
+                style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
               >
-                <Globe className="w-3.5 h-3.5" />
+                <Globe className="w-4 h-4" />
                 <img src={getFlagUrl(currentLang.cc)} alt="" className="w-5 h-3.5 rounded-[3px] object-cover shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 <span>{currentLang.label}</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${showLangPicker ? "rotate-180" : ""}`} />
               </motion.button>
-
-              {showLangPicker && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: -12, rotateX: -8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: -12 }}
-                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                  className="absolute left-0 top-full mt-2 z-50 bg-card/90 backdrop-blur-2xl border border-border/40 rounded-3xl shadow-2xl shadow-primary/10 p-2 min-w-[230px] max-h-[360px] overflow-y-auto"
-                  style={{ scrollbarWidth: 'thin' }}
-                >
-                  {LANGS.map((lang, i) => (
-                    <motion.button
-                      key={lang.code}
-                      initial={{ opacity: 0, x: -12 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.012, duration: 0.2 }}
-                      onClick={() => { changeLanguage(lang.code); setShowLangPicker(false); }}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all touch-manipulation active:scale-[0.97] relative overflow-hidden group ${
-                        currentLanguage === lang.code
-                          ? "bg-primary/12 text-primary ring-1 ring-primary/25"
-                          : "text-foreground hover:bg-muted/70"
-                      }`}
-                    >
-                      <img src={getFlagUrl(lang.cc)} alt="" className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-8 rounded object-cover opacity-[0.05] pointer-events-none group-hover:opacity-[0.12] transition-opacity" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                      <img src={getFlagUrl(lang.cc)} alt={lang.label} className="w-6 h-4 rounded-[3px] object-cover shadow-sm border border-border/30 relative z-10 shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                      <span className="relative z-10">{lang.label}</span>
-                      {currentLanguage === lang.code && <Star className="w-3 h-3 text-primary fill-primary ml-auto relative z-10" />}
-                    </motion.button>
-                  ))}
-                </motion.div>
-              )}
             </div>
           </ParallaxSection>
 
@@ -826,6 +798,45 @@ const Profile = () => {
       </div>
 
       <ZivoMobileNav />
+
+      {showLangPicker && langTriggerRef.current && createPortal(
+        <>
+          <div className="fixed inset-0 z-[90]" onClick={() => setShowLangPicker(false)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: -10 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed z-[100] bg-card/95 backdrop-blur-2xl border border-border/40 rounded-3xl shadow-2xl shadow-primary/10 p-2 min-w-[230px] max-h-[360px] overflow-y-auto"
+            style={{
+              left: Math.max(16, Math.min(langTriggerRef.current.getBoundingClientRect().left, window.innerWidth - 246)),
+              top: langTriggerRef.current.getBoundingClientRect().bottom + 8,
+              scrollbarWidth: 'thin',
+            }}
+          >
+            {LANGS.map((lang, i) => (
+              <motion.button
+                key={lang.code}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.012, duration: 0.2 }}
+                onClick={() => { changeLanguage(lang.code); setShowLangPicker(false); }}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all touch-manipulation active:scale-[0.97] relative overflow-hidden group ${
+                  currentLanguage === lang.code
+                    ? "bg-primary/12 text-primary ring-1 ring-primary/25"
+                    : "text-foreground hover:bg-muted/70"
+                }`}
+              >
+                <img src={getFlagUrl(lang.cc)} alt="" className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-8 rounded object-cover opacity-[0.05] pointer-events-none group-hover:opacity-[0.12] transition-opacity" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <img src={getFlagUrl(lang.cc)} alt={lang.label} className="w-6 h-4 rounded-[3px] object-cover shadow-sm border border-border/30 relative z-10 shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <span className="relative z-10">{lang.label}</span>
+                {currentLanguage === lang.code && <Star className="w-3 h-3 text-primary fill-primary ml-auto relative z-10" />}
+              </motion.button>
+            ))}
+          </motion.div>
+        </>,
+        document.body
+      )}
     </div>
   );
 };
