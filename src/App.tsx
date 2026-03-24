@@ -15,6 +15,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import PhoneRequiredGate from "@/components/auth/PhoneRequiredGate";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
 import CookieConsent from "./components/common/CookieConsent";
