@@ -619,6 +619,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "ride.fare_breakdown": "ព័ត៌មានតម្លៃ",
     "ride.base_fare": "តម្លៃមូលដ្ឋាន",
     "ride.booking_fee": "ថ្លៃកក់",
+    "ride.card_fee": "ថ្លៃកាត",
     "ride.total": "សរុប",
     "ride.title": "Zivo Ride",
     "ride.tab_book": "កក់",
