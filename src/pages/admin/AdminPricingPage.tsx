@@ -17,7 +17,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
-import rideTuktukImg from "@/assets/ride-tuktuk.jpg";
+import rideTuktukImg from "@/assets/ride-tuktuk-zivo.png";
 
 const RIDE_TYPE_IMAGES: Record<string, string> = {
   tuktuk: rideTuktukImg,
