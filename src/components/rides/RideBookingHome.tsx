@@ -782,6 +782,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [otherName, setOtherName] = useState("");
   const [otherPhone, setOtherPhone] = useState("");
 
+  // Rider info state (pre-filled from profile)
+  const [riderName, setRiderName] = useState("");
+  const [riderPhone, setRiderPhone] = useState("");
+  const [pickupNote, setPickupNote] = useState("");
+
   // Viewport height for dynamic sheet sizing
   const [viewportHeight, setViewportHeight] = useState(800);
   useEffect(() => {
