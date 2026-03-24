@@ -3642,7 +3642,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             {/* Payment Section — fills remaining space */}
             <div className="shrink-0 pb-6">
               <RidePaymentSection
-                price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
+                price={(() => {
+                  const base = appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice;
+                  const cardFee = selectedCambodiaPayment === "card" && (currentVehicle as any).cardFeePct > 0
+                    ? base * ((currentVehicle as any).cardFeePct / 100) : 0;
+                  return base + cardFee;
+                })()}
                 vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}
                 isSubmitting={isSubmitting}
                 onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
