@@ -455,9 +455,10 @@ const VEHICLE_IMAGES: Record<string, string> = {
 };
 
 /* Cambodia-specific overrides */
+import rideTuktukImg from "@/assets/ride-tuktuk.jpg";
 const CAMBODIA_VEHICLE_IMAGES: Record<string, string> = {
-  "economy": "/vehicles/zivo-tuktuk.png",
-  "share": "/vehicles/zivo-ev-tuktuk.png",
+  "economy": rideTuktukImg,
+  "share": rideTuktukImg,
 };
 const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
   "economy": "ZIVO Tuk Tuk",
