@@ -64,7 +64,7 @@ const RIDE_TYPE_IMAGES: Record<string, string> = {
 const COUNTRY_FILTERS: { label: string; flag: string; cities: string[] | "all" }[] = [
   { label: "All", flag: "🌍", cities: "all" },
   { label: "USA", flag: "🇺🇸", cities: ["default", "Baton Rouge", "New York", "Los Angeles", "Chicago", "Houston", "Dallas", "Miami", "Atlanta", "San Francisco", "Seattle", "Denver", "Boston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Austin", "Jacksonville", "Columbus", "Charlotte", "Indianapolis", "Washington", "Nashville", "Portland", "Las Vegas", "Memphis", "Louisville", "Baltimore", "Milwaukee", "Albuquerque", "Tucson", "Fresno", "Sacramento", "Mesa", "Kansas City", "Omaha", "Cleveland", "Virginia Beach", "Raleigh", "Minneapolis", "Tampa", "New Orleans", "Orlando", "Detroit", "St. Louis", "Pittsburgh", "Cincinnati", "Honolulu", "Anchorage"] },
-  { label: "Cambodia", flag: "🇰🇭", cities: ["Phnom Penh", "Siem Reap", "Battambang", "Sihanoukville", "Kampong Cham", "Poipet", "Kampot"] },
+  { label: "Cambodia", flag: "🇰🇭", cities: ["Phnom Penh", "Siem Reap", "Battambang", "Sihanoukville", "Kampong Cham", "Poipet", "Kampot", "Takeo", "Svay Rieng", "Prey Veng", "Pursat", "Kratie", "Koh Kong", "Stung Treng", "Ratanakiri", "Mondulkiri", "Pailin", "Kep", "Banteay Meanchey", "Kandal", "Kampong Chhnang", "Kampong Speu", "Kampong Thom", "Preah Vihear", "Oddar Meanchey", "Tboung Khmum"] },
 ];
 
 const defaultForm = {
