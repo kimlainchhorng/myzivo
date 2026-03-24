@@ -592,8 +592,8 @@ const Profile = () => {
                             >
                               <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
                               <div>
-                                <p className="text-sm font-bold text-destructive">Phone number required</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">Please add your phone number below to access Rides, Flights, Hotels, and other services.</p>
+                                <p className="text-sm font-bold text-destructive">{t("profile.phone_required_title")}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">{t("profile.phone_required_desc")}</p>
                               </div>
                             </motion.div>
                           )}
