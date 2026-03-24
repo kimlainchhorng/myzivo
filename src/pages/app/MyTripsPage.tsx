@@ -43,7 +43,7 @@ const serviceFilters: Array<{ id: ServiceType | "all"; label: string; icon?: Rea
   { id: "flights", label: "Flights", icon: Plane },
   { id: "hotels", label: "Hotels", icon: BedDouble },
   { id: "p2p_cars", label: "Cars", icon: CarFront },
-  { id: "rides", label: "ZIVO Ride", icon: CarTaxiFront },
+  { id: "rides", label: "Ride", icon: CarTaxiFront },
 ];
 
 const statusFilters = [
@@ -212,29 +212,24 @@ export default function MyTripsPage() {
             <div className="relative rounded-2xl shadow-lg shadow-primary/[0.04]">
               <div className="absolute inset-0 bg-card/65 backdrop-blur-2xl rounded-2xl" />
               <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/[0.06] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]" />
-              <div
-                className="relative z-10 overflow-x-auto overflow-y-hidden scrollbar-hide"
-                style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
-              >
-                <div className="inline-flex min-w-max items-center gap-2 p-3">
-                  {serviceFilters.map((filter) => (
-                    <motion.button
-                      key={filter.id}
-                      whileHover={{ scale: 1.06 }}
-                      whileTap={{ scale: 0.92 }}
-                      onClick={() => setServiceFilter(filter.id)}
-                      className={cn(
-                        "shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold transition-all duration-300 touch-manipulation",
-                        serviceFilter === filter.id
-                          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                          : "bg-transparent border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
-                      )}
-                    >
-                      {filter.icon && <filter.icon className="w-3.5 h-3.5" />}
-                      {filter.label}
-                    </motion.button>
-                  ))}
-                </div>
+              <div className="relative z-10 flex flex-wrap items-center gap-2 p-3">
+                {serviceFilters.map((filter) => (
+                  <motion.button
+                    key={filter.id}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => setServiceFilter(filter.id)}
+                    className={cn(
+                      "shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-[11px] font-bold transition-all duration-300 touch-manipulation",
+                      serviceFilter === filter.id
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                        : "bg-transparent border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
+                    )}
+                  >
+                    {filter.icon && <filter.icon className="w-3.5 h-3.5" />}
+                    {filter.label}
+                  </motion.button>
+                ))}
               </div>
             </div>
           </motion.div>
