@@ -543,6 +543,42 @@ const Login = () => {
       </div>
 
       <InlineLegalSheet open={sheet.open} onOpenChange={setOpen} title={sheet.title} url={sheet.url} />
+
+      {/* Language menu rendered via portal to escape 3D transform context */}
+      {showLangMenu && createPortal(
+        <>
+          <div className="fixed inset-0 z-[90]" onClick={() => setShowLangMenu(false)} />
+          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20 px-6 pointer-events-none">
+            <div className="pointer-events-auto w-[260px] max-h-[60vh] bg-black/90 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl py-1 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 h-fit ml-auto">
+              <div className="relative px-3 py-2 border-b border-white/10 overflow-hidden">
+                {currentLangItem?.flag && (
+                  <img src={currentLangItem.flag} alt="" className="absolute -right-3 -top-3 w-24 h-24 opacity-[0.07] pointer-events-none blur-[1px]" style={{ transform: "rotate(-12deg) scale(1.3)" }} />
+                )}
+                <p className="text-xs font-medium text-white/60 relative z-10">{t("lang.select")}</p>
+              </div>
+              <div className="max-h-[320px] overflow-y-auto py-1">
+                {LANGS.map(l => (
+                  <button
+                    key={l.code}
+                    onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
+                    className={cn(
+                      "w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-all duration-200 relative overflow-hidden group",
+                      currentLanguage === l.code ? "bg-primary/20 text-primary font-semibold" : "text-white/80 hover:bg-white/10"
+                    )}
+                  >
+                    <img src={l.flag} alt="" className="absolute right-0 top-1/2 w-14 h-14 opacity-0 group-hover:opacity-[0.08] transition-opacity duration-300 pointer-events-none blur-[0.5px]" style={{ transform: "translateY(-50%) rotate(-8deg)" }} />
+                    <img src={l.flag} alt={l.label} className="w-6 h-[17px] rounded-[3px] object-cover shadow-sm border border-white/20 shrink-0 relative z-10" />
+                    <span className="relative z-10 flex-1 text-left">{l.label}</span>
+                    <span className="text-[10px] font-mono text-white/40 uppercase relative z-10">{l.code}</span>
+                    {currentLanguage === l.code && <CheckCircle className="w-3.5 h-3.5 text-primary relative z-10" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
     </div>
   );
 };
