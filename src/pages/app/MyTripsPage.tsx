@@ -202,32 +202,33 @@ export default function MyTripsPage() {
 
         {/* ── Filters ── */}
         <div className="px-4 pt-4 space-y-3 max-w-lg mx-auto">
-          {/* Service Filter — 3D Glass Chips */}
+          {/* Service Filter — Clean Pill Chips (matching reference) */}
           <motion.div
-            initial={{ opacity: 0, y: 15, rotateX: 5 }}
-            animate={{ opacity: 1, y: 0, rotateX: 0 }}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            style={{ perspective: '800px' }}
           >
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              {serviceFilters.map((filter) => (
-                <motion.button
-                  key={filter.id}
-                  whileHover={{ scale: 1.06, y: -2 }}
-                  whileTap={{ scale: 0.92 }}
-                  onClick={() => setServiceFilter(filter.id)}
-                  className={cn(
-                    "shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-300 touch-manipulation relative overflow-hidden",
-                    serviceFilter === filter.id
-                      ? "bg-primary text-primary-foreground shadow-xl shadow-primary/25 ring-1 ring-primary/30"
-                      : "bg-card/60 backdrop-blur-xl border border-border/30 text-muted-foreground hover:text-foreground shadow-md shadow-foreground/[0.02]"
-                  )}
-                >
-                  {filter.icon && <filter.icon className="w-3.5 h-3.5" />}
-                  {filter.label}
-                </motion.button>
-              ))}
-            </div>
+            <GlassCard3D className="shadow-lg shadow-primary/[0.04]">
+              <div className="flex items-center gap-2 p-3 overflow-x-auto scrollbar-hide">
+                {serviceFilters.map((filter) => (
+                  <motion.button
+                    key={filter.id}
+                    whileHover={{ scale: 1.06 }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => setServiceFilter(filter.id)}
+                    className={cn(
+                      "shrink-0 flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 touch-manipulation",
+                      serviceFilter === filter.id
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                        : "bg-transparent border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
+                    )}
+                  >
+                    {filter.icon && <filter.icon className="w-3.5 h-3.5" />}
+                    {filter.label}
+                  </motion.button>
+                ))}
+              </div>
+            </GlassCard3D>
           </motion.div>
 
           {/* Status Filter — 3D Glass Tab Bar */}
