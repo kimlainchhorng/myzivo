@@ -403,6 +403,7 @@ export default function RidePaymentSection({
   onCashConfirm,
   onAbaConfirm,
   onBackToMethods,
+  onPaymentMethodChange,
 }: RidePaymentSectionProps) {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
