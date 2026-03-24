@@ -252,7 +252,6 @@ export default function AdminPricingPage() {
                     <span className="text-sm font-medium capitalize text-foreground">{form.ride_type.replace(/_/g, " ")}</span>
                   </div>
                 )}
-                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>Base Fare ({isCambodia ? "៛ KHR" : "$"})</Label>
