@@ -134,7 +134,7 @@ function CambodiaPaymentSelector({
           return (
             <button
               key={m.id}
-              onClick={() => setSelected(m.id)}
+              onClick={() => { setSelected(m.id); onMethodChange?.(m.id); }}
               className={cn(
                 "w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border transition-all text-left",
                 isSelected
