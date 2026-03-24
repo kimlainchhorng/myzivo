@@ -17,6 +17,7 @@ export interface CityPricingRow {
   booking_fee: number;
   minimum_fare: number;
   is_active: boolean;
+  card_fee_pct: number;
 }
 
 // Map DB ride_type → frontend vehicle id
