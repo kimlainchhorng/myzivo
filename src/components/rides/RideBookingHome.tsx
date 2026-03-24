@@ -3140,7 +3140,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <Input
                   value={riderPhone.replace(/^\+855\s?/, "")}
                   onChange={(e) => {
-                    const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
+                    const digits = e.target.value.replace(/\D/g, "").replace(/^0+/, "").slice(0, 9);
                     setRiderPhone(digits ? `+855 ${digits}` : "");
                   }}
                   placeholder="12 345 678"
