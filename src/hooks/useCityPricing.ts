@@ -40,7 +40,7 @@ const DB_TO_VEHICLE_ID: Record<string, string> = {
 };
 
 // Cambodia cities where pricing is stored in KHR (Riel)
-const KHR_CITIES = ["phnom penh", "siem reap", "sihanoukville", "battambang"];
+const KHR_CITIES = ["phnom penh", "siem reap", "sihanoukville", "battambang", "kampong cham", "poipet", "kampot", "takeo", "svay rieng", "prey veng", "pursat", "kratie", "koh kong", "stung treng", "ratanakiri", "mondulkiri", "pailin", "kep", "banteay meanchey", "kandal", "kampong chhnang", "kampong speu", "kampong thom", "preah vihear", "oddar meanchey", "tboung khmum"];
 const KHR_RATE = 4062.5;
 
 /** Check if a city stores pricing in KHR */
