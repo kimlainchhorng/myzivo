@@ -357,7 +357,18 @@ export default function AdminPricingPage() {
                   return (
                   <TableRow key={row.id}>
                     <TableCell className="font-medium">{row.city || "default"}</TableCell>
-                    <TableCell>{row.ride_type}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {RIDE_TYPE_IMAGES[row.ride_type || ""] && (
+                          <img
+                            src={RIDE_TYPE_IMAGES[row.ride_type || ""]}
+                            alt={row.ride_type || ""}
+                            className="w-10 h-7 object-contain"
+                          />
+                        )}
+                        <span>{row.ride_type}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">{sym}{(row.base_fare ?? 0).toFixed(2)}</TableCell>
                     <TableCell className="text-right">{sym}{(row.per_mile ?? 0).toFixed(2)}</TableCell>
                     <TableCell className="text-right">{sym}{(row.per_minute ?? 0).toFixed(2)}</TableCell>
