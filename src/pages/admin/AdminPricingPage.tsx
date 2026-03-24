@@ -397,7 +397,7 @@ export default function AdminPricingPage() {
                             className="w-10 h-7 object-contain"
                           />
                         )}
-                        <span>{row.ride_type}</span>
+                        <span>{getRideTypeLabel(row.ride_type || "", isCambodia)}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">{sym}{(row.base_fare ?? 0).toFixed(2)}</TableCell>
