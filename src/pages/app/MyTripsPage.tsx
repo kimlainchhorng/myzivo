@@ -43,7 +43,7 @@ const serviceFilters: Array<{ id: ServiceType | "all"; label: string; icon?: Rea
   { id: "flights", label: "Flights", icon: Plane },
   { id: "hotels", label: "Hotels", icon: BedDouble },
   { id: "p2p_cars", label: "Cars", icon: CarFront },
-  { id: "rides", label: "Rides", icon: CarTaxiFront },
+  { id: "rides", label: "ZIVO Ride", icon: CarTaxiFront },
 ];
 
 const statusFilters = [
@@ -209,9 +209,11 @@ export default function MyTripsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <GlassCard3D className="shadow-lg shadow-primary/[0.04]">
+            <div className="relative rounded-2xl shadow-lg shadow-primary/[0.04]">
+              <div className="absolute inset-0 bg-card/65 backdrop-blur-2xl rounded-2xl" />
+              <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/[0.06] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]" />
               <div
-                className="overflow-x-auto overflow-y-hidden scrollbar-hide"
+                className="relative z-10 overflow-x-auto overflow-y-hidden scrollbar-hide"
                 style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
               >
                 <div className="inline-flex min-w-max items-center gap-2 p-3">
@@ -234,7 +236,7 @@ export default function MyTripsPage() {
                   ))}
                 </div>
               </div>
-            </GlassCard3D>
+            </div>
           </motion.div>
 
           {/* Status Filter — 3D Glass Tab Bar */}
