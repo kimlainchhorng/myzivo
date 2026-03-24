@@ -64,7 +64,7 @@ export const useUpdateUserProfile = () => {
         const { error } = await supabase
           .from("profiles")
           .insert({
-            id: crypto.randomUUID(),
+            id: user.id,
             user_id: user.id,
             email: user.email,
             ...updates,
@@ -134,7 +134,7 @@ export const useUploadAvatar = () => {
         const { error } = await supabase
           .from("profiles")
           .insert({
-            id: crypto.randomUUID(),
+            id: user.id,
             user_id: user.id,
             email: user.email,
             avatar_url: publicUrl,
