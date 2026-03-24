@@ -88,6 +88,9 @@ export default function AdminUsersPage() {
     );
   }, [customerProfiles, searchQuery]);
 
+  const totalPages = Math.ceil((filtered?.length || 0) / PAGE_SIZE);
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
   // Stats
   const stats = useMemo(() => {
     if (!customerProfiles.length) return { total: 0, verified: 0, setupComplete: 0 };
