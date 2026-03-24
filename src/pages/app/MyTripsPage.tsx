@@ -29,10 +29,10 @@ const BokehParticle = ({ delay, size, x, y, color }: { delay: number; size: numb
 );
 
 /* ── Glass Card ── */
-const GlassCard3D = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`relative rounded-2xl overflow-hidden ${className}`}>
-    <div className="absolute inset-0 bg-card/65 backdrop-blur-2xl" />
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-primary/[0.015]" />
+const GlassCard3D = ({ children, className = "", allowOverflow = false }: { children: React.ReactNode; className?: string; allowOverflow?: boolean }) => (
+  <div className={`relative ${allowOverflow ? '' : 'overflow-hidden'} rounded-2xl ${className}`}>
+    <div className="absolute inset-0 bg-card/65 backdrop-blur-2xl rounded-2xl" />
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-primary/[0.015] rounded-2xl" />
     <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/[0.06] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]" />
     <div className="relative z-10">{children}</div>
   </div>
