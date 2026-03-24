@@ -66,7 +66,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const [moreOpen, setMoreOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
-  const { currentLanguage, changeLanguage } = useI18n();
+  const { currentLanguage, changeLanguage, t } = useI18n();
   const { data: supportedLanguages } = useSupportedLanguages(true);
   const activeLanguages = (supportedLanguages || []).filter((l) => l.is_active);
   const currentLangData = activeLanguages.find((l) => l.code === currentLanguage);
