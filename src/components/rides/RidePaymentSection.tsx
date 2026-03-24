@@ -50,6 +50,8 @@ interface RidePaymentSectionProps {
   onAbaConfirm?: () => void;
   /** Go back from card form to payment method selector (Cambodia) */
   onBackToMethods?: () => void;
+  /** Callback when Cambodia payment method changes */
+  onPaymentMethodChange?: (method: string) => void;
 }
 
 const BRAND_LABELS: Record<string, string> = {
