@@ -15,6 +15,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import PhoneRequiredGate from "@/components/auth/PhoneRequiredGate";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
 import CookieConsent from "./components/common/CookieConsent";
@@ -375,10 +376,10 @@ const App = () => (
                 <Route path="/book-hotel" element={<PreserveQueryRedirect to="/hotels" />} />
                 <Route path="/travel-extras" element={<PreserveQueryRedirect to="/extras" />} />
                 <Route path="/rides" element={<PreserveQueryRedirect to="/rides/hub" />} />
-                <Route path="/rides/track/:tripId" element={<ProtectedRoute><RideTrackingPage /></ProtectedRoute>} />
-                <Route path="/rides/hub" element={<ProtectedRoute><RideHubPage /></ProtectedRoute>} />
+                <Route path="/rides/track/:tripId" element={<ProtectedRoute><PhoneRequiredGate><RideTrackingPage /></PhoneRequiredGate></ProtectedRoute>} />
+                <Route path="/rides/hub" element={<ProtectedRoute><PhoneRequiredGate><RideHubPage /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/ride" element={<PreserveQueryRedirect to="/rides" />} />
-                <Route path="/eats" element={<ProtectedRoute><EatsLanding /></ProtectedRoute>} />
+                <Route path="/eats" element={<ProtectedRoute><PhoneRequiredGate><EatsLanding /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/eats/restaurant/:id" element={<ProtectedRoute><EatsLanding /></ProtectedRoute>} />
                 <Route path="/food" element={<PreserveQueryRedirect to="/eats" />} />
                 <Route path="/move" element={<PreserveQueryRedirect to="/rides" />} />
@@ -433,7 +434,7 @@ const App = () => (
                 <Route path="/flights/details/:id" element={<RouteErrorBoundary section="Flights"><FlightDetails /></RouteErrorBoundary>} />
                 <Route path="/flights/traveler" element={<RouteErrorBoundary section="Flights"><FlightTravelerInfo /></RouteErrorBoundary>} />
                 <Route path="/flights/traveler-info" element={<RouteErrorBoundary section="Flights"><FlightTravelerInfo /></RouteErrorBoundary>} />
-                <Route path="/flights/checkout" element={<RouteErrorBoundary section="Flights"><FlightCheckout /></RouteErrorBoundary>} />
+                <Route path="/flights/checkout" element={<RouteErrorBoundary section="Flights"><PhoneRequiredGate><FlightCheckout /></PhoneRequiredGate></RouteErrorBoundary>} />
                 <Route path="/flights/confirmation/:bookingId" element={<RouteErrorBoundary section="Flights"><FlightConfirmation /></RouteErrorBoundary>} />
                 <Route path="/flights/bookings" element={<RouteErrorBoundary section="Flights"><FlightBookingsPage /></RouteErrorBoundary>} />
                 {/* flights-dashboard removed */}
@@ -463,7 +464,7 @@ const App = () => (
                 <Route path="/how-to-rent" element={<RouteErrorBoundary section="Cars"><HowToRent /></RouteErrorBoundary>} />
 
                 {/* Travel Checkout */}
-                <Route path="/travel/checkout" element={<RouteErrorBoundary section="Checkout"><TravelCheckoutPage /></RouteErrorBoundary>} />
+                <Route path="/travel/checkout" element={<RouteErrorBoundary section="Checkout"><PhoneRequiredGate><TravelCheckoutPage /></PhoneRequiredGate></RouteErrorBoundary>} />
                 <Route path="/confirmation/:orderNumber" element={<RouteErrorBoundary section="Checkout"><TravelConfirmationPage /></RouteErrorBoundary>} />
                 <Route path="/my-trips/:orderNumber" element={<RouteErrorBoundary section="Checkout"><TravelOrderDetailPage /></RouteErrorBoundary>} />
 

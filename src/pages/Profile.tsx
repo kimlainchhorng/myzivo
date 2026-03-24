@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
 import SEOHead from "@/components/SEOHead";
@@ -134,6 +134,8 @@ const GlassCard3D = ({ children, className = "", glow = false }: { children: Rea
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const phoneRequired = (location.state as any)?.phoneRequired === true;
   const { t, currentLanguage, changeLanguage } = useI18n();
   const { country, setCountry, countries } = useCountry();
   const { user, signOut, isAdmin } = useAuth();
@@ -580,6 +582,21 @@ const Profile = () => {
                               </AnimatePresence>
                             )}
                           </div>
+
+                          {/* Phone Required Banner */}
+                          {phoneRequired && !form.watch("phone")?.trim() && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 flex items-start gap-2.5"
+                            >
+                              <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-sm font-bold text-destructive">Phone number required</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Please add your phone number below to access Rides, Flights, Hotels, and other services.</p>
+                              </div>
+                            </motion.div>
+                          )}
 
                           {/* Phone — Country selector */}
                           <FormField control={form.control} name="phone" render={({ field }) => (
