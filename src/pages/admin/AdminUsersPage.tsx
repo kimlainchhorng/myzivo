@@ -58,15 +58,21 @@ export default function AdminUsersPage() {
     enabled: isAdmin,
   });
 
-  // Fetch driver user_ids to exclude driver accounts
-  const { data: driverIds } = useQuery({
-    queryKey: ["admin-driver-ids"],
+  // Fetch driver emails to exclude driver accounts (from zivodriver.com)
+  const { data: driverEmails } = useQuery({
+    queryKey: ["admin-driver-emails"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("drivers")
-        .select("user_id");
+        .select("email, user_id");
       if (error) throw error;
-      return new Set((data || []).map((d) => d.user_id));
+      const emailSet = new Set<string>();
+      const idSet = new Set<string>();
+      (data || []).forEach((d) => {
+        if (d.email) emailSet.add(d.email.toLowerCase());
+        if (d.user_id) idSet.add(d.user_id);
+      });
+      return { emails: emailSet, ids: idSet };
     },
     enabled: isAdmin,
   });
@@ -80,18 +86,19 @@ export default function AdminUsersPage() {
     return map;
   }, [userRoles]);
 
-  // Filter to customers only: exclude staff roles AND anyone with a driver record
+  // Filter to hizivo.com customers only: exclude driver signups AND staff roles
   const customerProfiles = useMemo(() => {
     if (!profiles) return [];
     const excludedRoles = ["admin", "moderator", "super_admin", "operations", "finance", "support", "merchant", "owner", "manager"];
     return profiles.filter((p) => {
-      // Exclude users with a driver record (from zivodriver.com)
-      if (driverIds?.has(p.user_id)) return false;
+      // Exclude users with a driver record (by email or user_id)
+      if (driverEmails?.ids.has(p.user_id)) return false;
+      if (p.email && driverEmails?.emails.has(p.email.toLowerCase())) return false;
       // Exclude staff roles
       const roles = roleMap[p.user_id] || [];
       return !roles.some((r) => excludedRoles.includes(r));
     });
-  }, [profiles, roleMap, driverIds]);
+  }, [profiles, roleMap, driverEmails]);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return customerProfiles;
