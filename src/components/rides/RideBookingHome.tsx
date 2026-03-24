@@ -3523,25 +3523,43 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                     <span className="text-muted-foreground">{t("ride.booking_fee")}</span>
                     <span className="text-foreground">{dualPrice(currentVehicle.bookingFee, useKm)}</span>
                   </div>
+                  {selectedCambodiaPayment === "card" && (currentVehicle as any).cardFeePct > 0 && (() => {
+                    const baseFare = appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice;
+                    const cardFeeAmt = baseFare * ((currentVehicle as any).cardFeePct / 100);
+                    return (
+                      <div className="flex justify-between text-amber-600 dark:text-amber-400">
+                        <span className="text-muted-foreground">{t("ride.card_fee")} ({(currentVehicle as any).cardFeePct}%)</span>
+                        <span className="text-foreground">{dualPrice(cardFeeAmt, useKm)}</span>
+                      </div>
+                    );
+                  })()}
                   {appliedPromo && promoDiscount > 0 && (
                     <div className="flex justify-between text-primary">
                       <span className="font-medium">{t("ride.promo")} ({appliedPromo.code})</span>
                       <span className="font-medium">-{dualPrice(promoDiscount, useKm)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between border-t border-border/15 pt-1 mt-0.5">
-                    <span className="font-bold text-foreground text-[13px]">{t("ride.total")}</span>
-                    <div className="text-right">
-                      {useKm ? (
-                        <>
-                          <p className="font-bold text-foreground text-[15px]">{toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)}</p>
-                          <p className="text-[10px] text-muted-foreground">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</p>
-                        </>
-                      ) : (
-                        <span className="font-bold text-foreground text-[15px]">${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}</span>
-                      )}
-                    </div>
-                  </div>
+                  {(() => {
+                    const baseFare = appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice;
+                    const cardFeeAmt = selectedCambodiaPayment === "card" && (currentVehicle as any).cardFeePct > 0
+                      ? baseFare * ((currentVehicle as any).cardFeePct / 100) : 0;
+                    const totalWithCardFee = baseFare + cardFeeAmt;
+                    return (
+                      <div className="flex justify-between border-t border-border/15 pt-1 mt-0.5">
+                        <span className="font-bold text-foreground text-[13px]">{t("ride.total")}</span>
+                        <div className="text-right">
+                          {useKm ? (
+                            <>
+                              <p className="font-bold text-foreground text-[15px]">{toKHR(totalWithCardFee)}</p>
+                              <p className="text-[10px] text-muted-foreground">${totalWithCardFee.toFixed(2)}</p>
+                            </>
+                          ) : (
+                            <span className="font-bold text-foreground text-[15px]">${totalWithCardFee.toFixed(2)}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
               {!routeData && (
