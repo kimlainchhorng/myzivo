@@ -269,7 +269,7 @@ export default function AdminPricingPage() {
                       alt={form.ride_type}
                       className="w-16 h-10 object-contain"
                     />
-                    <span className="text-sm font-medium capitalize text-foreground">{form.ride_type.replace(/_/g, " ")}</span>
+                    <span className="text-sm font-medium text-foreground">{getRideTypeLabel(form.ride_type, isCambodia)}</span>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-3">
