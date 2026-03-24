@@ -223,7 +223,7 @@ export function useWebPush() {
       // Fallback to local notification if not logged in
       if (Notification.permission === "granted") {
         const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification("hiZIVO Test", {
+        await registration.showNotification("ZIVO Test", {
           body: "Push notifications are working!",
           icon: "/pwa-icons/icon-192x192.png",
           badge: "/pwa-icons/icon-192x192.png",
@@ -249,7 +249,7 @@ export function useWebPush() {
         console.error("[useWebPush] Test notification error:", error);
         // Fallback to local
         const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification("hiZIVO Test", {
+        await registration.showNotification("ZIVO Test", {
           body: "Push notifications are working locally!",
           icon: "/pwa-icons/icon-192x192.png",
           badge: "/pwa-icons/icon-192x192.png",
