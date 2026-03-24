@@ -67,12 +67,13 @@ export default function AdminUsersPage() {
     return map;
   }, [userRoles]);
 
-  // Filter to customers only (exclude admin/moderator roles) & search
+  // Filter to customers only (exclude admin/moderator/driver/merchant/owner/manager roles)
   const customerProfiles = useMemo(() => {
     if (!profiles) return [];
+    const excludedRoles = ["admin", "moderator", "super_admin", "operations", "finance", "support", "driver", "merchant", "owner", "manager"];
     return profiles.filter((p) => {
       const roles = roleMap[p.user_id] || [];
-      return !roles.some((r) => r === "admin" || r === "moderator");
+      return !roles.some((r) => excludedRoles.includes(r));
     });
   }, [profiles, roleMap]);
 
