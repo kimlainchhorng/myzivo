@@ -2499,6 +2499,45 @@ export type Database = {
           },
         ]
       }
+      app_version_config: {
+        Row: {
+          created_at: string | null
+          force_update: boolean
+          id: string
+          latest_version: string
+          min_version: string
+          platform: string
+          update_message: string | null
+          update_message_km: string | null
+          update_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          force_update?: boolean
+          id?: string
+          latest_version?: string
+          min_version?: string
+          platform?: string
+          update_message?: string | null
+          update_message_km?: string | null
+          update_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          force_update?: boolean
+          id?: string
+          latest_version?: string
+          min_version?: string
+          platform?: string
+          update_message?: string | null
+          update_message_km?: string | null
+          update_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       application_events: {
         Row: {
           actor_user_id: string | null
