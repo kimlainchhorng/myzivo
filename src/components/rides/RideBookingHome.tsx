@@ -3099,6 +3099,91 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         </motion.div>
       )}
 
+      {/* ═══════ RIDER INFO — collect name, phone, pickup note ═══════ */}
+      {viewStep === "rider-info" && (
+        <div
+          className="absolute left-0 right-0 bottom-0 z-40 bg-background flex flex-col"
+          style={{ top: HEADER_HEIGHT }}
+        >
+          <div className="px-5 pt-5 pb-3 shrink-0">
+            <h2 className="text-xl font-black text-foreground tracking-tight">{t("ride.rider_info") || "Rider Information"}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{t("ride.rider_info_desc") || "Confirm your details before choosing a ride"}</p>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-5 pb-6 space-y-5">
+            {/* Name */}
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <User className="w-4 h-4 text-primary" />
+                {t("ride.rider_name") || "Full Name"}
+              </label>
+              <Input
+                value={riderName}
+                onChange={(e) => setRiderName(e.target.value)}
+                placeholder={t("ride.rider_name_placeholder") || "Enter your name"}
+                className="h-12 rounded-2xl bg-muted/30 border-border/40 text-base shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]"
+              />
+            </div>
+
+            {/* Phone */}
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Phone className="w-4 h-4 text-primary" />
+                {t("ride.rider_phone") || "Phone Number"}
+              </label>
+              <Input
+                value={riderPhone}
+                onChange={(e) => setRiderPhone(e.target.value)}
+                placeholder={t("ride.rider_phone_placeholder") || "Enter your phone number"}
+                type="tel"
+                className="h-12 rounded-2xl bg-muted/30 border-border/40 text-base shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]"
+              />
+            </div>
+
+            {/* Pickup Note */}
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <MessageSquare className="w-4 h-4 text-primary" />
+                {t("ride.pickup_note") || "Pickup Note"} <span className="text-muted-foreground font-normal text-xs">({t("ride.optional") || "optional"})</span>
+              </label>
+              <Input
+                value={pickupNote}
+                onChange={(e) => setPickupNote(e.target.value)}
+                placeholder={t("ride.pickup_note_placeholder") || "e.g. Gate code #1234, near the blue building"}
+                className="h-12 rounded-2xl bg-muted/30 border-border/40 text-base shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]"
+              />
+            </div>
+
+            {/* Route summary */}
+            <div className="rounded-2xl bg-muted/20 border border-border/30 p-4 space-y-2">
+              <div className="flex items-start gap-3">
+                <div className="w-3 h-3 mt-1 rounded-full bg-primary ring-4 ring-primary/20 shrink-0" />
+                <p className="text-sm text-foreground truncate">{pickup?.address || "Pickup"}</p>
+              </div>
+              <div className="ml-1.5 border-l-2 border-dashed border-border/40 h-4" />
+              <div className="flex items-start gap-3">
+                <div className="w-3 h-3 mt-1 rounded-full bg-foreground ring-4 ring-foreground/20 shrink-0" />
+                <p className="text-sm text-foreground truncate">{destination?.address || "Destination"}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Continue Button */}
+          <div className="px-5 pb-5 shrink-0" style={{ paddingBottom: `calc(20px + ${SAFE_BOTTOM})` }}>
+            <Button
+              className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-primary/20"
+              disabled={!riderName.trim() || !riderPhone.trim()}
+              onClick={() => setViewStep("ride-options")}
+            >
+              {t("ride.continue_to_rides") || "Continue"}
+            </Button>
+            {(!riderName.trim() || !riderPhone.trim()) && (
+              <p className="text-xs text-destructive text-center mt-2">{t("ride.rider_info_required") || "Name and phone number are required"}</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ═══════ RIDE OPTIONS — full-screen overlay ═══════ */}
       {viewStep === "ride-options" && (
         <div
