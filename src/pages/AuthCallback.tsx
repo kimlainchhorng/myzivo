@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useExchangeAuthToken } from "@/hooks/useCrossAppAuth";
+import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 const AuthCallback = () => {
@@ -24,26 +25,52 @@ const AuthCallback = () => {
   };
 
   // Helper function to check setup status and navigate accordingly
-  const checkSetupAndNavigate = async (userId: string, user: { email?: string; email_confirmed_at?: string | null }) => {
+  const checkSetupAndNavigate = async (user: User) => {
     try {
+      const userId = user.id;
       const { data: profile } = await supabase
         .from("profiles")
         .select("setup_complete, email_verified")
         .eq("user_id", userId)
         .maybeSingle();
 
-      // If no profile exists, the user was likely rejected by allowlist trigger
-      // Show error and redirect to login
-      if (!profile) {
-        console.error("No profile found - user may not be on allowlist");
-        setStatus("error");
-        return;
+      let resolvedProfile = profile;
+
+      // Apple/native OAuth can succeed before a profile row is created.
+      // Provision a minimal profile so the user can continue through setup.
+      if (!resolvedProfile) {
+        console.warn("No profile found after successful auth, creating one now", { userId });
+
+        const { data: createdProfile, error: createProfileError } = await supabase
+          .from("profiles")
+          .insert({
+            id: userId,
+            user_id: userId,
+            email: user.email ?? null,
+            full_name:
+              typeof user.user_metadata?.full_name === "string"
+                ? user.user_metadata.full_name
+                : typeof user.user_metadata?.name === "string"
+                  ? user.user_metadata.name
+                  : null,
+          })
+          .select("setup_complete, email_verified")
+          .single();
+
+        if (createProfileError) {
+          console.error("Failed to create missing profile after successful auth:", createProfileError);
+          setErrorMessage("Sign-in worked, but we couldn't finish setting up your account. Please try again.");
+          setStatus("error");
+          return;
+        }
+
+        resolvedProfile = createdProfile;
       }
 
       // Check if email verification is required
       // ALL users (including Google OAuth) must verify via our OTP flow
       // We only check our custom email_verified flag, ignoring Supabase's email_confirmed_at
-      const needsVerification = profile.email_verified !== true;
+      const needsVerification = resolvedProfile.email_verified !== true;
 
       if (needsVerification && user.email) {
         // Send OTP for verification
@@ -171,10 +198,7 @@ const AuthCallback = () => {
 
         if (data.session?.user) {
           const user = data.session.user;
-          await checkSetupAndNavigate(user.id, {
-            email: user.email,
-            email_confirmed_at: user.email_confirmed_at,
-          });
+          await checkSetupAndNavigate(user);
         } else {
           setStatus("success");
           setTimeout(() => navigate("/", { replace: true }), 200);
@@ -200,10 +224,7 @@ const AuthCallback = () => {
 
       if (session?.user) {
         const user = session.user;
-        await checkSetupAndNavigate(user.id, {
-          email: user.email,
-          email_confirmed_at: user.email_confirmed_at,
-        });
+        await checkSetupAndNavigate(user);
         return;
       }
 
@@ -214,10 +235,7 @@ const AuthCallback = () => {
         if (nextSession?.user) {
           clearTimeout(timeout);
           const user = nextSession.user;
-          await checkSetupAndNavigate(user.id, {
-            email: user.email,
-            email_confirmed_at: user.email_confirmed_at,
-          });
+          await checkSetupAndNavigate(user);
           subscription.unsubscribe();
         }
       });
