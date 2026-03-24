@@ -17,6 +17,12 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import rideTuktukImg from "@/assets/ride-tuktuk.jpg";
+
+const RIDE_TYPE_IMAGES: Record<string, string> = {
+  tuktuk: rideTuktukImg,
+  tuktuk_ev: rideTuktukImg,
+};
 
 interface PricingRow {
   id: string;
@@ -339,7 +345,14 @@ export default function AdminPricingPage() {
                   return (
                   <TableRow key={row.id}>
                     <TableCell className="font-medium">{row.city || "default"}</TableCell>
-                    <TableCell>{row.ride_type}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {row.ride_type && RIDE_TYPE_IMAGES[row.ride_type] && (
+                          <img src={RIDE_TYPE_IMAGES[row.ride_type]} alt={row.ride_type} className="w-8 h-8 rounded-md object-cover" />
+                        )}
+                        {row.ride_type}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">{sym}{(row.base_fare ?? 0).toFixed(2)}</TableCell>
                     <TableCell className="text-right">{sym}{(row.per_mile ?? 0).toFixed(2)}</TableCell>
                     <TableCell className="text-right">{sym}{(row.per_minute ?? 0).toFixed(2)}</TableCell>
