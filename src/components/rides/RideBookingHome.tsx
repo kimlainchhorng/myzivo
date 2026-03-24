@@ -3656,6 +3656,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 onCashConfirm={handleCashRide}
                 onAbaConfirm={handleAbaRide}
                 onBackToMethods={() => { setClientSecret(null); setPaymentStep("idle"); }}
+                onPaymentMethodChange={(m) => setSelectedCambodiaPayment(m)}
               />
             </div>
           </div>
