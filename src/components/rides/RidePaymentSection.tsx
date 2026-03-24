@@ -79,7 +79,11 @@ function CambodiaPaymentSelector({
   cashAllowed?: boolean;
   onMethodChange?: (method: string) => void;
 }) {
-  const [selected, setSelected] = useState<CambodiaPaymentMethod>(cashAllowed ? "cash" : "card");
+  const [selected, setSelected] = useState<CambodiaPaymentMethod>(() => {
+    const initial = cashAllowed ? "cash" : "card";
+    onMethodChange?.(initial);
+    return initial;
+  });
 
   const allMethods = [
     {
