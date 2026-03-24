@@ -303,7 +303,7 @@ function VehicleRow({
   price,
   originalPrice,
   surgeActive,
-  isCambodia = false,
+  useKm = false,
 }: {
   vehicle: (typeof DEFAULT_VEHICLE_OPTIONS)[0];
   selected: boolean;
@@ -311,7 +311,7 @@ function VehicleRow({
   price: number;
   originalPrice?: number;
   surgeActive?: boolean;
-  isCambodia?: boolean;
+  useKm?: boolean;
 }) {
   const etaDate = new Date(Date.now() + vehicle.etaMin * 60000);
   const etaHour = etaDate.getHours();
@@ -333,14 +333,14 @@ function VehicleRow({
     >
       <div className="w-[72px] shrink-0 flex items-center justify-center">
         <img
-          src={getVehicleImage(vehicle.id, isCambodia)}
-          alt={getVehicleName(vehicle.id, vehicle.name, isCambodia)}
+          src={getVehicleImage(vehicle.id, useKm)}
+          alt={getVehicleName(vehicle.id, vehicle.name, useKm)}
           className="w-[72px] h-[44px] object-contain"
         />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-sm font-bold text-foreground">{getVehicleName(vehicle.id, vehicle.name, isCambodia)}</span>
+          <span className="text-sm font-bold text-foreground">{getVehicleName(vehicle.id, vehicle.name, useKm)}</span>
           {vehicle.id === "economy" && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
               <TrendingDown className="w-3 h-3" />
@@ -350,12 +350,12 @@ function VehicleRow({
           {vehicle.id === "share" && (
             <span className={cn(
               "flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold",
-              isCambodia
+              useKm
                 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                 : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
             )}>
-              {isCambodia ? <Zap className="w-3 h-3" /> : <Users className="w-3 h-3" />}
-              {isCambodia ? "EV" : "SAVE"}
+              {useKm ? <Zap className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+              {useKm ? "EV" : "SAVE"}
             </span>
           )}
           {vehicle.id === "comfort" && (
@@ -414,21 +414,21 @@ function VehicleRow({
           )}
           <div className="flex items-center gap-0.5 text-muted-foreground">
             <User className="w-3 h-3" />
-            <span className="text-xs">{getVehicleCapacity(vehicle.id, vehicle.capacity, isCambodia)}</span>
+            <span className="text-xs">{getVehicleCapacity(vehicle.id, vehicle.capacity, useKm)}</span>
           </div>
         </div>
         <div className="flex items-center gap-1.5 mt-0.5">
-          <span className="text-xs text-muted-foreground">{etaStr} · {getVehicleDesc(vehicle.id, vehicle.desc, isCambodia)}</span>
+          <span className="text-xs text-muted-foreground">{etaStr} · {getVehicleDesc(vehicle.id, vehicle.desc, useKm)}</span>
         </div>
       </div>
       <div className="text-right shrink-0 flex flex-col items-end gap-0.5">
         {surgeActive && originalPrice && (
-          <span className="line-through text-muted-foreground text-xs">{isCambodia ? dualPrice(originalPrice, true) : `$${originalPrice.toFixed(2)}`}</span>
+          <span className="line-through text-muted-foreground text-xs">{useKm ? dualPrice(originalPrice, true) : `$${originalPrice.toFixed(2)}`}</span>
         )}
         {isDiscount ? (
-          <span className="text-sm font-bold text-green-600">🟢 {isCambodia ? dualPrice(price, true) : `$${price.toFixed(2)}`}</span>
+          <span className="text-sm font-bold text-green-600">🟢 {useKm ? dualPrice(price, true) : `$${price.toFixed(2)}`}</span>
         ) : (
-          <span className="text-sm font-bold text-foreground">{isCambodia ? dualPrice(price, true) : `$${price.toFixed(2)}`}</span>
+          <span className="text-sm font-bold text-foreground">{useKm ? dualPrice(price, true) : `$${price.toFixed(2)}`}</span>
         )}
         {selected && (
           <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center mt-0.5" aria-label="Selected">
@@ -484,32 +484,32 @@ const CAMBODIA_EV_TUKTUK_PER_KM_KHR = 1250;
 const CAMBODIA_EV_TUKTUK_PER_MILE_USD = (CAMBODIA_EV_TUKTUK_PER_KM_KHR / KHR_RATE) * 1.60934;
 
 /** Get vehicle image based on region */
-function getVehicleImage(vehicleId: string, isCambodia: boolean): string {
-  if (isCambodia && CAMBODIA_VEHICLE_IMAGES[vehicleId]) {
+function getVehicleImage(vehicleId: string, useKm: boolean): string {
+  if (useKm && CAMBODIA_VEHICLE_IMAGES[vehicleId]) {
     return CAMBODIA_VEHICLE_IMAGES[vehicleId];
   }
   return VEHICLE_IMAGES[vehicleId] ?? "/vehicles/economy-car.svg";
 }
 
 /** Get vehicle display name based on region */
-function getVehicleName(vehicleId: string, originalName: string, isCambodia: boolean): string {
-  if (isCambodia && CAMBODIA_VEHICLE_NAMES[vehicleId]) {
+function getVehicleName(vehicleId: string, originalName: string, useKm: boolean): string {
+  if (useKm && CAMBODIA_VEHICLE_NAMES[vehicleId]) {
     return CAMBODIA_VEHICLE_NAMES[vehicleId];
   }
   return originalName;
 }
 
 /** Get vehicle description based on region */
-function getVehicleDesc(vehicleId: string, originalDesc: string, isCambodia: boolean): string {
-  if (isCambodia && CAMBODIA_VEHICLE_DESCS[vehicleId]) {
+function getVehicleDesc(vehicleId: string, originalDesc: string, useKm: boolean): string {
+  if (useKm && CAMBODIA_VEHICLE_DESCS[vehicleId]) {
     return CAMBODIA_VEHICLE_DESCS[vehicleId];
   }
   return originalDesc;
 }
 
 /** Get vehicle capacity based on region */
-function getVehicleCapacity(vehicleId: string, originalCapacity: number, isCambodia: boolean): number {
-  if (isCambodia && CAMBODIA_VEHICLE_CAPACITY[vehicleId]) {
+function getVehicleCapacity(vehicleId: string, originalCapacity: number, useKm: boolean): number {
+  if (useKm && CAMBODIA_VEHICLE_CAPACITY[vehicleId]) {
     return CAMBODIA_VEHICLE_CAPACITY[vehicleId];
   }
   return originalCapacity;
@@ -593,7 +593,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const { currentLanguage, changeLanguage, t } = useI18n();
   const [showLangMenu, setShowLangMenu] = useState(false);
 
-  const { isCambodia: isCambodiaCountry } = useCountry();
+  const { useKm: useKmCountry } = useCountry();
   const { cashAllowed } = usePaymentLocationRestriction();
   const { data: upcomingFlight } = useUpcomingFlightArrival();
 
@@ -616,7 +616,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     { code: "ru", label: "Русский", flag: "🇷🇺", cc: "RU", flagImg: "/flags/ru.svg" },
     { code: "tr", label: "Türkçe", flag: "🇹🇷", cc: "TR", flagImg: "/flags/tr.svg" },
   ];
-  const fallbackPickupCenter = isCambodiaCountry ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER;
+  const fallbackPickupCenter = useKmCountry ? CAMBODIA_DEFAULT_CENTER : US_DEFAULT_CENTER;
 
   // Recent ride destinations from Supabase
   const [recentDestinations, setRecentDestinations] = useState<{ id: string; address: string; lat: number; lng: number; time: string }[]>([]);
@@ -684,10 +684,10 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
     // On fresh open/reopen, pickup address may not be resolved yet.
     // Keep Cambodia users on Cambodia pricing instead of falling back to US defaults.
-    if (isCambodiaCountry) return "Phnom Penh";
+    if (useKmCountry) return "Phnom Penh";
 
     return undefined; // falls back to "default" pricing
-  }, [pickup?.address, isCambodiaCountry]);
+  }, [pickup?.address, useKmCountry]);
 
   // Fetch admin-configured pricing from city_pricing table
   const { data: cityPricingMap } = useCityPricing(pickupCity);
@@ -697,7 +697,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Merge DB pricing into vehicle options (admin rates override defaults)
   const vehicleOptions = useMemo(() => {
-    const isCambodia = isCambodiaCountry;
+    const useKm = useKmCountry;
     const hasDbPricing = cityPricingMap && Object.keys(cityPricingMap).length > 0;
     let options = DEFAULT_VEHICLE_OPTIONS;
 
@@ -715,7 +715,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
           minimumFare: dbPricing.minimum_fare ?? v.minimumFare,
         };
       });
-    } else if (isCambodia) {
+    } else if (useKm) {
       // Fallback: hardcoded Cambodia defaults (only when no DB pricing)
       options = options.map((v) => ({
         ...v,
@@ -889,7 +889,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
 
   // Check GPS permission on mount
   useEffect(() => {
-    if (isCambodiaCountry) {
+    if (useKmCountry) {
       setLocationPermission("granted");
       return;
     }
@@ -907,7 +907,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
       // Fallback: try getting location directly
       setLocationPermission("prompt");
     }
-  }, [isCambodiaCountry]);
+  }, [useKmCountry]);
 
 
   // Request GPS when user allows
@@ -930,7 +930,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   useEffect(() => {
     let cancelled = false;
 
-    if (isCambodiaCountry) {
+    if (useKmCountry) {
       // Only clear locations on FIRST mount, not on every re-render
       if (!hasInitializedRegion.current) {
         hasInitializedRegion.current = true;
@@ -953,7 +953,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
 
     return () => { cancelled = true; };
-  }, [isCambodiaCountry, getCurrentLocation, locationPermission]);
+  }, [useKmCountry, getCurrentLocation, locationPermission]);
 
   // Fetch real nearby drivers and poll every 10s
   useEffect(() => {
@@ -1225,7 +1225,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   }, [viewStep, destination, liveDriverLocation, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
-    if (isCambodiaCountry) {
+    if (useKmCountry) {
       // In Cambodia mode, use GPS but fall back to Phnom Penh
       getCurrentLocation()
         .then((loc) => {
@@ -1470,7 +1470,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
-  const useKm = useMemo(() => isInCambodia(pickup?.address, pickup?.lat) || isCambodiaCountry || currentLanguage === "km", [pickup?.address, pickup?.lat, isCambodiaCountry, currentLanguage]);
+  const useKm = useMemo(() => isInCambodia(pickup?.address, pickup?.lat) || useKmCountry || currentLanguage === "km", [pickup?.address, pickup?.lat, useKmCountry, currentLanguage]);
   const rideCountry = useKm ? "kh" : undefined;
   const locationModeKey = rideCountry ?? "global";
 
@@ -1542,7 +1542,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
     }
     else if (viewStep === "route-preview") setViewStep("search");
     else if (viewStep === "rider-info") setViewStep("route-preview");
-    else if (viewStep === "ride-options") setViewStep(isCambodia ? "rider-info" : "route-preview");
+    else if (viewStep === "ride-options") setViewStep(useKm ? "rider-info" : "route-preview");
     else if (viewStep === "confirm-ride") setViewStep("ride-options");
     else if (
       viewStep === "driver-assigned" ||
@@ -2211,7 +2211,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
         </div>
       )}
 
-      {locationPermission === "checking" && !isCambodiaCountry && (
+      {locationPermission === "checking" && !useKmCountry && (
         <div className="absolute inset-0 z-[100] bg-background flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
@@ -3069,7 +3069,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 ) : (
                   <Button
                     className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
-                    onClick={() => { if (isCambodia) { setRiderName(userProfile?.full_name || ""); setRiderPhone(userProfile?.phone || ""); setViewStep("rider-info"); } else { setViewStep("ride-options"); } }}
+                    onClick={() => { if (useKm) { setRiderName(userProfile?.full_name || ""); setRiderPhone(userProfile?.phone || ""); setViewStep("rider-info"); } else { setViewStep("ride-options"); } }}
                   >
                     {t("ride.choose_ride")}
                   </Button>
@@ -3089,7 +3089,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <p className="text-sm text-muted-foreground mb-4">{t("ride.browse_available_rides")}</p>
                   <Button
                     className="w-full h-12 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90"
-                    onClick={() => { if (isCambodia) { setRiderName(userProfile?.full_name || ""); setRiderPhone(userProfile?.phone || ""); setViewStep("rider-info"); } else { setViewStep("ride-options"); } }}
+                    onClick={() => { if (useKm) { setRiderName(userProfile?.full_name || ""); setRiderPhone(userProfile?.phone || ""); setViewStep("rider-info"); } else { setViewStep("ride-options"); } }}
                   >
                     {t("ride.see_ride_options")}
                   </Button>
@@ -3253,8 +3253,8 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   {/* Vehicle image */}
                   <div className="w-[68px] shrink-0 flex items-center justify-center">
                     <img
-                      src={getVehicleImage(v.id, isCambodiaCountry)}
-                      alt={getVehicleName(v.id, v.name, isCambodiaCountry)}
+                      src={getVehicleImage(v.id, useKmCountry)}
+                      alt={getVehicleName(v.id, v.name, useKmCountry)}
                       className={cn("w-[68px] h-auto transition-transform duration-200", isSelected && "scale-105")}
                     />
                   </div>
@@ -3262,7 +3262,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   {/* Center: Name + meta */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={cn("text-[14px] font-bold", isSelected ? "text-foreground" : "text-foreground")}>{getVehicleName(v.id, v.name, isCambodiaCountry)}</span>
+                      <span className={cn("text-[14px] font-bold", isSelected ? "text-foreground" : "text-foreground")}>{getVehicleName(v.id, v.name, useKmCountry)}</span>
                       {v.id === "economy" && (
                         <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
                           <TrendingDown className="w-3 h-3" />LOW
@@ -3271,12 +3271,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       {v.id === "share" && (
                         <span className={cn(
                           "flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold",
-                          isCambodiaCountry
+                          useKmCountry
                             ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                             : "bg-primary/10 text-primary"
                         )}>
-                          {isCambodiaCountry ? <Zap className="w-3 h-3" /> : <Users className="w-3 h-3" />}
-                          {isCambodiaCountry ? "EV" : "SAVE"}
+                          {useKmCountry ? <Zap className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+                          {useKmCountry ? "EV" : "SAVE"}
                         </span>
                       )}
                       {v.id === "comfort" && (
@@ -3321,11 +3321,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                       )}
                       <div className="flex items-center gap-0.5 text-muted-foreground/60">
                         <User className="w-3 h-3" />
-                        <span className="text-[11px]">{getVehicleCapacity(v.id, v.capacity, isCambodiaCountry)}</span>
+                        <span className="text-[11px]">{getVehicleCapacity(v.id, v.capacity, useKmCountry)}</span>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 leading-snug">
-                      {etaTime(v.etaMin)} · {getVehicleDesc(v.id, v.desc, isCambodiaCountry)}
+                      {etaTime(v.etaMin)} · {getVehicleDesc(v.id, v.desc, useKmCountry)}
                     </p>
                   </div>
 
@@ -3393,7 +3393,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 active:scale-[0.97] transition-all duration-200"
               onClick={() => { setPaymentStep("idle"); setViewStep("confirm-ride"); }}
             >
-              {t("ride.confirm")} {getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)} · {useKm ? `${toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)} ($${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)})` : `$${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}`}
+              {t("ride.confirm")} {getVehicleName(selectedVehicle, currentVehicle.name, useKmCountry)} · {useKm ? `${toKHR(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice)} ($${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)})` : `$${(appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice).toFixed(2)}`}
             </Button>
           </div>
         </div>
@@ -3469,11 +3469,11 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="rounded-lg bg-card border border-border/20 px-3 py-2 shrink-0">
               <div className="flex items-center gap-2.5 mb-1.5">
                 <div className="w-[50px] h-[36px] flex items-center justify-center shrink-0 bg-muted/10 rounded-md">
-                  <img src={getVehicleImage(selectedVehicle, isCambodiaCountry)} alt={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)} className="w-full h-full object-contain" />
+                  <img src={getVehicleImage(selectedVehicle, useKmCountry)} alt={getVehicleName(selectedVehicle, currentVehicle.name, useKmCountry)} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground leading-tight">{getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)} · {getVehicleCapacity(selectedVehicle, currentVehicle.capacity, isCambodiaCountry)} {t("ride.seats")}</p>
-                  <p className="text-xs text-muted-foreground">{currentVehicle.etaMin} {t("ride.min_away")} · {getVehicleDesc(selectedVehicle, currentVehicle.desc, isCambodiaCountry)}</p>
+                  <p className="text-sm font-bold text-foreground leading-tight">{getVehicleName(selectedVehicle, currentVehicle.name, useKmCountry)} · {getVehicleCapacity(selectedVehicle, currentVehicle.capacity, useKmCountry)} {t("ride.seats")}</p>
+                  <p className="text-xs text-muted-foreground">{currentVehicle.etaMin} {t("ride.min_away")} · {getVehicleDesc(selectedVehicle, currentVehicle.desc, useKmCountry)}</p>
                 </div>
               </div>
 
@@ -3609,7 +3609,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="shrink-0 pb-6">
               <RidePaymentSection
                 price={appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice}
-                vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}
+                vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, useKmCountry)}
                 isSubmitting={isSubmitting}
                 onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
                 onAuthorizeWithNewCard={() => handleRequestRide()}
@@ -3617,7 +3617,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 onPaymentSuccess={handlePaymentSuccess}
                 paymentFailed={paymentStep === "failed"}
                 onClearError={() => setPaymentStep("idle")}
-                isCambodia={useKm}
+                useKm={useKm}
                 cashAllowed={cashAllowed}
                 onCashConfirm={handleCashRide}
                 onAbaConfirm={handleAbaRide}
@@ -3987,7 +3987,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Vehicle</span>
-                <span className="text-foreground">{getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}</span>
+                <span className="text-foreground">{getVehicleName(selectedVehicle, currentVehicle.name, useKmCountry)}</span>
               </div>
               {routeData && (
                 <>
