@@ -3115,12 +3115,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="space-y-1.5">
               <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <User className="w-4 h-4 text-primary" />
-                {t("ride.rider_name") || "Full Name"}
+                {t("ride.your_name") || "Full Name"}
               </label>
               <Input
                 value={riderName}
                 onChange={(e) => setRiderName(e.target.value)}
-                placeholder={t("ride.rider_name_placeholder") || "Enter your name"}
+                placeholder={t("ride.your_name_placeholder") || "Enter your name"}
                 className="h-12 rounded-2xl bg-muted/30 border-border/40 text-base shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]"
               />
             </div>
@@ -3129,12 +3129,12 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
             <div className="space-y-1.5">
               <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <Phone className="w-4 h-4 text-primary" />
-                {t("ride.rider_phone") || "Phone Number"}
+                {t("ride.your_phone") || "Phone Number"}
               </label>
               <Input
                 value={riderPhone}
                 onChange={(e) => setRiderPhone(e.target.value)}
-                placeholder={t("ride.rider_phone_placeholder") || "Enter your phone number"}
+                placeholder={t("ride.your_phone_placeholder") || "Enter your phone number"}
                 type="tel"
                 className="h-12 rounded-2xl bg-muted/30 border-border/40 text-base shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]"
               />
