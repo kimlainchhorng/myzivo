@@ -574,6 +574,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "orders.no_orders": "No orders yet",
     "orders.pending_payment": "Pending Payment",
     "orders.items": "items",
+    "lang.select": "Select Language",
   },
   km: {
     "flights.roundtrip": "ទៅមក",
@@ -1138,6 +1139,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "ride.save_card": "រក្សាទុកកាត",
     "ride.saving": "កំពុងរក្សាទុក...",
     "ride.payment_failed": "ការទូទាត់បរាជ័យ",
+    "lang.select": "ជ្រើសរើសភាសា",
   },
   ko: {
     "flights.roundtrip": "왕복",
@@ -1521,6 +1523,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "ride.save_card": "카드 저장",
     "ride.saving": "저장 중...",
     "ride.payment_failed": "결제 실패",
+    "lang.select": "언어 선택",
   },
   zh: {
     "flights.roundtrip": "往返",
@@ -1904,6 +1907,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "services.banner.trip_label": "计划旅行",
     "services.banner.trip_title": "您的下一次冒险在等待",
     "services.banner.trip_subtitle": "航班 · 酒店 · 租车 · 一站式",
+    "lang.select": "选择语言",
   },
   ja: {
     "flights.roundtrip": "往復",
@@ -2287,6 +2291,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "services.banner.trip_label": "旅行を計画",
     "services.banner.trip_title": "次の冒険が待っています",
     "services.banner.trip_subtitle": "フライト · ホテル · レンタカー · すべて一か所で",
+    "lang.select": "言語を選択",
   },
   vi: {
     "flights.roundtrip": "Khứ hồi",
@@ -2670,6 +2675,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "services.banner.trip_label": "Lên kế hoạch chuyến đi",
     "services.banner.trip_title": "Cuộc phiêu lưu tiếp theo đang chờ bạn",
     "services.banner.trip_subtitle": "Chuyến bay · Khách sạn · Xe · Tất cả một nơi",
+    "lang.select": "Chọn ngôn ngữ",
   },
   th: {
     "flights.roundtrip": "ไป-กลับ", "flights.oneway": "เที่ยวเดียว", "flights.from": "จาก", "flights.to": "ไป", "flights.departure": "ออกเดินทาง", "flights.return": "กลับ", "flights.passengers": "ผู้โดยสาร", "flights.class": "ชั้นโดยสาร", "flights.search_title": "ค้นหาเที่ยวบิน",
