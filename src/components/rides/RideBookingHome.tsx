@@ -3132,10 +3132,24 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 <Phone className="w-4 h-4 text-primary" />
                 {t("ride.your_phone") || "Phone Number"}
               </label>
-              <CountryPhoneInput
-                value={riderPhone}
-                onChange={(val) => setRiderPhone(val)}
-              />
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 h-12 px-3 rounded-2xl bg-muted/30 border border-border/40 shrink-0">
+                  <img src="/flags/kh.svg" alt="KH" className="w-5 h-4 rounded-sm object-cover" />
+                  <span className="text-sm font-medium text-foreground">+855</span>
+                </div>
+                <Input
+                  value={riderPhone.replace(/^\+855\s?/, "")}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
+                    setRiderPhone(digits ? `+855 ${digits}` : "");
+                  }}
+                  placeholder="12 345 678"
+                  type="tel"
+                  inputMode="numeric"
+                  className="h-12 rounded-2xl bg-muted/30 border-border/40 text-base shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Cambodia · 8-9 digits</p>
             </div>
 
             {/* Pickup Note */}
