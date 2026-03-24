@@ -746,6 +746,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoValidating, setPromoValidating] = useState(false);
   const [promoError, setPromoError] = useState<string | null>(null);
+  const [selectedCambodiaPayment, setSelectedCambodiaPayment] = useState<string>("cash");
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [searchSheetY, setSearchSheetY] = useState(-20); // -20 = full, 0 = half, positive = peek
   const searchDragControls = useDragControls();
