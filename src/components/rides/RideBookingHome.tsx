@@ -3069,7 +3069,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                 ) : (
                   <Button
                     className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
-                    onClick={() => { if (useKm) { setRiderName(userProfile?.full_name || ""); setRiderPhone(userProfile?.phone || ""); setViewStep("rider-info"); } else { setViewStep("ride-options"); } }}
+                    onClick={() => { if (useKm) { setRiderName(userProfile?.full_name || ""); const ph = userProfile?.phone || ""; setRiderPhone(ph.startsWith("+855") ? ph : ""); setViewStep("rider-info"); } else { setViewStep("ride-options"); } }}
                   >
                     {t("ride.choose_ride")}
                   </Button>
@@ -3089,7 +3089,7 @@ export default function RideBookingHome({ initialSchedule = false }: { initialSc
                   <p className="text-sm text-muted-foreground mb-4">{t("ride.browse_available_rides")}</p>
                   <Button
                     className="w-full h-12 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90"
-                    onClick={() => { if (useKm) { setRiderName(userProfile?.full_name || ""); setRiderPhone(userProfile?.phone || ""); setViewStep("rider-info"); } else { setViewStep("ride-options"); } }}
+                    onClick={() => { if (useKm) { setRiderName(userProfile?.full_name || ""); const ph = userProfile?.phone || ""; setRiderPhone(ph.startsWith("+855") ? ph : ""); setViewStep("rider-info"); } else { setViewStep("ride-options"); } }}
                   >
                     {t("ride.see_ride_options")}
                   </Button>
