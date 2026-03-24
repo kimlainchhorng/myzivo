@@ -257,7 +257,7 @@ export default function AdminPricingPage() {
                       value={form.ride_type}
                       onChange={(e) => setForm({ ...form, ride_type: e.target.value })}
                     >
-                      {RIDE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                      {RIDE_TYPES.map((t) => <option key={t} value={t}>{getRideTypeLabel(t, isCambodia)}</option>)}
                     </select>
                   </div>
                 </div>
