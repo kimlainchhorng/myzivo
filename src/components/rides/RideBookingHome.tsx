@@ -109,6 +109,7 @@ type ViewStep =
   | "home"
   | "search"
   | "route-preview"
+  | "rider-info"
   | "ride-options"
   | "confirm-ride"
   | "searching"
