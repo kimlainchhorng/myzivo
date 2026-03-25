@@ -2,6 +2,11 @@
  * AdminStoreEditPage - Full store management: edit profile, cover, logo, products
  */
 import { useParams, useNavigate } from "react-router-dom";
+import { useI18n } from "@/hooks/useI18n";
+import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Globe } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
