@@ -214,6 +214,23 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
         movePin(pos.lat(), pos.lng());
       });
 
+      // If there's a current address, geocode it to position the pin
+      if (currentAddress) {
+        try {
+          const { data, error } = await supabase.functions.invoke("maps-geocode", {
+            body: { address: currentAddress },
+          });
+          if (!error && data?.lat != null && data?.lng != null) {
+            const pos = { lat: data.lat, lng: data.lng };
+            map.panTo(pos);
+            map.setZoom(16);
+            marker.setPosition(pos);
+            setCoords(pos);
+            setAddress(data.address || currentAddress);
+          }
+        } catch { /* keep default */ }
+      }
+
       setLoading(false);
     })();
 
