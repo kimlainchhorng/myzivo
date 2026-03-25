@@ -253,7 +253,7 @@ export default function AdminStoreEditPage() {
                   className="relative h-16 w-16 rounded-xl bg-background border-2 border-background shadow-lg overflow-hidden flex items-center justify-center shrink-0 group cursor-pointer hover:opacity-90 transition-opacity"
                 >
                   {form.logo_url ? (
-                    <img src={form.logo_url} alt="Logo" className="h-full w-full object-contain p-1" />
+                    <img src={form.logo_url} alt="Logo" className="h-full w-full object-cover" />
                   ) : (
                     <Store className="h-8 w-8 text-muted-foreground/30" />
                   )}
