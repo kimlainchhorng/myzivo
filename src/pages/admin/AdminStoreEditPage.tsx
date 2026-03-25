@@ -80,6 +80,7 @@ export default function AdminStoreEditPage() {
         rating: store.rating || 0,
         delivery_min: store.delivery_min || 0,
         is_active: store.is_active ?? true,
+        khr_rate: (store as any).khr_rate ?? 4062.5,
       });
     }
   }, [store]);
