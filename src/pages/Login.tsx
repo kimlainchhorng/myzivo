@@ -11,9 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle } from "lucide-react";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { toast } from "sonner";
-import { Provider } from "@supabase/supabase-js";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
-import { Capacitor } from "@capacitor/core";
 import SEOHead from "@/components/SEOHead";
 import { useI18n } from "@/hooks/useI18n";
 import { cn } from "@/lib/utils";
@@ -56,7 +54,7 @@ const Login = () => {
     }
   }, [searchParams]);
   const [isLoading, setIsLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  
   const [showLangMenu, setShowLangMenu] = useState(false);
   const { sheet, openSheet, setOpen } = useLegalSheet();
   const { currentLanguage, changeLanguage, t } = useI18n();
@@ -88,7 +86,7 @@ const Login = () => {
     { code: "ar", label: "العربية", flag: "/flags/sa.svg" },
   ];
   const currentLangItem = LANGS.find(l => l.code === currentLanguage);
-  const { signIn, signUp, signInWithProvider } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -248,55 +246,6 @@ const Login = () => {
     navigate("/verify-otp", { state: { email: data.email, userId } });
   };
 
-  const handleSocialLogin = async (provider: Provider) => {
-    setSocialLoading(provider);
-    const { error } = await signInWithProvider(provider);
-    if (error) {
-      toast.error(error.message || `Failed to sign in with ${provider}`);
-      setSocialLoading(null);
-      return;
-    }
-
-    // For native Apple sign-in, the session is already set via signInWithIdToken.
-    // Navigate directly to the right destination instead of going through auth-callback
-    // which can show false error screens.
-    if (provider === "apple" && Capacitor.isNativePlatform()) {
-      try {
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (currentUser) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("setup_complete, email_verified")
-            .eq("user_id", currentUser.id)
-            .maybeSingle();
-
-          setSocialLoading(null);
-
-          if (!profile) {
-            // Profile doesn't exist yet — trigger will create it, send to setup
-            navigate("/setup", { replace: true });
-            return;
-          }
-
-          if (!profile.setup_complete) {
-            navigate("/setup", { replace: true });
-            return;
-          }
-
-          // Apple OAuth already verifies the email — skip OTP check
-
-          toast.success("Welcome back!");
-          navigate("/", { replace: true });
-          return;
-        }
-      } catch (err) {
-        console.error("Error after native Apple sign-in:", err);
-      }
-      // Fallback
-      setSocialLoading(null);
-      navigate("/", { replace: true });
-    }
-  };
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
