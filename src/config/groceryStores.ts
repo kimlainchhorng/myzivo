@@ -65,6 +65,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     deliveryMin: 50,
     rating: 4.8,
     hours: "10am–8:30pm",
+    markets: ["US"],
   },
   {
     name: "Target",
@@ -79,6 +80,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     deliveryMin: 40,
     rating: 4.7,
     hours: "8am–10pm",
+    markets: ["US"],
   },
   {
     name: "Kroger",
@@ -93,6 +95,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     deliveryMin: 35,
     rating: 4.5,
     hours: "6am–12am",
+    markets: ["US"],
   },
 ];
 
