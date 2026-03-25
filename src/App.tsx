@@ -74,6 +74,7 @@ const AdminFlightOrders = lazy(() => import("./pages/admin/AdminFlightOrders"));
 const AdminFlightSearchAnalytics = lazy(() => import("./pages/admin/AdminFlightSearchAnalytics"));
 const AdminFlightApiMonitoring = lazy(() => import("./pages/admin/AdminFlightApiMonitoring"));
 const AdminFlightPriceAlerts = lazy(() => import("./pages/admin/AdminFlightPriceAlerts"));
+const AdminStoresPage = lazy(() => import("./pages/admin/AdminStoresPage"));
 const AdminSystemHealth = lazy(() => import("./pages/admin/AdminSystemHealth"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"));
@@ -418,6 +419,7 @@ const App = () => (
                 <Route path="/admin/flight-searches" element={<ProtectedRoute><AdminFlightSearchAnalytics /></ProtectedRoute>} />
                 <Route path="/admin/flight-api" element={<ProtectedRoute><AdminFlightApiMonitoring /></ProtectedRoute>} />
                 <Route path="/admin/flight-price-alerts" element={<ProtectedRoute><AdminFlightPriceAlerts /></ProtectedRoute>} />
+                <Route path="/admin/stores" element={<ProtectedRoute><AdminStoresPage /></ProtectedRoute>} />
                 <Route path="/admin/system-health" element={<ProtectedRoute><AdminSystemHealth /></ProtectedRoute>} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
