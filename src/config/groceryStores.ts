@@ -50,6 +50,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     deliveryMin: 35,
     rating: 4.6,
     hours: "6am–11pm",
+    markets: ["US"],
   },
   {
     name: "Costco",
