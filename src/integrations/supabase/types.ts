@@ -36361,6 +36361,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          image_urls: Json | null
           in_stock: boolean | null
           name: string
           price: number
@@ -36376,6 +36377,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: Json | null
           in_stock?: boolean | null
           name: string
           price: number
@@ -36391,6 +36393,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: Json | null
           in_stock?: boolean | null
           name?: string
           price?: number
