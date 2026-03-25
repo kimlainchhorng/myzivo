@@ -7,7 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Store, ArrowRight, X, Clock, TrendingUp, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { GROCERY_STORES } from "@/config/groceryStores";
+import { getStoresForMarket } from "@/config/groceryStores";
+import { useCountry } from "@/hooks/useCountry";
 
 const RECENT_KEY = "zivo_grocery_searches";
 const MAX_RECENT = 5;
