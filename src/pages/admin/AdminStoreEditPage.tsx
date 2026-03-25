@@ -245,29 +245,23 @@ export default function AdminStoreEditPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent" />
             <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
               <div className="flex items-end gap-3 min-w-0">
-                <div className="h-16 w-16 rounded-xl bg-background border-2 border-background shadow-lg overflow-hidden flex items-center justify-center shrink-0">
+                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "logo"); e.target.value = ""; }} />
+                <button
+                  type="button"
+                  onClick={() => logoInputRef.current?.click()}
+                  disabled={uploadingLogo}
+                  className="relative h-16 w-16 rounded-xl bg-background border-2 border-background shadow-lg overflow-hidden flex items-center justify-center shrink-0 group cursor-pointer hover:opacity-90 transition-opacity"
+                >
                   {form.logo_url ? (
                     <img src={form.logo_url} alt="Logo" className="h-full w-full object-contain p-1" />
                   ) : (
                     <Store className="h-8 w-8 text-muted-foreground/30" />
                   )}
-                </div>
-                <div className="pb-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground drop-shadow-sm truncate">{form.name || "Store Name"}</p>
-                  <Badge variant={form.is_active ? "default" : "secondary"} className="text-[10px] mt-1">
-                    {form.is_active ? "Active" : "Inactive"}
-                  </Badge>
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-2 shrink-0">
-                <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "cover"); e.target.value = ""; }} />
-                <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
-                  {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} Change Cover
-                </Button>
-                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "logo"); e.target.value = ""; }} />
-                <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}>
-                  {uploadingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Change Profile
-                </Button>
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">
+                    {uploadingLogo ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
+                  </div>
+                </button>
+...
               </div>
             </div>
           </div>
