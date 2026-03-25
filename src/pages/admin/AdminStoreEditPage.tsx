@@ -61,7 +61,7 @@ export default function AdminStoreEditPage() {
   const [form, setForm] = useState({
     name: "", slug: "", description: "", logo_url: "", banner_url: "",
     market: "", category: "", address: "", phone: "", hours: "",
-    rating: 0, delivery_min: 0, is_active: true,
+    rating: 0, delivery_min: 0, is_active: true, khr_rate: 4062.5,
   });
 
   useEffect(() => {
@@ -80,6 +80,7 @@ export default function AdminStoreEditPage() {
         rating: store.rating || 0,
         delivery_min: store.delivery_min || 0,
         is_active: store.is_active ?? true,
+        khr_rate: (store as any).khr_rate ?? 4062.5,
       });
     }
   }, [store]);
@@ -377,7 +378,22 @@ export default function AdminStoreEditPage() {
                     <Input type="number" value={form.delivery_min} onChange={e => updateField("delivery_min", parseInt(e.target.value) || 0)} />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>KHR Exchange Rate (1 USD = ?)</Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground font-medium">៛</span>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        min="1"
+                        value={form.khr_rate || ""}
+                        onChange={e => updateField("khr_rate", parseFloat(e.target.value) || 0)}
+                        placeholder="4062.5"
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Set the USD→KHR rate for this store's products</p>
+                  </div>
                   <div className="space-y-2">
                     <Label>Rating</Label>
                     <Input type="number" step="0.1" min="0" max="5" value={form.rating} onChange={e => updateField("rating", parseFloat(e.target.value) || 0)} />
@@ -486,7 +502,7 @@ export default function AdminStoreEditPage() {
                   onChange={e => {
                     const val = e.target.value;
                     updateProductField("price", val === "" ? 0 : parseFloat(val) || 0);
-                    updateProductField("_khrRaw" as any, val === "" ? "" : String(Math.round((parseFloat(val) || 0) * 4062.5)));
+                    updateProductField("_khrRaw" as any, val === "" ? "" : String(Math.round((parseFloat(val) || 0) * (form.khr_rate || 4062.5))));
                   }}
                   placeholder="0"
                 />
@@ -496,16 +512,16 @@ export default function AdminStoreEditPage() {
                 <Input
                   type="number"
                   step="100"
-                  value={(productForm as any)._khrRaw !== undefined ? (productForm as any)._khrRaw : (productForm.price ? Math.round(productForm.price * 4062.5) : "")}
+                  value={(productForm as any)._khrRaw !== undefined ? (productForm as any)._khrRaw : (productForm.price ? Math.round(productForm.price * (form.khr_rate || 4062.5)) : "")}
                   onChange={e => {
                     const val = e.target.value;
                     updateProductField("_khrRaw" as any, val);
                     const khr = parseFloat(val) || 0;
-                    updateProductField("price", parseFloat((khr / 4062.5).toFixed(2)));
+                    updateProductField("price", parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)));
                   }}
                   placeholder="0"
                 />
-                <p className="text-[10px] text-muted-foreground">1 USD = 4,062.5 KHR</p>
+                <p className="text-[10px] text-muted-foreground">Rate: 1 USD = {(form.khr_rate || 4062.5).toLocaleString()} KHR</p>
               </div>
               <div className="space-y-2">
                 <Label>SKU</Label>
