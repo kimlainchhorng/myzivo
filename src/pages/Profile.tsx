@@ -863,6 +863,15 @@ const Profile = () => {
         </>,
         document.body
       )}
+      {/* Phone Verification Dialog */}
+      {pendingProfileData?.phone && (
+        <PhoneVerificationDialog
+          open={showPhoneVerify}
+          onOpenChange={setShowPhoneVerify}
+          phoneNumber={pendingProfileData.phone}
+          onVerified={handlePhoneVerified}
+        />
+      )}
     </div>
   );
 };
