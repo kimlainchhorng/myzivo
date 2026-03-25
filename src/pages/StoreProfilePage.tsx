@@ -414,7 +414,7 @@ export default function StoreProfilePage() {
                     )}
                     
                     {/* Product name */}
-                    <p className="text-sm font-semibold line-clamp-2 leading-snug text-foreground min-h-[36px]">
+                    <p className="text-[14px] font-semibold line-clamp-2 leading-snug text-foreground min-h-[36px]">
                       {product.name}
                     </p>
 
