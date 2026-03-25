@@ -312,7 +312,14 @@ export default function StoreProfilePage() {
         )}
       </AnimatePresence>
 
-      <GroceryCheckoutDrawer open={showCart} onOpenChange={setShowCart} cart={cart} />
+      {showCart && (
+        <GroceryCheckoutDrawer
+          items={cart.items}
+          total={cart.total}
+          onClose={() => setShowCart(false)}
+          onOrderPlaced={() => { cart.clearCart(); setShowCart(false); }}
+        />
+      )}
       <ZivoMobileNav />
     </div>
   );
