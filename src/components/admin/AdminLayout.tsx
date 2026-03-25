@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   BarChart3, Users, ShoppingBag, Settings, LogOut, Shield,
   ChevronLeft, ChevronDown, Menu, Home, Activity, DollarSign, Plane,
-  Search as SearchIcon, Server, Bell
+  Search as SearchIcon, Server, Bell, Store
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,7 @@ const navEntries: NavEntry[] = [
       { label: "Price Alerts", icon: Bell, path: "/admin/flight-price-alerts" },
     ],
   },
+  { label: "Store", icon: Store, path: "/admin/stores" },
   { label: "Pricing", icon: DollarSign, path: "/admin/pricing" },
   { label: "System Health", icon: Activity, path: "/admin/system-health" },
 ];
