@@ -24,7 +24,9 @@ const AuthCallback = () => {
     };
   };
 
-  // Helper function to check setup status and navigate accordingly
+  // Helper function to check setup status and navigate accordingly.
+  // IMPORTANT: This function must NEVER set status to "error" when the user
+  // has a valid session. If anything fails, redirect gracefully.
   const checkSetupAndNavigate = async (user: User) => {
     try {
       const userId = user.id;
@@ -58,32 +60,43 @@ const AuthCallback = () => {
           .single();
 
         if (createProfileError) {
-          console.error("Failed to create missing profile after successful auth:", createProfileError);
-          setErrorMessage("Sign-in worked, but we couldn't finish setting up your account. Please try again.");
-          setStatus("error");
-          return;
-        }
+          console.error("Failed to create profile:", createProfileError);
+          // Profile may already exist (created by trigger) — try fetching again
+          const { data: retryProfile } = await supabase
+            .from("profiles")
+            .select("setup_complete, email_verified")
+            .eq("user_id", userId)
+            .maybeSingle();
 
-        resolvedProfile = createdProfile;
+          if (retryProfile) {
+            resolvedProfile = retryProfile;
+          } else {
+            // Even if profile creation fails, don't block the user.
+            // Redirect to setup so they can complete their profile.
+            setStatus("success");
+            setTimeout(() => navigate("/setup", { replace: true }), 200);
+            return;
+          }
+        } else {
+          resolvedProfile = createdProfile;
+        }
       }
 
       // Check if email verification is required
-      // ALL users (including Google OAuth) must verify via our OTP flow
-      // We only check our custom email_verified flag, ignoring Supabase's email_confirmed_at
       const needsVerification = resolvedProfile.email_verified !== true;
 
       if (needsVerification && user.email) {
-        // Send OTP for verification
+        // Send OTP for verification — but don't block if it fails
         try {
           const { data: otpResponse, error: otpError } = await supabase.functions.invoke(
             "send-otp-email",
-            { body: { email: user.email, userId } }
+            { body: { email: user.email, userId: user.id } }
           );
 
           if (!otpError && otpResponse?.success) {
             setStatus("success");
             setTimeout(() => {
-              navigate("/verify-otp", { state: { email: user.email, userId }, replace: true });
+              navigate("/verify-otp", { state: { email: user.email, userId: user.id }, replace: true });
             }, 200);
             return;
           }
@@ -91,7 +104,7 @@ const AuthCallback = () => {
           console.error("Failed to send OTP:", err);
         }
         
-        // Fallback to old verification page if OTP fails
+        // OTP failed — still redirect, don't show error
         setStatus("success");
         setTimeout(() => navigate("/verify-email", { replace: true }), 200);
         return;
@@ -106,14 +119,14 @@ const AuthCallback = () => {
 
       // Check if user is admin for auto-redirect to dashboard
       const { data: isAdminUser } = await supabase.rpc("check_user_role", {
-        _user_id: userId,
+        _user_id: user.id,
         _role: "admin",
       });
       setStatus("success");
       setTimeout(() => navigate(isAdminUser ? "/admin/analytics" : "/", { replace: true }), 200);
     } catch (err) {
       console.error("Error checking setup status:", err);
-      // Default to home on error
+      // User IS authenticated — never show an error. Redirect to home.
       setStatus("success");
       setTimeout(() => navigate("/", { replace: true }), 200);
     }
@@ -134,33 +147,37 @@ const AuthCallback = () => {
     if (errorParam) {
       console.error("OAuth provider returned error:", { errorParam, errorDescription });
       
-      // Parse user-friendly message based on error type
       const raw = (errorDescription || "").toLowerCase();
       let friendlyMessage = "Authentication failed. Please try again.";
 
-      // Our DB trigger messages (public.handle_new_user)
       if (raw.includes("email not authorized for signup")) {
         friendlyMessage = "This email is not authorized to sign up. Please request an invitation to join ZIVO.";
       } else if (raw.includes("invitation already used")) {
         friendlyMessage = "This invitation has already been used. Please sign in instead.";
-      }
-      // Supabase/Auth generic allowlist-ish failures
-      else if (
+      } else if (
         raw.includes("not on allowlist") ||
         raw.includes("saving new user") ||
         raw.includes("database error")
       ) {
         friendlyMessage = "This email is not authorized to sign up. Please request an invitation to join ZIVO.";
-      }
-      // Existing-account / provider mismatch cases
-      else if (raw.includes("already registered") || raw.includes("already exists")) {
+      } else if (raw.includes("already registered") || raw.includes("already exists")) {
         friendlyMessage = "An account with this email already exists. Please sign in instead.";
       } else if (errorDescription) {
         friendlyMessage = decodeURIComponent(errorDescription.replace(/\+/g, " "));
       }
 
-      setErrorMessage(friendlyMessage);
-      setStatus("error");
+      // Even with an OAuth error, check if the user actually has a session
+      // (some providers return error params but the session is valid)
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          // User is authenticated despite the error param — redirect gracefully
+          console.log("User has valid session despite OAuth error param, redirecting...");
+          checkSetupAndNavigate(session.user);
+        } else {
+          setErrorMessage(friendlyMessage);
+          setStatus("error");
+        }
+      });
       return;
     }
 
@@ -190,13 +207,20 @@ const AuthCallback = () => {
           
           const msg = (exchangeError.message || "").toLowerCase();
 
-          // Check if this is an allowlist / invite rejection
           if (msg.includes("email not authorized for signup") || msg.includes("not on allowlist") || msg.includes("database error")) {
             setErrorMessage("This email is not authorized to sign up. Please request an invitation to join ZIVO.");
           } else if (msg.includes("invitation already used")) {
             setErrorMessage("This invitation has already been used. Please sign in instead.");
           } else if (msg.includes("already registered") || msg.includes("already exists")) {
             setErrorMessage("An account with this email already exists. Please sign in instead.");
+          }
+          
+          // Check if user actually has a session despite the exchange error
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            console.log("User has valid session despite code exchange error, redirecting...");
+            await checkSetupAndNavigate(session.user);
+            return;
           }
           
           setStatus("error");
@@ -225,8 +249,7 @@ const AuthCallback = () => {
 
       if (sessionError) {
         console.error("OAuth callback session error:", sessionError);
-        setStatus("error");
-        return;
+        // Don't immediately error — listen for auth state changes
       }
 
       if (session?.user) {
@@ -235,7 +258,17 @@ const AuthCallback = () => {
         return;
       }
 
-      const timeout = setTimeout(() => setStatus("error"), 7000);
+      // Wait for auth state change with a generous timeout for native flows
+      const timeout = setTimeout(async () => {
+        // One final check before showing error
+        const { data: { session: finalSession } } = await supabase.auth.getSession();
+        if (finalSession?.user) {
+          await checkSetupAndNavigate(finalSession.user);
+        } else {
+          setStatus("error");
+        }
+      }, 10000);
+
       const {
         data: { subscription },
       } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
