@@ -2,7 +2,7 @@
  * GroceryPage - Scalable multi-store product search & shopping cart
  * Driven by GROCERY_STORES config — add a store in one place.
  */
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
