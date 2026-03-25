@@ -5,8 +5,9 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Clock, ArrowRight } from "lucide-react";
-import { GROCERY_STORES } from "@/config/groceryStores";
+import { getStoresForMarket } from "@/config/groceryStores";
 import { getStoreStatus } from "@/utils/storeStatus";
+import { useCountry } from "@/hooks/useCountry";
 import { useMemo, useEffect, useState } from "react";
 
 const STORAGE_KEY = "zivo_recent_stores";
@@ -22,6 +23,8 @@ export function addRecentStore(slug: string) {
 
 export default function GroceryRecentStores() {
   const navigate = useNavigate();
+  const { country } = useCountry();
+  const marketStores = useMemo(() => getStoresForMarket(country), [country]);
   const [slugs, setSlugs] = useState<string[]>([]);
 
   useEffect(() => {
@@ -32,8 +35,8 @@ export default function GroceryRecentStores() {
   }, []);
 
   const stores = useMemo(
-    () => slugs.map((s) => GROCERY_STORES.find((st) => st.slug === s)).filter(Boolean),
-    [slugs]
+    () => slugs.map((s) => marketStores.find((st) => st.slug === s)).filter(Boolean),
+    [slugs, marketStores]
   );
 
   if (stores.length === 0) return null;
