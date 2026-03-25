@@ -574,7 +574,7 @@ export default function AdminStoreEditPage() {
                           <div>
                             <p className="font-medium text-sm text-foreground">{product.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              ${product.price?.toFixed(2)}
+                              ៛{Math.round(product.price * (form.khr_rate || 4062.5)).toLocaleString()} · ${product.price?.toFixed(2)}
                               {product.category && ` · ${product.category}`}
                               {product.brand && ` · ${product.brand}`}
                             </p>
