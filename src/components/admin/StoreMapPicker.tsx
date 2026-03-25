@@ -90,7 +90,7 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
     setSearching(true);
     try {
       const { data, error } = await supabase.functions.invoke("maps-autocomplete", {
-        body: { input: query, location: `${coords.lat},${coords.lng}`, radius: 50000 },
+        body: { input: query, proximity: coords, country: "kh" },
       });
       if (!error && data?.suggestions) {
         setSuggestions(data.suggestions.map((p: any) => ({
