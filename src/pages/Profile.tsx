@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
@@ -160,6 +161,10 @@ const Profile = () => {
   const [emailOtp, setEmailOtp] = useState("");
   const [emailChanging, setEmailChanging] = useState(false);
 
+  // Phone verification state
+  const [showPhoneVerify, setShowPhoneVerify] = useState(false);
+  const [pendingProfileData, setPendingProfileData] = useState<ProfileFormData | null>(null);
+
   const profileTilt = use3DTilt(profileCardRef);
 
   const { scrollYProgress } = useScroll({ container: scrollRef });
@@ -199,11 +204,32 @@ const Profile = () => {
   };
 
   const onSubmit = async (data: ProfileFormData) => {
+    const phoneChanged = (data.phone || "") !== (profile?.phone || "");
+    const hasNewPhone = !!data.phone?.trim();
+
+    // If phone changed and there's a new phone, verify it first
+    if (phoneChanged && hasNewPhone) {
+      setPendingProfileData(data);
+      setShowPhoneVerify(true);
+      return;
+    }
+
+    // No phone change or phone removed — save directly
     const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ") || null;
     await updateProfile.mutateAsync({
       full_name: fullName,
       phone: data.phone || null,
     });
+  };
+
+  const handlePhoneVerified = async () => {
+    if (!pendingProfileData) return;
+    const fullName = [pendingProfileData.first_name, pendingProfileData.last_name].filter(Boolean).join(" ") || null;
+    await updateProfile.mutateAsync({
+      full_name: fullName,
+      phone: pendingProfileData.phone || null,
+    });
+    setPendingProfileData(null);
   };
 
   const handleEmailChangeRequest = async () => {
@@ -836,6 +862,15 @@ const Profile = () => {
           </motion.div>
         </>,
         document.body
+      )}
+      {/* Phone Verification Dialog */}
+      {pendingProfileData?.phone && (
+        <PhoneVerificationDialog
+          open={showPhoneVerify}
+          onOpenChange={setShowPhoneVerify}
+          phoneNumber={pendingProfileData.phone}
+          onVerified={handlePhoneVerified}
+        />
       )}
     </div>
   );
