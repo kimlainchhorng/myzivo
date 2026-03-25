@@ -179,7 +179,7 @@ export default function AdminStoreEditPage() {
   };
 
   const saveProduct = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (keepOpen?: boolean) => {
       const { _khrRaw, ...productPayload } = productForm as typeof productForm & { _khrRaw?: string };
 
       if (editingProduct) {
@@ -189,16 +189,24 @@ export default function AdminStoreEditPage() {
           .eq("id", editingProduct.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("store_products")
-          .insert({ ...productPayload, store_id: storeId! });
+          .insert({ ...productPayload, store_id: storeId! })
+          .select()
+          .single();
         if (error) throw error;
+        if (data) setEditingProduct(data);
       }
+      return keepOpen;
     },
-    onSuccess: () => {
+    onSuccess: (keepOpen) => {
       queryClient.invalidateQueries({ queryKey: ["admin-store-products", storeId] });
-      setProductDialog(false);
-      toast.success(editingProduct ? "Product updated" : "Product added");
+      if (keepOpen) {
+        toast.success("Saved");
+      } else {
+        setProductDialog(false);
+        toast.success(editingProduct ? "Product updated" : "Product added");
+      }
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -618,22 +626,7 @@ export default function AdminStoreEditPage() {
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Price ($) *</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={productForm.price}
-                  onChange={e => {
-                    const val = e.target.value;
-                    const num = val === "" ? 0 : parseFloat(val) || 0;
-                    updateProductField("price", num);
-                    updateProductField("_khrRaw" as any, val === "" ? "" : String(Math.round((parseFloat(val) || 0) * (form.khr_rate || 4062.5))));
-                  }}
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Price (៛ KHR)</Label>
+                <Label>Price (៛ KHR) *</Label>
                 <Input
                   type="number"
                   step="100"
@@ -647,6 +640,21 @@ export default function AdminStoreEditPage() {
                   placeholder="0"
                 />
                 <p className="text-[10px] text-muted-foreground">Rate: 1 USD = {(form.khr_rate || 4062.5).toLocaleString()} KHR</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Price ($)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={productForm.price}
+                  onChange={e => {
+                    const val = e.target.value;
+                    const num = val === "" ? 0 : parseFloat(val) || 0;
+                    updateProductField("price", num);
+                    updateProductField("_khrRaw" as any, val === "" ? "" : String(Math.round((parseFloat(val) || 0) * (form.khr_rate || 4062.5))));
+                  }}
+                  placeholder="0"
+                />
               </div>
               <div className="space-y-2">
                 <Label>SKU</Label>
@@ -712,19 +720,32 @@ export default function AdminStoreEditPage() {
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setProductDialog(false)}>Cancel</Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                if (!productForm.name || productForm.price <= 0) {
+                  toast.error("Name and price are required");
+                  return;
+                }
+                saveProduct.mutate(true);
+              }}
+              disabled={saveProduct.isPending}
+            >
+              {saveProduct.isPending ? "Saving..." : "Save"}
+            </Button>
             <Button
               onClick={() => {
                 if (!productForm.name || productForm.price <= 0) {
                   toast.error("Name and price are required");
                   return;
                 }
-                saveProduct.mutate();
+                saveProduct.mutate(false);
               }}
               disabled={saveProduct.isPending}
             >
-              {saveProduct.isPending ? "Saving..." : editingProduct ? "Update" : "Add"}
+              {saveProduct.isPending ? "Saving..." : editingProduct ? "Update & Close" : "Add & Close"}
             </Button>
           </DialogFooter>
         </DialogContent>
