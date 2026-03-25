@@ -487,10 +487,12 @@ export default function AdminStoreEditPage() {
                   type="number"
                   step="100"
                   value={Math.round((productForm.price || 0) * 4062.5)}
-                  readOnly
-                  className="bg-muted text-muted-foreground cursor-default"
+                  onChange={e => {
+                    const khr = parseFloat(e.target.value) || 0;
+                    updateProductField("price", parseFloat((khr / 4062.5).toFixed(2)));
+                  }}
                 />
-                <p className="text-[10px] text-muted-foreground">Auto: 1 USD = 4,062.5 KHR</p>
+                <p className="text-[10px] text-muted-foreground">1 USD = 4,062.5 KHR</p>
               </div>
               <div className="space-y-2">
                 <Label>SKU</Label>
