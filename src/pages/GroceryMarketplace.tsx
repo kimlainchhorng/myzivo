@@ -334,7 +334,7 @@ export default function GroceryMarketplace() {
                   className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/40 text-[9px] font-bold text-muted-foreground"
                 >
                   <Store className="h-2.5 w-2.5" />
-                  {availableStores.length} stores
+                  {availableStores.length + dbStores.length} stores
                 </motion.span>
               )}
             </div>
