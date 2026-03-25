@@ -238,7 +238,7 @@ export default function AdminStoreEditPage() {
         </div>
 
         <Card className="overflow-hidden">
-          <div className="relative h-40 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10">
+          <div className="relative h-52 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10">
             {form.banner_url && (
               <img src={form.banner_url} alt="Banner" className="w-full h-full object-cover object-center" />
             )}
