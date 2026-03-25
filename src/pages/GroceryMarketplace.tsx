@@ -183,6 +183,7 @@ export default function GroceryMarketplace() {
   const cart = useGroceryCart();
   const { country } = useCountry();
   const marketStores = useMemo(() => getStoresForMarket(country), [country]);
+  const { data: dbStores = [] } = useMarketStores(country);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState("");
   const [category, setCategory] = useState<StoreCategory | "all">("all");
