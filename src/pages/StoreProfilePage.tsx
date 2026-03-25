@@ -267,21 +267,21 @@ export default function StoreProfilePage() {
                   </div>
 
                   {/* Info */}
-                  <div className="p-2.5 space-y-1">
-                    {product.brand && (
-                      <p className="text-[11px] font-semibold text-muted-foreground truncate">{product.brand}</p>
+                  <div className="p-3 space-y-1.5">
+                    {/* Brand & Category on one line */}
+                    {(product.brand || product.category) && (
+                      <p className="text-[10px] font-medium text-muted-foreground truncate">
+                        {[product.brand, product.category].filter(Boolean).join(" · ")}
+                      </p>
                     )}
-                    {product.category && (
-                      <p className="text-[10px] font-medium text-muted-foreground/70 truncate">{product.category}</p>
-                    )}
-                    <p className="text-[13px] font-semibold line-clamp-2 leading-snug text-foreground min-h-[32px]">
+                    <p className="text-sm font-bold line-clamp-2 leading-tight text-foreground min-h-[36px]">
                       {product.name}
                     </p>
-                    <div>
-                      <span className="text-[14px] font-extrabold text-foreground tracking-tight block">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-base font-extrabold text-primary tracking-tight">
                         ៛{((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050))).toLocaleString()}
                       </span>
-                      <span className="text-[11px] font-medium text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         ${product.price.toFixed(2)}
                       </span>
                     </div>
@@ -290,15 +290,15 @@ export default function StoreProfilePage() {
                         <motion.button
                           whileTap={{ scale: 0.8 }}
                           onClick={() => cart.updateQuantity(product.id, cartItem.quantity - 1)}
-                          className="h-7 w-7 rounded-lg bg-background flex items-center justify-center border border-border/20"
+                          className="h-8 w-8 rounded-lg bg-background flex items-center justify-center border border-border/20"
                         >
                           <span className="text-sm font-bold">−</span>
                         </motion.button>
-                        <span className="text-[12px] font-extrabold text-primary">{cartItem.quantity}</span>
+                        <span className="text-sm font-extrabold text-primary">{cartItem.quantity}</span>
                         <motion.button
                           whileTap={{ scale: 0.8 }}
                           onClick={() => cart.updateQuantity(product.id, cartItem.quantity + 1)}
-                          className="h-7 w-7 rounded-lg bg-background flex items-center justify-center border border-border/20"
+                          className="h-8 w-8 rounded-lg bg-background flex items-center justify-center border border-border/20"
                         >
                           <span className="text-sm font-bold">+</span>
                         </motion.button>
@@ -306,7 +306,7 @@ export default function StoreProfilePage() {
                     ) : (
                       <Button
                         size="sm"
-                        className="w-full rounded-xl text-[10px] h-8 font-bold"
+                        className="w-full rounded-xl text-xs h-9 font-bold mt-1"
                         onClick={() => handleAddToCart(product)}
                       >
                         Add to Cart
