@@ -26,7 +26,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 const emptyProduct = {
-  name: "", description: "", price: 0, image_url: "", image_urls: [] as string[], category: "",
+  name: "", description: "", price: 0, price_khr: 0, image_url: "", image_urls: [] as string[], category: "",
   brand: "", sku: "", in_stock: true, sort_order: 0,
 };
 
@@ -167,6 +167,7 @@ export default function AdminStoreEditPage() {
       name: p.name || "",
       description: p.description || "",
       price: p.price || 0,
+      price_khr: p.price_khr || Math.round((p.price || 0) * (form.khr_rate || 4062.5)),
       image_url: p.image_url || "",
       image_urls: (p.image_urls as string[]) || (p.image_url ? [p.image_url] : []),
       category: p.category || "",
@@ -630,11 +631,11 @@ export default function AdminStoreEditPage() {
                 <Input
                   type="number"
                   step="100"
-                  value={(productForm as any)._khrRaw !== undefined ? (productForm as any)._khrRaw : (productForm.price ? Math.round(productForm.price * (form.khr_rate || 4062.5)) : "")}
+                  value={productForm.price_khr || ""}
                   onChange={e => {
                     const val = e.target.value;
-                    updateProductField("_khrRaw" as any, val);
-                    const khr = parseFloat(val) || 0;
+                    const khr = val === "" ? 0 : parseInt(val) || 0;
+                    updateProductField("price_khr", khr);
                     updateProductField("price", parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)));
                   }}
                   placeholder="0"
@@ -651,7 +652,7 @@ export default function AdminStoreEditPage() {
                     const val = e.target.value;
                     const num = val === "" ? 0 : parseFloat(val) || 0;
                     updateProductField("price", num);
-                    updateProductField("_khrRaw" as any, val === "" ? "" : String(Math.round((parseFloat(val) || 0) * (form.khr_rate || 4062.5))));
+                    updateProductField("price_khr", Math.round(num * (form.khr_rate || 4062.5)));
                   }}
                   placeholder="0"
                 />
