@@ -14,6 +14,7 @@ import GrocerySmartSearch from "@/components/grocery/GrocerySmartSearch";
 import { GroceryHowItWorks } from "@/components/grocery/GroceryHowItWorks";
 import { getStoresForMarket, type StoreCategory, type StoreConfig } from "@/config/groceryStores";
 import { useCountry } from "@/hooks/useCountry";
+import { useMarketStores, type StoreProfile } from "@/hooks/useStoreProfile";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { useNearbyGroceryStores, type NearbyStoreLocation } from "@/hooks/useNearbyGroceryStores";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
