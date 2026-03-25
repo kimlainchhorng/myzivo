@@ -28,7 +28,6 @@ export default function AdminStoreEditPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Fetch store
   const { data: store, isLoading } = useQuery({
     queryKey: ["admin-store", storeId],
     queryFn: async () => {
@@ -43,7 +42,6 @@ export default function AdminStoreEditPage() {
     enabled: !!storeId,
   });
 
-  // Fetch products
   const { data: products = [], isLoading: loadingProducts } = useQuery({
     queryKey: ["admin-store-products", storeId],
     queryFn: async () => {
@@ -59,7 +57,6 @@ export default function AdminStoreEditPage() {
     enabled: !!storeId,
   });
 
-  // Profile form state
   const [form, setForm] = useState({
     name: "", slug: "", description: "", logo_url: "", banner_url: "",
     market: "", category: "", address: "", phone: "", hours: "",
@@ -86,7 +83,6 @@ export default function AdminStoreEditPage() {
     }
   }, [store]);
 
-  // Save profile
   const saveProfile = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
@@ -103,7 +99,6 @@ export default function AdminStoreEditPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  // Product dialog
   const [productDialog, setProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState(emptyProduct);
@@ -167,8 +162,8 @@ export default function AdminStoreEditPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const updateField = (field: string, value: any) => setForm(p => ({ ...p, [field]: value }));
-  const updateProductField = (field: string, value: any) => setProductForm(p => ({ ...p, [field]: value }));
+  const updateField = (field: string, value: any) => setForm((p) => ({ ...p, [field]: value }));
+  const updateProductField = (field: string, value: any) => setProductForm((p) => ({ ...p, [field]: value }));
 
   if (isLoading) {
     return (
@@ -194,7 +189,6 @@ export default function AdminStoreEditPage() {
   return (
     <AdminLayout title={`Edit: ${store.name}`}>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="outline" size="icon" onClick={() => navigate("/admin/stores")}>
@@ -210,25 +204,35 @@ export default function AdminStoreEditPage() {
           </Button>
         </div>
 
-        {/* Banner Preview */}
         <Card className="overflow-hidden">
           <div className="relative h-40 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10">
             {form.banner_url && (
               <img src={form.banner_url} alt="Banner" className="w-full h-full object-cover" />
             )}
-            <div className="absolute bottom-3 left-4 flex items-end gap-3">
-              <div className="h-16 w-16 rounded-xl bg-background border-2 border-background shadow-lg overflow-hidden flex items-center justify-center">
-                {form.logo_url ? (
-                  <img src={form.logo_url} alt="Logo" className="h-full w-full object-contain p-1" />
-                ) : (
-                  <Store className="h-8 w-8 text-muted-foreground/30" />
-                )}
+            <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent" />
+            <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
+              <div className="flex items-end gap-3 min-w-0">
+                <div className="h-16 w-16 rounded-xl bg-background border-2 border-background shadow-lg overflow-hidden flex items-center justify-center shrink-0">
+                  {form.logo_url ? (
+                    <img src={form.logo_url} alt="Logo" className="h-full w-full object-contain p-1" />
+                  ) : (
+                    <Store className="h-8 w-8 text-muted-foreground/30" />
+                  )}
+                </div>
+                <div className="pb-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground drop-shadow-sm truncate">{form.name || "Store Name"}</p>
+                  <Badge variant={form.is_active ? "default" : "secondary"} className="text-[10px] mt-1">
+                    {form.is_active ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
               </div>
-              <div className="pb-1">
-                <p className="text-sm font-bold text-foreground drop-shadow-sm">{form.name || "Store Name"}</p>
-                <Badge variant={form.is_active ? "default" : "secondary"} className="text-[10px]">
-                  {form.is_active ? "Active" : "Inactive"}
-                </Badge>
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => document.getElementById("cover-url-input")?.focus()}>
+                  <Image className="h-3.5 w-3.5" /> Change Cover
+                </Button>
+                <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => document.getElementById("logo-url-input")?.focus()}>
+                  <Store className="h-3.5 w-3.5" /> Change Profile
+                </Button>
               </div>
             </div>
           </div>
@@ -240,8 +244,37 @@ export default function AdminStoreEditPage() {
             <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> Products ({products.length})</TabsTrigger>
           </TabsList>
 
-          {/* Profile Tab */}
           <TabsContent value="profile">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Profile & Cover</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1.5"><Store className="h-3.5 w-3.5" /> Profile Image URL</Label>
+                    <Input id="logo-url-input" value={form.logo_url} onChange={e => updateField("logo_url", e.target.value)} placeholder="https://..." />
+                    <div className="flex justify-end">
+                      <Button type="button" variant="ghost" size="sm" onClick={() => updateField("logo_url", "")}>Remove profile</Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1.5"><Image className="h-3.5 w-3.5" /> Cover Image URL</Label>
+                    <Input id="cover-url-input" value={form.banner_url} onChange={e => updateField("banner_url", e.target.value)} placeholder="https://..." />
+                    <div className="flex justify-end">
+                      <Button type="button" variant="ghost" size="sm" onClick={() => updateField("banner_url", "")}>Remove cover</Button>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={() => saveProfile.mutate()} disabled={saveProfile.isPending} className="gap-2">
+                    <Save className="h-4 w-4" />
+                    {saveProfile.isPending ? "Saving..." : "Save Profile Images"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Store Information</CardTitle>
@@ -260,16 +293,6 @@ export default function AdminStoreEditPage() {
                 <div className="space-y-2">
                   <Label>Description</Label>
                   <Textarea value={form.description} onChange={e => updateField("description", e.target.value)} rows={3} />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-1.5"><Image className="h-3.5 w-3.5" /> Logo URL</Label>
-                    <Input value={form.logo_url} onChange={e => updateField("logo_url", e.target.value)} placeholder="https://..." />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-1.5"><Image className="h-3.5 w-3.5" /> Banner/Cover URL</Label>
-                    <Input value={form.banner_url} onChange={e => updateField("banner_url", e.target.value)} placeholder="https://..." />
-                  </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
