@@ -36420,6 +36420,7 @@ export type Database = {
           hours: string | null
           id: string
           is_active: boolean | null
+          khr_rate: number | null
           logo_url: string | null
           market: string
           name: string
@@ -36438,6 +36439,7 @@ export type Database = {
           hours?: string | null
           id?: string
           is_active?: boolean | null
+          khr_rate?: number | null
           logo_url?: string | null
           market?: string
           name: string
@@ -36456,6 +36458,7 @@ export type Database = {
           hours?: string | null
           id?: string
           is_active?: boolean | null
+          khr_rate?: number | null
           logo_url?: string | null
           market?: string
           name?: string
