@@ -36365,6 +36365,7 @@ export type Database = {
           in_stock: boolean | null
           name: string
           price: number
+          price_khr: number | null
           sku: string | null
           sort_order: number | null
           store_id: string
@@ -36381,6 +36382,7 @@ export type Database = {
           in_stock?: boolean | null
           name: string
           price: number
+          price_khr?: number | null
           sku?: string | null
           sort_order?: number | null
           store_id: string
@@ -36397,6 +36399,7 @@ export type Database = {
           in_stock?: boolean | null
           name?: string
           price?: number
+          price_khr?: number | null
           sku?: string | null
           sort_order?: number | null
           store_id?: string
