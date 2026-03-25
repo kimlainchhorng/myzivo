@@ -14,8 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye } from "lucide-react";
-import { useState, useEffect } from "react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 const emptyProduct = {
@@ -165,6 +165,39 @@ export default function AdminStoreEditPage() {
   const updateField = (field: string, value: any) => setForm((p) => ({ ...p, [field]: value }));
   const updateProductField = (field: string, value: any) => setProductForm((p) => ({ ...p, [field]: value }));
 
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+
+  const uploadImage = async (file: File, type: "logo" | "cover") => {
+    const isLogo = type === "logo";
+    isLogo ? setUploadingLogo(true) : setUploadingCover(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${storeId}/${type}-${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("store-assets")
+        .upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
+      const field = isLogo ? "logo_url" : "banner_url";
+      updateField(field, urlData.publicUrl);
+      // Auto-save immediately
+      const { error: saveErr } = await supabase
+        .from("store_profiles")
+        .update({ [field]: urlData.publicUrl })
+        .eq("id", storeId!);
+      if (saveErr) throw saveErr;
+      queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
+      toast.success(`${isLogo ? "Profile" : "Cover"} image updated`);
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      isLogo ? setUploadingLogo(false) : setUploadingCover(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <AdminLayout title="Edit Store">
@@ -227,11 +260,13 @@ export default function AdminStoreEditPage() {
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2 shrink-0">
-                <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => document.getElementById("cover-url-input")?.focus()}>
-                  <Image className="h-3.5 w-3.5" /> Change Cover
+                <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "cover"); e.target.value = ""; }} />
+                <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                  {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} Change Cover
                 </Button>
-                <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => document.getElementById("logo-url-input")?.focus()}>
-                  <Store className="h-3.5 w-3.5" /> Change Profile
+                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "logo"); e.target.value = ""; }} />
+                <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}>
+                  {uploadingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Change Profile
                 </Button>
               </div>
             </div>
@@ -245,36 +280,6 @@ export default function AdminStoreEditPage() {
           </TabsList>
 
           <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Profile & Cover</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-1.5"><Store className="h-3.5 w-3.5" /> Profile Image URL</Label>
-                    <Input id="logo-url-input" value={form.logo_url} onChange={e => updateField("logo_url", e.target.value)} placeholder="https://..." />
-                    <div className="flex justify-end">
-                      <Button type="button" variant="ghost" size="sm" onClick={() => updateField("logo_url", "")}>Remove profile</Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-1.5"><Image className="h-3.5 w-3.5" /> Cover Image URL</Label>
-                    <Input id="cover-url-input" value={form.banner_url} onChange={e => updateField("banner_url", e.target.value)} placeholder="https://..." />
-                    <div className="flex justify-end">
-                      <Button type="button" variant="ghost" size="sm" onClick={() => updateField("banner_url", "")}>Remove cover</Button>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <Button onClick={() => saveProfile.mutate()} disabled={saveProfile.isPending} className="gap-2">
-                    <Save className="h-4 w-4" />
-                    {saveProfile.isPending ? "Saving..." : "Save Profile Images"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Store Information</CardTitle>
