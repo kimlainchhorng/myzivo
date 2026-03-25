@@ -103,7 +103,7 @@ export default function GroceryPage() {
 
         {/* ── Store Tabs (horizontal scroll) ── */}
         <div className="flex gap-2 px-4 pb-2 overflow-x-auto no-scrollbar">
-          {GROCERY_STORES.map((store) => (
+          {marketStores.map((store) => (
             <button
               key={store.name}
               onClick={() => handleStoreChange(store.name)}
