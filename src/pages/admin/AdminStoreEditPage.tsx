@@ -167,6 +167,7 @@ export default function AdminStoreEditPage() {
       name: p.name || "",
       description: p.description || "",
       price: p.price || 0,
+      price_khr: p.price_khr || Math.round((p.price || 0) * (form.khr_rate || 4062.5)),
       image_url: p.image_url || "",
       image_urls: (p.image_urls as string[]) || (p.image_url ? [p.image_url] : []),
       category: p.category || "",
