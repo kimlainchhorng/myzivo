@@ -13,6 +13,7 @@ interface StoreMapPickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentAddress: string;
+  currentCoords?: { lat: number; lng: number } | null;
   onConfirm: (address: string, lat: number, lng: number) => void;
 }
 
@@ -53,7 +54,7 @@ interface Suggestion {
   description: string;
 }
 
-export default function StoreMapPicker({ open, onOpenChange, currentAddress, onConfirm }: StoreMapPickerProps) {
+export default function StoreMapPicker({ open, onOpenChange, currentAddress, currentCoords, onConfirm }: StoreMapPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
@@ -69,6 +70,13 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    if (!open) return;
+    setAddress(currentAddress || "");
+    setSearchQuery(currentAddress || "");
+    setCoords(currentCoords ?? DEFAULT_CENTER);
+  }, [open, currentAddress, currentCoords]);
 
   // Reverse geocode
   const reverseGeocode = useCallback(async (lat: number, lng: number) => {
@@ -184,9 +192,10 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
       await new Promise((r) => setTimeout(r, 100));
       if (!mapRef.current || cancelled) { setLoading(false); return; }
 
+      const initialPos = currentCoords ?? DEFAULT_CENTER;
       const map = new google.maps.Map(mapRef.current, {
-        center: DEFAULT_CENTER,
-        zoom: 14,
+        center: initialPos,
+        zoom: currentCoords ? 16 : 14,
         disableDefaultUI: true,
         zoomControl: true,
         mapTypeControl: false,
@@ -197,7 +206,7 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
 
       const marker = new google.maps.Marker({
         map,
-        position: DEFAULT_CENTER,
+        position: initialPos,
         draggable: true,
         animation: google.maps.Animation.DROP,
       });
@@ -214,8 +223,11 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
         movePin(pos.lat(), pos.lng());
       });
 
-      // If there's a current address, geocode it to position the pin
-      if (currentAddress) {
+      if (currentCoords) {
+        setCoords(currentCoords);
+        setAddress(currentAddress);
+        setSearchQuery(currentAddress);
+      } else if (currentAddress) {
         try {
           const { data, error } = await supabase.functions.invoke("maps-geocode", {
             body: { address: currentAddress },
@@ -227,6 +239,7 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
             marker.setPosition(pos);
             setCoords(pos);
             setAddress(currentAddress);
+            setSearchQuery(currentAddress);
           }
         } catch { /* keep default */ }
       }
