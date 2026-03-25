@@ -260,11 +260,13 @@ export default function AdminStoreEditPage() {
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2 shrink-0">
-                <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => document.getElementById("cover-url-input")?.focus()}>
-                  <Image className="h-3.5 w-3.5" /> Change Cover
+                <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "cover"); e.target.value = ""; }} />
+                <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                  {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} Change Cover
                 </Button>
-                <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => document.getElementById("logo-url-input")?.focus()}>
-                  <Store className="h-3.5 w-3.5" /> Change Profile
+                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "logo"); e.target.value = ""; }} />
+                <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}>
+                  {uploadingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Change Profile
                 </Button>
               </div>
             </div>
@@ -278,37 +280,6 @@ export default function AdminStoreEditPage() {
           </TabsList>
 
           <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Profile & Cover</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-1.5"><Store className="h-3.5 w-3.5" /> Profile Image URL</Label>
-                    <Input id="logo-url-input" value={form.logo_url} onChange={e => updateField("logo_url", e.target.value)} placeholder="https://..." />
-                    <div className="flex justify-end">
-                      <Button type="button" variant="ghost" size="sm" onClick={() => updateField("logo_url", "")}>Remove profile</Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-1.5"><Image className="h-3.5 w-3.5" /> Cover Image URL</Label>
-                    <Input id="cover-url-input" value={form.banner_url} onChange={e => updateField("banner_url", e.target.value)} placeholder="https://..." />
-                    <div className="flex justify-end">
-                      <Button type="button" variant="ghost" size="sm" onClick={() => updateField("banner_url", "")}>Remove cover</Button>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <Button onClick={() => saveProfile.mutate()} disabled={saveProfile.isPending} className="gap-2">
-                    <Save className="h-4 w-4" />
-                    {saveProfile.isPending ? "Saving..." : "Save Profile Images"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
               <CardHeader>
                 <CardTitle className="text-base">Store Information</CardTitle>
               </CardHeader>
