@@ -403,9 +403,12 @@ export default function AdminStoreEditPage() {
                       <span className="text-[10px] text-muted-foreground">/ 5 — from customer reviews</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 pt-6">
-                    <Switch checked={form.is_active} onCheckedChange={v => updateField("is_active", v)} />
-                    <Label>Active</Label>
+                  <div className="space-y-2 pt-1">
+                    <Label>Store Status</Label>
+                    <div className="flex items-center gap-2 h-11 px-3 rounded-xl border border-border bg-muted">
+                      <span className="text-sm font-medium">{form.is_active ? "Active" : "Inactive"}</span>
+                      <span className="text-[10px] text-muted-foreground">— status is controlled elsewhere</span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex justify-end pt-2">
