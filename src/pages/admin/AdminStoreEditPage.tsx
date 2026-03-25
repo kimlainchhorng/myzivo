@@ -180,16 +180,18 @@ export default function AdminStoreEditPage() {
 
   const saveProduct = useMutation({
     mutationFn: async () => {
+      const { _khrRaw, ...productPayload } = productForm as typeof productForm & { _khrRaw?: string };
+
       if (editingProduct) {
         const { error } = await supabase
           .from("store_products")
-          .update(productForm)
+          .update(productPayload)
           .eq("id", editingProduct.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("store_products")
-          .insert({ ...productForm, store_id: storeId! });
+          .insert({ ...productPayload, store_id: storeId! });
         if (error) throw error;
       }
     },
