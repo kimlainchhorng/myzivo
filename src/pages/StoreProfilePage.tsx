@@ -269,7 +269,10 @@ export default function StoreProfilePage() {
                   {/* Info */}
                   <div className="p-2.5 space-y-1">
                     {product.brand && (
-                      <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider truncate">{product.brand}</p>
+                      <p className="text-[11px] font-semibold text-muted-foreground truncate">{product.brand}</p>
+                    )}
+                    {product.category && (
+                      <p className="text-[10px] font-medium text-muted-foreground/70 truncate">{product.category}</p>
                     )}
                     <p className="text-[13px] font-semibold line-clamp-2 leading-snug text-foreground min-h-[32px]">
                       {product.name}
