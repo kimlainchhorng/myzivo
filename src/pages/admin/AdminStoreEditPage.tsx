@@ -243,6 +243,12 @@ export default function AdminStoreEditPage() {
               <img src={form.banner_url} alt="Banner" className="w-full h-full object-cover" />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent" />
+            <div className="absolute top-3 right-4">
+              <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "cover"); e.target.value = ""; }} />
+              <Button size="sm" variant="secondary" className="gap-1.5 bg-background/80 backdrop-blur-sm" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} Change Cover
+              </Button>
+            </div>
             <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
               <div className="flex items-end gap-3 min-w-0">
                 <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "logo"); e.target.value = ""; }} />
