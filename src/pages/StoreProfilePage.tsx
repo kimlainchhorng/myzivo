@@ -318,6 +318,8 @@ export default function StoreProfilePage() {
           total={cart.total}
           onClose={() => setShowCart(false)}
           onOrderPlaced={() => { cart.clearCart(); setShowCart(false); }}
+          onRemoveItem={cart.removeItem}
+          onUpdateQuantity={cart.updateQuantity}
         />
       )}
       <ZivoMobileNav />
