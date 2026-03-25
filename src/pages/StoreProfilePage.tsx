@@ -271,12 +271,17 @@ export default function StoreProfilePage() {
                     {product.brand && (
                       <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider truncate">{product.brand}</p>
                     )}
-                    <p className="text-[11px] font-semibold line-clamp-2 leading-snug text-foreground/90 min-h-[28px]">
+                    <p className="text-[13px] font-semibold line-clamp-2 leading-snug text-foreground min-h-[32px]">
                       {product.name}
                     </p>
-                    <span className="text-[14px] font-extrabold text-foreground tracking-tight block">
-                      ${product.price.toFixed(2)}
-                    </span>
+                    <div>
+                      <span className="text-[14px] font-extrabold text-foreground tracking-tight block">
+                        ៛{((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050))).toLocaleString()}
+                      </span>
+                      <span className="text-[11px] font-medium text-muted-foreground">
+                        ${product.price.toFixed(2)}
+                      </span>
+                    </div>
                     {cartItem ? (
                       <div className="flex items-center justify-between bg-primary/10 rounded-xl p-0.5 border border-primary/15">
                         <motion.button
