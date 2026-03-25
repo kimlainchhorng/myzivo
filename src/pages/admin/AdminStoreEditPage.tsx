@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink } from "lucide-react";
 import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -330,7 +330,7 @@ export default function AdminStoreEditPage() {
                       className="gap-2"
                       onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.address)}`, "_blank", "noopener,noreferrer")}
                     >
-                      <Navigation className="h-3.5 w-3.5" />
+                      <ExternalLink className="h-3.5 w-3.5" />
                       View on Google Maps
                     </Button>
                   )}
