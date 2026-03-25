@@ -34,7 +34,7 @@ export default function AdminStoreEditPage() {
   const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { currentLanguage, changeLanguage } = useI18n();
+  const { currentLanguage, changeLanguage, t } = useI18n();
   const { data: supportedLanguages } = useSupportedLanguages(true);
   const STORE_LANG_CODES = ["en", "km", "th", "vi", "ko", "zh"];
   const activeLanguages = (supportedLanguages || []).filter(l => l.is_active && STORE_LANG_CODES.includes(l.code));
@@ -272,7 +272,7 @@ export default function AdminStoreEditPage() {
                   )}
                   <div className="flex items-center gap-2 relative z-10">
                     <Globe className="w-4 h-4 text-muted-foreground" />
-                    <p className="text-sm font-medium">Select Language</p>
+                    <p className="text-sm font-medium">{t("admin.store.select_language")}</p>
                   </div>
                 </div>
                 <div className="overflow-y-auto max-h-[360px] p-1">
@@ -307,7 +307,7 @@ export default function AdminStoreEditPage() {
             </Popover>
 
             <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" className="gap-2">
-              <Eye className="h-4 w-4" /> Preview
+              <Eye className="h-4 w-4" /> {t("admin.store.preview")}
             </Button>
           </div>
         </div>
@@ -321,7 +321,7 @@ export default function AdminStoreEditPage() {
             <div className="absolute top-3 right-4">
               <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "cover"); e.target.value = ""; }} />
               <Button size="sm" variant="secondary" className="gap-1.5 bg-background/80 backdrop-blur-sm" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
-                {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} Change Cover
+                {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} {t("admin.store.change_cover")}
               </Button>
             </div>
             <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
@@ -350,8 +350,8 @@ export default function AdminStoreEditPage() {
 
         <Tabs defaultValue="profile" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> Profile</TabsTrigger>
-            <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> Products ({products.length})</TabsTrigger>
+             <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
+            <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> {t("admin.store.products")} ({products.length})</TabsTrigger>
           </TabsList>
 
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-card">
@@ -372,42 +372,42 @@ export default function AdminStoreEditPage() {
           <TabsContent value="profile">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Store Information</CardTitle>
+                <CardTitle className="text-base">{t("admin.store.store_info")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Store Name</Label>
+                    <Label>{t("admin.store.store_name")}</Label>
                     <Input value={form.name} onChange={e => updateField("name", e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Slug</Label>
+                    <Label>{t("admin.store.slug")}</Label>
                     <Input value={form.slug} onChange={e => updateField("slug", e.target.value)} />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label>{t("admin.store.description")}</Label>
                   <Textarea value={form.description} onChange={e => updateField("description", e.target.value)} rows={3} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Market</Label>
+                    <Label>{t("admin.store.market")}</Label>
                     <Input value={form.market} onChange={e => updateField("market", e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Category</Label>
+                    <Label>{t("admin.store.category")}</Label>
                     <Input value={form.category} onChange={e => updateField("category", e.target.value)} />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Address</Label>
+                  <Label>{t("admin.store.address")}</Label>
                   <div
                     className="flex items-center gap-2 px-3 h-11 rounded-xl border border-border bg-background cursor-pointer hover:bg-muted transition-colors"
                     onClick={() => setMapPickerOpen(true)}
                   >
                     <MapPin className="h-4 w-4 text-primary shrink-0" />
                     <span className={`text-sm truncate ${form.address ? "text-foreground" : "text-muted-foreground"}`}>
-                      {form.address || "Tap to pick location on map"}
+                      {form.address || t("admin.store.tap_pick_location")}
                     </span>
                   </div>
                   {form.address && (
@@ -424,7 +424,7 @@ export default function AdminStoreEditPage() {
                       }}
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
-                      View on Google Maps
+                      {t("admin.store.view_on_maps")}
                     </Button>
                   )}
                   <StoreMapPicker
@@ -441,7 +441,7 @@ export default function AdminStoreEditPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>Phone</Label>
+                    <Label>{t("admin.store.phone")}</Label>
                     <div className="flex gap-2">
                       <div className="flex items-center gap-1.5 px-3 rounded-xl border border-border bg-muted text-sm text-muted-foreground shrink-0">
                         <span>🇰🇭</span>
@@ -467,17 +467,17 @@ export default function AdminStoreEditPage() {
                     })()}
                   </div>
                   <div className="space-y-2">
-                    <Label>Hours</Label>
+                    <Label>{t("admin.store.hours")}</Label>
                     <Input value={form.hours} onChange={e => updateField("hours", e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Delivery Min (minutes)</Label>
+                    <Label>{t("admin.store.delivery_min")}</Label>
                     <Input type="number" value={form.delivery_min} onChange={e => updateField("delivery_min", parseInt(e.target.value) || 0)} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Rating</Label>
+                    <Label>{t("admin.store.rating")}</Label>
                     <div className="flex items-center gap-2 h-11 px-3 rounded-xl border border-border bg-muted">
                       <span className="text-amber-500">★</span>
                       <span className="text-sm font-medium">{form.rating || "0"}</span>
@@ -485,9 +485,9 @@ export default function AdminStoreEditPage() {
                     </div>
                   </div>
                   <div className="space-y-2 pt-1">
-                    <Label>Store Status</Label>
+                    <Label>{t("admin.store.store_status")}</Label>
                     <div className="flex items-center gap-2 h-11 px-3 rounded-xl border border-border bg-muted">
-                      <span className="text-sm font-medium">{form.is_active ? "Active" : "Inactive"}</span>
+                      <span className="text-sm font-medium">{form.is_active ? t("admin.store.active") : t("admin.store.inactive")}</span>
                       <span className="text-[10px] text-muted-foreground">— status is controlled elsewhere</span>
                     </div>
                   </div>
@@ -495,7 +495,7 @@ export default function AdminStoreEditPage() {
                 <div className="flex justify-end pt-2">
                   <Button onClick={() => saveProfile.mutate()} disabled={saveProfile.isPending} className="gap-2">
                     <Save className="h-4 w-4" />
-                    {saveProfile.isPending ? "Saving..." : "Save Changes"}
+                    {saveProfile.isPending ? t("admin.store.saving") : t("admin.store.save_changes")}
                   </Button>
                 </div>
               </CardContent>
@@ -506,9 +506,9 @@ export default function AdminStoreEditPage() {
           <TabsContent value="products">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base">Products</CardTitle>
+                <CardTitle className="text-base">{t("admin.store.products")}</CardTitle>
                 <Button size="sm" onClick={openAddProduct} className="gap-1.5">
-                  <Plus className="h-4 w-4" /> Add Product
+                  <Plus className="h-4 w-4" /> {t("admin.store.add_product")}
                 </Button>
               </CardHeader>
               <CardContent>
@@ -519,9 +519,9 @@ export default function AdminStoreEditPage() {
                 ) : products.length === 0 ? (
                   <div className="text-center py-12 space-y-3">
                     <Package className="h-10 w-10 text-muted-foreground/20 mx-auto" />
-                    <p className="text-muted-foreground">No products yet</p>
+                    <p className="text-muted-foreground">{t("admin.store.no_products")}</p>
                     <Button variant="outline" size="sm" onClick={openAddProduct} className="gap-1.5">
-                      <Plus className="h-4 w-4" /> Add First Product
+                      <Plus className="h-4 w-4" /> {t("admin.store.add_first_product")}
                     </Button>
                   </div>
                 ) : (
@@ -547,7 +547,7 @@ export default function AdminStoreEditPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant={product.in_stock ? "default" : "secondary"} className="text-[10px]">
-                            {product.in_stock ? "In Stock" : "Out of Stock"}
+                            {product.in_stock ? t("admin.store.in_stock") : t("admin.store.out_of_stock")}
                           </Badge>
                           <Button size="sm" variant="outline" onClick={() => openEditProduct(product)}>
                             <Edit className="h-3.5 w-3.5" />
