@@ -2,10 +2,11 @@
  * GroceryPriceCompare - Cross-store price comparison for a product
  * Searches the same product name across other stores
  */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpDown, Loader2, Check, ExternalLink } from "lucide-react";
-import { GROCERY_STORES, type StoreName } from "@/config/groceryStores";
+import { getStoresForMarket, type StoreName } from "@/config/groceryStores";
+import { useCountry } from "@/hooks/useCountry";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://slirphzzwcogdbkeicff.supabase.co";
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI";
@@ -25,6 +26,8 @@ interface GroceryPriceCompareProps {
 }
 
 export function GroceryPriceCompare({ productName, currentStore, currentPrice }: GroceryPriceCompareProps) {
+  const { country } = useCountry();
+  const marketStores = useMemo(() => getStoresForMarket(country), [country]);
   const [results, setResults] = useState<PriceResult[]>([]);
   const [expanded, setExpanded] = useState(false);
   const fetched = useRef(false);
@@ -34,7 +37,7 @@ export function GroceryPriceCompare({ productName, currentStore, currentPrice }:
     fetched.current = true;
 
     // Search other stores
-    const otherStores = GROCERY_STORES.filter((s) => s.name !== currentStore);
+    const otherStores = marketStores.filter((s) => s.name !== currentStore);
     const initial: PriceResult[] = otherStores.map((s) => ({
       store: s.name,
       logo: s.logo,
@@ -89,7 +92,7 @@ export function GroceryPriceCompare({ productName, currentStore, currentPrice }:
     setExpanded(false);
   }, [productName]);
 
-  const currentStoreCfg = GROCERY_STORES.find((s) => s.name === currentStore);
+  const currentStoreCfg = marketStores.find((s) => s.name === currentStore);
 
   return (
     <div className="mt-3">

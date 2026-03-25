@@ -5,13 +5,17 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Star, Clock, ChevronRight, Store } from "lucide-react";
-import { GROCERY_STORES } from "@/config/groceryStores";
+import { getStoresForMarket } from "@/config/groceryStores";
 import { getStoreStatus, getLiveEta } from "@/utils/storeStatus";
+import { useCountry } from "@/hooks/useCountry";
+import { useMemo } from "react";
 
 export default function GroceryPromos() {
   const navigate = useNavigate();
+  const { country } = useCountry();
+  const marketStores = useMemo(() => getStoresForMarket(country), [country]);
 
-  const openStores = GROCERY_STORES.filter((s) => getStoreStatus(s.hours).isOpen);
+  const openStores = marketStores.filter((s) => getStoreStatus(s.hours).isOpen);
 
   if (openStores.length === 0) return null;
 

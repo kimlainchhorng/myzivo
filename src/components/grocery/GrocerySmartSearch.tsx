@@ -2,12 +2,13 @@
  * GrocerySmartSearch — autocomplete with recent searches & real store matches only
  * No fake trending items for non-existent stores
  */
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Store, ArrowRight, X, Clock, TrendingUp, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { GROCERY_STORES } from "@/config/groceryStores";
+import { getStoresForMarket } from "@/config/groceryStores";
+import { useCountry } from "@/hooks/useCountry";
 
 const RECENT_KEY = "zivo_grocery_searches";
 const MAX_RECENT = 5;
@@ -41,6 +42,8 @@ interface Props {
 
 export default function GrocerySmartSearch({ value, onChange }: Props) {
   const navigate = useNavigate();
+  const { country } = useCountry();
+  const marketStores = useMemo(() => getStoresForMarket(country), [country]);
   const [isFocused, setIsFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +56,7 @@ export default function GrocerySmartSearch({ value, onChange }: Props) {
   }, [isFocused]);
 
   const storeResults = query
-    ? GROCERY_STORES.filter((s) => s.name.toLowerCase().includes(query)).slice(0, 3)
+    ? marketStores.filter((s) => s.name.toLowerCase().includes(query)).slice(0, 3)
     : [];
 
   const trendingResults = query
@@ -181,7 +184,7 @@ export default function GrocerySmartSearch({ value, onChange }: Props) {
                   {query ? <><Sparkles className="h-2.5 w-2.5" /> Suggestions</> : <><TrendingUp className="h-2.5 w-2.5" /> Popular Categories</>}
                 </p>
                 {trendingResults.map((product) => {
-                  const store = GROCERY_STORES.find((s) => s.slug === product.store);
+                  const store = marketStores.find((s) => s.slug === product.store);
                   return (
                     <motion.button
                       key={product.query}
