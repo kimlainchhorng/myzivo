@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { User, Phone, ArrowRight, Loader2 } from "lucide-react";
-import CountryPhoneInput from "@/components/auth/CountryPhoneInput";
+import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 
 const setupSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required").max(50),
