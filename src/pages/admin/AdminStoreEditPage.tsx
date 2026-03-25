@@ -378,7 +378,22 @@ export default function AdminStoreEditPage() {
                     <Input type="number" value={form.delivery_min} onChange={e => updateField("delivery_min", parseInt(e.target.value) || 0)} />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>KHR Exchange Rate (1 USD = ?)</Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground font-medium">៛</span>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        min="1"
+                        value={form.khr_rate || ""}
+                        onChange={e => updateField("khr_rate", parseFloat(e.target.value) || 0)}
+                        placeholder="4062.5"
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Set the USD→KHR rate for this store's products</p>
+                  </div>
                   <div className="space-y-2">
                     <Label>Rating</Label>
                     <Input type="number" step="0.1" min="0" max="5" value={form.rating} onChange={e => updateField("rating", parseFloat(e.target.value) || 0)} />
