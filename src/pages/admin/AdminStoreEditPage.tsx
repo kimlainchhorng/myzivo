@@ -652,21 +652,25 @@ export default function AdminStoreEditPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>{t("admin.store.description")}</Label>
-              <div className="flex items-start gap-3">
-                <input ref={productImageInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadProductImage(f); e.target.value = ""; }} />
-                {productForm.image_url ? (
-                  <div className="relative group shrink-0">
-                    <img src={productForm.image_url} alt="Product" className="w-20 h-20 rounded-xl object-cover border border-border" />
+              <Label>Images ({(productForm.image_urls || []).length}/8)</Label>
+              <input ref={productImageInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadProductImage(f); e.target.value = ""; }} />
+              <div className="flex flex-wrap gap-2">
+                {(productForm.image_urls || []).map((url: string, idx: number) => (
+                  <div key={idx} className="relative group shrink-0">
+                    <img src={url} alt={`Product ${idx + 1}`} className="w-20 h-20 rounded-xl object-cover border border-border" />
                     <button
                       type="button"
-                      onClick={() => productImageInputRef.current?.click()}
-                      className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"
+                      onClick={() => removeProductImage(idx)}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs shadow-sm"
                     >
-                      {uploadingProductImage ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
+                      ×
                     </button>
+                    {idx === 0 && (
+                      <span className="absolute bottom-0.5 left-0.5 text-[8px] bg-primary text-primary-foreground px-1 rounded">Main</span>
+                    )}
                   </div>
-                ) : (
+                ))}
+                {(productForm.image_urls || []).length < 8 && (
                   <button
                     type="button"
                     onClick={() => productImageInputRef.current?.click()}
