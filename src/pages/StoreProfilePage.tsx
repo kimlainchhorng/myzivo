@@ -141,17 +141,37 @@ export default function StoreProfilePage() {
             </div>
           </div>
 
-          {/* Contact info */}
-          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border/20">
+          {/* Contact info - clickable buttons */}
+          <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-border/20">
             {store.address && (
-              <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate">
-                <MapPin className="h-3 w-3 shrink-0" /> {store.address}
-              </span>
+              <button
+                onClick={() => navigate(`/rides?destination=${encodeURIComponent(store.address)}`)}
+                className="flex items-center gap-2.5 w-full p-2.5 rounded-xl bg-primary/5 border border-primary/10 hover:bg-primary/10 hover:border-primary/20 transition-all duration-200 text-left group active:scale-[0.98]"
+              >
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                  <MapPin className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Address · Tap to ride</p>
+                  <p className="text-xs text-foreground truncate">{store.address}</p>
+                </div>
+                <ArrowLeft className="h-3.5 w-3.5 text-primary/40 rotate-180 group-hover:translate-x-0.5 transition-transform" />
+              </button>
             )}
             {store.phone && (
-              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                <Phone className="h-3 w-3 shrink-0" /> {store.phone}
-              </span>
+              <a
+                href={`tel:${store.phone.replace(/\s+/g, "")}`}
+                className="flex items-center gap-2.5 w-full p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 hover:bg-emerald-500/10 hover:border-emerald-500/20 transition-all duration-200 text-left group active:scale-[0.98]"
+              >
+                <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 group-hover:bg-emerald-500/15 transition-colors">
+                  <Phone className="h-4 w-4 text-emerald-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">Call Store</p>
+                  <p className="text-xs text-foreground font-medium">{store.phone}</p>
+                </div>
+                <Phone className="h-3.5 w-3.5 text-emerald-500/40 group-hover:text-emerald-500/60 transition-colors" />
+              </a>
             )}
           </div>
         </motion.div>
