@@ -405,26 +405,26 @@ export default function StoreProfilePage() {
                   </div>
 
                   {/* Info section */}
-                  <div className="relative p-2.5 space-y-1">
+                  <div className="relative p-3 space-y-1.5">
                     {/* Brand */}
                     {product.brand && (
-                      <p className="text-[7px] font-black text-primary/40 uppercase tracking-[0.2em] truncate">
+                      <p className="text-[10px] font-bold text-primary/50 uppercase tracking-[0.15em] truncate">
                         {product.brand}
                       </p>
                     )}
                     
                     {/* Product name */}
-                    <p className="text-[11px] font-semibold line-clamp-2 leading-[1.3] text-foreground/90 min-h-[28px]">
+                    <p className="text-sm font-semibold line-clamp-2 leading-snug text-foreground min-h-[36px]">
                       {product.name}
                     </p>
 
                     {/* Price row */}
-                    <div className="flex items-end justify-between pt-0.5">
+                    <div className="flex items-end justify-between pt-1">
                       <div>
-                        <span className="text-[14px] font-black text-foreground tracking-tight leading-none block">
+                        <span className="text-base font-black text-foreground tracking-tight leading-none block">
                           ៛{khrPrice.toLocaleString()}
                         </span>
-                        <span className="text-[9px] font-medium text-muted-foreground/60 block mt-0.5">
+                        <span className="text-[11px] font-medium text-muted-foreground/60 block mt-0.5">
                           ${product.price.toFixed(2)}
                         </span>
                       </div>
