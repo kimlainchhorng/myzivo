@@ -62,6 +62,7 @@ export default function AdminStoreEditPage() {
     name: "", slug: "", description: "", logo_url: "", banner_url: "",
     market: "", category: "", address: "", phone: "", hours: "",
     rating: 0, delivery_min: 0, is_active: true, khr_rate: 4062.5,
+    latitude: null as number | null, longitude: null as number | null,
   });
 
   useEffect(() => {
@@ -81,6 +82,8 @@ export default function AdminStoreEditPage() {
         delivery_min: store.delivery_min || 0,
         is_active: store.is_active ?? true,
         khr_rate: (store as any).khr_rate ?? 4062.5,
+        latitude: (store as any).latitude ?? null,
+        longitude: (store as any).longitude ?? null,
       });
     }
   }, [store]);
@@ -90,7 +93,7 @@ export default function AdminStoreEditPage() {
       const { rating, ...profileData } = form;
       const { error } = await supabase
         .from("store_profiles")
-        .update(profileData)
+        .update(profileData as any)
         .eq("id", storeId!);
       if (error) throw error;
     },
@@ -103,7 +106,6 @@ export default function AdminStoreEditPage() {
   });
 
   const [mapPickerOpen, setMapPickerOpen] = useState(false);
-  const [storeCoords, setStoreCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [productDialog, setProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState(emptyProduct);
@@ -347,8 +349,8 @@ export default function AdminStoreEditPage() {
                       size="sm"
                       className="gap-2"
                       onClick={() => {
-                        const query = storeCoords
-                          ? `${storeCoords.lat},${storeCoords.lng}`
+                        const query = form.latitude != null && form.longitude != null
+                          ? `${form.latitude},${form.longitude}`
                           : encodeURIComponent(form.address);
                         window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank", "noopener,noreferrer");
                       }}
@@ -361,7 +363,12 @@ export default function AdminStoreEditPage() {
                     open={mapPickerOpen}
                     onOpenChange={setMapPickerOpen}
                     currentAddress={form.address}
-                    onConfirm={(addr, lat, lng) => { updateField("address", addr); setStoreCoords({ lat, lng }); }}
+                    currentCoords={form.latitude != null && form.longitude != null ? { lat: form.latitude, lng: form.longitude } : null}
+                    onConfirm={(addr, lat, lng) => {
+                      updateField("address", addr);
+                      updateField("latitude", lat);
+                      updateField("longitude", lng);
+                    }}
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
