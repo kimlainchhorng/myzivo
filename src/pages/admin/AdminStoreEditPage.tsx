@@ -476,10 +476,21 @@ export default function AdminStoreEditPage() {
               <Label>Description</Label>
               <Textarea value={productForm.description} onChange={e => updateProductField("description", e.target.value)} rows={2} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Price ($) *</Label>
                 <Input type="number" step="0.01" value={productForm.price} onChange={e => updateProductField("price", parseFloat(e.target.value) || 0)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Price (៛ KHR)</Label>
+                <Input
+                  type="number"
+                  step="100"
+                  value={Math.round((productForm.price || 0) * 4062.5)}
+                  readOnly
+                  className="bg-muted text-muted-foreground cursor-default"
+                />
+                <p className="text-[10px] text-muted-foreground">Auto: 1 USD = 4,062.5 KHR</p>
               </div>
               <div className="space-y-2">
                 <Label>SKU</Label>
