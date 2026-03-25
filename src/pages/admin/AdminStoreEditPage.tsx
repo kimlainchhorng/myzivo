@@ -1,0 +1,471 @@
+/**
+ * AdminStoreEditPage - Full store management: edit profile, cover, logo, products
+ */
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import AdminLayout from "@/components/admin/AdminLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye } from "lucide-react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+
+const emptyProduct = {
+  name: "", description: "", price: 0, image_url: "", category: "",
+  brand: "", sku: "", in_stock: true, sort_order: 0,
+};
+
+export default function AdminStoreEditPage() {
+  const { storeId } = useParams<{ storeId: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Fetch store
+  const { data: store, isLoading } = useQuery({
+    queryKey: ["admin-store", storeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_profiles")
+        .select("*")
+        .eq("id", storeId!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!storeId,
+  });
+
+  // Fetch products
+  const { data: products = [], isLoading: loadingProducts } = useQuery({
+    queryKey: ["admin-store-products", storeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_products")
+        .select("*")
+        .eq("store_id", storeId!)
+        .order("sort_order")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!storeId,
+  });
+
+  // Profile form state
+  const [form, setForm] = useState({
+    name: "", slug: "", description: "", logo_url: "", banner_url: "",
+    market: "", category: "", address: "", phone: "", hours: "",
+    rating: 0, delivery_min: 0, is_active: true,
+  });
+
+  useEffect(() => {
+    if (store) {
+      setForm({
+        name: store.name || "",
+        slug: store.slug || "",
+        description: store.description || "",
+        logo_url: store.logo_url || "",
+        banner_url: store.banner_url || "",
+        market: store.market || "",
+        category: store.category || "",
+        address: store.address || "",
+        phone: store.phone || "",
+        hours: store.hours || "",
+        rating: store.rating || 0,
+        delivery_min: store.delivery_min || 0,
+        is_active: store.is_active ?? true,
+      });
+    }
+  }, [store]);
+
+  // Save profile
+  const saveProfile = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("store_profiles")
+        .update(form)
+        .eq("id", storeId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
+      toast.success("Store profile updated");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  // Product dialog
+  const [productDialog, setProductDialog] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [productForm, setProductForm] = useState(emptyProduct);
+  const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
+
+  const openAddProduct = () => {
+    setEditingProduct(null);
+    setProductForm(emptyProduct);
+    setProductDialog(true);
+  };
+
+  const openEditProduct = (p: any) => {
+    setEditingProduct(p);
+    setProductForm({
+      name: p.name || "",
+      description: p.description || "",
+      price: p.price || 0,
+      image_url: p.image_url || "",
+      category: p.category || "",
+      brand: p.brand || "",
+      sku: p.sku || "",
+      in_stock: p.in_stock ?? true,
+      sort_order: p.sort_order || 0,
+    });
+    setProductDialog(true);
+  };
+
+  const saveProduct = useMutation({
+    mutationFn: async () => {
+      if (editingProduct) {
+        const { error } = await supabase
+          .from("store_products")
+          .update(productForm)
+          .eq("id", editingProduct.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("store_products")
+          .insert({ ...productForm, store_id: storeId! });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-store-products", storeId] });
+      setProductDialog(false);
+      toast.success(editingProduct ? "Product updated" : "Product added");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteProduct = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("store_products").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-store-products", storeId] });
+      setDeleteProductId(null);
+      toast.success("Product deleted");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const updateField = (field: string, value: any) => setForm(p => ({ ...p, [field]: value }));
+  const updateProductField = (field: string, value: any) => setProductForm(p => ({ ...p, [field]: value }));
+
+  if (isLoading) {
+    return (
+      <AdminLayout title="Edit Store">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (!store) {
+    return (
+      <AdminLayout title="Store Not Found">
+        <div className="text-center py-20 space-y-4">
+          <p className="text-muted-foreground">Store not found</p>
+          <Button onClick={() => navigate("/admin/stores")} variant="outline">Back to Stores</Button>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  return (
+    <AdminLayout title={`Edit: ${store.name}`}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="icon" onClick={() => navigate("/admin/stores")}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h2 className="text-xl font-bold text-foreground">{store.name}</h2>
+              <p className="text-sm text-muted-foreground">/{store.slug} · {store.market}</p>
+            </div>
+          </div>
+          <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" className="gap-2">
+            <Eye className="h-4 w-4" /> Preview
+          </Button>
+        </div>
+
+        {/* Banner Preview */}
+        <Card className="overflow-hidden">
+          <div className="relative h-40 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10">
+            {form.banner_url && (
+              <img src={form.banner_url} alt="Banner" className="w-full h-full object-cover" />
+            )}
+            <div className="absolute bottom-3 left-4 flex items-end gap-3">
+              <div className="h-16 w-16 rounded-xl bg-background border-2 border-background shadow-lg overflow-hidden flex items-center justify-center">
+                {form.logo_url ? (
+                  <img src={form.logo_url} alt="Logo" className="h-full w-full object-contain p-1" />
+                ) : (
+                  <Store className="h-8 w-8 text-muted-foreground/30" />
+                )}
+              </div>
+              <div className="pb-1">
+                <p className="text-sm font-bold text-foreground drop-shadow-sm">{form.name || "Store Name"}</p>
+                <Badge variant={form.is_active ? "default" : "secondary"} className="text-[10px]">
+                  {form.is_active ? "Active" : "Inactive"}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <Tabs defaultValue="profile" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> Profile</TabsTrigger>
+            <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> Products ({products.length})</TabsTrigger>
+          </TabsList>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Store Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Store Name</Label>
+                    <Input value={form.name} onChange={e => updateField("name", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Slug</Label>
+                    <Input value={form.slug} onChange={e => updateField("slug", e.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea value={form.description} onChange={e => updateField("description", e.target.value)} rows={3} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1.5"><Image className="h-3.5 w-3.5" /> Logo URL</Label>
+                    <Input value={form.logo_url} onChange={e => updateField("logo_url", e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1.5"><Image className="h-3.5 w-3.5" /> Banner/Cover URL</Label>
+                    <Input value={form.banner_url} onChange={e => updateField("banner_url", e.target.value)} placeholder="https://..." />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Market</Label>
+                    <Input value={form.market} onChange={e => updateField("market", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <Input value={form.category} onChange={e => updateField("category", e.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Address</Label>
+                  <Input value={form.address} onChange={e => updateField("address", e.target.value)} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Phone</Label>
+                    <Input value={form.phone} onChange={e => updateField("phone", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Hours</Label>
+                    <Input value={form.hours} onChange={e => updateField("hours", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Delivery Min (minutes)</Label>
+                    <Input type="number" value={form.delivery_min} onChange={e => updateField("delivery_min", parseInt(e.target.value) || 0)} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Rating</Label>
+                    <Input type="number" step="0.1" min="0" max="5" value={form.rating} onChange={e => updateField("rating", parseFloat(e.target.value) || 0)} />
+                  </div>
+                  <div className="flex items-center gap-3 pt-6">
+                    <Switch checked={form.is_active} onCheckedChange={v => updateField("is_active", v)} />
+                    <Label>Active</Label>
+                  </div>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <Button onClick={() => saveProfile.mutate()} disabled={saveProfile.isPending} className="gap-2">
+                    <Save className="h-4 w-4" />
+                    {saveProfile.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Products Tab */}
+          <TabsContent value="products">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">Products</CardTitle>
+                <Button size="sm" onClick={openAddProduct} className="gap-1.5">
+                  <Plus className="h-4 w-4" /> Add Product
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {loadingProducts ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : products.length === 0 ? (
+                  <div className="text-center py-12 space-y-3">
+                    <Package className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+                    <p className="text-muted-foreground">No products yet</p>
+                    <Button variant="outline" size="sm" onClick={openAddProduct} className="gap-1.5">
+                      <Plus className="h-4 w-4" /> Add First Product
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {products.map((product: any) => (
+                      <div key={product.id} className="flex items-center justify-between py-3">
+                        <div className="flex items-center gap-3">
+                          {product.image_url ? (
+                            <img src={product.image_url} alt={product.name} className="w-12 h-12 rounded-lg object-cover bg-muted" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                              <Package className="h-5 w-5 text-muted-foreground/30" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-sm text-foreground">{product.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              ${product.price?.toFixed(2)}
+                              {product.category && ` · ${product.category}`}
+                              {product.brand && ` · ${product.brand}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={product.in_stock ? "default" : "secondary"} className="text-[10px]">
+                            {product.in_stock ? "In Stock" : "Out of Stock"}
+                          </Badge>
+                          <Button size="sm" variant="outline" onClick={() => openEditProduct(product)}>
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setDeleteProductId(product.id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Product Add/Edit Dialog */}
+      <Dialog open={productDialog} onOpenChange={setProductDialog}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingProduct ? "Edit Product" : "Add Product"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Product Name *</Label>
+              <Input value={productForm.name} onChange={e => updateProductField("name", e.target.value)} placeholder="Product name" />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea value={productForm.description} onChange={e => updateProductField("description", e.target.value)} rows={2} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Price ($) *</Label>
+                <Input type="number" step="0.01" value={productForm.price} onChange={e => updateProductField("price", parseFloat(e.target.value) || 0)} />
+              </div>
+              <div className="space-y-2">
+                <Label>SKU</Label>
+                <Input value={productForm.sku} onChange={e => updateProductField("sku", e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Image URL</Label>
+              <Input value={productForm.image_url} onChange={e => updateProductField("image_url", e.target.value)} placeholder="https://..." />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Input value={productForm.category} onChange={e => updateProductField("category", e.target.value)} placeholder="e.g. Snacks" />
+              </div>
+              <div className="space-y-2">
+                <Label>Brand</Label>
+                <Input value={productForm.brand} onChange={e => updateProductField("brand", e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Sort Order</Label>
+                <Input type="number" value={productForm.sort_order} onChange={e => updateProductField("sort_order", parseInt(e.target.value) || 0)} />
+              </div>
+              <div className="flex items-center gap-3 pt-6">
+                <Switch checked={productForm.in_stock} onCheckedChange={v => updateProductField("in_stock", v)} />
+                <Label>In Stock</Label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProductDialog(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (!productForm.name || productForm.price <= 0) {
+                  toast.error("Name and price are required");
+                  return;
+                }
+                saveProduct.mutate();
+              }}
+              disabled={saveProduct.isPending}
+            >
+              {saveProduct.isPending ? "Saving..." : editingProduct ? "Update" : "Add"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Product Confirmation */}
+      <Dialog open={!!deleteProductId} onOpenChange={() => setDeleteProductId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Product</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground">Are you sure? This cannot be undone.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteProductId(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => deleteProductId && deleteProduct.mutate(deleteProductId)} disabled={deleteProduct.isPending}>
+              {deleteProduct.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </AdminLayout>
+  );
+}
