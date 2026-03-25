@@ -189,7 +189,7 @@ export default function AdminStoresPage() {
                       <Badge variant={store.is_active ? "default" : "secondary"}>
                         {store.is_active ? "Active" : "Inactive"}
                       </Badge>
-                      <Button size="sm" variant="outline" onClick={() => openEdit(store)}>
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/admin/stores/${store.id}`)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => navigate(`/grocery/shop/${store.slug}`)}>
