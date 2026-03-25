@@ -26,7 +26,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 const emptyProduct = {
-  name: "", description: "", price: 0, image_url: "", image_urls: [] as string[], category: "",
+  name: "", description: "", price: 0, price_khr: 0, image_url: "", image_urls: [] as string[], category: "",
   brand: "", sku: "", in_stock: true, sort_order: 0,
 };
 
