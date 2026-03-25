@@ -396,7 +396,11 @@ export default function AdminStoreEditPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Rating</Label>
-                    <Input type="number" step="0.1" min="0" max="5" value={form.rating} onChange={e => updateField("rating", parseFloat(e.target.value) || 0)} />
+                    <div className="flex items-center gap-2 h-11 px-3 rounded-xl border border-border bg-muted">
+                      <span className="text-amber-500">★</span>
+                      <span className="text-sm font-medium">{form.rating || "0"}</span>
+                      <span className="text-[10px] text-muted-foreground">/ 5 — from customer reviews</span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 pt-6">
                     <Switch checked={form.is_active} onCheckedChange={v => updateField("is_active", v)} />
