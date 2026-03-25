@@ -1,6 +1,6 @@
 /**
  * Verify OTP SMS Edge Function
- * Verifies a 6-digit code and marks phone as verified
+ * Uses Twilio Verify API to check the verification code
  */
 
 import { serve, createClient } from "../_shared/deps.ts";
@@ -25,9 +25,19 @@ serve(async (req: Request): Promise<Response> => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
+    const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+    const TWILIO_VERIFY_SERVICE_SID = Deno.env.get("TWILIO_VERIFY_SERVICE_SID");
+
+    if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_VERIFY_SERVICE_SID) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Twilio Verify not configured" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const { phone_e164, code, user_id }: VerifyOTPRequest = await req.json();
 
-    // Validate inputs
     if (!phone_e164 || !code || !user_id) {
       return new Response(
         JSON.stringify({ success: false, error: "Phone, code, and user_id are required" }),
@@ -35,7 +45,6 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Validate code format
     if (!/^\d{6}$/.test(code)) {
       return new Response(
         JSON.stringify({ success: false, error: "Invalid code format" }),
@@ -43,75 +52,70 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Find the most recent valid OTP for this phone/user
-    const { data: otpRecord, error: fetchError } = await supabase
-      .from("sms_otp_codes")
-      .select("*")
-      .eq("phone_e164", phone_e164)
-      .eq("user_id", user_id)
-      .is("verified_at", null)
-      .gt("expires_at", new Date().toISOString())
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (fetchError || !otpRecord) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "No valid verification code found. Please request a new code.",
-          code: "NO_VALID_CODE",
+    // Verify code via Twilio Verify API
+    const checkResponse = await fetch(
+      `https://verify.twilio.com/v2/Services/${TWILIO_VERIFY_SERVICE_SID}/VerificationCheck`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": "Basic " + btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`),
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          To: phone_e164,
+          Code: code,
         }),
+      }
+    );
+
+    const checkData = await checkResponse.json();
+
+    if (!checkResponse.ok) {
+      console.error("Twilio Verify check error:", checkData);
+
+      // Twilio returns 404 when no pending verification exists
+      if (checkResponse.status === 404) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "No valid verification code found. Please request a new code.",
+            code: "NO_VALID_CODE",
+          }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      // Twilio returns 429 for too many attempts
+      if (checkResponse.status === 429) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Too many failed attempts. Please request a new code.",
+            code: "MAX_ATTEMPTS",
+          }),
+          { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: false, error: checkData.message || "Verification failed" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Brute force protection: Check attempts
-    if (otpRecord.attempts >= 5) {
-      // Invalidate this code
-      await supabase
-        .from("sms_otp_codes")
-        .update({ verified_at: new Date().toISOString() })
-        .eq("id", otpRecord.id);
-
+    // Check verification status
+    if (checkData.status !== "approved") {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Too many failed attempts. Please request a new code.",
-          code: "MAX_ATTEMPTS",
-        }),
-        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // Check if code matches
-    if (otpRecord.code !== code) {
-      // Increment attempts
-      await supabase
-        .from("sms_otp_codes")
-        .update({ attempts: otpRecord.attempts + 1 })
-        .eq("id", otpRecord.id);
-
-      const remainingAttempts = 5 - (otpRecord.attempts + 1);
-
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: `Incorrect code. ${remainingAttempts} attempt${remainingAttempts !== 1 ? "s" : ""} remaining.`,
+          error: "Incorrect code. Please try again.",
           code: "INVALID_CODE",
-          remainingAttempts,
         }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Code is valid! Mark as verified
-    await supabase
-      .from("sms_otp_codes")
-      .update({ verified_at: new Date().toISOString() })
-      .eq("id", otpRecord.id);
-
-    // Update notification_preferences
+    // Code is valid! Update notification_preferences
     const { error: prefsError } = await supabase
       .from("notification_preferences")
       .update({
@@ -122,7 +126,6 @@ serve(async (req: Request): Promise<Response> => {
       .eq("user_id", user_id);
 
     if (prefsError) {
-      // Try to insert if not exists
       await supabase.from("notification_preferences").upsert({
         user_id,
         phone_number: phone_e164,
