@@ -502,7 +502,7 @@ export default function AdminStoreEditPage() {
                   onChange={e => {
                     const val = e.target.value;
                     updateProductField("price", val === "" ? 0 : parseFloat(val) || 0);
-                    updateProductField("_khrRaw" as any, val === "" ? "" : String(Math.round((parseFloat(val) || 0) * 4062.5)));
+                    updateProductField("_khrRaw" as any, val === "" ? "" : String(Math.round((parseFloat(val) || 0) * (form.khr_rate || 4062.5))));
                   }}
                   placeholder="0"
                 />
@@ -512,12 +512,12 @@ export default function AdminStoreEditPage() {
                 <Input
                   type="number"
                   step="100"
-                  value={(productForm as any)._khrRaw !== undefined ? (productForm as any)._khrRaw : (productForm.price ? Math.round(productForm.price * 4062.5) : "")}
+                  value={(productForm as any)._khrRaw !== undefined ? (productForm as any)._khrRaw : (productForm.price ? Math.round(productForm.price * (form.khr_rate || 4062.5)) : "")}
                   onChange={e => {
                     const val = e.target.value;
                     updateProductField("_khrRaw" as any, val);
                     const khr = parseFloat(val) || 0;
-                    updateProductField("price", parseFloat((khr / 4062.5).toFixed(2)));
+                    updateProductField("price", parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)));
                   }}
                   placeholder="0"
                 />
