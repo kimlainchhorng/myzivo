@@ -165,6 +165,39 @@ export default function AdminStoreEditPage() {
   const updateField = (field: string, value: any) => setForm((p) => ({ ...p, [field]: value }));
   const updateProductField = (field: string, value: any) => setProductForm((p) => ({ ...p, [field]: value }));
 
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+
+  const uploadImage = async (file: File, type: "logo" | "cover") => {
+    const isLogo = type === "logo";
+    isLogo ? setUploadingLogo(true) : setUploadingCover(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${storeId}/${type}-${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("store-assets")
+        .upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
+      const field = isLogo ? "logo_url" : "banner_url";
+      updateField(field, urlData.publicUrl);
+      // Auto-save immediately
+      const { error: saveErr } = await supabase
+        .from("store_profiles")
+        .update({ [field]: urlData.publicUrl })
+        .eq("id", storeId!);
+      if (saveErr) throw saveErr;
+      queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
+      toast.success(`${isLogo ? "Profile" : "Cover"} image updated`);
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      isLogo ? setUploadingLogo(false) : setUploadingCover(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <AdminLayout title="Edit Store">
