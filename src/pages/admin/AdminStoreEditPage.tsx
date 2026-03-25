@@ -249,9 +249,52 @@ export default function AdminStoreEditPage() {
               <p className="text-sm text-muted-foreground">/{store.slug} · {store.market}</p>
             </div>
           </div>
-          <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" className="gap-2">
-            <Eye className="h-4 w-4" /> Preview
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Language Switcher */}
+            <Popover open={isLangOpen} onOpenChange={setIsLangOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2 h-9">
+                  {currentLangData?.flag_svg ? (
+                    <img src={currentLangData.flag_svg} alt="" className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm border border-foreground/10" />
+                  ) : (
+                    <Globe className="h-4 w-4" />
+                  )}
+                  <span className="text-xs font-medium">{currentLangData?.native_name || "English"}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-0" align="end">
+                <div className="p-2 border-b border-border/50 bg-muted/30">
+                  <p className="text-xs font-medium text-muted-foreground">Select Language</p>
+                </div>
+                <ScrollArea className="max-h-64">
+                  <div className="p-1">
+                    {activeLanguages.map(lang => (
+                      <button
+                        key={lang.code}
+                        onClick={() => { changeLanguage(lang.code); setIsLangOpen(false); }}
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-md transition-colors ${
+                          currentLanguage === lang.code
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "hover:bg-muted text-foreground"
+                        }`}
+                      >
+                        {lang.flag_svg ? (
+                          <img src={lang.flag_svg} alt={lang.name} className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm border border-foreground/10 shrink-0" />
+                        ) : (
+                          <span className="text-base">{lang.flag_emoji}</span>
+                        )}
+                        <span className="truncate">{lang.native_name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+
+            <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" className="gap-2">
+              <Eye className="h-4 w-4" /> Preview
+            </Button>
+          </div>
         </div>
 
         <Card className="overflow-hidden">
