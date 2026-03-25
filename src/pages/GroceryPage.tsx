@@ -254,6 +254,8 @@ export default function GroceryPage() {
             total={cart.total}
             onClose={() => setShowCheckout(false)}
             onOrderPlaced={handleOrderPlaced}
+            onRemoveItem={cart.removeItem}
+            onUpdateQuantity={cart.updateQuantity}
           />
         )}
       </AnimatePresence>

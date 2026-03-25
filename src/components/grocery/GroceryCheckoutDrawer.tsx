@@ -31,6 +31,8 @@ interface GroceryCheckoutDrawerProps {
   total: number;
   onClose: () => void;
   onOrderPlaced: (orderId: string) => void;
+  onRemoveItem?: (productId: string) => void;
+  onUpdateQuantity?: (productId: string, quantity: number) => void;
 }
 
 type SubstitutionPref = "contact_me" | "best_match" | "refund";
@@ -60,7 +62,7 @@ function getSavedProfile(): { name: string; phone: string; subPref: Substitution
   return { name: "", phone: "", subPref: "contact_me" };
 }
 
-export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: GroceryCheckoutDrawerProps) {
+export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity }: GroceryCheckoutDrawerProps) {
   const savedAddr = getSavedAddress();
   const savedProfile = getSavedProfile();
 
@@ -652,8 +654,44 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: 
                               {item.image && (
                                 <img src={item.image} alt={item.name} className="h-9 w-9 rounded-xl object-contain bg-background border border-border/15 p-0.5" loading="lazy" referrerPolicy="no-referrer" />
                               )}
-                              <span className="text-muted-foreground truncate flex-1">{item.quantity}× {item.name}</span>
-                              <span className="font-semibold shrink-0 tabular-nums">${(item.price * item.quantity).toFixed(2)}</span>
+                              <span className="text-muted-foreground truncate flex-1">{item.name}</span>
+                              {onUpdateQuantity ? (
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <button
+                                    onClick={() => {
+                                      if (item.quantity <= 1) {
+                                        onRemoveItem?.(item.productId);
+                                      } else {
+                                        onUpdateQuantity(item.productId, item.quantity - 1);
+                                      }
+                                    }}
+                                    className="h-6 w-6 rounded-lg bg-muted/50 hover:bg-muted flex items-center justify-center text-xs font-bold transition-colors"
+                                  >
+                                    −
+                                  </button>
+                                  <span className="text-[11px] font-bold w-5 text-center tabular-nums">{item.quantity}</span>
+                                  <button
+                                    onClick={() => onUpdateQuantity(item.productId, item.quantity + 1)}
+                                    className="h-6 w-6 rounded-lg bg-muted/50 hover:bg-muted flex items-center justify-center text-xs font-bold transition-colors"
+                                  >
+                                    +
+                                  </button>
+                                  <span className="font-semibold tabular-nums ml-1 w-14 text-right">${(item.price * item.quantity).toFixed(2)}</span>
+                                </div>
+                              ) : (
+                                <>
+                                  <span className="text-muted-foreground shrink-0">{item.quantity}×</span>
+                                  <span className="font-semibold shrink-0 tabular-nums">${(item.price * item.quantity).toFixed(2)}</span>
+                                </>
+                              )}
+                              {onRemoveItem && (
+                                <button
+                                  onClick={() => onRemoveItem(item.productId)}
+                                  className="h-6 w-6 rounded-lg hover:bg-destructive/10 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              )}
                             </motion.div>
                           ))}
                         </div>
