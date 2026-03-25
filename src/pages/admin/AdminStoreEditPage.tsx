@@ -669,12 +669,6 @@ export default function AdminStoreEditPage() {
                     )}
                   </button>
                 )}
-                <Input
-                  value={productForm.image_url}
-                  onChange={e => updateProductField("image_url", e.target.value)}
-                  placeholder="https://... or upload"
-                  className="flex-1"
-                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
