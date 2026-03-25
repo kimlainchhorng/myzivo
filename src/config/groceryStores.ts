@@ -32,6 +32,8 @@ export interface StoreConfig {
   rating: number;
   /** Store hours display */
   hours: string;
+  /** Markets where this store is available (ISO country codes). Empty = all markets */
+  markets?: string[];
 }
 
 export const GROCERY_STORES: StoreConfig[] = [
