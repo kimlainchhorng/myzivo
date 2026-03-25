@@ -280,6 +280,7 @@ export default function AdminStoreEditPage() {
           </TabsList>
 
           <TabsContent value="profile">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-base">Store Information</CardTitle>
               </CardHeader>
