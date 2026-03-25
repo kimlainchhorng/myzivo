@@ -322,6 +322,18 @@ export default function AdminStoreEditPage() {
                       {form.address || "Tap to pick location on map"}
                     </span>
                   </div>
+                  {form.address && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.address)}`, "_blank", "noopener,noreferrer")}
+                    >
+                      <Navigation className="h-3.5 w-3.5" />
+                      View on Google Maps
+                    </Button>
+                  )}
                   <StoreMapPicker
                     open={mapPickerOpen}
                     onOpenChange={setMapPickerOpen}
