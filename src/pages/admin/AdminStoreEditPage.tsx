@@ -61,7 +61,7 @@ export default function AdminStoreEditPage() {
   const [form, setForm] = useState({
     name: "", slug: "", description: "", logo_url: "", banner_url: "",
     market: "", category: "", address: "", phone: "", hours: "",
-    rating: 0, delivery_min: 0, is_active: true,
+    rating: 0, delivery_min: 0, is_active: true, khr_rate: 4062.5,
   });
 
   useEffect(() => {
