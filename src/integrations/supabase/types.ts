@@ -13948,6 +13948,7 @@ export type Database = {
           heading: number | null
           is_busy: boolean | null
           is_online: boolean
+          last_offline_at: string | null
           last_seen: string
           lat: number | null
           lng: number | null
@@ -13965,6 +13966,7 @@ export type Database = {
           heading?: number | null
           is_busy?: boolean | null
           is_online?: boolean
+          last_offline_at?: string | null
           last_seen?: string
           lat?: number | null
           lng?: number | null
@@ -13982,6 +13984,7 @@ export type Database = {
           heading?: number | null
           is_busy?: boolean | null
           is_online?: boolean
+          last_offline_at?: string | null
           last_seen?: string
           lat?: number | null
           lng?: number | null
