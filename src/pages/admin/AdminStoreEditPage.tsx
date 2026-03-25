@@ -100,6 +100,7 @@ export default function AdminStoreEditPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
   const [productDialog, setProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState(emptyProduct);
