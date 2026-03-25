@@ -4,7 +4,7 @@
  */
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -234,83 +234,116 @@ export default function StoreProfilePage() {
                   key={product.id}
                   variants={cardVariant}
                   className={cn(
-                    "group relative rounded-2xl bg-card border overflow-hidden transition-all",
+                    "group relative rounded-2xl overflow-hidden transition-all",
+                    "bg-card shadow-sm hover:shadow-xl",
                     cartItem
-                      ? "border-primary/30 shadow-md shadow-primary/10"
-                      : "border-border/30 hover:border-primary/15 hover:shadow-lg"
+                      ? "ring-2 ring-primary/40 shadow-lg shadow-primary/10"
+                      : "ring-1 ring-border/20 hover:ring-primary/20"
                   )}
                 >
-                  {/* Image */}
-                  <div className="aspect-square bg-muted/10 flex items-center justify-center p-2">
+                  {/* Image with gradient overlay */}
+                  <div className="relative aspect-[4/3] bg-gradient-to-br from-muted/5 to-muted/20 flex items-center justify-center p-3 overflow-hidden">
                     {product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.name}
-                        className="h-full w-full object-contain"
+                        className="h-full w-full object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                       />
                     ) : (
-                      <Package className="h-8 w-8 text-muted-foreground/15" />
+                      <Package className="h-10 w-10 text-muted-foreground/10" />
                     )}
+                    
+                    {/* Category pill */}
+                    {product.category && (
+                      <span className="absolute top-2 left-2 text-[9px] font-semibold bg-background/80 backdrop-blur-sm text-muted-foreground px-2 py-0.5 rounded-full border border-border/20">
+                        {product.category}
+                      </span>
+                    )}
+
+                    {/* Cart badge */}
                     <AnimatePresence>
                       {cartItem && (
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0 }}
-                          className="absolute top-1.5 right-1.5 h-6 min-w-[24px] px-1 rounded-full bg-primary flex items-center justify-center ring-2 ring-background"
+                          className="absolute top-2 right-2 h-7 min-w-[28px] px-1.5 rounded-full bg-primary flex items-center justify-center ring-2 ring-background shadow-lg"
                         >
-                          <span className="text-[9px] font-extrabold text-primary-foreground">{cartItem.quantity}</span>
+                          <span className="text-[11px] font-extrabold text-primary-foreground">{cartItem.quantity}</span>
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
 
-                  {/* Info */}
-                  <div className="p-3 space-y-1.5">
-                    {/* Brand & Category on one line */}
-                    {(product.brand || product.category) && (
-                      <p className="text-[10px] font-medium text-muted-foreground truncate">
-                        {[product.brand, product.category].filter(Boolean).join(" · ")}
+                  {/* Info section */}
+                  <div className="p-3 space-y-2">
+                    {/* Brand */}
+                    {product.brand && (
+                      <p className="text-[10px] font-semibold text-primary/70 uppercase tracking-widest truncate">
+                        {product.brand}
                       </p>
                     )}
-                    <p className="text-sm font-bold line-clamp-2 leading-tight text-foreground min-h-[36px]">
+                    
+                    {/* Product name */}
+                    <p className="text-[13px] font-bold line-clamp-2 leading-snug text-foreground min-h-[34px]">
                       {product.name}
                     </p>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-base font-extrabold text-primary tracking-tight">
-                        ៛{((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050))).toLocaleString()}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        ${product.price.toFixed(2)}
-                      </span>
+
+                    {/* Price row */}
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <span className="text-lg font-black text-foreground tracking-tight leading-none block">
+                          ៛{((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050))).toLocaleString()}
+                        </span>
+                        <span className="text-[11px] font-medium text-muted-foreground mt-0.5 block">
+                          ${product.price.toFixed(2)}
+                        </span>
+                      </div>
+                      {!cartItem && product.in_stock && (
+                        <motion.button
+                          whileTap={{ scale: 0.85 }}
+                          onClick={() => handleAddToCart(product)}
+                          className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/30 transition-shadow"
+                        >
+                          <Plus className="h-4.5 w-4.5 text-primary-foreground" />
+                        </motion.button>
+                      )}
                     </div>
-                    {cartItem ? (
-                      <div className="flex items-center justify-between bg-primary/10 rounded-xl p-0.5 border border-primary/15">
+
+                    {/* Quantity controls */}
+                    {cartItem && (
+                      <div className="flex items-center justify-between bg-primary/8 rounded-xl p-1 border border-primary/15">
                         <motion.button
                           whileTap={{ scale: 0.8 }}
                           onClick={() => cart.updateQuantity(product.id, cartItem.quantity - 1)}
-                          className="h-8 w-8 rounded-lg bg-background flex items-center justify-center border border-border/20"
+                          className="h-8 w-8 rounded-lg bg-background flex items-center justify-center border border-border/30 shadow-sm"
                         >
-                          <span className="text-sm font-bold">−</span>
+                          <span className="text-sm font-bold text-foreground">−</span>
                         </motion.button>
-                        <span className="text-sm font-extrabold text-primary">{cartItem.quantity}</span>
+                        <motion.span
+                          key={cartItem.quantity}
+                          initial={{ scale: 1.3 }}
+                          animate={{ scale: 1 }}
+                          className="text-sm font-extrabold text-primary"
+                        >
+                          {cartItem.quantity}
+                        </motion.span>
                         <motion.button
                           whileTap={{ scale: 0.8 }}
                           onClick={() => cart.updateQuantity(product.id, cartItem.quantity + 1)}
-                          className="h-8 w-8 rounded-lg bg-background flex items-center justify-center border border-border/20"
+                          className="h-8 w-8 rounded-lg bg-background flex items-center justify-center border border-border/30 shadow-sm"
                         >
-                          <span className="text-sm font-bold">+</span>
+                          <span className="text-sm font-bold text-foreground">+</span>
                         </motion.button>
                       </div>
-                    ) : (
-                      <Button
-                        size="sm"
-                        className="w-full rounded-xl text-xs h-9 font-bold mt-1"
-                        onClick={() => handleAddToCart(product)}
-                      >
-                        Add to Cart
-                      </Button>
+                    )}
+
+                    {/* Out of stock */}
+                    {!product.in_stock && (
+                      <div className="text-[10px] text-muted-foreground text-center py-2 rounded-xl bg-muted/30 font-medium">
+                        Out of Stock
+                      </div>
                     )}
                   </div>
                 </motion.div>
