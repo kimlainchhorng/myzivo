@@ -122,6 +122,25 @@ export default function AdminStoreEditPage() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState(emptyProduct);
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
+  const [uploadingProductImage, setUploadingProductImage] = useState(false);
+  const productImageInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadProductImage = async (file: File) => {
+    setUploadingProductImage(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `products/${storeId}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
+      updateProductField("image_url", urlData.publicUrl);
+      toast.success("Image uploaded");
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      setUploadingProductImage(false);
+    }
+  };
 
   const openAddProduct = () => {
     setEditingProduct(null);
@@ -618,8 +637,44 @@ export default function AdminStoreEditPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Image URL</Label>
-              <Input value={productForm.image_url} onChange={e => updateProductField("image_url", e.target.value)} placeholder="https://..." />
+              <Label>{t("admin.store.description")}</Label>
+              <div className="flex items-start gap-3">
+                <input ref={productImageInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadProductImage(f); e.target.value = ""; }} />
+                {productForm.image_url ? (
+                  <div className="relative group shrink-0">
+                    <img src={productForm.image_url} alt="Product" className="w-20 h-20 rounded-xl object-cover border border-border" />
+                    <button
+                      type="button"
+                      onClick={() => productImageInputRef.current?.click()}
+                      className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"
+                    >
+                      {uploadingProductImage ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => productImageInputRef.current?.click()}
+                    disabled={uploadingProductImage}
+                    className="w-20 h-20 rounded-xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center gap-1 hover:bg-muted transition-colors shrink-0"
+                  >
+                    {uploadingProductImage ? (
+                      <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+                    ) : (
+                      <>
+                        <Upload className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-[10px] text-muted-foreground">Upload</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                <Input
+                  value={productForm.image_url}
+                  onChange={e => updateProductField("image_url", e.target.value)}
+                  placeholder="https://... or upload"
+                  className="flex-1"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
