@@ -163,6 +163,8 @@ const Login = () => {
 
       if (isAdminUser) {
         navigate("/admin/analytics", { replace: true });
+      } else if (!profile?.setup_complete) {
+        navigate("/setup", { replace: true });
       } else {
         navigate("/", { replace: true });
       }

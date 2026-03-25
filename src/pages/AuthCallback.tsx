@@ -97,6 +97,13 @@ const AuthCallback = () => {
         return;
       }
 
+      // If setup is not complete, redirect to setup page
+      if (!resolvedProfile.setup_complete) {
+        setStatus("success");
+        setTimeout(() => navigate("/setup", { replace: true }), 200);
+        return;
+      }
+
       // Check if user is admin for auto-redirect to dashboard
       const { data: isAdminUser } = await supabase.rpc("check_user_role", {
         _user_id: userId,
