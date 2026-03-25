@@ -22,7 +22,7 @@ const container = {
 
 const cardVariant = {
   hidden: { opacity: 0, y: 16, scale: 0.97 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 320, damping: 24 } },
+  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, stiffness: 320, damping: 24 } },
 };
 
 export default function StoreProfilePage() {
