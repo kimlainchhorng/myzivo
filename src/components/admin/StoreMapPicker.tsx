@@ -237,6 +237,12 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void geocodeSearchQuery(searchQuery);
+                }
+              }}
               placeholder="Search for a place..."
               className="pl-9"
             />
