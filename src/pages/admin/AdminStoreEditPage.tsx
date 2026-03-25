@@ -479,18 +479,31 @@ export default function AdminStoreEditPage() {
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Price ($) *</Label>
-                <Input type="number" step="0.01" value={productForm.price} onChange={e => updateProductField("price", parseFloat(e.target.value) || 0)} />
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={productForm.price || ""}
+                  onChange={e => {
+                    const val = e.target.value;
+                    updateProductField("price", val === "" ? 0 : parseFloat(val) || 0);
+                    updateProductField("_khrRaw" as any, val === "" ? "" : String(Math.round((parseFloat(val) || 0) * 4062.5)));
+                  }}
+                  placeholder="0"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Price (៛ KHR)</Label>
                 <Input
                   type="number"
                   step="100"
-                  value={Math.round((productForm.price || 0) * 4062.5)}
+                  value={(productForm as any)._khrRaw !== undefined ? (productForm as any)._khrRaw : (productForm.price ? Math.round(productForm.price * 4062.5) : "")}
                   onChange={e => {
-                    const khr = parseFloat(e.target.value) || 0;
+                    const val = e.target.value;
+                    updateProductField("_khrRaw" as any, val);
+                    const khr = parseFloat(val) || 0;
                     updateProductField("price", parseFloat((khr / 4062.5).toFixed(2)));
                   }}
+                  placeholder="0"
                 />
                 <p className="text-[10px] text-muted-foreground">1 USD = 4,062.5 KHR</p>
               </div>
