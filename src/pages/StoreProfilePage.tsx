@@ -325,7 +325,7 @@ export default function StoreProfilePage() {
             variants={container}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-2 gap-2.5"
+            className="grid grid-cols-2 gap-2"
           >
             {products.map((product, i) => {
               const cartItem = cart.items.find((c) => c.productId === product.id);
@@ -338,7 +338,7 @@ export default function StoreProfilePage() {
                   whileHover={{ y: -3, scale: 1.015 }}
                   whileTap={{ scale: 0.97 }}
                   className={cn(
-                    "group relative rounded-[18px] overflow-hidden transition-all duration-300",
+                    "group relative rounded-[16px] overflow-hidden transition-all duration-300",
                     "bg-card/60 backdrop-blur-xl border",
                     cartItem
                       ? "border-primary/25 shadow-xl shadow-primary/10 ring-1 ring-primary/10"
@@ -347,12 +347,12 @@ export default function StoreProfilePage() {
                   style={{ transformStyle: "preserve-3d" }}
                 >
                   {/* Holographic shine overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-primary/[0.02] pointer-events-none z-[5] rounded-[18px]" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-primary/[0.02] pointer-events-none z-[5] rounded-[16px]" />
                   {/* Top edge highlight */}
                   <div className="absolute top-0 left-2 right-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent z-[5]" />
 
                   {/* Image container */}
-                  <div className="relative aspect-[4/3.5] overflow-hidden bg-gradient-to-br from-muted/[0.03] to-muted/[0.08]">
+                  <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted/[0.03] to-muted/[0.08]">
                     {/* Radial glow */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="w-1/2 h-1/2 rounded-full bg-primary/[0.05] blur-2xl" />
@@ -362,7 +362,7 @@ export default function StoreProfilePage() {
                       <motion.img
                         src={product.image_url}
                         alt={product.name}
-                        className="relative h-full w-full object-contain p-3 drop-shadow-md group-hover:scale-105 transition-transform duration-500"
+                        className="relative h-full w-full object-contain p-2 drop-shadow-md group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                         style={{ transform: "translateZ(12px)" }}
                       />
@@ -405,21 +405,21 @@ export default function StoreProfilePage() {
                   </div>
 
                   {/* Info section */}
-                  <div className="relative p-3 space-y-1.5">
+                  <div className="relative px-2.5 pt-1.5 pb-2.5 space-y-0.5">
                     {/* Brand */}
                     {product.brand && (
-                      <p className="text-[10px] font-bold text-primary/50 uppercase tracking-[0.15em] truncate">
+                      <p className="text-[9px] font-bold text-primary/50 uppercase tracking-[0.12em] truncate">
                         {product.brand}
                       </p>
                     )}
                     
                     {/* Product name */}
-                    <p className="text-[14px] font-semibold line-clamp-2 leading-snug text-foreground min-h-[36px]">
+                    <p className="text-[14px] font-semibold line-clamp-2 leading-tight text-foreground">
                       {product.name}
                     </p>
 
                     {/* Price row */}
-                    <div className="flex items-end justify-between pt-1">
+                    <div className="flex items-end justify-between">
                       <div>
                         <span className="text-base font-black text-foreground tracking-tight leading-none block">
                           ៛{khrPrice.toLocaleString()}
