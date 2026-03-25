@@ -1,0 +1,162 @@
+/**
+ * Setup Page — Collects first name, last name, and phone after OAuth signup.
+ * Shown when setup_complete is false.
+ */
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { toast } from "sonner";
+import { User, Phone, ArrowRight, Loader2 } from "lucide-react";
+import CountryPhoneInput from "@/components/auth/CountryPhoneInput";
+
+const setupSchema = z.object({
+  first_name: z.string().trim().min(1, "First name is required").max(50),
+  last_name: z.string().trim().min(1, "Last name is required").max(50),
+  phone: z.string().trim().min(5, "Phone number is required").max(20),
+});
+
+type SetupValues = z.infer<typeof setupSchema>;
+
+export default function Setup() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [saving, setSaving] = useState(false);
+
+  const form = useForm<SetupValues>({
+    resolver: zodResolver(setupSchema),
+    defaultValues: {
+      first_name: user?.user_metadata?.full_name?.split(" ")[0] || "",
+      last_name: user?.user_metadata?.full_name?.split(" ").slice(1).join(" ") || "",
+      phone: "",
+    },
+  });
+
+  const onSubmit = async (data: SetupValues) => {
+    if (!user) return;
+    setSaving(true);
+
+    try {
+      const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ");
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: fullName,
+          phone: data.phone,
+          setup_complete: true,
+        })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      toast.success("Account setup complete!");
+      navigate("/", { replace: true });
+    } catch (err: any) {
+      console.error("Setup error:", err);
+      toast.error(err?.message || "Failed to save. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-b from-[#0a1628] to-[#0d2137] px-4">
+      <div className="w-full max-w-md">
+        <div className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl p-6 sm:p-8">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-white tracking-tight">Complete Your Profile</h1>
+            <p className="text-white/50 text-sm mt-1">Just a few details to get started</p>
+          </div>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* First Name */}
+              <FormField
+                control={form.control}
+                name="first_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white/70 text-sm">First Name</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <input
+                          {...field}
+                          placeholder="First name"
+                          className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Last Name */}
+              <FormField
+                control={form.control}
+                name="last_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white/70 text-sm">Last Name</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <input
+                          {...field}
+                          placeholder="Last name"
+                          className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Phone Number */}
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white/70 text-sm">Phone Number</FormLabel>
+                    <FormControl>
+                      <CountryPhoneInput
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                disabled={saving}
+                className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm mt-2 touch-manipulation active:scale-[0.98] transition-all"
+              >
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    Continue
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
+        </div>
+      </div>
+    </div>
+  );
+}
