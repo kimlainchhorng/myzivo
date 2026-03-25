@@ -645,6 +645,31 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
       });
   }, [user?.id]);
 
+  // Auto-set destination from initialDestinationAddress (e.g. from store profile)
+  const initialDestAppliedRef = useRef(false);
+  useEffect(() => {
+    if (!initialDestinationAddress || initialDestAppliedRef.current) return;
+    initialDestAppliedRef.current = true;
+    
+    (async () => {
+      try {
+        // Use forward geocode to resolve address to coordinates
+        const { forwardGeocode } = await import("@/services/mapsApi");
+        const coords = await forwardGeocode(initialDestinationAddress);
+        if (coords) {
+          setDestination({ address: initialDestinationAddress, lat: coords.lat, lng: coords.lng });
+          setDestinationDisplay(initialDestinationAddress);
+          setMapPanTarget(coords);
+        } else {
+          // Even without coords, show the address text
+          setDestinationDisplay(initialDestinationAddress);
+        }
+      } catch {
+        setDestinationDisplay(initialDestinationAddress);
+      }
+    })();
+  }, [initialDestinationAddress]);
+
   // Map saved locations to display format
   const savedPlaces = useMemo(() =>
     savedLocations.map((loc) => ({

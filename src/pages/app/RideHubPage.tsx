@@ -133,6 +133,7 @@ export default function RideHubPage() {
   ];
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") === "reserve" ? "reserve" : "book";
+  const initialDestination = searchParams.get("destination") || undefined;
   const [activeTab, setActiveTab] = useState(initialTab);
   const [bookWithSchedule, setBookWithSchedule] = useState(false);
 
@@ -195,7 +196,7 @@ export default function RideHubPage() {
             transition={{ duration: 0.2 }}
             className={cn(isFullScreen && "h-full min-h-0 flex flex-col flex-1")}
           >
-            {activeTab === "book" && <RideBookingHome initialSchedule={bookWithSchedule} />}
+            {activeTab === "book" && <RideBookingHome initialSchedule={bookWithSchedule} initialDestinationAddress={initialDestination} />}
             {activeTab === "reserve" && <div className="flex-1 min-h-0 overflow-hidden"><ZivoReserve onReserve={() => { setBookWithSchedule(true); setActiveTab("book"); }} /></div>}
             {activeTab === "search" && <div className="p-4"><RideQuickSearch /></div>}
             {activeTab === "history" && <div className="p-4"><RideTripHistory /></div>}
