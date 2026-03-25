@@ -180,6 +180,8 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
 export default function GroceryMarketplace() {
   const navigate = useNavigate();
   const cart = useGroceryCart();
+  const { country } = useCountry();
+  const marketStores = useMemo(() => getStoresForMarket(country), [country]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState("");
   const [category, setCategory] = useState<StoreCategory | "all">("all");
@@ -217,20 +219,18 @@ export default function GroceryMarketplace() {
   // Which store configs have a nearby location?
   const availableStores = useMemo(() => {
     // If no address set, show all stores
-    if (!currentAddress?.lat || !currentAddress?.lng) return GROCERY_STORES;
-    // If still loading, show all
-    if (isLoadingStores) return GROCERY_STORES;
-    // Filter to nearby stores, but fallback to all if none found
-    const nearby = GROCERY_STORES.filter((s) => nearbyBySlug[s.slug]);
-    return nearby.length > 0 ? nearby : GROCERY_STORES;
-  }, [currentAddress, isLoadingStores, nearbyBySlug]);
+    if (!currentAddress?.lat || !currentAddress?.lng) return marketStores;
+    if (isLoadingStores) return marketStores;
+    const nearby = marketStores.filter((s) => nearbyBySlug[s.slug]);
+    return nearby.length > 0 ? nearby : marketStores;
+  }, [currentAddress, isLoadingStores, nearbyBySlug, marketStores]);
 
   // Live ETAs — use distance-based if available
   const [etas, setEtas] = useState<Record<string, number>>({});
   useEffect(() => {
     const compute = () => {
       const map: Record<string, number> = {};
-      GROCERY_STORES.forEach((s) => {
+      marketStores.forEach((s) => {
         const nearbyLoc = nearbyBySlug[s.slug];
         if (nearbyLoc?.distance_miles) {
           // Rough ETA: 3 min/mile driving + 15 min shopping
