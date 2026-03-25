@@ -225,40 +225,34 @@ export default function StoreProfilePage() {
             variants={container}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-2 gap-3"
+            className="grid grid-cols-3 gap-2"
           >
             {products.map((product, i) => {
               const cartItem = cart.items.find((c) => c.productId === product.id);
+              const khrPrice = ((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050)));
               return (
                 <motion.div
                   key={product.id}
                   variants={cardVariant}
                   className={cn(
-                    "group relative rounded-2xl overflow-hidden transition-all",
-                    "bg-card shadow-sm hover:shadow-xl",
+                    "group relative rounded-xl overflow-hidden transition-all",
+                    "bg-card",
                     cartItem
-                      ? "ring-2 ring-primary/40 shadow-lg shadow-primary/10"
-                      : "ring-1 ring-border/20 hover:ring-primary/20"
+                      ? "ring-2 ring-primary/40 shadow-md shadow-primary/10"
+                      : "ring-1 ring-border/15 hover:ring-primary/20 hover:shadow-md"
                   )}
                 >
-                  {/* Image with gradient overlay */}
-                  <div className="relative aspect-[4/3] bg-gradient-to-br from-muted/5 to-muted/20 flex items-center justify-center p-3 overflow-hidden">
+                  {/* Image */}
+                  <div className="relative aspect-square bg-gradient-to-br from-muted/5 to-muted/15 flex items-center justify-center p-1.5 overflow-hidden">
                     {product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.name}
-                        className="h-full w-full object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-500"
+                        className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-400"
                         loading="lazy"
                       />
                     ) : (
-                      <Package className="h-10 w-10 text-muted-foreground/10" />
-                    )}
-                    
-                    {/* Category pill */}
-                    {product.category && (
-                      <span className="absolute top-2 left-2 text-[9px] font-semibold bg-background/80 backdrop-blur-sm text-muted-foreground px-2 py-0.5 rounded-full border border-border/20">
-                        {product.category}
-                      </span>
+                      <Package className="h-6 w-6 text-muted-foreground/10" />
                     )}
 
                     {/* Cart badge */}
@@ -268,35 +262,30 @@ export default function StoreProfilePage() {
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0 }}
-                          className="absolute top-2 right-2 h-7 min-w-[28px] px-1.5 rounded-full bg-primary flex items-center justify-center ring-2 ring-background shadow-lg"
+                          className="absolute top-1 right-1 h-5 min-w-[20px] px-1 rounded-full bg-primary flex items-center justify-center ring-1.5 ring-background shadow"
                         >
-                          <span className="text-[11px] font-extrabold text-primary-foreground">{cartItem.quantity}</span>
+                          <span className="text-[8px] font-extrabold text-primary-foreground">{cartItem.quantity}</span>
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
 
-                  {/* Info section */}
-                  <div className="p-3 space-y-2">
-                    {/* Brand */}
+                  {/* Info */}
+                  <div className="px-2 pt-1.5 pb-2 space-y-0.5">
                     {product.brand && (
-                      <p className="text-[10px] font-semibold text-primary/70 uppercase tracking-widest truncate">
-                        {product.brand}
-                      </p>
+                      <p className="text-[8px] font-semibold text-primary/60 uppercase tracking-wider truncate">{product.brand}</p>
                     )}
-                    
-                    {/* Product name */}
-                    <p className="text-[13px] font-bold line-clamp-2 leading-snug text-foreground min-h-[34px]">
+                    <p className="text-[11px] font-semibold line-clamp-2 leading-tight text-foreground min-h-[26px]">
                       {product.name}
                     </p>
 
-                    {/* Price row */}
-                    <div className="flex items-end justify-between">
-                      <div>
-                        <span className="text-lg font-black text-foreground tracking-tight leading-none block">
-                          ៛{((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050))).toLocaleString()}
+                    {/* Price + Add */}
+                    <div className="flex items-end justify-between pt-0.5">
+                      <div className="leading-none">
+                        <span className="text-[13px] font-black text-foreground tracking-tight block">
+                          ៛{khrPrice.toLocaleString()}
                         </span>
-                        <span className="text-[11px] font-medium text-muted-foreground mt-0.5 block">
+                        <span className="text-[9px] text-muted-foreground">
                           ${product.price.toFixed(2)}
                         </span>
                       </div>
@@ -304,44 +293,43 @@ export default function StoreProfilePage() {
                         <motion.button
                           whileTap={{ scale: 0.85 }}
                           onClick={() => handleAddToCart(product)}
-                          className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/30 transition-shadow"
+                          className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center shadow shadow-primary/20"
                         >
-                          <Plus className="h-4.5 w-4.5 text-primary-foreground" />
+                          <Plus className="h-3.5 w-3.5 text-primary-foreground" />
                         </motion.button>
                       )}
                     </div>
 
-                    {/* Quantity controls */}
+                    {/* Qty controls */}
                     {cartItem && (
-                      <div className="flex items-center justify-between bg-primary/8 rounded-xl p-1 border border-primary/15">
+                      <div className="flex items-center justify-between bg-primary/8 rounded-lg p-0.5 border border-primary/15 mt-1">
                         <motion.button
                           whileTap={{ scale: 0.8 }}
                           onClick={() => cart.updateQuantity(product.id, cartItem.quantity - 1)}
-                          className="h-8 w-8 rounded-lg bg-background flex items-center justify-center border border-border/30 shadow-sm"
+                          className="h-6 w-6 rounded-md bg-background flex items-center justify-center border border-border/20"
                         >
-                          <span className="text-sm font-bold text-foreground">−</span>
+                          <span className="text-xs font-bold">−</span>
                         </motion.button>
                         <motion.span
                           key={cartItem.quantity}
                           initial={{ scale: 1.3 }}
                           animate={{ scale: 1 }}
-                          className="text-sm font-extrabold text-primary"
+                          className="text-xs font-extrabold text-primary"
                         >
                           {cartItem.quantity}
                         </motion.span>
                         <motion.button
                           whileTap={{ scale: 0.8 }}
                           onClick={() => cart.updateQuantity(product.id, cartItem.quantity + 1)}
-                          className="h-8 w-8 rounded-lg bg-background flex items-center justify-center border border-border/30 shadow-sm"
+                          className="h-6 w-6 rounded-md bg-background flex items-center justify-center border border-border/20"
                         >
-                          <span className="text-sm font-bold text-foreground">+</span>
+                          <span className="text-xs font-bold">+</span>
                         </motion.button>
                       </div>
                     )}
 
-                    {/* Out of stock */}
                     {!product.in_stock && (
-                      <div className="text-[10px] text-muted-foreground text-center py-2 rounded-xl bg-muted/30 font-medium">
+                      <div className="text-[8px] text-muted-foreground text-center py-1 rounded-lg bg-muted/30 font-medium mt-1">
                         Out of Stock
                       </div>
                     )}
