@@ -14,7 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin } from "lucide-react";
+import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
@@ -99,6 +100,7 @@ export default function AdminStoreEditPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
   const [productDialog, setProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState(emptyProduct);
@@ -311,7 +313,21 @@ export default function AdminStoreEditPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Address</Label>
-                  <Input value={form.address} onChange={e => updateField("address", e.target.value)} />
+                  <div
+                    className="flex items-center gap-2 px-3 h-11 rounded-xl border border-border bg-background cursor-pointer hover:bg-muted transition-colors"
+                    onClick={() => setMapPickerOpen(true)}
+                  >
+                    <MapPin className="h-4 w-4 text-primary shrink-0" />
+                    <span className={`text-sm truncate ${form.address ? "text-foreground" : "text-muted-foreground"}`}>
+                      {form.address || "Tap to pick location on map"}
+                    </span>
+                  </div>
+                  <StoreMapPicker
+                    open={mapPickerOpen}
+                    onOpenChange={setMapPickerOpen}
+                    currentAddress={form.address}
+                    onConfirm={(addr) => updateField("address", addr)}
+                  />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
