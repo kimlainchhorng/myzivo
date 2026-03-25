@@ -103,6 +103,7 @@ export default function AdminStoreEditPage() {
   });
 
   const [mapPickerOpen, setMapPickerOpen] = useState(false);
+  const [storeCoords, setStoreCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [productDialog, setProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState(emptyProduct);
