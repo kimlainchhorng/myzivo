@@ -31,6 +31,8 @@ interface GroceryCheckoutDrawerProps {
   total: number;
   onClose: () => void;
   onOrderPlaced: (orderId: string) => void;
+  onRemoveItem?: (productId: string) => void;
+  onUpdateQuantity?: (productId: string, quantity: number) => void;
 }
 
 type SubstitutionPref = "contact_me" | "best_match" | "refund";
@@ -60,7 +62,7 @@ function getSavedProfile(): { name: string; phone: string; subPref: Substitution
   return { name: "", phone: "", subPref: "contact_me" };
 }
 
-export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced }: GroceryCheckoutDrawerProps) {
+export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity }: GroceryCheckoutDrawerProps) {
   const savedAddr = getSavedAddress();
   const savedProfile = getSavedProfile();
 
