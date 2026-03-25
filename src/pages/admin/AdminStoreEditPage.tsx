@@ -26,7 +26,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 const emptyProduct = {
-  name: "", description: "", price: 0, image_url: "", category: "",
+  name: "", description: "", price: 0, image_url: "", image_urls: [] as string[], category: "",
   brand: "", sku: "", in_stock: true, sort_order: 0,
 };
 
@@ -126,6 +126,11 @@ export default function AdminStoreEditPage() {
   const productImageInputRef = useRef<HTMLInputElement>(null);
 
   const uploadProductImage = async (file: File) => {
+    const currentImages = productForm.image_urls || [];
+    if (currentImages.length >= 8) {
+      toast.error("Maximum 8 images allowed");
+      return;
+    }
     setUploadingProductImage(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
@@ -133,13 +138,21 @@ export default function AdminStoreEditPage() {
       const { error: upErr } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
-      updateProductField("image_url", urlData.publicUrl);
+      const newUrls = [...currentImages, urlData.publicUrl];
+      updateProductField("image_urls", newUrls);
+      updateProductField("image_url", newUrls[0]); // keep first as primary
       toast.success("Image uploaded");
     } catch (e: any) {
       toast.error(e.message || "Upload failed");
     } finally {
       setUploadingProductImage(false);
     }
+  };
+
+  const removeProductImage = (index: number) => {
+    const newUrls = (productForm.image_urls || []).filter((_: string, i: number) => i !== index);
+    updateProductField("image_urls", newUrls);
+    updateProductField("image_url", newUrls[0] || "");
   };
 
   const openAddProduct = () => {
@@ -155,6 +168,7 @@ export default function AdminStoreEditPage() {
       description: p.description || "",
       price: p.price || 0,
       image_url: p.image_url || "",
+      image_urls: (p.image_urls as string[]) || (p.image_url ? [p.image_url] : []),
       category: p.category || "",
       brand: p.brand || "",
       sku: p.sku || "",
