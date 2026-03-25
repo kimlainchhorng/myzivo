@@ -313,7 +313,21 @@ export default function AdminStoreEditPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Address</Label>
-                  <Input value={form.address} onChange={e => updateField("address", e.target.value)} />
+                  <div
+                    className="flex items-center gap-2 px-3 h-11 rounded-xl border border-border bg-background cursor-pointer hover:bg-muted transition-colors"
+                    onClick={() => setMapPickerOpen(true)}
+                  >
+                    <MapPin className="h-4 w-4 text-primary shrink-0" />
+                    <span className={`text-sm truncate ${form.address ? "text-foreground" : "text-muted-foreground"}`}>
+                      {form.address || "Tap to pick location on map"}
+                    </span>
+                  </div>
+                  <StoreMapPicker
+                    open={mapPickerOpen}
+                    onOpenChange={setMapPickerOpen}
+                    currentAddress={form.address}
+                    onConfirm={(addr) => updateField("address", addr)}
+                  />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
