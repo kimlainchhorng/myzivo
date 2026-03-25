@@ -226,7 +226,7 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
             map.setZoom(16);
             marker.setPosition(pos);
             setCoords(pos);
-            setAddress(data.address || currentAddress);
+            setAddress(currentAddress);
           }
         } catch { /* keep default */ }
       }
