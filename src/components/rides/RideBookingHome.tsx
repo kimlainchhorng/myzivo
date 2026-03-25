@@ -583,7 +583,7 @@ function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
 }
 
 /* ─── Main Component ─── */
-export default function RideBookingHome({ initialSchedule = false }: { initialSchedule?: boolean } = {}) {
+export default function RideBookingHome({ initialSchedule = false, initialDestinationAddress }: { initialSchedule?: boolean; initialDestinationAddress?: string } = {}) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: userProfile } = useUserProfile();
