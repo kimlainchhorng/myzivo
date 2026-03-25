@@ -92,10 +92,10 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
       const { data, error } = await supabase.functions.invoke("maps-autocomplete", {
         body: { input: query, location: `${coords.lat},${coords.lng}`, radius: 50000 },
       });
-      if (!error && data?.predictions) {
-        setSuggestions(data.predictions.map((p: any) => ({
+      if (!error && data?.suggestions) {
+        setSuggestions(data.suggestions.map((p: any) => ({
           place_id: p.place_id,
-          description: p.description,
+          description: p.description || p.main_text || p.text,
         })));
         setShowSuggestions(true);
       }
@@ -112,11 +112,11 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
       const { data, error } = await supabase.functions.invoke("maps-place-details", {
         body: { place_id: placeId },
       });
-      if (!error && data?.location) {
-        const lat = data.location.lat;
-        const lng = data.location.lng;
+      if (!error && data?.lat != null && data?.lng != null) {
+        const lat = data.lat;
+        const lng = data.lng;
         setCoords({ lat, lng });
-        setAddress(data.formatted_address || description);
+        setAddress(data.address || description);
         if (mapInstance.current) {
           mapInstance.current.panTo({ lat, lng });
           mapInstance.current.setZoom(16);
