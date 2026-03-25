@@ -165,6 +165,8 @@ const Profile = () => {
   const [showPhoneVerify, setShowPhoneVerify] = useState(false);
   const [pendingProfileData, setPendingProfileData] = useState<ProfileFormData | null>(null);
 
+  const profileTilt = use3DTilt(profileCardRef);
+
   const { scrollYProgress } = useScroll({ container: scrollRef });
   const headerY = useTransform(scrollYProgress, [0, 0.3], [0, -30]);
   const headerScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
@@ -202,11 +204,32 @@ const Profile = () => {
   };
 
   const onSubmit = async (data: ProfileFormData) => {
+    const phoneChanged = (data.phone || "") !== (profile?.phone || "");
+    const hasNewPhone = !!data.phone?.trim();
+
+    // If phone changed and there's a new phone, verify it first
+    if (phoneChanged && hasNewPhone) {
+      setPendingProfileData(data);
+      setShowPhoneVerify(true);
+      return;
+    }
+
+    // No phone change or phone removed — save directly
     const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ") || null;
     await updateProfile.mutateAsync({
       full_name: fullName,
       phone: data.phone || null,
     });
+  };
+
+  const handlePhoneVerified = async () => {
+    if (!pendingProfileData) return;
+    const fullName = [pendingProfileData.first_name, pendingProfileData.last_name].filter(Boolean).join(" ") || null;
+    await updateProfile.mutateAsync({
+      full_name: fullName,
+      phone: pendingProfileData.phone || null,
+    });
+    setPendingProfileData(null);
   };
 
   const handleEmailChangeRequest = async () => {
