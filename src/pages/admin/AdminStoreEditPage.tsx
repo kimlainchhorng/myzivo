@@ -122,6 +122,25 @@ export default function AdminStoreEditPage() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState(emptyProduct);
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
+  const [uploadingProductImage, setUploadingProductImage] = useState(false);
+  const productImageInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadProductImage = async (file: File) => {
+    setUploadingProductImage(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `products/${storeId}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
+      updateProductField("image_url", urlData.publicUrl);
+      toast.success("Image uploaded");
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      setUploadingProductImage(false);
+    }
+  };
 
   const openAddProduct = () => {
     setEditingProduct(null);
