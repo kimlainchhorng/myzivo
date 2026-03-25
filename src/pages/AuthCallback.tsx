@@ -82,8 +82,11 @@ const AuthCallback = () => {
         }
       }
 
-      // Check if email verification is required
-      const needsVerification = resolvedProfile.email_verified !== true;
+      // OAuth providers (apple, google, etc.) already verify the user's email —
+      // skip our custom OTP verification for them.
+      const provider = user.app_metadata?.provider;
+      const isOAuthUser = provider && provider !== "email";
+      const needsVerification = !isOAuthUser && resolvedProfile.email_verified !== true;
 
       if (needsVerification && user.email) {
         // Send OTP for verification — but don't block if it fails
