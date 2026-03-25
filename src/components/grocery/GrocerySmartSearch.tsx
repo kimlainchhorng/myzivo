@@ -42,6 +42,8 @@ interface Props {
 
 export default function GrocerySmartSearch({ value, onChange }: Props) {
   const navigate = useNavigate();
+  const { country } = useCountry();
+  const marketStores = useMemo(() => getStoresForMarket(country), [country]);
   const [isFocused, setIsFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -54,7 +56,7 @@ export default function GrocerySmartSearch({ value, onChange }: Props) {
   }, [isFocused]);
 
   const storeResults = query
-    ? GROCERY_STORES.filter((s) => s.name.toLowerCase().includes(query)).slice(0, 3)
+    ? marketStores.filter((s) => s.name.toLowerCase().includes(query)).slice(0, 3)
     : [];
 
   const trendingResults = query
