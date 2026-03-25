@@ -521,7 +521,7 @@ export default function AdminStoreEditPage() {
                   }}
                   placeholder="0"
                 />
-                <p className="text-[10px] text-muted-foreground">1 USD = 4,062.5 KHR</p>
+                <p className="text-[10px] text-muted-foreground">Rate: 1 USD = {(form.khr_rate || 4062.5).toLocaleString()} KHR</p>
               </div>
               <div className="space-y-2">
                 <Label>SKU</Label>
