@@ -283,10 +283,7 @@ const Login = () => {
             return;
           }
 
-          if (profile.email_verified !== true && currentUser.email) {
-            navigate("/verify-email", { replace: true });
-            return;
-          }
+          // Apple OAuth already verifies the email — skip OTP check
 
           toast.success("Welcome back!");
           navigate("/", { replace: true });
