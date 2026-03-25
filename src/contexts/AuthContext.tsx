@@ -53,17 +53,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (_event, session) => {
+        // IMPORTANT: Never await inside onAuthStateChange — it can deadlock
+        // the Supabase auth client and block subsequent events.
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Use setTimeout to avoid potential deadlock with Supabase client
-          setTimeout(async () => {
-            const adminStatus = await checkAdminRole(session.user.id);
+          // Fire-and-forget admin check to avoid blocking the callback
+          checkAdminRole(session.user.id).then((adminStatus) => {
             setIsAdmin(adminStatus);
             setIsLoading(false);
-          }, 0);
+          }).catch(() => {
+            setIsAdmin(false);
+            setIsLoading(false);
+          });
         } else {
           setIsAdmin(false);
           setIsLoading(false);

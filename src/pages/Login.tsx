@@ -257,9 +257,47 @@ const Login = () => {
       return;
     }
 
+    // For native Apple sign-in, the session is already set via signInWithIdToken.
+    // Navigate directly to the right destination instead of going through auth-callback
+    // which can show false error screens.
     if (provider === "apple" && Capacitor.isNativePlatform()) {
+      try {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (currentUser) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("setup_complete, email_verified")
+            .eq("user_id", currentUser.id)
+            .maybeSingle();
+
+          setSocialLoading(null);
+
+          if (!profile) {
+            // Profile doesn't exist yet — trigger will create it, send to setup
+            navigate("/setup", { replace: true });
+            return;
+          }
+
+          if (!profile.setup_complete) {
+            navigate("/setup", { replace: true });
+            return;
+          }
+
+          if (profile.email_verified !== true && currentUser.email) {
+            navigate("/verify-email", { replace: true });
+            return;
+          }
+
+          toast.success("Welcome back!");
+          navigate("/", { replace: true });
+          return;
+        }
+      } catch (err) {
+        console.error("Error after native Apple sign-in:", err);
+      }
+      // Fallback
       setSocialLoading(null);
-      navigate("/auth-callback", { replace: true });
+      navigate("/", { replace: true });
     }
   };
 
