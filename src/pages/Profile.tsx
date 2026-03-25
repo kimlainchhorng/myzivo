@@ -161,7 +161,9 @@ const Profile = () => {
   const [emailOtp, setEmailOtp] = useState("");
   const [emailChanging, setEmailChanging] = useState(false);
 
-  const profileTilt = use3DTilt(profileCardRef);
+  // Phone verification state
+  const [showPhoneVerify, setShowPhoneVerify] = useState(false);
+  const [pendingProfileData, setPendingProfileData] = useState<ProfileFormData | null>(null);
 
   const { scrollYProgress } = useScroll({ container: scrollRef });
   const headerY = useTransform(scrollYProgress, [0, 0.3], [0, -30]);
