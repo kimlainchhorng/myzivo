@@ -2,7 +2,7 @@
  * GroceryPage - Scalable multi-store product search & shopping cart
  * Driven by GROCERY_STORES config — add a store in one place.
  */
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -20,11 +20,15 @@ import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useStoreSearch, type StoreProduct } from "@/hooks/useStoreSearch";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
-import { GROCERY_STORES, DEFAULT_STORE, getStoreConfig, type StoreName } from "@/config/groceryStores";
+import { GROCERY_STORES, DEFAULT_STORE, getStoreConfig, getStoresForMarket, type StoreName } from "@/config/groceryStores";
+import { useCountry } from "@/hooks/useCountry";
 
 export default function GroceryPage() {
   const navigate = useNavigate();
-  const [selectedStore, setSelectedStore] = useState<StoreName>(DEFAULT_STORE);
+  const { country } = useCountry();
+  const marketStores = useMemo(() => getStoresForMarket(country), [country]);
+  const defaultStore = (marketStores[0]?.name ?? DEFAULT_STORE) as StoreName;
+  const [selectedStore, setSelectedStore] = useState<StoreName>(defaultStore);
   const [query, setQuery] = useState("");
   const [showCart, setShowCart] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
@@ -99,7 +103,7 @@ export default function GroceryPage() {
 
         {/* ── Store Tabs (horizontal scroll) ── */}
         <div className="flex gap-2 px-4 pb-2 overflow-x-auto no-scrollbar">
-          {GROCERY_STORES.map((store) => (
+          {marketStores.map((store) => (
             <button
               key={store.name}
               onClick={() => handleStoreChange(store.name)}

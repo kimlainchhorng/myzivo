@@ -32,6 +32,8 @@ export interface StoreConfig {
   rating: number;
   /** Store hours display */
   hours: string;
+  /** Markets where this store is available (ISO country codes). Empty = all markets */
+  markets?: string[];
 }
 
 export const GROCERY_STORES: StoreConfig[] = [
@@ -48,6 +50,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     deliveryMin: 35,
     rating: 4.6,
     hours: "6am–11pm",
+    markets: ["US"],
   },
   {
     name: "Costco",
@@ -62,6 +65,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     deliveryMin: 50,
     rating: 4.8,
     hours: "10am–8:30pm",
+    markets: ["US"],
   },
   {
     name: "Target",
@@ -76,6 +80,7 @@ export const GROCERY_STORES: StoreConfig[] = [
     deliveryMin: 40,
     rating: 4.7,
     hours: "8am–10pm",
+    markets: ["US"],
   },
   {
     name: "Kroger",
@@ -90,10 +95,17 @@ export const GROCERY_STORES: StoreConfig[] = [
     deliveryMin: 35,
     rating: 4.5,
     hours: "6am–12am",
+    markets: ["US"],
   },
 ];
 
 export const DEFAULT_STORE: StoreName = "Walmart";
+
+/** Filter stores available in a specific market (ISO country code, e.g. "US", "KH") */
+export function getStoresForMarket(countryCode: string): StoreConfig[] {
+  const code = countryCode.toUpperCase();
+  return GROCERY_STORES.filter((s) => !s.markets || s.markets.length === 0 || s.markets.includes(code));
+}
 
 /** Look up by name */
 export function getStoreConfig(name: StoreName): StoreConfig {
