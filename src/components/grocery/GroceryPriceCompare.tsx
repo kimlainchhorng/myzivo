@@ -26,6 +26,8 @@ interface GroceryPriceCompareProps {
 }
 
 export function GroceryPriceCompare({ productName, currentStore, currentPrice }: GroceryPriceCompareProps) {
+  const { country } = useCountry();
+  const marketStores = useMemo(() => getStoresForMarket(country), [country]);
   const [results, setResults] = useState<PriceResult[]>([]);
   const [expanded, setExpanded] = useState(false);
   const fetched = useRef(false);
@@ -35,7 +37,7 @@ export function GroceryPriceCompare({ productName, currentStore, currentPrice }:
     fetched.current = true;
 
     // Search other stores
-    const otherStores = GROCERY_STORES.filter((s) => s.name !== currentStore);
+    const otherStores = marketStores.filter((s) => s.name !== currentStore);
     const initial: PriceResult[] = otherStores.map((s) => ({
       store: s.name,
       logo: s.logo,
@@ -90,7 +92,7 @@ export function GroceryPriceCompare({ productName, currentStore, currentPrice }:
     setExpanded(false);
   }, [productName]);
 
-  const currentStoreCfg = GROCERY_STORES.find((s) => s.name === currentStore);
+  const currentStoreCfg = marketStores.find((s) => s.name === currentStore);
 
   return (
     <div className="mt-3">
