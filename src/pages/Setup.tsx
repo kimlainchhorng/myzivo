@@ -1,6 +1,6 @@
 /**
- * Setup Page — Collects first name, last name, and phone after OAuth signup.
- * Shown when setup_complete is false.
+ * Setup Page — Collects first name, last name, and phone after signup.
+ * Requires phone verification via Twilio Verify before completing.
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -12,8 +12,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { User, Phone, ArrowRight, Loader2 } from "lucide-react";
+import { User, ArrowRight, Loader2 } from "lucide-react";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
+import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 
 const setupSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required").max(50),
@@ -27,6 +28,8 @@ export default function Setup() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
+  const [showVerifyDialog, setShowVerifyDialog] = useState(false);
+  const [pendingData, setPendingData] = useState<SetupValues | null>(null);
 
   const form = useForm<SetupValues>({
     resolver: zodResolver(setupSchema),
@@ -39,16 +42,26 @@ export default function Setup() {
 
   const onSubmit = async (data: SetupValues) => {
     if (!user) return;
+    // Store form data and open phone verification dialog
+    setPendingData(data);
+    setShowVerifyDialog(true);
+  };
+
+  const handlePhoneVerified = async () => {
+    if (!user || !pendingData) return;
     setSaving(true);
 
     try {
-      const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ");
+      const fullName = [pendingData.first_name, pendingData.last_name].filter(Boolean).join(" ");
 
       const { error } = await supabase
         .from("profiles")
         .update({
           full_name: fullName,
-          phone: data.phone,
+          phone: pendingData.phone,
+          phone_e164: pendingData.phone,
+          phone_verified: true,
+          phone_verified_at: new Date().toISOString(),
           setup_complete: true,
         })
         .eq("user_id", user.id);
@@ -157,6 +170,16 @@ export default function Setup() {
           </Form>
         </div>
       </div>
+
+      {/* Phone Verification Dialog */}
+      {pendingData && (
+        <PhoneVerificationDialog
+          open={showVerifyDialog}
+          onOpenChange={setShowVerifyDialog}
+          phoneNumber={pendingData.phone}
+          onVerified={handlePhoneVerified}
+        />
+      )}
     </div>
   );
 }
