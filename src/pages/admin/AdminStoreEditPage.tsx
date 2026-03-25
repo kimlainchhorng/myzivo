@@ -606,10 +606,11 @@ export default function AdminStoreEditPage() {
                 <Input
                   type="number"
                   step="0.01"
-                  value={productForm.price || ""}
+                  value={productForm.price}
                   onChange={e => {
                     const val = e.target.value;
-                    updateProductField("price", val === "" ? 0 : parseFloat(val) || 0);
+                    const num = val === "" ? 0 : parseFloat(val) || 0;
+                    updateProductField("price", num);
                     updateProductField("_khrRaw" as any, val === "" ? "" : String(Math.round((parseFloat(val) || 0) * (form.khr_rate || 4062.5))));
                   }}
                   placeholder="0"
@@ -689,7 +690,7 @@ export default function AdminStoreEditPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Sort Order</Label>
-                <Input type="number" value={productForm.sort_order} onChange={e => updateProductField("sort_order", parseInt(e.target.value) || 0)} />
+                <Input type="number" value={productForm.sort_order} onChange={e => updateProductField("sort_order", e.target.value === "" ? 0 : parseInt(e.target.value) || 0)} />
               </div>
               <div className="flex items-center gap-3 pt-6">
                 <Switch checked={productForm.in_stock} onCheckedChange={v => updateProductField("in_stock", v)} />
