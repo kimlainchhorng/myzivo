@@ -26,7 +26,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 const emptyProduct = {
-  name: "", description: "", price: 0, image_url: "", category: "",
+  name: "", description: "", price: 0, image_url: "", image_urls: [] as string[], category: "",
   brand: "", sku: "", in_stock: true, sort_order: 0,
 };
 
@@ -126,6 +126,11 @@ export default function AdminStoreEditPage() {
   const productImageInputRef = useRef<HTMLInputElement>(null);
 
   const uploadProductImage = async (file: File) => {
+    const currentImages = productForm.image_urls || [];
+    if (currentImages.length >= 8) {
+      toast.error("Maximum 8 images allowed");
+      return;
+    }
     setUploadingProductImage(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
@@ -133,13 +138,21 @@ export default function AdminStoreEditPage() {
       const { error: upErr } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
-      updateProductField("image_url", urlData.publicUrl);
+      const newUrls = [...currentImages, urlData.publicUrl];
+      updateProductField("image_urls", newUrls);
+      updateProductField("image_url", newUrls[0]); // keep first as primary
       toast.success("Image uploaded");
     } catch (e: any) {
       toast.error(e.message || "Upload failed");
     } finally {
       setUploadingProductImage(false);
     }
+  };
+
+  const removeProductImage = (index: number) => {
+    const newUrls = (productForm.image_urls || []).filter((_: string, i: number) => i !== index);
+    updateProductField("image_urls", newUrls);
+    updateProductField("image_url", newUrls[0] || "");
   };
 
   const openAddProduct = () => {
@@ -155,6 +168,7 @@ export default function AdminStoreEditPage() {
       description: p.description || "",
       price: p.price || 0,
       image_url: p.image_url || "",
+      image_urls: (p.image_urls as string[]) || (p.image_url ? [p.image_url] : []),
       category: p.category || "",
       brand: p.brand || "",
       sku: p.sku || "",
@@ -638,21 +652,25 @@ export default function AdminStoreEditPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>{t("admin.store.description")}</Label>
-              <div className="flex items-start gap-3">
-                <input ref={productImageInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadProductImage(f); e.target.value = ""; }} />
-                {productForm.image_url ? (
-                  <div className="relative group shrink-0">
-                    <img src={productForm.image_url} alt="Product" className="w-20 h-20 rounded-xl object-cover border border-border" />
+              <Label>Images ({(productForm.image_urls || []).length}/8)</Label>
+              <input ref={productImageInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadProductImage(f); e.target.value = ""; }} />
+              <div className="flex flex-wrap gap-2">
+                {(productForm.image_urls || []).map((url: string, idx: number) => (
+                  <div key={idx} className="relative group shrink-0">
+                    <img src={url} alt={`Product ${idx + 1}`} className="w-20 h-20 rounded-xl object-cover border border-border" />
                     <button
                       type="button"
-                      onClick={() => productImageInputRef.current?.click()}
-                      className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"
+                      onClick={() => removeProductImage(idx)}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs shadow-sm"
                     >
-                      {uploadingProductImage ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
+                      ×
                     </button>
+                    {idx === 0 && (
+                      <span className="absolute bottom-0.5 left-0.5 text-[8px] bg-primary text-primary-foreground px-1 rounded">Main</span>
+                    )}
                   </div>
-                ) : (
+                ))}
+                {(productForm.image_urls || []).length < 8 && (
                   <button
                     type="button"
                     onClick={() => productImageInputRef.current?.click()}
