@@ -20,11 +20,15 @@ import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useStoreSearch, type StoreProduct } from "@/hooks/useStoreSearch";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
-import { GROCERY_STORES, DEFAULT_STORE, getStoreConfig, type StoreName } from "@/config/groceryStores";
+import { GROCERY_STORES, DEFAULT_STORE, getStoreConfig, getStoresForMarket, type StoreName } from "@/config/groceryStores";
+import { useCountry } from "@/hooks/useCountry";
 
 export default function GroceryPage() {
   const navigate = useNavigate();
-  const [selectedStore, setSelectedStore] = useState<StoreName>(DEFAULT_STORE);
+  const { country } = useCountry();
+  const marketStores = useMemo(() => getStoresForMarket(country), [country]);
+  const defaultStore = (marketStores[0]?.name ?? DEFAULT_STORE) as StoreName;
+  const [selectedStore, setSelectedStore] = useState<StoreName>(defaultStore);
   const [query, setQuery] = useState("");
   const [showCart, setShowCart] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
