@@ -36353,6 +36353,119 @@ export type Database = {
         }
         Relationships: []
       }
+      store_products: {
+        Row: {
+          brand: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          in_stock: boolean | null
+          name: string
+          price: number
+          sku: string | null
+          sort_order: number | null
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean | null
+          name: string
+          price: number
+          sku?: string | null
+          sort_order?: number | null
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean | null
+          name?: string
+          price?: number
+          sku?: string | null
+          sort_order?: number | null
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_profiles: {
+        Row: {
+          address: string | null
+          banner_url: string | null
+          category: string
+          created_at: string | null
+          delivery_min: number | null
+          description: string | null
+          hours: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          market: string
+          name: string
+          phone: string | null
+          rating: number | null
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          banner_url?: string | null
+          category?: string
+          created_at?: string | null
+          delivery_min?: number | null
+          description?: string | null
+          hours?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          market?: string
+          name: string
+          phone?: string | null
+          rating?: number | null
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          banner_url?: string | null
+          category?: string
+          created_at?: string | null
+          delivery_min?: number | null
+          description?: string | null
+          hours?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          market?: string
+          name?: string
+          phone?: string | null
+          rating?: number | null
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       strategic_goal_updates: {
         Row: {
           delta: number

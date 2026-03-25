@@ -14,6 +14,7 @@ import GrocerySmartSearch from "@/components/grocery/GrocerySmartSearch";
 import { GroceryHowItWorks } from "@/components/grocery/GroceryHowItWorks";
 import { getStoresForMarket, type StoreCategory, type StoreConfig } from "@/config/groceryStores";
 import { useCountry } from "@/hooks/useCountry";
+import { useMarketStores, type StoreProfile } from "@/hooks/useStoreProfile";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { useNearbyGroceryStores, type NearbyStoreLocation } from "@/hooks/useNearbyGroceryStores";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
@@ -182,6 +183,7 @@ export default function GroceryMarketplace() {
   const cart = useGroceryCart();
   const { country } = useCountry();
   const marketStores = useMemo(() => getStoresForMarket(country), [country]);
+  const { data: dbStores = [] } = useMarketStores(country);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState("");
   const [category, setCategory] = useState<StoreCategory | "all">("all");
@@ -332,7 +334,7 @@ export default function GroceryMarketplace() {
                   className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/40 text-[9px] font-bold text-muted-foreground"
                 >
                   <Store className="h-2.5 w-2.5" />
-                  {availableStores.length} stores
+                  {availableStores.length + dbStores.length} stores
                 </motion.span>
               )}
             </div>
@@ -495,7 +497,59 @@ export default function GroceryMarketplace() {
           {/* Order Again */}
           <GroceryReorder />
 
-          {/* Nearby stores list */}
+          {/* Database-backed stores (e.g. Cambodia local stores) */}
+          {dbStores.length > 0 && (
+            <div className="px-4 pt-5">
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <Store className="h-3.5 w-3.5 text-primary" />
+                <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">Local Stores</h2>
+              </div>
+              <motion.div variants={container} initial="hidden" animate="show" className="space-y-2">
+                {dbStores.map((ds) => (
+                  <motion.button
+                    key={ds.id}
+                    variants={cardVariant}
+                    onClick={() => navigate(`/grocery/shop/${ds.slug}`)}
+                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/30 hover:border-primary/20 hover:shadow-lg transition-all text-left group"
+                  >
+                    <div className="h-14 w-14 rounded-xl bg-background border border-border/20 overflow-hidden flex items-center justify-center shrink-0">
+                      {ds.logo_url ? (
+                        <img src={ds.logo_url} alt={ds.name} className="h-full w-full object-contain p-1" loading="lazy" />
+                      ) : (
+                        <Store className="h-6 w-6 text-muted-foreground/30" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                        </span>
+                        <span className="text-[10px] font-medium text-emerald-600">Open</span>
+                      </div>
+                      <p className="text-sm font-bold text-foreground truncate">{ds.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {ds.delivery_min && (
+                          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                            <Clock className="h-2.5 w-2.5" /> {ds.delivery_min}m
+                          </span>
+                        )}
+                        {ds.rating && (
+                          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                            <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {ds.rating}
+                          </span>
+                        )}
+                        {ds.hours && (
+                          <span className="text-[10px] text-muted-foreground">{ds.hours}</span>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/25 group-hover:text-primary/60 transition-colors shrink-0" />
+                  </motion.button>
+                ))}
+              </motion.div>
+            </div>
+          )}
           {nonFeaturedStores.length > 0 && (
             <>
               <div className="px-4 pt-5 pb-2 flex items-center justify-between">
