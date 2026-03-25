@@ -316,7 +316,29 @@ export default function AdminStoreEditPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>Phone</Label>
-                    <Input value={form.phone} onChange={e => updateField("phone", e.target.value)} />
+                    <div className="flex gap-2">
+                      <div className="flex items-center gap-1.5 px-3 rounded-xl border border-border bg-muted text-sm text-muted-foreground shrink-0">
+                        <span>🇰🇭</span>
+                        <span>+855</span>
+                      </div>
+                      <Input
+                        value={form.phone.replace(/^\+855\s?/, "")}
+                        onChange={e => {
+                          let val = e.target.value.replace(/[^0-9]/g, "").replace(/^0+/, "");
+                          if (val.length > 9) val = val.slice(0, 9);
+                          updateField("phone", val ? `+855 ${val}` : "");
+                        }}
+                        placeholder="12 345 678"
+                        maxLength={9}
+                      />
+                    </div>
+                    {form.phone && (() => {
+                      const digits = form.phone.replace(/^\+855\s?/, "").replace(/\D/g, "");
+                      if (digits.length > 0 && (digits.length < 8 || digits.length > 9)) {
+                        return <p className="text-xs text-destructive">Must be 8–9 digits</p>;
+                      }
+                      return null;
+                    })()}
                   </div>
                   <div className="space-y-2">
                     <Label>Hours</Label>
