@@ -101,6 +101,12 @@ export const GROCERY_STORES: StoreConfig[] = [
 
 export const DEFAULT_STORE: StoreName = "Walmart";
 
+/** Filter stores available in a specific market (ISO country code, e.g. "US", "KH") */
+export function getStoresForMarket(countryCode: string): StoreConfig[] {
+  const code = countryCode.toUpperCase();
+  return GROCERY_STORES.filter((s) => !s.markets || s.markets.length === 0 || s.markets.includes(code));
+}
+
 /** Look up by name */
 export function getStoreConfig(name: StoreName): StoreConfig {
   return GROCERY_STORES.find((s) => s.name === name) ?? GROCERY_STORES[0];
