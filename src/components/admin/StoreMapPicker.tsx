@@ -103,6 +103,41 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
     finally { setSearching(false); }
   }, [coords]);
 
+  const applyLocationSelection = useCallback((nextAddress: string, lat: number, lng: number) => {
+    setCoords({ lat, lng });
+    setAddress(nextAddress);
+    setSearchQuery(nextAddress);
+    if (mapInstance.current) {
+      mapInstance.current.panTo({ lat, lng });
+      mapInstance.current.setZoom(16);
+    }
+    if (markerRef.current) {
+      markerRef.current.setPosition({ lat, lng });
+    }
+  }, []);
+
+  const geocodeSearchQuery = useCallback(async (query: string) => {
+    const normalizedQuery = query.trim();
+    if (normalizedQuery.length < 3) return;
+
+    setShowSuggestions(false);
+    setGeocoding(true);
+    try {
+      const searchAddress = /cambodia/i.test(normalizedQuery)
+        ? normalizedQuery
+        : `${normalizedQuery}, Phnom Penh, Cambodia`;
+
+      const { data, error } = await supabase.functions.invoke("maps-geocode", {
+        body: { address: searchAddress },
+      });
+
+      if (!error && data?.lat != null && data?.lng != null) {
+        applyLocationSelection(data.address || normalizedQuery, data.lat, data.lng);
+      }
+    } catch { /* ignore */ }
+    finally { setGeocoding(false); }
+  }, [applyLocationSelection]);
+
   // Select a suggestion
   const selectPlace = useCallback(async (placeId: string, description: string) => {
     setShowSuggestions(false);
@@ -113,21 +148,11 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, onC
         body: { place_id: placeId },
       });
       if (!error && data?.lat != null && data?.lng != null) {
-        const lat = data.lat;
-        const lng = data.lng;
-        setCoords({ lat, lng });
-        setAddress(data.address || description);
-        if (mapInstance.current) {
-          mapInstance.current.panTo({ lat, lng });
-          mapInstance.current.setZoom(16);
-        }
-        if (markerRef.current) {
-          markerRef.current.setPosition({ lat, lng });
-        }
+        applyLocationSelection(data.address || description, data.lat, data.lng);
       }
     } catch { /* ignore */ }
     finally { setGeocoding(false); }
-  }, []);
+  }, [applyLocationSelection]);
 
   // Debounced search
   useEffect(() => {
