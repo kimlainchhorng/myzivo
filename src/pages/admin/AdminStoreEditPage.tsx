@@ -34,7 +34,7 @@ export default function AdminStoreEditPage() {
   const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { currentLanguage, changeLanguage } = useI18n();
+  const { currentLanguage, changeLanguage, t } = useI18n();
   const { data: supportedLanguages } = useSupportedLanguages(true);
   const STORE_LANG_CODES = ["en", "km", "th", "vi", "ko", "zh"];
   const activeLanguages = (supportedLanguages || []).filter(l => l.is_active && STORE_LANG_CODES.includes(l.code));
