@@ -36421,7 +36421,9 @@ export type Database = {
           id: string
           is_active: boolean | null
           khr_rate: number | null
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           market: string
           name: string
           phone: string | null
@@ -36440,7 +36442,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           khr_rate?: number | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           market?: string
           name: string
           phone?: string | null
@@ -36459,7 +36463,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           khr_rate?: number | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           market?: string
           name?: string
           phone?: string | null
