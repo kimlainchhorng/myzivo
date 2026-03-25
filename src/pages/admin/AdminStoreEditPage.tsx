@@ -35,7 +35,8 @@ export default function AdminStoreEditPage() {
   const queryClient = useQueryClient();
   const { currentLanguage, changeLanguage } = useI18n();
   const { data: supportedLanguages } = useSupportedLanguages(true);
-  const activeLanguages = (supportedLanguages || []).filter(l => l.is_active);
+  const STORE_LANG_CODES = ["en", "km", "th", "vi", "ko", "zh"];
+  const activeLanguages = (supportedLanguages || []).filter(l => l.is_active && STORE_LANG_CODES.includes(l.code));
   const currentLangData = activeLanguages.find(l => l.code === currentLanguage);
   const [isLangOpen, setIsLangOpen] = useState(false);
 
