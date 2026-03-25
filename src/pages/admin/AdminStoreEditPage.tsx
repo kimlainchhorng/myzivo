@@ -87,9 +87,10 @@ export default function AdminStoreEditPage() {
 
   const saveProfile = useMutation({
     mutationFn: async () => {
+      const { rating, ...profileData } = form;
       const { error } = await supabase
         .from("store_profiles")
-        .update(form)
+        .update(profileData)
         .eq("id", storeId!);
       if (error) throw error;
     },
