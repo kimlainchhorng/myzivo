@@ -12,7 +12,7 @@ import GroceryRecentStores from "@/components/grocery/GroceryRecentStores";
 import GroceryReorder from "@/components/grocery/GroceryReorder";
 import GrocerySmartSearch from "@/components/grocery/GrocerySmartSearch";
 import { GroceryHowItWorks } from "@/components/grocery/GroceryHowItWorks";
-import { GROCERY_STORES, getStoresForMarket, type StoreCategory, type StoreConfig } from "@/config/groceryStores";
+import { getStoresForMarket, type StoreCategory, type StoreConfig } from "@/config/groceryStores";
 import { useCountry } from "@/hooks/useCountry";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { useNearbyGroceryStores, type NearbyStoreLocation } from "@/hooks/useNearbyGroceryStores";
