@@ -201,6 +201,42 @@ export default function AdminStoreEditPage() {
     });
   };
 
+  const validatePlayableVideo = async (file: File) => {
+    if (!file.type.startsWith("video/")) return true;
+
+    const probeUrl = URL.createObjectURL(file);
+
+    try {
+      const canPlay = await new Promise<boolean>((resolve) => {
+        const video = document.createElement("video");
+        let settled = false;
+
+        const finish = (result: boolean) => {
+          if (settled) return;
+          settled = true;
+          video.removeAttribute("src");
+          video.load();
+          URL.revokeObjectURL(probeUrl);
+          resolve(result);
+        };
+
+        video.preload = "metadata";
+        video.muted = true;
+        video.playsInline = true;
+        video.onloadedmetadata = () => finish(true);
+        video.onerror = () => finish(false);
+        video.src = probeUrl;
+
+        window.setTimeout(() => finish(false), 4000);
+      });
+
+      return canPlay;
+    } catch {
+      URL.revokeObjectURL(probeUrl);
+      return false;
+    }
+  };
+
   const resetPostState = () => {
     setPostCaption("");
     cleanupPreviews();
@@ -214,8 +250,17 @@ export default function AdminStoreEditPage() {
       return;
     }
 
-    const localPreviewUrl = URL.createObjectURL(file);
     const fileIsVideo = file.type.startsWith("video/");
+
+    if (fileIsVideo) {
+      const isPlayable = await validatePlayableVideo(file);
+      if (!isPlayable) {
+        toast.error("This video format is not supported for browser preview. Please use MP4 (H.264).");
+        return;
+      }
+    }
+
+    const localPreviewUrl = URL.createObjectURL(file);
     setPostMediaPreviews(prev => [...prev, { url: localPreviewUrl, isVideo: fileIsVideo }]);
     setUploadingPostMedia(true);
 
