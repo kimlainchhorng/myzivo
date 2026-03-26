@@ -1025,6 +1025,12 @@ export default function AdminStoreEditPage() {
                               playsInline
                               preload="auto"
                               crossOrigin="anonymous"
+                              onLoadedMetadata={(event) => {
+                                const video = event.currentTarget;
+                                if (video.duration > 1) {
+                                  video.currentTime = 1;
+                                }
+                              }}
                             />
                           )}
                           {post.media_urls?.length > 1 && (
