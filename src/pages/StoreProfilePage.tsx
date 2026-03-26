@@ -526,17 +526,14 @@ export default function StoreProfilePage() {
                           animate={{ scale: 1, y: 0 }}
                           transition={{ type: "spring", stiffness: 400, damping: 15 }}
                           className={cn(
-                            "absolute top-0 left-1/2 -translate-x-1/2 z-20",
-                            "px-3 py-0.5 rounded-b-lg",
+                            "absolute -top-2.5 right-2 z-30",
+                            "px-2.5 py-1 rounded-lg",
                             "bg-gradient-to-r text-white",
-                            "shadow-lg border-b-2 border-white/20",
+                            "shadow-lg ring-2 ring-background",
                             b.cls, b.glow
                           )}
                         >
-                          <div className="flex items-center gap-1">
-                            <span className="text-[10px]">{b.emoji}</span>
-                            <span className="text-[9px] font-extrabold tracking-wide uppercase drop-shadow-sm">{b.label}</span>
-                          </div>
+                          <span className="text-[9px] font-extrabold tracking-wider uppercase drop-shadow-sm">{b.label}</span>
                         </motion.div>
                       );
                     })()}
