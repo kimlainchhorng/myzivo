@@ -182,7 +182,7 @@ export default function AdminStoreEditPage() {
   const [postDialog, setPostDialog] = useState(false);
   const [postCaption, setPostCaption] = useState("");
   const [postMediaUrls, setPostMediaUrls] = useState<string[]>([]);
-  const [postMediaPreviews, setPostMediaPreviews] = useState<string[]>([]);
+  const [postMediaPreviews, setPostMediaPreviews] = useState<{ url: string; isVideo: boolean }[]>([]);
   const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [postMediaMode, setPostMediaMode] = useState<"image" | "video">("image");
@@ -194,6 +194,19 @@ export default function AdminStoreEditPage() {
     }
   }, [store]);
 
+  const cleanupPreviews = () => {
+    postMediaPreviews.forEach((p) => {
+      if (p.url.startsWith("blob:")) URL.revokeObjectURL(p.url);
+    });
+  };
+
+  const resetPostState = () => {
+    setPostCaption("");
+    cleanupPreviews();
+    setPostMediaPreviews([]);
+    setPostMediaUrls([]);
+  };
+
   const uploadPostMedia = async (file: File) => {
     if (postMediaUrls.length >= 10) {
       toast.error("Maximum 10 files per post");
@@ -201,7 +214,8 @@ export default function AdminStoreEditPage() {
     }
 
     const localPreviewUrl = URL.createObjectURL(file);
-    setPostMediaPreviews(prev => [...prev, localPreviewUrl]);
+    const fileIsVideo = file.type.startsWith("video/");
+    setPostMediaPreviews(prev => [...prev, { url: localPreviewUrl, isVideo: fileIsVideo }]);
     setUploadingPostMedia(true);
 
     try {
@@ -213,7 +227,7 @@ export default function AdminStoreEditPage() {
       setPostMediaUrls(prev => [...prev, urlData.publicUrl]);
     } catch (e: any) {
       URL.revokeObjectURL(localPreviewUrl);
-      setPostMediaPreviews(prev => prev.filter((url) => url !== localPreviewUrl));
+      setPostMediaPreviews(prev => prev.filter((p) => p.url !== localPreviewUrl));
       toast.error(e.message || "Upload failed");
     } finally {
       setUploadingPostMedia(false);
@@ -223,13 +237,13 @@ export default function AdminStoreEditPage() {
   const removePostMedia = (index: number) => {
     setPostMediaPreviews(prev => {
       const preview = prev[index];
-      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+      if (preview?.url.startsWith("blob:")) URL.revokeObjectURL(preview.url);
       return prev.filter((_, i) => i !== index);
     });
     setPostMediaUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  const isVideoUrl = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || url.includes('/store-posts/') && /\.(mp4|mov|webm|avi|mkv)/i.test(url);
+  const isVideoUrl = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
 
   const getMediaType = (urls: string[]): string => {
     const hasVideo = urls.some(isVideoUrl);
@@ -253,12 +267,7 @@ export default function AdminStoreEditPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
       setPostDialog(false);
-      setPostCaption("");
-      postMediaPreviews.forEach((preview) => {
-        if (preview.startsWith("blob:")) URL.revokeObjectURL(preview);
-      });
-      setPostMediaPreviews([]);
-      setPostMediaUrls([]);
+      resetPostState();
       toast.success("Post created!");
     },
     onError: (e: any) => toast.error(e.message),
@@ -884,7 +893,7 @@ export default function AdminStoreEditPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base">{t("admin.store.photo_posts")}</CardTitle>
-                <Button size="sm" onClick={() => { setPostCaption(""); postMediaPreviews.forEach((preview) => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }); setPostMediaPreviews([]); setPostMediaUrls([]); setPostMediaMode("image"); setPostDialog(true); }} className="gap-1.5">
+                <Button size="sm" onClick={() => { resetPostState(); setPostMediaMode("image"); setPostDialog(true); }} className="gap-1.5">
                   <Plus className="h-4 w-4" /> {t("admin.store.add_photo_post")}
                 </Button>
               </CardHeader>
@@ -897,7 +906,7 @@ export default function AdminStoreEditPage() {
                   <div className="text-center py-12 space-y-3">
                     <ImagePlus className="h-10 w-10 text-muted-foreground/20 mx-auto" />
                     <p className="text-muted-foreground">{t("admin.store.no_photo_posts")}</p>
-                    <Button variant="outline" size="sm" onClick={() => { setPostCaption(""); postMediaPreviews.forEach((preview) => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }); setPostMediaPreviews([]); setPostMediaUrls([]); setPostMediaMode("image"); setPostDialog(true); }} className="gap-1.5">
+                    <Button variant="outline" size="sm" onClick={() => { resetPostState(); setPostMediaMode("image"); setPostDialog(true); }} className="gap-1.5">
                       <Plus className="h-4 w-4" /> {t("admin.store.add_photo_post")}
                     </Button>
                   </div>
@@ -937,7 +946,7 @@ export default function AdminStoreEditPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base">{t("admin.store.video_posts")}</CardTitle>
-                <Button size="sm" onClick={() => { setPostCaption(""); postMediaPreviews.forEach((preview) => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }); setPostMediaPreviews([]); setPostMediaUrls([]); setPostMediaMode("video"); setPostDialog(true); }} className="gap-1.5">
+                <Button size="sm" onClick={() => { resetPostState(); setPostMediaMode("video"); setPostDialog(true); }} className="gap-1.5">
                   <Plus className="h-4 w-4" /> {t("admin.store.add_video_post")}
                 </Button>
               </CardHeader>
@@ -950,7 +959,7 @@ export default function AdminStoreEditPage() {
                   <div className="text-center py-12 space-y-3">
                     <Video className="h-10 w-10 text-muted-foreground/20 mx-auto" />
                     <p className="text-muted-foreground">{t("admin.store.no_video_posts")}</p>
-                    <Button variant="outline" size="sm" onClick={() => { setPostCaption(""); postMediaPreviews.forEach((preview) => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }); setPostMediaPreviews([]); setPostMediaUrls([]); setPostMediaMode("video"); setPostDialog(true); }} className="gap-1.5">
+                    <Button variant="outline" size="sm" onClick={() => { resetPostState(); setPostMediaMode("video"); setPostDialog(true); }} className="gap-1.5">
                       <Plus className="h-4 w-4" /> {t("admin.store.add_video_post")}
                     </Button>
                   </div>
@@ -1459,11 +1468,11 @@ export default function AdminStoreEditPage() {
             <div className="space-y-2">
               <Label>{t("admin.store.post_media")}</Label>
               <div className="grid grid-cols-3 gap-2">
-                {postMediaPreviews.map((url, i) => (
-                  <div key={i} className="relative group rounded-lg overflow-hidden border border-border bg-black" style={{ aspectRatio: isVideoUrl(url) ? '9/16' : '1/1' }}>
-                    {isVideoUrl(url) ? (
+                {postMediaPreviews.map((preview, i) => (
+                  <div key={i} className="relative group rounded-lg overflow-hidden border border-border bg-black" style={{ aspectRatio: preview.isVideo ? '9/16' : '1/1' }}>
+                    {preview.isVideo ? (
                       <video
-                        src={url}
+                        src={preview.url}
                         className="w-full h-full object-cover"
                         muted
                         controls
@@ -1471,7 +1480,7 @@ export default function AdminStoreEditPage() {
                         preload="auto"
                       />
                     ) : (
-                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <img src={preview.url} alt="" className="w-full h-full object-cover" />
                     )}
                     <button
                       onClick={() => removePostMedia(i)}
@@ -1513,7 +1522,7 @@ export default function AdminStoreEditPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { postMediaPreviews.forEach((preview) => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }); setPostMediaPreviews([]); setPostDialog(false); }}>Cancel</Button>
+            <Button variant="outline" onClick={() => { cleanupPreviews(); setPostMediaPreviews([]); setPostDialog(false); }}>Cancel</Button>
             <Button
               onClick={() => savePost.mutate()}
               disabled={savePost.isPending || postMediaUrls.length === 0}
