@@ -188,7 +188,9 @@ export default function StoreProfilePage() {
                 )}
               </motion.button>
             </div>
-      </div>
+          </div>
+        );
+      })()}
 
       {/* ── Store Info Card - 3D glassmorphic ── */}
       <div className="relative px-4 -mt-16 z-10" style={{ perspective: "1000px" }}>
