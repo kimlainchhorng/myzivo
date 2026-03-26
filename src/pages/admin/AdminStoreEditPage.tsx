@@ -19,15 +19,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
+function generateSku(storeName: string, category: string, name: string): string {
+  const s = (storeName || "ST").substring(0, 2).toUpperCase();
+  const c = (category || "GN").substring(0, 2).toUpperCase();
+  const n = (name || "").replace(/[^a-zA-Z0-9]/g, "").substring(0, 3).toUpperCase() || "XXX";
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `${s}-${c}-${n}${rand}`;
+}
+
 const emptyProduct = {
   name: "", description: "", price: 0, price_khr: 0, image_url: "", image_urls: [] as string[], category: "",
   brand: "", sku: "", in_stock: true, sort_order: 0,
+  discount_type: null as string | null, discount_value: null as number | null,
+  discount_price_khr: null as number | null, discount_expires_at: "" as string,
 };
 
 export default function AdminStoreEditPage() {
@@ -175,24 +185,38 @@ export default function AdminStoreEditPage() {
       sku: p.sku || "",
       in_stock: p.in_stock ?? true,
       sort_order: p.sort_order || 0,
+      discount_type: p.discount_type || null,
+      discount_value: p.discount_value || null,
+      discount_price_khr: p.discount_price_khr || null,
+      discount_expires_at: p.discount_expires_at || "",
     });
     setProductDialog(true);
   };
 
   const saveProduct = useMutation({
     mutationFn: async (keepOpen?: boolean) => {
-      const { _khrRaw, ...productPayload } = productForm as typeof productForm & { _khrRaw?: string };
+      const { _khrRaw, ...rest } = productForm as typeof productForm & { _khrRaw?: string };
+      // Auto-generate SKU if empty
+      const productPayload = {
+        ...rest,
+        sku: rest.sku || generateSku(form.name, rest.category, rest.name),
+        // Clean empty discount fields
+        discount_type: rest.discount_type || null,
+        discount_value: rest.discount_value || null,
+        discount_price_khr: rest.discount_price_khr || null,
+        discount_expires_at: rest.discount_expires_at || null,
+      };
 
       if (editingProduct) {
         const { error } = await supabase
           .from("store_products")
-          .update(productPayload)
+          .update(productPayload as any)
           .eq("id", editingProduct.id);
         if (error) throw error;
       } else {
         const { data, error } = await supabase
           .from("store_products")
-          .insert({ ...productPayload, store_id: storeId! })
+          .insert({ ...(productPayload as any), store_id: storeId! })
           .select()
           .single();
         if (error) throw error;
@@ -659,7 +683,18 @@ export default function AdminStoreEditPage() {
               </div>
               <div className="space-y-2">
                 <Label>SKU</Label>
-                <Input value={productForm.sku} onChange={e => updateProductField("sku", e.target.value)} />
+                <div className="flex gap-2">
+                  <Input value={productForm.sku} onChange={e => updateProductField("sku", e.target.value)} className="flex-1" placeholder="Auto-generated" />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 text-xs"
+                    onClick={() => updateProductField("sku", generateSku(form.name, productForm.category, productForm.name))}
+                  >
+                    Auto
+                  </Button>
+                </div>
               </div>
             </div>
             <div className="space-y-2">
@@ -710,6 +745,118 @@ export default function AdminStoreEditPage() {
                 <Input value={productForm.brand} onChange={e => updateProductField("brand", e.target.value)} />
               </div>
             </div>
+            {/* ── Discount Section ── */}
+            <div className="space-y-3 rounded-xl border border-border/50 bg-muted/30 p-3">
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-primary" />
+                <Label className="font-semibold text-sm">Discount</Label>
+                <Switch
+                  checked={!!productForm.discount_type}
+                  onCheckedChange={(v) => {
+                    if (v) {
+                      updateProductField("discount_type", "percentage");
+                      updateProductField("discount_value", 0);
+                    } else {
+                      updateProductField("discount_type", null);
+                      updateProductField("discount_value", null);
+                      updateProductField("discount_price_khr", null);
+                      updateProductField("discount_expires_at", "");
+                    }
+                  }}
+                />
+              </div>
+              {productForm.discount_type && (
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={productForm.discount_type === "percentage" ? "default" : "outline"}
+                      className="flex-1 gap-1 text-xs"
+                      onClick={() => {
+                        updateProductField("discount_type", "percentage");
+                        // Recalc
+                        const val = productForm.discount_value || 0;
+                        const discounted = Math.round((productForm.price_khr || 0) * (1 - val / 100));
+                        updateProductField("discount_price_khr", discounted);
+                      }}
+                    >
+                      <Percent className="h-3 w-3" /> Percentage
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={productForm.discount_type === "fixed" ? "default" : "outline"}
+                      className="flex-1 gap-1 text-xs"
+                      onClick={() => {
+                        updateProductField("discount_type", "fixed");
+                        const val = productForm.discount_value || 0;
+                        const discounted = Math.max(0, (productForm.price_khr || 0) - val);
+                        updateProductField("discount_price_khr", discounted);
+                      }}
+                    >
+                      <DollarSign className="h-3 w-3" /> Fixed Amount
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">
+                        {productForm.discount_type === "percentage" ? "Discount %" : "Discount ៛ KHR"}
+                      </Label>
+                      <Input
+                        type="number"
+                        step={productForm.discount_type === "percentage" ? "1" : "100"}
+                        value={productForm.discount_value || ""}
+                        onChange={e => {
+                          const val = parseFloat(e.target.value) || 0;
+                          updateProductField("discount_value", val);
+                          const origKhr = productForm.price_khr || 0;
+                          if (productForm.discount_type === "percentage") {
+                            updateProductField("discount_price_khr", Math.round(origKhr * (1 - val / 100)));
+                          } else {
+                            updateProductField("discount_price_khr", Math.max(0, origKhr - val));
+                          }
+                        }}
+                        placeholder={productForm.discount_type === "percentage" ? "e.g. 10" : "e.g. 500"}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Sale Price ៛</Label>
+                      <Input
+                        type="number"
+                        value={productForm.discount_price_khr || ""}
+                        readOnly
+                        className="bg-muted/50 font-bold text-primary"
+                      />
+                    </div>
+                  </div>
+                  {/* Preview */}
+                  {(productForm.discount_value || 0) > 0 && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="line-through text-muted-foreground">៛{(productForm.price_khr || 0).toLocaleString()}</span>
+                      <span className="font-bold text-primary">→ ៛{(productForm.discount_price_khr || 0).toLocaleString()}</span>
+                      {productForm.discount_type === "percentage" && (
+                        <Badge variant="secondary" className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">
+                          -{productForm.discount_value}%
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    <Label className="text-xs flex items-center gap-1">
+                      <CalendarIcon className="h-3 w-3" /> Discount Expires
+                    </Label>
+                    <Input
+                      type="datetime-local"
+                      value={productForm.discount_expires_at ? productForm.discount_expires_at.slice(0, 16) : ""}
+                      onChange={e => updateProductField("discount_expires_at", e.target.value ? new Date(e.target.value).toISOString() : "")}
+                    />
+                    <p className="text-[10px] text-muted-foreground">Leave empty for no expiry</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Sort Order</Label>
