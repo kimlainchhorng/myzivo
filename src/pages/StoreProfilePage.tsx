@@ -691,7 +691,7 @@ export default function StoreProfilePage() {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 80, opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="fixed bottom-20 left-3 right-3 z-40"
+            className="fixed bottom-24 left-3 right-3 z-50"
           >
             <button
               onClick={() => setShowCart(true)}
