@@ -373,7 +373,9 @@ export default function StoreProfilePage() {
               const khrPrice = ((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050)));
               const isLiked = likedProducts.has(product.id);
               const p = product as any;
-              const hasDiscount = p.discount_type && p.discount_value > 0 && p.discount_price_khr != null
+              const hasBogo = p.discount_type === "bogo" && (p.buy_quantity || 0) >= 1 && (p.get_quantity || 0) >= 1
+                && (!p.discount_expires_at || new Date(p.discount_expires_at) > new Date());
+              const hasDiscount = !hasBogo && p.discount_type && p.discount_value > 0 && p.discount_price_khr != null
                 && (!p.discount_expires_at || new Date(p.discount_expires_at) > new Date());
               const discountKhr = hasDiscount ? p.discount_price_khr : null;
               const discountUsd = hasDiscount ? parseFloat((discountKhr / ((store as any)?.khr_rate || 4050)).toFixed(2)) : null;
@@ -444,7 +446,7 @@ export default function StoreProfilePage() {
                     </AnimatePresence>
 
                     {/* Category chip */}
-                    {product.category && !hasDiscount && (
+                    {product.category && !hasDiscount && !hasBogo && (
                       <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-background/60 backdrop-blur-xl border border-white/10 z-20">
                         <span className="text-[7px] font-bold text-foreground/70 uppercase tracking-wider">{product.category}</span>
                       </div>
@@ -502,6 +504,30 @@ export default function StoreProfilePage() {
                           </div>
                           {/* Inner shine */}
                           <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent rounded-xl pointer-events-none" />
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* BOGO Badge */}
+                    {hasBogo && (
+                      <motion.div
+                        initial={{ scale: 0, rotate: -10 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        className="absolute bottom-1.5 left-1.5 z-20"
+                      >
+                        <div className="relative px-2.5 py-1 rounded-xl overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 rounded-xl" />
+                          <motion.div
+                            animate={{ opacity: [0.5, 0.9, 0.5] }}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute inset-0 bg-gradient-to-r from-emerald-400/40 via-teal-400/30 to-emerald-400/40 rounded-xl blur-[1px]"
+                          />
+                          <div className="relative flex items-center gap-1 z-10">
+                            <span className="text-[9px] font-black text-white drop-shadow-md tracking-wide">
+                              BUY {p.buy_quantity} GET {p.get_quantity} FREE
+                            </span>
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-transparent rounded-xl pointer-events-none" />
                         </div>
                       </motion.div>
                     )}
