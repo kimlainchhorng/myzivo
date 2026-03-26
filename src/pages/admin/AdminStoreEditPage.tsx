@@ -134,6 +134,15 @@ export default function AdminStoreEditPage() {
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [uploadingProductImage, setUploadingProductImage] = useState(false);
   const productImageInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (store) {
+      setGalleryImages((store as any).gallery_images || []);
+    }
+  }, [store]);
 
   const uploadProductImage = async (file: File) => {
     const currentImages = productForm.image_urls || [];
@@ -256,6 +265,50 @@ export default function AdminStoreEditPage() {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+
+  const uploadGalleryImage = async (file: File) => {
+    if (galleryImages.length >= 10) {
+      toast.error("Maximum 10 gallery images allowed");
+      return;
+    }
+    setUploadingGallery(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${storeId}/gallery-${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
+      const newImages = [...galleryImages, urlData.publicUrl];
+      setGalleryImages(newImages);
+      const { error: saveErr } = await supabase
+        .from("store_profiles")
+        .update({ gallery_images: newImages } as any)
+        .eq("id", storeId!);
+      if (saveErr) throw saveErr;
+      queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
+      toast.success("Gallery image added");
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
+  const removeGalleryImage = async (index: number) => {
+    const newImages = galleryImages.filter((_, i) => i !== index);
+    setGalleryImages(newImages);
+    try {
+      const { error } = await supabase
+        .from("store_profiles")
+        .update({ gallery_images: newImages } as any)
+        .eq("id", storeId!);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
+      toast.success("Gallery image removed");
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
 
   const uploadImage = async (file: File, type: "logo" | "cover") => {
     const isLogo = type === "logo";
@@ -414,6 +467,59 @@ export default function AdminStoreEditPage() {
               </div>
             </div>
           </div>
+        </Card>
+
+        {/* ── Gallery Images ── */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Image className="h-4 w-4" /> Gallery Images
+              <Badge variant="secondary" className="text-[10px]">{galleryImages.length}/10</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {galleryImages.map((url, i) => (
+                <div key={i} className="relative group aspect-video rounded-xl overflow-hidden border border-border bg-muted">
+                  <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => removeGalleryImage(i)}
+                    className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              {galleryImages.length < 10 && (
+                <button
+                  onClick={() => galleryInputRef.current?.click()}
+                  disabled={uploadingGallery}
+                  className="aspect-video rounded-xl border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1.5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                >
+                  {uploadingGallery ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Plus className="h-5 w-5" />
+                      <span className="text-[10px] font-medium">Add Photo</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => {
+                const f = e.target.files?.[0];
+                if (f) uploadGalleryImage(f);
+                e.target.value = "";
+              }}
+            />
+            <p className="text-[11px] text-muted-foreground mt-2">These images appear as a scrolling banner on your store page.</p>
+          </CardContent>
         </Card>
 
         <Tabs defaultValue="profile" className="space-y-4">
