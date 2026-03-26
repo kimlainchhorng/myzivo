@@ -79,12 +79,13 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
           <div className="relative w-full h-full" onClick={toggleVideo}>
             <video
               ref={videoRef}
-              src={urls[activeIndex]}
+              src={getVideoPreviewSrc(urls[activeIndex])}
               className="w-full h-full object-cover"
               playsInline
+              autoPlay
               loop
               muted
-              preload="metadata"
+              preload="auto"
               onLoadedData={handleVideoLoaded}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
