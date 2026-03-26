@@ -312,9 +312,14 @@ export default function AdminStoreEditPage() {
       ]);
 
       const data = await ffmpeg.readFile(outputName);
-      const outputBytes = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
+      if (!(data instanceof Uint8Array)) {
+        throw new Error("Failed to read transcoded video output.");
+      }
 
-      return new File([outputBytes], `${safeBaseName}.mp4`, {
+      const normalizedBuffer = new ArrayBuffer(data.byteLength);
+      new Uint8Array(normalizedBuffer).set(data);
+
+      return new File([normalizedBuffer], `${safeBaseName}.mp4`, {
         type: "video/mp4",
         lastModified: Date.now(),
       });
