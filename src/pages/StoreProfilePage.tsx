@@ -508,26 +508,35 @@ export default function StoreProfilePage() {
 
                     {/* Product badge */}
                     {(product as any).badge && (() => {
-                      const badgeMap: Record<string, { emoji: string; label: string; cls: string }> = {
-                        "new": { emoji: "🆕", label: "New", cls: "from-blue-500 to-indigo-500" },
-                        "hot": { emoji: "🔥", label: "Hot", cls: "from-red-500 to-orange-500" },
-                        "popular": { emoji: "⭐", label: "Popular", cls: "from-amber-500 to-yellow-500" },
-                        "best-seller": { emoji: "🏆", label: "Best Seller", cls: "from-emerald-500 to-green-500" },
-                        "limited": { emoji: "⏰", label: "Limited", cls: "from-purple-500 to-violet-500" },
-                        "recommended": { emoji: "👍", label: "Recommended", cls: "from-sky-500 to-cyan-500" },
-                        "organic": { emoji: "🌿", label: "Organic", cls: "from-green-500 to-lime-500" },
-                        "imported": { emoji: "✈️", label: "Imported", cls: "from-violet-500 to-fuchsia-500" },
+                      const badgeMap: Record<string, { emoji: string; label: string; labelKm: string; cls: string; glow: string }> = {
+                        "new": { emoji: "🆕", label: "New", labelKm: "ថ្មី", cls: "from-blue-500 via-indigo-500 to-purple-600", glow: "shadow-blue-500/40" },
+                        "hot": { emoji: "🔥", label: "Hot", labelKm: "ក្ដៅ", cls: "from-red-500 via-orange-500 to-yellow-500", glow: "shadow-red-500/40" },
+                        "popular": { emoji: "⭐", label: "Popular", labelKm: "កំពូល", cls: "from-amber-400 via-yellow-500 to-orange-500", glow: "shadow-amber-500/40" },
+                        "best-seller": { emoji: "🏆", label: "Best", labelKm: "លក់ដាច់", cls: "from-emerald-500 via-green-500 to-teal-500", glow: "shadow-emerald-500/40" },
+                        "limited": { emoji: "⏰", label: "Limited", labelKm: "មានកំណត់", cls: "from-purple-500 via-violet-500 to-pink-500", glow: "shadow-purple-500/40" },
+                        "recommended": { emoji: "👍", label: "Pick", labelKm: "ណែនាំ", cls: "from-sky-400 via-blue-500 to-cyan-500", glow: "shadow-sky-500/40" },
+                        "organic": { emoji: "🌿", label: "Organic", labelKm: "ធម្មជាតិ", cls: "from-green-500 via-emerald-500 to-lime-500", glow: "shadow-green-500/40" },
+                        "imported": { emoji: "✈️", label: "Import", labelKm: "នាំចូល", cls: "from-violet-500 via-fuchsia-500 to-pink-500", glow: "shadow-violet-500/40" },
                       };
                       const b = badgeMap[(product as any).badge];
                       if (!b) return null;
                       return (
                         <motion.div
-                          initial={{ scale: 0, y: -5 }}
-                          animate={{ scale: 1, y: 0 }}
-                          transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                          className={cn("absolute top-1.5 left-10 px-1.5 py-0.5 rounded-md bg-gradient-to-r text-white text-[8px] font-bold z-20 shadow-md", b.cls)}
+                          initial={{ scale: 0, rotate: -12, y: -8 }}
+                          animate={{ scale: 1, rotate: -3, y: 0 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          className={cn(
+                            "absolute -top-1 -left-1 z-20",
+                            "px-2 py-1 rounded-br-lg rounded-tl-lg",
+                            "bg-gradient-to-r text-white",
+                            "shadow-lg",
+                            b.cls, b.glow
+                          )}
                         >
-                          {b.emoji} {b.label}
+                          <div className="flex items-center gap-0.5">
+                            <span className="text-[10px]">{b.emoji}</span>
+                            <span className="text-[9px] font-extrabold tracking-wide uppercase drop-shadow-sm">{b.label}</span>
+                          </div>
                         </motion.div>
                       );
                     })()}
