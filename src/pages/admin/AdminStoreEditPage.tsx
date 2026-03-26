@@ -1444,20 +1444,22 @@ export default function AdminStoreEditPage() {
               <Label>{t("admin.store.post_media")}</Label>
               <div className="grid grid-cols-3 gap-2">
                 {postMediaUrls.map((url, i) => (
-                  <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                  <div key={i} className="relative group rounded-lg overflow-hidden border border-border bg-black" style={{ aspectRatio: isVideoUrl(url) ? '9/16' : '1/1' }}>
                     {isVideoUrl(url) ? (
-                      <div className="relative w-full h-full bg-black">
-                        <video src={url + "#t=0.5"} className="w-full h-full object-cover" muted preload="auto" playsInline />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <Play className="w-6 h-6 text-white" fill="white" />
-                        </div>
-                      </div>
+                      <video
+                        src={url}
+                        className="w-full h-full object-cover"
+                        muted
+                        controls
+                        playsInline
+                        preload="auto"
+                      />
                     ) : (
                       <img src={url} alt="" className="w-full h-full object-cover" />
                     )}
                     <button
                       onClick={() => removePostMedia(i)}
-                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
