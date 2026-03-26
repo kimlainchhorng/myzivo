@@ -1416,7 +1416,7 @@ export default function AdminStoreEditPage() {
       <Dialog open={postDialog} onOpenChange={setPostDialog}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t("admin.store.add_post")}</DialogTitle>
+            <DialogTitle>{postMediaMode === "video" ? t("admin.store.add_video_post") : t("admin.store.add_photo_post")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -1466,7 +1466,7 @@ export default function AdminStoreEditPage() {
               <input
                 ref={postMediaInputRef}
                 type="file"
-                accept="image/*,video/*"
+                accept={postMediaMode === "video" ? "video/*" : "image/*"}
                 className="hidden"
                 onChange={e => {
                   const f = e.target.files?.[0];
