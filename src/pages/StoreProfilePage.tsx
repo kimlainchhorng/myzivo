@@ -229,11 +229,13 @@ export default function StoreProfilePage() {
             </div>
           </div>
 
-          {/* Contact row */}
-          <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/[0.05]">
+          {/* Contact row — 3D/4D spatial style */}
+          <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-white/[0.06]" style={{ perspective: "800px" }}>
             {store.address && (
               <motion.button
-                whileTap={{ scale: 0.96 }}
+                whileTap={{ scale: 0.95, rotateX: 2 }}
+                whileHover={{ rotateY: -4, rotateX: -2, scale: 1.03 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 onClick={() => {
                   const params = new URLSearchParams({ destination: store.address! });
                   const s = store as any;
@@ -243,33 +245,63 @@ export default function StoreProfilePage() {
                   }
                   navigate(`/rides/hub?${params.toString()}`);
                 }}
-                className="relative flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-gradient-to-br from-primary/[0.08] to-primary/[0.03] border border-primary/15 hover:border-primary/25 transition-all overflow-hidden group"
+                className="relative flex flex-col items-center gap-2 p-4 rounded-2xl border border-primary/20 transition-all overflow-hidden group"
+                style={{
+                  background: "linear-gradient(145deg, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.02))",
+                  boxShadow: "0 8px 32px -8px hsl(var(--primary) / 0.15), inset 0 1px 0 0 hsl(0 0% 100% / 0.08), inset 0 -1px 0 0 hsl(0 0% 0% / 0.05)",
+                  backdropFilter: "blur(12px)",
+                  transformStyle: "preserve-3d",
+                }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none" />
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-sm relative">
-                  <MapPin className="h-4.5 w-4.5 text-primary" />
-                  <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-primary/20 flex items-center justify-center">
+                {/* Glassmorphic shine layer */}
+                <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{ background: "linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, transparent 50%, hsl(0 0% 100% / 0.03) 100%)" }} />
+                {/* Floating icon with depth */}
+                <div
+                  className="h-12 w-12 rounded-xl flex items-center justify-center relative"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(var(--primary) / 0.25), hsl(var(--primary) / 0.1))",
+                    boxShadow: "0 4px 12px -2px hsl(var(--primary) / 0.3), inset 0 1px 0 0 hsl(0 0% 100% / 0.15)",
+                    transform: "translateZ(20px)",
+                  }}
+                >
+                  <MapPin className="h-5 w-5 text-primary" />
+                  <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary/25 flex items-center justify-center border border-primary/20">
                     <ArrowLeft className="h-2 w-2 text-primary rotate-[135deg]" />
                   </div>
                 </div>
-                <div className="text-center relative">
-                  <p className="text-[10px] font-bold text-primary">Ride There</p>
+                <div className="text-center relative" style={{ transform: "translateZ(10px)" }}>
+                  <p className="text-[11px] font-bold text-primary tracking-wide">Ride There</p>
                   <p className="text-[9px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">{store.address}</p>
                 </div>
               </motion.button>
             )}
             {store.phone && (
               <motion.a
-                whileTap={{ scale: 0.96 }}
+                whileTap={{ scale: 0.95, rotateX: 2 }}
+                whileHover={{ rotateY: 4, rotateX: -2, scale: 1.03 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 href={`tel:${store.phone.replace(/\s+/g, "")}`}
-                className="relative flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-gradient-to-br from-emerald-500/[0.08] to-emerald-500/[0.03] border border-emerald-500/15 hover:border-emerald-500/25 transition-all overflow-hidden group"
+                className="relative flex flex-col items-center gap-2 p-4 rounded-2xl border border-emerald-500/20 transition-all overflow-hidden group"
+                style={{
+                  background: "linear-gradient(145deg, hsl(152 70% 50% / 0.08), hsl(152 70% 50% / 0.02))",
+                  boxShadow: "0 8px 32px -8px hsl(152 70% 50% / 0.15), inset 0 1px 0 0 hsl(0 0% 100% / 0.08), inset 0 -1px 0 0 hsl(0 0% 0% / 0.05)",
+                  backdropFilter: "blur(12px)",
+                  transformStyle: "preserve-3d",
+                }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none" />
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 flex items-center justify-center shadow-sm">
-                  <Phone className="h-4.5 w-4.5 text-emerald-500" />
+                <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{ background: "linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, transparent 50%, hsl(0 0% 100% / 0.03) 100%)" }} />
+                <div
+                  className="h-12 w-12 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(152 70% 50% / 0.25), hsl(152 70% 50% / 0.1))",
+                    boxShadow: "0 4px 12px -2px hsl(152 70% 50% / 0.3), inset 0 1px 0 0 hsl(0 0% 100% / 0.15)",
+                    transform: "translateZ(20px)",
+                  }}
+                >
+                  <Phone className="h-5 w-5 text-emerald-500" />
                 </div>
-                <div className="text-center">
-                  <p className="text-[10px] font-bold text-emerald-600">Call Store</p>
+                <div className="text-center" style={{ transform: "translateZ(10px)" }}>
+                  <p className="text-[11px] font-bold text-emerald-600 tracking-wide">Call Store</p>
                   <p className="text-[12px] text-foreground font-semibold mt-0.5">{store.phone}</p>
                 </div>
               </motion.a>
