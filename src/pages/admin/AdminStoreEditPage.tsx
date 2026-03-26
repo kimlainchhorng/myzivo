@@ -209,6 +209,7 @@ export default function AdminStoreEditPage() {
   };
 
   const uploadPostMedia = async (file: File) => {
+    console.log("[PostMedia] uploadPostMedia called", { name: file.name, type: file.type, size: file.size });
     if (postMediaUrls.length >= 10) {
       toast.error("Maximum 10 files per post");
       return;
@@ -228,13 +229,17 @@ export default function AdminStoreEditPage() {
     try {
       const ext = file.name.split(".").pop() || "jpg";
       const path = `posts/${storeId}/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("store-posts").upload(path, file, { upsert: true });
+      console.log("[PostMedia] uploading to storage path:", path);
+      const { error: upErr, data: uploadData } = await supabase.storage.from("store-posts").upload(path, file, { upsert: true });
+      console.log("[PostMedia] upload result:", { error: upErr, data: uploadData });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
+      console.log("[PostMedia] publicUrl:", urlData.publicUrl);
       setPostMediaUrls(prev => [...prev, urlData.publicUrl]);
     } catch (e: any) {
       URL.revokeObjectURL(localPreviewUrl);
       setPostMediaPreviews(prev => prev.filter((p) => p.url !== localPreviewUrl));
+      console.error("[PostMedia] upload error:", e);
       toast.error(e.message || "Upload failed");
     } finally {
       setUploadingPostMedia(false);
