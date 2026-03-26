@@ -19,15 +19,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
+function generateSku(storeName: string, category: string, name: string): string {
+  const s = (storeName || "ST").substring(0, 2).toUpperCase();
+  const c = (category || "GN").substring(0, 2).toUpperCase();
+  const n = (name || "").replace(/[^a-zA-Z0-9]/g, "").substring(0, 3).toUpperCase() || "XXX";
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `${s}-${c}-${n}${rand}`;
+}
+
 const emptyProduct = {
   name: "", description: "", price: 0, price_khr: 0, image_url: "", image_urls: [] as string[], category: "",
   brand: "", sku: "", in_stock: true, sort_order: 0,
+  discount_type: null as string | null, discount_value: null as number | null,
+  discount_price_khr: null as number | null, discount_expires_at: "" as string,
 };
 
 export default function AdminStoreEditPage() {
