@@ -36353,6 +36353,47 @@ export type Database = {
         }
         Relationships: []
       }
+      store_posts: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          is_published: boolean
+          media_type: string
+          media_urls: string[]
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          media_type?: string
+          media_urls?: string[]
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          media_type?: string
+          media_urls?: string[]
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_posts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_products: {
         Row: {
           badge: string | null
