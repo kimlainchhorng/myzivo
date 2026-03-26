@@ -299,7 +299,7 @@ export default function StoreProfilePage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 25 }}
-          className="rounded-2xl overflow-hidden border border-white/[0.08] shadow-lg shadow-black/5 relative h-40"
+          className="rounded-2xl overflow-hidden border border-white/[0.08] shadow-lg shadow-black/5 relative h-48"
         >
           <StoreHeroCarousel
             images={["/images/stores/chipmong-1.png", "/images/stores/chipmong-2.png", "/images/stores/chipmong-3.png"]}
