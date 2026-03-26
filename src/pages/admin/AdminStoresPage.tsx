@@ -245,7 +245,15 @@ export default function AdminStoresPage() {
               </div>
               <div className="space-y-2">
                 <Label>Category</Label>
-                <Input value={form.category} onChange={e => updateField("category", e.target.value)} placeholder="grocery" />
+                <select
+                  value={form.category}
+                  onChange={e => updateField("category", e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {STORE_CATEGORY_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="space-y-2">
