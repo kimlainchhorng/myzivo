@@ -15,6 +15,7 @@ import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawe
 import { useState, useRef } from "react";
 import StoreHeroCarousel from "@/components/grocery/StoreHeroCarousel";
 import { toast } from "sonner";
+import { useI18n } from "@/hooks/useI18n";
 
 const container = {
   hidden: {},
