@@ -41,8 +41,16 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
   const [activeIndex, setActiveIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
 
   const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
+
+  const handleVideoLoaded = () => {
+    if (videoRef.current && videoRef.current.currentTime < 0.1) {
+      videoRef.current.currentTime = 0.5;
+    }
+    setVideoReady(true);
+  };
 
   const toggleVideo = () => {
     if (!videoRef.current) return;
@@ -66,6 +74,9 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               className="w-full h-full object-cover"
               playsInline
               loop
+              muted
+              preload="metadata"
+              onLoadedData={handleVideoLoaded}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
             />
