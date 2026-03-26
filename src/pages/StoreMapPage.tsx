@@ -361,12 +361,12 @@ export default function StoreMapPage() {
             {searchOpen ? (
               <motion.div
                 key="search"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="flex items-center gap-2 rounded-2xl px-4 py-2.5 shadow-md border border-border/40 bg-card"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="flex items-center gap-2.5 rounded-2xl px-4 py-3 bg-card/95 backdrop-blur-xl shadow-lg border border-border/20"
               >
-                <Search className="w-4 h-4 shrink-0 text-muted-foreground" />
+                <Search className="w-4 h-4 shrink-0 text-primary" />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -374,33 +374,34 @@ export default function StoreMapPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search stores..."
                   autoFocus
-                  className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground"
+                  className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground/60"
                 />
-                <button onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="p-1 rounded-full text-muted-foreground">
-                  <X className="w-4 h-4" />
+                <button onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="p-1.5 rounded-full bg-muted/60 text-muted-foreground hover:bg-muted transition-colors">
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </motion.div>
             ) : (
               <motion.div
                 key="title"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="flex items-center gap-2"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
               >
-                <div className="flex-1 flex items-center gap-3 rounded-2xl px-4 py-3 shadow-md border border-border/40 bg-card">
-                  <Store className="w-5 h-5 text-primary shrink-0" />
+                <div className="flex items-center gap-3 rounded-2xl px-4 py-3 bg-card/95 backdrop-blur-xl shadow-lg border border-border/20">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Store className="w-5 h-5 text-primary" />
+                  </div>
                   <div className="flex-1">
-                    <p className="text-[13px] font-bold text-foreground">Explore Stores</p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[14px] font-bold text-foreground leading-tight">Explore Stores</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
                       {filteredStores.length} {filteredStores.length === 1 ? "store" : "stores"} nearby
                     </p>
                   </div>
                   <button
                     onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 100); }}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center bg-muted"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors"
                   >
-                    <Search className="w-4 h-4 text-muted-foreground" />
+                    <Search className="w-[18px] h-[18px] text-muted-foreground" />
                   </button>
                 </div>
               </motion.div>
@@ -410,34 +411,36 @@ export default function StoreMapPage() {
 
         {/* ── Category chips ── */}
         {usedCategories.length > 0 && (
-          <div className="px-4 pt-2 pb-1 overflow-x-auto scrollbar-hide">
+          <div className="px-4 pt-2.5 pb-1 overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 w-max">
-              <button
+              <motion.button
+                whileTap={{ scale: 0.95 }}
                 onClick={() => { setActiveCategory("all"); setSelectedStore(null); }}
-                className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap shadow-sm border ${
+                className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap border backdrop-blur-sm ${
                   activeCategory === "all"
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-card text-muted-foreground border-border/40"
+                    ? "bg-primary text-primary-foreground border-primary shadow-md"
+                    : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
                 }`}
               >
                 All ({stores.length})
-              </button>
+              </motion.button>
               {usedCategories.map((cat) => {
                 const count = stores.filter((s) => s.category === cat.value).length;
                 const isActive = activeCategory === cat.value;
                 return (
-                  <button
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
                     key={cat.value}
                     onClick={() => { setActiveCategory(isActive ? "all" : cat.value); setSelectedStore(null); }}
-                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 shadow-sm border ${
+                    className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm ${
                       isActive
-                        ? "bg-foreground text-background border-foreground"
-                        : "bg-card text-muted-foreground border-border/40"
+                        ? "bg-primary text-primary-foreground border-primary shadow-md"
+                        : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
                     }`}
                   >
-                    <span>{getCategoryIcon(cat.value)}</span>
+                    <span className="text-[13px]">{getCategoryIcon(cat.value)}</span>
                     {cat.label} ({count})
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
@@ -446,30 +449,36 @@ export default function StoreMapPage() {
       </div>
 
       {/* ── Right FABs ── */}
-      <div className="absolute right-4 bottom-[140px] z-[1500] flex flex-col gap-2">
-        <Button variant="secondary" size="icon" onClick={handleLocateMe}
-          className="w-11 h-11 rounded-full shadow-md border border-border/40 bg-card hover:bg-muted"
-          style={{ color: userLocation ? "#4285F4" : undefined }}
-          aria-label="My location"
-        >
-          <Locate className="w-5 h-5" />
-        </Button>
-        <Button variant="secondary" size="icon" onClick={handleRecenter}
-          className="w-11 h-11 rounded-full shadow-md border border-border/40 bg-card text-foreground hover:bg-muted"
-          aria-label="Recenter"
-        >
-          <Navigation className="w-5 h-5" />
-        </Button>
+      <div className="absolute right-4 bottom-[140px] z-[1500] flex flex-col gap-2.5">
+        <motion.div whileTap={{ scale: 0.9 }}>
+          <Button variant="secondary" size="icon" onClick={handleLocateMe}
+            className="w-12 h-12 rounded-full shadow-lg border border-border/20 bg-card/95 backdrop-blur-xl hover:bg-muted transition-colors"
+            style={{ color: userLocation ? "#4285F4" : undefined }}
+            aria-label="My location"
+          >
+            <Locate className="w-5 h-5" />
+          </Button>
+        </motion.div>
+        <motion.div whileTap={{ scale: 0.9 }}>
+          <Button variant="secondary" size="icon" onClick={handleRecenter}
+            className="w-12 h-12 rounded-full shadow-lg border border-border/20 bg-card/95 backdrop-blur-xl text-foreground hover:bg-muted transition-colors"
+            aria-label="Recenter"
+          >
+            <Navigation className="w-5 h-5" />
+          </Button>
+        </motion.div>
       </div>
 
       {/* ── Map ── */}
       <div ref={mapContainerRef} className="absolute inset-0" style={{ touchAction: "none" }} />
 
       {mapError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/90">
+        <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
           <div className="text-center p-6">
-            <MapPin className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-            <p className="text-muted-foreground">Map unavailable</p>
+            <div className="w-16 h-16 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-4">
+              <MapPin className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground font-medium">Map unavailable</p>
           </div>
         </div>
       )}
@@ -478,65 +487,68 @@ export default function StoreMapPage() {
       <AnimatePresence>
         {selectedStore && (
           <motion.div
-            initial={{ y: 120, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 120, opacity: 0 }}
-            transition={{ type: "spring", damping: 28, stiffness: 350 }}
+            initial={{ y: 140, opacity: 0, scale: 0.92 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 140, opacity: 0, scale: 0.92 }}
+            transition={{ type: "spring", damping: 26, stiffness: 320 }}
             className="absolute bottom-[100px] left-3 right-3 z-[1600]"
           >
             <div
-              className="rounded-2xl overflow-hidden shadow-xl border border-border/30 bg-card cursor-pointer active:scale-[0.98] transition-transform"
+              className="rounded-[20px] overflow-hidden shadow-2xl border border-border/20 bg-card/95 backdrop-blur-xl cursor-pointer active:scale-[0.98] transition-transform"
               onClick={() => navigate(`/store/${selectedStore.slug}`)}
             >
-              <div className="p-4 flex items-center gap-3">
+              <div className="p-4 flex items-center gap-3.5">
+                {/* Store logo / icon */}
                 <div
-                  className="w-13 h-13 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
-                  style={{ background: getCategoryColor(selectedStore.category) + "15", width: 52, height: 52 }}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden shadow-sm"
+                  style={{ background: getCategoryColor(selectedStore.category) + "12" }}
                 >
                   {selectedStore.logo_url ? (
-                    <img src={selectedStore.logo_url} alt="" className="w-full h-full object-cover rounded-xl" />
+                    <img src={selectedStore.logo_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-2xl">{getCategoryIcon(selectedStore.category)}</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-[15px] truncate text-foreground">{selectedStore.name}</h3>
-                  <div className="flex items-center gap-2 mt-0.5">
+                  <h3 className="font-bold text-[15px] truncate text-foreground leading-tight">{selectedStore.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
                     <span
-                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                      style={{ background: getCategoryColor(selectedStore.category) + "18", color: getCategoryColor(selectedStore.category) }}
+                      className="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide"
+                      style={{ background: getCategoryColor(selectedStore.category) + "15", color: getCategoryColor(selectedStore.category) }}
                     >
                       {getCategoryLabel(selectedStore.category)}
                     </span>
                     {selectedStore.rating && (
-                      <span className="flex items-center gap-0.5 text-[11px] font-semibold text-amber-500">
+                      <span className="flex items-center gap-0.5 text-[11px] font-bold text-amber-500">
                         <Star className="w-3 h-3 fill-current" />
                         {selectedStore.rating}
                       </span>
                     )}
                   </div>
                   {selectedStore.address && (
-                    <p className="text-[11px] mt-1 truncate flex items-center gap-1 text-muted-foreground">
+                    <p className="text-[11px] mt-1.5 truncate flex items-center gap-1 text-muted-foreground">
                       <MapPin className="w-3 h-3 shrink-0" />
                       {selectedStore.address}
                     </p>
                   )}
                 </div>
-                <ChevronRight className="w-5 h-5 shrink-0 text-muted-foreground/50" />
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <ChevronRight className="w-4 h-4 text-primary" />
+                </div>
               </div>
-              <div className="flex border-t border-border/30">
+              <div className="flex border-t border-border/20">
                 <button
-                  className="flex-1 py-3 text-[12px] font-semibold text-center text-primary"
+                  className="flex-1 py-3.5 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors"
                   onClick={(e) => { e.stopPropagation(); navigate(`/store/${selectedStore.slug}`); }}
                 >
                   View Store
                 </button>
                 {selectedStore.hours && (
                   <>
-                    <div className="w-px bg-border/30" />
-                    <div className="flex-1 py-3 flex items-center justify-center gap-1.5">
-                      <Clock className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-[11px] text-muted-foreground">{selectedStore.hours}</span>
+                    <div className="w-px bg-border/20" />
+                    <div className="flex-1 py-3.5 flex items-center justify-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-[11px] font-medium text-muted-foreground">{selectedStore.hours}</span>
                     </div>
                   </>
                 )}
