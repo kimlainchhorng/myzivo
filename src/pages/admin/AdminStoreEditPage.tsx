@@ -277,14 +277,18 @@ export default function AdminStoreEditPage() {
 
   const savePost = useMutation({
     mutationFn: async () => {
+      console.log("[SavePost] starting save", { postMediaUrls, hasPendingPostUploads, postMediaItems, postMediaMode });
       if (postMediaUrls.length === 0) throw new Error("Add at least one picture or video");
       if (hasPendingPostUploads) throw new Error("Please wait for media upload to finish");
-      const { data, error } = await supabase.from("store_posts").insert({
+      const insertPayload = {
         store_id: storeId!,
         caption: postCaption || null,
         media_urls: postMediaUrls,
         media_type: postMediaMode === "video" ? "video" : "image",
-      } as any);
+      };
+      console.log("[SavePost] inserting:", JSON.stringify(insertPayload));
+      const { data, error } = await supabase.from("store_posts").insert(insertPayload as any).select();
+      console.log("[SavePost] result:", { data, error });
       if (error) throw error;
       return data;
     },
