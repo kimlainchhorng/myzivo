@@ -658,8 +658,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
       setDestinationDisplay(initialDestinationAddress);
       setMapPanTarget({ lat: initialDestLat, lng: initialDestLng });
       setPickupConfirmed(true);
-      setDestConfirmed(true);
-      setViewStep("confirmRide");
+      setViewStep("ride-options");
       setPinPlacementMode(null);
       return;
     }
