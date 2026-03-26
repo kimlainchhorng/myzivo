@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Trash2 } from "lucide-react";
 
 interface ReelPreviewCardProps {
@@ -7,12 +6,9 @@ interface ReelPreviewCardProps {
   onRemove: () => void;
 }
 
-const ReelPreviewCard = React.forwardRef<HTMLDivElement, ReelPreviewCardProps>(function ReelPreviewCard(
-  { url, isVideo, onRemove },
-  ref,
-) {
+export default function ReelPreviewCard({ url, isVideo, onRemove }: ReelPreviewCardProps) {
   return (
-    <div ref={ref} className="relative group">
+    <div className="relative group">
       {isVideo ? (
         <video
           src={url}
@@ -43,6 +39,4 @@ const ReelPreviewCard = React.forwardRef<HTMLDivElement, ReelPreviewCardProps>(f
       </button>
     </div>
   );
-});
-
-export default ReelPreviewCard;
+}
