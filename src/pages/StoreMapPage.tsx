@@ -315,15 +315,16 @@ export default function StoreMapPage() {
       const pos = { lat: store.latitude, lng: store.longitude };
       bounds.extend(pos);
       const color = getCategoryColor(store.category);
+      const bg = getCategoryBg(store.category);
 
-      // Create marker with fallback icon first
+      // Create marker with category-styled icon
       const marker = new google.maps.Marker({
         map: mapRef.current!,
         position: pos,
         icon: {
-          url: makeMarkerIcon(getCategoryIcon(store.category), color),
-          scaledSize: new google.maps.Size(40, 49),
-          anchor: new google.maps.Point(20, 49),
+          url: makeMarkerIcon(getCategoryIcon(store.category), color, bg),
+          scaledSize: new google.maps.Size(36, 43),
+          anchor: new google.maps.Point(18, 43),
         },
         title: store.name,
         animation: google.maps.Animation.DROP,
@@ -332,11 +333,11 @@ export default function StoreMapPage() {
 
       // If store has a logo, replace with logo marker
       if (store.logo_url) {
-        createLogoMarkerCanvas(store.logo_url, color, (dataUrl) => {
+        createLogoMarkerCanvas(store.logo_url, color, bg, (dataUrl) => {
           marker.setIcon({
             url: dataUrl,
-            scaledSize: new google.maps.Size(44, 54),
-            anchor: new google.maps.Point(22, 54),
+            scaledSize: new google.maps.Size(36, 43),
+            anchor: new google.maps.Point(18, 43),
           });
         });
       }
