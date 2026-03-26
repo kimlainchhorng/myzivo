@@ -1023,7 +1023,8 @@ export default function AdminStoreEditPage() {
                               className="w-full h-full object-contain"
                               controls
                               playsInline
-                              preload="metadata"
+                              preload="auto"
+                              crossOrigin="anonymous"
                             />
                           )}
                           {post.media_urls?.length > 1 && (
@@ -1526,7 +1527,7 @@ export default function AdminStoreEditPage() {
                           src={preview.previewUrl}
                           controls
                           playsInline
-                          preload="metadata"
+                          preload="auto"
                           className="w-full rounded-lg bg-muted"
                           style={{ aspectRatio: "9 / 16", maxHeight: 320 }}
                         />
