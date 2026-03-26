@@ -1,3 +1,4 @@
+import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
