@@ -1,5 +1,5 @@
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Handshake, Plane, Hotel, Car, DollarSign, BarChart3, Users, CheckCircle, ChevronRight, Mail, Building2, Globe, Sparkles, ArrowRight, Shield, Star, TrendingUp, UserPlus } from "lucide-react";
+import { ArrowLeft, Handshake, Plane, Hotel, Car, DollarSign, BarChart3, Users, CheckCircle, ChevronRight, Mail, Building2, Globe, Sparkles, ArrowRight, Shield, Star, TrendingUp, UserPlus, Store, UtensilsCrossed, Truck, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
