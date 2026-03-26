@@ -860,6 +860,80 @@ export default function AdminStoreEditPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Posts Tab */}
+          <TabsContent value="posts">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">{t("admin.store.posts")}</CardTitle>
+                <Button size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostDialog(true); }} className="gap-1.5">
+                  <Plus className="h-4 w-4" /> {t("admin.store.add_post")}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {loadingPosts ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : posts.length === 0 ? (
+                  <div className="text-center py-12 space-y-3">
+                    <ImagePlus className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+                    <p className="text-muted-foreground">{t("admin.store.no_posts")}</p>
+                    <p className="text-xs text-muted-foreground/60">{t("admin.store.no_posts_desc")}</p>
+                    <Button variant="outline" size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostDialog(true); }} className="gap-1.5">
+                      <Plus className="h-4 w-4" /> {t("admin.store.add_post")}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {posts.map((post: any) => (
+                      <div key={post.id} className="rounded-xl border border-border overflow-hidden bg-card group">
+                        {/* Media preview */}
+                        <div className="aspect-square relative bg-muted overflow-hidden">
+                          {post.media_urls?.[0] && (
+                            isVideoUrl(post.media_urls[0]) ? (
+                              <video src={post.media_urls[0]} className="w-full h-full object-cover" muted />
+                            ) : (
+                              <img src={post.media_urls[0]} alt="" className="w-full h-full object-cover" />
+                            )
+                          )}
+                          {post.media_urls?.length > 1 && (
+                            <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                              +{post.media_urls.length - 1}
+                            </div>
+                          )}
+                          {post.media_type === "video" || post.media_type === "mixed" ? (
+                            <div className="absolute bottom-2 left-2">
+                              <Video className="h-4 w-4 text-white drop-shadow-md" />
+                            </div>
+                          ) : null}
+                        </div>
+                        {/* Caption & actions */}
+                        <div className="p-3 space-y-2">
+                          {post.caption && (
+                            <p className="text-sm text-foreground line-clamp-2">{post.caption}</p>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(post.created_at).toLocaleDateString()}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-destructive hover:text-destructive"
+                              onClick={() => setDeletePostId(post.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
