@@ -36355,6 +36355,7 @@ export type Database = {
       }
       store_products: {
         Row: {
+          badge: string | null
           brand: string | null
           buy_quantity: number | null
           category: string | null
@@ -36379,6 +36380,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          badge?: string | null
           brand?: string | null
           buy_quantity?: number | null
           category?: string | null
@@ -36403,6 +36405,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          badge?: string | null
           brand?: string | null
           buy_quantity?: number | null
           category?: string | null
