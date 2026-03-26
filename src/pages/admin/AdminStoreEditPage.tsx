@@ -1084,7 +1084,19 @@ export default function AdminStoreEditPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Sort Order</Label>
-                <Input type="number" value={productForm.sort_order === 0 ? "0" : productForm.sort_order || ""} onChange={e => updateProductField("sort_order", e.target.value === "" ? "" : parseInt(e.target.value) || 0)} onBlur={e => { if (e.target.value === "") updateProductField("sort_order", 0); }} />
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  value={productForm.sort_order === 0 ? "0" : productForm.sort_order || ""}
+                  onChange={e => {
+                    const normalized = normalizeLocalizedNumberInput(e.target.value);
+                    const val = normalized.replace(/[^0-9]/g, "");
+                    updateProductField("sort_order", val === "" ? "" : parseInt(val, 10) || 0);
+                  }}
+                  onBlur={e => {
+                    if (e.target.value === "") updateProductField("sort_order", 0);
+                  }}
+                />
               </div>
               <div className="flex items-center gap-3 pt-6">
                 <Switch checked={productForm.in_stock} onCheckedChange={v => updateProductField("in_stock", v)} />
