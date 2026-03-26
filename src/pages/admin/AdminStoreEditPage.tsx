@@ -1080,9 +1080,11 @@ export default function AdminStoreEditPage() {
                               className="w-full h-full object-contain"
                               controls
                               playsInline
-                              preload="auto"
-                              crossOrigin="anonymous"
+                              preload="metadata"
                               onLoadedMetadata={(event) => {
+                                ensurePostVideoFrame(event.currentTarget);
+                              }}
+                              onLoadedData={(event) => {
                                 ensurePostVideoFrame(event.currentTarget);
                               }}
                             />
