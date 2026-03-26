@@ -209,6 +209,7 @@ export default function AdminStoreEditPage() {
       category: p.category || "",
       brand: p.brand || "",
       sku: p.sku || "",
+      unit: p.unit || "",
       in_stock: p.in_stock ?? true,
       sort_order: p.sort_order || 0,
       discount_type: p.discount_type || null,
