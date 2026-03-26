@@ -15,6 +15,7 @@ import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawe
 import { useState, useRef } from "react";
 import StoreHeroCarousel from "@/components/grocery/StoreHeroCarousel";
 import { toast } from "sonner";
+import { useI18n } from "@/hooks/useI18n";
 
 const container = {
   hidden: {},
@@ -48,6 +49,7 @@ export default function StoreProfilePage() {
   const [showCart, setShowCart] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
+  const { t } = useI18n();
 
   const { data: store, isLoading: loadingStore } = useStoreProfile(slug || "");
   const { data: products = [], isLoading: loadingProducts } = useStoreProducts(store?.id, selectedCategory);
@@ -61,7 +63,7 @@ export default function StoreProfilePage() {
       image: product.image_url || "",
       brand: product.brand || "",
     }, store?.name || "Store");
-    toast.success("Added to cart", { icon: "🛒" });
+    toast.success(t("store.added_to_cart"), { icon: "🛒" });
   };
 
   const toggleLike = (id: string) => {
@@ -86,7 +88,7 @@ export default function StoreProfilePage() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6">
         <Store className="h-12 w-12 text-muted-foreground/30" />
-        <p className="text-muted-foreground">Store not found</p>
+        <p className="text-muted-foreground">{t("store.not_found")}</p>
         <Button onClick={() => navigate("/grocery")} variant="outline">Back to Grocery</Button>
       </div>
     );
@@ -342,11 +344,11 @@ export default function StoreProfilePage() {
         <div className="flex items-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5 text-primary" />
           <h2 className="text-sm font-bold text-foreground">
-            {selectedCategory || "All Products"}
+            {selectedCategory || t("store.all_products")}
           </h2>
         </div>
         <span className="text-[10px] text-muted-foreground font-medium">
-          {products.length} items
+          {products.length} {t("store.items")}
         </span>
       </div>
 
@@ -359,7 +361,7 @@ export default function StoreProfilePage() {
         ) : products.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Package className="h-12 w-12 text-muted-foreground/20" />
-            <p className="text-sm text-muted-foreground">No products available yet</p>
+            <p className="text-sm text-muted-foreground">{t("store.no_products")}</p>
           </div>
         ) : (
           <motion.div
@@ -499,7 +501,7 @@ export default function StoreProfilePage() {
                               <Flame className="h-3 w-3 text-white drop-shadow-lg" />
                             </motion.div>
                             <span className="text-[9px] font-black text-white drop-shadow-md tracking-wide">
-                              {discountPct ? `-${discountPct}%` : "SALE"}
+                              {discountPct ? `-${discountPct}%` : t("store.sale")}
                             </span>
                           </div>
                           {/* Inner shine */}
@@ -524,7 +526,7 @@ export default function StoreProfilePage() {
                           />
                           <div className="relative flex items-center gap-1 z-10">
                             <span className="text-[9px] font-black text-white drop-shadow-md tracking-wide">
-                              BUY {p.buy_quantity} GET {p.get_quantity} FREE
+                              {t("store.buy_x_get_y").replace("{buy}", String(p.buy_quantity)).replace("{get}", String(p.get_quantity))}
                             </span>
                           </div>
                           <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-transparent rounded-xl pointer-events-none" />
@@ -625,7 +627,7 @@ export default function StoreProfilePage() {
 
                     {!product.in_stock && (
                       <div className="text-[8px] text-muted-foreground text-center py-1.5 rounded-xl bg-muted/10 backdrop-blur-sm font-semibold mt-1 uppercase tracking-wider">
-                        Out of Stock
+                        {t("store.out_of_stock")}
                       </div>
                     )}
                   </div>
@@ -653,7 +655,7 @@ export default function StoreProfilePage() {
               {/* Button shine */}
               <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-transparent pointer-events-none" />
               <ShoppingCart className="h-4.5 w-4.5 relative z-10" />
-              <span className="relative z-10">View Cart · {cart.itemCount} items · ${cart.total.toFixed(2)}</span>
+              <span className="relative z-10">{t("store.view_cart")} · {cart.itemCount} {t("store.items")} · ${cart.total.toFixed(2)}</span>
             </button>
           </motion.div>
         )}
