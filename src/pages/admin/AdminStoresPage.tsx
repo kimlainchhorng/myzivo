@@ -28,6 +28,7 @@ export default function AdminStoresPage() {
   const [editingStore, setEditingStore] = useState<any>(null);
   const [form, setForm] = useState(emptyStore);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
 
   const { data: stores = [], isLoading } = useQuery({
     queryKey: ["admin-stores"],
@@ -40,6 +41,14 @@ export default function AdminStoresPage() {
       return data;
     },
   });
+
+  // Derive used categories and filtered list
+  const usedCategories = STORE_CATEGORY_OPTIONS.filter(opt =>
+    stores.some((s: any) => s.category === opt.value)
+  );
+  const filteredStores = activeCategory === "all"
+    ? stores
+    : stores.filter((s: any) => s.category === activeCategory);
 
   const saveMutation = useMutation({
     mutationFn: async (values: typeof form & { id?: string }) => {
@@ -159,19 +168,45 @@ export default function AdminStoresPage() {
           </Card>
         </div>
 
+        {/* Category Filter */}
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant={activeCategory === "all" ? "default" : "outline"}
+            onClick={() => setActiveCategory("all")}
+            className="rounded-full"
+          >
+            All
+          </Button>
+          {usedCategories.map(cat => (
+            <Button
+              key={cat.value}
+              size="sm"
+              variant={activeCategory === cat.value ? "default" : "outline"}
+              onClick={() => setActiveCategory(cat.value)}
+              className="rounded-full"
+            >
+              {cat.label}
+            </Button>
+          ))}
+        </div>
+
         {/* Store List */}
         <Card>
           <CardHeader>
-            <CardTitle>All Stores</CardTitle>
+            <CardTitle>
+              {activeCategory === "all" ? "All Stores" : STORE_CATEGORY_OPTIONS.find(o => o.value === activeCategory)?.label || activeCategory}
+              <span className="ml-2 text-sm font-normal text-muted-foreground">({filteredStores.length})</span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <p className="text-muted-foreground text-center py-8">Loading stores...</p>
-            ) : stores.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No stores found. Add your first store to get started.</p>
+            ) : filteredStores.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No stores found in this category.</p>
             ) : (
               <div className="divide-y divide-border">
-                {stores.map((store: any) => (
+                {filteredStores.map((store: any) => (
                   <div key={store.id} className="flex items-center justify-between py-4">
                     <div className="flex items-center gap-4">
                       {store.logo_url ? (
