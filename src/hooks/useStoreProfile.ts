@@ -50,6 +50,8 @@ export function useStoreProfile(slug: string) {
       return data as StoreProfile | null;
     },
     enabled: !!slug,
+    staleTime: 30_000, // refetch after 30s so admin changes appear quickly
+    refetchOnWindowFocus: true,
   });
 }
 
