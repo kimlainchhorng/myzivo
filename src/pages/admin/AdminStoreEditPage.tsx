@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus } from "lucide-react";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import StoreMapPicker from "@/components/admin/StoreMapPicker";
@@ -97,6 +97,20 @@ export default function AdminStoreEditPage() {
     enabled: !!storeId,
   });
 
+  const { data: posts = [], isLoading: loadingPosts } = useQuery({
+    queryKey: ["admin-store-posts", storeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_posts")
+        .select("*")
+        .eq("store_id", storeId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!storeId,
+  });
+
   const existingCategories = [...new Set(products.map((p: any) => p.category).filter(Boolean))] as string[];
 
   // Derive saved brands/categories from existing products
@@ -164,12 +178,87 @@ export default function AdminStoreEditPage() {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  // Post state
+  const [postDialog, setPostDialog] = useState(false);
+  const [postCaption, setPostCaption] = useState("");
+  const [postMediaUrls, setPostMediaUrls] = useState<string[]>([]);
+  const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const postMediaInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (store) {
       setGalleryImages((store as any).gallery_images || []);
     }
   }, [store]);
+
+  const uploadPostMedia = async (file: File) => {
+    if (postMediaUrls.length >= 10) {
+      toast.error("Maximum 10 files per post");
+      return;
+    }
+    setUploadingPostMedia(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `posts/${storeId}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("store-posts").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
+      setPostMediaUrls(prev => [...prev, urlData.publicUrl]);
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      setUploadingPostMedia(false);
+    }
+  };
+
+  const removePostMedia = (index: number) => {
+    setPostMediaUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const isVideoUrl = (url: string) => /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
+
+  const getMediaType = (urls: string[]): string => {
+    const hasVideo = urls.some(isVideoUrl);
+    const hasImage = urls.some(u => !isVideoUrl(u));
+    if (hasVideo && hasImage) return "mixed";
+    if (hasVideo) return "video";
+    return "image";
+  };
+
+  const savePost = useMutation({
+    mutationFn: async () => {
+      if (postMediaUrls.length === 0) throw new Error("Add at least one picture or video");
+      const { error } = await supabase.from("store_posts").insert({
+        store_id: storeId!,
+        caption: postCaption || null,
+        media_urls: postMediaUrls,
+        media_type: getMediaType(postMediaUrls),
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
+      setPostDialog(false);
+      setPostCaption("");
+      setPostMediaUrls([]);
+      toast.success("Post created!");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deletePost = useMutation({
+    mutationFn: async (postId: string) => {
+      const { error } = await supabase.from("store_posts").delete().eq("id", postId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
+      setDeletePostId(null);
+      toast.success("Post deleted");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
 
   const uploadProductImage = async (file: File) => {
     const currentImages = productForm.image_urls || [];
@@ -559,6 +648,7 @@ export default function AdminStoreEditPage() {
           <TabsList>
              <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
             <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> {t("admin.store.products")} ({products.length})</TabsTrigger>
+            <TabsTrigger value="posts" className="gap-1.5"><ImagePlus className="h-3.5 w-3.5" /> {t("admin.store.posts")} ({posts.length})</TabsTrigger>
           </TabsList>
 
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-card">
@@ -762,6 +852,80 @@ export default function AdminStoreEditPage() {
                           <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setDeleteProductId(product.id)}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Posts Tab */}
+          <TabsContent value="posts">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">{t("admin.store.posts")}</CardTitle>
+                <Button size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostDialog(true); }} className="gap-1.5">
+                  <Plus className="h-4 w-4" /> {t("admin.store.add_post")}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {loadingPosts ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : posts.length === 0 ? (
+                  <div className="text-center py-12 space-y-3">
+                    <ImagePlus className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+                    <p className="text-muted-foreground">{t("admin.store.no_posts")}</p>
+                    <p className="text-xs text-muted-foreground/60">{t("admin.store.no_posts_desc")}</p>
+                    <Button variant="outline" size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostDialog(true); }} className="gap-1.5">
+                      <Plus className="h-4 w-4" /> {t("admin.store.add_post")}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {posts.map((post: any) => (
+                      <div key={post.id} className="rounded-xl border border-border overflow-hidden bg-card group">
+                        {/* Media preview */}
+                        <div className="aspect-square relative bg-muted overflow-hidden">
+                          {post.media_urls?.[0] && (
+                            isVideoUrl(post.media_urls[0]) ? (
+                              <video src={post.media_urls[0]} className="w-full h-full object-cover" muted />
+                            ) : (
+                              <img src={post.media_urls[0]} alt="" className="w-full h-full object-cover" />
+                            )
+                          )}
+                          {post.media_urls?.length > 1 && (
+                            <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                              +{post.media_urls.length - 1}
+                            </div>
+                          )}
+                          {post.media_type === "video" || post.media_type === "mixed" ? (
+                            <div className="absolute bottom-2 left-2">
+                              <Video className="h-4 w-4 text-white drop-shadow-md" />
+                            </div>
+                          ) : null}
+                        </div>
+                        {/* Caption & actions */}
+                        <div className="p-3 space-y-2">
+                          {post.caption && (
+                            <p className="text-sm text-foreground line-clamp-2">{post.caption}</p>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(post.created_at).toLocaleDateString()}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-destructive hover:text-destructive"
+                              onClick={() => setDeletePostId(post.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -1209,6 +1373,100 @@ export default function AdminStoreEditPage() {
             <Button variant="outline" onClick={() => setDeleteProductId(null)}>Cancel</Button>
             <Button variant="destructive" onClick={() => deleteProductId && deleteProduct.mutate(deleteProductId)} disabled={deleteProduct.isPending}>
               {deleteProduct.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Post Dialog */}
+      <Dialog open={postDialog} onOpenChange={setPostDialog}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("admin.store.add_post")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>{t("admin.store.post_caption")}</Label>
+              <Textarea
+                value={postCaption}
+                onChange={e => setPostCaption(e.target.value)}
+                placeholder={t("admin.store.post_caption_placeholder")}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("admin.store.post_media")}</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {postMediaUrls.map((url, i) => (
+                  <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                    {isVideoUrl(url) ? (
+                      <video src={url} className="w-full h-full object-cover" muted />
+                    ) : (
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                    )}
+                    <button
+                      onClick={() => removePostMedia(i)}
+                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                {postMediaUrls.length < 10 && (
+                  <button
+                    onClick={() => postMediaInputRef.current?.click()}
+                    disabled={uploadingPostMedia}
+                    className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                  >
+                    {uploadingPostMedia ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Camera className="h-5 w-5" />
+                        <span className="text-[10px]">Add</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+              <input
+                ref={postMediaInputRef}
+                type="file"
+                accept="image/*,video/*"
+                className="hidden"
+                onChange={e => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadPostMedia(f);
+                  e.target.value = "";
+                }}
+              />
+              <p className="text-[10px] text-muted-foreground">Supports images (JPG, PNG) and videos (MP4, MOV). Max 10 files.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPostDialog(false)}>Cancel</Button>
+            <Button
+              onClick={() => savePost.mutate()}
+              disabled={savePost.isPending || postMediaUrls.length === 0}
+            >
+              {savePost.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+              {savePost.isPending ? "Posting..." : t("admin.store.add_post")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Post Confirmation */}
+      <Dialog open={!!deletePostId} onOpenChange={() => setDeletePostId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("admin.store.delete_post")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground">Are you sure? This cannot be undone.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletePostId(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => deletePostId && deletePost.mutate(deletePostId)} disabled={deletePost.isPending}>
+              {deletePost.isPending ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
