@@ -82,6 +82,8 @@ export default function AdminStoreEditPage() {
     enabled: !!storeId,
   });
 
+  const existingCategories = [...new Set(products.map((p: any) => p.category).filter(Boolean))] as string[];
+
   const [form, setForm] = useState({
     name: "", slug: "", description: "", logo_url: "", banner_url: "",
     market: "", category: "", address: "", phone: "", hours: "",
