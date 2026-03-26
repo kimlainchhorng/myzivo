@@ -1472,20 +1472,32 @@ export default function AdminStoreEditPage() {
             </div>
             <div className="space-y-2">
               <Label>{t("admin.store.post_media")}</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className={cn(
+                postMediaMode === "video"
+                  ? "flex flex-wrap items-start gap-3"
+                  : "grid grid-cols-3 gap-2"
+              )}>
                 {postMediaPreviews.map((preview, i) => (
-                  <ReelPreviewCard
+                  <div
                     key={`${preview.url}-${i}`}
-                    url={preview.url}
-                    isVideo={preview.isVideo}
-                    onRemove={() => removePostMedia(i)}
-                  />
+                    className={cn(postMediaMode === "video" && "w-[11rem] sm:w-[12rem]")}
+                  >
+                    <ReelPreviewCard
+                      url={preview.url}
+                      isVideo={preview.isVideo}
+                      onRemove={() => removePostMedia(i)}
+                    />
+                  </div>
                 ))}
                 {postMediaUrls.length < 10 && (
                   <button
                     onClick={() => postMediaInputRef.current?.click()}
                     disabled={uploadingPostMedia}
-                    className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                    className={cn(
+                      "rounded-lg border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer",
+                      postMediaMode === "video" ? "w-[11rem] sm:w-[12rem]" : "aspect-square"
+                    )}
+                    style={postMediaMode === "video" ? { aspectRatio: "9 / 16" } : undefined}
                   >
                     {uploadingPostMedia ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
