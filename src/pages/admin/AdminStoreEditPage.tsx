@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import { useState, useEffect, useRef } from "react";
@@ -38,6 +38,7 @@ const emptyProduct = {
   brand: "", sku: "", in_stock: true, sort_order: 0,
   discount_type: null as string | null, discount_value: null as number | null,
   discount_price_khr: null as number | null, discount_expires_at: "" as string,
+  buy_quantity: 1, get_quantity: 0,
 };
 
 export default function AdminStoreEditPage() {
@@ -198,6 +199,8 @@ export default function AdminStoreEditPage() {
       discount_value: p.discount_value || null,
       discount_price_khr: p.discount_price_khr || null,
       discount_expires_at: p.discount_expires_at || "",
+      buy_quantity: p.buy_quantity || 1,
+      get_quantity: p.get_quantity || 0,
     });
     setProductDialog(true);
   };
@@ -214,6 +217,8 @@ export default function AdminStoreEditPage() {
         discount_value: rest.discount_value || null,
         discount_price_khr: rest.discount_price_khr || null,
         discount_expires_at: rest.discount_expires_at || null,
+        buy_quantity: rest.discount_type === "bogo" ? (rest.buy_quantity || 1) : 1,
+        get_quantity: rest.discount_type === "bogo" ? (rest.get_quantity || 0) : 0,
       };
 
       if (editingProduct) {
@@ -879,13 +884,15 @@ export default function AdminStoreEditPage() {
                       updateProductField("discount_value", null);
                       updateProductField("discount_price_khr", null);
                       updateProductField("discount_expires_at", "");
+                      updateProductField("buy_quantity", 1);
+                      updateProductField("get_quantity", 0);
                     }
                   }}
                 />
               </div>
               {productForm.discount_type && (
                 <div className="space-y-3">
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5">
                     <Button
                       type="button"
                       size="sm"
@@ -893,13 +900,11 @@ export default function AdminStoreEditPage() {
                       className="flex-1 gap-1 text-xs"
                       onClick={() => {
                         updateProductField("discount_type", "percentage");
-                        // Recalc
                         const val = productForm.discount_value || 0;
-                        const discounted = Math.round((productForm.price_khr || 0) * (1 - val / 100));
-                        updateProductField("discount_price_khr", discounted);
+                        updateProductField("discount_price_khr", Math.round((productForm.price_khr || 0) * (1 - val / 100)));
                       }}
                     >
-                      <Percent className="h-3 w-3" /> Percentage
+                      <Percent className="h-3 w-3" /> %
                     </Button>
                     <Button
                       type="button"
@@ -909,55 +914,109 @@ export default function AdminStoreEditPage() {
                       onClick={() => {
                         updateProductField("discount_type", "fixed");
                         const val = productForm.discount_value || 0;
-                        const discounted = Math.max(0, (productForm.price_khr || 0) - val);
-                        updateProductField("discount_price_khr", discounted);
+                        updateProductField("discount_price_khr", Math.max(0, (productForm.price_khr || 0) - val));
                       }}
                     >
-                      <DollarSign className="h-3 w-3" /> Fixed Amount
+                      <DollarSign className="h-3 w-3" /> Fixed
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={productForm.discount_type === "bogo" ? "default" : "outline"}
+                      className="flex-1 gap-1 text-xs"
+                      onClick={() => {
+                        updateProductField("discount_type", "bogo");
+                        updateProductField("discount_value", null);
+                        updateProductField("discount_price_khr", null);
+                        updateProductField("buy_quantity", 1);
+                        updateProductField("get_quantity", 1);
+                      }}
+                    >
+                      <Gift className="h-3 w-3" /> Buy X Get Y
                     </Button>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs">
-                        {productForm.discount_type === "percentage" ? "Discount %" : "Discount ៛ KHR"}
-                      </Label>
-                      <Input
-                        type="number"
-                        step={productForm.discount_type === "percentage" ? "1" : "100"}
-                        value={productForm.discount_value || ""}
-                        onChange={e => {
-                          const val = parseFloat(e.target.value) || 0;
-                          updateProductField("discount_value", val);
-                          const origKhr = productForm.price_khr || 0;
-                          if (productForm.discount_type === "percentage") {
-                            updateProductField("discount_price_khr", Math.round(origKhr * (1 - val / 100)));
-                          } else {
-                            updateProductField("discount_price_khr", Math.max(0, origKhr - val));
-                          }
-                        }}
-                        placeholder={productForm.discount_type === "percentage" ? "e.g. 10" : "e.g. 500"}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Sale Price ៛</Label>
-                      <Input
-                        type="number"
-                        value={productForm.discount_price_khr || ""}
-                        readOnly
-                        className="bg-muted/50 font-bold text-primary"
-                      />
-                    </div>
-                  </div>
-                  {/* Preview */}
-                  {(productForm.discount_value || 0) > 0 && (
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="line-through text-muted-foreground">៛{(productForm.price_khr || 0).toLocaleString()}</span>
-                      <span className="font-bold text-primary">→ ៛{(productForm.discount_price_khr || 0).toLocaleString()}</span>
-                      {productForm.discount_type === "percentage" && (
-                        <Badge variant="secondary" className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">
-                          -{productForm.discount_value}%
-                        </Badge>
+
+                  {/* Percentage / Fixed fields */}
+                  {(productForm.discount_type === "percentage" || productForm.discount_type === "fixed") && (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">
+                            {productForm.discount_type === "percentage" ? "Discount %" : "Discount ៛ KHR"}
+                          </Label>
+                          <Input
+                            type="number"
+                            min="0"
+                            step={productForm.discount_type === "percentage" ? "1" : "100"}
+                            value={productForm.discount_value || ""}
+                            onChange={e => {
+                              const val = parseFloat(e.target.value) || 0;
+                              updateProductField("discount_value", val);
+                              const origKhr = productForm.price_khr || 0;
+                              if (productForm.discount_type === "percentage") {
+                                updateProductField("discount_price_khr", Math.round(origKhr * (1 - val / 100)));
+                              } else {
+                                updateProductField("discount_price_khr", Math.max(0, origKhr - val));
+                              }
+                            }}
+                            placeholder={productForm.discount_type === "percentage" ? "e.g. 10" : "e.g. 500"}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Sale Price ៛</Label>
+                          <Input
+                            type="number"
+                            value={productForm.discount_price_khr || ""}
+                            readOnly
+                            className="bg-muted/50 font-bold text-primary"
+                          />
+                        </div>
+                      </div>
+                      {(productForm.discount_value || 0) > 0 && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="line-through text-muted-foreground">៛{(productForm.price_khr || 0).toLocaleString()}</span>
+                          <span className="font-bold text-primary">→ ៛{(productForm.discount_price_khr || 0).toLocaleString()}</span>
+                          {productForm.discount_type === "percentage" && (
+                            <Badge variant="secondary" className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">
+                              -{productForm.discount_value}%
+                            </Badge>
+                          )}
+                        </div>
                       )}
+                    </>
+                  )}
+
+                  {/* BOGO fields */}
+                  {productForm.discount_type === "bogo" && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Buy Quantity</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={productForm.buy_quantity === 0 ? "" : productForm.buy_quantity}
+                            onChange={e => updateProductField("buy_quantity", parseInt(e.target.value) || 1)}
+                            placeholder="e.g. 2"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Get Free</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={productForm.get_quantity === 0 ? "" : productForm.get_quantity}
+                            onChange={e => updateProductField("get_quantity", parseInt(e.target.value) || 1)}
+                            placeholder="e.g. 1"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                          <Gift className="h-3 w-3 mr-1" />
+                          Buy {productForm.buy_quantity} Get {productForm.get_quantity} Free
+                        </Badge>
+                      </div>
                     </div>
                   )}
                   <div className="space-y-1">
