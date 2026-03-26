@@ -234,7 +234,7 @@ export default function AdminStoreEditPage() {
         store_id: storeId!,
         caption: postCaption || null,
         media_urls: postMediaUrls,
-        media_type: getMediaType(postMediaUrls),
+        media_type: postMediaMode === "video" ? "video" : "image",
       } as any);
       if (error) throw error;
     },
