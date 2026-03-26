@@ -185,6 +185,10 @@ export default function AdminStoreEditPage() {
       sku: p.sku || "",
       in_stock: p.in_stock ?? true,
       sort_order: p.sort_order || 0,
+      discount_type: p.discount_type || null,
+      discount_value: p.discount_value || null,
+      discount_price_khr: p.discount_price_khr || null,
+      discount_expires_at: p.discount_expires_at || "",
     });
     setProductDialog(true);
   };
