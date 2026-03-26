@@ -229,33 +229,33 @@ export default function StoreProfilePage() {
             </div>
           </div>
 
-          {/* Contact buttons */}
-          <div className="flex gap-2 mt-3 pt-3 border-t border-white/[0.05]">
+          {/* Contact - full vertical layout */}
+          <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-white/[0.05]">
             {store.address && (
               <button
                 onClick={() => navigate(`/rides?destination=${encodeURIComponent(store.address)}`)}
-                className="flex-1 flex items-center gap-2 p-2.5 rounded-2xl bg-primary/[0.06] border border-primary/10 hover:bg-primary/10 transition-all text-left group active:scale-[0.97]"
+                className="flex items-center gap-2.5 w-full p-2.5 rounded-2xl bg-primary/[0.06] border border-primary/10 hover:bg-primary/10 transition-all text-left group active:scale-[0.97]"
               >
-                <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <MapPin className="h-3.5 w-3.5 text-primary" />
+                <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <MapPin className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[9px] font-semibold text-primary uppercase tracking-wider">Ride there</p>
-                  <p className="text-[10px] text-foreground truncate">{store.address}</p>
+                  <p className="text-[9px] font-semibold text-primary uppercase tracking-wider">Address · Tap to ride</p>
+                  <p className="text-[11px] text-foreground leading-snug">{store.address}</p>
                 </div>
               </button>
             )}
             {store.phone && (
               <a
                 href={`tel:${store.phone.replace(/\s+/g, "")}`}
-                className="flex items-center gap-2 p-2.5 rounded-2xl bg-emerald-500/[0.06] border border-emerald-500/10 hover:bg-emerald-500/10 transition-all group active:scale-[0.97] shrink-0"
+                className="flex items-center gap-2.5 w-full p-2.5 rounded-2xl bg-emerald-500/[0.06] border border-emerald-500/10 hover:bg-emerald-500/10 transition-all group active:scale-[0.97]"
               >
-                <div className="h-8 w-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                  <Phone className="h-3.5 w-3.5 text-emerald-500" />
+                <div className="h-9 w-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <Phone className="h-4 w-4 text-emerald-500" />
                 </div>
-                <div>
-                  <p className="text-[9px] font-semibold text-emerald-600 uppercase tracking-wider">Call</p>
-                  <p className="text-[10px] text-foreground font-medium">{store.phone}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-semibold text-emerald-600 uppercase tracking-wider">Call Store</p>
+                  <p className="text-[11px] text-foreground font-medium">{store.phone}</p>
                 </div>
               </a>
             )}
