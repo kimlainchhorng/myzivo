@@ -106,11 +106,9 @@ const ZivoMobileNav = () => {
               <span className={cn(
                 "text-[11px] leading-none transition-all duration-200",
                 isActive
-                  ? "font-semibold"
+                  ? "font-semibold text-primary"
                   : "font-medium text-muted-foreground"
-              )}
-              style={isActive ? { color: `hsl(${tab.cssVar})`, textShadow: `0 0 8px hsl(${tab.cssVar} / 0.3)` } : undefined}
-              >
+              )}>
                 {t(tab.labelKey)}
               </span>
             </button>
