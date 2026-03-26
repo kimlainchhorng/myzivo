@@ -962,7 +962,7 @@ export default function AdminStoreEditPage() {
                       <div key={post.id} className="rounded-xl border border-border overflow-hidden bg-card group">
                         <div className="aspect-square relative bg-muted overflow-hidden">
                           {post.media_urls?.[0] && (
-                            <img src={post.media_urls[0]} alt="" className="w-full h-full object-cover" />
+                            <img src={normalizeStorePostMediaUrl(post.media_urls[0])} alt="" className="w-full h-full object-cover" />
                           )}
                           {post.media_urls?.length > 1 && (
                             <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground text-xs font-medium px-2 py-0.5 rounded-full">
