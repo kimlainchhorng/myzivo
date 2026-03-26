@@ -4,7 +4,7 @@
  */
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -403,10 +403,66 @@ export default function StoreProfilePage() {
                     </AnimatePresence>
 
                     {/* Category chip */}
-                    {product.category && (
+                    {product.category && !hasDiscount && (
                       <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-background/60 backdrop-blur-xl border border-white/10 z-20">
                         <span className="text-[7px] font-bold text-foreground/70 uppercase tracking-wider">{product.category}</span>
                       </div>
+                    )}
+
+                    {/* 🔥 3D Fire Discount Badge */}
+                    {hasDiscount && (
+                      <motion.div
+                        initial={{ scale: 0, rotate: -20 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        className="absolute bottom-1.5 left-1.5 z-20"
+                        style={{ transformStyle: "preserve-3d", transform: "translateZ(30px)" }}
+                      >
+                        <div className="relative px-2.5 py-1 rounded-xl overflow-hidden">
+                          {/* Fire background layers */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-red-700 via-orange-500 to-yellow-400 rounded-xl" />
+                          <motion.div
+                            animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.05, 1] }}
+                            transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute inset-0 bg-gradient-to-t from-red-600/80 via-orange-400/60 to-yellow-300/40 rounded-xl blur-[1px]"
+                          />
+                          {/* Fire glow */}
+                          <motion.div
+                            animate={{ opacity: [0.3, 0.7, 0.3], y: [-1, 1, -1] }}
+                            transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute -inset-1 bg-orange-500/30 rounded-xl blur-md"
+                          />
+                          {/* Flame particles */}
+                          <motion.div
+                            animate={{ y: [-2, -8], opacity: [1, 0], scale: [1, 0.5] }}
+                            transition={{ duration: 0.7, repeat: Infinity, ease: "easeOut" }}
+                            className="absolute -top-1 left-1 w-1.5 h-1.5 rounded-full bg-yellow-300"
+                          />
+                          <motion.div
+                            animate={{ y: [-2, -10], opacity: [0.8, 0], scale: [1, 0.3] }}
+                            transition={{ duration: 0.9, repeat: Infinity, ease: "easeOut", delay: 0.3 }}
+                            className="absolute -top-0.5 right-2 w-1 h-1 rounded-full bg-orange-300"
+                          />
+                          <motion.div
+                            animate={{ y: [-1, -6], opacity: [0.7, 0], scale: [1, 0.4] }}
+                            transition={{ duration: 0.6, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
+                            className="absolute -top-1 left-1/2 w-1 h-1 rounded-full bg-yellow-200"
+                          />
+                          {/* Content */}
+                          <div className="relative flex items-center gap-1 z-10">
+                            <motion.div
+                              animate={{ rotate: [-5, 5, -5], scale: [1, 1.15, 1] }}
+                              transition={{ duration: 0.5, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                              <Flame className="h-3 w-3 text-white drop-shadow-lg" />
+                            </motion.div>
+                            <span className="text-[9px] font-black text-white drop-shadow-md tracking-wide">
+                              {discountPct ? `-${discountPct}%` : "SALE"}
+                            </span>
+                          </div>
+                          {/* Inner shine */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent rounded-xl pointer-events-none" />
+                        </div>
+                      </motion.div>
                     )}
                   </div>
 
@@ -427,12 +483,30 @@ export default function StoreProfilePage() {
                     {/* Price row */}
                     <div className="flex items-end justify-between">
                       <div>
-                        <span className="text-base font-black text-foreground tracking-tight leading-none block">
-                          ៛{khrPrice.toLocaleString()}
-                        </span>
-                        <span className="text-[11px] font-medium text-muted-foreground/60 block mt-0.5">
-                          ${product.price.toFixed(2)}
-                        </span>
+                        {hasDiscount ? (
+                          <>
+                            <span className="text-base font-black text-destructive tracking-tight leading-none block">
+                              ៛{discountKhr.toLocaleString()}
+                            </span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[10px] font-medium text-muted-foreground/50 line-through">
+                                ៛{khrPrice.toLocaleString()}
+                              </span>
+                              <span className="text-[9px] font-medium text-muted-foreground/50">
+                                ${discountUsd?.toFixed(2)}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-base font-black text-foreground tracking-tight leading-none block">
+                              ៛{khrPrice.toLocaleString()}
+                            </span>
+                            <span className="text-[11px] font-medium text-muted-foreground/60 block mt-0.5">
+                              ${product.price.toFixed(2)}
+                            </span>
+                          </>
+                        )}
                       </div>
                       
                       {/* Add button - 3D floating */}
