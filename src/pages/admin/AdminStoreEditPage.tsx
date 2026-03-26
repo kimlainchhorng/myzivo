@@ -761,10 +761,16 @@ export default function AdminStoreEditPage() {
                 <Input
                   type="number"
                   step="100"
-                  value={productForm.price_khr || ""}
+                  min="0"
+                  value={productForm.price_khr === 0 ? "" : productForm.price_khr}
                   onChange={e => {
                     const val = e.target.value;
-                    const khr = val === "" ? 0 : parseInt(val) || 0;
+                    if (val === "") {
+                      updateProductField("price_khr", 0);
+                      updateProductField("price", 0);
+                      return;
+                    }
+                    const khr = parseInt(val) || 0;
                     updateProductField("price_khr", khr);
                     updateProductField("price", parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)));
                   }}
@@ -777,10 +783,16 @@ export default function AdminStoreEditPage() {
                 <Input
                   type="number"
                   step="0.01"
-                  value={productForm.price}
+                  min="0"
+                  value={productForm.price === 0 ? "" : productForm.price}
                   onChange={e => {
                     const val = e.target.value;
-                    const num = val === "" ? 0 : parseFloat(val) || 0;
+                    if (val === "") {
+                      updateProductField("price", 0);
+                      updateProductField("price_khr", 0);
+                      return;
+                    }
+                    const num = parseFloat(val) || 0;
                     updateProductField("price", num);
                     updateProductField("price_khr", Math.round(num * (form.khr_rate || 4062.5)));
                   }}
