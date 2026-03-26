@@ -507,6 +507,30 @@ export default function StoreProfilePage() {
                         </div>
                       </motion.div>
                     )}
+
+                    {/* BOGO Badge */}
+                    {hasBogo && (
+                      <motion.div
+                        initial={{ scale: 0, rotate: -10 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        className="absolute bottom-1.5 left-1.5 z-20"
+                      >
+                        <div className="relative px-2.5 py-1 rounded-xl overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 rounded-xl" />
+                          <motion.div
+                            animate={{ opacity: [0.5, 0.9, 0.5] }}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute inset-0 bg-gradient-to-r from-emerald-400/40 via-teal-400/30 to-emerald-400/40 rounded-xl blur-[1px]"
+                          />
+                          <div className="relative flex items-center gap-1 z-10">
+                            <span className="text-[9px] font-black text-white drop-shadow-md tracking-wide">
+                              BUY {p.buy_quantity} GET {p.get_quantity} FREE
+                            </span>
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-transparent rounded-xl pointer-events-none" />
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
 
                   {/* Info section */}
