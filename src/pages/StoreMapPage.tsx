@@ -81,15 +81,31 @@ const LIGHT_MAP_STYLES: google.maps.MapTypeStyle[] = [
 ];
 
 const CATEGORY_ICONS: Record<string, string> = {
-  "food-market": "🛒", "restaurant": "🍽️", "fashion-market": "👗",
-  "drink": "🥤", "mall": "🏬", "supermarket": "🛒", "salon": "💇",
-  "electronics": "📱", "pharmacy": "💊", "default": "🏪",
+  "food-market": "🛒", "grocery": "🛒", "restaurant": "🍽️", "fashion": "👗",
+  "drink": "🥤", "mall": "🏬", "supermarket": "🏪", "salon": "💇",
+  "electronics": "📱", "pharmacy": "💊", "car-rental": "🚗", "car-dealership": "🚙",
+  "auto-repair": "🔧", "tire-shop": "🛞", "auto-parts": "⚙️", "other": "📍", "default": "📍",
 };
 
-const CATEGORY_COLORS: Record<string, string> = {
-  "food-market": "#16a34a", "restaurant": "#ea580c", "fashion-market": "#9333ea",
-  "drink": "#2563eb", "mall": "#db2777", "supermarket": "#0d9488", "salon": "#e11d48",
-  "electronics": "#4f46e5", "pharmacy": "#059669", "default": "#6b7280",
+const CATEGORY_COLORS: Record<string, [string, string]> = {
+  // [main color, light bg]
+  "food-market":    ["#16a34a", "#dcfce7"],
+  "grocery":        ["#16a34a", "#dcfce7"],
+  "restaurant":     ["#ea580c", "#fff7ed"],
+  "fashion":        ["#9333ea", "#f3e8ff"],
+  "drink":          ["#2563eb", "#dbeafe"],
+  "mall":           ["#db2777", "#fce7f3"],
+  "supermarket":    ["#0d9488", "#ccfbf1"],
+  "salon":          ["#e11d48", "#ffe4e6"],
+  "electronics":    ["#4f46e5", "#e0e7ff"],
+  "pharmacy":       ["#059669", "#d1fae5"],
+  "car-rental":     ["#7c3aed", "#ede9fe"],
+  "car-dealership": ["#1d4ed8", "#dbeafe"],
+  "auto-repair":    ["#b45309", "#fef3c7"],
+  "tire-shop":      ["#374151", "#f3f4f6"],
+  "auto-parts":     ["#64748b", "#f1f5f9"],
+  "other":          ["#6b7280", "#f3f4f6"],
+  "default":        ["#6b7280", "#f3f4f6"],
 };
 
 function getCategoryIcon(cat: string) {
@@ -97,80 +113,91 @@ function getCategoryIcon(cat: string) {
 }
 
 function getCategoryColor(cat: string) {
-  return CATEGORY_COLORS[cat] || CATEGORY_COLORS.default;
+  return (CATEGORY_COLORS[cat] || CATEGORY_COLORS.default)[0];
+}
+
+function getCategoryBg(cat: string) {
+  return (CATEGORY_COLORS[cat] || CATEGORY_COLORS.default)[1];
 }
 
 function getCategoryLabel(cat: string) {
   return STORE_CATEGORY_OPTIONS.find((o) => o.value === cat)?.label || cat;
 }
 
-/** Colored pin marker with emoji fallback */
-function makeMarkerIcon(emoji: string, color: string): string {
+/** Small rounded category marker — compact & distinct per category */
+function makeMarkerIcon(emoji: string, color: string, bgColor: string): string {
   const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="44" height="54" viewBox="0 0 44 54">
+    <svg xmlns="http://www.w3.org/2000/svg" width="42" height="50" viewBox="0 0 42 50">
       <defs>
-        <filter id="s" x="-20%" y="-10%" width="140%" height="130%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-opacity="0.25"/>
+        <filter id="ds" x="-30%" y="-20%" width="160%" height="150%">
+          <feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="${color}" flood-opacity="0.3"/>
         </filter>
       </defs>
-      <path d="M22 50 C22 50, 5 31, 5 19 A17 17 0 1 1 39 19 C39 31, 22 50, 22 50Z" fill="${color}" filter="url(#s)"/>
-      <circle cx="22" cy="19" r="12" fill="#fff"/>
-      <text x="22" y="24" text-anchor="middle" font-size="15">${emoji}</text>
+      <!-- Pin tail -->
+      <polygon points="21,48 16,36 26,36" fill="${color}"/>
+      <!-- Circle body -->
+      <circle cx="21" cy="20" r="19" fill="${color}" filter="url(#ds)"/>
+      <circle cx="21" cy="20" r="16" fill="${bgColor}"/>
+      <!-- Emoji -->
+      <text x="21" y="25.5" text-anchor="middle" font-size="14">${emoji}</text>
     </svg>`;
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 }
 
-/** Create a logo marker as a canvas-rendered image URL */
+/** Small category marker with store logo inside */
+function makeLogoMarkerIcon(color: string, bgColor: string): string {
+  // Return pin SVG without emoji — logo overlay via canvas
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="42" height="50" viewBox="0 0 42 50">
+      <defs>
+        <filter id="ds2" x="-30%" y="-20%" width="160%" height="150%">
+          <feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="${color}" flood-opacity="0.3"/>
+        </filter>
+      </defs>
+      <polygon points="21,48 16,36 26,36" fill="${color}"/>
+      <circle cx="21" cy="20" r="19" fill="${color}" filter="url(#ds2)"/>
+      <circle cx="21" cy="20" r="15" fill="#ffffff"/>
+    </svg>`;
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+/** Create a logo marker as canvas (logo inside colored circle pin) */
 function createLogoMarkerCanvas(
   logoUrl: string,
   color: string,
+  bgColor: string,
   callback: (dataUrl: string) => void
 ) {
+  const W = 42 * 2, H = 50 * 2; // 2x for retina
   const canvas = document.createElement("canvas");
-  const size = 56;
-  const pinH = 68;
-  canvas.width = size;
-  canvas.height = pinH;
+  canvas.width = W;
+  canvas.height = H;
   const ctx = canvas.getContext("2d")!;
-
-  // Draw pin shape
-  ctx.beginPath();
-  const cx = size / 2, topR = 24;
-  ctx.arc(cx, topR + 2, topR, Math.PI * 0.85, Math.PI * 0.15);
-  ctx.quadraticCurveTo(cx + 6, pinH - 14, cx, pinH - 2);
-  ctx.quadraticCurveTo(cx - 6, pinH - 14, cx - topR * Math.cos(Math.PI * 0.15), topR + 2 - topR * Math.sin(Math.PI * 0.15));
-  ctx.closePath();
-  ctx.fillStyle = color;
-  ctx.shadowColor = "rgba(0,0,0,0.25)";
-  ctx.shadowBlur = 6;
-  ctx.shadowOffsetY = 2;
-  ctx.fill();
-  ctx.shadowColor = "transparent";
-
-  // White circle bg for logo
-  const logoR = 16;
-  ctx.beginPath();
-  ctx.arc(cx, topR + 2, logoR, 0, Math.PI * 2);
-  ctx.fillStyle = "#fff";
-  ctx.fill();
-
-  // Load and draw logo
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.onload = () => {
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, topR + 2, logoR - 2, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.drawImage(img, cx - logoR + 2, topR + 2 - logoR + 2, (logoR - 2) * 2, (logoR - 2) * 2);
-    ctx.restore();
-    callback(canvas.toDataURL());
+  
+  // Draw the base pin SVG first
+  const pinSvg = makeLogoMarkerIcon(color, bgColor);
+  const pinImg = new Image();
+  pinImg.onload = () => {
+    ctx.drawImage(pinImg, 0, 0, W, H);
+    
+    // Now load and draw the logo
+    const logo = new Image();
+    logo.crossOrigin = "anonymous";
+    logo.onload = () => {
+      const cx = W / 2, cy = 20 * 2; // center of circle
+      const r = 13 * 2; // logo radius
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(logo, cx - r, cy - r, r * 2, r * 2);
+      ctx.restore();
+      callback(canvas.toDataURL());
+    };
+    logo.onerror = () => callback(canvas.toDataURL());
+    logo.src = logoUrl;
   };
-  img.onerror = () => {
-    // If logo fails, just use pin as-is (white circle, no image)
-    callback(canvas.toDataURL());
-  };
-  img.src = logoUrl;
+  pinImg.src = pinSvg;
 }
 
 /** Blue dot for user location */
