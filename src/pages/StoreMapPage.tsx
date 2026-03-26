@@ -1,19 +1,17 @@
 /**
- * StoreMapPage — Google Map showing all active store locations
- * Tapping a pin shows store info and links to the store page.
+ * StoreMapPage — Uber/Lyft-style dark map showing all active store locations
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Clock, Star, Navigation, Store } from "lucide-react";
+import { MapPin, Clock, Star, Navigation, Store, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
-import { cn } from "@/lib/utils";
 
-const DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 }; // Phnom Penh
+const DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
 
 interface StorePin {
   id: string;
@@ -60,21 +58,39 @@ async function loadGoogleMaps(apiKey: string): Promise<boolean> {
   });
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  "food-market": "#22c55e",
-  "restaurant": "#f97316",
-  "fashion-market": "#a855f7",
-  "drink": "#3b82f6",
-  "mall": "#ec4899",
-  "supermarket": "#14b8a6",
-  "salon": "#f43f5e",
-  "electronics": "#6366f1",
-  "pharmacy": "#10b981",
-  "default": "#6b7280",
+/* ── Uber/Lyft dark map style ── */
+const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
+  { elementType: "geometry", stylers: [{ color: "#1d1d1d" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1d1d1d" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#b0b0b0" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#2c2c2c" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#1d1d1d" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3a3a3a" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1d1d1d" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#6a6a6a" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e0e0e" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3d3d3d" }] },
+];
+
+const CATEGORY_ICONS: Record<string, string> = {
+  "food-market": "🛒",
+  "restaurant": "🍽️",
+  "fashion-market": "👗",
+  "drink": "🥤",
+  "mall": "🏬",
+  "supermarket": "🛒",
+  "salon": "💇",
+  "electronics": "📱",
+  "pharmacy": "💊",
+  "default": "🏪",
 };
 
-function getCategoryColor(cat: string) {
-  return CATEGORY_COLORS[cat] || CATEGORY_COLORS.default;
+function getCategoryIcon(cat: string) {
+  return CATEGORY_ICONS[cat] || CATEGORY_ICONS.default;
 }
 
 function getCategoryLabel(cat: string) {
@@ -90,7 +106,6 @@ export default function StoreMapPage() {
   const [mapError, setMapError] = useState(false);
   const [selectedStore, setSelectedStore] = useState<StorePin | null>(null);
 
-  // Fetch all stores with coordinates
   const { data: stores = [] } = useQuery({
     queryKey: ["store-map-pins"],
     queryFn: async () => {
@@ -106,7 +121,7 @@ export default function StoreMapPage() {
     staleTime: 60_000,
   });
 
-  // Init map
+  // Init dark map
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -123,22 +138,23 @@ export default function StoreMapPage() {
         disableDefaultUI: true,
         zoomControl: false,
         gestureHandling: "greedy",
-        styles: [
-          { featureType: "poi", stylers: [{ visibility: "off" }] },
-          { featureType: "transit", stylers: [{ visibility: "off" }] },
-        ],
+        backgroundColor: "#1d1d1d",
+        styles: DARK_MAP_STYLES,
       });
       mapRef.current = map;
+
+      // Dismiss card on map tap
+      map.addListener("click", () => setSelectedStore(null));
+
       if (!cancelled) setMapReady(true);
     })();
     return () => { cancelled = true; };
   }, []);
 
-  // Place markers
+  // Place markers — Uber-style pins
   useEffect(() => {
     if (!mapReady || !mapRef.current || !stores.length) return;
 
-    // Clear old
     markersRef.current.forEach((m) => (m.map = null));
     markersRef.current = [];
 
@@ -148,18 +164,25 @@ export default function StoreMapPage() {
       const pos = { lat: store.latitude, lng: store.longitude };
       bounds.extend(pos);
 
-      const color = getCategoryColor(store.category);
+      const icon = getCategoryIcon(store.category);
 
-      // Custom pin element
+      // Uber-style pill marker
       const el = document.createElement("div");
       el.style.cssText = `
-        width: 36px; height: 36px; border-radius: 50%;
-        background: ${color}; border: 3px solid white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer; transition: transform 0.15s;
+        display: flex; align-items: center; gap: 4px;
+        background: #fff; border-radius: 20px;
+        padding: 5px 10px 5px 6px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+        cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        white-space: nowrap; max-width: 160px;
       `;
-      el.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"/></svg>`;
+      el.innerHTML = `
+        <span style="font-size: 16px; line-height: 1;">${icon}</span>
+        <span style="font-size: 11px; font-weight: 600; color: #1a1a1a; overflow: hidden; text-overflow: ellipsis;">${store.name}</span>
+      `;
+      el.addEventListener("mouseenter", () => { el.style.transform = "scale(1.08)"; el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.45)"; });
+      el.addEventListener("mouseleave", () => { el.style.transform = "scale(1)"; el.style.boxShadow = "0 4px 14px rgba(0,0,0,0.35)"; });
 
       const marker = new google.maps.marker.AdvancedMarkerElement({
         map: mapRef.current!,
@@ -171,13 +194,14 @@ export default function StoreMapPage() {
       marker.addListener("click", () => {
         setSelectedStore(store);
         mapRef.current?.panTo(pos);
+        mapRef.current?.setZoom(Math.max(mapRef.current.getZoom() || 14, 14));
       });
 
       markersRef.current.push(marker);
     });
 
     if (stores.length > 1) {
-      mapRef.current.fitBounds(bounds, { top: 80, bottom: 160, left: 40, right: 40 });
+      mapRef.current.fitBounds(bounds, { top: 100, bottom: 180, left: 30, right: 30 });
     } else if (stores.length === 1) {
       mapRef.current.setCenter({ lat: stores[0].latitude, lng: stores[0].longitude });
       mapRef.current.setZoom(15);
@@ -188,133 +212,128 @@ export default function StoreMapPage() {
     if (!mapRef.current || !stores.length) return;
     const bounds = new google.maps.LatLngBounds();
     stores.forEach((s) => bounds.extend({ lat: s.latitude, lng: s.longitude }));
-    mapRef.current.fitBounds(bounds, { top: 80, bottom: 160, left: 40, right: 40 });
+    mapRef.current.fitBounds(bounds, { top: 100, bottom: 180, left: 30, right: 30 });
     setSelectedStore(null);
   }, [stores]);
 
   return (
-    <div className="fixed inset-0 z-0 bg-background">
-      {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-[1100] safe-top">
-        <div className="flex items-center gap-3 px-4 pt-3 pb-2">
-          <Button
-            variant="secondary"
-            size="icon"
-            className="w-10 h-10 rounded-full bg-card/90 backdrop-blur-xl shadow-lg border-0"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex-1 bg-card/90 backdrop-blur-xl rounded-full px-4 py-2.5 shadow-lg">
-            <h1 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Store className="w-4 h-4 text-primary" />
-              Nearby Stores
-              {stores.length > 0 && (
-                <span className="text-xs text-muted-foreground font-normal">
-                  ({stores.length})
-                </span>
-              )}
-            </h1>
+    <div className="fixed inset-0 z-0" style={{ background: "#1d1d1d" }}>
+      {/* Floating search-style header — Uber style */}
+      <div className="absolute top-0 left-0 right-0 z-[1100]" style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 12px)" }}>
+        <div className="flex items-center gap-2.5 px-4 pb-2">
+          <div className="flex-1 flex items-center gap-3 bg-[#2a2a2a] rounded-xl px-4 py-3 shadow-lg">
+            <Store className="w-5 h-5 text-primary shrink-0" />
+            <div>
+              <p className="text-[13px] font-semibold text-[#f5f5f5]">Explore Stores</p>
+              <p className="text-[11px] text-[#888]">
+                {stores.length > 0 ? `${stores.length} nearby` : "Loading..."}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Recenter button */}
+      {/* Recenter FAB */}
       <Button
         variant="secondary"
         size="icon"
         onClick={handleRecenter}
-        className="absolute right-3 bottom-48 z-[1500] w-12 h-12 rounded-full bg-card/90 text-foreground shadow-lg border-0 hover:bg-card backdrop-blur-xl"
+        className="absolute right-4 bottom-[140px] z-[1500] w-11 h-11 rounded-full shadow-lg border-0 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-[#f5f5f5]"
         aria-label="Recenter"
       >
-        <Navigation className="w-5 h-5" />
+        <Navigation className="w-4.5 h-4.5" />
       </Button>
 
-      {/* Map */}
+      {/* Map container */}
       <div ref={mapContainerRef} className="absolute inset-0" style={{ touchAction: "none" }} />
 
       {mapError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+        <div className="absolute inset-0 flex items-center justify-center" style={{ background: "#1d1d1dcc" }}>
           <div className="text-center p-6">
-            <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">Map unavailable</p>
+            <MapPin className="w-12 h-12 mx-auto mb-3" style={{ color: "#555" }} />
+            <p style={{ color: "#888" }}>Map unavailable</p>
           </div>
         </div>
       )}
 
-      {/* Selected store card */}
+      {/* Selected store — Uber-style bottom card */}
       <AnimatePresence>
         {selectedStore && (
           <motion.div
-            initial={{ y: 200, opacity: 0 }}
+            initial={{ y: 120, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 200, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="absolute bottom-28 left-3 right-3 z-[1200]"
+            exit={{ y: 120, opacity: 0 }}
+            transition={{ type: "spring", damping: 28, stiffness: 350 }}
+            className="absolute bottom-[100px] left-3 right-3 z-[1200]"
           >
             <div
-              className="bg-card/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-border/30 p-4 cursor-pointer active:scale-[0.98] transition-transform"
+              className="rounded-2xl overflow-hidden shadow-2xl cursor-pointer active:scale-[0.98] transition-transform"
+              style={{ background: "#2a2a2a" }}
               onClick={() => navigate(`/store/${selectedStore.slug}`)}
             >
-              <div className="flex items-start gap-3">
-                {/* Logo */}
+              {/* Card content */}
+              <div className="p-4 flex items-center gap-3">
+                {/* Icon/Logo */}
                 <div
-                  className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
-                  style={{ background: getCategoryColor(selectedStore.category) + "22" }}
+                  className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                  style={{ background: "#3a3a3a" }}
                 >
                   {selectedStore.logo_url ? (
                     <img src={selectedStore.logo_url} alt="" className="w-full h-full object-cover rounded-xl" />
                   ) : (
-                    <Store className="w-6 h-6" style={{ color: getCategoryColor(selectedStore.category) }} />
+                    <span className="text-2xl">{getCategoryIcon(selectedStore.category)}</span>
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground text-base truncate">{selectedStore.name}</h3>
+                  <h3 className="font-bold text-[15px] truncate" style={{ color: "#f5f5f5" }}>
+                    {selectedStore.name}
+                  </h3>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span
-                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white"
-                      style={{ background: getCategoryColor(selectedStore.category) }}
-                    >
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ background: "#3a3a3a", color: "#aaa" }}>
                       {getCategoryLabel(selectedStore.category)}
                     </span>
                     {selectedStore.rating && (
-                      <span className="flex items-center gap-0.5 text-xs text-amber-500 font-semibold">
+                      <span className="flex items-center gap-0.5 text-[11px] font-semibold" style={{ color: "#fbbf24" }}>
                         <Star className="w-3 h-3 fill-current" />
                         {selectedStore.rating}
                       </span>
                     )}
                   </div>
                   {selectedStore.address && (
-                    <p className="text-xs text-muted-foreground mt-1 truncate flex items-center gap-1">
+                    <p className="text-[11px] mt-1 truncate flex items-center gap-1" style={{ color: "#777" }}>
                       <MapPin className="w-3 h-3 shrink-0" />
                       {selectedStore.address}
                     </p>
                   )}
-                  {selectedStore.hours && (
-                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                      <Clock className="w-3 h-3 shrink-0" />
-                      {selectedStore.hours}
-                    </p>
-                  )}
                 </div>
+
+                <ChevronRight className="w-5 h-5 shrink-0" style={{ color: "#555" }} />
               </div>
-              <div className="mt-3 flex justify-end">
-                <span className="text-xs font-semibold text-primary">View Store →</span>
+
+              {/* Bottom action strip */}
+              <div className="flex border-t" style={{ borderColor: "#3a3a3a" }}>
+                <button
+                  className="flex-1 py-3 text-[12px] font-semibold text-center transition-colors"
+                  style={{ color: "#22c55e" }}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/store/${selectedStore.slug}`); }}
+                >
+                  View Store
+                </button>
+                {selectedStore.hours && (
+                  <>
+                    <div className="w-px" style={{ background: "#3a3a3a" }} />
+                    <div className="flex-1 py-3 flex items-center justify-center gap-1.5">
+                      <Clock className="w-3 h-3" style={{ color: "#777" }} />
+                      <span className="text-[11px]" style={{ color: "#888" }}>{selectedStore.hours}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Tap to dismiss */}
-      {selectedStore && (
-        <div
-          className="absolute inset-0 z-[1100]"
-          style={{ pointerEvents: "auto" }}
-          onClick={() => setSelectedStore(null)}
-        />
-      )}
 
       <ZivoMobileNav />
     </div>
