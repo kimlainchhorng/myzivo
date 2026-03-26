@@ -767,18 +767,17 @@ export default function AdminStoreEditPage() {
               <div className="space-y-2">
                 <Label>Price (៛ KHR) *</Label>
                 <Input
-                  type="number"
-                  step="100"
-                  min="0"
-                  value={productForm.price_khr === 0 ? "" : productForm.price_khr}
+                  type="text"
+                  inputMode="numeric"
+                  value={productForm.price_khr || ""}
                   onChange={e => {
-                    const val = e.target.value;
+                    const val = e.target.value.replace(/[^0-9]/g, "");
                     if (val === "") {
                       updateProductField("price_khr", 0);
                       updateProductField("price", 0);
                       return;
                     }
-                    const khr = parseInt(val) || 0;
+                    const khr = parseInt(val);
                     updateProductField("price_khr", khr);
                     updateProductField("price", parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)));
                   }}
@@ -789,20 +788,21 @@ export default function AdminStoreEditPage() {
               <div className="space-y-2">
                 <Label>Price ($)</Label>
                 <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={productForm.price === 0 ? "" : productForm.price}
+                  type="text"
+                  inputMode="decimal"
+                  value={productForm.price || ""}
                   onChange={e => {
-                    const val = e.target.value;
-                    if (val === "") {
+                    const val = e.target.value.replace(/[^0-9.]/g, "");
+                    if (val === "" || val === ".") {
                       updateProductField("price", 0);
                       updateProductField("price_khr", 0);
                       return;
                     }
-                    const num = parseFloat(val) || 0;
-                    updateProductField("price", num);
-                    updateProductField("price_khr", Math.round(num * (form.khr_rate || 4062.5)));
+                    const num = parseFloat(val);
+                    if (!isNaN(num)) {
+                      updateProductField("price", num);
+                      updateProductField("price_khr", Math.round(num * (form.khr_rate || 4062.5)));
+                    }
                   }}
                   placeholder="0"
                 />
