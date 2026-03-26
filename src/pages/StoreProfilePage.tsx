@@ -229,35 +229,42 @@ export default function StoreProfilePage() {
             </div>
           </div>
 
-          {/* Contact - side by side */}
-          <div className="flex gap-2 mt-3 pt-3 border-t border-white/[0.05]">
+          {/* Contact row */}
+          <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/[0.05]">
             {store.address && (
-              <button
+              <motion.button
+                whileTap={{ scale: 0.96 }}
                 onClick={() => navigate(`/rides?destination=${encodeURIComponent(store.address)}`)}
-                className="flex-1 flex items-center gap-2 p-2.5 rounded-2xl bg-primary/[0.06] border border-primary/10 hover:bg-primary/10 transition-all text-left group active:scale-[0.97]"
+                className="relative flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-gradient-to-br from-primary/[0.08] to-primary/[0.03] border border-primary/15 hover:border-primary/25 transition-all overflow-hidden group"
               >
-                <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <MapPin className="h-4 w-4 text-primary" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none" />
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-sm relative">
+                  <MapPin className="h-4.5 w-4.5 text-primary" />
+                  <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-primary/20 flex items-center justify-center">
+                    <ArrowLeft className="h-2 w-2 text-primary rotate-[135deg]" />
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[9px] font-semibold text-primary uppercase tracking-wider">Address · Tap to ride</p>
-                  <p className="text-[11px] text-foreground leading-snug line-clamp-2">{store.address}</p>
+                <div className="text-center relative">
+                  <p className="text-[10px] font-bold text-primary">Ride There</p>
+                  <p className="text-[9px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">{store.address}</p>
                 </div>
-              </button>
+              </motion.button>
             )}
             {store.phone && (
-              <a
+              <motion.a
+                whileTap={{ scale: 0.96 }}
                 href={`tel:${store.phone.replace(/\s+/g, "")}`}
-                className="shrink-0 flex items-center gap-2 p-2.5 rounded-2xl bg-emerald-500/[0.06] border border-emerald-500/10 hover:bg-emerald-500/10 transition-all group active:scale-[0.97]"
+                className="relative flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-gradient-to-br from-emerald-500/[0.08] to-emerald-500/[0.03] border border-emerald-500/15 hover:border-emerald-500/25 transition-all overflow-hidden group"
               >
-                <div className="h-9 w-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-                  <Phone className="h-4 w-4 text-emerald-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none" />
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 flex items-center justify-center shadow-sm">
+                  <Phone className="h-4.5 w-4.5 text-emerald-500" />
                 </div>
-                <div>
-                  <p className="text-[9px] font-semibold text-emerald-600 uppercase tracking-wider">Call Store</p>
-                  <p className="text-[11px] text-foreground font-medium">{store.phone}</p>
+                <div className="text-center">
+                  <p className="text-[10px] font-bold text-emerald-600">Call Store</p>
+                  <p className="text-[12px] text-foreground font-semibold mt-0.5">{store.phone}</p>
                 </div>
-              </a>
+              </motion.a>
             )}
           </div>
         </motion.div>
