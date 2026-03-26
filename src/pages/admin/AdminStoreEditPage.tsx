@@ -884,7 +884,7 @@ export default function AdminStoreEditPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base">{t("admin.store.photo_posts")}</CardTitle>
-                <Button size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostMediaMode("image"); setPostDialog(true); }} className="gap-1.5">
+                <Button size="sm" onClick={() => { setPostCaption(""); postMediaPreviews.forEach((preview) => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }); setPostMediaPreviews([]); setPostMediaUrls([]); setPostMediaMode("image"); setPostDialog(true); }} className="gap-1.5">
                   <Plus className="h-4 w-4" /> {t("admin.store.add_photo_post")}
                 </Button>
               </CardHeader>
@@ -897,7 +897,7 @@ export default function AdminStoreEditPage() {
                   <div className="text-center py-12 space-y-3">
                     <ImagePlus className="h-10 w-10 text-muted-foreground/20 mx-auto" />
                     <p className="text-muted-foreground">{t("admin.store.no_photo_posts")}</p>
-                    <Button variant="outline" size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostMediaMode("image"); setPostDialog(true); }} className="gap-1.5">
+                    <Button variant="outline" size="sm" onClick={() => { setPostCaption(""); postMediaPreviews.forEach((preview) => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }); setPostMediaPreviews([]); setPostMediaUrls([]); setPostMediaMode("image"); setPostDialog(true); }} className="gap-1.5">
                       <Plus className="h-4 w-4" /> {t("admin.store.add_photo_post")}
                     </Button>
                   </div>
@@ -937,7 +937,7 @@ export default function AdminStoreEditPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base">{t("admin.store.video_posts")}</CardTitle>
-                <Button size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostMediaMode("video"); setPostDialog(true); }} className="gap-1.5">
+                <Button size="sm" onClick={() => { setPostCaption(""); postMediaPreviews.forEach((preview) => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }); setPostMediaPreviews([]); setPostMediaUrls([]); setPostMediaMode("video"); setPostDialog(true); }} className="gap-1.5">
                   <Plus className="h-4 w-4" /> {t("admin.store.add_video_post")}
                 </Button>
               </CardHeader>
@@ -950,7 +950,7 @@ export default function AdminStoreEditPage() {
                   <div className="text-center py-12 space-y-3">
                     <Video className="h-10 w-10 text-muted-foreground/20 mx-auto" />
                     <p className="text-muted-foreground">{t("admin.store.no_video_posts")}</p>
-                    <Button variant="outline" size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostMediaMode("video"); setPostDialog(true); }} className="gap-1.5">
+                    <Button variant="outline" size="sm" onClick={() => { setPostCaption(""); postMediaPreviews.forEach((preview) => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }); setPostMediaPreviews([]); setPostMediaUrls([]); setPostMediaMode("video"); setPostDialog(true); }} className="gap-1.5">
                       <Plus className="h-4 w-4" /> {t("admin.store.add_video_post")}
                     </Button>
                   </div>
@@ -1459,7 +1459,7 @@ export default function AdminStoreEditPage() {
             <div className="space-y-2">
               <Label>{t("admin.store.post_media")}</Label>
               <div className="grid grid-cols-3 gap-2">
-                {postMediaUrls.map((url, i) => (
+                {postMediaPreviews.map((url, i) => (
                   <div key={i} className="relative group rounded-lg overflow-hidden border border-border bg-black" style={{ aspectRatio: isVideoUrl(url) ? '9/16' : '1/1' }}>
                     {isVideoUrl(url) ? (
                       <video
@@ -1513,7 +1513,7 @@ export default function AdminStoreEditPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPostDialog(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => { postMediaPreviews.forEach((preview) => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }); setPostMediaPreviews([]); setPostDialog(false); }}>Cancel</Button>
             <Button
               onClick={() => savePost.mutate()}
               disabled={savePost.isPending || postMediaUrls.length === 0}
