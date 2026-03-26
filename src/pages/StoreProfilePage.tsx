@@ -522,18 +522,18 @@ export default function StoreProfilePage() {
                       if (!b) return null;
                       return (
                         <motion.div
-                          initial={{ scale: 0, y: -10 }}
-                          animate={{ scale: 1, y: 0 }}
+                          initial={{ scale: 0, x: 10 }}
+                          animate={{ scale: 1, x: 0 }}
                           transition={{ type: "spring", stiffness: 400, damping: 15 }}
                           className={cn(
-                            "absolute -top-2.5 right-2 z-30",
-                            "px-2.5 py-1 rounded-lg",
+                            "absolute top-1.5 right-1.5 z-30",
+                            "px-2 py-0.5 rounded-md",
                             "bg-gradient-to-r text-white",
-                            "shadow-lg ring-2 ring-background",
+                            "shadow-lg",
                             b.cls, b.glow
                           )}
                         >
-                          <span className="text-[9px] font-extrabold tracking-wider uppercase drop-shadow-sm">{b.label}</span>
+                          <span className="text-[8px] font-extrabold tracking-wider uppercase drop-shadow-sm">{b.label}</span>
                         </motion.div>
                       );
                     })()}
