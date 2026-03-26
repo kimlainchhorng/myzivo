@@ -53,6 +53,7 @@ const RideHubPage = lazy(() => import("./pages/app/RideHubPage"));
 const EatsLanding = lazy(() => import("./pages/EatsLanding"));
 const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
 const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
+const FeedPage = lazy(() => import("./pages/FeedPage"));
 const GroceryStorePage = lazy(() => import("./pages/GroceryStorePage"));
 const StoreProfilePage = lazy(() => import("./pages/StoreProfilePage"));
 const GroceryOrderPlaced = lazy(() => import("./pages/grocery/GroceryOrderPlaced"));
@@ -394,6 +395,7 @@ const App = () => (
                 <Route path="/alerts" element={<PreserveQueryRedirect to="/notifications" />} />
                 <Route path="/delivery" element={<DeliveryPage />} />
                 <Route path="/grocery" element={<GroceryMarketplace />} />
+                <Route path="/feed" element={<FeedPage />} />
                 <Route path="/grocery/store/:slug" element={<GroceryStorePage />} />
                 <Route path="/grocery/shop/:slug" element={<StoreProfilePage />} />
                 <Route path="/grocery/order-placed" element={<GroceryOrderPlaced />} />
