@@ -517,7 +517,7 @@ const Login = () => {
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <span className="relative z-10 flex items-center justify-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
-              Become a ZIVO Partner
+              {t("auth.become_partner")}
               <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
             </span>
           </motion.button>
