@@ -15,6 +15,7 @@ import { useStoreProfile, useStoreProducts, useStoreProductCategories, type Stor
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
 import { useState, useRef } from "react";
+import StoreHeroCarousel from "@/components/grocery/StoreHeroCarousel";
 import { toast } from "sonner";
 
 const container = {
