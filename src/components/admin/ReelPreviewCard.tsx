@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { Trash2 } from "lucide-react";
 
 interface ReelPreviewCardProps {
@@ -8,40 +7,31 @@ interface ReelPreviewCardProps {
 }
 
 export default function ReelPreviewCard({ url, isVideo, onRemove }: ReelPreviewCardProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  const handleRemove = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    onRemove();
-  };
-
   return (
-    <div
-      className="relative group rounded-lg overflow-hidden border border-border bg-card"
-      style={{ aspectRatio: isVideo ? "9 / 16" : "1 / 1" }}
-    >
+    <div className="relative group">
       {isVideo ? (
-        <div className="relative h-full w-full bg-muted/10">
-          <video
-            ref={videoRef}
-            src={url}
-            className="h-full w-full object-contain"
-            controls
-            playsInline
-            preload="auto"
-          />
-        </div>
+        <video
+          src={url}
+          controls
+          playsInline
+          preload="auto"
+          style={{ width: "100%", maxHeight: 320, borderRadius: 8, background: "#000" }}
+        />
       ) : (
-        <img src={url} alt="Post preview" className="h-full w-full object-cover" />
+        <img
+          src={url}
+          alt="Post preview"
+          className="w-full rounded-lg object-cover border border-border"
+          style={{ aspectRatio: "1 / 1" }}
+        />
       )}
-
       <button
         type="button"
-        onClick={handleRemove}
-        className="absolute top-1 right-1 z-10 rounded-full bg-destructive p-0.5 text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
+        onClick={(e) => { e.stopPropagation(); onRemove(); }}
+        className="absolute top-1 right-1 z-10 rounded-full bg-destructive p-1 text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
         aria-label="Remove media"
       >
-        <Trash2 className="h-3 w-3" />
+        <Trash2 className="h-3.5 w-3.5" />
       </button>
     </div>
   );
