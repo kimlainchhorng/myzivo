@@ -81,34 +81,10 @@ const ZivoMobileNav = () => {
               aria-current={isActive ? "page" : undefined}
             >
               <div className="relative flex items-center justify-center">
-                {/* Photo background orb behind active icon */}
-                {isActive && (
-                  <motion.div
-                    layoutId="nav-glow"
-                    className="absolute w-12 h-12 rounded-full overflow-hidden"
-                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                  >
-                    <img
-                      src={tab.bg}
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-cover"
-                      style={{ opacity: 0.7 }}
-                    />
-                    <span
-                      className="absolute inset-0"
-                      style={{
-                        background: `radial-gradient(circle, hsl(${tab.cssVar} / 0.5) 0%, hsl(${tab.cssVar} / 0.35) 60%, hsl(${tab.cssVar} / 0.2) 100%)`,
-                        boxShadow: `0 0 20px 4px hsl(${tab.cssVar} / 0.2)`,
-                      }}
-                    />
-                  </motion.div>
-                )}
                 <tab.icon
                   className={cn(
-                    "relative z-10 transition-all duration-200",
-                    isActive
-                      ? "w-[28px] h-[28px] text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]"
-                      : "w-7 h-7 text-muted-foreground"
+                    "relative z-10 transition-all duration-200 w-7 h-7",
+                    isActive ? "text-primary" : "text-muted-foreground"
                   )}
                   strokeWidth={isActive ? 2.2 : 1.4}
                   fill={isActive && tab.id === "home" ? "currentColor" : "none"}
