@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X, Locate } from "lucide-react";
+import { MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X, Locate, Car, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
