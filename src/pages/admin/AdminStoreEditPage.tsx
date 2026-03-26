@@ -399,6 +399,7 @@ export default function AdminStoreEditPage() {
       setUploadingPostMedia(false);
     }
   };
+  const removePostMedia = (index: number) => {
     setPostMediaItems(prev => {
       const preview = prev[index];
       if (preview?.previewUrl.startsWith("blob:")) URL.revokeObjectURL(preview.previewUrl);
