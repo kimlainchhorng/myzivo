@@ -532,6 +532,7 @@ export default function StoreProfilePage() {
                             "shadow-lg",
                             b.cls, b.glow
                           )}
+                        >
                           <div className="flex flex-col items-center leading-none">
                             <span className="text-[10px] font-extrabold drop-shadow-sm">{b.labelKm}</span>
                             <span className="text-[7px] font-bold tracking-wider uppercase opacity-80">{b.label}</span>
