@@ -409,25 +409,51 @@ export default function StoreProfilePage() {
             <p className="text-sm text-muted-foreground">{t("store.no_products")}</p>
           </div>
         ) : (
-          <motion.div
-            variants={container}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-2 gap-2"
-          >
-            {products.map((product, i) => {
-              const cartItem = cart.items.find((c) => c.productId === product.id);
-              const khrPrice = ((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050)));
-              const isLiked = likedProducts.has(product.id);
-              const p = product as any;
-              const hasBogo = p.discount_type === "bogo" && (p.buy_quantity || 0) >= 1 && (p.get_quantity || 0) >= 1
-                && (!p.discount_expires_at || new Date(p.discount_expires_at) > new Date());
-              const hasDiscount = !hasBogo && p.discount_type && p.discount_value > 0 && p.discount_price_khr != null
-                && (!p.discount_expires_at || new Date(p.discount_expires_at) > new Date());
-              const discountKhr = hasDiscount ? p.discount_price_khr : null;
-              const discountUsd = hasDiscount ? parseFloat((discountKhr / ((store as any)?.khr_rate || 4050)).toFixed(2)) : null;
-              const discountPct = hasDiscount && p.discount_type === "percentage" ? p.discount_value : null;
+          (() => {
+            // Group by category when showing "All"
+            const grouped = !selectedCategory
+              ? categories.reduce<Record<string, typeof products>>((acc, cat) => {
+                  acc[cat] = products.filter((p: any) => p.category === cat);
+                  return acc;
+                }, {})
+              : { [selectedCategory]: products };
+
+            // Add uncategorized
+            if (!selectedCategory) {
+              const uncategorized = products.filter((p: any) => !p.category || !categories.includes(p.category));
+              if (uncategorized.length > 0) grouped[t("store.other") || "Other"] = uncategorized;
+            }
+
+            return Object.entries(grouped).map(([cat, catProducts]) => {
+              if (!catProducts.length) return null;
               return (
+                <div key={cat} className="mb-4">
+                  {!selectedCategory && Object.keys(grouped).length > 1 && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-5 w-1 rounded-full bg-primary" />
+                      <h3 className="text-xs font-bold text-foreground">{cat}</h3>
+                      <span className="text-[10px] text-muted-foreground">({catProducts.length})</span>
+                    </div>
+                  )}
+                  <motion.div
+                    variants={container}
+                    initial="hidden"
+                    animate="show"
+                    className="grid grid-cols-2 gap-2"
+                  >
+                    {catProducts.map((product, i) => {
+                      const cartItem = cart.items.find((c) => c.productId === product.id);
+                      const khrPrice = ((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050)));
+                      const isLiked = likedProducts.has(product.id);
+                      const p = product as any;
+                      const hasBogo = p.discount_type === "bogo" && (p.buy_quantity || 0) >= 1 && (p.get_quantity || 0) >= 1
+                        && (!p.discount_expires_at || new Date(p.discount_expires_at) > new Date());
+                      const hasDiscount = !hasBogo && p.discount_type && p.discount_value > 0 && p.discount_price_khr != null
+                        && (!p.discount_expires_at || new Date(p.discount_expires_at) > new Date());
+                      const discountKhr = hasDiscount ? p.discount_price_khr : null;
+                      const discountUsd = hasDiscount ? parseFloat((discountKhr / ((store as any)?.khr_rate || 4050)).toFixed(2)) : null;
+                      const discountPct = hasDiscount && p.discount_type === "percentage" ? p.discount_value : null;
+                      return (
                 <motion.div
                   key={product.id}
                   variants={cardVariant}
@@ -677,9 +703,13 @@ export default function StoreProfilePage() {
                     )}
                   </div>
                 </motion.div>
+                    );
+                    })}
+                  </motion.div>
+                </div>
               );
-            })}
-          </motion.div>
+            });
+          })()
         )}
       </div>
 
