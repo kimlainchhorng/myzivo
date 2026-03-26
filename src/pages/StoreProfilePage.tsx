@@ -398,7 +398,7 @@ export default function StoreProfilePage() {
       </div>
 
       {/* ── Products Grid - 3D Holographic Cards ── */}
-      <div className="px-3 pt-1" style={{ perspective: "1200px" }}>
+      <div className="px-3 pt-1 pb-40" style={{ perspective: "1200px" }}>
         {loadingProducts ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
