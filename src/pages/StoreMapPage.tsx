@@ -1,6 +1,6 @@
 /**
- * StoreMapPage — Uber/Lyft-style dark map with store pins
- * Uses regular google.maps.Marker (not AdvancedMarker) so JSON dark styles work without mapId
+ * StoreMapPage — Clean white Uber/Lyft-style map with store pins
+ * Features: light tiles, category filters, user GPS dot, search bar
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -59,25 +59,25 @@ async function loadGoogleMaps(apiKey: string): Promise<boolean> {
   });
 }
 
-/* ── Uber-style dark map ── */
-const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#212121" }] },
+/* ── Clean light map style ── */
+const LIGHT_MAP_STYLES: google.maps.MapTypeStyle[] = [
+  { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
   { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
-  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }, { visibility: "off" }] },
-  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
-  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#bdbdbd" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#f5f5f5" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.land_parcel", elementType: "labels.text.fill", stylers: [{ color: "#bdbdbd" }] },
+  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#333333" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2c2c2c" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
-  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#373737" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3c3c3c" }] },
-  { featureType: "road.highway.controlled_access", elementType: "geometry", stylers: [{ color: "#4e4e4e" }] },
-  { featureType: "road.local", elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
+  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#e8e8e8" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#d6d6d6" }] },
+  { featureType: "road.local", elementType: "labels.text.fill", stylers: [{ color: "#bdbdbd" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3d3d3d" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9e8fc" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#7eadd4" }] },
 ];
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -86,35 +86,45 @@ const CATEGORY_ICONS: Record<string, string> = {
   "electronics": "📱", "pharmacy": "💊", "default": "🏪",
 };
 
+const CATEGORY_COLORS: Record<string, string> = {
+  "food-market": "#16a34a", "restaurant": "#ea580c", "fashion-market": "#9333ea",
+  "drink": "#2563eb", "mall": "#db2777", "supermarket": "#0d9488", "salon": "#e11d48",
+  "electronics": "#4f46e5", "pharmacy": "#059669", "default": "#6b7280",
+};
+
 function getCategoryIcon(cat: string) {
   return CATEGORY_ICONS[cat] || CATEGORY_ICONS.default;
+}
+
+function getCategoryColor(cat: string) {
+  return CATEGORY_COLORS[cat] || CATEGORY_COLORS.default;
 }
 
 function getCategoryLabel(cat: string) {
   return STORE_CATEGORY_OPTIONS.find((o) => o.value === cat)?.label || cat;
 }
 
-/** Build an SVG data-uri marker icon with emoji */
-function makeMarkerIcon(emoji: string): string {
+/** Colored pin marker with emoji */
+function makeMarkerIcon(emoji: string, color: string): string {
   const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="56" viewBox="0 0 48 56">
+    <svg xmlns="http://www.w3.org/2000/svg" width="44" height="54" viewBox="0 0 44 54">
       <defs>
         <filter id="s" x="-20%" y="-10%" width="140%" height="130%">
-          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.4"/>
+          <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-opacity="0.25"/>
         </filter>
       </defs>
-      <path d="M24 52 C24 52, 6 32, 6 20 A18 18 0 1 1 42 20 C42 32, 24 52, 24 52Z" fill="#fff" filter="url(#s)"/>
-      <circle cx="24" cy="20" r="14" fill="#2a2a2a"/>
-      <text x="24" y="26" text-anchor="middle" font-size="18">${emoji}</text>
+      <path d="M22 50 C22 50, 5 31, 5 19 A17 17 0 1 1 39 19 C39 31, 22 50, 22 50Z" fill="${color}" filter="url(#s)"/>
+      <circle cx="22" cy="19" r="12" fill="#fff"/>
+      <text x="22" y="24" text-anchor="middle" font-size="15">${emoji}</text>
     </svg>`;
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 }
 
-/** Blue dot SVG for user location */
+/** Blue dot for user location */
 function makeUserDotIcon(): string {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
-      <circle cx="14" cy="14" r="13" fill="rgba(66,133,244,0.2)" stroke="none"/>
+      <circle cx="14" cy="14" r="13" fill="rgba(66,133,244,0.15)" stroke="none"/>
       <circle cx="14" cy="14" r="8" fill="#4285F4" stroke="#fff" stroke-width="3"/>
     </svg>`;
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
@@ -165,7 +175,6 @@ export default function StoreMapPage() {
     return result;
   }, [stores, activeCategory, searchQuery]);
 
-  // Get user location
   useEffect(() => {
     if (!("geolocation" in navigator)) return;
     navigator.geolocation.getCurrentPosition(
@@ -175,7 +184,7 @@ export default function StoreMapPage() {
     );
   }, []);
 
-  // Init map — no mapId, so JSON styles apply
+  // Init map
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -191,8 +200,8 @@ export default function StoreMapPage() {
         disableDefaultUI: true,
         zoomControl: false,
         gestureHandling: "greedy",
-        backgroundColor: "#212121",
-        styles: DARK_MAP_STYLES,
+        backgroundColor: "#f5f5f5",
+        styles: LIGHT_MAP_STYLES,
       });
       mapRef.current = map;
       map.addListener("click", () => setSelectedStore(null));
@@ -205,62 +214,47 @@ export default function StoreMapPage() {
   useEffect(() => {
     if (!mapReady || !mapRef.current || !userLocation) return;
     if (userDotRef.current) userDotRef.current.setMap(null);
-
     userDotRef.current = new google.maps.Marker({
       map: mapRef.current,
       position: userLocation,
-      icon: {
-        url: makeUserDotIcon(),
-        scaledSize: new google.maps.Size(28, 28),
-        anchor: new google.maps.Point(14, 14),
-      },
+      icon: { url: makeUserDotIcon(), scaledSize: new google.maps.Size(28, 28), anchor: new google.maps.Point(14, 14) },
       title: "You",
       zIndex: 999,
     });
   }, [mapReady, userLocation]);
 
-  // Place store markers
+  // Store markers
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
-
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
-
     if (!filteredStores.length) return;
 
     const bounds = new google.maps.LatLngBounds();
-
     filteredStores.forEach((store) => {
       const pos = { lat: store.latitude, lng: store.longitude };
       bounds.extend(pos);
-
-      const icon = getCategoryIcon(store.category);
-
       const marker = new google.maps.Marker({
         map: mapRef.current!,
         position: pos,
         icon: {
-          url: makeMarkerIcon(icon),
-          scaledSize: new google.maps.Size(40, 47),
-          anchor: new google.maps.Point(20, 47),
+          url: makeMarkerIcon(getCategoryIcon(store.category), getCategoryColor(store.category)),
+          scaledSize: new google.maps.Size(40, 49),
+          anchor: new google.maps.Point(20, 49),
         },
         title: store.name,
         animation: google.maps.Animation.DROP,
         zIndex: 100,
       });
-
       marker.addListener("click", () => {
         setSelectedStore(store);
         mapRef.current?.panTo(pos);
         const z = mapRef.current?.getZoom() || 14;
         if (z < 14) mapRef.current?.setZoom(14);
       });
-
       markersRef.current.push(marker);
     });
-
     if (userLocation) bounds.extend(userLocation);
-
     if (filteredStores.length > 1) {
       mapRef.current.fitBounds(bounds, { top: 140, bottom: 180, left: 30, right: 30 });
     } else {
@@ -271,10 +265,8 @@ export default function StoreMapPage() {
 
   const handleRecenter = useCallback(() => {
     if (!mapRef.current) return;
-    if (userLocation) {
-      mapRef.current.panTo(userLocation);
-      mapRef.current.setZoom(14);
-    } else if (filteredStores.length) {
+    if (userLocation) { mapRef.current.panTo(userLocation); mapRef.current.setZoom(14); }
+    else if (filteredStores.length) {
       const bounds = new google.maps.LatLngBounds();
       filteredStores.forEach((s) => bounds.extend({ lat: s.latitude, lng: s.longitude }));
       mapRef.current.fitBounds(bounds, { top: 140, bottom: 180, left: 30, right: 30 });
@@ -285,19 +277,14 @@ export default function StoreMapPage() {
   const handleLocateMe = useCallback(() => {
     if (!("geolocation" in navigator) || !mapRef.current) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setUserLocation(loc);
-        mapRef.current?.panTo(loc);
-        mapRef.current?.setZoom(15);
-      },
+      (pos) => { const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }; setUserLocation(loc); mapRef.current?.panTo(loc); mapRef.current?.setZoom(15); },
       () => {},
       { enableHighAccuracy: true, timeout: 5000 }
     );
   }, []);
 
   return (
-    <div className="fixed inset-0 z-0" style={{ background: "#212121" }}>
+    <div className="fixed inset-0 z-0 bg-background">
 
       {/* ── Header ── */}
       <div className="absolute top-0 left-0 right-0 z-[1100]" style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 12px)" }}>
@@ -309,10 +296,9 @@ export default function StoreMapPage() {
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="flex items-center gap-2 rounded-2xl px-4 py-2.5 shadow-xl"
-                style={{ background: "#2a2a2a" }}
+                className="flex items-center gap-2 rounded-2xl px-4 py-2.5 shadow-md border border-border/40 bg-card"
               >
-                <Search className="w-4 h-4 shrink-0" style={{ color: "#666" }} />
+                <Search className="w-4 h-4 shrink-0 text-muted-foreground" />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -320,10 +306,9 @@ export default function StoreMapPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search stores..."
                   autoFocus
-                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#555]"
-                  style={{ color: "#f5f5f5" }}
+                  className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground"
                 />
-                <button onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="p-1 rounded-full" style={{ color: "#888" }}>
+                <button onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="p-1 rounded-full text-muted-foreground">
                   <X className="w-4 h-4" />
                 </button>
               </motion.div>
@@ -335,20 +320,19 @@ export default function StoreMapPage() {
                 exit={{ opacity: 0, y: -8 }}
                 className="flex items-center gap-2"
               >
-                <div className="flex-1 flex items-center gap-3 rounded-2xl px-4 py-3 shadow-xl" style={{ background: "#2a2a2a" }}>
+                <div className="flex-1 flex items-center gap-3 rounded-2xl px-4 py-3 shadow-md border border-border/40 bg-card">
                   <Store className="w-5 h-5 text-primary shrink-0" />
                   <div className="flex-1">
-                    <p className="text-[13px] font-bold" style={{ color: "#f5f5f5" }}>Explore Stores</p>
-                    <p className="text-[11px]" style={{ color: "#777" }}>
+                    <p className="text-[13px] font-bold text-foreground">Explore Stores</p>
+                    <p className="text-[11px] text-muted-foreground">
                       {filteredStores.length} {filteredStores.length === 1 ? "store" : "stores"} nearby
                     </p>
                   </div>
                   <button
                     onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 100); }}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center"
-                    style={{ background: "#3a3a3a" }}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center bg-muted"
                   >
-                    <Search className="w-4 h-4" style={{ color: "#aaa" }} />
+                    <Search className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </div>
               </motion.div>
@@ -362,12 +346,11 @@ export default function StoreMapPage() {
             <div className="flex gap-2 w-max">
               <button
                 onClick={() => { setActiveCategory("all"); setSelectedStore(null); }}
-                className="px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap"
-                style={{
-                  background: activeCategory === "all" ? "#fff" : "#2a2a2a",
-                  color: activeCategory === "all" ? "#1a1a1a" : "#999",
-                  boxShadow: activeCategory === "all" ? "0 2px 8px rgba(0,0,0,0.3)" : "none",
-                }}
+                className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap shadow-sm border ${
+                  activeCategory === "all"
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-card text-muted-foreground border-border/40"
+                }`}
               >
                 All ({stores.length})
               </button>
@@ -378,12 +361,11 @@ export default function StoreMapPage() {
                   <button
                     key={cat.value}
                     onClick={() => { setActiveCategory(isActive ? "all" : cat.value); setSelectedStore(null); }}
-                    className="px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5"
-                    style={{
-                      background: isActive ? "#fff" : "#2a2a2a",
-                      color: isActive ? "#1a1a1a" : "#999",
-                      boxShadow: isActive ? "0 2px 8px rgba(0,0,0,0.3)" : "none",
-                    }}
+                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 shadow-sm border ${
+                      isActive
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-card text-muted-foreground border-border/40"
+                    }`}
                   >
                     <span>{getCategoryIcon(cat.value)}</span>
                     {cat.label} ({count})
@@ -398,18 +380,17 @@ export default function StoreMapPage() {
       {/* ── Right FABs ── */}
       <div className="absolute right-4 bottom-[140px] z-[1500] flex flex-col gap-2">
         <Button variant="secondary" size="icon" onClick={handleLocateMe}
-          className="w-11 h-11 rounded-full shadow-lg border-0"
-          style={{ background: "#2a2a2a", color: userLocation ? "#4285F4" : "#888" }}
+          className="w-11 h-11 rounded-full shadow-md border border-border/40 bg-card hover:bg-muted"
+          style={{ color: userLocation ? "#4285F4" : undefined }}
           aria-label="My location"
         >
-          <Locate className="w-4.5 h-4.5" />
+          <Locate className="w-5 h-5" />
         </Button>
         <Button variant="secondary" size="icon" onClick={handleRecenter}
-          className="w-11 h-11 rounded-full shadow-lg border-0"
-          style={{ background: "#2a2a2a", color: "#f5f5f5" }}
+          className="w-11 h-11 rounded-full shadow-md border border-border/40 bg-card text-foreground hover:bg-muted"
           aria-label="Recenter"
         >
-          <Navigation className="w-4.5 h-4.5" />
+          <Navigation className="w-5 h-5" />
         </Button>
       </div>
 
@@ -417,10 +398,10 @@ export default function StoreMapPage() {
       <div ref={mapContainerRef} className="absolute inset-0" style={{ touchAction: "none" }} />
 
       {mapError && (
-        <div className="absolute inset-0 flex items-center justify-center" style={{ background: "#212121ee" }}>
+        <div className="absolute inset-0 flex items-center justify-center bg-background/90">
           <div className="text-center p-6">
-            <MapPin className="w-12 h-12 mx-auto mb-3" style={{ color: "#555" }} />
-            <p style={{ color: "#888" }}>Map unavailable</p>
+            <MapPin className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+            <p className="text-muted-foreground">Map unavailable</p>
           </div>
         </div>
       )}
@@ -436,12 +417,14 @@ export default function StoreMapPage() {
             className="absolute bottom-[100px] left-3 right-3 z-[1600]"
           >
             <div
-              className="rounded-2xl overflow-hidden shadow-2xl cursor-pointer active:scale-[0.98] transition-transform"
-              style={{ background: "#2a2a2a" }}
+              className="rounded-2xl overflow-hidden shadow-xl border border-border/30 bg-card cursor-pointer active:scale-[0.98] transition-transform"
               onClick={() => navigate(`/store/${selectedStore.slug}`)}
             >
               <div className="p-4 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden" style={{ background: "#3a3a3a" }}>
+                <div
+                  className="w-13 h-13 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                  style={{ background: getCategoryColor(selectedStore.category) + "15", width: 52, height: 52 }}
+                >
                   {selectedStore.logo_url ? (
                     <img src={selectedStore.logo_url} alt="" className="w-full h-full object-cover rounded-xl" />
                   ) : (
@@ -449,41 +432,43 @@ export default function StoreMapPage() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-[15px] truncate" style={{ color: "#f5f5f5" }}>{selectedStore.name}</h3>
+                  <h3 className="font-bold text-[15px] truncate text-foreground">{selectedStore.name}</h3>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ background: "#3a3a3a", color: "#aaa" }}>
+                    <span
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                      style={{ background: getCategoryColor(selectedStore.category) + "18", color: getCategoryColor(selectedStore.category) }}
+                    >
                       {getCategoryLabel(selectedStore.category)}
                     </span>
                     {selectedStore.rating && (
-                      <span className="flex items-center gap-0.5 text-[11px] font-semibold" style={{ color: "#fbbf24" }}>
+                      <span className="flex items-center gap-0.5 text-[11px] font-semibold text-amber-500">
                         <Star className="w-3 h-3 fill-current" />
                         {selectedStore.rating}
                       </span>
                     )}
                   </div>
                   {selectedStore.address && (
-                    <p className="text-[11px] mt-1 truncate flex items-center gap-1" style={{ color: "#777" }}>
+                    <p className="text-[11px] mt-1 truncate flex items-center gap-1 text-muted-foreground">
                       <MapPin className="w-3 h-3 shrink-0" />
                       {selectedStore.address}
                     </p>
                   )}
                 </div>
-                <ChevronRight className="w-5 h-5 shrink-0" style={{ color: "#555" }} />
+                <ChevronRight className="w-5 h-5 shrink-0 text-muted-foreground/50" />
               </div>
-              <div className="flex border-t" style={{ borderColor: "#3a3a3a" }}>
+              <div className="flex border-t border-border/30">
                 <button
-                  className="flex-1 py-3 text-[12px] font-semibold text-center"
-                  style={{ color: "#22c55e" }}
+                  className="flex-1 py-3 text-[12px] font-semibold text-center text-primary"
                   onClick={(e) => { e.stopPropagation(); navigate(`/store/${selectedStore.slug}`); }}
                 >
                   View Store
                 </button>
                 {selectedStore.hours && (
                   <>
-                    <div className="w-px" style={{ background: "#3a3a3a" }} />
+                    <div className="w-px bg-border/30" />
                     <div className="flex-1 py-3 flex items-center justify-center gap-1.5">
-                      <Clock className="w-3 h-3" style={{ color: "#777" }} />
-                      <span className="text-[11px]" style={{ color: "#888" }}>{selectedStore.hours}</span>
+                      <Clock className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-[11px] text-muted-foreground">{selectedStore.hours}</span>
                     </div>
                   </>
                 )}
