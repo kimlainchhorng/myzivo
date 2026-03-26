@@ -21,7 +21,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus } from "lucide-react";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
-import ReelPreviewCard from "@/components/admin/ReelPreviewCard";
 import { cn } from "@/lib/utils";
 import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import { useState, useEffect, useRef } from "react";
@@ -267,9 +266,16 @@ export default function AdminStoreEditPage() {
     return /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
   };
 
+  const normalizeStorePostMediaUrl = (url: string) => {
+    if (!url) return "";
+    if (/^https?:\/\//i.test(url) || url.startsWith("blob:")) return url;
+    const cleaned = url.startsWith("/") ? url.slice(1) : url;
+    return supabase.storage.from("store-posts").getPublicUrl(cleaned).data.publicUrl;
+  };
+
   const getMediaType = (urls: string[]): string => {
-    const hasVideo = urls.some(isVideoUrl);
-    const hasImage = urls.some(u => !isVideoUrl(u));
+    const hasVideo = urls.some((url) => isVideoUrl(normalizeStorePostMediaUrl(url)));
+    const hasImage = urls.some((url) => !isVideoUrl(normalizeStorePostMediaUrl(url)));
     if (hasVideo && hasImage) return "mixed";
     if (hasVideo) return "video";
     return "image";
@@ -1000,16 +1006,19 @@ export default function AdminStoreEditPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {posts.filter((p: any) => p.media_type === "video" || p.media_type === "mixed").map((post: any) => (
+                    {posts.filter((p: any) => p.media_type === "video" || p.media_type === "mixed").map((post: any) => {
+                      const primaryMediaUrl = normalizeStorePostMediaUrl(post.media_urls?.[0] || "");
+
+                      return (
                       <div key={post.id} className="rounded-xl border border-border overflow-hidden bg-card group">
                         <div className="aspect-[9/16] relative overflow-hidden bg-muted/10">
-                          {post.media_urls?.[0] && (
+                          {primaryMediaUrl && (
                             <video
-                              src={post.media_urls[0]}
+                              src={primaryMediaUrl}
                               className="w-full h-full object-contain"
                               controls
                               playsInline
-                              preload="auto"
+                              preload="metadata"
                             />
                           )}
                           {post.media_urls?.length > 1 && (
@@ -1028,7 +1037,7 @@ export default function AdminStoreEditPage() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 )}
               </CardContent>
@@ -1506,12 +1515,32 @@ export default function AdminStoreEditPage() {
               )}>
                 {postMediaItems.map((preview, i) => (
                   <div key={`${preview.previewUrl}-${i}`}>
-                    <div className="relative">
-                      <ReelPreviewCard
-                        url={preview.previewUrl}
-                        isVideo={preview.isVideo}
-                        onRemove={() => removePostMedia(i)}
-                      />
+                    <div className="relative overflow-hidden rounded-lg border border-border bg-muted/20">
+                      {preview.isVideo ? (
+                        <video
+                          src={preview.previewUrl}
+                          controls
+                          playsInline
+                          preload="metadata"
+                          className="w-full rounded-lg bg-muted"
+                          style={{ aspectRatio: "9 / 16", maxHeight: 320 }}
+                        />
+                      ) : (
+                        <img
+                          src={preview.previewUrl}
+                          alt="Post preview"
+                          className="w-full rounded-lg object-cover"
+                          style={{ aspectRatio: "1 / 1" }}
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removePostMedia(i)}
+                        className="absolute right-1 top-1 z-10 rounded-full bg-destructive p-1 text-destructive-foreground"
+                        aria-label="Remove media"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                       {preview.isUploading && (
                         <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/70 backdrop-blur-[1px]">
                           <Loader2 className="h-5 w-5 animate-spin text-primary" />
