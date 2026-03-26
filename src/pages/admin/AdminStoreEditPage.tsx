@@ -884,6 +884,8 @@ export default function AdminStoreEditPage() {
                       updateProductField("discount_value", null);
                       updateProductField("discount_price_khr", null);
                       updateProductField("discount_expires_at", "");
+                      updateProductField("buy_quantity", 1);
+                      updateProductField("get_quantity", 0);
                     }
                   }}
                 />
