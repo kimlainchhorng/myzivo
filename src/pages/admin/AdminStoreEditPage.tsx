@@ -201,42 +201,6 @@ export default function AdminStoreEditPage() {
     });
   };
 
-  const validatePlayableVideo = async (file: File) => {
-    if (!file.type.startsWith("video/")) return true;
-
-    const probeUrl = URL.createObjectURL(file);
-
-    try {
-      const canPlay = await new Promise<boolean>((resolve) => {
-        const video = document.createElement("video");
-        let settled = false;
-
-        const finish = (result: boolean) => {
-          if (settled) return;
-          settled = true;
-          video.removeAttribute("src");
-          video.load();
-          URL.revokeObjectURL(probeUrl);
-          resolve(result);
-        };
-
-        video.preload = "metadata";
-        video.muted = true;
-        video.playsInline = true;
-        video.onloadedmetadata = () => finish(true);
-        video.onerror = () => finish(false);
-        video.src = probeUrl;
-
-        window.setTimeout(() => finish(false), 4000);
-      });
-
-      return canPlay;
-    } catch {
-      URL.revokeObjectURL(probeUrl);
-      return false;
-    }
-  };
-
   const resetPostState = () => {
     setPostCaption("");
     cleanupPreviews();
@@ -252,12 +216,9 @@ export default function AdminStoreEditPage() {
 
     const fileIsVideo = file.type.startsWith("video/");
 
-    if (fileIsVideo) {
-      const isPlayable = await validatePlayableVideo(file);
-      if (!isPlayable) {
-        toast.error("This video can't play in browser. Please convert it to MP4 with H.264/AAC (many iPhone HEVC videos won't work).");
-        return;
-      }
+    if (fileIsVideo && file.size > 100 * 1024 * 1024) {
+      toast.error("Video file is too large. Maximum 100 MB.");
+      return;
     }
 
     const localPreviewUrl = URL.createObjectURL(file);
@@ -1553,7 +1514,7 @@ export default function AdminStoreEditPage() {
                   e.target.value = "";
                 }}
               />
-              <p className="text-[10px] text-muted-foreground">Supports JPG, PNG, and browser-safe videos like MP4 (H.264/AAC). Some MOV or iPhone HEVC videos may not work. Max 10 files.</p>
+              <p className="text-[10px] text-muted-foreground">Supports images (JPG, PNG) and videos (MP4, MOV). Max 10 files, 100 MB per video.</p>
             </div>
           </div>
           <DialogFooter>
