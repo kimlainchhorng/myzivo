@@ -19,8 +19,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, Play } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus } from "lucide-react";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
+import ReelPreviewCard from "@/components/admin/ReelPreviewCard";
 import { cn } from "@/lib/utils";
 import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import { useState, useEffect, useRef } from "react";
@@ -1450,7 +1451,10 @@ export default function AdminStoreEditPage() {
       </Dialog>
 
       {/* New Post Dialog */}
-      <Dialog open={postDialog} onOpenChange={setPostDialog}>
+      <Dialog open={postDialog} onOpenChange={(open) => {
+        setPostDialog(open);
+        if (!open) resetPostState();
+      }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{postMediaMode === "video" ? t("admin.store.add_video_post") : t("admin.store.add_photo_post")}</DialogTitle>
@@ -1469,26 +1473,12 @@ export default function AdminStoreEditPage() {
               <Label>{t("admin.store.post_media")}</Label>
               <div className="grid grid-cols-3 gap-2">
                 {postMediaPreviews.map((preview, i) => (
-                  <div key={i} className="relative group rounded-lg overflow-hidden border border-border bg-black" style={{ aspectRatio: preview.isVideo ? '9/16' : '1/1' }}>
-                    {preview.isVideo ? (
-                      <video
-                        src={preview.url}
-                        className="w-full h-full object-cover"
-                        muted
-                        controls
-                        playsInline
-                        preload="auto"
-                      />
-                    ) : (
-                      <img src={preview.url} alt="" className="w-full h-full object-cover" />
-                    )}
-                    <button
-                      onClick={() => removePostMedia(i)}
-                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
+                  <ReelPreviewCard
+                    key={`${preview.url}-${i}`}
+                    url={preview.url}
+                    isVideo={preview.isVideo}
+                    onRemove={() => removePostMedia(i)}
+                  />
                 ))}
                 {postMediaUrls.length < 10 && (
                   <button
@@ -1522,7 +1512,7 @@ export default function AdminStoreEditPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { cleanupPreviews(); setPostMediaPreviews([]); setPostDialog(false); }}>Cancel</Button>
+            <Button variant="outline" onClick={() => { setPostDialog(false); }}>Cancel</Button>
             <Button
               onClick={() => savePost.mutate()}
               disabled={savePost.isPending || postMediaUrls.length === 0}
