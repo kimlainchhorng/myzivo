@@ -648,6 +648,7 @@ export default function AdminStoreEditPage() {
           <TabsList>
              <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
             <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> {t("admin.store.products")} ({products.length})</TabsTrigger>
+            <TabsTrigger value="posts" className="gap-1.5"><ImagePlus className="h-3.5 w-3.5" /> {t("admin.store.posts")} ({posts.length})</TabsTrigger>
           </TabsList>
 
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-card">
