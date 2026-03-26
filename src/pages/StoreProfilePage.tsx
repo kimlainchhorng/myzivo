@@ -135,7 +135,7 @@ export default function StoreProfilePage() {
         />
       </div>
 
-      {/* ── Banner with 3D parallax ── */}
+      {/* ── Banner with overlapping store info card ── */}
       {(() => {
         const gallerySlides = [
           ...(store.gallery_images || []),
@@ -144,101 +144,100 @@ export default function StoreProfilePage() {
         const hasSlides = gallerySlides.length > 0;
 
         return (
-          <div className="relative w-full h-52 overflow-hidden" style={{ perspective: "800px" }}>
-            {hasSlides ? (
-              <StoreHeroCarousel images={gallerySlides} storeName={store.name} />
-            ) : (
-              <motion.div
-                initial={{ scale: 1.15, rotateX: 4 }}
-                animate={{ scale: 1, rotateX: 0 }}
-                transition={{ duration: 1.4, ease: "easeOut" }}
-                className="absolute inset-0 origin-bottom"
-              >
-                <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/10 to-sky-500/15" />
-              </motion.div>
-            )}
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none z-[1]" />
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none z-[1]" />
-
-            {/* Nav buttons */}
-            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-3 z-10">
-              <motion.button
-                whileTap={{ scale: 0.85 }}
-                onClick={() => navigate(-1)}
-                className="h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
-              >
-                <ArrowLeft className="h-4 w-4 text-foreground" />
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.85 }}
-                onClick={() => setShowCart(true)}
-                className="relative h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
-              >
-                <ShoppingCart className="h-4 w-4 text-foreground" />
-                {cart.itemCount > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30"
-                  >
-                    {cart.itemCount}
-                  </motion.span>
-                )}
-              </motion.button>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* ── Store Info Card - 3D glassmorphic ── */}
-      <div className="relative px-4 -mt-16 z-10" style={{ perspective: "1000px" }}>
-        <motion.div
-          initial={{ y: 50, opacity: 0, rotateX: 10 }}
-          animate={{ y: 0, opacity: 1, rotateX: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
-          className="bg-card/70 backdrop-blur-2xl rounded-3xl border border-white/[0.08] shadow-2xl shadow-black/10 p-4 relative overflow-hidden"
-        >
-          {/* Holographic shine */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.06] via-transparent to-primary/[0.02] rounded-3xl pointer-events-none" />
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          
-          <div className="flex items-start gap-3 relative">
-            <motion.div
-              initial={{ scale: 0.7, opacity: 0, rotateY: -20 }}
-              animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
-              className="h-16 w-16 rounded-2xl bg-background/80 backdrop-blur-sm border border-white/10 overflow-hidden flex items-center justify-center shrink-0 shadow-xl shadow-black/5"
-            >
-              {store.logo_url ? (
-                <img src={store.logo_url} alt={store.name} className="h-full w-full object-contain p-1" />
+          <div className="relative w-full" style={{ perspective: "800px" }}>
+            {/* Banner area */}
+            <div className="relative w-full h-56 overflow-hidden">
+              {hasSlides ? (
+                <StoreHeroCarousel images={gallerySlides} storeName={store.name} />
               ) : (
-                <Store className="h-8 w-8 text-muted-foreground/30" />
+                <motion.div
+                  initial={{ scale: 1.15, rotateX: 4 }}
+                  animate={{ scale: 1, rotateX: 0 }}
+                  transition={{ duration: 1.4, ease: "easeOut" }}
+                  className="absolute inset-0 origin-bottom"
+                >
+                  <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/10 to-sky-500/15" />
+                </motion.div>
               )}
-            </motion.div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold text-foreground truncate">{store.name}</h1>
-              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                  {store.rating || "4.5"}
-                </span>
-                {store.hours && (
-                  <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" /> {store.hours}
-                  </span>
-                )}
-                {store.delivery_min && (
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/15">
-                    {store.delivery_min}m delivery
-                  </Badge>
-                )}
+              {/* Gradient overlay for readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-black/10 pointer-events-none z-[1]" />
+
+              {/* Nav buttons */}
+              <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-3 z-10">
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => navigate(-1)}
+                  className="h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
+                >
+                  <ArrowLeft className="h-4 w-4 text-foreground" />
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => setShowCart(true)}
+                  className="relative h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
+                >
+                  <ShoppingCart className="h-4 w-4 text-foreground" />
+                  {cart.itemCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30"
+                    >
+                      {cart.itemCount}
+                    </motion.span>
+                  )}
+                </motion.button>
               </div>
-              {store.description && (
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{store.description}</p>
-              )}
             </div>
-          </div>
+
+            {/* ── Overlapping Store Info Card ── */}
+            <div className="relative px-4 -mt-20 z-10" style={{ perspective: "1000px" }}>
+              <motion.div
+                initial={{ y: 40, opacity: 0, rotateX: 8 }}
+                animate={{ y: 0, opacity: 1, rotateX: 0 }}
+                transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
+                className="bg-card/80 backdrop-blur-2xl rounded-2xl border border-white/[0.08] shadow-2xl shadow-black/10 p-3.5 relative overflow-hidden"
+              >
+                {/* Holographic shine */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.06] via-transparent to-primary/[0.02] rounded-2xl pointer-events-none" />
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+                <div className="flex items-start gap-3 relative">
+                  <motion.div
+                    initial={{ scale: 0.7, opacity: 0, rotateY: -20 }}
+                    animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                    transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+                    className="h-14 w-14 rounded-xl bg-background/80 backdrop-blur-sm border border-white/10 overflow-hidden flex items-center justify-center shrink-0 shadow-xl shadow-black/5"
+                  >
+                    {store.logo_url ? (
+                      <img src={store.logo_url} alt={store.name} className="h-full w-full object-contain p-1" />
+                    ) : (
+                      <Store className="h-7 w-7 text-muted-foreground/30" />
+                    )}
+                  </motion.div>
+                  <div className="flex-1 min-w-0">
+                    <h1 className="text-base font-bold text-foreground truncate">{store.name}</h1>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                        {store.rating || "4.5"}
+                      </span>
+                      {store.hours && (
+                        <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" /> {store.hours}
+                        </span>
+                      )}
+                      {store.delivery_min && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/15">
+                          {store.delivery_min}m delivery
+                        </Badge>
+                      )}
+                    </div>
+                    {store.description && (
+                      <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{store.description}</p>
+                    )}
+                  </div>
+                </div>
 
           {/* Contact row — compact 3D cards */}
           <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/[0.06]" style={{ perspective: "600px" }}>
