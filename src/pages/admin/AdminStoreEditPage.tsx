@@ -942,7 +942,7 @@ export default function AdminStoreEditPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {posts.filter((p: any) => p.media_type === "video" || p.media_type === "mixed").map((post: any) => (
                       <div key={post.id} className="rounded-xl border border-border overflow-hidden bg-card group">
-                        <div className="aspect-[9/16] relative bg-muted overflow-hidden">
+                        <div className="aspect-[9/16] relative overflow-hidden bg-black">
                           {post.media_urls?.[0] && (
                             <video
                               src={post.media_urls[0]}
@@ -951,15 +951,13 @@ export default function AdminStoreEditPage() {
                               loop
                               autoPlay
                               playsInline
-                              preload="metadata"
+                              preload="auto"
+                              onLoadedData={(e) => {
+                                void e.currentTarget.play().catch(() => undefined);
+                              }}
                             />
                           )}
-                          <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-background/50 via-transparent to-transparent" />
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur-sm">
-                              <Play className="h-5 w-5 fill-current" />
-                            </div>
-                          </div>
+                          <div className="absolute inset-x-0 bottom-0 h-20 pointer-events-none bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
                           {post.media_urls?.length > 1 && (
                             <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground text-xs font-medium px-2 py-0.5 rounded-full">
                               +{post.media_urls.length - 1}
