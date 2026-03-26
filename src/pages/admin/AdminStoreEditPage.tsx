@@ -310,6 +310,7 @@ export default function AdminStoreEditPage() {
     }
   };
 
+  const uploadImage = async (file: File, type: "logo" | "cover") => {
     const isLogo = type === "logo";
     isLogo ? setUploadingLogo(true) : setUploadingCover(true);
     try {
