@@ -205,36 +205,6 @@ export default function AdminStoreEditPage() {
     setPostMediaItems([]);
   };
 
-  const validatePlayableVideo = (previewUrl: string) => {
-    return new Promise<void>((resolve, reject) => {
-      const video = document.createElement("video");
-      let settled = false;
-
-      const finish = (callback: () => void) => {
-        if (settled) return;
-        settled = true;
-        window.clearTimeout(timeoutId);
-        video.pause();
-        video.removeAttribute("src");
-        video.load();
-        callback();
-      };
-
-      const timeoutId = window.setTimeout(() => {
-        finish(() => reject(new Error("This video cannot be previewed. Please use MP4 or MOV.")));
-      }, 8000);
-
-      video.preload = "metadata";
-      video.muted = true;
-      video.playsInline = true;
-      video.onloadeddata = () => finish(resolve);
-      video.oncanplay = () => finish(resolve);
-      video.onerror = () => finish(() => reject(new Error("This video format is not playable in the browser.")));
-      video.src = previewUrl;
-      video.load();
-    });
-  };
-
   const uploadPostMedia = async (file: File) => {
     console.log("[PostMedia] uploadPostMedia called", { name: file.name, type: file.type, size: file.size });
     if (postMediaItems.length >= 10) {
@@ -254,10 +224,6 @@ export default function AdminStoreEditPage() {
     setUploadingPostMedia(true);
 
     try {
-      if (fileIsVideo) {
-        await validatePlayableVideo(localPreviewUrl);
-      }
-
       const ext = file.name.split(".").pop() || "jpg";
       const path = `posts/${storeId}/${Date.now()}.${ext}`;
       console.log("[PostMedia] uploading to storage path:", path);
