@@ -1,11 +1,13 @@
 /**
  * ManagedTagDropdown - Dropdown with save/add/delete for tags like Brand or Category
+ * Shows existing items from products, prevents duplicates
  */
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Check } from "lucide-react";
+import { Plus, Trash2, Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface ManagedTagDropdownProps {
   label: string;
@@ -48,58 +50,87 @@ export default function ManagedTagDropdown({
 
   const handleAddNew = () => {
     const trimmed = newItem.trim();
-    if (trimmed && !savedItems.includes(trimmed)) {
-      onSaveItem(trimmed);
-      onChange(trimmed);
-      setNewItem("");
-      setShowAddInput(false);
+    if (!trimmed) return;
+    if (savedItems.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error(`"${trimmed}" already exists`);
+      return;
     }
+    onSaveItem(trimmed);
+    onChange(trimmed);
+    setNewItem("");
+    setShowAddInput(false);
+    toast.success(`"${trimmed}" added`);
   };
 
-  const canSaveCurrent = value.trim() && !savedItems.includes(value.trim());
+  const canSaveCurrent =
+    value.trim() &&
+    !savedItems.some((s) => s.toLowerCase() === value.trim().toLowerCase());
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="flex gap-1.5">
+      <div className="relative">
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           onFocus={() => setOpen(true)}
-          className="flex-1"
+          className="pr-16"
         />
-        {canSaveCurrent && (
-          <Button
+        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {canSaveCurrent && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-[10px] gap-1 text-primary hover:text-primary"
+              onClick={() => {
+                onSaveItem(value.trim());
+                toast.success(`"${value.trim()}" saved`);
+              }}
+              title="Save to list"
+            >
+              <Check className="h-3 w-3" />
+            </Button>
+          )}
+          <button
             type="button"
-            variant="outline"
-            size="sm"
-            className="shrink-0 text-xs gap-1 h-9"
-            onClick={() => {
-              onSaveItem(value.trim());
-            }}
-            title="Save to list"
+            onClick={() => setOpen(!open)}
+            className="p-1 rounded hover:bg-muted transition-colors"
           >
-            <Check className="h-3 w-3" />
-            Save
-          </Button>
-        )}
+            <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
+          </button>
+        </div>
       </div>
 
       {open && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-52 overflow-hidden">
-          <div className="max-h-40 overflow-y-auto">
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-56 overflow-hidden">
+          {/* Header showing count */}
+          {savedItems.length > 0 && (
+            <div className="px-3 py-1.5 border-b border-border bg-muted/30">
+              <p className="text-[10px] text-muted-foreground font-medium">
+                {savedItems.length} saved {label.toLowerCase()}{savedItems.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+          )}
+
+          <div className="max-h-36 overflow-y-auto">
             {filtered.length === 0 && !showAddInput && (
-              <p className="px-3 py-2 text-xs text-muted-foreground">No saved items</p>
+              <p className="px-3 py-3 text-xs text-muted-foreground text-center">
+                {savedItems.length === 0 ? `No saved ${label.toLowerCase()}s yet` : "No match found"}
+              </p>
             )}
             {filtered.map((item) => (
               <div
                 key={item}
-                className="flex items-center justify-between px-3 py-2 hover:bg-muted/50 transition-colors group"
+                className={cn(
+                  "flex items-center justify-between px-3 py-2 hover:bg-muted/50 transition-colors group",
+                  value === item && "bg-primary/5"
+                )}
               >
                 <button
                   type="button"
                   className={cn(
-                    "flex-1 text-left text-sm",
+                    "flex-1 text-left text-sm flex items-center gap-2",
                     value === item && "font-semibold text-primary"
                   )}
                   onMouseDown={(e) => {
@@ -108,6 +139,7 @@ export default function ManagedTagDropdown({
                     setOpen(false);
                   }}
                 >
+                  {value === item && <Check className="h-3 w-3 text-primary shrink-0" />}
                   {item}
                 </button>
                 <button
@@ -117,6 +149,7 @@ export default function ManagedTagDropdown({
                     e.stopPropagation();
                     onDeleteItem(item);
                     if (value === item) onChange("");
+                    toast.success(`"${item}" removed`);
                   }}
                   className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-destructive"
                   title="Delete"
