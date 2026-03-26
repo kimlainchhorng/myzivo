@@ -182,6 +182,7 @@ export default function AdminStoreEditPage() {
   const [postDialog, setPostDialog] = useState(false);
   const [postCaption, setPostCaption] = useState("");
   const [postMediaUrls, setPostMediaUrls] = useState<string[]>([]);
+  const [postMediaPreviews, setPostMediaPreviews] = useState<string[]>([]);
   const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [postMediaMode, setPostMediaMode] = useState<"image" | "video">("image");
