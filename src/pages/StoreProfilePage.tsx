@@ -289,25 +289,11 @@ export default function StoreProfilePage() {
               </motion.a>
             )}
           </div>
-        </motion.div>
-      </div>
-
-      {/* ── Store Cover Banner Carousel ── */}
-      {(store.gallery_images?.length ?? 0) > 0 && (
-        <div className="px-4 pt-4">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 25 }}
-            className="rounded-2xl overflow-hidden border border-white/[0.08] shadow-lg shadow-black/5 relative h-48"
-          >
-            <StoreHeroCarousel
-              images={store.gallery_images!}
-              storeName={store.name}
-            />
-          </motion.div>
-        </div>
-      )}
+              </motion.div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Category Tabs - Floating 3D pills ── */}
       {categories.length > 0 && (
