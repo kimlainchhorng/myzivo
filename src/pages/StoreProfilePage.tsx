@@ -16,6 +16,8 @@ import { useState, useRef } from "react";
 import StoreHeroCarousel from "@/components/grocery/StoreHeroCarousel";
 import { toast } from "sonner";
 import { useI18n } from "@/hooks/useI18n";
+import storeRideBg from "@/assets/store-ride-bg.jpg";
+import storeCallBg from "@/assets/store-call-bg.jpg";
 
 const container = {
   hidden: {},
@@ -235,11 +237,12 @@ export default function StoreProfilePage() {
             </div>
           </div>
 
-          {/* Contact row — compact 3D cards */}
-          <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/[0.06]" style={{ perspective: "600px" }}>
+          {/* Contact row — immersive 4D cards */}
+          <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-white/[0.06]" style={{ perspective: "800px" }}>
             {store.address && (
               <motion.button
-                whileTap={{ scale: 0.96 }}
+                whileTap={{ scale: 0.94, rotateX: 2 }}
+                whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
                 onClick={() => {
                   const params = new URLSearchParams({ destination: store.address! });
                   const s = store as any;
@@ -249,39 +252,87 @@ export default function StoreProfilePage() {
                   }
                   navigate(`/rides/hub?${params.toString()}`);
                 }}
-                className="relative flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl border border-primary/15 transition-all overflow-hidden"
+                className="relative flex flex-col items-center justify-end gap-1 rounded-2xl border border-white/20 overflow-hidden h-28 group"
                 style={{
-                  background: "linear-gradient(145deg, hsl(var(--primary) / 0.06), hsl(var(--primary) / 0.01))",
-                  boxShadow: "0 4px 16px -4px hsl(var(--primary) / 0.1), inset 0 1px 0 0 hsl(0 0% 100% / 0.06)",
-                  backdropFilter: "blur(8px)",
+                  transformStyle: "preserve-3d",
+                  boxShadow: "0 8px 32px -8px hsl(var(--primary) / 0.25), 0 2px 8px -2px hsl(0 0% 0% / 0.15), inset 0 1px 0 0 hsl(0 0% 100% / 0.15)",
                 }}
               >
-                <div className="h-9 w-9 rounded-lg flex items-center justify-center relative" style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--primary) / 0.08))" }}>
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary/20 flex items-center justify-center">
-                    <ArrowLeft className="h-1.5 w-1.5 text-primary rotate-[135deg]" />
+                {/* Background image with parallax movement */}
+                <motion.div
+                  className="absolute inset-0 z-0"
+                  animate={{ scale: [1, 1.08, 1], x: [0, 3, -2, 0], y: [0, -2, 1, 0] }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <img src={storeRideBg} alt="" className="w-full h-full object-cover" loading="lazy" />
+                </motion.div>
+                {/* Dark gradient overlay */}
+                <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                {/* Animated light streak */}
+                <motion.div
+                  className="absolute inset-0 z-[2] pointer-events-none"
+                  animate={{ opacity: [0, 0.3, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ background: "linear-gradient(135deg, transparent 30%, hsl(0 0% 100% / 0.15) 50%, transparent 70%)" }}
+                />
+                {/* Content */}
+                <div className="relative z-[3] flex flex-col items-center gap-0.5 pb-2.5 px-2">
+                  <div className="h-10 w-10 rounded-xl flex items-center justify-center mb-0.5 border border-white/20"
+                    style={{
+                      background: "linear-gradient(135deg, hsl(var(--primary) / 0.85), hsl(var(--primary) / 0.6))",
+                      boxShadow: "0 4px 12px -2px hsl(var(--primary) / 0.5)",
+                      transform: "translateZ(20px)",
+                    }}
+                  >
+                    <MapPin className="h-5 w-5 text-primary-foreground drop-shadow-md" />
                   </div>
+                  <p className="text-[11px] font-bold text-white drop-shadow-md">{t("store.ride_there") || "Ride There"}</p>
+                  <p className="text-[8px] text-white/70 leading-tight line-clamp-1 text-center px-1 drop-shadow-sm">{store.address}</p>
                 </div>
-                <p className="text-[10px] font-bold text-primary">Ride There</p>
-                <p className="text-[8px] text-muted-foreground leading-tight line-clamp-2 text-center px-1">{store.address}</p>
               </motion.button>
             )}
             {store.phone && (
               <motion.a
-                whileTap={{ scale: 0.96 }}
+                whileTap={{ scale: 0.94, rotateX: 2 }}
+                whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
                 href={`tel:${store.phone.replace(/\s+/g, "")}`}
-                className="relative flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl border border-emerald-500/15 transition-all overflow-hidden"
+                className="relative flex flex-col items-center justify-end gap-1 rounded-2xl border border-white/20 overflow-hidden h-28 group"
                 style={{
-                  background: "linear-gradient(145deg, hsl(152 70% 50% / 0.06), hsl(152 70% 50% / 0.01))",
-                  boxShadow: "0 4px 16px -4px hsl(152 70% 50% / 0.1), inset 0 1px 0 0 hsl(0 0% 100% / 0.06)",
-                  backdropFilter: "blur(8px)",
+                  transformStyle: "preserve-3d",
+                  boxShadow: "0 8px 32px -8px hsl(152 70% 50% / 0.25), 0 2px 8px -2px hsl(0 0% 0% / 0.15), inset 0 1px 0 0 hsl(0 0% 100% / 0.15)",
                 }}
               >
-                <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, hsl(152 70% 50% / 0.2), hsl(152 70% 50% / 0.08))" }}>
-                  <Phone className="h-4 w-4 text-emerald-500" />
+                {/* Background image with parallax movement */}
+                <motion.div
+                  className="absolute inset-0 z-0"
+                  animate={{ scale: [1, 1.06, 1], x: [0, -2, 3, 0], y: [0, 2, -1, 0] }}
+                  transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <img src={storeCallBg} alt="" className="w-full h-full object-cover" loading="lazy" />
+                </motion.div>
+                {/* Dark gradient overlay */}
+                <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                {/* Animated light streak */}
+                <motion.div
+                  className="absolute inset-0 z-[2] pointer-events-none"
+                  animate={{ opacity: [0, 0.25, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                  style={{ background: "linear-gradient(225deg, transparent 30%, hsl(0 0% 100% / 0.12) 50%, transparent 70%)" }}
+                />
+                {/* Content */}
+                <div className="relative z-[3] flex flex-col items-center gap-0.5 pb-2.5 px-2">
+                  <div className="h-10 w-10 rounded-xl flex items-center justify-center mb-0.5 border border-white/20"
+                    style={{
+                      background: "linear-gradient(135deg, hsl(152 70% 45% / 0.9), hsl(152 70% 35% / 0.7))",
+                      boxShadow: "0 4px 12px -2px hsl(152 70% 50% / 0.5)",
+                      transform: "translateZ(20px)",
+                    }}
+                  >
+                    <Phone className="h-5 w-5 text-white drop-shadow-md" />
+                  </div>
+                  <p className="text-[11px] font-bold text-white drop-shadow-md">{t("store.call_store") || "Call Store"}</p>
+                  <p className="text-[11px] text-white/80 font-semibold drop-shadow-sm">{store.phone}</p>
                 </div>
-                <p className="text-[10px] font-bold text-emerald-600">Call Store</p>
-                <p className="text-[11px] text-foreground font-semibold">{store.phone}</p>
               </motion.a>
             )}
           </div>
