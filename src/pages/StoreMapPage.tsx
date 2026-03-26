@@ -523,7 +523,7 @@ export default function StoreMapPage() {
           >
             <div
               className="rounded-[20px] overflow-hidden shadow-2xl border border-border/20 bg-card/95 backdrop-blur-xl cursor-pointer active:scale-[0.98] transition-transform"
-              onClick={() => navigate(`/store/${selectedStore.slug}`)}
+              onClick={() => navigate(`/grocery/store/${selectedStore.slug}`)}
             >
               <div className="p-4 flex items-center gap-3.5">
                 {/* Store logo / icon */}
@@ -567,7 +567,7 @@ export default function StoreMapPage() {
               <div className="flex border-t border-border/20">
                 <button
                   className="flex-1 py-3.5 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors"
-                  onClick={(e) => { e.stopPropagation(); navigate(`/store/${selectedStore.slug}`); }}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/grocery/store/${selectedStore.slug}`); }}
                 >
                   View Store
                 </button>
