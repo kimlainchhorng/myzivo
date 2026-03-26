@@ -285,7 +285,14 @@ export default function AdminStoreEditPage() {
       resetPostState();
       toast.success("Post created!");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => {
+      const message = typeof e?.message === "string" ? e.message : "Failed to create post";
+      if (message.toLowerCase().includes("row-level security") || message.toLowerCase().includes("permission")) {
+        toast.error("Only admins can create video posts.");
+        return;
+      }
+      toast.error(message);
+    },
   });
 
   const deletePost = useMutation({
