@@ -979,14 +979,9 @@ export default function AdminStoreEditPage() {
                             <video
                               src={post.media_urls[0]}
                               className="w-full h-full object-cover"
-                              muted
-                              loop
-                              autoPlay
+                              controls
                               playsInline
-                              preload="auto"
-                              onLoadedData={(e) => {
-                                void e.currentTarget.play().catch(() => undefined);
-                              }}
+                              preload="metadata"
                             />
                           )}
                           <div className="absolute inset-x-0 bottom-0 h-20 pointer-events-none bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
