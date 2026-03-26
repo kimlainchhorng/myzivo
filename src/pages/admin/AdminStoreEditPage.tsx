@@ -1446,8 +1446,8 @@ export default function AdminStoreEditPage() {
                 {postMediaUrls.map((url, i) => (
                   <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
                     {isVideoUrl(url) ? (
-                      <div className="relative w-full h-full">
-                        <video src={url} className="w-full h-full object-cover" muted preload="metadata" />
+                      <div className="relative w-full h-full bg-black">
+                        <video src={url + "#t=0.5"} className="w-full h-full object-cover" muted preload="auto" playsInline />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                           <Play className="w-6 h-6 text-white" fill="white" />
                         </div>
