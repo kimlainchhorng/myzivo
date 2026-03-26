@@ -468,6 +468,59 @@ export default function AdminStoreEditPage() {
           </div>
         </Card>
 
+        {/* ── Gallery Images ── */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Image className="h-4 w-4" /> Gallery Images
+              <Badge variant="secondary" className="text-[10px]">{galleryImages.length}/10</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {galleryImages.map((url, i) => (
+                <div key={i} className="relative group aspect-video rounded-xl overflow-hidden border border-border bg-muted">
+                  <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => removeGalleryImage(i)}
+                    className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              {galleryImages.length < 10 && (
+                <button
+                  onClick={() => galleryInputRef.current?.click()}
+                  disabled={uploadingGallery}
+                  className="aspect-video rounded-xl border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1.5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                >
+                  {uploadingGallery ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Plus className="h-5 w-5" />
+                      <span className="text-[10px] font-medium">Add Photo</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => {
+                const f = e.target.files?.[0];
+                if (f) uploadGalleryImage(f);
+                e.target.value = "";
+              }}
+            />
+            <p className="text-[11px] text-muted-foreground mt-2">These images appear as a scrolling banner on your store page.</p>
+          </CardContent>
+        </Card>
+
         <Tabs defaultValue="profile" className="space-y-4">
           <TabsList>
              <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
