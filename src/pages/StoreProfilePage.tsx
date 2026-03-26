@@ -766,12 +766,27 @@ export default function StoreProfilePage() {
           >
             <button
               onClick={() => setShowCart(true)}
-              className="w-full h-14 rounded-2xl text-sm font-bold bg-gradient-to-r from-primary via-primary to-primary/90 text-primary-foreground shadow-2xl shadow-primary/30 flex items-center justify-center gap-2.5 border border-primary/30 relative overflow-hidden active:scale-[0.98] transition-transform"
+              className="w-full rounded-2xl bg-gradient-to-r from-primary via-primary to-primary/90 text-primary-foreground shadow-2xl shadow-primary/30 border border-primary/30 relative overflow-hidden active:scale-[0.98] transition-transform px-4 py-3"
             >
-              {/* Button shine */}
+              {/* Shine */}
               <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-transparent pointer-events-none" />
-              <ShoppingCart className="h-4.5 w-4.5 relative z-10" />
-              <span className="relative z-10">{t("store.view_cart")} · {cart.itemCount} {t("store.items")} · ៛{Math.round(cart.total * ((store as any)?.khr_rate || 4050)).toLocaleString()} · ${cart.total.toFixed(2)}</span>
+              <div className="relative z-10 flex items-center justify-between">
+                {/* Left: cart icon + count */}
+                <div className="flex items-center gap-2">
+                  <div className="h-9 w-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <ShoppingCart className="h-4 w-4" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[13px] font-extrabold">{t("store.view_cart")}</p>
+                    <p className="text-[10px] font-medium opacity-80">{cart.itemCount} {t("store.items")}</p>
+                  </div>
+                </div>
+                {/* Right: price */}
+                <div className="text-right">
+                  <p className="text-[14px] font-extrabold">៛{Math.round(cart.total * ((store as any)?.khr_rate || 4050)).toLocaleString()}</p>
+                  <p className="text-[10px] font-medium opacity-80">${cart.total.toFixed(2)}</p>
+                </div>
+              </div>
             </button>
           </motion.div>
         )}
