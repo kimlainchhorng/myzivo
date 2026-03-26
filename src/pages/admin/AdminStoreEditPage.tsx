@@ -195,18 +195,28 @@ export default function AdminStoreEditPage() {
 
   const saveProduct = useMutation({
     mutationFn: async (keepOpen?: boolean) => {
-      const { _khrRaw, ...productPayload } = productForm as typeof productForm & { _khrRaw?: string };
+      const { _khrRaw, ...rest } = productForm as typeof productForm & { _khrRaw?: string };
+      // Auto-generate SKU if empty
+      const productPayload = {
+        ...rest,
+        sku: rest.sku || generateSku(form.name, rest.category, rest.name),
+        // Clean empty discount fields
+        discount_type: rest.discount_type || null,
+        discount_value: rest.discount_value || null,
+        discount_price_khr: rest.discount_price_khr || null,
+        discount_expires_at: rest.discount_expires_at || null,
+      };
 
       if (editingProduct) {
         const { error } = await supabase
           .from("store_products")
-          .update(productPayload)
+          .update(productPayload as any)
           .eq("id", editingProduct.id);
         if (error) throw error;
       } else {
         const { data, error } = await supabase
           .from("store_products")
-          .insert({ ...productPayload, store_id: storeId! })
+          .insert({ ...(productPayload as any), store_id: storeId! })
           .select()
           .single();
         if (error) throw error;
