@@ -137,8 +137,9 @@ export default function StoreProfilePage() {
 
       {/* ── Banner with 3D parallax ── */}
       {(() => {
+        const defaultImages = ["/images/stores/chipmong-1.png"];
         const gallerySlides = [
-          ...(store.gallery_images || []),
+          ...(store.gallery_images?.length ? store.gallery_images : defaultImages),
           ...(store.banner_url && !(store.gallery_images || []).includes(store.banner_url) ? [store.banner_url] : []),
         ];
         const hasSlides = gallerySlides.length > 0;
