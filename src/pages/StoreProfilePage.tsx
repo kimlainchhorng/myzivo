@@ -643,29 +643,29 @@ export default function StoreProfilePage() {
                       <motion.div
                         initial={{ opacity: 0, y: 4 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center justify-between bg-primary/[0.06] backdrop-blur-xl rounded-[12px] p-0.5 border border-primary/10 mt-1"
+                        className="flex items-center justify-between bg-primary/[0.08] backdrop-blur-xl rounded-[12px] p-0.5 border border-primary/15 mt-1.5"
                       >
                         <motion.button
                           whileTap={{ scale: 0.75 }}
-                          onClick={() => cart.updateQuantity(product.id, cartItem.quantity - 1)}
-                          className="h-7 w-7 rounded-[10px] bg-background/70 backdrop-blur-sm flex items-center justify-center border border-white/10 shadow-sm"
+                          onClick={(e) => { e.stopPropagation(); cart.updateQuantity(product.id, cartItem.quantity - 1); }}
+                          className="h-8 w-8 rounded-[10px] bg-background/80 backdrop-blur-sm flex items-center justify-center border border-border/20 shadow-sm touch-manipulation active:bg-muted"
                         >
-                          <Minus className="h-3 w-3 text-foreground/70" />
+                          <Minus className="h-3.5 w-3.5 text-foreground/70" />
                         </motion.button>
                         <motion.span
                           key={cartItem.quantity}
                           initial={{ scale: 1.5, opacity: 0.5 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="text-xs font-black text-primary min-w-[20px] text-center"
+                          className="text-sm font-black text-primary min-w-[28px] text-center"
                         >
                           {cartItem.quantity}
                         </motion.span>
                         <motion.button
                           whileTap={{ scale: 0.75 }}
-                          onClick={() => cart.updateQuantity(product.id, cartItem.quantity + 1)}
-                          className="h-7 w-7 rounded-[10px] bg-background/70 backdrop-blur-sm flex items-center justify-center border border-white/10 shadow-sm"
+                          onClick={(e) => { e.stopPropagation(); cart.updateQuantity(product.id, cartItem.quantity + 1); }}
+                          className="h-8 w-8 rounded-[10px] bg-background/80 backdrop-blur-sm flex items-center justify-center border border-border/20 shadow-sm touch-manipulation active:bg-muted"
                         >
-                          <Plus className="h-3 w-3 text-foreground/70" />
+                          <Plus className="h-3.5 w-3.5 text-foreground/70" />
                         </motion.button>
                       </motion.div>
                     )}
