@@ -302,7 +302,7 @@ export default function StoreProfilePage() {
           className="rounded-2xl overflow-hidden border border-white/[0.08] shadow-lg shadow-black/5 relative h-40"
         >
           <StoreHeroCarousel
-            images={["/images/stores/chipmong-1.png", "/images/stores/chipmong-2.png"]}
+            images={["/images/stores/chipmong-1.png", "/images/stores/chipmong-2.png", "/images/stores/chipmong-3.png"]}
             storeName={store.name}
           />
         </motion.div>
