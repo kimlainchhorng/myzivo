@@ -569,7 +569,7 @@ export default function StoreMapPage() {
                   className="flex-1 py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(`/rides?dest=${encodeURIComponent(selectedStore.address || selectedStore.name)}&lat=${selectedStore.latitude}&lng=${selectedStore.longitude}`);
+                    navigate(`/rides/hub?destination=${encodeURIComponent(selectedStore.address || selectedStore.name)}&destLat=${selectedStore.latitude}&destLng=${selectedStore.longitude}`);
                   }}
                 >
                   <Car className="w-3.5 h-3.5" /> Ride There
