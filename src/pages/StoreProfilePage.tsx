@@ -533,7 +533,7 @@ export default function StoreProfilePage() {
                             b.cls, b.glow
                           )}
                         >
-                          <span className="text-[8px] font-extrabold tracking-wider uppercase drop-shadow-sm">{b.label}</span>
+                          <span className="text-[8px] font-extrabold tracking-wider uppercase drop-shadow-sm">{b.label} / {b.labelKm}</span>
                         </motion.div>
                       );
                     })()}
