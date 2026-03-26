@@ -1377,6 +1377,100 @@ export default function AdminStoreEditPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* New Post Dialog */}
+      <Dialog open={postDialog} onOpenChange={setPostDialog}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("admin.store.add_post")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>{t("admin.store.post_caption")}</Label>
+              <Textarea
+                value={postCaption}
+                onChange={e => setPostCaption(e.target.value)}
+                placeholder={t("admin.store.post_caption_placeholder")}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("admin.store.post_media")}</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {postMediaUrls.map((url, i) => (
+                  <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                    {isVideoUrl(url) ? (
+                      <video src={url} className="w-full h-full object-cover" muted />
+                    ) : (
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                    )}
+                    <button
+                      onClick={() => removePostMedia(i)}
+                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                {postMediaUrls.length < 10 && (
+                  <button
+                    onClick={() => postMediaInputRef.current?.click()}
+                    disabled={uploadingPostMedia}
+                    className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                  >
+                    {uploadingPostMedia ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Camera className="h-5 w-5" />
+                        <span className="text-[10px]">Add</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+              <input
+                ref={postMediaInputRef}
+                type="file"
+                accept="image/*,video/*"
+                className="hidden"
+                onChange={e => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadPostMedia(f);
+                  e.target.value = "";
+                }}
+              />
+              <p className="text-[10px] text-muted-foreground">Supports images (JPG, PNG) and videos (MP4, MOV). Max 10 files.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPostDialog(false)}>Cancel</Button>
+            <Button
+              onClick={() => savePost.mutate()}
+              disabled={savePost.isPending || postMediaUrls.length === 0}
+            >
+              {savePost.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+              {savePost.isPending ? "Posting..." : t("admin.store.add_post")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Post Confirmation */}
+      <Dialog open={!!deletePostId} onOpenChange={() => setDeletePostId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("admin.store.delete_post")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground">Are you sure? This cannot be undone.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletePostId(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => deletePostId && deletePost.mutate(deletePostId)} disabled={deletePost.isPending}>
+              {deletePost.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
