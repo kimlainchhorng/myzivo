@@ -281,9 +281,10 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, cur
             )}
           </div>
 
-          {/* Suggestions dropdown */}
+          {/* Suggestions dropdown — overlays the map */}
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute left-4 right-4 top-full mt-1 bg-background border border-border rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto">
+            <div className="absolute left-4 right-4 top-full mt-1 bg-background border border-border rounded-xl shadow-lg z-[60] max-h-40 overflow-y-auto"
+                 style={{ backdropFilter: 'blur(8px)', background: 'hsl(var(--background) / 0.97)' }}>
               {suggestions.map((s) => (
                 <button
                   key={s.place_id}
