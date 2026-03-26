@@ -51,6 +51,12 @@ export default function AdminStoreEditPage() {
   const activeLanguages = (supportedLanguages || []).filter(l => l.is_active && STORE_LANG_CODES.includes(l.code));
   const currentLangData = activeLanguages.find(l => l.code === currentLanguage);
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+
+  const existingCategories = useMemo(() => {
+    const cats = products.map((p: any) => p.category).filter(Boolean);
+    return [...new Set(cats)] as string[];
+  }, [products]);
 
   const { data: store, isLoading } = useQuery({
     queryKey: ["admin-store", storeId],
