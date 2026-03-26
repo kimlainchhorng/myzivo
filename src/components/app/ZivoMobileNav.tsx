@@ -35,7 +35,7 @@ const ZivoMobileNav = () => {
   const tabs: NavTab[] = [
     { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
     { id: "feed", labelKey: "nav.feed", icon: Rss, path: "/feed", bg: navSearchBg, cssVar: "var(--flights)" },
-    { id: "trips", labelKey: "nav.trips", icon: Briefcase, path: "/my-trips", bg: navTripsBg, cssVar: "var(--hotels)" },
+    { id: "map", labelKey: "nav.map", icon: MapPin, path: "/rides", bg: navTripsBg, cssVar: "var(--hotels)" },
     { id: "alerts", labelKey: "nav.alerts", icon: Bell, path: "/notifications", badge: activeAlertsCount, bg: navAlertsBg, cssVar: "var(--cars)" },
     { id: "account", labelKey: "nav.account", icon: User, path: "/profile", bg: navAccountBg, cssVar: "var(--primary)" },
   ];
@@ -44,7 +44,7 @@ const ZivoMobileNav = () => {
     const path = location.pathname;
     if (path === "/" || path === "") return "home";
     if (path.startsWith("/feed")) return "feed";
-    if (path.startsWith("/trips") || path.startsWith("/my-trips") || path.startsWith("/my-orders")) return "trips";
+    if (path.startsWith("/rides") || path.startsWith("/map")) return "map";
     if (path.startsWith("/alerts") || path.startsWith("/price-alerts") || path.startsWith("/notifications")) return "alerts";
     if (path.startsWith("/account") || path.startsWith("/profile")) return "account";
     return "home";
