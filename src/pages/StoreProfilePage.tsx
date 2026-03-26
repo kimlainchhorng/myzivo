@@ -700,7 +700,7 @@ export default function StoreProfilePage() {
               {/* Button shine */}
               <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-transparent pointer-events-none" />
               <ShoppingCart className="h-4.5 w-4.5 relative z-10" />
-              <span className="relative z-10">{t("store.view_cart")} · {cart.itemCount} {t("store.items")} · ${cart.total.toFixed(2)}</span>
+              <span className="relative z-10">{t("store.view_cart")} · {cart.itemCount} {t("store.items")} · ៛{Math.round(cart.total * ((store as any)?.khr_rate || 4050)).toLocaleString()} · ${cart.total.toFixed(2)}</span>
             </button>
           </motion.div>
         )}
