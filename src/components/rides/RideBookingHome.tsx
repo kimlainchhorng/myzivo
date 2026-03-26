@@ -652,10 +652,14 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
     initialDestAppliedRef.current = true;
     
     // If we have exact coordinates from the store, use them directly
+    // and auto-advance to confirm drop-off state
     if (initialDestLat && initialDestLng) {
       setDestination({ address: initialDestinationAddress, lat: initialDestLat, lng: initialDestLng });
       setDestinationDisplay(initialDestinationAddress);
       setMapPanTarget({ lat: initialDestLat, lng: initialDestLng });
+      setPickupConfirmed(true);
+      setViewStep("search");
+      setPinPlacementMode("destination");
       return;
     }
 
