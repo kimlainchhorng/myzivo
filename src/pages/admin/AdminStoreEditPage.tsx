@@ -974,17 +974,16 @@ export default function AdminStoreEditPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {posts.filter((p: any) => p.media_type === "video" || p.media_type === "mixed").map((post: any) => (
                       <div key={post.id} className="rounded-xl border border-border overflow-hidden bg-card group">
-                        <div className="aspect-[9/16] relative overflow-hidden bg-black">
+                        <div className="aspect-[9/16] relative overflow-hidden bg-muted/10">
                           {post.media_urls?.[0] && (
                             <video
                               src={post.media_urls[0]}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                               controls
                               playsInline
-                              preload="metadata"
+                              preload="auto"
                             />
                           )}
-                          <div className="absolute inset-x-0 bottom-0 h-20 pointer-events-none bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
                           {post.media_urls?.length > 1 && (
                             <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground text-xs font-medium px-2 py-0.5 rounded-full">
                               +{post.media_urls.length - 1}
