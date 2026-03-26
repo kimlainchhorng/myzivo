@@ -194,6 +194,19 @@ export default function AdminStoreEditPage() {
     }
   }, [store]);
 
+  const cleanupPreviews = () => {
+    postMediaPreviews.forEach((p) => {
+      if (p.url.startsWith("blob:")) URL.revokeObjectURL(p.url);
+    });
+  };
+
+  const resetPostState = () => {
+    setPostCaption("");
+    cleanupPreviews();
+    setPostMediaPreviews([]);
+    setPostMediaUrls([]);
+  };
+
   const uploadPostMedia = async (file: File) => {
     if (postMediaUrls.length >= 10) {
       toast.error("Maximum 10 files per post");
@@ -201,7 +214,8 @@ export default function AdminStoreEditPage() {
     }
 
     const localPreviewUrl = URL.createObjectURL(file);
-    setPostMediaPreviews(prev => [...prev, localPreviewUrl]);
+    const fileIsVideo = file.type.startsWith("video/");
+    setPostMediaPreviews(prev => [...prev, { url: localPreviewUrl, isVideo: fileIsVideo }]);
     setUploadingPostMedia(true);
 
     try {
@@ -213,7 +227,7 @@ export default function AdminStoreEditPage() {
       setPostMediaUrls(prev => [...prev, urlData.publicUrl]);
     } catch (e: any) {
       URL.revokeObjectURL(localPreviewUrl);
-      setPostMediaPreviews(prev => prev.filter((url) => url !== localPreviewUrl));
+      setPostMediaPreviews(prev => prev.filter((p) => p.url !== localPreviewUrl));
       toast.error(e.message || "Upload failed");
     } finally {
       setUploadingPostMedia(false);
@@ -223,13 +237,13 @@ export default function AdminStoreEditPage() {
   const removePostMedia = (index: number) => {
     setPostMediaPreviews(prev => {
       const preview = prev[index];
-      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+      if (preview?.url.startsWith("blob:")) URL.revokeObjectURL(preview.url);
       return prev.filter((_, i) => i !== index);
     });
     setPostMediaUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  const isVideoUrl = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || url.includes('/store-posts/') && /\.(mp4|mov|webm|avi|mkv)/i.test(url);
+  const isVideoUrl = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
 
   const getMediaType = (urls: string[]): string => {
     const hasVideo = urls.some(isVideoUrl);
@@ -253,12 +267,7 @@ export default function AdminStoreEditPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
       setPostDialog(false);
-      setPostCaption("");
-      postMediaPreviews.forEach((preview) => {
-        if (preview.startsWith("blob:")) URL.revokeObjectURL(preview);
-      });
-      setPostMediaPreviews([]);
-      setPostMediaUrls([]);
+      resetPostState();
       toast.success("Post created!");
     },
     onError: (e: any) => toast.error(e.message),
