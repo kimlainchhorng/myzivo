@@ -269,7 +269,12 @@ export default function AdminStoreEditPage() {
   const normalizeStorePostMediaUrl = (url: string) => {
     if (!url) return "";
     if (/^https?:\/\//i.test(url) || url.startsWith("blob:")) return url;
-    const cleaned = url.startsWith("/") ? url.slice(1) : url;
+
+    let cleaned = url.trim();
+    cleaned = cleaned.replace(/^\/+/, "");
+    cleaned = cleaned.replace(/^storage\/v1\/object\/public\/store-posts\//, "");
+    cleaned = cleaned.replace(/^store-posts\//, "");
+
     return supabase.storage.from("store-posts").getPublicUrl(cleaned).data.publicUrl;
   };
 
