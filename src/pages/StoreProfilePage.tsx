@@ -621,6 +621,9 @@ export default function StoreProfilePage() {
                     {/* Product name */}
                     <p className="text-[14px] font-semibold line-clamp-2 leading-tight text-foreground">
                       {product.name}
+                      {(product as any).unit && (
+                        <span className="text-[10px] font-medium text-muted-foreground ml-1">/ {(product as any).unit}</span>
+                      )}
                     </p>
 
                     {/* Price row */}

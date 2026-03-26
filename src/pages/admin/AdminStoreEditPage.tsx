@@ -48,7 +48,7 @@ function generateSku(storeName: string, category: string, name: string): string 
 
 const emptyProduct = {
   name: "", description: "", price: 0, price_khr: 0, image_url: "", image_urls: [] as string[], category: "",
-  brand: "", sku: "", in_stock: true, sort_order: 0,
+  brand: "", sku: "", unit: "", in_stock: true, sort_order: 0,
   discount_type: null as string | null, discount_value: null as number | null,
   discount_price_khr: null as number | null, discount_expires_at: "" as string,
   buy_quantity: 1, get_quantity: 0,
@@ -209,6 +209,7 @@ export default function AdminStoreEditPage() {
       category: p.category || "",
       brand: p.brand || "",
       sku: p.sku || "",
+      unit: p.unit || "",
       in_stock: p.in_stock ?? true,
       sort_order: p.sort_order || 0,
       discount_type: p.discount_type || null,
@@ -1079,6 +1080,34 @@ export default function AdminStoreEditPage() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Unit selector */}
+            <div className="space-y-2">
+              <Label>Unit / ឯកតា</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {["ចំនួន", "គីឡូ", "កញ្ចប់", "ដប", "កំប៉ុង", "ប្រអប់", "kg", "pcs", "pack", "bottle", "box", "liter"].map(u => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => updateProductField("unit", productForm.unit === u ? "" : u)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors",
+                      productForm.unit === u
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50"
+                    )}
+                  >
+                    {u}
+                  </button>
+                ))}
+              </div>
+              <Input
+                value={productForm.unit || ""}
+                onChange={e => updateProductField("unit", e.target.value)}
+                placeholder="Custom unit..."
+                className="mt-1"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">

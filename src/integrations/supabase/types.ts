@@ -36375,6 +36375,7 @@ export type Database = {
           sku: string | null
           sort_order: number | null
           store_id: string
+          unit: string | null
           updated_at: string | null
         }
         Insert: {
@@ -36398,6 +36399,7 @@ export type Database = {
           sku?: string | null
           sort_order?: number | null
           store_id: string
+          unit?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -36421,6 +36423,7 @@ export type Database = {
           sku?: string | null
           sort_order?: number | null
           store_id?: string
+          unit?: string | null
           updated_at?: string | null
         }
         Relationships: [
