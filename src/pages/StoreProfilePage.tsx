@@ -294,23 +294,21 @@ export default function StoreProfilePage() {
         </motion.div>
       </div>
 
-      {/* ── Banner Image ── */}
-      {store.banner_url && (
-        <div className="px-4 pt-4">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 25 }}
-            className="rounded-2xl overflow-hidden border border-white/[0.08] shadow-lg shadow-black/5"
-          >
-            <img
-              src={store.banner_url}
-              alt={`${store.name} banner`}
-              className="w-full h-auto object-cover"
-            />
-          </motion.div>
-        </div>
-      )}
+      {/* ── Store Cover Banner ── */}
+      <div className="px-4 pt-4">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 25 }}
+          className="rounded-2xl overflow-hidden border border-white/[0.08] shadow-lg shadow-black/5"
+        >
+          <img
+            src="/images/stores/chipmong-1.png"
+            alt={`${store.name} cover`}
+            className="w-full h-40 object-cover"
+          />
+        </motion.div>
+      </div>
 
       {/* ── Category Tabs - Floating 3D pills ── */}
       {categories.length > 0 && (
