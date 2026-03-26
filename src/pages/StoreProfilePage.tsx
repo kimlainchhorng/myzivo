@@ -331,6 +331,12 @@ export default function StoreProfilePage() {
               const cartItem = cart.items.find((c) => c.productId === product.id);
               const khrPrice = ((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050)));
               const isLiked = likedProducts.has(product.id);
+              const p = product as any;
+              const hasDiscount = p.discount_type && p.discount_value > 0 && p.discount_price_khr != null
+                && (!p.discount_expires_at || new Date(p.discount_expires_at) > new Date());
+              const discountKhr = hasDiscount ? p.discount_price_khr : null;
+              const discountUsd = hasDiscount ? parseFloat((discountKhr / ((store as any)?.khr_rate || 4050)).toFixed(2)) : null;
+              const discountPct = hasDiscount && p.discount_type === "percentage" ? p.discount_value : null;
               return (
                 <motion.div
                   key={product.id}
