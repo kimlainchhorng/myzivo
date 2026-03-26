@@ -36359,6 +36359,10 @@ export type Database = {
           category: string | null
           created_at: string | null
           description: string | null
+          discount_expires_at: string | null
+          discount_price_khr: number | null
+          discount_type: string | null
+          discount_value: number | null
           id: string
           image_url: string | null
           image_urls: Json | null
@@ -36376,6 +36380,10 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           description?: string | null
+          discount_expires_at?: string | null
+          discount_price_khr?: number | null
+          discount_type?: string | null
+          discount_value?: number | null
           id?: string
           image_url?: string | null
           image_urls?: Json | null
@@ -36393,6 +36401,10 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           description?: string | null
+          discount_expires_at?: string | null
+          discount_price_khr?: number | null
+          discount_type?: string | null
+          discount_value?: number | null
           id?: string
           image_url?: string | null
           image_urls?: Json | null
