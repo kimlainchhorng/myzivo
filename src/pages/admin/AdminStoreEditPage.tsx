@@ -68,14 +68,6 @@ export default function AdminStoreEditPage() {
   const [savedBrands, setSavedBrands] = useState<string[]>([]);
   const [savedCategories, setSavedCategories] = useState<string[]>([]);
 
-  // Derive saved brands/categories from existing products
-  useEffect(() => {
-    const brands = [...new Set(products.map((p: any) => p.brand).filter(Boolean))] as string[];
-    const cats = [...new Set(products.map((p: any) => p.category).filter(Boolean))] as string[];
-    setSavedBrands((prev) => [...new Set([...prev, ...brands])]);
-    setSavedCategories((prev) => [...new Set([...prev, ...cats])]);
-  }, [products]);
-
   const { data: store, isLoading } = useQuery({
     queryKey: ["admin-store", storeId],
     queryFn: async () => {
