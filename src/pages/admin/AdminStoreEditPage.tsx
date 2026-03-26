@@ -254,6 +254,10 @@ export default function AdminStoreEditPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
       setPostDialog(false);
       setPostCaption("");
+      postMediaPreviews.forEach((preview) => {
+        if (preview.startsWith("blob:")) URL.revokeObjectURL(preview);
+      });
+      setPostMediaPreviews([]);
       setPostMediaUrls([]);
       toast.success("Post created!");
     },
