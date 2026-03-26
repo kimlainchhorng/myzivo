@@ -351,36 +351,52 @@ export default function StoreProfilePage() {
       )}
 
 
-      {/* ── Category Tabs - Floating 3D pills ── */}
+      {/* ── Category Tabs - 3D Spatial Pills ── */}
       {categories.length > 0 && (
-        <div className="flex gap-2 px-4 pt-5 overflow-x-auto no-scrollbar">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setSelectedCategory(undefined)}
-            className={cn(
-              "px-4 py-2 rounded-2xl text-[11px] font-bold whitespace-nowrap transition-all shrink-0 border backdrop-blur-sm",
-              !selectedCategory
-                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 border-primary/40"
-                : "bg-card/50 text-muted-foreground border-white/[0.06] hover:bg-card/80"
-            )}
-          >
-            All
-          </motion.button>
-          {categories.map((cat) => (
+        <div className="relative px-4 pt-5">
+          {/* Frosted track background */}
+          <div className="absolute inset-x-4 top-5 bottom-0 rounded-2xl bg-card/30 backdrop-blur-xl border border-white/[0.06] shadow-inner" />
+          <div className="relative flex gap-1.5 overflow-x-auto no-scrollbar p-1.5">
             <motion.button
-              whileTap={{ scale: 0.9 }}
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              whileTap={{ scale: 0.88, rotateX: 8 }}
+              whileHover={{ y: -2, scale: 1.03 }}
+              onClick={() => setSelectedCategory(undefined)}
               className={cn(
-                "px-4 py-2 rounded-2xl text-[11px] font-bold whitespace-nowrap transition-all shrink-0 border backdrop-blur-sm",
-                selectedCategory === cat
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 border-primary/40"
-                  : "bg-card/50 text-muted-foreground border-white/[0.06] hover:bg-card/80"
+                "relative px-5 py-2.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap shrink-0 transition-all duration-200",
+                "border backdrop-blur-sm",
+                !selectedCategory
+                  ? "bg-gradient-to-b from-primary via-primary to-primary/85 text-primary-foreground shadow-xl shadow-primary/30 border-primary/50 ring-1 ring-primary/20"
+                  : "bg-card/60 text-muted-foreground border-white/[0.08] hover:bg-card/90 hover:border-white/[0.15] hover:text-foreground"
               )}
+              style={{ transformStyle: "preserve-3d" }}
             >
-              {cat}
+              {!selectedCategory && (
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-b from-white/20 via-transparent to-black/10 pointer-events-none" />
+              )}
+              <span className="relative z-10">All</span>
             </motion.button>
-          ))}
+            {categories.map((cat) => (
+              <motion.button
+                whileTap={{ scale: 0.88, rotateX: 8 }}
+                whileHover={{ y: -2, scale: 1.03 }}
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={cn(
+                  "relative px-5 py-2.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap shrink-0 transition-all duration-200",
+                  "border backdrop-blur-sm",
+                  selectedCategory === cat
+                    ? "bg-gradient-to-b from-primary via-primary to-primary/85 text-primary-foreground shadow-xl shadow-primary/30 border-primary/50 ring-1 ring-primary/20"
+                    : "bg-card/60 text-muted-foreground border-white/[0.08] hover:bg-card/90 hover:border-white/[0.15] hover:text-foreground"
+                )}
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                {selectedCategory === cat && (
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-b from-white/20 via-transparent to-black/10 pointer-events-none" />
+                )}
+                <span className="relative z-10">{cat}</span>
+              </motion.button>
+            ))}
+          </div>
         </div>
       )}
 
