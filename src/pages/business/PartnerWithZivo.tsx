@@ -241,7 +241,7 @@ export default function PartnerWithZivo() {
           </div>
         </section>
 
-        {/* Partnership Form */}
+        {/* Setup Partner Account */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -256,18 +256,42 @@ export default function PartnerWithZivo() {
               <div className="flex items-center gap-3 mb-1">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10 relative">
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-b from-white/10 to-transparent" />
-                  <Sparkles className="h-5 w-5 text-primary relative z-10" />
+                  <UserPlus className="h-5 w-5 text-primary relative z-10" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-extrabold">Get Started</CardTitle>
+                  <CardTitle className="text-xl font-extrabold">Setup Partner Account</CardTitle>
                   <CardDescription className="text-xs">
-                    We'll respond within 2-3 business days
+                    Create your ZIVO Partner account to get started
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="relative z-10">
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Account credentials */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Business Email *</Label>
+                  <Input required type="email" placeholder="business@company.com" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">Password *</Label>
+                    <Input required type="password" placeholder="Create a password" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">Confirm Password *</Label>
+                    <Input required type="password" placeholder="Confirm password" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="flex items-center gap-3 py-1">
+                  <div className="flex-1 h-px bg-border/50" />
+                  <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Business Details</span>
+                  <div className="flex-1 h-px bg-border/50" />
+                </div>
+
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold">Company Name *</Label>
@@ -297,17 +321,6 @@ export default function PartnerWithZivo() {
                     <Input required placeholder="Full name" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">Job Title</Label>
-                    <Input placeholder="Your role" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
-                  </div>
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">Email *</Label>
-                    <Input required type="email" placeholder="business@company.com" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
-                  </div>
-                  <div className="space-y-1.5">
                     <Label className="text-xs font-semibold">Phone</Label>
                     <Input type="tel" placeholder="+1 (555) 000-0000" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
                   </div>
@@ -318,14 +331,17 @@ export default function PartnerWithZivo() {
                   <Input type="url" placeholder="https://yourcompany.com" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Tell us about your business</Label>
-                  <Textarea
-                    placeholder="Brief description of your offerings and why you'd like to partner with ZIVO..."
-                    rows={4}
-                    className="rounded-xl bg-muted/30 border-border/50 focus:border-primary/50 resize-none"
-                  />
-                </div>
+                {/* Terms checkbox */}
+                <label className="flex items-start gap-3 cursor-pointer group py-1">
+                  <input type="checkbox" required className="mt-0.5 w-4 h-4 rounded border-border accent-primary" />
+                  <span className="text-xs text-muted-foreground leading-relaxed">
+                    I agree to the{" "}
+                    <Link to="/terms" className="text-primary hover:underline font-medium">Terms of Service</Link>
+                    {" "}and{" "}
+                    <Link to="/privacy" className="text-primary hover:underline font-medium">Privacy Policy</Link>
+                    {" "}for ZIVO Partners.
+                  </span>
+                </label>
 
                 <motion.div whileTap={{ scale: 0.97 }}>
                   <Button
@@ -333,8 +349,8 @@ export default function PartnerWithZivo() {
                     className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground h-13 rounded-2xl font-bold text-sm shadow-xl shadow-primary/20 relative overflow-hidden group"
                   >
                     <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/10 pointer-events-none" />
-                    <Mail className="h-4 w-4 mr-2 relative z-10" />
-                    <span className="relative z-10">Submit Partnership Inquiry</span>
+                    <UserPlus className="h-4 w-4 mr-2 relative z-10" />
+                    <span className="relative z-10">Create Partner Account</span>
                     <ArrowRight className="h-4 w-4 ml-2 relative z-10 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </motion.div>
@@ -342,8 +358,14 @@ export default function PartnerWithZivo() {
                 {/* Trust indicators */}
                 <div className="flex items-center justify-center gap-4 pt-2 text-[10px] text-muted-foreground">
                   <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure & Encrypted</span>
-                  <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3" /> No obligation</span>
+                  <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Free to join</span>
                 </div>
+
+                {/* Already have account */}
+                <p className="text-center text-xs text-muted-foreground pt-1">
+                  Already a partner?{" "}
+                  <Link to="/login" className="text-primary font-semibold hover:underline">Sign in</Link>
+                </p>
               </form>
             </CardContent>
           </Card>
