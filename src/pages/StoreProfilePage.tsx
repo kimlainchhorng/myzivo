@@ -427,12 +427,15 @@ export default function StoreProfilePage() {
             return Object.entries(grouped).map(([cat, catProducts]) => {
               if (!catProducts.length) return null;
               return (
-                <div key={cat} className="mb-4">
+                <div key={cat} className="mb-5">
                   {!selectedCategory && Object.keys(grouped).length > 1 && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="h-5 w-1 rounded-full bg-primary" />
-                      <h3 className="text-xs font-bold text-foreground">{cat}</h3>
-                      <span className="text-[10px] text-muted-foreground">({catProducts.length})</span>
+                    <div className="flex items-center gap-2.5 mb-3 px-1">
+                      <div className="h-7 w-7 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Package className="h-3.5 w-3.5 text-primary" />
+                      </div>
+                      <h3 className="text-[13px] font-bold text-foreground tracking-tight">{cat}</h3>
+                      <span className="text-[10px] text-muted-foreground/60 font-medium bg-muted/30 px-2 py-0.5 rounded-full">{catProducts.length}</span>
+                      <div className="flex-1 h-px bg-border/30 ml-1" />
                     </div>
                   )}
                   <motion.div
