@@ -280,7 +280,7 @@ export default function AdminStoreEditPage() {
       const ext = file.name.split(".").pop() || "jpg";
       const path = `posts/${storeId}/${Date.now()}.${ext}`;
       console.log("[PostMedia] uploading to storage path:", path);
-      const { error: upErr, data: uploadData } = await supabase.storage.from("store-posts").upload(path, uploadFile, { upsert: true });
+      const { error: upErr, data: uploadData } = await supabase.storage.from("store-posts").upload(path, file, { upsert: true });
       console.log("[PostMedia] upload result:", { error: upErr, data: uploadData });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
