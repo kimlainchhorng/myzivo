@@ -99,6 +99,14 @@ export default function AdminStoreEditPage() {
 
   const existingCategories = [...new Set(products.map((p: any) => p.category).filter(Boolean))] as string[];
 
+  // Derive saved brands/categories from existing products
+  useEffect(() => {
+    const brands = [...new Set(products.map((p: any) => p.brand).filter(Boolean))] as string[];
+    const cats = [...new Set(products.map((p: any) => p.category).filter(Boolean))] as string[];
+    setSavedBrands((prev) => [...new Set([...prev, ...brands])]);
+    setSavedCategories((prev) => [...new Set([...prev, ...cats])]);
+  }, [products]);
+
   const [form, setForm] = useState({
     name: "", slug: "", description: "", logo_url: "", banner_url: "",
     market: "", category: "", address: "", phone: "", hours: "",
