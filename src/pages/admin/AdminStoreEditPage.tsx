@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, Play } from "lucide-react";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import StoreMapPicker from "@/components/admin/StoreMapPicker";
@@ -1434,7 +1434,12 @@ export default function AdminStoreEditPage() {
                 {postMediaUrls.map((url, i) => (
                   <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
                     {isVideoUrl(url) ? (
-                      <video src={url} className="w-full h-full object-cover" muted />
+                      <div className="relative w-full h-full">
+                        <video src={url} className="w-full h-full object-cover" muted preload="metadata" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <Play className="w-6 h-6 text-white" fill="white" />
+                        </div>
+                      </div>
                     ) : (
                       <img src={url} alt="" className="w-full h-full object-cover" />
                     )}
