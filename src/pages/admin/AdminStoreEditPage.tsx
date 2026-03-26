@@ -1116,14 +1116,14 @@ export default function AdminStoreEditPage() {
               <Label>Badge / ស្លាក</Label>
               <div className="flex flex-wrap gap-1.5">
                 {[
-                  { value: "new", label: "🆕 New Arrival", color: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
-                  { value: "hot", label: "🔥 Hot", color: "bg-red-500/15 text-red-500 border-red-500/30" },
-                  { value: "popular", label: "⭐ Popular", color: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
-                  { value: "best-seller", label: "🏆 Best Seller", color: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30" },
-                  { value: "limited", label: "⏰ Limited", color: "bg-purple-500/15 text-purple-500 border-purple-500/30" },
-                  { value: "recommended", label: "👍 Recommended", color: "bg-sky-500/15 text-sky-500 border-sky-500/30" },
-                  { value: "organic", label: "🌿 Organic", color: "bg-green-500/15 text-green-500 border-green-500/30" },
-                  { value: "imported", label: "✈️ Imported", color: "bg-violet-500/15 text-violet-500 border-violet-500/30" },
+                  { value: "new", label: "🆕 New Arrival / ទំនិញថ្មី", color: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
+                  { value: "hot", label: "🔥 Hot / ពេញនិយម", color: "bg-red-500/15 text-red-500 border-red-500/30" },
+                  { value: "popular", label: "⭐ Popular / កំពូល", color: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
+                  { value: "best-seller", label: "🏆 Best Seller / លក់ដាច់", color: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30" },
+                  { value: "limited", label: "⏰ Limited / មានកំណត់", color: "bg-purple-500/15 text-purple-500 border-purple-500/30" },
+                  { value: "recommended", label: "👍 Recommended / ណែនាំ", color: "bg-sky-500/15 text-sky-500 border-sky-500/30" },
+                  { value: "organic", label: "🌿 Organic / ធម្មជាតិ", color: "bg-green-500/15 text-green-500 border-green-500/30" },
+                  { value: "imported", label: "✈️ Imported / នាំចូល", color: "bg-violet-500/15 text-violet-500 border-violet-500/30" },
                 ].map(b => (
                   <button
                     key={b.value}
