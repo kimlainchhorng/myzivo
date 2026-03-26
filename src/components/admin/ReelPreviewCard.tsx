@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Trash2 } from "lucide-react";
 
 interface ReelPreviewCardProps {
@@ -6,16 +7,20 @@ interface ReelPreviewCardProps {
   onRemove: () => void;
 }
 
-export default function ReelPreviewCard({ url, isVideo, onRemove }: ReelPreviewCardProps) {
+const ReelPreviewCard = React.forwardRef<HTMLDivElement, ReelPreviewCardProps>(function ReelPreviewCard(
+  { url, isVideo, onRemove },
+  ref,
+) {
   return (
-    <div className="relative group">
+    <div ref={ref} className="relative group">
       {isVideo ? (
         <video
           src={url}
           controls
           playsInline
           preload="auto"
-          style={{ width: "100%", maxHeight: 320, borderRadius: 8, background: "#000" }}
+          className="w-full rounded-lg bg-muted"
+          style={{ maxHeight: 320 }}
         />
       ) : (
         <img
@@ -27,7 +32,10 @@ export default function ReelPreviewCard({ url, isVideo, onRemove }: ReelPreviewC
       )}
       <button
         type="button"
-        onClick={(e) => { e.stopPropagation(); onRemove(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
         className="absolute top-1 right-1 z-10 rounded-full bg-destructive p-1 text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
         aria-label="Remove media"
       >
@@ -35,4 +43,6 @@ export default function ReelPreviewCard({ url, isVideo, onRemove }: ReelPreviewC
       </button>
     </div>
   );
-}
+});
+
+export default ReelPreviewCard;
