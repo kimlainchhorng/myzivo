@@ -502,6 +502,25 @@ const Login = () => {
           <div className="flex items-center justify-center gap-3 mt-2 text-[10px] text-white/30 relative z-10">
             <span>{isLogin ? t("auth.protected") : t("auth.terms_agree")}</span>
           </div>
+
+          {/* Become a ZIVO Partner */}
+          <motion.button
+            type="button"
+            onClick={() => navigate("/partner-with-zivo")}
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.96, rotateX: 6 }}
+            className="relative z-10 mt-4 w-full py-3 rounded-2xl text-xs font-bold tracking-wide text-white/80 hover:text-white border border-white/10 hover:border-primary/40 bg-gradient-to-b from-white/[0.06] via-transparent to-white/[0.02] backdrop-blur-sm transition-all duration-300 overflow-hidden group"
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            {/* 3D shine overlay */}
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              Become a ZIVO Partner
+              <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          </motion.button>
         </motion.div>
       </div>
 
