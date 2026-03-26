@@ -373,7 +373,9 @@ export default function StoreProfilePage() {
               const khrPrice = ((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050)));
               const isLiked = likedProducts.has(product.id);
               const p = product as any;
-              const hasDiscount = p.discount_type && p.discount_value > 0 && p.discount_price_khr != null
+              const hasBogo = p.discount_type === "bogo" && (p.buy_quantity || 0) >= 1 && (p.get_quantity || 0) >= 1
+                && (!p.discount_expires_at || new Date(p.discount_expires_at) > new Date());
+              const hasDiscount = !hasBogo && p.discount_type && p.discount_value > 0 && p.discount_price_khr != null
                 && (!p.discount_expires_at || new Date(p.discount_expires_at) > new Date());
               const discountKhr = hasDiscount ? p.discount_price_khr : null;
               const discountUsd = hasDiscount ? parseFloat((discountKhr / ((store as any)?.khr_rate || 4050)).toFixed(2)) : null;
