@@ -248,6 +248,12 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "auth.become_partner": "Become a ZIVO Partner",
     "auth.partner_sign_in": "Partner Sign In",
     "auth.go_home": "Go to Home",
+    "auth.business_email": "Business Email",
+    "auth.access_dashboard": "Access your ZIVO business dashboard",
+    "auth.sign_in_dashboard": "Sign In to Dashboard",
+    "auth.new_partner": "NEW PARTNER?",
+    "auth.customer_login": "Looking for customer login?",
+    "auth.sign_in_here": "Sign in here",
     // Profile
     "profile.title": "Profile Settings",
     "profile.subtitle": "Manage your account information",

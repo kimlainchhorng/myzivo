@@ -3,6 +3,7 @@
  * After login, redirects to partner dashboard based on user role.
  */
 import { useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,10 +12,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, ArrowRight, Home, Store, Briefcase } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowRight, Home, Store, Briefcase, Globe, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
+import { useI18n } from "@/hooks/useI18n";
 import { cn } from "@/lib/utils";
 
 const partnerLoginSchema = z.object({
