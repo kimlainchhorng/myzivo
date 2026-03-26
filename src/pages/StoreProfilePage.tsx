@@ -234,7 +234,15 @@ export default function StoreProfilePage() {
             {store.address && (
               <motion.button
                 whileTap={{ scale: 0.96 }}
-                onClick={() => navigate(`/rides?destination=${encodeURIComponent(store.address)}`)}
+                onClick={() => {
+                  const params = new URLSearchParams({ destination: store.address! });
+                  const s = store as any;
+                  if (s.latitude && s.longitude) {
+                    params.set("destLat", String(s.latitude));
+                    params.set("destLng", String(s.longitude));
+                  }
+                  navigate(`/rides/hub?${params.toString()}`);
+                }}
                 className="relative flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-gradient-to-br from-primary/[0.08] to-primary/[0.03] border border-primary/15 hover:border-primary/25 transition-all overflow-hidden group"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none" />
