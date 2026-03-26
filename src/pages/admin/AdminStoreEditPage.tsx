@@ -271,13 +271,14 @@ export default function AdminStoreEditPage() {
   const savePost = useMutation({
     mutationFn: async () => {
       if (postMediaUrls.length === 0) throw new Error("Add at least one picture or video");
-      const { error } = await supabase.from("store_posts").insert({
-        store_id: storeId!,
-        caption: postCaption || null,
-        media_urls: postMediaUrls,
-        media_type: postMediaMode === "video" ? "video" : "image",
-      } as any);
+      const { data, error } = await supabase.rpc("create_store_post", {
+        _store_id: storeId!,
+        _caption: postCaption || null,
+        _media_urls: postMediaUrls,
+        _media_type: postMediaMode === "video" ? "video" : "image",
+      });
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
