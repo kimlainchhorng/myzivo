@@ -1,6 +1,6 @@
 /**
  * StoreMapPage — Uber/Lyft-style dark map with store pins
- * Features: dark tiles, category filters, user GPS dot, search bar
+ * Uses regular google.maps.Marker (not AdvancedMarker) so JSON dark styles work without mapId
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -50,7 +50,7 @@ async function loadGoogleMaps(apiKey: string): Promise<boolean> {
   }
   return new Promise((resolve) => {
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
     script.async = true;
     script.defer = true;
     script.onload = () => resolve(true);
@@ -59,7 +59,7 @@ async function loadGoogleMaps(apiKey: string): Promise<boolean> {
   });
 }
 
-/* ── Uber-style dark map JSON styles ── */
+/* ── Uber-style dark map ── */
 const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
   { elementType: "geometry", stylers: [{ color: "#212121" }] },
   { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
@@ -81,16 +81,9 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
 ];
 
 const CATEGORY_ICONS: Record<string, string> = {
-  "food-market": "🛒",
-  "restaurant": "🍽️",
-  "fashion-market": "👗",
-  "drink": "🥤",
-  "mall": "🏬",
-  "supermarket": "🛒",
-  "salon": "💇",
-  "electronics": "📱",
-  "pharmacy": "💊",
-  "default": "🏪",
+  "food-market": "🛒", "restaurant": "🍽️", "fashion-market": "👗",
+  "drink": "🥤", "mall": "🏬", "supermarket": "🛒", "salon": "💇",
+  "electronics": "📱", "pharmacy": "💊", "default": "🏪",
 };
 
 function getCategoryIcon(cat: string) {
@@ -101,12 +94,38 @@ function getCategoryLabel(cat: string) {
   return STORE_CATEGORY_OPTIONS.find((o) => o.value === cat)?.label || cat;
 }
 
+/** Build an SVG data-uri marker icon with emoji */
+function makeMarkerIcon(emoji: string): string {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="56" viewBox="0 0 48 56">
+      <defs>
+        <filter id="s" x="-20%" y="-10%" width="140%" height="130%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.4"/>
+        </filter>
+      </defs>
+      <path d="M24 52 C24 52, 6 32, 6 20 A18 18 0 1 1 42 20 C42 32, 24 52, 24 52Z" fill="#fff" filter="url(#s)"/>
+      <circle cx="24" cy="20" r="14" fill="#2a2a2a"/>
+      <text x="24" y="26" text-anchor="middle" font-size="18">${emoji}</text>
+    </svg>`;
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+/** Blue dot SVG for user location */
+function makeUserDotIcon(): string {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+      <circle cx="14" cy="14" r="13" fill="rgba(66,133,244,0.2)" stroke="none"/>
+      <circle cx="14" cy="14" r="8" fill="#4285F4" stroke="#fff" stroke-width="3"/>
+    </svg>`;
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
 export default function StoreMapPage() {
   const navigate = useNavigate();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
-  const userDotRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const userDotRef = useRef<google.maps.Marker | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [selectedStore, setSelectedStore] = useState<StorePin | null>(null);
@@ -131,18 +150,14 @@ export default function StoreMapPage() {
     staleTime: 60_000,
   });
 
-  // Categories used by stores
   const usedCategories = useMemo(() => {
     const cats = new Set(stores.map((s) => s.category));
     return STORE_CATEGORY_OPTIONS.filter((o) => cats.has(o.value));
   }, [stores]);
 
-  // Filtered stores
   const filteredStores = useMemo(() => {
     let result = stores;
-    if (activeCategory !== "all") {
-      result = result.filter((s) => s.category === activeCategory);
-    }
+    if (activeCategory !== "all") result = result.filter((s) => s.category === activeCategory);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((s) => s.name.toLowerCase().includes(q) || s.address?.toLowerCase().includes(q));
@@ -160,7 +175,7 @@ export default function StoreMapPage() {
     );
   }, []);
 
-  // Init map — NO mapId so JSON styles work
+  // Init map — no mapId, so JSON styles apply
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -189,20 +204,16 @@ export default function StoreMapPage() {
   // User location blue dot
   useEffect(() => {
     if (!mapReady || !mapRef.current || !userLocation) return;
+    if (userDotRef.current) userDotRef.current.setMap(null);
 
-    if (userDotRef.current) userDotRef.current.map = null;
-
-    const dot = document.createElement("div");
-    dot.style.cssText = `
-      width: 18px; height: 18px; border-radius: 50%;
-      background: #4285F4; border: 3px solid #fff;
-      box-shadow: 0 0 0 6px rgba(66, 133, 244, 0.25), 0 2px 6px rgba(0,0,0,0.3);
-    `;
-
-    userDotRef.current = new google.maps.marker.AdvancedMarkerElement({
+    userDotRef.current = new google.maps.Marker({
       map: mapRef.current,
       position: userLocation,
-      content: dot,
+      icon: {
+        url: makeUserDotIcon(),
+        scaledSize: new google.maps.Size(28, 28),
+        anchor: new google.maps.Point(14, 14),
+      },
       title: "You",
       zIndex: 999,
     });
@@ -212,7 +223,7 @@ export default function StoreMapPage() {
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
 
-    markersRef.current.forEach((m) => (m.map = null));
+    markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
 
     if (!filteredStores.length) return;
@@ -225,34 +236,24 @@ export default function StoreMapPage() {
 
       const icon = getCategoryIcon(store.category);
 
-      const el = document.createElement("div");
-      el.style.cssText = `
-        display: flex; align-items: center; gap: 4px;
-        background: #fff; border-radius: 20px;
-        padding: 5px 10px 5px 6px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-        cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        white-space: nowrap; max-width: 160px;
-      `;
-      el.innerHTML = `
-        <span style="font-size: 16px; line-height: 1;">${icon}</span>
-        <span style="font-size: 11px; font-weight: 600; color: #1a1a1a; overflow: hidden; text-overflow: ellipsis;">${store.name}</span>
-      `;
-      el.addEventListener("mouseenter", () => { el.style.transform = "scale(1.08)"; });
-      el.addEventListener("mouseleave", () => { el.style.transform = "scale(1)"; });
-
-      const marker = new google.maps.marker.AdvancedMarkerElement({
+      const marker = new google.maps.Marker({
         map: mapRef.current!,
         position: pos,
-        content: el,
+        icon: {
+          url: makeMarkerIcon(icon),
+          scaledSize: new google.maps.Size(40, 47),
+          anchor: new google.maps.Point(20, 47),
+        },
         title: store.name,
+        animation: google.maps.Animation.DROP,
+        zIndex: 100,
       });
 
       marker.addListener("click", () => {
         setSelectedStore(store);
         mapRef.current?.panTo(pos);
-        mapRef.current?.setZoom(Math.max(mapRef.current.getZoom() || 14, 14));
+        const z = mapRef.current?.getZoom() || 14;
+        if (z < 14) mapRef.current?.setZoom(14);
       });
 
       markersRef.current.push(marker);
@@ -298,7 +299,7 @@ export default function StoreMapPage() {
   return (
     <div className="fixed inset-0 z-0" style={{ background: "#212121" }}>
 
-      {/* ── Header: Search + title ── */}
+      {/* ── Header ── */}
       <div className="absolute top-0 left-0 right-0 z-[1100]" style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 12px)" }}>
         <div className="px-4 pb-1">
           <AnimatePresence mode="wait">
@@ -322,11 +323,7 @@ export default function StoreMapPage() {
                   className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#555]"
                   style={{ color: "#f5f5f5" }}
                 />
-                <button
-                  onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
-                  className="p-1 rounded-full"
-                  style={{ color: "#888" }}
-                >
+                <button onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="p-1 rounded-full" style={{ color: "#888" }}>
                   <X className="w-4 h-4" />
                 </button>
               </motion.div>
@@ -338,10 +335,7 @@ export default function StoreMapPage() {
                 exit={{ opacity: 0, y: -8 }}
                 className="flex items-center gap-2"
               >
-                <div
-                  className="flex-1 flex items-center gap-3 rounded-2xl px-4 py-3 shadow-xl"
-                  style={{ background: "#2a2a2a" }}
-                >
+                <div className="flex-1 flex items-center gap-3 rounded-2xl px-4 py-3 shadow-xl" style={{ background: "#2a2a2a" }}>
                   <Store className="w-5 h-5 text-primary shrink-0" />
                   <div className="flex-1">
                     <p className="text-[13px] font-bold" style={{ color: "#f5f5f5" }}>Explore Stores</p>
@@ -362,7 +356,7 @@ export default function StoreMapPage() {
           </AnimatePresence>
         </div>
 
-        {/* ── Category filter chips ── */}
+        {/* ── Category chips ── */}
         {usedCategories.length > 0 && (
           <div className="px-4 pt-2 pb-1 overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 w-max">
@@ -401,22 +395,16 @@ export default function StoreMapPage() {
         )}
       </div>
 
-      {/* ── Right-side FABs ── */}
+      {/* ── Right FABs ── */}
       <div className="absolute right-4 bottom-[140px] z-[1500] flex flex-col gap-2">
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={handleLocateMe}
+        <Button variant="secondary" size="icon" onClick={handleLocateMe}
           className="w-11 h-11 rounded-full shadow-lg border-0"
           style={{ background: "#2a2a2a", color: userLocation ? "#4285F4" : "#888" }}
           aria-label="My location"
         >
           <Locate className="w-4.5 h-4.5" />
         </Button>
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={handleRecenter}
+        <Button variant="secondary" size="icon" onClick={handleRecenter}
           className="w-11 h-11 rounded-full shadow-lg border-0"
           style={{ background: "#2a2a2a", color: "#f5f5f5" }}
           aria-label="Recenter"
@@ -453,21 +441,15 @@ export default function StoreMapPage() {
               onClick={() => navigate(`/store/${selectedStore.slug}`)}
             >
               <div className="p-4 flex items-center gap-3">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
-                  style={{ background: "#3a3a3a" }}
-                >
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden" style={{ background: "#3a3a3a" }}>
                   {selectedStore.logo_url ? (
                     <img src={selectedStore.logo_url} alt="" className="w-full h-full object-cover rounded-xl" />
                   ) : (
                     <span className="text-2xl">{getCategoryIcon(selectedStore.category)}</span>
                   )}
                 </div>
-
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-[15px] truncate" style={{ color: "#f5f5f5" }}>
-                    {selectedStore.name}
-                  </h3>
+                  <h3 className="font-bold text-[15px] truncate" style={{ color: "#f5f5f5" }}>{selectedStore.name}</h3>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ background: "#3a3a3a", color: "#aaa" }}>
                       {getCategoryLabel(selectedStore.category)}
@@ -486,10 +468,8 @@ export default function StoreMapPage() {
                     </p>
                   )}
                 </div>
-
                 <ChevronRight className="w-5 h-5 shrink-0" style={{ color: "#555" }} />
               </div>
-
               <div className="flex border-t" style={{ borderColor: "#3a3a3a" }}>
                 <button
                   className="flex-1 py-3 text-[12px] font-semibold text-center"
