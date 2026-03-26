@@ -36356,6 +36356,7 @@ export type Database = {
       store_products: {
         Row: {
           brand: string | null
+          buy_quantity: number | null
           category: string | null
           created_at: string | null
           description: string | null
@@ -36363,6 +36364,7 @@ export type Database = {
           discount_price_khr: number | null
           discount_type: string | null
           discount_value: number | null
+          get_quantity: number | null
           id: string
           image_url: string | null
           image_urls: Json | null
@@ -36377,6 +36379,7 @@ export type Database = {
         }
         Insert: {
           brand?: string | null
+          buy_quantity?: number | null
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -36384,6 +36387,7 @@ export type Database = {
           discount_price_khr?: number | null
           discount_type?: string | null
           discount_value?: number | null
+          get_quantity?: number | null
           id?: string
           image_url?: string | null
           image_urls?: Json | null
@@ -36398,6 +36402,7 @@ export type Database = {
         }
         Update: {
           brand?: string | null
+          buy_quantity?: number | null
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -36405,6 +36410,7 @@ export type Database = {
           discount_price_khr?: number | null
           discount_type?: string | null
           discount_value?: number | null
+          get_quantity?: number | null
           id?: string
           image_url?: string | null
           image_urls?: Json | null
