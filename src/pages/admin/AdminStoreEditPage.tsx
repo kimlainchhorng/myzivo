@@ -38,6 +38,7 @@ const emptyProduct = {
   brand: "", sku: "", in_stock: true, sort_order: 0,
   discount_type: null as string | null, discount_value: null as number | null,
   discount_price_khr: null as number | null, discount_expires_at: "" as string,
+  buy_quantity: 1, get_quantity: 0,
 };
 
 export default function AdminStoreEditPage() {
