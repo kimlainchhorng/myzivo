@@ -36435,6 +36435,7 @@ export type Database = {
           created_at: string | null
           delivery_min: number | null
           description: string | null
+          gallery_images: Json | null
           hours: string | null
           id: string
           is_active: boolean | null
@@ -36456,6 +36457,7 @@ export type Database = {
           created_at?: string | null
           delivery_min?: number | null
           description?: string | null
+          gallery_images?: Json | null
           hours?: string | null
           id?: string
           is_active?: boolean | null
@@ -36477,6 +36479,7 @@ export type Database = {
           created_at?: string | null
           delivery_min?: number | null
           description?: string | null
+          gallery_images?: Json | null
           hours?: string | null
           id?: string
           is_active?: boolean | null
