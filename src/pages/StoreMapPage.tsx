@@ -287,11 +287,14 @@ export default function StoreMapPage() {
     filteredStores.forEach((store) => {
       const pos = { lat: store.latitude, lng: store.longitude };
       bounds.extend(pos);
+      const color = getCategoryColor(store.category);
+
+      // Create marker with fallback icon first
       const marker = new google.maps.Marker({
         map: mapRef.current!,
         position: pos,
         icon: {
-          url: makeMarkerIcon(getCategoryIcon(store.category), getCategoryColor(store.category)),
+          url: makeMarkerIcon(getCategoryIcon(store.category), color),
           scaledSize: new google.maps.Size(40, 49),
           anchor: new google.maps.Point(20, 49),
         },
@@ -299,6 +302,18 @@ export default function StoreMapPage() {
         animation: google.maps.Animation.DROP,
         zIndex: 100,
       });
+
+      // If store has a logo, replace with logo marker
+      if (store.logo_url) {
+        createLogoMarkerCanvas(store.logo_url, color, (dataUrl) => {
+          marker.setIcon({
+            url: dataUrl,
+            scaledSize: new google.maps.Size(44, 54),
+            anchor: new google.maps.Point(22, 54),
+          });
+        });
+      }
+
       marker.addListener("click", () => {
         setSelectedStore(store);
         mapRef.current?.panTo(pos);
