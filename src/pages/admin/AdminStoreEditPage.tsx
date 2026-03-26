@@ -25,6 +25,19 @@ import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
+function normalizeLocalizedNumberInput(value: string): string {
+  const khmerToLatin: Record<string, string> = {
+    "០": "0", "១": "1", "២": "2", "៣": "3", "៤": "4",
+    "៥": "5", "៦": "6", "៧": "7", "៨": "8", "៩": "9",
+    "٫": ".", ",": ".",
+  };
+
+  return value
+    .split("")
+    .map((char) => khmerToLatin[char] ?? char)
+    .join("");
+}
+
 function generateSku(storeName: string, category: string, name: string): string {
   const s = (storeName || "ST").substring(0, 2).toUpperCase();
   const c = (category || "GN").substring(0, 2).toUpperCase();
@@ -771,15 +784,18 @@ export default function AdminStoreEditPage() {
                   inputMode="numeric"
                   value={productForm.price_khr || ""}
                   onChange={e => {
-                    const val = e.target.value.replace(/[^0-9]/g, "");
+                    const normalized = normalizeLocalizedNumberInput(e.target.value);
+                    const val = normalized.replace(/[^0-9]/g, "");
                     if (val === "") {
                       updateProductField("price_khr", 0);
                       updateProductField("price", 0);
                       return;
                     }
-                    const khr = parseInt(val);
-                    updateProductField("price_khr", khr);
-                    updateProductField("price", parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)));
+                    const khr = parseInt(val, 10);
+                    if (!Number.isNaN(khr)) {
+                      updateProductField("price_khr", khr);
+                      updateProductField("price", parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)));
+                    }
                   }}
                   placeholder="0"
                 />
@@ -792,14 +808,18 @@ export default function AdminStoreEditPage() {
                   inputMode="decimal"
                   value={productForm.price || ""}
                   onChange={e => {
-                    const val = e.target.value.replace(/[^0-9.]/g, "");
-                    if (val === "" || val === ".") {
+                    const normalized = normalizeLocalizedNumberInput(e.target.value);
+                    const parts = normalized.split(".");
+                    const safeDecimal = parts.length > 1
+                      ? `${parts[0].replace(/[^0-9]/g, "")}.${parts.slice(1).join("").replace(/[^0-9]/g, "")}`
+                      : normalized.replace(/[^0-9]/g, "");
+                    if (safeDecimal === "" || safeDecimal === ".") {
                       updateProductField("price", 0);
                       updateProductField("price_khr", 0);
                       return;
                     }
-                    const num = parseFloat(val);
-                    if (!isNaN(num)) {
+                    const num = parseFloat(safeDecimal);
+                    if (!Number.isNaN(num)) {
                       updateProductField("price", num);
                       updateProductField("price_khr", Math.round(num * (form.khr_rate || 4062.5)));
                     }
