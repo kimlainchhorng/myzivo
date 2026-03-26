@@ -525,7 +525,7 @@ export default function StoreProfilePage() {
                           initial={{ scale: 0, y: -5 }}
                           animate={{ scale: 1, y: 0 }}
                           transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                          className={cn("absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-gradient-to-r text-white text-[8px] font-bold z-20 shadow-md", b.cls)}
+                          className={cn("absolute top-1.5 left-10 px-1.5 py-0.5 rounded-md bg-gradient-to-r text-white text-[8px] font-bold z-20 shadow-md", b.cls)}
                         >
                           {b.emoji} {b.label}
                         </motion.div>
