@@ -28,8 +28,26 @@ type PartnerLoginData = z.infer<typeof partnerLoginSchema>;
 
 export default function PartnerLogin() {
   const [isLoading, setIsLoading] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const { currentLanguage, changeLanguage, t } = useI18n();
+
+  const LANGS = [
+    { code: "en", label: "English", flag: "/flags/us.svg" },
+    { code: "km", label: "ខ្មែរ", flag: "/flags/kh.svg" },
+    { code: "ko", label: "한국어", flag: "/flags/kr.svg" },
+    { code: "zh", label: "中文", flag: "/flags/cn.svg" },
+    { code: "ja", label: "日本語", flag: "/flags/jp.svg" },
+    { code: "vi", label: "Tiếng Việt", flag: "/flags/vn.svg" },
+    { code: "th", label: "ไทย", flag: "/flags/th.svg" },
+    { code: "ms", label: "Bahasa Melayu", flag: "/flags/my.svg" },
+    { code: "hi", label: "हिन्दी", flag: "/flags/in.svg" },
+    { code: "fr", label: "Français", flag: "/flags/fr.svg" },
+    { code: "es", label: "Español", flag: "/flags/es.svg" },
+    { code: "ar", label: "العربية", flag: "/flags/sa.svg" },
+  ];
+  const currentLangItem = LANGS.find(l => l.code === currentLanguage);
 
   const form = useForm<PartnerLoginData>({
     resolver: zodResolver(partnerLoginSchema),
