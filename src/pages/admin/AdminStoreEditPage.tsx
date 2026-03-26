@@ -266,7 +266,50 @@ export default function AdminStoreEditPage() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
 
-  const uploadImage = async (file: File, type: "logo" | "cover") => {
+  const uploadGalleryImage = async (file: File) => {
+    if (galleryImages.length >= 10) {
+      toast.error("Maximum 10 gallery images allowed");
+      return;
+    }
+    setUploadingGallery(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${storeId}/gallery-${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
+      const newImages = [...galleryImages, urlData.publicUrl];
+      setGalleryImages(newImages);
+      const { error: saveErr } = await supabase
+        .from("store_profiles")
+        .update({ gallery_images: newImages } as any)
+        .eq("id", storeId!);
+      if (saveErr) throw saveErr;
+      queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
+      toast.success("Gallery image added");
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
+  const removeGalleryImage = async (index: number) => {
+    const newImages = galleryImages.filter((_, i) => i !== index);
+    setGalleryImages(newImages);
+    try {
+      const { error } = await supabase
+        .from("store_profiles")
+        .update({ gallery_images: newImages } as any)
+        .eq("id", storeId!);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
+      toast.success("Gallery image removed");
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
     const isLogo = type === "logo";
     isLogo ? setUploadingLogo(true) : setUploadingCover(true);
     try {
