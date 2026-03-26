@@ -217,7 +217,7 @@ export default function AdminStoreEditPage() {
     setPostMediaUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  const isVideoUrl = (url: string) => /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
+  const isVideoUrl = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || url.includes('/store-posts/') && /\.(mp4|mov|webm|avi|mkv)/i.test(url);
 
   const getMediaType = (urls: string[]): string => {
     const hasVideo = urls.some(isVideoUrl);
