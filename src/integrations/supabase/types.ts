@@ -47099,6 +47099,30 @@ export type Database = {
         Args: { p_driver_id: string }
         Returns: number
       }
+      create_store_post: {
+        Args: {
+          _caption: string
+          _media_type: string
+          _media_urls: string[]
+          _store_id: string
+        }
+        Returns: {
+          caption: string | null
+          created_at: string
+          id: string
+          is_published: boolean
+          media_type: string
+          media_urls: string[]
+          store_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "store_posts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       credit_customer_wallet:
         | {
             Args: {
