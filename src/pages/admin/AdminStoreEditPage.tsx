@@ -182,8 +182,7 @@ export default function AdminStoreEditPage() {
   // Post state
   const [postDialog, setPostDialog] = useState(false);
   const [postCaption, setPostCaption] = useState("");
-  const [postMediaUrls, setPostMediaUrls] = useState<string[]>([]);
-  const [postMediaPreviews, setPostMediaPreviews] = useState<{ url: string; isVideo: boolean }[]>([]);
+  const [postMediaItems, setPostMediaItems] = useState<Array<{ previewUrl: string; uploadedUrl?: string; isVideo: boolean; isUploading: boolean }>>([]);
   const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [postMediaMode, setPostMediaMode] = useState<"image" | "video">("image");
@@ -196,21 +195,20 @@ export default function AdminStoreEditPage() {
   }, [store]);
 
   const cleanupPreviews = () => {
-    postMediaPreviews.forEach((p) => {
-      if (p.url.startsWith("blob:")) URL.revokeObjectURL(p.url);
+    postMediaItems.forEach((p) => {
+      if (p.previewUrl.startsWith("blob:")) URL.revokeObjectURL(p.previewUrl);
     });
   };
 
   const resetPostState = () => {
     setPostCaption("");
     cleanupPreviews();
-    setPostMediaPreviews([]);
-    setPostMediaUrls([]);
+    setPostMediaItems([]);
   };
 
   const uploadPostMedia = async (file: File) => {
     console.log("[PostMedia] uploadPostMedia called", { name: file.name, type: file.type, size: file.size });
-    if (postMediaUrls.length >= 10) {
+    if (postMediaItems.length >= 10) {
       toast.error("Maximum 10 files per post");
       return;
     }
@@ -223,7 +221,7 @@ export default function AdminStoreEditPage() {
     }
 
     const localPreviewUrl = URL.createObjectURL(file);
-    setPostMediaPreviews(prev => [...prev, { url: localPreviewUrl, isVideo: fileIsVideo }]);
+    setPostMediaItems(prev => [...prev, { previewUrl: localPreviewUrl, isVideo: fileIsVideo, isUploading: true }]);
     setUploadingPostMedia(true);
 
     try {
@@ -235,10 +233,14 @@ export default function AdminStoreEditPage() {
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
       console.log("[PostMedia] publicUrl:", urlData.publicUrl);
-      setPostMediaUrls(prev => [...prev, urlData.publicUrl]);
+      setPostMediaItems(prev => prev.map((item) => item.previewUrl === localPreviewUrl ? {
+        ...item,
+        uploadedUrl: urlData.publicUrl,
+        isUploading: false,
+      } : item));
     } catch (e: any) {
       URL.revokeObjectURL(localPreviewUrl);
-      setPostMediaPreviews(prev => prev.filter((p) => p.url !== localPreviewUrl));
+      setPostMediaItems(prev => prev.filter((p) => p.previewUrl !== localPreviewUrl));
       console.error("[PostMedia] upload error:", e);
       toast.error(e.message || "Upload failed");
     } finally {
@@ -247,13 +249,18 @@ export default function AdminStoreEditPage() {
   };
 
   const removePostMedia = (index: number) => {
-    setPostMediaPreviews(prev => {
+    setPostMediaItems(prev => {
       const preview = prev[index];
-      if (preview?.url.startsWith("blob:")) URL.revokeObjectURL(preview.url);
+      if (preview?.previewUrl.startsWith("blob:")) URL.revokeObjectURL(preview.previewUrl);
       return prev.filter((_, i) => i !== index);
     });
-    setPostMediaUrls(prev => prev.filter((_, i) => i !== index));
   };
+
+  const postMediaUrls = postMediaItems
+    .map((item) => item.uploadedUrl)
+    .filter((url): url is string => Boolean(url));
+
+  const hasPendingPostUploads = postMediaItems.some((item) => item.isUploading);
 
   const isVideoUrl = (url: string) => {
     if (!url) return false;
@@ -271,6 +278,7 @@ export default function AdminStoreEditPage() {
   const savePost = useMutation({
     mutationFn: async () => {
       if (postMediaUrls.length === 0) throw new Error("Add at least one picture or video");
+      if (hasPendingPostUploads) throw new Error("Please wait for media upload to finish");
       const { data, error } = await supabase.from("store_posts").insert({
         store_id: storeId!,
         caption: postCaption || null,
@@ -1492,19 +1500,26 @@ export default function AdminStoreEditPage() {
                   ? "flex flex-wrap items-start gap-3"
                   : "grid grid-cols-3 gap-2"
               )}>
-                {postMediaPreviews.map((preview, i) => (
+                {postMediaItems.map((preview, i) => (
                   <div
-                    key={`${preview.url}-${i}`}
+                    key={`${preview.previewUrl}-${i}`}
                     className={cn(postMediaMode === "video" && "w-[11rem] sm:w-[12rem]")}
                   >
-                    <ReelPreviewCard
-                      url={preview.url}
-                      isVideo={preview.isVideo}
-                      onRemove={() => removePostMedia(i)}
-                    />
+                    <div className="relative">
+                      <ReelPreviewCard
+                        url={preview.previewUrl}
+                        isVideo={preview.isVideo}
+                        onRemove={() => removePostMedia(i)}
+                      />
+                      {preview.isUploading && (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/70 backdrop-blur-[1px]">
+                          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
-                {postMediaUrls.length < 10 && (
+                {postMediaItems.length < 10 && (
                   <button
                     onClick={() => postMediaInputRef.current?.click()}
                     disabled={uploadingPostMedia}
@@ -1543,7 +1558,7 @@ export default function AdminStoreEditPage() {
             <Button variant="outline" onClick={() => { setPostDialog(false); }}>Cancel</Button>
             <Button
               onClick={() => savePost.mutate()}
-              disabled={savePost.isPending || postMediaUrls.length === 0}
+              disabled={savePost.isPending || postMediaUrls.length === 0 || hasPendingPostUploads}
             >
               {savePost.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
               {savePost.isPending ? "Posting..." : t("admin.store.add_post")}
