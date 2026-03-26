@@ -51,6 +51,7 @@ export default function AdminStoreEditPage() {
   const activeLanguages = (supportedLanguages || []).filter(l => l.is_active && STORE_LANG_CODES.includes(l.code));
   const currentLangData = activeLanguages.find(l => l.code === currentLanguage);
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
 
   const { data: store, isLoading } = useQuery({
     queryKey: ["admin-store", storeId],
@@ -80,6 +81,8 @@ export default function AdminStoreEditPage() {
     },
     enabled: !!storeId,
   });
+
+  const existingCategories = [...new Set(products.map((p: any) => p.category).filter(Boolean))] as string[];
 
   const [form, setForm] = useState({
     name: "", slug: "", description: "", logo_url: "", banner_url: "",
@@ -861,7 +864,31 @@ export default function AdminStoreEditPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Category</Label>
-                <Input value={productForm.category} onChange={e => updateProductField("category", e.target.value)} placeholder="e.g. Snacks" />
+                <div className="relative">
+                  <Input
+                    value={productForm.category}
+                    onChange={e => updateProductField("category", e.target.value)}
+                    placeholder="e.g. Snacks"
+                    onFocus={() => setCategoryDropdownOpen(true)}
+                    onBlur={() => setTimeout(() => setCategoryDropdownOpen(false), 150)}
+                  />
+                  {categoryDropdownOpen && existingCategories.length > 0 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      {existingCategories
+                        .filter(c => !productForm.category || c.toLowerCase().includes(productForm.category.toLowerCase()))
+                        .map(cat => (
+                          <button
+                            key={cat}
+                            type="button"
+                            onMouseDown={(e) => { e.preventDefault(); updateProductField("category", cat); setCategoryDropdownOpen(false); }}
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Brand</Label>
