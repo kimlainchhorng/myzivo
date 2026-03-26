@@ -137,25 +137,18 @@ export default function StoreProfilePage() {
 
       {/* ── Banner with 3D parallax ── */}
       {(() => {
-        const gallerySlides = [
-          ...(store.gallery_images || []),
-          ...(store.banner_url && !(store.gallery_images || []).includes(store.banner_url) ? [store.banner_url] : []),
-        ];
-        const hasSlides = gallerySlides.length > 0;
+        const coverUrl = store.banner_url;
 
         return (
-          <div className="relative w-full h-60 overflow-hidden" style={{ perspective: "800px" }}>
-            {hasSlides ? (
-              <StoreHeroCarousel images={gallerySlides} storeName={store.name} />
+          <div className="relative w-full h-60 overflow-hidden">
+            {coverUrl ? (
+              <img
+                src={coverUrl}
+                alt={`${store.name} cover`}
+                className="w-full h-full object-cover"
+              />
             ) : (
-              <motion.div
-                initial={{ scale: 1.15, rotateX: 4 }}
-                animate={{ scale: 1, rotateX: 0 }}
-                transition={{ duration: 1.4, ease: "easeOut" }}
-                className="absolute inset-0 origin-bottom"
-              >
-                <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/10 to-sky-500/15" />
-              </motion.div>
+              <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/10 to-sky-500/15" />
             )}
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none z-[1]" />
