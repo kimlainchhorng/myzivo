@@ -13,7 +13,42 @@ export type StoreName =
   | "Target"
   | "Kroger";
 
-export type StoreCategory = "grocery";
+export type StoreCategory =
+  | "grocery"
+  | "food-market"
+  | "fashion"
+  | "restaurant"
+  | "drink"
+  | "mall"
+  | "supermarket"
+  | "car-rental"
+  | "car-dealership"
+  | "auto-repair"
+  | "tire-shop"
+  | "auto-parts"
+  | "salon"
+  | "electronics"
+  | "pharmacy"
+  | "other";
+
+export const STORE_CATEGORY_OPTIONS: { value: StoreCategory; label: string }[] = [
+  { value: "grocery", label: "Grocery" },
+  { value: "food-market", label: "Food Market" },
+  { value: "fashion", label: "Fashion Market" },
+  { value: "restaurant", label: "Restaurant" },
+  { value: "drink", label: "Drink" },
+  { value: "mall", label: "Mall" },
+  { value: "supermarket", label: "Supermarket" },
+  { value: "car-rental", label: "Rental Car" },
+  { value: "car-dealership", label: "Car Dealership" },
+  { value: "auto-repair", label: "Auto Repair" },
+  { value: "tire-shop", label: "Tire Shop" },
+  { value: "auto-parts", label: "Auto Parts" },
+  { value: "salon", label: "Salon" },
+  { value: "electronics", label: "Electronics" },
+  { value: "pharmacy", label: "Pharmacy" },
+  { value: "other", label: "Other" },
+];
 
 export interface StoreConfig {
   name: StoreName;
