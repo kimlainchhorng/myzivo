@@ -28,6 +28,7 @@ export default function AdminStoresPage() {
   const [editingStore, setEditingStore] = useState<any>(null);
   const [form, setForm] = useState(emptyStore);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
 
   const { data: stores = [], isLoading } = useQuery({
     queryKey: ["admin-stores"],
