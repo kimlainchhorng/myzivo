@@ -25,13 +25,20 @@ import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
-function generateSku(storeName: string, category: string, name: string): string {
-  const s = (storeName || "ST").substring(0, 2).toUpperCase();
-  const c = (category || "GN").substring(0, 2).toUpperCase();
-  const n = (name || "").replace(/[^a-zA-Z0-9]/g, "").substring(0, 3).toUpperCase() || "XXX";
-  const rand = Math.floor(1000 + Math.random() * 9000);
-  return `${s}-${c}-${n}${rand}`;
+function normalizeLocalizedNumberInput(value: string): string {
+  const khmerToLatin: Record<string, string> = {
+    "០": "0", "១": "1", "២": "2", "៣": "3", "៤": "4",
+    "៥": "5", "៦": "6", "៧": "7", "៨": "8", "៩": "9",
+    "٫": ".", ",": ".",
+  };
+
+  return value
+    .split("")
+    .map((char) => khmerToLatin[char] ?? char)
+    .join("");
 }
+
+function generateSku(storeName: string, category: string, name: string): string {
 
 const emptyProduct = {
   name: "", description: "", price: 0, price_khr: 0, image_url: "", image_urls: [] as string[], category: "",
