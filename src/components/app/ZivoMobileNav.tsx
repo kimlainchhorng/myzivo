@@ -3,7 +3,7 @@
  * Large icons, clean labels, subtle active glow with photographic backgrounds
  */
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Rss, Briefcase, Bell, User } from "lucide-react";
+import { Home, Rss, MapPin, Bell, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
