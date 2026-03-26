@@ -48,7 +48,7 @@ function generateSku(storeName: string, category: string, name: string): string 
 
 const emptyProduct = {
   name: "", description: "", price: 0, price_khr: 0, image_url: "", image_urls: [] as string[], category: "",
-  brand: "", sku: "", unit: "", in_stock: true, sort_order: 0,
+  brand: "", sku: "", unit: "", badge: "" as string, in_stock: true, sort_order: 0,
   discount_type: null as string | null, discount_value: null as number | null,
   discount_price_khr: null as number | null, discount_expires_at: "" as string,
   buy_quantity: 1, get_quantity: 0,
@@ -210,6 +210,7 @@ export default function AdminStoreEditPage() {
       brand: p.brand || "",
       sku: p.sku || "",
       unit: p.unit || "",
+      badge: p.badge || "",
       in_stock: p.in_stock ?? true,
       sort_order: p.sort_order || 0,
       discount_type: p.discount_type || null,
@@ -1086,7 +1087,7 @@ export default function AdminStoreEditPage() {
             <div className="space-y-2">
               <Label>Unit / ឯកតា</Label>
               <div className="flex flex-wrap gap-1.5">
-                {["ចំនួន", "គីឡូ", "កញ្ចប់", "ដប", "កំប៉ុង", "ប្រអប់", "kg", "pcs", "pack", "bottle", "box", "liter"].map(u => (
+                {["ចំនួន", "គីឡូ", "កញ្ចប់", "ដប", "កំប៉ុង", "ប្រអប់", "ដុំ", "ចាន", "កែវ", "ថង់", "kg", "g", "pcs", "pack", "bottle", "box", "liter", "dozen"].map(u => (
                   <button
                     key={u}
                     type="button"
@@ -1108,6 +1109,37 @@ export default function AdminStoreEditPage() {
                 placeholder="Custom unit..."
                 className="mt-1"
               />
+            </div>
+
+            {/* Badge / Tag selector */}
+            <div className="space-y-2">
+              <Label>Badge / ស្លាក</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { value: "new", label: "🆕 New Arrival", color: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
+                  { value: "hot", label: "🔥 Hot", color: "bg-red-500/15 text-red-500 border-red-500/30" },
+                  { value: "popular", label: "⭐ Popular", color: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
+                  { value: "best-seller", label: "🏆 Best Seller", color: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30" },
+                  { value: "limited", label: "⏰ Limited", color: "bg-purple-500/15 text-purple-500 border-purple-500/30" },
+                  { value: "recommended", label: "👍 Recommended", color: "bg-sky-500/15 text-sky-500 border-sky-500/30" },
+                  { value: "organic", label: "🌿 Organic", color: "bg-green-500/15 text-green-500 border-green-500/30" },
+                  { value: "imported", label: "✈️ Imported", color: "bg-violet-500/15 text-violet-500 border-violet-500/30" },
+                ].map(b => (
+                  <button
+                    key={b.value}
+                    type="button"
+                    onClick={() => updateProductField("badge", productForm.badge === b.value ? "" : b.value)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors",
+                      productForm.badge === b.value
+                        ? b.color
+                        : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50"
+                    )}
+                  >
+                    {b.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
