@@ -39,6 +39,12 @@ function normalizeLocalizedNumberInput(value: string): string {
 }
 
 function generateSku(storeName: string, category: string, name: string): string {
+  const s = (storeName || "ST").substring(0, 2).toUpperCase();
+  const c = (category || "GN").substring(0, 2).toUpperCase();
+  const n = (name || "").replace(/[^a-zA-Z0-9]/g, "").substring(0, 3).toUpperCase() || "XXX";
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `${s}-${c}-${n}${rand}`;
+}
 
 const emptyProduct = {
   name: "", description: "", price: 0, price_khr: 0, image_url: "", image_urls: [] as string[], category: "",
@@ -778,15 +784,18 @@ export default function AdminStoreEditPage() {
                   inputMode="numeric"
                   value={productForm.price_khr || ""}
                   onChange={e => {
-                    const val = e.target.value.replace(/[^0-9]/g, "");
+                    const normalized = normalizeLocalizedNumberInput(e.target.value);
+                    const val = normalized.replace(/[^0-9]/g, "");
                     if (val === "") {
                       updateProductField("price_khr", 0);
                       updateProductField("price", 0);
                       return;
                     }
-                    const khr = parseInt(val);
-                    updateProductField("price_khr", khr);
-                    updateProductField("price", parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)));
+                    const khr = parseInt(val, 10);
+                    if (!Number.isNaN(khr)) {
+                      updateProductField("price_khr", khr);
+                      updateProductField("price", parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)));
+                    }
                   }}
                   placeholder="0"
                 />
@@ -799,14 +808,18 @@ export default function AdminStoreEditPage() {
                   inputMode="decimal"
                   value={productForm.price || ""}
                   onChange={e => {
-                    const val = e.target.value.replace(/[^0-9.]/g, "");
-                    if (val === "" || val === ".") {
+                    const normalized = normalizeLocalizedNumberInput(e.target.value);
+                    const parts = normalized.split(".");
+                    const safeDecimal = parts.length > 1
+                      ? `${parts[0].replace(/[^0-9]/g, "")}.${parts.slice(1).join("").replace(/[^0-9]/g, "")}`
+                      : normalized.replace(/[^0-9]/g, "");
+                    if (safeDecimal === "" || safeDecimal === ".") {
                       updateProductField("price", 0);
                       updateProductField("price_khr", 0);
                       return;
                     }
-                    const num = parseFloat(val);
-                    if (!isNaN(num)) {
+                    const num = parseFloat(safeDecimal);
+                    if (!Number.isNaN(num)) {
                       updateProductField("price", num);
                       updateProductField("price_khr", Math.round(num * (form.khr_rate || 4062.5)));
                     }
