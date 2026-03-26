@@ -8,6 +8,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { fetchFile } from "@ffmpeg/util";
+import ffmpegCoreUrl from "@ffmpeg/core?url";
+import ffmpegWasmUrl from "@ffmpeg/core/wasm?url";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
