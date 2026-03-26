@@ -335,8 +335,14 @@ export default function AdminStoreEditPage() {
     const isPlayable = await probeVideoFile(file);
     if (isPlayable) return file;
 
-    toast.info("Optimizing video for browser playback...");
-    return transcodeVideoForBrowser(file);
+    try {
+      toast.info("Optimizing video for browser playback...");
+      return await transcodeVideoForBrowser(file);
+    } catch (err) {
+      console.warn("[PostMedia] Video optimization failed, uploading original:", err);
+      toast.warning("Could not optimize video — uploading original file. Playback may be limited in some browsers.");
+      return file;
+    }
   };
 
   const uploadPostMedia = async (file: File) => {
