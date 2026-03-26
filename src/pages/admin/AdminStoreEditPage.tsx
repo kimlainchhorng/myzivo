@@ -190,6 +190,8 @@ export default function AdminStoreEditPage() {
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [postMediaMode, setPostMediaMode] = useState<"image" | "video">("image");
   const postMediaInputRef = useRef<HTMLInputElement>(null);
+  const ffmpegRef = useRef<FFmpeg | null>(null);
+  const ffmpegLoadPromiseRef = useRef<Promise<FFmpeg> | null>(null);
 
   useEffect(() => {
     if (store) {
@@ -260,6 +262,88 @@ export default function AdminStoreEditPage() {
     }
   };
 
+  const ensureFFmpegLoaded = async () => {
+    if (ffmpegRef.current) return ffmpegRef.current;
+
+    if (!ffmpegLoadPromiseRef.current) {
+      ffmpegLoadPromiseRef.current = (async () => {
+        const ffmpeg = new FFmpeg();
+        await ffmpeg.load({
+          coreURL: ffmpegCoreUrl,
+          wasmURL: ffmpegWasmUrl,
+        });
+        ffmpegRef.current = ffmpeg;
+        return ffmpeg;
+      })().catch((error) => {
+        ffmpegLoadPromiseRef.current = null;
+        throw error;
+      });
+    }
+
+    return ffmpegLoadPromiseRef.current;
+  };
+
+  const transcodeVideoForBrowser = async (file: File) => {
+    const ffmpeg = await ensureFFmpegLoaded();
+    const inputExtension = file.name.split(".").pop()?.toLowerCase() || "mp4";
+    const safeBaseName = (file.name.replace(/\.[^.]+$/, "") || "video").replace(/[^a-zA-Z0-9-_]/g, "-");
+    const inputName = `${safeBaseName}.${inputExtension}`;
+    const outputName = `${safeBaseName}-browser.mp4`;
+
+    await ffmpeg.writeFile(inputName, await fetchFile(file));
+
+    try {
+      await ffmpeg.exec([
+        "-i", inputName,
+        "-movflags", "+faststart",
+        "-pix_fmt", "yuv420p",
+        "-c:v", "libx264",
+        "-preset", "veryfast",
+        "-profile:v", "baseline",
+        "-level", "3.0",
+        "-c:a", "aac",
+        "-profile:a", "aac_low",
+        "-b:a", "128k",
+        "-ar", "44100",
+        "-ac", "2",
+        "-y",
+        outputName,
+      ]);
+
+      const data = await ffmpeg.readFile(outputName);
+      if (!(data instanceof Uint8Array)) {
+        throw new Error("Failed to read transcoded video output.");
+      }
+
+      const normalizedBuffer = new ArrayBuffer(data.byteLength);
+      new Uint8Array(normalizedBuffer).set(data);
+
+      return new File([normalizedBuffer], `${safeBaseName}.mp4`, {
+        type: "video/mp4",
+        lastModified: Date.now(),
+      });
+    } finally {
+      await Promise.allSettled([
+        ffmpeg.deleteFile(inputName),
+        ffmpeg.deleteFile(outputName),
+      ]);
+    }
+  };
+
+  const normalizeVideoUpload = async (file: File) => {
+    const isPlayable = await probeVideoFile(file);
+    if (isPlayable) return file;
+
+    toast.info("Optimizing video for browser playback...");
+    const normalizedFile = await transcodeVideoForBrowser(file);
+    const normalizedIsPlayable = await probeVideoFile(normalizedFile);
+
+    if (!normalizedIsPlayable) {
+      throw new Error("This video could not be converted into a browser-safe format.");
+    }
+
+    return normalizedFile;
+  };
 
   const uploadPostMedia = async (file: File) => {
     console.log("[PostMedia] uploadPostMedia called", { name: file.name, type: file.type, size: file.size });
@@ -281,10 +365,18 @@ export default function AdminStoreEditPage() {
     setUploadingPostMedia(true);
 
     try {
-      const ext = file.name.split(".").pop() || "jpg";
+      const uploadFile = fileIsVideo ? await normalizeVideoUpload(file) : file;
+
+      if (uploadFile !== file) {
+        const normalizedPreviewUrl = URL.createObjectURL(uploadFile);
+        updatePostMediaItem(mediaItemId, (item) => ({ ...item, previewUrl: normalizedPreviewUrl }));
+        URL.revokeObjectURL(localPreviewUrl);
+      }
+
+      const ext = uploadFile.name.split(".").pop() || "jpg";
       const path = `posts/${storeId}/${Date.now()}.${ext}`;
       console.log("[PostMedia] uploading to storage path:", path);
-      const { error: upErr, data: uploadData } = await supabase.storage.from("store-posts").upload(path, file, { upsert: true });
+      const { error: upErr, data: uploadData } = await supabase.storage.from("store-posts").upload(path, uploadFile, { upsert: true });
       console.log("[PostMedia] upload result:", { error: upErr, data: uploadData });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
@@ -307,8 +399,6 @@ export default function AdminStoreEditPage() {
       setUploadingPostMedia(false);
     }
   };
-
-  const removePostMedia = (index: number) => {
     setPostMediaItems(prev => {
       const preview = prev[index];
       if (preview?.previewUrl.startsWith("blob:")) URL.revokeObjectURL(preview.previewUrl);
