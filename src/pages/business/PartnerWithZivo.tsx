@@ -1,5 +1,5 @@
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Handshake, Plane, Hotel, Car, DollarSign, BarChart3, Users, CheckCircle, ChevronRight, Mail, Building2, Globe, Sparkles, ArrowRight, Shield, Star, TrendingUp, UserPlus } from "lucide-react";
+import { ArrowLeft, Handshake, Plane, Hotel, Car, DollarSign, BarChart3, Users, CheckCircle, ChevronRight, Mail, Building2, Globe, Sparkles, ArrowRight, Shield, Star, TrendingUp, UserPlus, Store, UtensilsCrossed, Truck, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,38 @@ const PARTNER_TYPES = [
     gradient: "from-emerald-500 to-teal-500",
     glow: "shadow-emerald-500/25",
     stat: "Global Network",
+  },
+  {
+    icon: UtensilsCrossed,
+    title: "Restaurants",
+    description: "Serve hungry travelers and locals through ZIVO Eats ordering",
+    gradient: "from-rose-500 to-pink-600",
+    glow: "shadow-rose-500/25",
+    stat: "10K+ Restaurants",
+  },
+  {
+    icon: Store,
+    title: "Stores",
+    description: "Sell products to travelers and locals through ZIVO marketplace",
+    gradient: "from-indigo-500 to-blue-500",
+    glow: "shadow-indigo-500/25",
+    stat: "5K+ Stores",
+  },
+  {
+    icon: Truck,
+    title: "Drivers",
+    description: "Join our fleet and earn by delivering rides and food orders",
+    gradient: "from-cyan-500 to-teal-500",
+    glow: "shadow-cyan-500/25",
+    stat: "50K+ Drivers",
+  },
+  {
+    icon: ShoppingBag,
+    title: "Food Delivery",
+    description: "Partner with ZIVO Eats to expand your delivery reach",
+    gradient: "from-orange-500 to-red-500",
+    glow: "shadow-orange-500/25",
+    stat: "1M+ Orders",
   },
 ];
 
