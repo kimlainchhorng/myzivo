@@ -704,10 +704,13 @@ export default function StoreProfilePage() {
                   </div>
                 </motion.div>
               );
-            })}
-          </motion.div>
-        )}
-      </div>
+              );
+                    })}
+                  </motion.div>
+                </div>
+              );
+            });
+          })()
 
       {/* ── Floating Cart Bar - Premium 3D ── */}
       <AnimatePresence>
