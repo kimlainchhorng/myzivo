@@ -339,6 +339,10 @@ export default function PartnerWithZivo() {
                         <SelectItem value="airline">Airline</SelectItem>
                         <SelectItem value="hotel">Hotel / Accommodation</SelectItem>
                         <SelectItem value="car">Car Rental</SelectItem>
+                        <SelectItem value="restaurant">Restaurant</SelectItem>
+                        <SelectItem value="store">Store / Retail</SelectItem>
+                        <SelectItem value="driver">Driver</SelectItem>
+                        <SelectItem value="food_delivery">Food Delivery</SelectItem>
                         <SelectItem value="agency">Travel Agency</SelectItem>
                         <SelectItem value="affiliate">Affiliate Marketer</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
