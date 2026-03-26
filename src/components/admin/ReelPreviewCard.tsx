@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Trash2 } from "lucide-react";
 
 interface ReelPreviewCardProps {
@@ -9,14 +9,6 @@ interface ReelPreviewCardProps {
 
 export default function ReelPreviewCard({ url, isVideo, onRemove }: ReelPreviewCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (!isVideo || !videoRef.current) return;
-
-    const video = videoRef.current;
-    video.currentTime = 0;
-    void video.play().catch(() => undefined);
-  }, [isVideo, url]);
 
   const handleRemove = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -29,23 +21,15 @@ export default function ReelPreviewCard({ url, isVideo, onRemove }: ReelPreviewC
       style={{ aspectRatio: isVideo ? "9 / 16" : "1 / 1" }}
     >
       {isVideo ? (
-        <div className="relative h-full w-full bg-foreground/5">
+        <div className="relative h-full w-full bg-muted/10">
           <video
             ref={videoRef}
             src={url}
-            className="h-full w-full object-cover"
-            autoPlay
-            muted
-            loop
+            className="h-full w-full object-contain"
             controls
             playsInline
-            preload="metadata"
-            onLoadedData={() => {
-              if (!videoRef.current) return;
-              void videoRef.current.play().catch(() => undefined);
-            }}
+            preload="auto"
           />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-foreground/40 to-transparent" />
         </div>
       ) : (
         <img src={url} alt="Post preview" className="h-full w-full object-cover" />
