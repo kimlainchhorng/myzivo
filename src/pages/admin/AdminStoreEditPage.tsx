@@ -217,6 +217,8 @@ export default function AdminStoreEditPage() {
         discount_value: rest.discount_value || null,
         discount_price_khr: rest.discount_price_khr || null,
         discount_expires_at: rest.discount_expires_at || null,
+        buy_quantity: rest.discount_type === "bogo" ? (rest.buy_quantity || 1) : 1,
+        get_quantity: rest.discount_type === "bogo" ? (rest.get_quantity || 0) : 0,
       };
 
       if (editingProduct) {
