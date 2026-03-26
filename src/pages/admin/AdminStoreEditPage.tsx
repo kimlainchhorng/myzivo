@@ -8,6 +8,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -181,11 +183,13 @@ export default function AdminStoreEditPage() {
   // Post state
   const [postDialog, setPostDialog] = useState(false);
   const [postCaption, setPostCaption] = useState("");
-  const [postMediaItems, setPostMediaItems] = useState<Array<{ previewUrl: string; uploadedUrl?: string; isVideo: boolean; isUploading: boolean }>>([]);
+  const [postMediaItems, setPostMediaItems] = useState<Array<{ id: string; previewUrl: string; uploadedUrl?: string; isVideo: boolean; isUploading: boolean }>>([]);
   const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [postMediaMode, setPostMediaMode] = useState<"image" | "video">("image");
   const postMediaInputRef = useRef<HTMLInputElement>(null);
+  const ffmpegRef = useRef<FFmpeg | null>(null);
+  const ffmpegLoadPromiseRef = useRef<Promise<FFmpeg> | null>(null);
 
   useEffect(() => {
     if (store) {
@@ -205,6 +209,131 @@ export default function AdminStoreEditPage() {
     setPostMediaItems([]);
   };
 
+  const updatePostMediaItem = (
+    id: string,
+    updater: (item: { id: string; previewUrl: string; uploadedUrl?: string; isVideo: boolean; isUploading: boolean }) => { id: string; previewUrl: string; uploadedUrl?: string; isVideo: boolean; isUploading: boolean },
+  ) => {
+    setPostMediaItems((prev) => prev.map((item) => (item.id === id ? updater(item) : item)));
+  };
+
+  const ensurePostVideoFrame = (video: HTMLVideoElement) => {
+    if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+    const targetTime = Math.min(1, Math.max(video.duration * 0.1, 0.25));
+    if (Math.abs(video.currentTime - targetTime) < 0.01) return;
+
+    try {
+      video.currentTime = targetTime;
+    } catch {
+      // Ignore seek failures on restrictive browsers.
+    }
+  };
+
+  const probeVideoFile = async (file: File) => {
+    const objectUrl = URL.createObjectURL(file);
+
+    try {
+      return await new Promise<boolean>((resolve) => {
+        const video = document.createElement("video");
+        let settled = false;
+
+        const finalize = (result: boolean) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeoutId);
+          video.removeAttribute("src");
+          video.load();
+          resolve(result);
+        };
+
+        const timeoutId = window.setTimeout(() => finalize(false), 4000);
+
+        video.preload = "metadata";
+        video.muted = true;
+        video.playsInline = true;
+        video.onloadedmetadata = () => finalize(Number.isFinite(video.duration) && video.duration > 0);
+        video.onerror = () => finalize(false);
+        video.src = objectUrl;
+        video.load();
+      });
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
+
+  const ensureFFmpegLoaded = async () => {
+    if (ffmpegRef.current) return ffmpegRef.current;
+
+    if (!ffmpegLoadPromiseRef.current) {
+      ffmpegLoadPromiseRef.current = (async () => {
+        const ffmpeg = new FFmpeg();
+        const baseUrl = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm";
+
+        await ffmpeg.load({
+          coreURL: await toBlobURL(`${baseUrl}/ffmpeg-core.js`, "text/javascript"),
+          wasmURL: await toBlobURL(`${baseUrl}/ffmpeg-core.wasm`, "application/wasm"),
+          workerURL: await toBlobURL(`${baseUrl}/ffmpeg-core.worker.js`, "text/javascript"),
+        });
+
+        ffmpegRef.current = ffmpeg;
+        return ffmpeg;
+      })().catch((error) => {
+        ffmpegLoadPromiseRef.current = null;
+        throw error;
+      });
+    }
+
+    return ffmpegLoadPromiseRef.current;
+  };
+
+  const transcodeVideoForBrowser = async (file: File) => {
+    const ffmpeg = await ensureFFmpegLoaded();
+    const inputExtension = file.name.split(".").pop()?.toLowerCase() || "mp4";
+    const safeBaseName = (file.name.replace(/\.[^.]+$/, "") || "video").replace(/[^a-zA-Z0-9-_]/g, "-");
+    const inputName = `${safeBaseName}.${inputExtension}`;
+    const outputName = `${safeBaseName}-browser.mp4`;
+
+    await ffmpeg.writeFile(inputName, await fetchFile(file));
+
+    try {
+      await ffmpeg.exec([
+        "-i", inputName,
+        "-movflags", "+faststart",
+        "-pix_fmt", "yuv420p",
+        "-c:v", "libx264",
+        "-preset", "veryfast",
+        "-profile:v", "baseline",
+        "-level", "3.0",
+        "-c:a", "aac",
+        "-b:a", "128k",
+        "-ar", "44100",
+        "-ac", "2",
+        "-y",
+        outputName,
+      ]);
+
+      const data = await ffmpeg.readFile(outputName);
+      const outputBytes = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
+
+      return new File([outputBytes], `${safeBaseName}.mp4`, {
+        type: "video/mp4",
+        lastModified: Date.now(),
+      });
+    } finally {
+      await Promise.allSettled([
+        ffmpeg.deleteFile(inputName),
+        ffmpeg.deleteFile(outputName),
+      ]);
+    }
+  };
+
+  const normalizeVideoUpload = async (file: File) => {
+    const isPlayable = await probeVideoFile(file);
+    if (isPlayable) return file;
+
+    toast.info("Optimizing video for browser playback...");
+    return transcodeVideoForBrowser(file);
+  };
+
   const uploadPostMedia = async (file: File) => {
     console.log("[PostMedia] uploadPostMedia called", { name: file.name, type: file.type, size: file.size });
     if (postMediaItems.length >= 10) {
@@ -213,6 +342,7 @@ export default function AdminStoreEditPage() {
     }
 
     const fileIsVideo = file.type.startsWith("video/");
+    const mediaItemId = crypto.randomUUID();
 
     if (fileIsVideo && file.size > 100 * 1024 * 1024) {
       toast.error("Video file is too large. Maximum 100 MB.");
@@ -220,28 +350,39 @@ export default function AdminStoreEditPage() {
     }
 
     const localPreviewUrl = URL.createObjectURL(file);
-    setPostMediaItems(prev => [...prev, { previewUrl: localPreviewUrl, isVideo: fileIsVideo, isUploading: true }]);
+    setPostMediaItems(prev => [...prev, { id: mediaItemId, previewUrl: localPreviewUrl, isVideo: fileIsVideo, isUploading: true }]);
     setUploadingPostMedia(true);
 
     try {
-      const ext = file.name.split(".").pop() || "jpg";
+      const uploadFile = fileIsVideo ? await normalizeVideoUpload(file) : file;
+      if (uploadFile !== file) {
+        const normalizedPreviewUrl = URL.createObjectURL(uploadFile);
+        updatePostMediaItem(mediaItemId, (item) => ({ ...item, previewUrl: normalizedPreviewUrl }));
+        URL.revokeObjectURL(localPreviewUrl);
+      }
+
+      const ext = uploadFile.name.split(".").pop() || "jpg";
       const path = `posts/${storeId}/${Date.now()}.${ext}`;
       console.log("[PostMedia] uploading to storage path:", path);
-      const { error: upErr, data: uploadData } = await supabase.storage.from("store-posts").upload(path, file, { upsert: true });
+      const { error: upErr, data: uploadData } = await supabase.storage.from("store-posts").upload(path, uploadFile, { upsert: true });
       console.log("[PostMedia] upload result:", { error: upErr, data: uploadData });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
       console.log("[PostMedia] publicUrl:", urlData.publicUrl);
-      setPostMediaItems(prev => prev.map((item) => item.previewUrl === localPreviewUrl ? {
+      setPostMediaItems(prev => prev.map((item) => item.id === mediaItemId ? {
         ...item,
         uploadedUrl: urlData.publicUrl,
         isUploading: false,
       } : item));
     } catch (e: any) {
-      URL.revokeObjectURL(localPreviewUrl);
-      setPostMediaItems(prev => prev.filter((p) => p.previewUrl !== localPreviewUrl));
+      setPostMediaItems(prev => {
+        const currentItem = prev.find((p) => p.id === mediaItemId);
+        if (currentItem?.previewUrl.startsWith("blob:")) URL.revokeObjectURL(currentItem.previewUrl);
+        if (localPreviewUrl.startsWith("blob:")) URL.revokeObjectURL(localPreviewUrl);
+        return prev.filter((p) => p.id !== mediaItemId);
+      });
       console.error("[PostMedia] upload error:", e);
-      toast.error(e.message || "Upload failed");
+      toast.error(e.message || "This video format could not be prepared for web playback.");
     } finally {
       setUploadingPostMedia(false);
     }
@@ -1026,10 +1167,7 @@ export default function AdminStoreEditPage() {
                               preload="auto"
                               crossOrigin="anonymous"
                               onLoadedMetadata={(event) => {
-                                const video = event.currentTarget;
-                                if (video.duration > 1) {
-                                  video.currentTime = 1;
-                                }
+                                ensurePostVideoFrame(event.currentTarget);
                               }}
                             />
                           )}
@@ -1540,10 +1678,7 @@ export default function AdminStoreEditPage() {
                           className="w-full rounded-lg bg-muted"
                           style={{ aspectRatio: "9 / 16", maxHeight: 320 }}
                           onLoadedMetadata={(event) => {
-                            const video = event.currentTarget;
-                            if (video.duration > 0.25) {
-                              video.currentTime = 0.25;
-                            }
+                            ensurePostVideoFrame(event.currentTarget);
                           }}
                         />
                       ) : (
