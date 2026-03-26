@@ -604,6 +604,18 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "admin.store.in_stock": "In Stock",
     "admin.store.out_of_stock": "Out of Stock",
     "admin.store.select_language": "Select Language",
+    // Store profile page
+    "store.all_products": "All Products",
+    "store.items": "items",
+    "store.no_products": "No products available yet",
+    "store.out_of_stock": "Out of Stock",
+    "store.sale": "SALE",
+    "store.buy_x_get_y": "BUY {buy} GET {get} FREE",
+    "store.added_to_cart": "Added to cart",
+    "store.view_cart": "View Cart",
+    "store.not_found": "Store not found",
+    "store.not_found_desc": "This store doesn't exist or has been removed.",
+    "store.go_back": "Go Back",
   },
   km: {
     "flights.roundtrip": "ទៅមក",
