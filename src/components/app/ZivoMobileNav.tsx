@@ -3,7 +3,7 @@
  * Large icons, clean labels, subtle active glow with photographic backgrounds
  */
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Search, Briefcase, Bell, User } from "lucide-react";
+import { Home, Rss, Briefcase, Bell, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
@@ -34,7 +34,7 @@ const ZivoMobileNav = () => {
 
   const tabs: NavTab[] = [
     { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
-    { id: "search", labelKey: "nav.search", icon: Search, path: "/flights", bg: navSearchBg, cssVar: "var(--flights)" },
+    { id: "feed", labelKey: "nav.feed", icon: Rss, path: "/feed", bg: navSearchBg, cssVar: "var(--flights)" },
     { id: "trips", labelKey: "nav.trips", icon: Briefcase, path: "/my-trips", bg: navTripsBg, cssVar: "var(--hotels)" },
     { id: "alerts", labelKey: "nav.alerts", icon: Bell, path: "/notifications", badge: activeAlertsCount, bg: navAlertsBg, cssVar: "var(--cars)" },
     { id: "account", labelKey: "nav.account", icon: User, path: "/profile", bg: navAccountBg, cssVar: "var(--primary)" },
@@ -43,11 +43,7 @@ const ZivoMobileNav = () => {
   const getActiveTab = () => {
     const path = location.pathname;
     if (path === "/" || path === "") return "home";
-    if (path.startsWith("/search") || 
-        path.startsWith("/flights") || 
-        path.startsWith("/hotels") || 
-        path.startsWith("/rent-car") ||
-        path.startsWith("/car-rental")) return "search";
+    if (path.startsWith("/feed")) return "feed";
     if (path.startsWith("/trips") || path.startsWith("/my-trips") || path.startsWith("/my-orders")) return "trips";
     if (path.startsWith("/alerts") || path.startsWith("/price-alerts") || path.startsWith("/notifications")) return "alerts";
     if (path.startsWith("/account") || path.startsWith("/profile")) return "account";
