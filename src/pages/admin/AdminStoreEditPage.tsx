@@ -255,7 +255,7 @@ export default function AdminStoreEditPage() {
     if (fileIsVideo) {
       const isPlayable = await validatePlayableVideo(file);
       if (!isPlayable) {
-        toast.error("This video format is not supported for browser preview. Please use MP4 (H.264).");
+        toast.error("This video can't play in browser. Please convert it to MP4 with H.264/AAC (many iPhone HEVC videos won't work).");
         return;
       }
     }
@@ -1553,7 +1553,7 @@ export default function AdminStoreEditPage() {
                   e.target.value = "";
                 }}
               />
-              <p className="text-[10px] text-muted-foreground">Supports images (JPG, PNG) and videos (MP4, MOV). Max 10 files.</p>
+              <p className="text-[10px] text-muted-foreground">Supports JPG, PNG, and browser-safe videos like MP4 (H.264/AAC). Some MOV or iPhone HEVC videos may not work. Max 10 files.</p>
             </div>
           </div>
           <DialogFooter>
