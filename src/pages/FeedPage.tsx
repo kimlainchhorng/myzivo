@@ -41,24 +41,33 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
   const [activeIndex, setActiveIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [videoReady, setVideoReady] = useState(false);
 
   const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
+  const getVideoPreviewSrc = (url: string) => (url.includes("#") ? url : `${url}#t=0.001`);
 
-  const handleVideoLoaded = () => {
-    if (videoRef.current && videoRef.current.currentTime < 0.1) {
-      videoRef.current.currentTime = 0.5;
+  const handleVideoLoaded = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    try {
+      await video.play();
+      setIsPlaying(true);
+    } catch {
+      if (video.currentTime < 0.01) {
+        video.currentTime = 0.001;
+      }
+      setIsPlaying(false);
     }
-    setVideoReady(true);
   };
 
   const toggleVideo = () => {
-    if (!videoRef.current) return;
-    if (videoRef.current.paused) {
-      videoRef.current.play();
-      setIsPlaying(true);
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     } else {
-      videoRef.current.pause();
+      video.pause();
       setIsPlaying(false);
     }
   };
