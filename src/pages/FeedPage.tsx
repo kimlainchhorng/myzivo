@@ -42,7 +42,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
+  const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
 
   const toggleVideo = () => {
     if (!videoRef.current) return;
