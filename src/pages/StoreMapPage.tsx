@@ -104,7 +104,7 @@ function getCategoryLabel(cat: string) {
   return STORE_CATEGORY_OPTIONS.find((o) => o.value === cat)?.label || cat;
 }
 
-/** Colored pin marker with emoji */
+/** Colored pin marker with emoji fallback */
 function makeMarkerIcon(emoji: string, color: string): string {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="44" height="54" viewBox="0 0 44 54">
@@ -118,6 +118,59 @@ function makeMarkerIcon(emoji: string, color: string): string {
       <text x="22" y="24" text-anchor="middle" font-size="15">${emoji}</text>
     </svg>`;
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+/** Create a logo marker as a canvas-rendered image URL */
+function createLogoMarkerCanvas(
+  logoUrl: string,
+  color: string,
+  callback: (dataUrl: string) => void
+) {
+  const canvas = document.createElement("canvas");
+  const size = 56;
+  const pinH = 68;
+  canvas.width = size;
+  canvas.height = pinH;
+  const ctx = canvas.getContext("2d")!;
+
+  // Draw pin shape
+  ctx.beginPath();
+  const cx = size / 2, topR = 24;
+  ctx.arc(cx, topR + 2, topR, Math.PI * 0.85, Math.PI * 0.15);
+  ctx.quadraticCurveTo(cx + 6, pinH - 14, cx, pinH - 2);
+  ctx.quadraticCurveTo(cx - 6, pinH - 14, cx - topR * Math.cos(Math.PI * 0.15), topR + 2 - topR * Math.sin(Math.PI * 0.15));
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.shadowColor = "rgba(0,0,0,0.25)";
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetY = 2;
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+
+  // White circle bg for logo
+  const logoR = 16;
+  ctx.beginPath();
+  ctx.arc(cx, topR + 2, logoR, 0, Math.PI * 2);
+  ctx.fillStyle = "#fff";
+  ctx.fill();
+
+  // Load and draw logo
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, topR + 2, logoR - 2, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(img, cx - logoR + 2, topR + 2 - logoR + 2, (logoR - 2) * 2, (logoR - 2) * 2);
+    ctx.restore();
+    callback(canvas.toDataURL());
+  };
+  img.onerror = () => {
+    // If logo fails, just use pin as-is (white circle, no image)
+    callback(canvas.toDataURL());
+  };
+  img.src = logoUrl;
 }
 
 /** Blue dot for user location */
@@ -234,11 +287,14 @@ export default function StoreMapPage() {
     filteredStores.forEach((store) => {
       const pos = { lat: store.latitude, lng: store.longitude };
       bounds.extend(pos);
+      const color = getCategoryColor(store.category);
+
+      // Create marker with fallback icon first
       const marker = new google.maps.Marker({
         map: mapRef.current!,
         position: pos,
         icon: {
-          url: makeMarkerIcon(getCategoryIcon(store.category), getCategoryColor(store.category)),
+          url: makeMarkerIcon(getCategoryIcon(store.category), color),
           scaledSize: new google.maps.Size(40, 49),
           anchor: new google.maps.Point(20, 49),
         },
@@ -246,6 +302,18 @@ export default function StoreMapPage() {
         animation: google.maps.Animation.DROP,
         zIndex: 100,
       });
+
+      // If store has a logo, replace with logo marker
+      if (store.logo_url) {
+        createLogoMarkerCanvas(store.logo_url, color, (dataUrl) => {
+          marker.setIcon({
+            url: dataUrl,
+            scaledSize: new google.maps.Size(44, 54),
+            anchor: new google.maps.Point(22, 54),
+          });
+        });
+      }
+
       marker.addListener("click", () => {
         setSelectedStore(store);
         mapRef.current?.panTo(pos);
