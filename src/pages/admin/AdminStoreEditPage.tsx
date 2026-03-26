@@ -178,12 +178,87 @@ export default function AdminStoreEditPage() {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  // Post state
+  const [postDialog, setPostDialog] = useState(false);
+  const [postCaption, setPostCaption] = useState("");
+  const [postMediaUrls, setPostMediaUrls] = useState<string[]>([]);
+  const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const postMediaInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (store) {
       setGalleryImages((store as any).gallery_images || []);
     }
   }, [store]);
+
+  const uploadPostMedia = async (file: File) => {
+    if (postMediaUrls.length >= 10) {
+      toast.error("Maximum 10 files per post");
+      return;
+    }
+    setUploadingPostMedia(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `posts/${storeId}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("store-posts").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
+      setPostMediaUrls(prev => [...prev, urlData.publicUrl]);
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      setUploadingPostMedia(false);
+    }
+  };
+
+  const removePostMedia = (index: number) => {
+    setPostMediaUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const isVideoUrl = (url: string) => /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
+
+  const getMediaType = (urls: string[]): string => {
+    const hasVideo = urls.some(isVideoUrl);
+    const hasImage = urls.some(u => !isVideoUrl(u));
+    if (hasVideo && hasImage) return "mixed";
+    if (hasVideo) return "video";
+    return "image";
+  };
+
+  const savePost = useMutation({
+    mutationFn: async () => {
+      if (postMediaUrls.length === 0) throw new Error("Add at least one picture or video");
+      const { error } = await supabase.from("store_posts").insert({
+        store_id: storeId!,
+        caption: postCaption || null,
+        media_urls: postMediaUrls,
+        media_type: getMediaType(postMediaUrls),
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
+      setPostDialog(false);
+      setPostCaption("");
+      setPostMediaUrls([]);
+      toast.success("Post created!");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deletePost = useMutation({
+    mutationFn: async (postId: string) => {
+      const { error } = await supabase.from("store_posts").delete().eq("id", postId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
+      setDeletePostId(null);
+      toast.success("Post deleted");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
 
   const uploadProductImage = async (file: File) => {
     const currentImages = productForm.image_urls || [];
