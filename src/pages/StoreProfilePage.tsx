@@ -506,6 +506,32 @@ export default function StoreProfilePage() {
                       <Heart className={cn("h-3 w-3 transition-colors", isLiked ? "fill-rose-500 text-rose-500" : "text-muted-foreground/60")} />
                     </motion.button>
 
+                    {/* Product badge */}
+                    {(product as any).badge && (() => {
+                      const badgeMap: Record<string, { emoji: string; label: string; cls: string }> = {
+                        "new": { emoji: "🆕", label: "New", cls: "from-blue-500 to-indigo-500" },
+                        "hot": { emoji: "🔥", label: "Hot", cls: "from-red-500 to-orange-500" },
+                        "popular": { emoji: "⭐", label: "Popular", cls: "from-amber-500 to-yellow-500" },
+                        "best-seller": { emoji: "🏆", label: "Best Seller", cls: "from-emerald-500 to-green-500" },
+                        "limited": { emoji: "⏰", label: "Limited", cls: "from-purple-500 to-violet-500" },
+                        "recommended": { emoji: "👍", label: "Recommended", cls: "from-sky-500 to-cyan-500" },
+                        "organic": { emoji: "🌿", label: "Organic", cls: "from-green-500 to-lime-500" },
+                        "imported": { emoji: "✈️", label: "Imported", cls: "from-violet-500 to-fuchsia-500" },
+                      };
+                      const b = badgeMap[(product as any).badge];
+                      if (!b) return null;
+                      return (
+                        <motion.div
+                          initial={{ scale: 0, y: -5 }}
+                          animate={{ scale: 1, y: 0 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                          className={cn("absolute top-1.5 left-10 px-1.5 py-0.5 rounded-md bg-gradient-to-r text-white text-[8px] font-bold z-20 shadow-md", b.cls)}
+                        >
+                          {b.emoji} {b.label}
+                        </motion.div>
+                      );
+                    })()}
+
                     {/* Cart quantity badge */}
                     <AnimatePresence>
                       {cartItem && (
