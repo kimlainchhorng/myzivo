@@ -446,7 +446,7 @@ export default function StoreProfilePage() {
                     </AnimatePresence>
 
                     {/* Category chip */}
-                    {product.category && !hasDiscount && (
+                    {product.category && !hasDiscount && !hasBogo && (
                       <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-background/60 backdrop-blur-xl border border-white/10 z-20">
                         <span className="text-[7px] font-bold text-foreground/70 uppercase tracking-wider">{product.category}</span>
                       </div>
