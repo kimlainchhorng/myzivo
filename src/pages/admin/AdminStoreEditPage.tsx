@@ -1539,6 +1539,12 @@ export default function AdminStoreEditPage() {
                           preload="auto"
                           className="w-full rounded-lg bg-muted"
                           style={{ aspectRatio: "9 / 16", maxHeight: 320 }}
+                          onLoadedMetadata={(event) => {
+                            const video = event.currentTarget;
+                            if (video.duration > 0.25) {
+                              video.currentTime = 0.25;
+                            }
+                          }}
                         />
                       ) : (
                         <img
