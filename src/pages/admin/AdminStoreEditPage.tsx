@@ -184,6 +184,7 @@ export default function AdminStoreEditPage() {
   const [postMediaUrls, setPostMediaUrls] = useState<string[]>([]);
   const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const [postMediaMode, setPostMediaMode] = useState<"image" | "video">("image");
   const postMediaInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -233,7 +234,7 @@ export default function AdminStoreEditPage() {
         store_id: storeId!,
         caption: postCaption || null,
         media_urls: postMediaUrls,
-        media_type: getMediaType(postMediaUrls),
+        media_type: postMediaMode === "video" ? "video" : "image",
       } as any);
       if (error) throw error;
     },
@@ -648,7 +649,8 @@ export default function AdminStoreEditPage() {
           <TabsList>
              <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
             <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> {t("admin.store.products")} ({products.length})</TabsTrigger>
-            <TabsTrigger value="posts" className="gap-1.5"><ImagePlus className="h-3.5 w-3.5" /> {t("admin.store.posts")} ({posts.length})</TabsTrigger>
+            <TabsTrigger value="photos" className="gap-1.5"><ImagePlus className="h-3.5 w-3.5" /> {t("admin.store.photo_posts")} ({posts.filter((p: any) => p.media_type === "image").length})</TabsTrigger>
+            <TabsTrigger value="videos" className="gap-1.5"><Video className="h-3.5 w-3.5" /> {t("admin.store.video_posts")} ({posts.filter((p: any) => p.media_type === "video" || p.media_type === "mixed").length})</TabsTrigger>
           </TabsList>
 
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-card">
@@ -861,13 +863,13 @@ export default function AdminStoreEditPage() {
             </Card>
           </TabsContent>
 
-          {/* Posts Tab */}
-          <TabsContent value="posts">
+          {/* Photos Tab */}
+          <TabsContent value="photos">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base">{t("admin.store.posts")}</CardTitle>
-                <Button size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostDialog(true); }} className="gap-1.5">
-                  <Plus className="h-4 w-4" /> {t("admin.store.add_post")}
+                <CardTitle className="text-base">{t("admin.store.photo_posts")}</CardTitle>
+                <Button size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostMediaMode("image"); setPostDialog(true); }} className="gap-1.5">
+                  <Plus className="h-4 w-4" /> {t("admin.store.add_photo_post")}
                 </Button>
               </CardHeader>
               <CardContent>
@@ -875,54 +877,86 @@ export default function AdminStoreEditPage() {
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
                   </div>
-                ) : posts.length === 0 ? (
+                ) : posts.filter((p: any) => p.media_type === "image").length === 0 ? (
                   <div className="text-center py-12 space-y-3">
                     <ImagePlus className="h-10 w-10 text-muted-foreground/20 mx-auto" />
-                    <p className="text-muted-foreground">{t("admin.store.no_posts")}</p>
-                    <p className="text-xs text-muted-foreground/60">{t("admin.store.no_posts_desc")}</p>
-                    <Button variant="outline" size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostDialog(true); }} className="gap-1.5">
-                      <Plus className="h-4 w-4" /> {t("admin.store.add_post")}
+                    <p className="text-muted-foreground">{t("admin.store.no_photo_posts")}</p>
+                    <Button variant="outline" size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostMediaMode("image"); setPostDialog(true); }} className="gap-1.5">
+                      <Plus className="h-4 w-4" /> {t("admin.store.add_photo_post")}
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {posts.map((post: any) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {posts.filter((p: any) => p.media_type === "image").map((post: any) => (
                       <div key={post.id} className="rounded-xl border border-border overflow-hidden bg-card group">
-                        {/* Media preview */}
                         <div className="aspect-square relative bg-muted overflow-hidden">
                           {post.media_urls?.[0] && (
-                            isVideoUrl(post.media_urls[0]) ? (
-                              <video src={post.media_urls[0]} className="w-full h-full object-cover" muted />
-                            ) : (
-                              <img src={post.media_urls[0]} alt="" className="w-full h-full object-cover" />
-                            )
+                            <img src={post.media_urls[0]} alt="" className="w-full h-full object-cover" />
                           )}
                           {post.media_urls?.length > 1 && (
                             <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground text-xs font-medium px-2 py-0.5 rounded-full">
                               +{post.media_urls.length - 1}
                             </div>
                           )}
-                          {post.media_type === "video" || post.media_type === "mixed" ? (
-                            <div className="absolute bottom-2 left-2">
-                              <Video className="h-4 w-4 text-white drop-shadow-md" />
-                            </div>
-                          ) : null}
                         </div>
-                        {/* Caption & actions */}
-                        <div className="p-3 space-y-2">
-                          {post.caption && (
-                            <p className="text-sm text-foreground line-clamp-2">{post.caption}</p>
-                          )}
+                        <div className="p-2.5 space-y-1.5">
+                          {post.caption && <p className="text-xs text-foreground line-clamp-2">{post.caption}</p>}
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-muted-foreground">
-                              {new Date(post.created_at).toLocaleDateString()}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-destructive hover:text-destructive"
-                              onClick={() => setDeletePostId(post.id)}
-                            >
+                            <span className="text-[10px] text-muted-foreground">{new Date(post.created_at).toLocaleDateString()}</span>
+                            <Button size="sm" variant="outline" className="h-6 w-6 p-0 text-destructive hover:text-destructive" onClick={() => setDeletePostId(post.id)}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Videos Tab */}
+          <TabsContent value="videos">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">{t("admin.store.video_posts")}</CardTitle>
+                <Button size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostMediaMode("video"); setPostDialog(true); }} className="gap-1.5">
+                  <Plus className="h-4 w-4" /> {t("admin.store.add_video_post")}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {loadingPosts ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : posts.filter((p: any) => p.media_type === "video" || p.media_type === "mixed").length === 0 ? (
+                  <div className="text-center py-12 space-y-3">
+                    <Video className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+                    <p className="text-muted-foreground">{t("admin.store.no_video_posts")}</p>
+                    <Button variant="outline" size="sm" onClick={() => { setPostCaption(""); setPostMediaUrls([]); setPostMediaMode("video"); setPostDialog(true); }} className="gap-1.5">
+                      <Plus className="h-4 w-4" /> {t("admin.store.add_video_post")}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {posts.filter((p: any) => p.media_type === "video" || p.media_type === "mixed").map((post: any) => (
+                      <div key={post.id} className="rounded-xl border border-border overflow-hidden bg-card group">
+                        <div className="aspect-video relative bg-muted overflow-hidden">
+                          {post.media_urls?.[0] && (
+                            <video src={post.media_urls[0]} className="w-full h-full object-cover" muted controls />
+                          )}
+                          {post.media_urls?.length > 1 && (
+                            <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                              +{post.media_urls.length - 1}
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-3 space-y-2">
+                          {post.caption && <p className="text-sm text-foreground line-clamp-2">{post.caption}</p>}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-muted-foreground">{new Date(post.created_at).toLocaleDateString()}</span>
+                            <Button size="sm" variant="outline" className="h-7 text-destructive hover:text-destructive" onClick={() => setDeletePostId(post.id)}>
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
@@ -1382,7 +1416,7 @@ export default function AdminStoreEditPage() {
       <Dialog open={postDialog} onOpenChange={setPostDialog}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t("admin.store.add_post")}</DialogTitle>
+            <DialogTitle>{postMediaMode === "video" ? t("admin.store.add_video_post") : t("admin.store.add_photo_post")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -1432,7 +1466,7 @@ export default function AdminStoreEditPage() {
               <input
                 ref={postMediaInputRef}
                 type="file"
-                accept="image/*,video/*"
+                accept={postMediaMode === "video" ? "video/*" : "image/*"}
                 className="hidden"
                 onChange={e => {
                   const f = e.target.files?.[0];
