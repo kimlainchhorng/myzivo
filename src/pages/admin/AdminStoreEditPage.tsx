@@ -199,7 +199,11 @@ export default function AdminStoreEditPage() {
       toast.error("Maximum 10 files per post");
       return;
     }
+
+    const localPreviewUrl = URL.createObjectURL(file);
+    setPostMediaPreviews(prev => [...prev, localPreviewUrl]);
     setUploadingPostMedia(true);
+
     try {
       const ext = file.name.split(".").pop() || "jpg";
       const path = `posts/${storeId}/${Date.now()}.${ext}`;
@@ -208,6 +212,8 @@ export default function AdminStoreEditPage() {
       const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
       setPostMediaUrls(prev => [...prev, urlData.publicUrl]);
     } catch (e: any) {
+      URL.revokeObjectURL(localPreviewUrl);
+      setPostMediaPreviews(prev => prev.filter((url) => url !== localPreviewUrl));
       toast.error(e.message || "Upload failed");
     } finally {
       setUploadingPostMedia(false);
@@ -215,6 +221,11 @@ export default function AdminStoreEditPage() {
   };
 
   const removePostMedia = (index: number) => {
+    setPostMediaPreviews(prev => {
+      const preview = prev[index];
+      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+      return prev.filter((_, i) => i !== index);
+    });
     setPostMediaUrls(prev => prev.filter((_, i) => i !== index));
   };
 
