@@ -640,7 +640,7 @@ const App = () => (
           <CookieConsent />
           <PWAUpdatePrompt />
           <PWAInstallBanner />
-          <ScrollToTopButton />
+          {/* ScrollToTopButton removed */}
           {/* LiveChatWidget removed */}
           <SpatialCursor />
           <BrandThemeApplicator />
