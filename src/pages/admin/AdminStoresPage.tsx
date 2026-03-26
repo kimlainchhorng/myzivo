@@ -42,6 +42,14 @@ export default function AdminStoresPage() {
     },
   });
 
+  // Derive used categories and filtered list
+  const usedCategories = STORE_CATEGORY_OPTIONS.filter(opt =>
+    stores.some((s: any) => s.category === opt.value)
+  );
+  const filteredStores = activeCategory === "all"
+    ? stores
+    : stores.filter((s: any) => s.category === activeCategory);
+
   const saveMutation = useMutation({
     mutationFn: async (values: typeof form & { id?: string }) => {
       const { id, ...rest } = values as any;
