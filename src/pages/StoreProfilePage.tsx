@@ -13,6 +13,7 @@ import { useStoreProfile, useStoreProducts, useStoreProductCategories, type Stor
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
 import { useState, useRef } from "react";
+import StoreHeroCarousel from "@/components/grocery/StoreHeroCarousel";
 import { toast } from "sonner";
 
 const container = {
@@ -135,50 +136,60 @@ export default function StoreProfilePage() {
       </div>
 
       {/* ── Banner with 3D parallax ── */}
-      <div className="relative w-full h-52 overflow-hidden" style={{ perspective: "800px" }}>
-        <motion.div
-          initial={{ scale: 1.15, rotateX: 4 }}
-          animate={{ scale: 1, rotateX: 0 }}
-          transition={{ duration: 1.4, ease: "easeOut" }}
-          className="absolute inset-0 origin-bottom"
-        >
-          {store.banner_url ? (
-            <img src={store.banner_url} alt={`${store.name} banner`} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/10 to-sky-500/15" />
-          )}
-        </motion.div>
-        {/* Gradient overlay with depth */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
-        
-        {/* Nav buttons */}
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-3 z-10">
-          <motion.button
-            whileTap={{ scale: 0.85 }}
-            onClick={() => navigate(-1)}
-            className="h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
-          >
-            <ArrowLeft className="h-4 w-4 text-foreground" />
-          </motion.button>
-          <motion.button
-            whileTap={{ scale: 0.85 }}
-            onClick={() => setShowCart(true)}
-            className="relative h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
-          >
-            <ShoppingCart className="h-4 w-4 text-foreground" />
-            {cart.itemCount > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30"
+      {(() => {
+        const gallerySlides = [
+          ...(store.gallery_images || []),
+          ...(store.banner_url && !(store.gallery_images || []).includes(store.banner_url) ? [store.banner_url] : []),
+        ];
+        const hasSlides = gallerySlides.length > 0;
+
+        return (
+          <div className="relative w-full h-56 overflow-hidden" style={{ perspective: "800px" }}>
+            {hasSlides ? (
+              <StoreHeroCarousel images={gallerySlides} storeName={store.name} />
+            ) : (
+              <motion.div
+                initial={{ scale: 1.15, rotateX: 4 }}
+                animate={{ scale: 1, rotateX: 0 }}
+                transition={{ duration: 1.4, ease: "easeOut" }}
+                className="absolute inset-0 origin-bottom"
               >
-                {cart.itemCount}
-              </motion.span>
+                <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/10 to-sky-500/15" />
+              </motion.div>
             )}
-          </motion.button>
-        </div>
-      </div>
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none z-[1]" />
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none z-[1]" />
+
+            {/* Nav buttons */}
+            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-3 z-10">
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                onClick={() => navigate(-1)}
+                className="h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
+              >
+                <ArrowLeft className="h-4 w-4 text-foreground" />
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                onClick={() => setShowCart(true)}
+                className="relative h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
+              >
+                <ShoppingCart className="h-4 w-4 text-foreground" />
+                {cart.itemCount > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30"
+                  >
+                    {cart.itemCount}
+                  </motion.span>
+                )}
+              </motion.button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Store Info Card - 3D glassmorphic ── */}
       <div className="relative px-4 -mt-16 z-10" style={{ perspective: "1000px" }}>

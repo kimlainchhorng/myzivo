@@ -19,6 +19,7 @@ export interface StoreProfile {
   hours: string | null;
   rating: number | null;
   delivery_min: number | null;
+  gallery_images: string[] | null;
   is_active: boolean;
 }
 
