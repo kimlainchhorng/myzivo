@@ -74,6 +74,9 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               className="w-full h-full object-cover"
               playsInline
               loop
+              muted
+              preload="metadata"
+              onLoadedData={handleVideoLoaded}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
             />
