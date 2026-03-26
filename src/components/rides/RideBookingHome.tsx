@@ -583,7 +583,7 @@ function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
 }
 
 /* ─── Main Component ─── */
-export default function RideBookingHome({ initialSchedule = false, initialDestinationAddress }: { initialSchedule?: boolean; initialDestinationAddress?: string } = {}) {
+export default function RideBookingHome({ initialSchedule = false, initialDestinationAddress, initialDestLat, initialDestLng }: { initialSchedule?: boolean; initialDestinationAddress?: string; initialDestLat?: number; initialDestLng?: number } = {}) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: userProfile } = useUserProfile();
@@ -651,9 +651,16 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
     if (!initialDestinationAddress || initialDestAppliedRef.current) return;
     initialDestAppliedRef.current = true;
     
+    // If we have exact coordinates from the store, use them directly
+    if (initialDestLat && initialDestLng) {
+      setDestination({ address: initialDestinationAddress, lat: initialDestLat, lng: initialDestLng });
+      setDestinationDisplay(initialDestinationAddress);
+      setMapPanTarget({ lat: initialDestLat, lng: initialDestLng });
+      return;
+    }
+
     (async () => {
       try {
-        // Use forward geocode to resolve address to coordinates
         const { forwardGeocode } = await import("@/services/mapsApi");
         const coords = await forwardGeocode(initialDestinationAddress);
         if (coords) {
@@ -661,14 +668,13 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
           setDestinationDisplay(initialDestinationAddress);
           setMapPanTarget(coords);
         } else {
-          // Even without coords, show the address text
           setDestinationDisplay(initialDestinationAddress);
         }
       } catch {
         setDestinationDisplay(initialDestinationAddress);
       }
     })();
-  }, [initialDestinationAddress]);
+  }, [initialDestinationAddress, initialDestLat, initialDestLng]);
 
   // Map saved locations to display format
   const savedPlaces = useMemo(() =>
