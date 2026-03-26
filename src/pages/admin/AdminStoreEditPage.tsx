@@ -199,6 +199,8 @@ export default function AdminStoreEditPage() {
       discount_value: p.discount_value || null,
       discount_price_khr: p.discount_price_khr || null,
       discount_expires_at: p.discount_expires_at || "",
+      buy_quantity: p.buy_quantity || 1,
+      get_quantity: p.get_quantity || 0,
     });
     setProductDialog(true);
   };
