@@ -1483,11 +1483,11 @@ export default function AdminStoreEditPage() {
         setPostDialog(open);
         if (!open) resetPostState();
       }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>{postMediaMode === "video" ? t("admin.store.add_video_post") : t("admin.store.add_photo_post")}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 py-2 overflow-y-auto pr-1 max-h-[calc(90vh-11rem)]">
             <div className="space-y-2">
               <Label>{t("admin.store.post_caption")}</Label>
               <Textarea
@@ -1501,14 +1501,11 @@ export default function AdminStoreEditPage() {
               <Label>{t("admin.store.post_media")}</Label>
               <div className={cn(
                 postMediaMode === "video"
-                  ? "flex flex-wrap items-start gap-3"
+                  ? "grid grid-cols-2 gap-3"
                   : "grid grid-cols-3 gap-2"
               )}>
                 {postMediaItems.map((preview, i) => (
-                  <div
-                    key={`${preview.previewUrl}-${i}`}
-                    className={cn(postMediaMode === "video" && "w-[11rem] sm:w-[12rem]")}
-                  >
+                  <div key={`${preview.previewUrl}-${i}`}>
                     <div className="relative">
                       <ReelPreviewCard
                         url={preview.previewUrl}
@@ -1525,11 +1522,12 @@ export default function AdminStoreEditPage() {
                 ))}
                 {postMediaItems.length < 10 && (
                   <button
+                    type="button"
                     onClick={() => postMediaInputRef.current?.click()}
                     disabled={uploadingPostMedia}
                     className={cn(
                       "rounded-lg border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer",
-                      postMediaMode === "video" ? "w-[11rem] sm:w-[12rem]" : "aspect-square"
+                      postMediaMode === "video" ? "w-full" : "aspect-square"
                     )}
                     style={postMediaMode === "video" ? { aspectRatio: "9 / 16" } : undefined}
                   >
@@ -1558,13 +1556,13 @@ export default function AdminStoreEditPage() {
               <p className="text-[10px] text-muted-foreground">Supports images (JPG, PNG) and videos (MP4, MOV). Max 10 files, 100 MB per video.</p>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="border-t border-border pt-4">
             <Button variant="outline" onClick={() => { setPostDialog(false); }}>Cancel</Button>
             <Button
               onClick={() => savePost.mutate()}
               disabled={savePost.isPending || postMediaUrls.length === 0 || hasPendingPostUploads}
             >
-              {savePost.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+              {savePost.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
               {savePost.isPending ? "Posting..." : t("admin.store.add_post")}
             </Button>
           </DialogFooter>
