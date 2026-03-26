@@ -134,6 +134,15 @@ export default function AdminStoreEditPage() {
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [uploadingProductImage, setUploadingProductImage] = useState(false);
   const productImageInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (store) {
+      setGalleryImages((store as any).gallery_images || []);
+    }
+  }, [store]);
 
   const uploadProductImage = async (file: File) => {
     const currentImages = productForm.image_urls || [];
