@@ -144,7 +144,7 @@ export default function StoreProfilePage() {
         const hasSlides = gallerySlides.length > 0;
 
         return (
-          <div className="relative w-full h-56 overflow-hidden" style={{ perspective: "800px" }}>
+          <div className="relative w-full h-72 overflow-hidden" style={{ perspective: "800px" }}>
             {hasSlides ? (
               <StoreHeroCarousel images={gallerySlides} storeName={store.name} />
             ) : (
