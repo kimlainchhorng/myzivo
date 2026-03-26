@@ -32,13 +32,23 @@ export default function ReelPreviewCard({ url, isVideo, onRemove }: ReelPreviewC
     setIsPlaying(false);
   };
 
+  const handleRemove = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onRemove();
+  };
+
   return (
     <div
       className="relative group rounded-lg overflow-hidden border border-border bg-card"
       style={{ aspectRatio: isVideo ? "9 / 16" : "1 / 1" }}
     >
       {isVideo ? (
-        <button type="button" onClick={toggleVideo} className="relative h-full w-full bg-foreground/5">
+        <div role="button" tabIndex={0} onClick={toggleVideo} onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            toggleVideo();
+          }
+        }} className="relative h-full w-full cursor-pointer bg-foreground/5">
           <video
             ref={videoRef}
             src={url}
@@ -61,14 +71,14 @@ export default function ReelPreviewCard({ url, isVideo, onRemove }: ReelPreviewC
               <Play className="ml-0.5 h-4 w-4 fill-current" />
             </div>
           </div>
-        </button>
+        </div>
       ) : (
         <img src={url} alt="Post preview" className="h-full w-full object-cover" />
       )}
 
       <button
         type="button"
-        onClick={onRemove}
+        onClick={handleRemove}
         className="absolute top-1 right-1 z-10 rounded-full bg-destructive p-0.5 text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
         aria-label="Remove media"
       >
