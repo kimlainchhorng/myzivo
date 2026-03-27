@@ -23,7 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace } from "lucide-react";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
@@ -191,8 +191,10 @@ export default function AdminStoreEditPage() {
   const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [reprocessingPostId, setReprocessingPostId] = useState<string | null>(null);
+  const [replacingPostId, setReplacingPostId] = useState<string | null>(null);
   const [postMediaMode, setPostMediaMode] = useState<"image" | "video">("image");
   const postMediaInputRef = useRef<HTMLInputElement>(null);
+  const replaceVideoInputRef = useRef<HTMLInputElement>(null);
   const ffmpegRef = useRef<FFmpeg | null>(null);
   const ffmpegLoadPromiseRef = useRef<Promise<FFmpeg> | null>(null);
 
@@ -536,6 +538,40 @@ export default function AdminStoreEditPage() {
       toast.error(e?.message || "Failed to reprocess video");
     } finally {
       setReprocessingPostId(null);
+    }
+  };
+
+  const replacePostVideo = async (post: any, file: File) => {
+    if (replacingPostId) return;
+    setReplacingPostId(post.id);
+
+    try {
+      const normalizedFile = await normalizeVideoUpload(file);
+      const path = `${storeId}/replaced-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`;
+      const { error: uploadError } = await supabase.storage
+        .from("store-posts")
+        .upload(path, normalizedFile, { contentType: "video/mp4", upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
+      const nextUrls = (post.media_urls || []).map((url: string, index: number) =>
+        index === 0 ? urlData.publicUrl : url
+      );
+
+      const { error: updateError } = await supabase
+        .from("store_posts")
+        .update({ media_urls: nextUrls } as any)
+        .eq("id", post.id);
+
+      if (updateError) throw updateError;
+
+      queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
+      toast.success("Video replaced successfully!");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to replace video");
+    } finally {
+      setReplacingPostId(null);
     }
   };
 
@@ -1263,6 +1299,23 @@ export default function AdminStoreEditPage() {
                                 size="sm"
                                 variant="outline"
                                 className="h-7 text-xs gap-1"
+                                disabled={replacingPostId === post.id || reprocessingPostId === post.id}
+                                onClick={() => {
+                                  setReplacingPostId(post.id);
+                                  replaceVideoInputRef.current?.click();
+                                }}
+                              >
+                                {replacingPostId === post.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Replace className="h-3 w-3" />
+                                )}
+                                {replacingPostId === post.id ? "Selecting..." : "Replace"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs gap-1"
                                 disabled={reprocessingPostId === post.id}
                                 onClick={() => reprocessPostVideo(post)}
                               >
@@ -1820,6 +1873,26 @@ export default function AdminStoreEditPage() {
                   </button>
                 )}
               </div>
+              <input
+                ref={replaceVideoInputRef}
+                type="file"
+                accept="video/*"
+                className="hidden"
+                onChange={e => {
+                  const f = e.target.files?.[0];
+                  if (f && replacingPostId) {
+                    const post = posts.find((item: any) => item.id === replacingPostId);
+                    if (post) {
+                      void replacePostVideo(post, f);
+                    } else {
+                      setReplacingPostId(null);
+                    }
+                  } else {
+                    setReplacingPostId(null);
+                  }
+                  e.target.value = "";
+                }}
+              />
               <input
                 ref={postMediaInputRef}
                 type="file"
