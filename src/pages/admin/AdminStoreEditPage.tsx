@@ -487,6 +487,10 @@ export default function AdminStoreEditPage() {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryPositions, setGalleryPositions] = useState<Record<string, number>>({});
+  const [repositioningGalleryIdx, setRepositioningGalleryIdx] = useState<number | null>(null);
+  const [galleryDragStartY, setGalleryDragStartY] = useState<number | null>(null);
+  const [galleryDragStartPos, setGalleryDragStartPos] = useState(50);
   // Post state
   const [postDialog, setPostDialog] = useState(false);
   const [postCaption, setPostCaption] = useState("");
@@ -503,8 +507,9 @@ export default function AdminStoreEditPage() {
   const repairedPreviewUrlsRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
-    if (store) {
+   if (store) {
       setGalleryImages((store as any).gallery_images || []);
+      setGalleryPositions((store as any).gallery_positions || {});
     }
   }, [store]);
 
@@ -1305,17 +1310,80 @@ export default function AdminStoreEditPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {galleryImages.map((url, i) => (
-                <div key={i} className="relative group aspect-video rounded-xl overflow-hidden border border-border bg-muted">
-                  <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
-                  <button
-                    onClick={() => removeGalleryImage(i)}
-                    className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+              {galleryImages.map((url, i) => {
+                const isRepos = repositioningGalleryIdx === i;
+                const pos = galleryPositions[url] ?? 50;
+                return (
+                <div
+                  key={i}
+                  className={cn("relative group aspect-video rounded-xl overflow-hidden border border-border bg-muted", isRepos && "cursor-grab active:cursor-grabbing ring-2 ring-primary")}
+                  onMouseDown={isRepos ? (e) => { e.preventDefault(); setGalleryDragStartY(e.clientY); setGalleryDragStartPos(pos); } : undefined}
+                  onMouseMove={isRepos && galleryDragStartY !== null ? (e) => {
+                    const deltaY = e.clientY - galleryDragStartY;
+                    const newPos = Math.max(0, Math.min(100, galleryDragStartPos - (deltaY / 120) * 100));
+                    setGalleryPositions(prev => ({ ...prev, [url]: Math.round(newPos) }));
+                  } : undefined}
+                  onMouseUp={isRepos ? () => setGalleryDragStartY(null) : undefined}
+                  onMouseLeave={isRepos ? () => setGalleryDragStartY(null) : undefined}
+                  onTouchStart={isRepos ? (e) => { setGalleryDragStartY(e.touches[0].clientY); setGalleryDragStartPos(pos); } : undefined}
+                  onTouchMove={isRepos ? (e) => {
+                    if (galleryDragStartY === null) return;
+                    const deltaY = e.touches[0].clientY - galleryDragStartY;
+                    const newPos = Math.max(0, Math.min(100, galleryDragStartPos - (deltaY / 120) * 100));
+                    setGalleryPositions(prev => ({ ...prev, [url]: Math.round(newPos) }));
+                  } : undefined}
+                  onTouchEnd={isRepos ? () => setGalleryDragStartY(null) : undefined}
+                >
+                  <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover select-none" draggable={false} style={{ objectPosition: `center ${pos}%` }} />
+                  {isRepos && (
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none">
+                      <div className="bg-background/90 backdrop-blur-sm rounded-md px-2 py-1 text-[10px] font-medium text-foreground shadow flex items-center gap-1">
+                        <Move className="h-3 w-3" /> Drag up/down
+                      </div>
+                    </div>
+                  )}
+                  {isRepos ? (
+                    <div className="absolute top-1.5 right-1.5 flex gap-1">
+                      <button
+                        onClick={async () => {
+                          setRepositioningGalleryIdx(null);
+                          const { error } = await supabase.from("store_profiles").update({ gallery_positions: galleryPositions } as any).eq("id", storeId!);
+                          if (error) toast.error(error.message);
+                          else toast.success("Position saved");
+                        }}
+                        className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg"
+                      >
+                        <Check className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setRepositioningGalleryIdx(null);
+                          setGalleryPositions(prev => ({ ...prev, [url]: galleryDragStartPos }));
+                        }}
+                        className="h-6 w-6 rounded-full bg-muted text-foreground flex items-center justify-center shadow-lg border border-border"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => { setRepositioningGalleryIdx(i); setGalleryDragStartPos(pos); }}
+                        className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm text-foreground flex items-center justify-center shadow-lg border border-border"
+                      >
+                        <Move className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => removeGalleryImage(i)}
+                        className="h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
               {galleryImages.length < 10 && (
                 <button
                   onClick={() => galleryInputRef.current?.click()}

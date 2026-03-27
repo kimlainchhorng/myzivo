@@ -10,9 +10,10 @@ import { cn } from "@/lib/utils";
 interface StoreHeroCarouselProps {
   images: string[];
   storeName: string;
+  positions?: Record<string, number>;
 }
 
-export default function StoreHeroCarousel({ images, storeName }: StoreHeroCarouselProps) {
+export default function StoreHeroCarousel({ images, storeName, positions }: StoreHeroCarouselProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -44,6 +45,7 @@ export default function StoreHeroCarousel({ images, storeName }: StoreHeroCarous
                 src={src}
                 alt={`${storeName} photo ${i + 1}`}
                 className="w-full h-full object-cover"
+                style={{ objectPosition: `center ${positions?.[src] ?? 50}%` }}
                 loading={i === 0 ? "eager" : "lazy"}
               />
             </div>
