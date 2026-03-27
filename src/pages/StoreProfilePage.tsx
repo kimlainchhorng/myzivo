@@ -51,19 +51,22 @@ export default function StoreProfilePage() {
   const [showCart, setShowCart] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
+  // Track selected size per product: productId -> variant index
+  const [selectedSizes, setSelectedSizes] = useState<Record<string, number>>({});
   const { t } = useI18n();
 
   const { data: store, isLoading: loadingStore } = useStoreProfile(slug || "");
   const { data: products = [], isLoading: loadingProducts } = useStoreProducts(store?.id, selectedCategory);
   const { data: categories = [] } = useStoreProductCategories(store?.id);
 
-  const handleAddToCart = (product: StoreProductItem) => {
+  const handleAddToCart = (product: StoreProductItem, sizeVariant?: { size: string; price_khr: number; price_usd: number }) => {
     cart.addItem({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
+      productId: sizeVariant ? `${product.id}__${sizeVariant.size}` : product.id,
+      name: sizeVariant ? `${product.name} (${sizeVariant.size})` : product.name,
+      price: sizeVariant ? sizeVariant.price_usd : product.price,
       image: product.image_url || "",
       brand: product.brand || "",
+      sizeLabel: sizeVariant?.size,
     }, store?.name || "Store");
     toast.success(t("store.added_to_cart"), { icon: "🛒" });
   };
@@ -463,10 +466,17 @@ export default function StoreProfilePage() {
                     className="grid grid-cols-2 gap-2"
                   >
                     {catProducts.map((product, i) => {
-                      const cartItem = cart.items.find((c) => c.productId === product.id);
-                      const khrPrice = ((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050)));
-                      const isLiked = likedProducts.has(product.id);
                       const p = product as any;
+                      const sizeVariants: { size: string; price_khr: number; price_usd: number }[] = (p.size_variants || []);
+                      const hasSizes = sizeVariants.length > 0;
+                      const selectedIdx = selectedSizes[product.id] ?? 0;
+                      const activeVariant = hasSizes ? sizeVariants[selectedIdx] : null;
+                      const activePrice = activeVariant ? activeVariant.price_usd : product.price;
+                      const activeKhr = activeVariant ? activeVariant.price_khr : ((p.price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050))));
+                      const cartKey = hasSizes && activeVariant ? `${product.id}__${activeVariant.size}` : product.id;
+                      const cartItem = cart.items.find((c) => c.productId === cartKey);
+                      const khrPrice = activeKhr;
+                      const isLiked = likedProducts.has(product.id);
                       const hasBogo = p.discount_type === "bogo" && (p.buy_quantity || 0) >= 1 && (p.get_quantity || 0) >= 1
                         && (!p.discount_expires_at || new Date(p.discount_expires_at) > new Date());
                       const hasDiscount = !hasBogo && p.discount_type && p.discount_value > 0 && p.discount_price_khr != null
@@ -679,10 +689,30 @@ export default function StoreProfilePage() {
                       )}
                     </p>
 
+                    {/* Size selector */}
+                    {hasSizes && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {sizeVariants.map((sv, sIdx) => (
+                          <button
+                            key={sv.size}
+                            onClick={(e) => { e.stopPropagation(); setSelectedSizes(prev => ({ ...prev, [product.id]: sIdx })); }}
+                            className={cn(
+                              "px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all",
+                              selectedIdx === sIdx
+                                ? "bg-primary/15 border-primary/40 text-primary"
+                                : "bg-muted/20 border-border/30 text-muted-foreground hover:border-primary/20"
+                            )}
+                          >
+                            {sv.size}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Price row */}
                     <div className="flex items-end justify-between">
                       <div>
-                        {hasDiscount ? (
+                        {hasDiscount && !hasSizes ? (
                           <>
                             <span className="text-base font-black text-destructive tracking-tight leading-none block">
                               ៛{discountKhr.toLocaleString()}
@@ -702,7 +732,7 @@ export default function StoreProfilePage() {
                               ៛{khrPrice.toLocaleString()}
                             </span>
                             <span className="text-[11px] font-medium text-muted-foreground/60 block mt-0.5">
-                              ${product.price.toFixed(2)}
+                              ${activePrice.toFixed(2)}
                             </span>
                           </>
                         )}
@@ -713,7 +743,7 @@ export default function StoreProfilePage() {
                         <motion.button
                           whileTap={{ scale: 0.75, rotate: -15 }}
                           whileHover={{ scale: 1.1, y: -2 }}
-                          onClick={(e) => { e.stopPropagation(); handleAddToCart(product); }}
+                          onClick={(e) => { e.stopPropagation(); handleAddToCart(product, activeVariant || undefined); }}
                           className="h-9 w-9 rounded-[14px] bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-xl shadow-primary/30 border border-primary/30 relative overflow-hidden"
                         >
                           {/* Button shine */}
@@ -732,7 +762,7 @@ export default function StoreProfilePage() {
                       >
                         <motion.button
                           whileTap={{ scale: 0.75 }}
-                          onClick={(e) => { e.stopPropagation(); cart.updateQuantity(product.id, cartItem.quantity - 1); }}
+                          onClick={(e) => { e.stopPropagation(); cart.updateQuantity(cartKey, cartItem.quantity - 1); }}
                           className="h-8 w-8 rounded-[10px] bg-background/80 backdrop-blur-sm flex items-center justify-center border border-border/20 shadow-sm touch-manipulation active:bg-muted"
                         >
                           <Minus className="h-3.5 w-3.5 text-foreground/70" />
@@ -747,7 +777,7 @@ export default function StoreProfilePage() {
                         </motion.span>
                         <motion.button
                           whileTap={{ scale: 0.75 }}
-                          onClick={(e) => { e.stopPropagation(); cart.updateQuantity(product.id, cartItem.quantity + 1); }}
+                          onClick={(e) => { e.stopPropagation(); cart.updateQuantity(cartKey, cartItem.quantity + 1); }}
                           className="h-8 w-8 rounded-[10px] bg-background/80 backdrop-blur-sm flex items-center justify-center border border-border/20 shadow-sm touch-manipulation active:bg-muted"
                         >
                           <Plus className="h-3.5 w-3.5 text-foreground/70" />
