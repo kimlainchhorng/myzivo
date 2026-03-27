@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Mail, ShieldCheck } from "lucide-react";
-import InputOTP from "@/components/ui/input-otp";
 
 interface PaymentVerificationDialogProps {
   open: boolean;
