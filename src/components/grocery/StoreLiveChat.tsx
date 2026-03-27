@@ -469,11 +469,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                   </div>
                   {isAdmin && chatId && (
                     <button
-                      onClick={() => {
-                        if (confirm("Delete this chat? This cannot be undone.")) {
-                          handleDeleteChat(chatId);
-                        }
-                      }}
+                      onClick={() => setConfirmDeleteInChat(true)}
                       className="p-2 rounded-full hover:bg-destructive/10 transition-colors"
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
