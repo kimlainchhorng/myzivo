@@ -87,6 +87,12 @@ function captureVideoPosterFrame(video: HTMLVideoElement, setPosterUrl: (value: 
   }
 }
 
+type DiagnosticStep = {
+  id: string;
+  label: string;
+  status: "pending" | "running" | "success" | "failed" | "skipped";
+};
+
 function AdminVideoPreview({
   src,
   className,
@@ -107,98 +113,175 @@ function AdminVideoPreview({
   onRepairSource?: (src: string) => Promise<string | null>;
 }) {
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
-  const [hasPlaybackError, setHasPlaybackError] = useState(false);
-  const [triedBlobFallback, setTriedBlobFallback] = useState(false);
-  const [blobSrc, setBlobSrc] = useState<string | null>(null);
-  const [repairedSrc, setRepairedSrc] = useState<string | null>(null);
-  const [isRepairing, setIsRepairing] = useState(false);
+  const [activeSrc, setActiveSrc] = useState(src);
+  const [diagSteps, setDiagSteps] = useState<DiagnosticStep[]>([]);
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
+  const [diagComplete, setDiagComplete] = useState(false);
+  const [diagSuccess, setDiagSuccess] = useState(false);
+  const attemptedRef = useRef(false);
 
+  // Reset when src changes
   useEffect(() => {
-    setHasPlaybackError(false);
-    setTriedBlobFallback(false);
+    attemptedRef.current = false;
+    setActiveSrc(src);
+    setDiagSteps([]);
+    setIsDiagnosing(false);
+    setDiagComplete(false);
+    setDiagSuccess(false);
     setPosterUrl((prev) => {
       if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
       return null;
     });
-
-    setBlobSrc((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return null;
-    });
-
-    setRepairedSrc((prev) => {
-      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-      return null;
-    });
-    setIsRepairing(false);
   }, [src]);
 
-  useEffect(() => {
-    return () => {
-      setPosterUrl((prev) => {
-        if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-        return prev;
-      });
-      setBlobSrc((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return prev;
-      });
-      setRepairedSrc((prev) => {
-        if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-        return prev;
-      });
-    };
-  }, []);
-
-  const tryBlobFallback = async () => {
-    if (triedBlobFallback) return;
-
-    setTriedBlobFallback(true);
-
-    try {
-      const response = await fetch(src);
-      if (!response.ok) throw new Error("fetch failed");
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      setBlobSrc((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return objectUrl;
-      });
-      setHasPlaybackError(false);
-    } catch {
-      setHasPlaybackError(true);
-    }
+  const updateStep = (id: string, status: DiagnosticStep["status"]) => {
+    setDiagSteps((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, status } : s))
+    );
   };
 
-  const tryRepairFallback = async () => {
-    if (!onRepairSource || isRepairing || repairedSrc) return;
+  // Test if a URL can be played by creating a temporary video element
+  const testPlayback = (url: string, timeoutMs = 8000): Promise<boolean> =>
+    new Promise((resolve) => {
+      const vid = document.createElement("video");
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.preload = "auto";
+      const timer = setTimeout(() => {
+        vid.src = "";
+        resolve(false);
+      }, timeoutMs);
+      vid.onloadeddata = () => {
+        clearTimeout(timer);
+        vid.src = "";
+        resolve(true);
+      };
+      vid.onerror = () => {
+        clearTimeout(timer);
+        vid.src = "";
+        resolve(false);
+      };
+      vid.src = url;
+    });
 
-    setIsRepairing(true);
+  const runDiagnostics = async () => {
+    if (attemptedRef.current) return;
+    attemptedRef.current = true;
+    setIsDiagnosing(true);
+    setDiagComplete(false);
+    setDiagSuccess(false);
+
+    const steps: DiagnosticStep[] = [
+      { id: "check_url", label: "Checking video URL…", status: "pending" },
+      { id: "blob_fetch", label: "Fetching as local blob…", status: "pending" },
+      { id: "codec_probe", label: "Probing codec compatibility…", status: "pending" },
+      { id: "transcode", label: "Transcoding to H.264/AAC…", status: "pending" },
+    ];
+    setDiagSteps(steps);
+
+    // Step 1: Check URL reachability
+    updateStep("check_url", "running");
+    let urlOk = false;
     try {
-      const repairedUrl = await onRepairSource(src);
-      if (!repairedUrl) {
-        setHasPlaybackError(true);
+      const res = await fetch(src, { method: "HEAD" });
+      urlOk = res.ok;
+    } catch { /* ignore */ }
+    updateStep("check_url", urlOk ? "success" : "failed");
+    if (!urlOk) {
+      updateStep("blob_fetch", "skipped");
+      updateStep("codec_probe", "skipped");
+      updateStep("transcode", "skipped");
+      setIsDiagnosing(false);
+      setDiagComplete(true);
+      return;
+    }
+
+    // Step 2: Blob fetch fallback
+    updateStep("blob_fetch", "running");
+    let blobUrl: string | null = null;
+    try {
+      const res = await fetch(src);
+      if (!res.ok) throw new Error("fetch failed");
+      const blob = await res.blob();
+      blobUrl = URL.createObjectURL(blob);
+    } catch { /* ignore */ }
+
+    if (blobUrl) {
+      const canPlay = await testPlayback(blobUrl);
+      if (canPlay) {
+        updateStep("blob_fetch", "success");
+        updateStep("codec_probe", "skipped");
+        updateStep("transcode", "skipped");
+        setActiveSrc(blobUrl);
+        setIsDiagnosing(false);
+        setDiagComplete(true);
+        setDiagSuccess(true);
         return;
       }
+      URL.revokeObjectURL(blobUrl);
+    }
+    updateStep("blob_fetch", "failed");
 
-      setRepairedSrc((prev) => {
-        if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-        return repairedUrl;
-      });
-      setHasPlaybackError(false);
-    } catch {
-      setHasPlaybackError(true);
-    } finally {
-      setIsRepairing(false);
+    // Step 3: Codec probe
+    updateStep("codec_probe", "running");
+    const codecTypes = [
+      'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
+      'video/mp4; codecs="avc1.4D401E"',
+      'video/mp4',
+    ];
+    const supported = codecTypes.filter((c) => {
+      try { return MediaSource.isTypeSupported(c); } catch { return false; }
+    });
+    updateStep("codec_probe", supported.length > 0 ? "success" : "failed");
+
+    // Step 4: Full transcode via FFmpeg (with timeout)
+    if (onRepairSource) {
+      updateStep("transcode", "running");
+      try {
+        const repairedUrl = await Promise.race([
+          onRepairSource(src),
+          new Promise<null>((_, reject) =>
+            setTimeout(() => reject(new Error("Transcode timed out")), 60000)
+          ),
+        ]);
+        if (repairedUrl) {
+          updateStep("transcode", "success");
+          setActiveSrc(repairedUrl);
+          setDiagSuccess(true);
+        } else {
+          updateStep("transcode", "failed");
+        }
+      } catch {
+        updateStep("transcode", "failed");
+      }
+    } else {
+      updateStep("transcode", "skipped");
+    }
+
+    setIsDiagnosing(false);
+    setDiagComplete(true);
+  };
+
+  const stepIcon = (status: DiagnosticStep["status"]) => {
+    switch (status) {
+      case "running":
+        return <Loader2 className="h-3 w-3 animate-spin text-blue-400" />;
+      case "success":
+        return <CheckCircle2 className="h-3 w-3 text-emerald-400" />;
+      case "failed":
+        return <XCircle className="h-3 w-3 text-red-400" />;
+      case "skipped":
+        return <MinusCircle className="h-3 w-3 text-muted-foreground/50" />;
+      default:
+        return <div className="h-3 w-3 rounded-full border border-muted-foreground/30" />;
     }
   };
 
   return (
     <div className={cn("relative bg-black", className)}>
       <video
-        key={repairedSrc || blobSrc || src}
-        src={repairedSrc || blobSrc || src}
+        key={activeSrc}
+        src={activeSrc}
         poster={posterUrl ?? undefined}
         className={cn("w-full h-full", videoClassName)}
         controls={controls}
@@ -213,31 +296,54 @@ function AdminVideoPreview({
           if (!autoPlay) event.currentTarget.pause();
         }}
         onLoadedData={(event) => {
-          setHasPlaybackError(false);
           ensureVisibleVideoFrame(event.currentTarget);
           captureVideoPosterFrame(event.currentTarget, setPosterUrl);
           if (!autoPlay) event.currentTarget.pause();
         }}
         onError={() => {
-          if (!triedBlobFallback) {
-            void tryBlobFallback();
-          } else if (onRepairSource && !repairedSrc) {
-            void tryRepairFallback();
-          } else {
-            setHasPlaybackError(true);
-          }
+          if (!attemptedRef.current) void runDiagnostics();
         }}
       />
 
-      {isRepairing && (
-        <div className="absolute inset-0 flex items-center justify-center bg-foreground/20 px-4 text-center backdrop-blur-sm">
-          <p className="text-xs font-medium text-background">Repairing video preview...</p>
-        </div>
-      )}
+      {/* AI Diagnostic Overlay */}
+      {(isDiagnosing || (diagComplete && !diagSuccess)) && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80 px-5 text-center backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            {isDiagnosing ? (
+              <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+            ) : (
+              <AlertTriangle className="h-4 w-4 text-amber-400" />
+            )}
+            <p className="text-xs font-semibold text-white">
+              {isDiagnosing ? "AI Video Doctor — Diagnosing…" : "Diagnosis Complete"}
+            </p>
+          </div>
 
-      {hasPlaybackError && !isRepairing && (
-        <div className="absolute inset-0 flex items-center justify-center bg-foreground/20 px-4 text-center backdrop-blur-sm">
-          <p className="text-xs font-medium text-background">Video preview unavailable — try Replace or Reprocess.</p>
+          <div className="w-full max-w-[200px] space-y-1.5">
+            {diagSteps.map((step) => (
+              <div key={step.id} className="flex items-center gap-2">
+                {stepIcon(step.status)}
+                <span
+                  className={cn(
+                    "text-[10px] leading-tight",
+                    step.status === "skipped"
+                      ? "text-muted-foreground/50"
+                      : step.status === "failed"
+                      ? "text-red-300"
+                      : "text-white/80"
+                  )}
+                >
+                  {step.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {diagComplete && !diagSuccess && (
+            <p className="mt-1 text-[10px] text-amber-300">
+              Auto-fix failed — use <strong>Replace</strong> or <strong>Reprocess</strong> below.
+            </p>
+          )}
         </div>
       )}
     </div>
