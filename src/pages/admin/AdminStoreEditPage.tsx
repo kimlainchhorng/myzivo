@@ -377,6 +377,7 @@ export default function AdminStoreEditPage() {
   const [savedBrands, setSavedBrands] = useState<string[]>([]);
   const [savedCategories, setSavedCategories] = useState<string[]>([]);
   const [chatOpen, setChatOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
 
   const { data: store, isLoading } = useQuery({
     queryKey: ["admin-store", storeId],
@@ -1141,7 +1142,7 @@ export default function AdminStoreEditPage() {
   };
 
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
-    <StoreOwnerLayout title={title} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url}>{children}</StoreOwnerLayout>
+    <StoreOwnerLayout title={title} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
   );
 
   if (isLoading) {
@@ -1463,12 +1464,14 @@ export default function AdminStoreEditPage() {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="profile" className="space-y-4">
-          <TabsList>
-             <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
-            <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> {t("admin.store.products")} ({products.length})</TabsTrigger>
-            <TabsTrigger value="payment" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Payment</TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          {isAdmin && (
+            <TabsList>
+              <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
+              <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> {t("admin.store.products")} ({products.length})</TabsTrigger>
+              <TabsTrigger value="payment" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Payment</TabsTrigger>
+            </TabsList>
+          )}
 
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-card">
             <span className="text-sm font-medium text-foreground whitespace-nowrap">៛ KHR Rate</span>
