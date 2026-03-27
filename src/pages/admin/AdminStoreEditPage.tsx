@@ -1780,11 +1780,8 @@ export default function AdminStoreEditPage() {
                       <p className="text-sm font-medium text-foreground">ABA PayWay</p>
                       <p className="text-xs text-muted-foreground">Accept payments via ABA mobile & KHQR</p>
                     </div>
+                    <Switch />
                   </div>
-                  <Button className="w-full gap-2" variant="outline">
-                    <Banknote className="h-4 w-4" />
-                    Connect ABA PayWay
-                  </Button>
                 </div>
 
                 {/* Cash */}
