@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 const partnerLoginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  store_id: z.string().optional(),
 });
 
 type PartnerLoginData = z.infer<typeof partnerLoginSchema>;
