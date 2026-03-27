@@ -665,6 +665,49 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     )}
                   </AnimatePresence>
                 </div>
+              {/* Fee summary in Step 1 */}
+                <div className="rounded-2xl bg-muted/15 border border-border/20 p-3.5 mb-4">
+                  <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
+                    <Truck className="h-3.5 w-3.5 text-primary" />
+                    {t("grocery.checkout.fee_summary") || "Fee Summary"}
+                  </h3>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[12px]">
+                      <span className="text-muted-foreground">{t("grocery.checkout.subtotal")}</span>
+                      <span className="text-foreground font-medium tabular-nums">${total.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-[12px]">
+                      <span className="text-muted-foreground flex items-center gap-1.5">
+                        <Truck className="h-3 w-3" /> {t("grocery.checkout.delivery_fee") || "Delivery Fee"} (~{estimatedMiles}mi)
+                      </span>
+                      <span className="text-foreground font-medium tabular-nums">${deliveryFee.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-[12px]">
+                      <span className="text-muted-foreground flex items-center gap-1.5">
+                        {t("grocery.checkout.service_fee") || "Service Fee"} ({SERVICE_FEE_PCT}%)
+                        {isPlus && <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-amber-500/15 text-amber-600">ZIVO+</span>}
+                      </span>
+                      {isPlus ? (
+                        <span className="text-amber-600 font-bold">
+                          <span className="line-through text-muted-foreground/50 mr-1">${calcServiceFee(total).toFixed(2)}</span>
+                          $0.00
+                        </span>
+                      ) : (
+                        <span className="text-foreground font-medium tabular-nums">${serviceFee.toFixed(2)}</span>
+                      )}
+                    </div>
+                    {priorityFee > 0 && (
+                      <div className="flex justify-between text-[12px]">
+                        <span className="text-muted-foreground flex items-center gap-1.5">⚡ {t("grocery.checkout.priority") || "Priority"}</span>
+                        <span className="text-amber-600 font-medium tabular-nums">+${priorityFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="border-t border-border/15 pt-1.5 mt-1.5 flex justify-between text-[13px] font-bold">
+                      <span>{t("grocery.checkout.estimated_total") || "Estimated Total"}</span>
+                      <span className="text-primary tabular-nums">${grandTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             )}
 
