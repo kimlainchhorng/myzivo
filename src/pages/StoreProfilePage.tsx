@@ -4,7 +4,7 @@
  */
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useI18n } from "@/hooks/useI18n";
 import storeRideBg from "@/assets/store-ride-bg.jpg";
 import storeCallBg from "@/assets/store-call-bg.jpg";
+import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 
 const container = {
   hidden: {},
