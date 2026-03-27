@@ -173,22 +173,31 @@ export default function StoreProfilePage() {
               >
                 <ArrowLeft className="h-4 w-4 text-foreground" />
               </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.85 }}
-                onClick={() => setShowCart(true)}
-                className="relative h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
-              >
-                <ShoppingCart className="h-4 w-4 text-foreground" />
-                {cart.itemCount > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30"
-                  >
-                    {cart.itemCount}
-                  </motion.span>
-                )}
-              </motion.button>
+              <div className="flex items-center gap-2">
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => setChatOpen(true)}
+                  className="h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
+                >
+                  <MessageCircle className="h-4 w-4 text-foreground" />
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => setShowCart(true)}
+                  className="relative h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
+                >
+                  <ShoppingCart className="h-4 w-4 text-foreground" />
+                  {cart.itemCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30"
+                    >
+                      {cart.itemCount}
+                    </motion.span>
+                  )}
+                </motion.button>
+              </div>
             </div>
           </div>
         );
