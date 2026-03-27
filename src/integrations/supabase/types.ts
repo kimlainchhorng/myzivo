@@ -36640,8 +36640,10 @@ export type Database = {
           longitude: number | null
           market: string
           name: string
+          owner_id: string | null
           phone: string | null
           rating: number | null
+          setup_complete: boolean
           slug: string
           updated_at: string | null
         }
@@ -36665,8 +36667,10 @@ export type Database = {
           longitude?: number | null
           market?: string
           name: string
+          owner_id?: string | null
           phone?: string | null
           rating?: number | null
+          setup_complete?: boolean
           slug: string
           updated_at?: string | null
         }
@@ -36690,8 +36694,10 @@ export type Database = {
           longitude?: number | null
           market?: string
           name?: string
+          owner_id?: string | null
           phone?: string | null
           rating?: number | null
+          setup_complete?: boolean
           slug?: string
           updated_at?: string | null
         }
