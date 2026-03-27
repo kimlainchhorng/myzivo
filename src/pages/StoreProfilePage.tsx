@@ -489,306 +489,171 @@ export default function StoreProfilePage() {
                 <motion.div
                   key={product.id}
                   variants={cardVariant}
-                  whileHover={{ y: -3, scale: 1.015 }}
-                  whileTap={{ scale: 0.97 }}
+                  whileTap={{ scale: 0.96 }}
                   className={cn(
-                    "group relative rounded-[16px] overflow-hidden transition-all duration-300 snap-start shrink-0",
-                    "bg-card/60 backdrop-blur-xl border",
-                    "w-[22vw] min-w-[85px] max-w-[95px]",
+                    "group relative rounded-2xl overflow-hidden snap-start shrink-0",
+                    "bg-card border",
+                    "w-[28vw] min-w-[105px] max-w-[120px]",
                     cartItem
-                      ? "border-primary/25 shadow-xl shadow-primary/10 ring-1 ring-primary/10"
-                      : "border-white/[0.06] shadow-lg shadow-black/5 hover:shadow-xl hover:border-white/[0.12]"
+                      ? "border-primary/30 ring-1 ring-primary/10"
+                      : "border-border/40"
                   )}
-                  style={{ transformStyle: "preserve-3d" }}
                 >
-                  {/* Holographic shine overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-primary/[0.02] pointer-events-none z-[5] rounded-[16px]" />
-                  {/* Top edge highlight */}
-                  <div className="absolute top-0 left-2 right-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent z-[5]" />
-
-                  {/* Image container */}
-                  <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted/[0.03] to-muted/[0.08]">
-                    {/* Radial glow */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-1/2 h-1/2 rounded-full bg-primary/[0.05] blur-2xl" />
-                    </div>
-
+                  {/* Image */}
+                  <div className="relative aspect-[4/3] overflow-hidden bg-muted/5">
                     {product.image_url ? (
-                      <motion.img
+                      <img
                         src={product.image_url}
                         alt={product.name}
-                        className="relative h-full w-full object-contain p-2 drop-shadow-md group-hover:scale-105 transition-transform duration-500"
+                        className="h-full w-full object-cover"
                         loading="lazy"
-                        style={{ transform: "translateZ(12px)" }}
                       />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center">
-                        <Package className="h-8 w-8 text-muted-foreground/[0.08]" />
+                        <Package className="h-5 w-5 text-muted-foreground/20" />
                       </div>
                     )}
 
-                    {/* Like button - bottom right */}
-                    <motion.button
-                      whileTap={{ scale: 0.75 }}
-                      onClick={(e) => { e.stopPropagation(); toggleLike(product.id); }}
-                      className="absolute bottom-2 right-2 h-7 w-7 rounded-full bg-background/50 backdrop-blur-xl flex items-center justify-center border border-white/10 z-20 shadow-sm"
-                    >
-                      <Heart className={cn("h-3 w-3 transition-colors", isLiked ? "fill-rose-500 text-rose-500" : "text-muted-foreground/60")} />
-                    </motion.button>
-
-                    {/* Category chip - top left */}
-                    {product.category && (
-                      <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-background/60 backdrop-blur-xl border border-white/10 z-20">
-                        <span className="text-[7px] font-bold text-foreground/70 uppercase tracking-wider">{product.category}</span>
-                      </div>
-                    )}
-
-                    {/* Product badge */}
+                    {/* Badge - top right */}
                     {(product as any).badge && (() => {
-                      const badgeMap: Record<string, { emoji: string; label: string; labelKm: string; cls: string; glow: string }> = {
-                        "new": { emoji: "🆕", label: "New", labelKm: "ថ្មី", cls: "from-blue-500 via-indigo-500 to-purple-600", glow: "shadow-blue-500/40" },
-                        "hot": { emoji: "🔥", label: "Hot", labelKm: "ក្ដៅ", cls: "from-red-500 via-orange-500 to-yellow-500", glow: "shadow-red-500/40" },
-                        "popular": { emoji: "⭐", label: "Popular", labelKm: "កំពូល", cls: "from-amber-400 via-yellow-500 to-orange-500", glow: "shadow-amber-500/40" },
-                        "best-seller": { emoji: "🏆", label: "Best", labelKm: "លក់ដាច់", cls: "from-emerald-500 via-green-500 to-teal-500", glow: "shadow-emerald-500/40" },
-                        "limited": { emoji: "⏰", label: "Limited", labelKm: "មានកំណត់", cls: "from-purple-500 via-violet-500 to-pink-500", glow: "shadow-purple-500/40" },
-                        "recommended": { emoji: "👍", label: "Pick", labelKm: "ណែនាំ", cls: "from-sky-400 via-blue-500 to-cyan-500", glow: "shadow-sky-500/40" },
-                        "organic": { emoji: "🌿", label: "Organic", labelKm: "ធម្មជាតិ", cls: "from-green-500 via-emerald-500 to-lime-500", glow: "shadow-green-500/40" },
-                        "imported": { emoji: "✈️", label: "Import", labelKm: "នាំចូល", cls: "from-violet-500 via-fuchsia-500 to-pink-500", glow: "shadow-violet-500/40" },
+                      const badgeMap: Record<string, { labelKm: string; cls: string }> = {
+                        "new": { labelKm: "ថ្មី", cls: "from-blue-500 to-indigo-600" },
+                        "hot": { labelKm: "ក្ដៅ", cls: "from-red-500 to-orange-500" },
+                        "popular": { labelKm: "កំពូល", cls: "from-amber-400 to-orange-500" },
+                        "best-seller": { labelKm: "លក់ដាច់", cls: "from-emerald-500 to-teal-500" },
+                        "limited": { labelKm: "មានកំណត់", cls: "from-purple-500 to-pink-500" },
+                        "recommended": { labelKm: "ណែនាំ", cls: "from-sky-400 to-blue-500" },
+                        "organic": { labelKm: "ធម្មជាតិ", cls: "from-green-500 to-emerald-500" },
+                        "imported": { labelKm: "នាំចូល", cls: "from-violet-500 to-fuchsia-500" },
                       };
                       const b = badgeMap[(product as any).badge];
                       if (!b) return null;
                       return (
-                        <motion.div
-                          initial={{ scale: 0, x: 10 }}
-                          animate={{ scale: 1, x: 0 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                          className={cn(
-                            "absolute top-1.5 right-1.5 z-30",
-                            "px-2 py-0.5 rounded-md",
-                            "bg-gradient-to-r text-white",
-                            "shadow-lg",
-                            b.cls, b.glow
-                          )}
-                        >
-                          <div className="flex flex-col items-center leading-none">
-                            <span className="text-[10px] font-extrabold drop-shadow-sm">{b.labelKm}</span>
-                            <span className="text-[7px] font-bold tracking-wider uppercase opacity-80">{b.label}</span>
-                          </div>
-                        </motion.div>
+                        <div className={cn("absolute top-1 right-1 px-1.5 py-0.5 rounded-md bg-gradient-to-r text-white text-[6px] font-bold z-10", b.cls)}>
+                          {b.labelKm}
+                        </div>
                       );
                     })()}
 
-                    {/* Cart quantity badge */}
+                    {/* Discount badge */}
+                    {hasDiscount && (
+                      <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-destructive text-destructive-foreground text-[7px] font-bold z-10">
+                        {discountPct ? `-${discountPct}%` : t("store.sale")}
+                      </div>
+                    )}
+
+                    {/* BOGO badge */}
+                    {hasBogo && (
+                      <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-emerald-500 text-white text-[6px] font-bold z-10">
+                        {t("store.buy_x_get_y").replace("{buy}", String(p.buy_quantity)).replace("{get}", String(p.get_quantity))}
+                      </div>
+                    )}
+
+                    {/* Cart quantity */}
                     <AnimatePresence>
                       {cartItem && (
                         <motion.div
-                          initial={{ scale: 0, rotate: -30 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          exit={{ scale: 0, rotate: 30 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 18 }}
-                          className="absolute bottom-2 left-2 h-6 min-w-[24px] px-1.5 rounded-full bg-primary flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30 z-20"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          className="absolute top-1 left-1 h-5 min-w-[20px] px-1 rounded-full bg-primary flex items-center justify-center ring-1 ring-background z-20"
                         >
-                          <span className="text-[9px] font-black text-primary-foreground">{cartItem.quantity}</span>
+                          <span className="text-[8px] font-black text-primary-foreground">{cartItem.quantity}</span>
                         </motion.div>
                       )}
                     </AnimatePresence>
 
-
-                    {/* 🔥 3D Fire Discount Badge */}
-                    {hasDiscount && (
-                      <motion.div
-                        initial={{ scale: 0, rotate: -20 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        className="absolute bottom-1.5 left-1.5 z-20"
-                        style={{ transformStyle: "preserve-3d", transform: "translateZ(30px)" }}
-                      >
-                        <div className="relative px-2.5 py-1 rounded-xl overflow-hidden">
-                          {/* Fire background layers */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-red-700 via-orange-500 to-yellow-400 rounded-xl" />
-                          <motion.div
-                            animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.05, 1] }}
-                            transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute inset-0 bg-gradient-to-t from-red-600/80 via-orange-400/60 to-yellow-300/40 rounded-xl blur-[1px]"
-                          />
-                          {/* Fire glow */}
-                          <motion.div
-                            animate={{ opacity: [0.3, 0.7, 0.3], y: [-1, 1, -1] }}
-                            transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute -inset-1 bg-orange-500/30 rounded-xl blur-md"
-                          />
-                          {/* Flame particles */}
-                          <motion.div
-                            animate={{ y: [-2, -8], opacity: [1, 0], scale: [1, 0.5] }}
-                            transition={{ duration: 0.7, repeat: Infinity, ease: "easeOut" }}
-                            className="absolute -top-1 left-1 w-1.5 h-1.5 rounded-full bg-yellow-300"
-                          />
-                          <motion.div
-                            animate={{ y: [-2, -10], opacity: [0.8, 0], scale: [1, 0.3] }}
-                            transition={{ duration: 0.9, repeat: Infinity, ease: "easeOut", delay: 0.3 }}
-                            className="absolute -top-0.5 right-2 w-1 h-1 rounded-full bg-orange-300"
-                          />
-                          <motion.div
-                            animate={{ y: [-1, -6], opacity: [0.7, 0], scale: [1, 0.4] }}
-                            transition={{ duration: 0.6, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
-                            className="absolute -top-1 left-1/2 w-1 h-1 rounded-full bg-yellow-200"
-                          />
-                          {/* Content */}
-                          <div className="relative flex items-center gap-1 z-10">
-                            <motion.div
-                              animate={{ rotate: [-5, 5, -5], scale: [1, 1.15, 1] }}
-                              transition={{ duration: 0.5, repeat: Infinity, ease: "easeInOut" }}
-                            >
-                              <Flame className="h-3 w-3 text-white drop-shadow-lg" />
-                            </motion.div>
-                            <span className="text-[9px] font-black text-white drop-shadow-md tracking-wide">
-                              {discountPct ? `-${discountPct}%` : t("store.sale")}
-                            </span>
-                          </div>
-                          {/* Inner shine */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent rounded-xl pointer-events-none" />
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* BOGO Badge */}
-                    {hasBogo && (
-                      <motion.div
-                        initial={{ scale: 0, rotate: -10 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        className="absolute bottom-1.5 left-1.5 z-20"
-                      >
-                        <div className="relative px-2.5 py-1 rounded-xl overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 rounded-xl" />
-                          <motion.div
-                            animate={{ opacity: [0.5, 0.9, 0.5] }}
-                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute inset-0 bg-gradient-to-r from-emerald-400/40 via-teal-400/30 to-emerald-400/40 rounded-xl blur-[1px]"
-                          />
-                          <div className="relative flex items-center gap-1 z-10">
-                            <span className="text-[9px] font-black text-white drop-shadow-md tracking-wide">
-                              {t("store.buy_x_get_y").replace("{buy}", String(p.buy_quantity)).replace("{get}", String(p.get_quantity))}
-                            </span>
-                          </div>
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-transparent rounded-xl pointer-events-none" />
-                        </div>
-                      </motion.div>
-                    )}
+                    {/* Like button */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleLike(product.id); }}
+                      className="absolute bottom-1 right-1 h-5 w-5 rounded-full bg-background/60 backdrop-blur flex items-center justify-center z-20"
+                    >
+                      <Heart className={cn("h-2.5 w-2.5", isLiked ? "fill-rose-500 text-rose-500" : "text-muted-foreground/50")} />
+                    </button>
                   </div>
 
-                  {/* Info section */}
-                  <div className="relative px-2.5 pt-1.5 pb-2.5 space-y-0.5">
-                    {/* Brand */}
-                    {product.brand && (
-                      <p className="text-[9px] font-bold text-primary/50 uppercase tracking-[0.12em] truncate">
-                        {product.brand}
-                      </p>
-                    )}
-                    
-                    {/* Product name */}
-                    <p className="text-[14px] font-semibold line-clamp-2 leading-tight text-foreground">
+                  {/* Info */}
+                  <div className="px-1.5 pt-1 pb-1.5">
+                    <p className="text-[9px] font-semibold text-foreground line-clamp-2 leading-tight min-h-[22px]">
                       {product.name}
-                      {(product as any).unit && (
-                        <span className="text-[10px] font-medium text-muted-foreground ml-1">/ {(product as any).unit}</span>
-                      )}
                     </p>
 
-                    {/* Size selector + Price row */}
-                    <div className="flex items-end justify-between gap-1 mt-0.5">
-                      <div className="min-w-0 flex-1">
-                        {/* Size pills */}
-                        {hasSizes && (
-                          <div className="flex flex-wrap gap-1.5 mb-1.5">
-                            {sizeVariants.map((sv, sIdx) => (
-                              <button
-                                key={sv.size}
-                                onClick={(e) => { e.stopPropagation(); setSelectedSizes(prev => ({ ...prev, [product.id]: sIdx })); }}
-                                className={cn(
-                                  "h-7 px-3 rounded-xl text-[11px] font-extrabold tracking-wide border-2 transition-all",
-                                  selectedIdx === sIdx
-                                    ? "bg-primary/15 border-primary/40 text-primary shadow-md shadow-primary/15 scale-105"
-                                    : "bg-muted/10 border-border/30 text-muted-foreground/50 hover:border-primary/20"
-                                )}
-                              >
-                                {sv.size}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        {/* Price */}
+                    {/* Size pills */}
+                    {hasSizes && (
+                      <div className="flex gap-0.5 mt-1">
+                        {sizeVariants.map((sv, sIdx) => (
+                          <button
+                            key={sv.size}
+                            onClick={(e) => { e.stopPropagation(); setSelectedSizes(prev => ({ ...prev, [product.id]: sIdx })); }}
+                            className={cn(
+                              "h-4 px-1.5 rounded text-[7px] font-bold border transition-all",
+                              selectedIdx === sIdx
+                                ? "bg-primary/15 border-primary/40 text-primary"
+                                : "bg-muted/10 border-border/30 text-muted-foreground/40"
+                            )}
+                          >
+                            {sv.size}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Price + Add */}
+                    <div className="flex items-end justify-between mt-1">
+                      <div>
                         {hasDiscount && !hasSizes ? (
                           <>
-                            <span className="text-base font-black text-destructive tracking-tight leading-none block">
+                            <span className="text-[11px] font-black text-destructive leading-none block">
                               ៛{discountKhr.toLocaleString()}
                             </span>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="text-[10px] font-medium text-muted-foreground/50 line-through">
-                                ៛{khrPrice.toLocaleString()}
-                              </span>
-                              <span className="text-[9px] font-medium text-muted-foreground/50">
-                                ${discountUsd?.toFixed(2)}
-                              </span>
-                            </div>
+                            <span className="text-[7px] text-muted-foreground/40 line-through">
+                              ៛{khrPrice.toLocaleString()}
+                            </span>
                           </>
                         ) : (
                           <>
-                            <span className="text-base font-black text-foreground tracking-tight leading-none block">
+                            <span className="text-[11px] font-black text-foreground leading-none block">
                               ៛{khrPrice.toLocaleString()}
                             </span>
-                            <span className="text-[10px] font-medium text-muted-foreground/50 block mt-0.5">
+                            <span className="text-[7px] text-muted-foreground/40">
                               ${activePrice.toFixed(2)}
                             </span>
                           </>
                         )}
                       </div>
-                      
-                      {/* Add button */}
+
                       {!cartItem && product.in_stock && (
                         <motion.button
-                          whileTap={{ scale: 0.75, rotate: -15 }}
-                          whileHover={{ scale: 1.1, y: -2 }}
+                          whileTap={{ scale: 0.8 }}
                           onClick={(e) => { e.stopPropagation(); handleAddToCart(product, activeVariant || undefined); }}
-                          className="h-9 w-9 shrink-0 rounded-[14px] bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-xl shadow-primary/30 border border-primary/30 relative overflow-hidden"
+                          className="h-6 w-6 shrink-0 rounded-full bg-primary flex items-center justify-center shadow-sm"
                         >
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent" />
-                          <Plus className="h-4 w-4 text-primary-foreground relative z-10" />
+                          <Plus className="h-3 w-3 text-primary-foreground" />
                         </motion.button>
                       )}
                     </div>
 
-                    {/* Quantity stepper - glassmorphic */}
+                    {/* Quantity stepper */}
                     {cartItem && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center justify-between bg-primary/[0.08] backdrop-blur-xl rounded-[12px] p-0.5 border border-primary/15 mt-1.5"
-                      >
-                        <motion.button
-                          whileTap={{ scale: 0.75 }}
+                      <div className="flex items-center justify-between bg-primary/[0.08] rounded-lg p-0.5 mt-1">
+                        <button
                           onClick={(e) => { e.stopPropagation(); cart.updateQuantity(cartKey, cartItem.quantity - 1); }}
-                          className="h-8 w-8 rounded-[10px] bg-background/80 backdrop-blur-sm flex items-center justify-center border border-border/20 shadow-sm touch-manipulation active:bg-muted"
+                          className="h-5 w-5 rounded-md bg-background/80 flex items-center justify-center touch-manipulation"
                         >
-                          <Minus className="h-3.5 w-3.5 text-foreground/70" />
-                        </motion.button>
-                        <motion.span
-                          key={cartItem.quantity}
-                          initial={{ scale: 1.5, opacity: 0.5 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="text-sm font-black text-primary min-w-[28px] text-center"
-                        >
-                          {cartItem.quantity}
-                        </motion.span>
-                        <motion.button
-                          whileTap={{ scale: 0.75 }}
+                          <Minus className="h-2.5 w-2.5 text-foreground/60" />
+                        </button>
+                        <span className="text-[9px] font-black text-primary">{cartItem.quantity}</span>
+                        <button
                           onClick={(e) => { e.stopPropagation(); cart.updateQuantity(cartKey, cartItem.quantity + 1); }}
-                          className="h-8 w-8 rounded-[10px] bg-background/80 backdrop-blur-sm flex items-center justify-center border border-border/20 shadow-sm touch-manipulation active:bg-muted"
+                          className="h-5 w-5 rounded-md bg-background/80 flex items-center justify-center touch-manipulation"
                         >
-                          <Plus className="h-3.5 w-3.5 text-foreground/70" />
-                        </motion.button>
-                      </motion.div>
+                          <Plus className="h-2.5 w-2.5 text-foreground/60" />
+                        </button>
+                      </div>
                     )}
 
                     {!product.in_stock && (
-                      <div className="text-[8px] text-muted-foreground text-center py-1.5 rounded-xl bg-muted/10 backdrop-blur-sm font-semibold mt-1 uppercase tracking-wider">
+                      <div className="text-[7px] text-muted-foreground text-center py-1 rounded bg-muted/10 font-semibold mt-1 uppercase">
                         {t("store.out_of_stock")}
                       </div>
                     )}
