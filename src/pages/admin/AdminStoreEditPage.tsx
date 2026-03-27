@@ -2448,7 +2448,7 @@ export default function AdminStoreEditPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </Layout>
     {store && (
       <StoreLiveChat
         storeId={store.id}
