@@ -1739,11 +1739,7 @@ export default function AdminStoreEditPage() {
             </Card>
           </TabsContent>
 
-          {/* Photos Tab */}
-          <TabsContent value="photos">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base">{t("admin.store.photo_posts")}</CardTitle>
+
                 <Button size="sm" onClick={() => { resetPostState(); setPostMediaMode("image"); setPostDialog(true); }} className="gap-1.5">
                   <Plus className="h-4 w-4" /> {t("admin.store.add_photo_post")}
                 </Button>
