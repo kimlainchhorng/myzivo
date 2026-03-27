@@ -14,6 +14,7 @@ import ffmpegCoreUrl from "@ffmpeg/core?url";
 import ffmpegWasmUrl from "@ffmpeg/core/wasm?url";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import StoreOwnerLayout from "@/components/admin/StoreOwnerLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
