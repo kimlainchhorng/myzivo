@@ -774,6 +774,15 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   </button>
                 </div>
 
+                {/* Route map: Store → Delivery */}
+                {storeCoords && addressCoords && (
+                  <CheckoutRouteMap
+                    storeCoords={storeCoords}
+                    deliveryCoords={addressCoords}
+                    storeName={storeNameProp || storeName}
+                  />
+                )}
+
                 {/* Live ETA */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
