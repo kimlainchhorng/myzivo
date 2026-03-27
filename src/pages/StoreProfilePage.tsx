@@ -534,15 +534,12 @@ export default function StoreProfilePage() {
                       <Heart className={cn("h-3 w-3 transition-colors", isLiked ? "fill-rose-500 text-rose-500" : "text-muted-foreground/60")} />
                     </motion.button>
 
-                    {/* Price overlay - top left */}
-                    <div className="absolute top-1.5 left-1.5 z-20 px-2 py-1 rounded-lg bg-background/70 backdrop-blur-xl border border-white/10 shadow-md">
-                      <span className="text-[13px] font-black text-foreground tracking-tight leading-none block">
-                        ៛{activeKhr.toLocaleString()}
-                      </span>
-                      <span className="text-[9px] font-bold text-muted-foreground leading-none">
-                        ${activePrice.toFixed(2)}
-                      </span>
-                    </div>
+                    {/* Category chip - top left */}
+                    {product.category && (
+                      <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-background/60 backdrop-blur-xl border border-white/10 z-20">
+                        <span className="text-[7px] font-bold text-foreground/70 uppercase tracking-wider">{product.category}</span>
+                      </div>
+                    )}
 
                     {/* Product badge */}
                     {(product as any).badge && (() => {
@@ -594,12 +591,6 @@ export default function StoreProfilePage() {
                       )}
                     </AnimatePresence>
 
-                    {/* Category chip */}
-                    {product.category && !hasDiscount && !hasBogo && (
-                      <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-background/60 backdrop-blur-xl border border-white/10 z-20">
-                        <span className="text-[7px] font-bold text-foreground/70 uppercase tracking-wider">{product.category}</span>
-                      </div>
-                    )}
 
                     {/* 🔥 3D Fire Discount Badge */}
                     {hasDiscount && (
