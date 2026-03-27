@@ -510,41 +510,54 @@ export default function GroceryMarketplace() {
                     key={ds.id}
                     variants={cardVariant}
                     onClick={() => navigate(`/grocery/shop/${ds.slug}`)}
-                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/30 hover:border-primary/20 hover:shadow-lg transition-all text-left group"
+                    className="w-full rounded-2xl bg-card border border-border/30 hover:border-primary/20 hover:shadow-lg transition-all text-left group overflow-hidden"
                   >
-                    <div className="h-14 w-14 rounded-xl bg-background border border-border/20 overflow-hidden flex items-center justify-center shrink-0">
-                      {ds.logo_url ? (
-                        <img src={ds.logo_url} alt={ds.name} className="h-full w-full object-contain p-1" loading="lazy" />
-                      ) : (
-                        <Store className="h-6 w-6 text-muted-foreground/30" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                        </span>
-                        <span className="text-[10px] font-medium text-emerald-600">Open</span>
+                    {/* Cover / Banner */}
+                    {ds.banner_url ? (
+                      <div className="h-24 w-full relative">
+                        <img src={ds.banner_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
                       </div>
-                      <p className="text-sm font-bold text-foreground truncate">{ds.name}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {ds.delivery_min && (
-                          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                            <Clock className="h-2.5 w-2.5" /> {ds.delivery_min}m
-                          </span>
-                        )}
-                        {ds.rating && (
-                          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                            <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {ds.rating}
-                          </span>
-                        )}
-                        {ds.hours && (
-                          <span className="text-[10px] text-muted-foreground">{ds.hours}</span>
+                    ) : (
+                      <div className="h-16 w-full bg-gradient-to-r from-primary/10 via-primary/5 to-muted/10" />
+                    )}
+
+                    {/* Info row with overlapping profile logo */}
+                    <div className="flex items-center gap-3 px-3 pb-3 -mt-5 relative">
+                      <div className="h-14 w-14 rounded-xl bg-background border-2 border-card shadow-md overflow-hidden flex items-center justify-center shrink-0">
+                        {ds.logo_url ? (
+                          <img src={ds.logo_url} alt={ds.name} className="h-full w-full object-contain p-1" loading="lazy" />
+                        ) : (
+                          <Store className="h-6 w-6 text-muted-foreground/30" />
                         )}
                       </div>
+                      <div className="flex-1 min-w-0 pt-5">
+                        <div className="flex items-center gap-2">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                          </span>
+                          <span className="text-[10px] font-medium text-emerald-600">Open</span>
+                        </div>
+                        <p className="text-sm font-bold text-foreground truncate">{ds.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {ds.delivery_min && (
+                            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                              <Clock className="h-2.5 w-2.5" /> {ds.delivery_min}m
+                            </span>
+                          )}
+                          {ds.rating && (
+                            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                              <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {ds.rating}
+                            </span>
+                          )}
+                          {ds.hours && (
+                            <span className="text-[10px] text-muted-foreground">{ds.hours}</span>
+                          )}
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/25 group-hover:text-primary/60 transition-colors shrink-0" />
                     </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/25 group-hover:text-primary/60 transition-colors shrink-0" />
                   </motion.button>
                 ))}
               </motion.div>
