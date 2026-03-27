@@ -211,16 +211,16 @@ export default function StorePaymentSection({ storeId }: { storeId: string }) {
           </p>
 
           {/* Card / Stripe */}
-          <div className="rounded-xl border border-border p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <CreditCard className="h-5 w-5 text-primary" />
+          <div className="rounded-lg border border-border/60 px-3 py-2.5 bg-muted/30">
+            <div className="flex items-center gap-2.5">
+              <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
+                <CreditCard className="h-3.5 w-3.5 text-primary" />
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">Card Payment</p>
-                <p className="text-xs text-muted-foreground">Accept Visa, Mastercard & more via Stripe</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-foreground">Card Payment</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">Visa, Mastercard & more via Stripe</p>
               </div>
-              <Switch />
+              <Switch className="scale-90" />
             </div>
           </div>
 
