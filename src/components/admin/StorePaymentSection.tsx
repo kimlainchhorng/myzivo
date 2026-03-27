@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { CreditCard, QrCode, DollarSign, Loader2, Edit, Save, X, ShieldCheck, Upload } from "lucide-react";
+import { CreditCard, QrCode, DollarSign, Loader2, Edit, Save, X, ShieldCheck, Upload, ClipboardCheck } from "lucide-react";
 import PaymentVerificationDialog from "./PaymentVerificationDialog";
 
 import abaLogo from "@/assets/payments/aba-logo.png";
@@ -224,7 +224,20 @@ export default function StorePaymentSection({ storeId }: { storeId: string }) {
             </div>
           </div>
 
-          {/* Bank providers */}
+          {/* Confirmed Payment Order */}
+          <div className="rounded-lg border border-border/60 px-3 py-2.5 bg-muted/30">
+            <div className="flex items-center gap-2.5">
+              <div className="h-7 w-7 rounded-md bg-emerald-500/10 flex items-center justify-center">
+                <ClipboardCheck className="h-3.5 w-3.5 text-emerald-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-foreground">Confirmed Payment Order</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">Require payment confirmation before processing orders</p>
+              </div>
+              <Switch className="scale-90" />
+            </div>
+          </div>
+
           {PROVIDERS.map((prov) => {
             const method = getMethod(prov.key);
             const isEditing = editing === prov.key;
