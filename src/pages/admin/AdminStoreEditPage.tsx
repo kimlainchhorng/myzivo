@@ -303,7 +303,6 @@ export default function AdminStoreEditPage() {
         "-profile:v", "baseline",
         "-level", "3.0",
         "-c:a", "aac",
-        "-profile:a", "aac_low",
         "-b:a", "128k",
         "-ar", "44100",
         "-ac", "2",

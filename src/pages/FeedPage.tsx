@@ -3,10 +3,6 @@
  * Customers can browse content posted by stores
  */
 import { useQuery } from "@tanstack/react-query";
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile } from "@ffmpeg/util";
-import ffmpegCoreUrl from "@ffmpeg/core?url";
-import ffmpegWasmUrl from "@ffmpeg/core/wasm?url";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -15,7 +11,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 
 interface FeedPost {
   id: string;
@@ -28,83 +23,6 @@ interface FeedPost {
   store_name?: string;
   store_logo?: string;
   store_slug?: string;
-}
-
-let feedFFmpegInstance: FFmpeg | null = null;
-let feedFFmpegLoadPromise: Promise<FFmpeg> | null = null;
-
-async function ensureFeedFFmpegLoaded() {
-  if (feedFFmpegInstance) return feedFFmpegInstance;
-
-  if (!feedFFmpegLoadPromise) {
-    feedFFmpegLoadPromise = (async () => {
-      const ffmpeg = new FFmpeg();
-      await ffmpeg.load({
-        coreURL: ffmpegCoreUrl,
-        wasmURL: ffmpegWasmUrl,
-      });
-      feedFFmpegInstance = ffmpeg;
-      return ffmpeg;
-    })().catch((error) => {
-      feedFFmpegLoadPromise = null;
-      throw error;
-    });
-  }
-
-  return feedFFmpegLoadPromise;
-}
-
-async function transcodeFeedVideoForPlayback(sourceUrl: string) {
-  const ffmpeg = await ensureFeedFFmpegLoaded();
-  const response = await fetch(sourceUrl);
-  if (!response.ok) throw new Error("Failed to fetch source video");
-
-  const blob = await response.blob();
-  const inputName = `feed-input-${crypto.randomUUID()}.mp4`;
-  const outputName = `feed-output-${crypto.randomUUID()}.mp4`;
-
-  await ffmpeg.writeFile(inputName, await fetchFile(blob));
-
-  try {
-    try {
-      await ffmpeg.exec([
-        "-i", inputName,
-        "-movflags", "+faststart",
-        "-c:v", "copy",
-        "-an",
-        "-y",
-        outputName,
-      ]);
-    } catch {
-      await ffmpeg.exec([
-        "-i", inputName,
-        "-movflags", "+faststart",
-        "-pix_fmt", "yuv420p",
-        "-c:v", "libx264",
-        "-preset", "veryfast",
-        "-profile:v", "baseline",
-        "-level", "3.0",
-        "-an",
-        "-y",
-        outputName,
-      ]);
-    }
-
-    const data = await ffmpeg.readFile(outputName);
-    if (!(data instanceof Uint8Array)) {
-      throw new Error("Failed to read converted video");
-    }
-
-    const normalizedBuffer = new ArrayBuffer(data.byteLength);
-    new Uint8Array(normalizedBuffer).set(data);
-
-    return URL.createObjectURL(new Blob([normalizedBuffer], { type: "video/mp4" }));
-  } finally {
-    await Promise.allSettled([
-      ffmpeg.deleteFile(inputName),
-      ffmpeg.deleteFile(outputName),
-    ]);
-  }
 }
 
 function timeAgo(dateStr: string): string {
@@ -122,23 +40,12 @@ function timeAgo(dateStr: string): string {
 function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const objectUrlRef = useRef<string | null>(null);
-  const autoplayAfterRecoveryRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
-  const [resolvedSrc, setResolvedSrc] = useState(urls[0] ?? "");
-  const [isMediaLoading, setIsMediaLoading] = useState(false);
-  const [hasRecoveredVideo, setHasRecoveredVideo] = useState(false);
+  const [hasPlaybackError, setHasPlaybackError] = useState(false);
 
   const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
-
-  const cleanupObjectUrl = () => {
-    if (objectUrlRef.current) {
-      URL.revokeObjectURL(objectUrlRef.current);
-      objectUrlRef.current = null;
-    }
-  };
 
   const ensureVisibleFrame = (video: HTMLVideoElement) => {
     if (!Number.isFinite(video.duration) || video.duration <= 0) return;
@@ -185,9 +92,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
       setIsPlaying(true);
     } catch {
       setIsPlaying(false);
-      if (!hasRecoveredVideo) {
-        void recoverVideoForPlayback(true);
-      }
+      setHasPlaybackError(true);
     }
   };
 
@@ -219,36 +124,11 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     }
   };
 
-  const recoverVideoForPlayback = async (autoplayAfterRecovery = false) => {
-    const sourceUrl = urls[activeIndex] ?? "";
-    if (!sourceUrl || !isVideo(sourceUrl) || hasRecoveredVideo || isMediaLoading) return;
-
-    try {
-      setIsMediaLoading(true);
-      autoplayAfterRecoveryRef.current = autoplayAfterRecovery;
-      toast.info("Fixing video format...");
-      const fixedUrl = await transcodeFeedVideoForPlayback(sourceUrl);
-      cleanupObjectUrl();
-      objectUrlRef.current = fixedUrl;
-      setResolvedSrc(fixedUrl);
-      setHasRecoveredVideo(true);
-    } catch {
-      autoplayAfterRecoveryRef.current = false;
-      toast.error("This video could not be repaired for playback.");
-    } finally {
-      setIsMediaLoading(false);
-    }
-  };
-
   useEffect(() => {
     setIsPlaying(false);
     setIsMuted(true);
     setPosterUrl(null);
-    setHasRecoveredVideo(false);
-    autoplayAfterRecoveryRef.current = false;
-    cleanupObjectUrl();
-    setResolvedSrc(urls[activeIndex] ?? "");
-    setIsMediaLoading(false);
+    setHasPlaybackError(false);
   }, [activeIndex, urls]);
 
   useEffect(() => {
@@ -259,13 +139,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     video.currentTime = 0;
     video.muted = true;
     video.load();
-  }, [activeIndex, resolvedSrc, urls]);
-
-  useEffect(() => {
-    return () => {
-      cleanupObjectUrl();
-    };
-  }, []);
+  }, [activeIndex, urls]);
 
   return (
     <div className="relative bg-muted">
@@ -273,9 +147,9 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
         {isVideo(urls[activeIndex]) ? (
           <div className="relative w-full h-full">
             <video
-              key={resolvedSrc}
+              key={urls[activeIndex]}
               ref={videoRef}
-              src={resolvedSrc}
+              src={urls[activeIndex]}
               poster={posterUrl ?? undefined}
               className="w-full h-full object-cover"
               playsInline
@@ -288,25 +162,19 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
                 ensureVisibleFrame(event.currentTarget);
               }}
               onLoadedData={(event) => {
+                setHasPlaybackError(false);
                 ensureVisibleFrame(event.currentTarget);
                 capturePosterFrame(event.currentTarget);
-                if (autoplayAfterRecoveryRef.current) {
-                  autoplayAfterRecoveryRef.current = false;
-                  void event.currentTarget.play().catch(() => {
-                    setIsPlaying(false);
-                  });
-                }
               }}
               onPlay={(event) => {
                 setIsMuted(event.currentTarget.muted);
                 setIsPlaying(true);
+                setHasPlaybackError(false);
               }}
               onPause={() => setIsPlaying(false)}
               onError={() => {
                 setIsPlaying(false);
-                if (!hasRecoveredVideo) {
-                  void recoverVideoForPlayback(false);
-                }
+                setHasPlaybackError(true);
               }}
             />
             <button
@@ -315,7 +183,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               className="absolute inset-0 z-10"
               aria-label={isPlaying ? "Pause video" : "Play video"}
             />
-            {!isPlaying && !isMediaLoading && (
+            {!isPlaying && !hasPlaybackError && (
               <button
                 type="button"
                 onClick={toggleVideo}
@@ -327,9 +195,14 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
                 </div>
               </button>
             )}
-            {isMediaLoading && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-foreground/10 backdrop-blur-sm">
-                <Loader2 className="h-8 w-8 animate-spin text-background" />
+            {hasPlaybackError && (
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-foreground/20 px-6 text-center backdrop-blur-sm">
+                <p className="max-w-xs text-sm font-medium text-background">
+                  This video format isn&apos;t supported here yet.
+                </p>
+                <p className="max-w-xs text-xs text-background/80">
+                  Please re-upload it from the store admin page and it will be converted automatically.
+                </p>
               </div>
             )}
             <button
