@@ -72,12 +72,36 @@ export default function PartnerLogin() {
       return;
     }
 
+    // If store ID provided, validate and redirect to that store
+    const storeIdInput = data.store_id?.replace(/^CBD/i, "").trim();
+    if (storeIdInput && storeIdInput.length >= 8) {
+      // Find store by matching first 8 chars of UUID (without dashes)
+      const { data: stores } = await supabase.from("store_profiles").select("id, name, setup_complete, owner_id").eq("owner_id", user.id);
+      const matchedStore = stores?.find((s: any) => s.id.replace(/-/g, "").toUpperCase().startsWith(storeIdInput.toUpperCase()));
+
+      if (matchedStore) {
+        setIsLoading(false);
+        toast.success(`Welcome back! Opening ${matchedStore.name}`);
+        if (!matchedStore.setup_complete) {
+          navigate("/store/setup", { replace: true });
+        } else {
+          navigate(`/admin/stores/${matchedStore.id}`, { replace: true });
+        }
+        return;
+      } else {
+        setIsLoading(false);
+        toast.error("Store ID not found or not linked to your account");
+        return;
+      }
+    }
+
     // Check partner roles: restaurant owner, hotel owner, car rental owner, store merchant
-    const [restaurant, hotel, carRentals, adminRole] = await Promise.all([
+    const [restaurant, hotel, carRentals, adminRole, storeProfile] = await Promise.all([
       supabase.from("restaurants").select("id").eq("owner_id", user.id).maybeSingle(),
       supabase.from("hotels").select("id").eq("owner_id", user.id).maybeSingle(),
       supabase.from("rental_cars").select("id").eq("owner_id", user.id).limit(1),
       supabase.rpc("check_user_role", { _user_id: user.id, _role: "admin" }),
+      supabase.from("store_profiles").select("id, setup_complete").eq("owner_id", user.id).maybeSingle(),
     ]);
 
     setIsLoading(false);
@@ -86,6 +110,13 @@ export default function PartnerLogin() {
     if (adminRole.data) {
       toast.success("Welcome back, Admin!");
       navigate("/admin/analytics", { replace: true });
+    } else if (storeProfile.data) {
+      toast.success("Welcome back, Partner!");
+      if (!storeProfile.data.setup_complete) {
+        navigate("/store/setup", { replace: true });
+      } else {
+        navigate(`/admin/stores/${storeProfile.data.id}`, { replace: true });
+      }
     } else if (restaurant.data) {
       toast.success("Welcome back, Partner!");
       navigate("/restaurant/dashboard", { replace: true });
@@ -96,9 +127,9 @@ export default function PartnerLogin() {
       toast.success("Welcome back, Partner!");
       navigate("/car-rental/dashboard", { replace: true });
     } else {
-      // No partner role found — still logged in, send to store/business setup
+      // No partner role found — send to store setup
       toast.info("No partner account found. Please set up your business first.");
-      navigate("/partner-with-zivo", { replace: true });
+      navigate("/store/setup", { replace: true });
     }
   };
 
