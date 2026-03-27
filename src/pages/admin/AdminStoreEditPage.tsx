@@ -372,6 +372,7 @@ export default function AdminStoreEditPage() {
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [savedBrands, setSavedBrands] = useState<string[]>([]);
   const [savedCategories, setSavedCategories] = useState<string[]>([]);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const { data: store, isLoading } = useQuery({
     queryKey: ["admin-store", storeId],
@@ -2580,5 +2581,16 @@ export default function AdminStoreEditPage() {
         </DialogContent>
       </Dialog>
     </AdminLayout>
+    {store && (
+      <StoreLiveChat
+        storeId={store.id}
+        storeName={store.name}
+        storeLogo={store.logo_url}
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+      />
+    )}
+    </>
+  );
   );
 }
