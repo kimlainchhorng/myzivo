@@ -26,6 +26,8 @@ import { GROCERY_STORES } from "@/config/groceryStores";
 import { SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee, calcMarkup, getMarkupPct } from "@/config/groceryPricing";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useI18n } from "@/hooks/useI18n";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
