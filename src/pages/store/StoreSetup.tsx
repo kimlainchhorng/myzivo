@@ -414,6 +414,20 @@ export default function StoreSetup() {
                       </div>
                     </div>
                   </div>
+                  {/* ACLEDA */}
+                  <div className="rounded-xl border border-white/15 p-4 space-y-3">
+                    <h3 className="text-white font-medium">ACLEDA Bank</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-white/60 text-xs">Account Number</Label>
+                        <Input value={acledaAccount} onChange={e => setAcledaAccount(e.target.value)} placeholder="000 123 456" className="bg-white/10 border-white/20 text-white placeholder:text-white/40 text-sm" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-white/60 text-xs">Account Holder</Label>
+                        <Input value={acledaHolder} onChange={e => setAcledaHolder(e.target.value)} placeholder="Name on account" className="bg-white/10 border-white/20 text-white placeholder:text-white/40 text-sm" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -451,10 +465,11 @@ export default function StoreSetup() {
                   {/* Payment */}
                   <div className="rounded-xl border border-white/15 p-4">
                     <h3 className="text-white/60 text-xs uppercase tracking-wider mb-2">Payment</h3>
-                    {abaAccount || wingAccount ? (
+                    {abaAccount || wingAccount || acledaAccount ? (
                       <div className="space-y-1">
                         {abaAccount && <p className="text-white/70 text-sm">ABA: {abaHolder} — {abaAccount}</p>}
                         {wingAccount && <p className="text-white/70 text-sm">Wing: {wingHolder} — {wingAccount}</p>}
+                        {acledaAccount && <p className="text-white/70 text-sm">ACLEDA: {acledaHolder} — {acledaAccount}</p>}
                       </div>
                     ) : (
                       <p className="text-white/40 text-sm">No payment methods added (can be configured later)</p>
