@@ -463,7 +463,8 @@ export default function StoreProfilePage() {
                     variants={container}
                     initial="hidden"
                     animate="show"
-                    className="grid grid-cols-2 gap-2"
+                    className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+                    style={{ WebkitOverflowScrolling: "touch" }}
                   >
                     {catProducts.map((product, i) => {
                       const p = product as any;
@@ -491,8 +492,9 @@ export default function StoreProfilePage() {
                   whileHover={{ y: -3, scale: 1.015 }}
                   whileTap={{ scale: 0.97 }}
                   className={cn(
-                    "group relative rounded-[16px] overflow-hidden transition-all duration-300",
+                    "group relative rounded-[16px] overflow-hidden transition-all duration-300 snap-start shrink-0",
                     "bg-card/60 backdrop-blur-xl border",
+                    "w-[46vw] min-w-[170px] max-w-[200px]",
                     cartItem
                       ? "border-primary/25 shadow-xl shadow-primary/10 ring-1 ring-primary/10"
                       : "border-white/[0.06] shadow-lg shadow-black/5 hover:shadow-xl hover:border-white/[0.12]"
