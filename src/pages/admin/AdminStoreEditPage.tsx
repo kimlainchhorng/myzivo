@@ -483,6 +483,19 @@ export default function AdminStoreEditPage() {
   const [productDialog, setProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState(emptyProduct);
+
+  // Auto-draft: persist product form to localStorage
+  const draftKey = `zivo_product_draft_${storeId}`;
+  useEffect(() => {
+    if (!productDialog || editingProduct) return;
+    // Only save draft for new products with some data entered
+    const hasData = productForm.name || productForm.price > 0 || productForm.price_khr > 0 || (productForm.image_urls || []).length > 0 || productForm.category || productForm.brand;
+    if (hasData) {
+      try { localStorage.setItem(draftKey, JSON.stringify(productForm)); } catch {}
+    }
+  }, [productForm, productDialog, editingProduct, draftKey]);
+
+  const clearProductDraft = () => { try { localStorage.removeItem(draftKey); } catch {} };
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [uploadingProductImage, setUploadingProductImage] = useState(false);
   const productImageInputRef = useRef<HTMLInputElement>(null);
