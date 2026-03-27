@@ -463,7 +463,7 @@ export default function StoreProfilePage() {
                     variants={container}
                     initial="hidden"
                     animate="show"
-                    className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+                    className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3"
                     style={{ WebkitOverflowScrolling: "touch" }}
                   >
                     {catProducts.map((product, i) => {
