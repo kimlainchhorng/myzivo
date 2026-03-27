@@ -36453,6 +36453,101 @@ export type Database = {
           },
         ]
       }
+      store_orders: {
+        Row: {
+          assigned_driver_id: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          customer_id: string
+          customer_name: string | null
+          customer_phone: string | null
+          delivered_at: string | null
+          delivery_address: string | null
+          delivery_fee_cents: number
+          delivery_lat: number | null
+          delivery_lng: number | null
+          driver_picked_up_at: string | null
+          id: string
+          items: Json
+          notes: string | null
+          payment_confirmed_at: string | null
+          payment_provider: string | null
+          receipt_uploaded_at: string | null
+          receipt_url: string | null
+          status: string
+          store_id: string
+          subtotal_cents: number
+          total_cents: number
+          updated_at: string
+        }
+        Insert: {
+          assigned_driver_id?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          customer_id: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivered_at?: string | null
+          delivery_address?: string | null
+          delivery_fee_cents?: number
+          delivery_lat?: number | null
+          delivery_lng?: number | null
+          driver_picked_up_at?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          payment_confirmed_at?: string | null
+          payment_provider?: string | null
+          receipt_uploaded_at?: string | null
+          receipt_url?: string | null
+          status?: string
+          store_id: string
+          subtotal_cents?: number
+          total_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          assigned_driver_id?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          customer_id?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivered_at?: string | null
+          delivery_address?: string | null
+          delivery_fee_cents?: number
+          delivery_lat?: number | null
+          delivery_lng?: number | null
+          driver_picked_up_at?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          payment_confirmed_at?: string | null
+          payment_provider?: string | null
+          receipt_uploaded_at?: string | null
+          receipt_url?: string | null
+          status?: string
+          store_id?: string
+          subtotal_cents?: number
+          total_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_payment_methods: {
         Row: {
           account_holder_name: string | null
