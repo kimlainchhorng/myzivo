@@ -219,6 +219,7 @@ export default function AdminStoresPage() {
                       <div>
                         <p className="font-medium text-foreground">{store.name}</p>
                         <p className="text-sm text-muted-foreground">{store.market} · {STORE_CATEGORY_OPTIONS.find(o => o.value === store.category)?.label || store.category} · /{store.slug}</p>
+                        <p className="text-xs text-muted-foreground font-mono">ID: {store.id}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
