@@ -42,6 +42,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [posterUrl, setPosterUrl] = useState<string | null>(null);
 
   const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
 
@@ -55,6 +56,27 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
       video.currentTime = targetTime;
     } catch {
       // Ignore seek failures on restrictive browsers.
+    }
+  };
+
+  const capturePosterFrame = (video: HTMLVideoElement) => {
+    if (video.videoWidth === 0 || video.videoHeight === 0) return;
+
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const nextPoster = canvas.toDataURL("image/jpeg", 0.82);
+      setPosterUrl((prev) => {
+        if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+        return nextPoster;
+      });
+    } catch {
+      // Ignore poster extraction failures and fall back to video surface.
     }
   };
 
@@ -103,6 +125,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
   useEffect(() => {
     setIsPlaying(false);
     setIsMuted(true);
+    setPosterUrl(null);
   }, [activeIndex, urls]);
 
   useEffect(() => {
@@ -134,6 +157,15 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     return () => observer.disconnect();
   }, [activeIndex, urls]);
 
+  useEffect(() => {
+    return () => {
+      setPosterUrl((prev) => {
+        if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+        return null;
+      });
+    };
+  }, []);
+
   return (
     <div className="relative bg-muted">
       <div className={cn("overflow-hidden bg-black", isVideo(urls[activeIndex]) ? "aspect-[9/16]" : "aspect-square")}>
@@ -143,6 +175,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               key={urls[activeIndex]}
               ref={videoRef}
               src={urls[activeIndex]}
+              poster={posterUrl ?? undefined}
               className="w-full h-full object-cover"
               playsInline
               loop
@@ -152,6 +185,10 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               onLoadedMetadata={(event) => {
                 event.currentTarget.muted = isMuted;
                 ensureVisibleFrame(event.currentTarget);
+              }}
+              onLoadedData={(event) => {
+                ensureVisibleFrame(event.currentTarget);
+                capturePosterFrame(event.currentTarget);
               }}
               onCanPlay={(event) => {
                 ensureVisibleFrame(event.currentTarget);
