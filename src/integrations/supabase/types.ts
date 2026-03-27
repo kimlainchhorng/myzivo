@@ -26878,6 +26878,36 @@ export type Database = {
           },
         ]
       }
+      payment_verification_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          store_id: string
+          used: boolean
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          store_id: string
+          used?: boolean
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          store_id?: string
+          used?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       payout_batches: {
         Row: {
           created_at: string
@@ -36422,6 +36452,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      store_payment_methods: {
+        Row: {
+          account_holder_name: string | null
+          account_number: string | null
+          created_at: string
+          id: string
+          is_enabled: boolean
+          provider: string
+          qr_code_url: string | null
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_holder_name?: string | null
+          account_number?: string | null
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          provider: string
+          qr_code_url?: string | null
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_holder_name?: string | null
+          account_number?: string | null
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          provider?: string
+          qr_code_url?: string | null
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       store_posts: {
         Row: {
