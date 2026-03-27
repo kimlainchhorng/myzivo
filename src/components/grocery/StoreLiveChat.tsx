@@ -544,6 +544,15 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                 </div>
               </>
             )}
+            <ConfirmDialog
+              open={confirmDeleteInChat}
+              message="Delete this chat? This cannot be undone."
+              onCancel={() => setConfirmDeleteInChat(false)}
+              onConfirm={() => {
+                if (chatId) handleDeleteChat(chatId);
+                setConfirmDeleteInChat(false);
+              }}
+            />
           </motion.div>
         </motion.div>
       )}
