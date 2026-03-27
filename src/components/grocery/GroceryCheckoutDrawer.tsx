@@ -30,6 +30,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useCountry } from "@/hooks/useCountry";
 import { CheckoutPinMap } from "@/components/grocery/CheckoutPinMap";
+import { CheckoutRouteMap } from "@/components/grocery/CheckoutRouteMap";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -38,6 +39,8 @@ interface GroceryCheckoutDrawerProps {
   onOrderPlaced: (orderId: string) => void;
   onRemoveItem?: (productId: string) => void;
   onUpdateQuantity?: (productId: string, quantity: number) => void;
+  storeCoords?: { lat: number; lng: number } | null;
+  storeName?: string;
 }
 
 type SubstitutionPref = "contact_me" | "best_match" | "refund";
