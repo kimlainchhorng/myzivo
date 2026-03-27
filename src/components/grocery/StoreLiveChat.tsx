@@ -82,14 +82,16 @@ function RichMessageCard({ payload, isOwn }: { payload: RichPayload; isOwn: bool
           >
             Open in Maps →
           </a>
-          {!isOwn && (
-            <a
-              href={rideUrl}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur text-[11px] font-semibold hover:bg-white/30 transition-colors w-fit"
-            >
-              🚗 Ride There
-            </a>
-          )}
+          <a
+            href={rideUrl}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors w-fit ${
+              isOwn
+                ? "bg-white/20 backdrop-blur hover:bg-white/30 text-primary-foreground"
+                : "bg-primary/10 hover:bg-primary/20 text-primary"
+            }`}
+          >
+            🚗 Ride There
+          </a>
         </div>
       </div>
     );
