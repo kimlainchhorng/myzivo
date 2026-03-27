@@ -220,6 +220,21 @@ export default function PartnerLogin() {
                   </FormItem>
                 )} />
 
+                {/* Store Account ID */}
+                <FormField control={form.control} name="store_id" render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="text-white/70 text-xs font-medium">Store Account ID</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <input type="text" placeholder="CBD12345678" autoComplete="off" className={cn(input3D, "uppercase font-mono tracking-wider")} {...field} onChange={e => field.onChange(e.target.value.toUpperCase())} />
+                      </div>
+                    </FormControl>
+                    <p className="text-white/30 text-[10px]">Enter your store ID (e.g. CBD12345678) — optional for non-store partners</p>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )} />
+
                 <motion.div whileTap={{ scale: 0.97, y: 2 }} whileHover={{ scale: 1.01 }}>
                   <Button
                     type="submit"
