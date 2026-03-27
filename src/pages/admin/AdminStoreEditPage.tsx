@@ -1605,39 +1605,79 @@ export default function AdminStoreEditPage() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="divide-y divide-border">
-                    {products.map((product: any) => (
-                      <div key={product.id} className="flex items-center justify-between py-3">
-                        <div className="flex items-center gap-3">
-                          {product.image_url ? (
-                            <img src={product.image_url} alt={product.name} className="w-12 h-12 rounded-lg object-cover bg-muted" />
-                          ) : (
-                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                              <Package className="h-5 w-5 text-muted-foreground/30" />
+                  <div className="space-y-3">
+                    {/* Category Filter Bar */}
+                    {(() => {
+                      const allCats = Array.from(new Set(products.map((p: any) => p.category).filter(Boolean))).sort() as string[];
+                      if (allCats.length === 0) return null;
+                      return (
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                          <button
+                            onClick={() => setProductCategoryFilter("")}
+                            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                              !productCategoryFilter
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            }`}
+                          >
+                            All
+                          </button>
+                          {allCats.map(cat => (
+                            <button
+                              key={cat}
+                              onClick={() => setProductCategoryFilter(productCategoryFilter === cat ? "" : cat)}
+                              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                productCategoryFilter === cat
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                              }`}
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                    <div className="divide-y divide-border">
+                      {products
+                        .filter((product: any) => !productCategoryFilter || product.category === productCategoryFilter)
+                        .map((product: any) => (
+                        <div key={product.id} className="flex items-center justify-between py-3">
+                          <div className="flex items-center gap-3">
+                            {product.image_url ? (
+                              <img src={product.image_url} alt={product.name} className="w-12 h-12 rounded-lg object-cover bg-muted" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                                <Package className="h-5 w-5 text-muted-foreground/30" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-medium text-sm text-foreground">{product.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                ៛{(product.price_khr || Math.round(product.price * (form.khr_rate || 4062.5))).toLocaleString()} · ${product.price?.toFixed(2)}
+                                {product.brand && ` · ${product.brand}`}
+                              </p>
+                              {product.category && (
+                                <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent text-accent-foreground">
+                                  {product.category}
+                                </span>
+                              )}
                             </div>
-                          )}
-                          <div>
-                            <p className="font-medium text-sm text-foreground">{product.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              ៛{(product.price_khr || Math.round(product.price * (form.khr_rate || 4062.5))).toLocaleString()} · ${product.price?.toFixed(2)}
-                              {product.category && ` · ${product.category}`}
-                              {product.brand && ` · ${product.brand}`}
-                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={product.in_stock ? "default" : "secondary"} className="text-[10px]">
+                              {product.in_stock ? t("admin.store.in_stock") : t("admin.store.out_of_stock")}
+                            </Badge>
+                            <Button size="sm" variant="outline" onClick={() => openEditProduct(product)}>
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setDeleteProductId(product.id)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={product.in_stock ? "default" : "secondary"} className="text-[10px]">
-                            {product.in_stock ? t("admin.store.in_stock") : t("admin.store.out_of_stock")}
-                          </Badge>
-                          <Button size="sm" variant="outline" onClick={() => openEditProduct(product)}>
-                            <Edit className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setDeleteProductId(product.id)}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>
