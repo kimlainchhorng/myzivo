@@ -95,6 +95,7 @@ function AdminVideoPreview({
   autoPlay = false,
   loop = false,
   muted = true,
+  onRepairSource,
 }: {
   src: string;
   className?: string;
@@ -103,11 +104,14 @@ function AdminVideoPreview({
   autoPlay?: boolean;
   loop?: boolean;
   muted?: boolean;
+  onRepairSource?: (src: string) => Promise<string | null>;
 }) {
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
   const [triedBlobFallback, setTriedBlobFallback] = useState(false);
   const [blobSrc, setBlobSrc] = useState<string | null>(null);
+  const [repairedSrc, setRepairedSrc] = useState<string | null>(null);
+  const [isRepairing, setIsRepairing] = useState(false);
 
   useEffect(() => {
     setHasPlaybackError(false);
@@ -121,6 +125,12 @@ function AdminVideoPreview({
       if (prev) URL.revokeObjectURL(prev);
       return null;
     });
+
+    setRepairedSrc((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setIsRepairing(false);
   }, [src]);
 
   useEffect(() => {
@@ -131,6 +141,10 @@ function AdminVideoPreview({
       });
       setBlobSrc((prev) => {
         if (prev) URL.revokeObjectURL(prev);
+        return prev;
+      });
+      setRepairedSrc((prev) => {
+        if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
         return prev;
       });
     };
@@ -157,11 +171,34 @@ function AdminVideoPreview({
     }
   };
 
+  const tryRepairFallback = async () => {
+    if (!onRepairSource || isRepairing || repairedSrc) return;
+
+    setIsRepairing(true);
+    try {
+      const repairedUrl = await onRepairSource(src);
+      if (!repairedUrl) {
+        setHasPlaybackError(true);
+        return;
+      }
+
+      setRepairedSrc((prev) => {
+        if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+        return repairedUrl;
+      });
+      setHasPlaybackError(false);
+    } catch {
+      setHasPlaybackError(true);
+    } finally {
+      setIsRepairing(false);
+    }
+  };
+
   return (
     <div className={cn("relative bg-black", className)}>
       <video
-        key={blobSrc || src}
-        src={blobSrc || src}
+        key={repairedSrc || blobSrc || src}
+        src={repairedSrc || blobSrc || src}
         poster={posterUrl ?? undefined}
         className={cn("w-full h-full", videoClassName)}
         controls={controls}
@@ -184,13 +221,21 @@ function AdminVideoPreview({
         onError={() => {
           if (!triedBlobFallback) {
             void tryBlobFallback();
+          } else if (onRepairSource && !repairedSrc) {
+            void tryRepairFallback();
           } else {
             setHasPlaybackError(true);
           }
         }}
       />
 
-      {hasPlaybackError && (
+      {isRepairing && (
+        <div className="absolute inset-0 flex items-center justify-center bg-foreground/20 px-4 text-center backdrop-blur-sm">
+          <p className="text-xs font-medium text-background">Repairing video preview...</p>
+        </div>
+      )}
+
+      {hasPlaybackError && !isRepairing && (
         <div className="absolute inset-0 flex items-center justify-center bg-foreground/20 px-4 text-center backdrop-blur-sm">
           <p className="text-xs font-medium text-background">Video preview unavailable — try Replace or Reprocess.</p>
         </div>
@@ -343,12 +388,22 @@ export default function AdminStoreEditPage() {
   const replaceVideoInputRef = useRef<HTMLInputElement>(null);
   const ffmpegRef = useRef<FFmpeg | null>(null);
   const ffmpegLoadPromiseRef = useRef<Promise<FFmpeg> | null>(null);
+  const repairedPreviewUrlsRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     if (store) {
       setGalleryImages((store as any).gallery_images || []);
     }
   }, [store]);
+
+  useEffect(() => {
+    return () => {
+      repairedPreviewUrlsRef.current.forEach((url) => {
+        if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+      });
+      repairedPreviewUrlsRef.current.clear();
+    };
+  }, []);
 
   const cleanupPreviews = () => {
     postMediaItems.forEach((p) => {
@@ -479,6 +534,22 @@ export default function AdminStoreEditPage() {
     }
 
     return normalizedFile;
+  };
+
+  const repairVideoPreviewSource = async (url: string) => {
+    const normalizedUrl = normalizeStorePostMediaUrl(url);
+    const cached = repairedPreviewUrlsRef.current.get(normalizedUrl);
+    if (cached) return cached;
+
+    const response = await fetch(normalizedUrl);
+    if (!response.ok) throw new Error("Failed to download video for repair.");
+
+    const blob = await response.blob();
+    const file = new File([blob], "preview-repair.mp4", { type: blob.type || "video/mp4" });
+    const repairedFile = await transcodeVideoForBrowser(file);
+    const repairedUrl = URL.createObjectURL(repairedFile);
+    repairedPreviewUrlsRef.current.set(normalizedUrl, repairedUrl);
+    return repairedUrl;
   };
 
   const uploadPostMedia = async (file: File) => {
@@ -1415,6 +1486,7 @@ export default function AdminStoreEditPage() {
                               videoClassName="object-contain"
                               controls
                               muted
+                              onRepairSource={repairVideoPreviewSource}
                             />
                           )}
                           {post.media_urls?.length > 1 && (
