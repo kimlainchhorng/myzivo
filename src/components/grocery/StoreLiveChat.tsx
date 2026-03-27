@@ -612,8 +612,89 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                   <div ref={messagesEndRef} />
                 </div>
 
+                {/* Admin action buttons */}
+                {isAdmin && chatId && (
+                  <div className="px-4 pt-2 flex items-center gap-2 border-t border-border/10">
+                    <button
+                      onClick={async () => {
+                        const { data: store } = await supabase
+                          .from("store_profiles")
+                          .select("address, latitude, longitude")
+                          .eq("id", storeId)
+                          .single();
+                        if (!store?.address) { toast.error("Store address not set"); return; }
+                        const content = wrapRich({
+                          type: "location",
+                          address: store.address,
+                          lat: store.latitude || 0,
+                          lng: store.longitude || 0,
+                        });
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (!user) return;
+                        await supabase.from("store_chat_messages").insert({
+                          chat_id: chatId, sender_id: user.id, sender_type: "store", content,
+                        });
+                      }}
+                      className="flex items-center gap-1.5 px-3 h-8 rounded-full bg-accent/60 text-accent-foreground text-[11px] font-medium hover:bg-accent transition-colors"
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                      Location
+                    </button>
+                    <button
+                      onClick={() => {
+                        const url = prompt("Paste your payment link or URL:");
+                        if (!url?.trim()) return;
+                        const amount = prompt("Amount (optional):");
+                        const note = prompt("Note (optional):");
+                        const sendQR = async () => {
+                          const content = wrapRich({
+                            type: "payment_qr",
+                            paymentUrl: url.trim(),
+                            amount: amount?.trim() || undefined,
+                            note: note?.trim() || undefined,
+                          });
+                          const { data: { user } } = await supabase.auth.getUser();
+                          if (!user) return;
+                          await supabase.from("store_chat_messages").insert({
+                            chat_id: chatId, sender_id: user.id, sender_type: "store", content,
+                          });
+                        };
+                        sendQR();
+                      }}
+                      className="flex items-center gap-1.5 px-3 h-8 rounded-full bg-accent/60 text-accent-foreground text-[11px] font-medium hover:bg-accent transition-colors"
+                    >
+                      <QrCode className="h-3.5 w-3.5" />
+                      Payment
+                    </button>
+                    <button
+                      onClick={() => {
+                        const orderId = prompt("Enter order ID to share tracking:");
+                        if (!orderId?.trim()) return;
+                        const status = prompt("Current status (e.g. preparing, on the way, delivered):") || "preparing";
+                        const sendTracking = async () => {
+                          const content = wrapRich({
+                            type: "tracking",
+                            orderId: orderId.trim(),
+                            status: status.trim(),
+                          });
+                          const { data: { user } } = await supabase.auth.getUser();
+                          if (!user) return;
+                          await supabase.from("store_chat_messages").insert({
+                            chat_id: chatId, sender_id: user.id, sender_type: "store", content,
+                          });
+                        };
+                        sendTracking();
+                      }}
+                      className="flex items-center gap-1.5 px-3 h-8 rounded-full bg-accent/60 text-accent-foreground text-[11px] font-medium hover:bg-accent transition-colors"
+                    >
+                      <Truck className="h-3.5 w-3.5" />
+                      Tracking
+                    </button>
+                  </div>
+                )}
+
                 {/* Input */}
-                <div className="px-4 py-3 border-t border-border/30 shrink-0 pb-safe">
+                <div className="px-4 py-3 shrink-0 pb-safe">
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
