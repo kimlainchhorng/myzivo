@@ -52,7 +52,7 @@ export default function PartnerLogin() {
 
   const form = useForm<PartnerLoginData>({
     resolver: zodResolver(partnerLoginSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: "", password: "", store_id: "" },
   });
 
   const onSubmit = async (data: PartnerLoginData) => {
