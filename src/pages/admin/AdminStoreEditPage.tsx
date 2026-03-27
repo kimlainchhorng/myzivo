@@ -429,7 +429,12 @@ export default function AdminStoreEditPage() {
     market: "", category: "", address: "", phone: "", hours: "",
     rating: 0, delivery_min: 0, is_active: true, khr_rate: 4062.5,
     latitude: null as number | null, longitude: null as number | null,
+    banner_position: 50,
   });
+  const [isRepositioning, setIsRepositioning] = useState(false);
+  const [dragStartY, setDragStartY] = useState<number | null>(null);
+  const [dragStartPos, setDragStartPos] = useState(50);
+  const coverContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (store) {
@@ -439,6 +444,7 @@ export default function AdminStoreEditPage() {
         description: store.description || "",
         logo_url: store.logo_url || "",
         banner_url: store.banner_url || "",
+        banner_position: (store as any).banner_position ?? 50,
         market: store.market || "",
         category: store.category || "",
         address: store.address || "",
