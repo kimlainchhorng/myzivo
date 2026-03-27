@@ -466,16 +466,24 @@ export default function StoreProfilePage() {
                     className="grid grid-cols-2 gap-2"
                   >
                     {catProducts.map((product, i) => {
-                      const cartItem = cart.items.find((c) => c.productId === product.id);
-                      const khrPrice = ((product as any).price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050)));
-                      const isLiked = likedProducts.has(product.id);
                       const p = product as any;
+                      const sizeVariants: { size: string; price_khr: number; price_usd: number }[] = (p.size_variants || []);
+                      const hasSizes = sizeVariants.length > 0;
+                      const selectedIdx = selectedSizes[product.id] ?? 0;
+                      const activeVariant = hasSizes ? sizeVariants[selectedIdx] : null;
+                      const activePrice = activeVariant ? activeVariant.price_usd : product.price;
+                      const activeKhr = activeVariant ? activeVariant.price_khr : ((p.price_khr || Math.round(product.price * ((store as any)?.khr_rate || 4050))));
+                      const cartKey = hasSizes && activeVariant ? `${product.id}__${activeVariant.size}` : product.id;
+                      const cartItem = cart.items.find((c) => c.productId === cartKey);
+                      const khrPrice = activeKhr;
+                      const isLiked = likedProducts.has(product.id);
                       const hasBogo = p.discount_type === "bogo" && (p.buy_quantity || 0) >= 1 && (p.get_quantity || 0) >= 1
                         && (!p.discount_expires_at || new Date(p.discount_expires_at) > new Date());
                       const hasDiscount = !hasBogo && p.discount_type && p.discount_value > 0 && p.discount_price_khr != null
                         && (!p.discount_expires_at || new Date(p.discount_expires_at) > new Date());
                       const discountKhr = hasDiscount ? p.discount_price_khr : null;
                       const discountUsd = hasDiscount ? parseFloat((discountKhr / ((store as any)?.khr_rate || 4050)).toFixed(2)) : null;
+                      const discountPct = hasDiscount && p.discount_type === "percentage" ? p.discount_value : null;
                       const discountPct = hasDiscount && p.discount_type === "percentage" ? p.discount_value : null;
                       return (
                 <motion.div
