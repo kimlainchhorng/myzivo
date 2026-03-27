@@ -441,6 +441,7 @@ export default function AdminStoreEditPage() {
         "-profile:v", "baseline",
         "-level", "3.0",
         "-c:a", "aac",
+        "-profile:a", "aac_low",
         "-b:a", "128k",
         "-ar", "44100",
         "-ac", "2",
@@ -469,9 +470,6 @@ export default function AdminStoreEditPage() {
   };
 
   const normalizeVideoUpload = async (file: File) => {
-    const isPlayable = await probeVideoFile(file);
-    if (isPlayable) return file;
-
     toast.info("Optimizing video for browser playback...");
     const normalizedFile = await transcodeVideoForBrowser(file);
     const normalizedIsPlayable = await probeVideoFile(normalizedFile);
