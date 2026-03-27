@@ -366,6 +366,7 @@ const emptyProduct = {
 export default function AdminStoreEditPage() {
   const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const { currentLanguage, changeLanguage, t } = useI18n();
   const { data: supportedLanguages } = useSupportedLanguages(true);
