@@ -2593,5 +2593,4 @@ export default function AdminStoreEditPage() {
     )}
     </>
   );
-  );
 }
