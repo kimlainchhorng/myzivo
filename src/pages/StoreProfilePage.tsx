@@ -52,6 +52,7 @@ export default function StoreProfilePage() {
   const [showCart, setShowCart] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
+  const [chatOpen, setChatOpen] = useState(false);
   // Track selected size per product: productId -> variant index
   const [selectedSizes, setSelectedSizes] = useState<Record<string, number>>({});
   const { t } = useI18n();
