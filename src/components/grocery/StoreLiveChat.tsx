@@ -4,8 +4,9 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, MessageCircle, Loader2, Trash2, ChevronLeft, User } from "lucide-react";
+import { X, Send, MessageCircle, Loader2, Trash2, ChevronLeft, User, MapPin, QrCode, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 
 interface StoreLiveChatProps {
