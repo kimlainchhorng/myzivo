@@ -1027,6 +1027,7 @@ export default function AdminStoreEditPage() {
       return keepOpen;
     },
     onSuccess: (keepOpen) => {
+      clearProductDraft();
       queryClient.invalidateQueries({ queryKey: ["admin-store-products", storeId] });
       if (keepOpen) {
         toast.success("Saved");
