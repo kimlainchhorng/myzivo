@@ -459,13 +459,16 @@ export default function StoreProfilePage() {
                       <div className="flex-1 h-px bg-border/30 ml-1" />
                     </div>
                   )}
-                  <motion.div
-                    variants={container}
-                    initial="hidden"
-                    animate="show"
-                    className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+                  <div
+                    className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3"
                     style={{ WebkitOverflowScrolling: "touch" }}
                   >
+                    <motion.div
+                      variants={container}
+                      initial="hidden"
+                      animate="show"
+                      className="flex gap-3"
+                    >
                     {catProducts.map((product, i) => {
                       const p = product as any;
                       const sizeVariants: { size: string; price_khr: number; price_usd: number }[] = (p.size_variants || []);
