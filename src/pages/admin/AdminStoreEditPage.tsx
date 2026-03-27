@@ -28,6 +28,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet } from "lucide-react";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
+import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
+import StoreMarketingSection from "@/components/admin/StoreMarketingSection";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
