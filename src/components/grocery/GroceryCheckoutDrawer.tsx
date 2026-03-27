@@ -303,10 +303,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
               </motion.div>
               <div>
                 <h2 className="text-lg font-bold tracking-tight">
-                  {step === 1 ? "Delivery Details" : "Review & Pay"}
+                  {step === 1 ? t("grocery.checkout.delivery_details") : t("grocery.checkout.review_pay")}
                 </h2>
                 <p className="text-[11px] text-muted-foreground">
-                  Step {step} of 2 · {itemCount} items from {storeName}
+                  {t("grocery.checkout.step_of")} {step} / 2 · {itemCount} {t("grocery.checkout.items_from")} {storeName}
                 </p>
               </div>
             </div>
@@ -342,12 +342,12 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   </div>
                   <div className="flex-1">
                     <p className="text-[12px] font-bold text-foreground">
-                      Estimated delivery:{" "}
+                      {t("grocery.checkout.estimated_delivery")}:{" "}
                       <motion.span key={liveEta} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-primary">
-                        {liveEta}–{liveEta + 15} min
+                        {liveEta}–{liveEta + 15} {t("grocery.checkout.min")}
                       </motion.span>
                     </p>
-                    <p className="text-[10px] text-muted-foreground">A ZIVO driver will shop & deliver your items</p>
+                    <p className="text-[10px] text-muted-foreground">{t("grocery.checkout.driver_will_shop")}</p>
                   </div>
                 </div>
 
@@ -360,7 +360,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   >
                     <CheckCircle className="h-3 w-3 text-emerald-500" />
                     <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                      Address auto-filled from your saved location
+                      {t("grocery.checkout.address_autofilled")}
                     </span>
                   </motion.div>
                 )}
@@ -368,7 +368,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 {/* Contact info */}
                 <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
                   <User className="h-3.5 w-3.5 text-primary" />
-                  Contact Information
+                  {t("grocery.checkout.contact_info")}
                 </h3>
                 <div className="space-y-2.5 mb-4">
                   <div className="relative">
@@ -376,7 +376,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     <Input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Full name *"
+                      placeholder={t("grocery.checkout.full_name")}
                       className="pl-10 rounded-xl h-11 bg-muted/15 border-border/15 text-[13px] focus:bg-muted/25 transition-colors"
                     />
                   </div>
@@ -385,7 +385,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     <Input
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="Phone (optional)"
+                      placeholder={t("grocery.checkout.phone_optional")}
                       className="pl-10 rounded-xl h-11 bg-muted/15 border-border/15 text-[13px] focus:bg-muted/25 transition-colors"
                       type="tel"
                     />
@@ -395,7 +395,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 {/* Delivery address */}
                 <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
                   <MapPin className="h-3.5 w-3.5 text-primary" />
-                  Delivery Address
+                  {t("grocery.checkout.delivery_address")}
                 </h3>
                 <div className="relative mb-4">
                   <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 z-10" />
@@ -404,7 +404,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     onChange={(e) => searchAddressAutocomplete(e.target.value)}
                     onFocus={() => addressSuggestions.length > 0 && setShowAddrSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowAddrSuggestions(false), 200)}
-                    placeholder="Search delivery address *"
+                    placeholder={t("grocery.checkout.search_address")}
                     className="pl-10 rounded-xl h-11 bg-muted/15 border-border/15 text-[13px] focus:bg-muted/25 transition-colors"
                   />
                   {isSearchingAddr && (
@@ -441,7 +441,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 {/* Delivery preferences */}
                 <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
                   <Package className="h-3.5 w-3.5 text-primary" />
-                  Delivery Preferences
+                  {t("grocery.checkout.delivery_preferences")}
                 </h3>
 
                 <motion.button
@@ -457,13 +457,13 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     {leaveAtDoor && <CheckCircle className="h-3 w-3 text-primary-foreground" />}
                   </div>
                   <DoorOpen className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[12px] font-medium">Leave at my door</span>
+                  <span className="text-[12px] font-medium">{t("grocery.checkout.leave_at_door")}</span>
                 </motion.button>
 
                 <Textarea
                   value={deliveryNote}
                   onChange={(e) => setDeliveryNote(e.target.value)}
-                  placeholder="Delivery instructions (e.g., gate code, apartment #)"
+                  placeholder={t("grocery.checkout.delivery_instructions")}
                   className="rounded-xl bg-muted/15 border-border/15 text-[12px] min-h-[60px] resize-none focus:bg-muted/25 transition-colors mb-4"
                   rows={2}
                 />
@@ -471,7 +471,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 {/* Substitution preference */}
                 <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
                   <RefreshCw className="h-3.5 w-3.5 text-primary" />
-                  If an item is unavailable
+                  {t("grocery.checkout.if_unavailable")}
                 </h3>
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   {SUB_OPTIONS.map((opt) => (
