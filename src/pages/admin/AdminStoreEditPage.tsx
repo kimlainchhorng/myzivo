@@ -36,7 +36,7 @@ import abaLogo from "@/assets/payments/aba-logo.png";
 import abaBanner from "@/assets/payments/aba-banner.jpg";
 import wingLogo from "@/assets/payments/wing-logo.png";
 import wingBanner from "@/assets/payments/wing-banner.jpg";
-import acledaLogo from "@/assets/payments/acleda-logo.png";
+import acledaLogo from "@/assets/payments/acleda-logo.webp";
 function normalizeLocalizedNumberInput(value: string): string {
   const khmerToLatin: Record<string, string> = {
     "០": "0", "១": "1", "២": "2", "៣": "3", "៤": "4",
