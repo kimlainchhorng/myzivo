@@ -23,7 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw } from "lucide-react";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
@@ -189,6 +189,7 @@ export default function AdminStoreEditPage() {
   const [postMediaItems, setPostMediaItems] = useState<Array<{ id: string; previewUrl: string; uploadedUrl?: string; isVideo: boolean; isUploading: boolean }>>([]);
   const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const [reprocessingPostId, setReprocessingPostId] = useState<string | null>(null);
   const [postMediaMode, setPostMediaMode] = useState<"image" | "video">("image");
   const postMediaInputRef = useRef<HTMLInputElement>(null);
   const ffmpegRef = useRef<FFmpeg | null>(null);
