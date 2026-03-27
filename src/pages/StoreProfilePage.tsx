@@ -150,6 +150,7 @@ export default function StoreProfilePage() {
                 src={coverUrl}
                 alt={`${store.name} cover`}
                 className="w-full h-full object-cover"
+                style={{ objectPosition: `center ${(store as any).banner_position ?? 50}%` }}
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/10 to-sky-500/15" />
