@@ -51,19 +51,22 @@ export default function StoreProfilePage() {
   const [showCart, setShowCart] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
+  // Track selected size per product: productId -> variant index
+  const [selectedSizes, setSelectedSizes] = useState<Record<string, number>>({});
   const { t } = useI18n();
 
   const { data: store, isLoading: loadingStore } = useStoreProfile(slug || "");
   const { data: products = [], isLoading: loadingProducts } = useStoreProducts(store?.id, selectedCategory);
   const { data: categories = [] } = useStoreProductCategories(store?.id);
 
-  const handleAddToCart = (product: StoreProductItem) => {
+  const handleAddToCart = (product: StoreProductItem, sizeVariant?: { size: string; price_khr: number; price_usd: number }) => {
     cart.addItem({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
+      productId: sizeVariant ? `${product.id}__${sizeVariant.size}` : product.id,
+      name: sizeVariant ? `${product.name} (${sizeVariant.size})` : product.name,
+      price: sizeVariant ? sizeVariant.price_usd : product.price,
       image: product.image_url || "",
       brand: product.brand || "",
+      sizeLabel: sizeVariant?.size,
     }, store?.name || "Store");
     toast.success(t("store.added_to_cart"), { icon: "🛒" });
   };
