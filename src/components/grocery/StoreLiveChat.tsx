@@ -46,7 +46,10 @@ type RichPayload =
 
 function parseRichContent(content: string): RichPayload | null {
   try {
-    const parsed = JSON.parse(content);
+    const trimmed = content.trim();
+    let parsed = JSON.parse(trimmed);
+    // Handle double-encoded JSON strings
+    if (typeof parsed === "string") parsed = JSON.parse(parsed);
     if (parsed && parsed.__rich && parsed.payload) return parsed.payload as RichPayload;
   } catch {}
   return null;
