@@ -168,7 +168,7 @@ export default function StoreSetup() {
       }
 
       // Save payment methods if provided
-      if (abaAccount || wingAccount) {
+      if (abaAccount || wingAccount || acledaAccount) {
         const payments = [];
         if (abaAccount) {
           payments.push({
@@ -186,6 +186,16 @@ export default function StoreSetup() {
             provider: "wing",
             account_number: wingAccount,
             account_holder_name: wingHolder,
+            is_enabled: true,
+            qr_code_url: "",
+          });
+        }
+        if (acledaAccount) {
+          payments.push({
+            store_id: storeId!,
+            provider: "acleda",
+            account_number: acledaAccount,
+            account_holder_name: acledaHolder,
             is_enabled: true,
             qr_code_url: "",
           });
