@@ -122,7 +122,9 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
         throw new Error("Failed to build compatible video.");
       }
 
-      const objectUrl = URL.createObjectURL(new Blob([data], { type: "video/mp4" }));
+      const blobBytes = new Uint8Array(data.byteLength);
+      blobBytes.set(data);
+      const objectUrl = URL.createObjectURL(new Blob([blobBytes.buffer], { type: "video/mp4" }));
       compatibilityCacheRef.current.set(sourceUrl, objectUrl);
       return objectUrl;
     } finally {
