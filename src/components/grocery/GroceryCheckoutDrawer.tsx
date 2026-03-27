@@ -28,6 +28,7 @@ import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useI18n } from "@/hooks/useI18n";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import { CheckoutPinMap } from "@/components/grocery/CheckoutPinMap";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
