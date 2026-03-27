@@ -1141,8 +1141,9 @@ export default function AdminStoreEditPage() {
     }
   };
 
+  const storeOwnerTitle = activeTab === "products" ? "Products" : activeTab === "payment" ? "Payment" : `Edit: ${store?.name || "Store"}`;
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
-    <StoreOwnerLayout title={title} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
+    <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
   );
 
   if (isLoading) {
