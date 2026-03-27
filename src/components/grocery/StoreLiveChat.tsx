@@ -227,8 +227,17 @@ function AdminChatList({
                 </button>
               </div>
             </div>
-          ))
+        ))
         )}
+        <ConfirmDialog
+          open={!!deleteConfirmId}
+          message="Delete this chat? This cannot be undone."
+          onCancel={() => setDeleteConfirmId(null)}
+          onConfirm={() => {
+            if (deleteConfirmId) onDeleteChat(deleteConfirmId);
+            setDeleteConfirmId(null);
+          }}
+        />
       </div>
     </>
   );
