@@ -1246,6 +1246,7 @@ export default function AdminStoreEditPage() {
           </div>
         </div>
 
+        {(isAdmin || activeTab === "profile") && (<>
         <Card className="overflow-hidden">
           <div
             ref={coverContainerRef}
