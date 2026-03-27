@@ -689,29 +689,29 @@ export default function StoreProfilePage() {
                       )}
                     </p>
 
-                    {/* Size selector */}
-                    {hasSizes && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {sizeVariants.map((sv, sIdx) => (
-                          <button
-                            key={sv.size}
-                            onClick={(e) => { e.stopPropagation(); setSelectedSizes(prev => ({ ...prev, [product.id]: sIdx })); }}
-                            className={cn(
-                              "px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all",
-                              selectedIdx === sIdx
-                                ? "bg-primary/15 border-primary/40 text-primary"
-                                : "bg-muted/20 border-border/30 text-muted-foreground hover:border-primary/20"
-                            )}
-                          >
-                            {sv.size}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Price row */}
-                    <div className="flex items-end justify-between">
-                      <div>
+                    {/* Size selector + Price row */}
+                    <div className="flex items-end justify-between gap-1 mt-0.5">
+                      <div className="min-w-0 flex-1">
+                        {/* Size pills */}
+                        {hasSizes && (
+                          <div className="flex flex-wrap gap-1 mb-1">
+                            {sizeVariants.map((sv, sIdx) => (
+                              <button
+                                key={sv.size}
+                                onClick={(e) => { e.stopPropagation(); setSelectedSizes(prev => ({ ...prev, [product.id]: sIdx })); }}
+                                className={cn(
+                                  "h-5 px-2 rounded-md text-[9px] font-extrabold tracking-wide border transition-all",
+                                  selectedIdx === sIdx
+                                    ? "bg-primary/15 border-primary/30 text-primary shadow-sm shadow-primary/10"
+                                    : "bg-muted/10 border-border/20 text-muted-foreground/60 hover:border-primary/20"
+                                )}
+                              >
+                                {sv.size}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {/* Price */}
                         {hasDiscount && !hasSizes ? (
                           <>
                             <span className="text-base font-black text-destructive tracking-tight leading-none block">
@@ -731,22 +731,21 @@ export default function StoreProfilePage() {
                             <span className="text-base font-black text-foreground tracking-tight leading-none block">
                               ៛{khrPrice.toLocaleString()}
                             </span>
-                            <span className="text-[11px] font-medium text-muted-foreground/60 block mt-0.5">
+                            <span className="text-[10px] font-medium text-muted-foreground/50 block mt-0.5">
                               ${activePrice.toFixed(2)}
                             </span>
                           </>
                         )}
                       </div>
                       
-                      {/* Add button - 3D floating */}
+                      {/* Add button */}
                       {!cartItem && product.in_stock && (
                         <motion.button
                           whileTap={{ scale: 0.75, rotate: -15 }}
                           whileHover={{ scale: 1.1, y: -2 }}
                           onClick={(e) => { e.stopPropagation(); handleAddToCart(product, activeVariant || undefined); }}
-                          className="h-9 w-9 rounded-[14px] bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-xl shadow-primary/30 border border-primary/30 relative overflow-hidden"
+                          className="h-9 w-9 shrink-0 rounded-[14px] bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-xl shadow-primary/30 border border-primary/30 relative overflow-hidden"
                         >
-                          {/* Button shine */}
                           <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent" />
                           <Plus className="h-4 w-4 text-primary-foreground relative z-10" />
                         </motion.button>
