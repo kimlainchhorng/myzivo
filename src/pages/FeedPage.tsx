@@ -3,14 +3,10 @@
  * Customers can browse content posted by stores
  */
 import { useQuery } from "@tanstack/react-query";
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile } from "@ffmpeg/util";
-import ffmpegCoreUrl from "@ffmpeg/core?url";
-import ffmpegWasmUrl from "@ffmpeg/core/wasm?url";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { Loader2, Heart, MessageCircle, Share2, Store, Play } from "lucide-react";
+import { Loader2, Heart, MessageCircle, Share2, Store, Play, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -44,13 +40,8 @@ function timeAgo(dateStr: string): string {
 function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const ffmpegRef = useRef<FFmpeg | null>(null);
-  const ffmpegLoadPromiseRef = useRef<Promise<FFmpeg> | null>(null);
-  const compatibilityCacheRef = useRef<Map<string, string>>(new Map());
-  const pendingPlayRef = useRef(false);
-  const [resolvedVideoSrc, setResolvedVideoSrc] = useState(urls[0] ?? "");
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isPreparingFallback, setIsPreparingFallback] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
 
@@ -67,74 +58,6 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     }
   };
 
-  const ensureFFmpegLoaded = async () => {
-    if (ffmpegRef.current) return ffmpegRef.current;
-
-    if (!ffmpegLoadPromiseRef.current) {
-      ffmpegLoadPromiseRef.current = (async () => {
-        const ffmpeg = new FFmpeg();
-        await ffmpeg.load({
-          coreURL: ffmpegCoreUrl,
-          wasmURL: ffmpegWasmUrl,
-        });
-        ffmpegRef.current = ffmpeg;
-        return ffmpeg;
-      })().catch((error) => {
-        ffmpegLoadPromiseRef.current = null;
-        throw error;
-      });
-    }
-
-    return ffmpegLoadPromiseRef.current;
-  };
-
-  const createCompatibilitySrc = async (sourceUrl: string) => {
-    const cached = compatibilityCacheRef.current.get(sourceUrl);
-    if (cached) return cached;
-
-    const ffmpeg = await ensureFFmpegLoaded();
-    const response = await fetch(sourceUrl);
-    if (!response.ok) {
-      throw new Error("Unable to fetch video for compatibility playback.");
-    }
-
-    const inputName = `feed-video-${activeIndex}.mp4`;
-    const outputName = `feed-video-${activeIndex}-compat.mp4`;
-
-    await ffmpeg.writeFile(inputName, await fetchFile(await response.blob()));
-
-    try {
-      await ffmpeg.exec([
-        "-i", inputName,
-        "-movflags", "+faststart",
-        "-pix_fmt", "yuv420p",
-        "-c:v", "libx264",
-        "-preset", "veryfast",
-        "-profile:v", "baseline",
-        "-level", "3.0",
-        "-an",
-        "-y",
-        outputName,
-      ]);
-
-      const data = await ffmpeg.readFile(outputName);
-      if (!(data instanceof Uint8Array)) {
-        throw new Error("Failed to build compatible video.");
-      }
-
-      const blobBytes = new Uint8Array(data.byteLength);
-      blobBytes.set(data);
-      const objectUrl = URL.createObjectURL(new Blob([blobBytes.buffer], { type: "video/mp4" }));
-      compatibilityCacheRef.current.set(sourceUrl, objectUrl);
-      return objectUrl;
-    } finally {
-      await Promise.allSettled([
-        ffmpeg.deleteFile(inputName),
-        ffmpeg.deleteFile(outputName),
-      ]);
-    }
-  };
-
   const playCurrentVideo = async () => {
     const video = videoRef.current;
     if (!video) return;
@@ -143,20 +66,9 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
 
     try {
       await video.play();
-      video.controls = false;
       setIsPlaying(true);
     } catch {
-      try {
-        setIsPreparingFallback(true);
-        pendingPlayRef.current = true;
-        const compatibleSrc = await createCompatibilitySrc(urls[activeIndex]);
-        setResolvedVideoSrc(compatibleSrc);
-      } catch {
-        video.controls = true;
-        setIsPlaying(false);
-      } finally {
-        setIsPreparingFallback(false);
-      }
+      setIsPlaying(false);
     }
   };
 
@@ -165,8 +77,16 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     if (!video) return;
 
     video.pause();
-    video.controls = true;
     setIsPlaying(false);
+  };
+
+  const toggleMute = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const nextMuted = !video.muted;
+    video.muted = nextMuted;
+    setIsMuted(nextMuted);
   };
 
   const toggleVideo = () => {
@@ -181,11 +101,8 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
   };
 
   useEffect(() => {
-    const nextSource = urls[activeIndex] ?? "";
-    setResolvedVideoSrc(compatibilityCacheRef.current.get(nextSource) ?? nextSource);
     setIsPlaying(false);
-    setIsPreparingFallback(false);
-    pendingPlayRef.current = false;
+    setIsMuted(true);
   }, [activeIndex, urls]);
 
   useEffect(() => {
@@ -193,66 +110,71 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     if (!video) return;
 
     video.pause();
-    video.controls = true;
     video.currentTime = 0;
+    video.muted = true;
     video.load();
-  }, [resolvedVideoSrc]);
+  }, [activeIndex, urls]);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !pendingPlayRef.current) return;
+    if (!video || !isVideo(urls[activeIndex])) return;
 
-    pendingPlayRef.current = false;
-    ensureVisibleFrame(video);
-    video.play().then(() => {
-      video.controls = false;
-      setIsPlaying(true);
-    }).catch(() => {
-      video.controls = true;
-      setIsPlaying(false);
-    });
-  }, [resolvedVideoSrc]);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          void playCurrentVideo();
+        } else {
+          pauseVideo();
+        }
+      },
+      { threshold: 0.65 }
+    );
 
-  useEffect(() => {
-    return () => {
-      compatibilityCacheRef.current.forEach((objectUrl) => URL.revokeObjectURL(objectUrl));
-      compatibilityCacheRef.current.clear();
-    };
-  }, []);
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [activeIndex, urls]);
 
   return (
     <div className="relative bg-muted">
-      <div className="aspect-square overflow-hidden">
+      <div className={cn("overflow-hidden bg-black", isVideo(urls[activeIndex]) ? "aspect-[9/16]" : "aspect-square")}>
         {isVideo(urls[activeIndex]) ? (
           <div className="relative w-full h-full">
             <video
-              key={resolvedVideoSrc}
+              key={urls[activeIndex]}
               ref={videoRef}
-              src={resolvedVideoSrc}
+              src={urls[activeIndex]}
               className="w-full h-full object-cover"
               playsInline
               loop
               muted
-              controls
-              preload="metadata"
+              autoPlay
+              preload="auto"
               onLoadedMetadata={(event) => {
-                event.currentTarget.controls = true;
+                event.currentTarget.muted = isMuted;
                 ensureVisibleFrame(event.currentTarget);
               }}
+              onCanPlay={(event) => {
+                ensureVisibleFrame(event.currentTarget);
+                void event.currentTarget.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+              }}
               onPlay={(event) => {
-                event.currentTarget.controls = false;
+                setIsMuted(event.currentTarget.muted);
                 setIsPlaying(true);
               }}
-              onPause={(event) => {
-                event.currentTarget.controls = true;
-                setIsPlaying(false);
-              }}
+              onPause={() => setIsPlaying(false)}
+              onError={() => setIsPlaying(false)}
             />
-            {!isPlaying && !isPreparingFallback && (
+            <button
+              type="button"
+              onClick={toggleVideo}
+              className="absolute inset-0 z-10"
+              aria-label={isPlaying ? "Pause video" : "Play video"}
+            />
+            {!isPlaying && (
               <button
                 type="button"
                 onClick={toggleVideo}
-                className="absolute inset-0 flex items-center justify-center bg-black/20"
+                className="absolute inset-0 z-20 flex items-center justify-center bg-black/20"
                 aria-label="Play video"
               >
                 <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
@@ -260,12 +182,14 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
                 </div>
               </button>
             )}
-            {isPreparingFallback && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/35 text-white">
-                <Loader2 className="h-8 w-8 animate-spin" />
-                <span className="text-sm font-medium">Preparing video…</span>
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={toggleMute}
+              className="absolute right-3 bottom-3 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur-sm"
+              aria-label={isMuted ? "Unmute video" : "Mute video"}
+            >
+              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </button>
           </div>
         ) : (
           <img
