@@ -799,8 +799,8 @@ export default function StoreProfilePage() {
                 </motion.div>
                     );
                     })}
-                  </motion.div>
-                </div>
+                    </motion.div>
+                  </div>
               );
             });
           })()
