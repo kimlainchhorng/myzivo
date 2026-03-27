@@ -382,7 +382,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 </div>
 
                 {/* Auto-filled address badge */}
-                {savedAddr && address === savedAddr.address && (
+                {address && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -391,6 +391,20 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     <CheckCircle className="h-3 w-3 text-emerald-500" />
                     <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                       {t("grocery.checkout.address_autofilled")}
+                    </span>
+                  </motion.div>
+                )}
+
+                {/* Profile auto-filled badge */}
+                {profileAutoFilled && userProfile?.full_name && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/15 w-fit mb-3"
+                  >
+                    <User className="h-3 w-3 text-blue-500" />
+                    <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
+                      {t("grocery.checkout.contact_autofilled") || "Contact auto-filled from your account"}
                     </span>
                   </motion.div>
                 )}
