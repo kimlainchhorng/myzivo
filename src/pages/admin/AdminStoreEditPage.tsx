@@ -485,6 +485,59 @@ export default function AdminStoreEditPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const reprocessPostVideo = async (post: any) => {
+    if (reprocessingPostId) return;
+    setReprocessingPostId(post.id);
+    try {
+      const videoUrls = (post.media_urls || []).filter((u: string) =>
+        /\.(mp4|mov|webm|avi|mkv)/i.test(u)
+      );
+      if (videoUrls.length === 0) {
+        toast.error("No video files found in this post");
+        return;
+      }
+
+      const newUrls: string[] = [];
+      for (const url of post.media_urls as string[]) {
+        if (!/\.(mp4|mov|webm|avi|mkv)/i.test(url)) {
+          newUrls.push(url);
+          continue;
+        }
+
+        toast.info("Downloading video for reprocessing...");
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error("Failed to download video");
+        const blob = await resp.blob();
+        const originalFile = new File([blob], "reprocess.mp4", { type: blob.type || "video/mp4" });
+
+        toast.info("Transcoding video...");
+        const transcodedFile = await transcodeVideoForBrowser(originalFile);
+
+        const path = `${storeId}/reprocessed-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`;
+        const { error: uploadError } = await supabase.storage
+          .from("store-posts")
+          .upload(path, transcodedFile, { contentType: "video/mp4", upsert: false });
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
+        newUrls.push(urlData.publicUrl);
+      }
+
+      const { error: updateError } = await supabase
+        .from("store_posts")
+        .update({ media_urls: newUrls } as any)
+        .eq("id", post.id);
+      if (updateError) throw updateError;
+
+      queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
+      toast.success("Video reprocessed successfully!");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to reprocess video");
+    } finally {
+      setReprocessingPostId(null);
+    }
+  };
+
   const uploadProductImage = async (file: File) => {
     const currentImages = productForm.image_urls || [];
     if (currentImages.length >= 8) {
