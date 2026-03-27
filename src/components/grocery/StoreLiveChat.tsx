@@ -38,7 +38,92 @@ interface ChatThread {
   unread_count?: number;
 }
 
-/* ─── Confirm dialog ─── */
+/* ─── Rich message types ─── */
+type RichPayload =
+  | { type: "location"; address: string; lat: number; lng: number }
+  | { type: "payment_qr"; amount?: string; note?: string; paymentUrl: string }
+  | { type: "tracking"; orderId: string; status: string };
+
+function parseRichContent(content: string): RichPayload | null {
+  try {
+    const parsed = JSON.parse(content);
+    if (parsed && parsed.__rich && parsed.payload) return parsed.payload as RichPayload;
+  } catch {}
+  return null;
+}
+
+function wrapRich(payload: RichPayload): string {
+  return JSON.stringify({ __rich: true, payload });
+}
+
+/* ─── Rich message card renderer ─── */
+function RichMessageCard({ payload, isOwn }: { payload: RichPayload; isOwn: boolean }) {
+  if (payload.type === "location") {
+    const mapUrl = `https://www.google.com/maps?q=${payload.lat},${payload.lng}`;
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5" />
+          <span className="text-xs font-semibold">Store Location</span>
+        </div>
+        <p className="text-[11px] leading-relaxed">{payload.address}</p>
+        <a
+          href={mapUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`inline-flex items-center gap-1 text-[11px] font-medium underline ${
+            isOwn ? "text-primary-foreground/80" : "text-primary"
+          }`}
+        >
+          Open in Maps →
+        </a>
+      </div>
+    );
+  }
+
+  if (payload.type === "payment_qr") {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <QrCode className="h-3.5 w-3.5" />
+          <span className="text-xs font-semibold">Payment QR</span>
+        </div>
+        {payload.note && <p className="text-[11px]">{payload.note}</p>}
+        {payload.amount && <p className="text-[12px] font-bold">{payload.amount}</p>}
+        <div className="bg-white rounded-lg p-2 inline-block">
+          <QRCodeSVG value={payload.paymentUrl} size={120} />
+        </div>
+        <a
+          href={payload.paymentUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`block text-[11px] font-medium underline ${
+            isOwn ? "text-primary-foreground/80" : "text-primary"
+          }`}
+        >
+          Open Payment Link →
+        </a>
+      </div>
+    );
+  }
+
+  if (payload.type === "tracking") {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Truck className="h-3.5 w-3.5" />
+          <span className="text-xs font-semibold">Delivery Tracking</span>
+        </div>
+        <p className="text-[11px]">Order: <span className="font-mono font-medium">{payload.orderId}</span></p>
+        <p className="text-[11px]">Status: <span className="font-semibold capitalize">{payload.status}</span></p>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+
 function ConfirmDialog({ open, message, onConfirm, onCancel }: { open: boolean; message: string; onConfirm: () => void; onCancel: () => void }) {
   if (!open) return null;
   return (
