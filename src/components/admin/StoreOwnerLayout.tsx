@@ -1,13 +1,13 @@
 /**
  * Store Owner Layout — Simplified sidebar for store owners (non-admin).
- * Shows only store-relevant navigation items.
+ * Shows Profile, Products, Payment as sidebar navigation.
  */
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  LogOut, ChevronLeft, Menu, Home, Store, Settings, 
-  BarChart3, Package, CreditCard, MessageCircle, Image
+  LogOut, ChevronLeft, Menu, Home, Store,
+  Package, CreditCard, MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,18 +20,20 @@ interface StoreOwnerLayoutProps {
   storeId?: string;
   storeName?: string;
   storeLogoUrl?: string;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
+  productCount?: number;
 }
 
-export default function StoreOwnerLayout({ children, title, storeId, storeName, storeLogoUrl }: StoreOwnerLayoutProps) {
+export default function StoreOwnerLayout({ children, title, storeId, storeName, storeLogoUrl, activeTab, onTabChange, productCount }: StoreOwnerLayoutProps) {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const storePath = storeId ? `/admin/stores/${storeId}` : "/store/setup";
-
   const navItems = [
-    { label: "My Store", icon: Store, path: storePath },
+    { id: "profile", label: "Profile", icon: Store },
+    { id: "products", label: `Products${productCount != null ? ` (${productCount})` : ""}`, icon: Package },
+    { id: "payment", label: "Payment", icon: CreditCard },
   ];
 
   return (
@@ -42,12 +44,10 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       </Helmet>
 
       <div className="min-h-screen bg-background flex">
-        {/* Mobile overlay */}
         {sidebarOpen && (
           <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
         )}
 
-        {/* Sidebar */}
         <aside className={cn(
           "fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-card border-r border-border flex flex-col transition-transform duration-300",
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
@@ -62,7 +62,12 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                   <Store className="w-4 h-4 text-primary" />
                 </div>
               )}
-              <span className="text-sm font-bold text-foreground truncate">{storeName || "My Store"}</span>
+              <div className="min-w-0">
+                <span className="text-sm font-bold text-foreground truncate block">{storeName || "My Store"}</span>
+                {storeId && (
+                  <span className="text-[10px] text-muted-foreground font-mono">CBD{storeId.replace(/-/g, '').slice(0, 8).toUpperCase()}</span>
+                )}
+              </div>
             </div>
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
               <ChevronLeft className="w-4 h-4" />
@@ -72,11 +77,11 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           {/* Nav */}
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.path || location.pathname.startsWith(item.path);
+              const isActive = activeTab === item.id;
               return (
                 <button
-                  key={item.path}
-                  onClick={() => { navigate(item.path); setSidebarOpen(false); }}
+                  key={item.id}
+                  onClick={() => { onTabChange?.(item.id); setSidebarOpen(false); }}
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
                     isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
