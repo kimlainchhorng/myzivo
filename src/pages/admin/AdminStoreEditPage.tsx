@@ -1768,7 +1768,7 @@ export default function AdminStoreEditPage() {
                 </div>
 
                 {/* ABA PayWay */}
-                <div className="rounded-xl border border-border p-4">
+                <div className="rounded-xl border border-border p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                       <Banknote className="h-5 w-5 text-blue-600" />
@@ -1778,6 +1778,58 @@ export default function AdminStoreEditPage() {
                       <p className="text-xs text-muted-foreground">Accept payments via ABA mobile & KHQR</p>
                     </div>
                     <Switch />
+                  </div>
+                  <div className="space-y-2 pt-1">
+                    <Input placeholder="ABA Account Number" className="text-sm" />
+                    <Input placeholder="Account Holder Name" className="text-sm" />
+                    <Button variant="outline" className="w-full gap-2 text-sm">
+                      <QrCode className="h-4 w-4" />
+                      Upload QR Code
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Wing */}
+                <div className="rounded-xl border border-border p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                      <Smartphone className="h-5 w-5 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">Wing</p>
+                      <p className="text-xs text-muted-foreground">Accept payments via Wing mobile wallet</p>
+                    </div>
+                    <Switch />
+                  </div>
+                  <div className="space-y-2 pt-1">
+                    <Input placeholder="Wing Account Number" className="text-sm" />
+                    <Input placeholder="Account Holder Name" className="text-sm" />
+                    <Button variant="outline" className="w-full gap-2 text-sm">
+                      <QrCode className="h-4 w-4" />
+                      Upload QR Code
+                    </Button>
+                  </div>
+                </div>
+
+                {/* ACLEDA */}
+                <div className="rounded-xl border border-border p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                      <Building2 className="h-5 w-5 text-yellow-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">ACLEDA Bank</p>
+                      <p className="text-xs text-muted-foreground">Accept payments via ACLEDA mobile & KHQR</p>
+                    </div>
+                    <Switch />
+                  </div>
+                  <div className="space-y-2 pt-1">
+                    <Input placeholder="ACLEDA Account Number" className="text-sm" />
+                    <Input placeholder="Account Holder Name" className="text-sm" />
+                    <Button variant="outline" className="w-full gap-2 text-sm">
+                      <QrCode className="h-4 w-4" />
+                      Upload QR Code
+                    </Button>
                   </div>
                 </div>
 
