@@ -73,16 +73,6 @@ function RichMessageCard({ payload, isOwn }: { payload: RichPayload; isOwn: bool
         <p className="text-[11px] leading-relaxed">{payload.address}</p>
         <div className="flex flex-col gap-1.5">
           <a
-            href={mapUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`inline-flex items-center gap-1 text-[11px] font-medium underline ${
-              isOwn ? "text-primary-foreground/80" : "text-primary"
-            }`}
-          >
-            Open in Maps →
-          </a>
-          <a
             href={rideUrl}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors w-fit ${
               isOwn
