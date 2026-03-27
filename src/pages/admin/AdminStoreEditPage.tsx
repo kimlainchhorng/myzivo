@@ -1478,6 +1478,7 @@ export default function AdminStoreEditPage() {
             </TabsList>
           )}
 
+          {(isAdmin || activeTab === "profile") && (
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-card">
             <span className="text-sm font-medium text-foreground whitespace-nowrap">៛ KHR Rate</span>
             <span className="text-xs text-muted-foreground whitespace-nowrap">1 USD =</span>
@@ -1492,6 +1493,7 @@ export default function AdminStoreEditPage() {
             />
             <span className="text-xs text-muted-foreground">KHR</span>
           </div>
+          )}
 
           <TabsContent value="profile">
             <Card>
