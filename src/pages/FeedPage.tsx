@@ -44,6 +44,8 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
   const [isMuted, setIsMuted] = useState(true);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
+  const [triedBlobFallback, setTriedBlobFallback] = useState(false);
+  const [blobSrc, setBlobSrc] = useState<string | null>(null);
 
   const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
 
@@ -124,11 +126,32 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     }
   };
 
+  // When the video element errors, try fetching as blob (bypasses some codec detection issues)
+  const tryBlobFallback = async (url: string) => {
+    if (triedBlobFallback) return;
+    setTriedBlobFallback(true);
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error("fetch failed");
+      const blob = await resp.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      setBlobSrc(objectUrl);
+      setHasPlaybackError(false);
+    } catch {
+      setHasPlaybackError(true);
+    }
+  };
+
   useEffect(() => {
     setIsPlaying(false);
     setIsMuted(true);
     setPosterUrl(null);
     setHasPlaybackError(false);
+    setTriedBlobFallback(false);
+    if (blobSrc) {
+      URL.revokeObjectURL(blobSrc);
+      setBlobSrc(null);
+    }
   }, [activeIndex, urls]);
 
   useEffect(() => {
@@ -147,9 +170,9 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
         {isVideo(urls[activeIndex]) ? (
           <div className="relative w-full h-full">
             <video
-              key={urls[activeIndex]}
+              key={blobSrc || urls[activeIndex]}
               ref={videoRef}
-              src={urls[activeIndex]}
+              src={blobSrc || urls[activeIndex]}
               poster={posterUrl ?? undefined}
               className="w-full h-full object-cover"
               playsInline
@@ -174,7 +197,11 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               onPause={() => setIsPlaying(false)}
               onError={() => {
                 setIsPlaying(false);
-                setHasPlaybackError(true);
+                if (!triedBlobFallback) {
+                  void tryBlobFallback(urls[activeIndex]);
+                } else {
+                  setHasPlaybackError(true);
+                }
               }}
             />
             <button
