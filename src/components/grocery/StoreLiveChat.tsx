@@ -413,7 +413,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
     ? (selectedChat.customer_name || selectedChat.customer_email || "Customer")
     : storeName;
   const chatSubtitle = isAdmin && selectedChat
-    ? selectedChat.customer_email
+    ? [selectedChat.customer_email, selectedChat.customer_phone].filter(Boolean).join(" · ")
     : "Live Chat";
 
   return (
