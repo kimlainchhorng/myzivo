@@ -525,14 +525,24 @@ export default function StoreProfilePage() {
                       </div>
                     )}
 
-                    {/* Like button */}
+                    {/* Like button - bottom right */}
                     <motion.button
                       whileTap={{ scale: 0.75 }}
                       onClick={(e) => { e.stopPropagation(); toggleLike(product.id); }}
-                      className="absolute top-2 left-2 h-7 w-7 rounded-full bg-background/50 backdrop-blur-xl flex items-center justify-center border border-white/10 z-20 shadow-sm"
+                      className="absolute bottom-2 right-2 h-7 w-7 rounded-full bg-background/50 backdrop-blur-xl flex items-center justify-center border border-white/10 z-20 shadow-sm"
                     >
                       <Heart className={cn("h-3 w-3 transition-colors", isLiked ? "fill-rose-500 text-rose-500" : "text-muted-foreground/60")} />
                     </motion.button>
+
+                    {/* Price overlay - top left */}
+                    <div className="absolute top-1.5 left-1.5 z-20 px-2 py-1 rounded-lg bg-background/70 backdrop-blur-xl border border-white/10 shadow-md">
+                      <span className="text-[13px] font-black text-foreground tracking-tight leading-none block">
+                        ៛{activeKhr.toLocaleString()}
+                      </span>
+                      <span className="text-[9px] font-bold text-muted-foreground leading-none">
+                        ${activePrice.toFixed(2)}
+                      </span>
+                    </div>
 
                     {/* Product badge */}
                     {(product as any).badge && (() => {
@@ -577,7 +587,7 @@ export default function StoreProfilePage() {
                           animate={{ scale: 1, rotate: 0 }}
                           exit={{ scale: 0, rotate: 30 }}
                           transition={{ type: "spring", stiffness: 400, damping: 18 }}
-                          className="absolute top-2 right-2 h-6 min-w-[24px] px-1.5 rounded-full bg-primary flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30 z-20"
+                          className="absolute bottom-2 left-2 h-6 min-w-[24px] px-1.5 rounded-full bg-primary flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30 z-20"
                         >
                           <span className="text-[9px] font-black text-primary-foreground">{cartItem.quantity}</span>
                         </motion.div>
