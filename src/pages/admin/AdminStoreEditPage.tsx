@@ -1194,35 +1194,101 @@ export default function AdminStoreEditPage() {
         </div>
 
         <Card className="overflow-hidden">
-          <div className="relative h-52 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10">
+          <div
+            ref={coverContainerRef}
+            className={cn("relative h-52 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10", isRepositioning && "cursor-grab active:cursor-grabbing")}
+            onMouseDown={isRepositioning ? (e) => { e.preventDefault(); setDragStartY(e.clientY); setDragStartPos(form.banner_position); } : undefined}
+            onMouseMove={isRepositioning && dragStartY !== null ? (e) => {
+              const containerH = coverContainerRef.current?.clientHeight || 208;
+              const deltaY = e.clientY - dragStartY;
+              const deltaPct = (deltaY / containerH) * 100;
+              const newPos = Math.max(0, Math.min(100, dragStartPos - deltaPct));
+              updateField("banner_position", Math.round(newPos));
+            } : undefined}
+            onMouseUp={isRepositioning ? () => setDragStartY(null) : undefined}
+            onMouseLeave={isRepositioning ? () => setDragStartY(null) : undefined}
+            onTouchStart={isRepositioning ? (e) => { setDragStartY(e.touches[0].clientY); setDragStartPos(form.banner_position); } : undefined}
+            onTouchMove={isRepositioning ? (e) => {
+              if (dragStartY === null) return;
+              const containerH = coverContainerRef.current?.clientHeight || 208;
+              const deltaY = e.touches[0].clientY - dragStartY;
+              const deltaPct = (deltaY / containerH) * 100;
+              const newPos = Math.max(0, Math.min(100, dragStartPos - deltaPct));
+              updateField("banner_position", Math.round(newPos));
+            } : undefined}
+            onTouchEnd={isRepositioning ? () => setDragStartY(null) : undefined}
+          >
             {form.banner_url && (
-              <img src={form.banner_url} alt="Banner" className="w-full h-full object-cover object-center" />
+              <img
+                src={form.banner_url}
+                alt="Banner"
+                className="w-full h-full object-cover select-none"
+                draggable={false}
+                style={{ objectPosition: `center ${form.banner_position}%` }}
+              />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent" />
-            <div className="absolute top-3 right-4">
-              <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "cover"); e.target.value = ""; }} />
-              <Button size="sm" variant="secondary" className="gap-1.5 bg-background/80 backdrop-blur-sm" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
-                {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} {t("admin.store.change_cover")}
-              </Button>
-            </div>
-            <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
-              <div className="flex items-end gap-3 min-w-0">
-                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "logo"); e.target.value = ""; }} />
-                <button
-                  type="button"
-                  onClick={() => logoInputRef.current?.click()}
-                  disabled={uploadingLogo}
-                  className="relative h-16 w-16 rounded-xl bg-background border-2 border-background shadow-lg overflow-hidden flex items-center justify-center shrink-0 group cursor-pointer hover:opacity-90 transition-opacity"
-                >
-                  {form.logo_url ? (
-                    <img src={form.logo_url} alt="Logo" className="h-full w-full object-cover" />
-                  ) : (
-                    <Store className="h-8 w-8 text-muted-foreground/30" />
+            {!isRepositioning && (
+              <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent" />
+            )}
+            {isRepositioning && (
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none">
+                <div className="bg-background/90 backdrop-blur-sm rounded-lg px-4 py-2 text-sm font-medium text-foreground shadow-lg flex items-center gap-2">
+                  <Move className="h-4 w-4" />
+                  Drag to reposition
+                </div>
+              </div>
+            )}
+            <div className="absolute top-3 right-4 flex items-center gap-2">
+              {isRepositioning ? (
+                <>
+                  <Button size="sm" variant="secondary" className="gap-1.5 bg-background/90 backdrop-blur-sm" onClick={async () => {
+                    setIsRepositioning(false);
+                    const { error } = await supabase.from("store_profiles").update({ banner_position: form.banner_position } as any).eq("id", storeId!);
+                    if (error) toast.error(error.message);
+                    else toast.success("Cover position saved");
+                  }}>
+                    <Check className="h-3.5 w-3.5" /> Save Position
+                  </Button>
+                  <Button size="sm" variant="ghost" className="bg-background/90 backdrop-blur-sm" onClick={() => {
+                    setIsRepositioning(false);
+                    updateField("banner_position", dragStartPos);
+                  }}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {form.banner_url && (
+                    <Button size="sm" variant="secondary" className="gap-1.5 bg-background/80 backdrop-blur-sm" onClick={() => { setIsRepositioning(true); setDragStartPos(form.banner_position); }}>
+                      <Move className="h-3.5 w-3.5" /> Reposition
+                    </Button>
                   )}
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">
-                    {uploadingLogo ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
-                  </div>
-                </button>
+                  <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "cover"); e.target.value = ""; }} />
+                  <Button size="sm" variant="secondary" className="gap-1.5 bg-background/80 backdrop-blur-sm" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                    {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} {t("admin.store.change_cover")}
+                  </Button>
+                </>
+              )}
+            </div>
+            {!isRepositioning && (
+              <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
+                <div className="flex items-end gap-3 min-w-0">
+                  <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "logo"); e.target.value = ""; }} />
+                  <button
+                    type="button"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={uploadingLogo}
+                    className="relative h-16 w-16 rounded-xl bg-background border-2 border-background shadow-lg overflow-hidden flex items-center justify-center shrink-0 group cursor-pointer hover:opacity-90 transition-opacity"
+                  >
+                    {form.logo_url ? (
+                      <img src={form.logo_url} alt="Logo" className="h-full w-full object-cover" />
+                    ) : (
+                      <Store className="h-8 w-8 text-muted-foreground/30" />
+                    )}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">
+                      {uploadingLogo ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
+                    </div>
+                  </button>
 ...
               </div>
             </div>
