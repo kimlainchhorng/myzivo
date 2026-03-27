@@ -37,6 +37,7 @@ import abaBanner from "@/assets/payments/aba-banner.jpg";
 import wingLogo from "@/assets/payments/wing-logo.png";
 import wingBanner from "@/assets/payments/wing-banner.jpg";
 import acledaLogo from "@/assets/payments/acleda-logo.webp";
+import acledaBanner from "@/assets/payments/acleda-banner.jpg";
 function normalizeLocalizedNumberInput(value: string): string {
   const khmerToLatin: Record<string, string> = {
     "០": "0", "១": "1", "២": "2", "៣": "3", "៤": "4",
@@ -1826,7 +1827,11 @@ export default function AdminStoreEditPage() {
                 </div>
 
                 {/* ACLEDA */}
-                <div className="rounded-xl border border-border p-4 space-y-3">
+                <div className="rounded-xl border border-border overflow-hidden space-y-0">
+                  <div className="relative h-24 w-full">
+                    <img src={acledaBanner} alt="ACLEDA Bank" className="h-full w-full object-cover" loading="lazy" />
+                  </div>
+                  <div className="p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center bg-muted">
                       <img src={acledaLogo} alt="ACLEDA" className="h-10 w-10 object-contain" loading="lazy" />
@@ -1844,6 +1849,7 @@ export default function AdminStoreEditPage() {
                       <QrCode className="h-4 w-4" />
                       Upload QR Code
                     </Button>
+                  </div>
                   </div>
                 </div>
 
