@@ -149,8 +149,8 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   // Platform markup: 0% for Cambodia, 3-5% elsewhere
   const platformMarkup = isCambodia ? 0 : calcMarkup(total);
   const markupPct = isCambodia ? 0 : getMarkupPct(total);
-  // Service fee: waived for ZIVO+ members
-  const serviceFee = isPlus ? 0 : calcServiceFee(total);
+  // Service fee: waived for Cambodia and ZIVO+ members
+  const serviceFee = isCambodia ? 0 : (isPlus ? 0 : calcServiceFee(total));
   const grandTotal = Math.max(0, total + platformMarkup + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
@@ -699,6 +699,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                       </span>
                       <span className="text-foreground font-medium tabular-nums">${deliveryFee.toFixed(2)}</span>
                     </div>
+                    {!isCambodia && (
                     <div className="flex justify-between text-[12px]">
                       <span className="text-muted-foreground flex items-center gap-1.5">
                         {t("grocery.checkout.service_fee") || "Service Fee"} ({SERVICE_FEE_PCT}%)
@@ -713,6 +714,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                         <span className="text-foreground font-medium tabular-nums">${serviceFee.toFixed(2)}</span>
                       )}
                     </div>
+                    )}
                     {priorityFee > 0 && (
                       <div className="flex justify-between text-[12px]">
                         <span className="text-muted-foreground flex items-center gap-1.5">⚡ {t("grocery.checkout.priority") || "Priority"}</span>
@@ -902,6 +904,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                       <span className="flex items-center gap-1.5"><Truck className="h-3 w-3" /> {isCambodia ? "Delivery" : "Delivery"} ({distanceLabel})</span>
                       <span className="text-foreground tabular-nums">${deliveryFee.toFixed(2)}</span>
                     </div>
+                    {!isCambodia && (
                     <div className="flex justify-between text-[12px] text-muted-foreground">
                       <span className="flex items-center gap-1.5">
                         Service fee ({SERVICE_FEE_PCT}%)
@@ -916,6 +919,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                         <span className="text-foreground tabular-nums">${serviceFee.toFixed(2)}</span>
                       )}
                     </div>
+                    )}
                     {priorityFee > 0 && (
                       <div className="flex justify-between text-[12px] text-muted-foreground">
                         <span className="flex items-center gap-1.5">⚡ Priority</span>
