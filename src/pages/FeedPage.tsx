@@ -178,7 +178,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               playsInline
               loop
               muted
-              preload="metadata"
+              preload="auto"
               onClick={toggleVideo}
               onLoadedMetadata={(event) => {
                 event.currentTarget.muted = isMuted;
