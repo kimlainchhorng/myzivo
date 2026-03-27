@@ -431,6 +431,7 @@ export default function AdminStoreEditPage() {
     rating: 0, delivery_min: 0, is_active: true, khr_rate: 4062.5,
     latitude: null as number | null, longitude: null as number | null,
     banner_position: 50,
+    facebook_url: "",
   });
   const [isRepositioning, setIsRepositioning] = useState(false);
   const [dragStartY, setDragStartY] = useState<number | null>(null);
@@ -457,6 +458,7 @@ export default function AdminStoreEditPage() {
         khr_rate: (store as any).khr_rate ?? 4062.5,
         latitude: (store as any).latitude ?? null,
         longitude: (store as any).longitude ?? null,
+        facebook_url: (store as any).facebook_url || "",
       });
     }
   }, [store]);
