@@ -405,6 +405,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
     }
   };
 
+  const [confirmDeleteInChat, setConfirmDeleteInChat] = useState(false);
   const showChatList = isAdmin && !selectedChat;
   const chatTitle = isAdmin && selectedChat
     ? (selectedChat.customer_name || selectedChat.customer_email || "Customer")
