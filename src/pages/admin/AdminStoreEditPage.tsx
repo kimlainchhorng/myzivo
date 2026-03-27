@@ -950,7 +950,19 @@ export default function AdminStoreEditPage() {
 
   const openAddProduct = () => {
     setEditingProduct(null);
-    setProductForm(emptyProduct);
+    // Restore draft if available
+    try {
+      const draft = localStorage.getItem(draftKey);
+      if (draft) {
+        const parsed = JSON.parse(draft);
+        setProductForm({ ...emptyProduct, ...parsed });
+        toast.info("Draft restored — continue where you left off");
+      } else {
+        setProductForm(emptyProduct);
+      }
+    } catch {
+      setProductForm(emptyProduct);
+    }
     setProductDialog(true);
   };
 
