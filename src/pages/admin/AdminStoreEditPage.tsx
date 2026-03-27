@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import abaLogo from "@/assets/payments/aba-logo.png";
 import abaBanner from "@/assets/payments/aba-banner.jpg";
 import wingLogo from "@/assets/payments/wing-logo.png";
+import wingBanner from "@/assets/payments/wing-banner.jpg";
 import acledaLogo from "@/assets/payments/acleda-logo.png";
 function normalizeLocalizedNumberInput(value: string): string {
   const khmerToLatin: Record<string, string> = {
@@ -1798,24 +1799,29 @@ export default function AdminStoreEditPage() {
                 </div>
 
                 {/* Wing */}
-                <div className="rounded-xl border border-border p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center bg-muted">
-                      <img src={wingLogo} alt="Wing" className="h-10 w-10 object-contain" loading="lazy" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">Wing</p>
-                      <p className="text-xs text-muted-foreground">Accept payments via Wing mobile wallet</p>
-                    </div>
-                    <Switch />
+                <div className="rounded-xl border border-border overflow-hidden space-y-0">
+                  <div className="relative h-24 w-full">
+                    <img src={wingBanner} alt="Wing Bank" className="h-full w-full object-cover" loading="lazy" />
                   </div>
-                  <div className="space-y-2 pt-1">
-                    <Input placeholder="Wing Account Number" className="text-sm" />
-                    <Input placeholder="Account Holder Name" className="text-sm" />
-                    <Button variant="outline" className="w-full gap-2 text-sm">
-                      <QrCode className="h-4 w-4" />
-                      Upload QR Code
-                    </Button>
+                  <div className="p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center">
+                        <img src={wingLogo} alt="Wing" className="h-full w-full object-cover" loading="lazy" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">Wing Bank</p>
+                        <p className="text-xs text-muted-foreground">Accept payments via Wing mobile wallet</p>
+                      </div>
+                      <Switch />
+                    </div>
+                    <div className="space-y-2 pt-1">
+                      <Input placeholder="Wing Account Number" className="text-sm" />
+                      <Input placeholder="Account Holder Name" className="text-sm" />
+                      <Button variant="outline" className="w-full gap-2 text-sm">
+                        <QrCode className="h-4 w-4" />
+                        Upload QR Code
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
