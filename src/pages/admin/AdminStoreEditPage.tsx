@@ -1289,9 +1289,9 @@ export default function AdminStoreEditPage() {
                       {uploadingLogo ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
                     </div>
                   </button>
-...
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </Card>
 
