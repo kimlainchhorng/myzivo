@@ -33,12 +33,7 @@ import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
-import abaLogo from "@/assets/payments/aba-logo.png";
-import abaBanner from "@/assets/payments/aba-banner.jpg";
-import wingLogo from "@/assets/payments/wing-logo.png";
-import wingBanner from "@/assets/payments/wing-banner.jpg";
-import acledaLogo from "@/assets/payments/acleda-logo.webp";
-import acledaBanner from "@/assets/payments/acleda-banner.jpg";
+
 function normalizeLocalizedNumberInput(value: string): string {
   const khmerToLatin: Record<string, string> = {
     "០": "0", "១": "1", "២": "2", "៣": "3", "៤": "4",
