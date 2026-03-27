@@ -86,6 +86,7 @@ function AdminChatList({
 }) {
   const [chats, setChats] = useState<ChatThread[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadChats = async () => {
