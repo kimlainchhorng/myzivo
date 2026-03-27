@@ -4,8 +4,9 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, MessageCircle, Loader2, Trash2, ChevronLeft, User } from "lucide-react";
+import { X, Send, MessageCircle, Loader2, Trash2, ChevronLeft, User, MapPin, QrCode, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 
 interface StoreLiveChatProps {
@@ -37,7 +38,92 @@ interface ChatThread {
   unread_count?: number;
 }
 
-/* ─── Confirm dialog ─── */
+/* ─── Rich message types ─── */
+type RichPayload =
+  | { type: "location"; address: string; lat: number; lng: number }
+  | { type: "payment_qr"; amount?: string; note?: string; paymentUrl: string }
+  | { type: "tracking"; orderId: string; status: string };
+
+function parseRichContent(content: string): RichPayload | null {
+  try {
+    const parsed = JSON.parse(content);
+    if (parsed && parsed.__rich && parsed.payload) return parsed.payload as RichPayload;
+  } catch {}
+  return null;
+}
+
+function wrapRich(payload: RichPayload): string {
+  return JSON.stringify({ __rich: true, payload });
+}
+
+/* ─── Rich message card renderer ─── */
+function RichMessageCard({ payload, isOwn }: { payload: RichPayload; isOwn: boolean }) {
+  if (payload.type === "location") {
+    const mapUrl = `https://www.google.com/maps?q=${payload.lat},${payload.lng}`;
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5" />
+          <span className="text-xs font-semibold">Store Location</span>
+        </div>
+        <p className="text-[11px] leading-relaxed">{payload.address}</p>
+        <a
+          href={mapUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`inline-flex items-center gap-1 text-[11px] font-medium underline ${
+            isOwn ? "text-primary-foreground/80" : "text-primary"
+          }`}
+        >
+          Open in Maps →
+        </a>
+      </div>
+    );
+  }
+
+  if (payload.type === "payment_qr") {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <QrCode className="h-3.5 w-3.5" />
+          <span className="text-xs font-semibold">Payment QR</span>
+        </div>
+        {payload.note && <p className="text-[11px]">{payload.note}</p>}
+        {payload.amount && <p className="text-[12px] font-bold">{payload.amount}</p>}
+        <div className="bg-white rounded-lg p-2 inline-block">
+          <QRCodeSVG value={payload.paymentUrl} size={120} />
+        </div>
+        <a
+          href={payload.paymentUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`block text-[11px] font-medium underline ${
+            isOwn ? "text-primary-foreground/80" : "text-primary"
+          }`}
+        >
+          Open Payment Link →
+        </a>
+      </div>
+    );
+  }
+
+  if (payload.type === "tracking") {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Truck className="h-3.5 w-3.5" />
+          <span className="text-xs font-semibold">Delivery Tracking</span>
+        </div>
+        <p className="text-[11px]">Order: <span className="font-mono font-medium">{payload.orderId}</span></p>
+        <p className="text-[11px]">Status: <span className="font-semibold capitalize">{payload.status}</span></p>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+
 function ConfirmDialog({ open, message, onConfirm, onCancel }: { open: boolean; message: string; onConfirm: () => void; onCancel: () => void }) {
   if (!open) return null;
   return (
@@ -498,16 +584,21 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                   ) : (
                     messages.map((msg) => {
                       const isOwn = isAdmin ? msg.sender_type === "store" : msg.sender_type === "customer";
+                      const richPayload = parseRichContent(msg.content);
                       return (
                         <div key={msg.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
                           <div
-                            className={`max-w-[75%] px-3 py-2 rounded-2xl text-[13px] ${
+                            className={`max-w-[80%] px-3 py-2 rounded-2xl text-[13px] ${
                               isOwn
                                 ? "bg-primary text-primary-foreground rounded-br-md"
                                 : "bg-muted text-foreground rounded-bl-md"
                             }`}
                           >
-                            {msg.content}
+                            {richPayload ? (
+                              <RichMessageCard payload={richPayload} isOwn={isOwn} />
+                            ) : (
+                              msg.content
+                            )}
                             <p className={`text-[9px] mt-1 ${
                               isOwn ? "text-primary-foreground/60" : "text-muted-foreground"
                             }`}>
@@ -521,8 +612,89 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                   <div ref={messagesEndRef} />
                 </div>
 
+                {/* Admin action buttons */}
+                {isAdmin && chatId && (
+                  <div className="px-4 pt-2 flex items-center gap-2 border-t border-border/10">
+                    <button
+                      onClick={async () => {
+                        const { data: store } = await supabase
+                          .from("store_profiles")
+                          .select("address, latitude, longitude")
+                          .eq("id", storeId)
+                          .single();
+                        if (!store?.address) { toast.error("Store address not set"); return; }
+                        const content = wrapRich({
+                          type: "location",
+                          address: store.address,
+                          lat: store.latitude || 0,
+                          lng: store.longitude || 0,
+                        });
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (!user) return;
+                        await supabase.from("store_chat_messages").insert({
+                          chat_id: chatId, sender_id: user.id, sender_type: "store", content,
+                        });
+                      }}
+                      className="flex items-center gap-1.5 px-3 h-8 rounded-full bg-accent/60 text-accent-foreground text-[11px] font-medium hover:bg-accent transition-colors"
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                      Location
+                    </button>
+                    <button
+                      onClick={() => {
+                        const url = prompt("Paste your payment link or URL:");
+                        if (!url?.trim()) return;
+                        const amount = prompt("Amount (optional):");
+                        const note = prompt("Note (optional):");
+                        const sendQR = async () => {
+                          const content = wrapRich({
+                            type: "payment_qr",
+                            paymentUrl: url.trim(),
+                            amount: amount?.trim() || undefined,
+                            note: note?.trim() || undefined,
+                          });
+                          const { data: { user } } = await supabase.auth.getUser();
+                          if (!user) return;
+                          await supabase.from("store_chat_messages").insert({
+                            chat_id: chatId, sender_id: user.id, sender_type: "store", content,
+                          });
+                        };
+                        sendQR();
+                      }}
+                      className="flex items-center gap-1.5 px-3 h-8 rounded-full bg-accent/60 text-accent-foreground text-[11px] font-medium hover:bg-accent transition-colors"
+                    >
+                      <QrCode className="h-3.5 w-3.5" />
+                      Payment
+                    </button>
+                    <button
+                      onClick={() => {
+                        const orderId = prompt("Enter order ID to share tracking:");
+                        if (!orderId?.trim()) return;
+                        const status = prompt("Current status (e.g. preparing, on the way, delivered):") || "preparing";
+                        const sendTracking = async () => {
+                          const content = wrapRich({
+                            type: "tracking",
+                            orderId: orderId.trim(),
+                            status: status.trim(),
+                          });
+                          const { data: { user } } = await supabase.auth.getUser();
+                          if (!user) return;
+                          await supabase.from("store_chat_messages").insert({
+                            chat_id: chatId, sender_id: user.id, sender_type: "store", content,
+                          });
+                        };
+                        sendTracking();
+                      }}
+                      className="flex items-center gap-1.5 px-3 h-8 rounded-full bg-accent/60 text-accent-foreground text-[11px] font-medium hover:bg-accent transition-colors"
+                    >
+                      <Truck className="h-3.5 w-3.5" />
+                      Tracking
+                    </button>
+                  </div>
+                )}
+
                 {/* Input */}
-                <div className="px-4 py-3 border-t border-border/30 shrink-0 pb-safe">
+                <div className="px-4 py-3 shrink-0 pb-safe">
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
