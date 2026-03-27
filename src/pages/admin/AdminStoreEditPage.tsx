@@ -377,6 +377,7 @@ export default function AdminStoreEditPage() {
   const [savedBrands, setSavedBrands] = useState<string[]>([]);
   const [savedCategories, setSavedCategories] = useState<string[]>([]);
   const [chatOpen, setChatOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
 
   const { data: store, isLoading } = useQuery({
     queryKey: ["admin-store", storeId],
