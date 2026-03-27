@@ -1256,9 +1256,25 @@ export default function AdminStoreEditPage() {
                           {post.caption && <p className="text-sm text-foreground line-clamp-2">{post.caption}</p>}
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] text-muted-foreground">{new Date(post.created_at).toLocaleDateString()}</span>
-                            <Button size="sm" variant="outline" className="h-7 text-destructive hover:text-destructive" onClick={() => setDeletePostId(post.id)}>
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs gap-1"
+                                disabled={reprocessingPostId === post.id}
+                                onClick={() => reprocessPostVideo(post)}
+                              >
+                                {reprocessingPostId === post.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="h-3 w-3" />
+                                )}
+                                {reprocessingPostId === post.id ? "Processing..." : "Reprocess"}
+                              </Button>
+                              <Button size="sm" variant="outline" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => setDeletePostId(post.id)}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
