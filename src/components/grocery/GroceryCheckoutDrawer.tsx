@@ -67,6 +67,8 @@ function getSavedProfile(): { name: string; phone: string; subPref: Substitution
 
 export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity }: GroceryCheckoutDrawerProps) {
   const { t } = useI18n();
+  const { data: userProfile } = useUserProfile();
+  const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
   const savedAddr = getSavedAddress();
   const savedProfile = getSavedProfile();
 
@@ -77,6 +79,32 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const addrDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const [name, setName] = useState(savedProfile.name);
   const [phone, setPhone] = useState(savedProfile.phone);
+  const [gpsAutoFilled, setGpsAutoFilled] = useState(false);
+  const [profileAutoFilled, setProfileAutoFilled] = useState(false);
+
+  // Auto-fill contact info from user profile
+  useEffect(() => {
+    if (userProfile && !profileAutoFilled) {
+      if (userProfile.full_name && !name) setName(userProfile.full_name);
+      if (userProfile.phone && !phone) setPhone(userProfile.phone);
+      setProfileAutoFilled(true);
+    }
+  }, [userProfile, profileAutoFilled]);
+
+  // Auto-fill address from live GPS
+  useEffect(() => {
+    if (!address && !gpsAutoFilled) {
+      setGpsAutoFilled(true);
+      getCurrentLocation()
+        .then(async (loc) => {
+          const addr = await reverseGeocode(loc.lat, loc.lng);
+          if (addr && addr !== "Unknown location") {
+            setAddress(addr);
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
   const [tip, setTip] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
