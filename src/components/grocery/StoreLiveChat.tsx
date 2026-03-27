@@ -217,9 +217,7 @@ function AdminChatList({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (confirm("Delete this chat? This cannot be undone.")) {
-                      onDeleteChat(chat.id);
-                    }
+                    setDeleteConfirmId(chat.id);
                   }}
                   className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all"
                 >
