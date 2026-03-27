@@ -798,6 +798,8 @@ export default function StoreProfilePage() {
           onOrderPlaced={() => { cart.clearCart(); setShowCart(false); }}
           onRemoveItem={cart.removeItem}
           onUpdateQuantity={cart.updateQuantity}
+          storeCoords={store?.latitude && store?.longitude ? { lat: store.latitude, lng: store.longitude } : null}
+          storeName={store?.name}
         />
       )}
       {store && (

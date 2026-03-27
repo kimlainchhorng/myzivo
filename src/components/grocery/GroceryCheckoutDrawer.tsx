@@ -30,6 +30,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useCountry } from "@/hooks/useCountry";
 import { CheckoutPinMap } from "@/components/grocery/CheckoutPinMap";
+import { CheckoutRouteMap } from "@/components/grocery/CheckoutRouteMap";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -38,6 +39,8 @@ interface GroceryCheckoutDrawerProps {
   onOrderPlaced: (orderId: string) => void;
   onRemoveItem?: (productId: string) => void;
   onUpdateQuantity?: (productId: string, quantity: number) => void;
+  storeCoords?: { lat: number; lng: number } | null;
+  storeName?: string;
 }
 
 type SubstitutionPref = "contact_me" | "best_match" | "refund";
@@ -67,7 +70,7 @@ function getSavedProfile(): { name: string; phone: string; subPref: Substitution
   return { name: "", phone: "", subPref: "contact_me" };
 }
 
-export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity }: GroceryCheckoutDrawerProps) {
+export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity, storeCoords, storeName: storeNameProp }: GroceryCheckoutDrawerProps) {
   const { t } = useI18n();
   const { data: userProfile } = useUserProfile();
   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
@@ -770,6 +773,15 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     Edit details
                   </button>
                 </div>
+
+                {/* Route map: Store → Delivery */}
+                {storeCoords && addressCoords && (
+                  <CheckoutRouteMap
+                    storeCoords={storeCoords}
+                    deliveryCoords={addressCoords}
+                    storeName={storeNameProp || storeName}
+                  />
+                )}
 
                 {/* Live ETA */}
                 <motion.div
