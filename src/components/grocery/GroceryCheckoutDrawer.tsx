@@ -490,7 +490,35 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   </AnimatePresence>
                 </div>
 
-                {/* Delivery preferences */}
+                {/* Adjust pin button */}
+                {address && !showPinMap && (
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setShowPinMap(true)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/5 border border-primary/15 mb-4 w-full hover:bg-primary/10 transition-colors"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[11px] font-semibold text-primary">
+                      {t("grocery.checkout.adjust_pin") || "Adjust pin on map"}
+                    </span>
+                  </motion.button>
+                )}
+
+                {/* Draggable pin map */}
+                <AnimatePresence>
+                  {showPinMap && (
+                    <CheckoutPinMap
+                      coords={addressCoords}
+                      onLocationChange={(lat, lng, addr) => {
+                        setAddressCoords({ lat, lng });
+                        setAddress(addr);
+                      }}
+                    />
+                  )}
+                </AnimatePresence>
+
                 <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
                   <Package className="h-3.5 w-3.5 text-primary" />
                   {t("grocery.checkout.delivery_preferences")}
