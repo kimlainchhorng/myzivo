@@ -394,83 +394,6 @@ export default function GroceryMarketplace() {
         </motion.div>
       ) : (
         <>
-          {/* Hero banner */}
-          <motion.div
-            style={{ y: heroY, scale: heroScale }}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05, type: "spring" as const, stiffness: 300, damping: 25 }}
-            className="mx-4 mt-4 p-4 rounded-[20px] bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 backdrop-blur-sm relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
-            <div className="relative flex items-start gap-3">
-              <motion.div
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="p-2.5 rounded-2xl bg-primary/15 shrink-0"
-              >
-                <Zap className="h-5 w-5 text-primary" />
-              </motion.div>
-              <div>
-                <p className="text-sm font-bold">Same-day delivery</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                  {hasAddress
-                    ? "Showing real stores near you. A ZIVO driver shops in-store & delivers same day."
-                    : "Add your address to see nearby stores with same-day delivery."
-                  }
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-primary/10">
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                <Clock className="h-3 w-3 text-primary" />
-                <span>Same day</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                <Shield className="h-3 w-3 text-primary" />
-                <span>In-store prices</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                <MapPin className="h-3 w-3 text-primary" />
-                <span>Within {maxRadius} mi</span>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* How it works */}
-          <GroceryHowItWorks />
-
-          {/* Loading nearby stores indicator */}
-          {isLoadingStores && hasAddress && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center justify-center gap-2 py-6"
-            >
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-[12px] text-muted-foreground">Finding stores near you…</span>
-            </motion.div>
-          )}
-
-          {/* No stores nearby warning */}
-          {!isLoadingStores && hasAddress && availableStores.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mx-4 mt-4 p-4 rounded-[20px] border border-amber-500/20 bg-amber-500/5"
-            >
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
-                <div>
-                  <p className="text-sm font-bold text-foreground">No stores nearby</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    No grocery stores found within {maxRadius} miles of your address. Try updating your delivery address.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
           {/* Featured spotlight — closest store */}
           {featuredStore && (
             <div className="px-4 pt-4">
@@ -562,6 +485,83 @@ export default function GroceryMarketplace() {
                 ))}
               </motion.div>
             </div>
+          )}
+
+          {/* Hero banner */}
+          <motion.div
+            style={{ y: heroY, scale: heroScale }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05, type: "spring" as const, stiffness: 300, damping: 25 }}
+            className="mx-4 mt-4 p-4 rounded-[20px] bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 backdrop-blur-sm relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
+            <div className="relative flex items-start gap-3">
+              <motion.div
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="p-2.5 rounded-2xl bg-primary/15 shrink-0"
+              >
+                <Zap className="h-5 w-5 text-primary" />
+              </motion.div>
+              <div>
+                <p className="text-sm font-bold">Same-day delivery</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                  {hasAddress
+                    ? "Showing real stores near you. A ZIVO driver shops in-store & delivers same day."
+                    : "Add your address to see nearby stores with same-day delivery."
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-primary/10">
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                <Clock className="h-3 w-3 text-primary" />
+                <span>Same day</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                <Shield className="h-3 w-3 text-primary" />
+                <span>In-store prices</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                <MapPin className="h-3 w-3 text-primary" />
+                <span>Within {maxRadius} mi</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* How it works */}
+          <GroceryHowItWorks />
+
+          {/* Loading nearby stores indicator */}
+          {isLoadingStores && hasAddress && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center justify-center gap-2 py-6"
+            >
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-[12px] text-muted-foreground">Finding stores near you…</span>
+            </motion.div>
+          )}
+
+          {/* No stores nearby warning */}
+          {!isLoadingStores && hasAddress && availableStores.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mx-4 mt-4 p-4 rounded-[20px] border border-amber-500/20 bg-amber-500/5"
+            >
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-bold text-foreground">No stores nearby</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    No grocery stores found within {maxRadius} miles of your address. Try updating your delivery address.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           )}
           {nonFeaturedStores.length > 0 && (
             <>
