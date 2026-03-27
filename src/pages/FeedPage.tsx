@@ -40,9 +40,12 @@ function timeAgo(dateStr: string): string {
 function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const objectUrlRef = useRef<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
+  const [resolvedSrc, setResolvedSrc] = useState(urls[0] ?? "");
+  const [isMediaLoading, setIsMediaLoading] = useState(false);
 
   const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
 
@@ -126,43 +129,63 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     setIsPlaying(false);
     setIsMuted(true);
     setPosterUrl(null);
-  }, [activeIndex, urls]);
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    const nextSrc = urls[activeIndex] ?? "";
+    if (!nextSrc || !isVideo(nextSrc)) {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
+      setResolvedSrc(nextSrc);
+      setIsMediaLoading(false);
+      return;
+    }
 
-    video.pause();
-    video.currentTime = 0;
-    video.muted = true;
-    video.load();
+    let cancelled = false;
+    setIsMediaLoading(true);
+
+    fetch(nextSrc)
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Failed to load video");
+        return response.blob();
+      })
+      .then((blob) => {
+        if (cancelled) return;
+        if (objectUrlRef.current) {
+          URL.revokeObjectURL(objectUrlRef.current);
+        }
+        const objectUrl = URL.createObjectURL(blob);
+        objectUrlRef.current = objectUrl;
+        setResolvedSrc(objectUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setResolvedSrc(nextSrc);
+      })
+      .finally(() => {
+        if (!cancelled) setIsMediaLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [activeIndex, urls]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !isVideo(urls[activeIndex])) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          void playCurrentVideo();
-        } else {
-          pauseVideo();
-        }
-      },
-      { threshold: 0.65 }
-    );
-
-    observer.observe(video);
-    return () => observer.disconnect();
-  }, [activeIndex, urls]);
+    video.pause();
+    video.currentTime = 0;
+    video.muted = true;
+    video.load();
+  }, [activeIndex, resolvedSrc, urls]);
 
   useEffect(() => {
     return () => {
-      setPosterUrl((prev) => {
-        if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-        return null;
-      });
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
     };
   }, []);
 
@@ -172,16 +195,17 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
         {isVideo(urls[activeIndex]) ? (
           <div className="relative w-full h-full">
             <video
-              key={urls[activeIndex]}
+              key={resolvedSrc}
               ref={videoRef}
-              src={urls[activeIndex]}
+              src={resolvedSrc}
               poster={posterUrl ?? undefined}
               className="w-full h-full object-cover"
               playsInline
               loop
               muted
-              autoPlay
-              preload="auto"
+              controls={!isPlaying}
+              preload="metadata"
+              onClick={toggleVideo}
               onLoadedMetadata={(event) => {
                 event.currentTarget.muted = isMuted;
                 ensureVisibleFrame(event.currentTarget);
@@ -189,10 +213,6 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               onLoadedData={(event) => {
                 ensureVisibleFrame(event.currentTarget);
                 capturePosterFrame(event.currentTarget);
-              }}
-              onCanPlay={(event) => {
-                ensureVisibleFrame(event.currentTarget);
-                void event.currentTarget.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
               }}
               onPlay={(event) => {
                 setIsMuted(event.currentTarget.muted);
@@ -207,7 +227,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               className="absolute inset-0 z-10"
               aria-label={isPlaying ? "Pause video" : "Play video"}
             />
-            {!isPlaying && (
+            {!isPlaying && !isMediaLoading && (
               <button
                 type="button"
                 onClick={toggleVideo}
@@ -218,6 +238,11 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
                   <Play className="w-6 h-6 text-foreground ml-0.5" fill="currentColor" />
                 </div>
               </button>
+            )}
+            {isMediaLoading && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-foreground/10 backdrop-blur-sm">
+                <Loader2 className="h-8 w-8 animate-spin text-background" />
+              </div>
             )}
             <button
               type="button"
