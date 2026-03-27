@@ -57,7 +57,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     }
   };
 
-  const tryAutoplay = async () => {
+  const playVideo = async () => {
     const video = videoRef.current;
     if (!video) return;
 
@@ -68,7 +68,17 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
       setIsPlaying(true);
     } catch {
       setIsPlaying(false);
+      video.controls = true;
     }
+  };
+
+  const pauseVideo = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.pause();
+    video.controls = true;
+    setIsPlaying(false);
   };
 
   const toggleVideo = () => {
@@ -76,11 +86,9 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     if (!video) return;
 
     if (video.paused) {
-      ensureVisibleFrame(video);
-      video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      void playVideo();
     } else {
-      video.pause();
-      setIsPlaying(false);
+      pauseVideo();
     }
   };
 
@@ -90,6 +98,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     if (!video) return;
 
     video.pause();
+    video.controls = true;
     video.currentTime = 0;
     video.load();
   }, [activeIndex, urls]);
@@ -98,31 +107,41 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     <div className="relative bg-muted">
       <div className="aspect-square overflow-hidden">
         {isVideo(urls[activeIndex]) ? (
-          <div className="relative w-full h-full" onClick={toggleVideo}>
+          <div className="relative w-full h-full">
             <video
               key={urls[activeIndex]}
               ref={videoRef}
               src={urls[activeIndex]}
               className="w-full h-full object-cover"
               playsInline
-              autoPlay
               loop
               muted
               controls
               preload="metadata"
               onLoadedMetadata={(event) => {
+                event.currentTarget.controls = true;
                 ensureVisibleFrame(event.currentTarget);
               }}
-              onLoadedData={tryAutoplay}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
+              onPlay={(event) => {
+                event.currentTarget.controls = false;
+                setIsPlaying(true);
+              }}
+              onPause={(event) => {
+                event.currentTarget.controls = true;
+                setIsPlaying(false);
+              }}
             />
             {!isPlaying && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+              <button
+                type="button"
+                onClick={toggleVideo}
+                className="absolute inset-0 flex items-center justify-center bg-black/20"
+                aria-label="Play video"
+              >
                 <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
                   <Play className="w-6 h-6 text-foreground ml-0.5" fill="currentColor" />
                 </div>
-              </div>
+              </button>
             )}
           </div>
         ) : (
