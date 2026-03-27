@@ -777,7 +777,7 @@ export default function StoreProfilePage() {
                         </motion.span>
                         <motion.button
                           whileTap={{ scale: 0.75 }}
-                          onClick={(e) => { e.stopPropagation(); cart.updateQuantity(product.id, cartItem.quantity + 1); }}
+                          onClick={(e) => { e.stopPropagation(); cart.updateQuantity(cartKey, cartItem.quantity + 1); }}
                           className="h-8 w-8 rounded-[10px] bg-background/80 backdrop-blur-sm flex items-center justify-center border border-border/20 shadow-sm touch-manipulation active:bg-muted"
                         >
                           <Plus className="h-3.5 w-3.5 text-foreground/70" />
