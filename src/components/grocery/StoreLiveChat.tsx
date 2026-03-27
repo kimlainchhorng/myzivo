@@ -203,9 +203,6 @@ function AdminChatList({
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] text-muted-foreground truncate">
-                  {[chat.customer_email, chat.customer_phone].filter(Boolean).join(" · ")}
-                </p>
                 {chat.last_message && (
                   <p className="text-[11px] text-muted-foreground truncate mt-0.5">{chat.last_message}</p>
                 )}
