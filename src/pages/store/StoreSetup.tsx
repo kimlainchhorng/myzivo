@@ -54,6 +54,8 @@ export default function StoreSetup() {
   const [abaHolder, setAbaHolder] = useState("");
   const [wingAccount, setWingAccount] = useState("");
   const [wingHolder, setWingHolder] = useState("");
+  const [acledaAccount, setAcledaAccount] = useState("");
+  const [acledaHolder, setAcledaHolder] = useState("");
 
   // Fetch the user's store
   const { data: myStore, isLoading: loadingStore } = useQuery({
