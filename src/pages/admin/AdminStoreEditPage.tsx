@@ -2,6 +2,7 @@
  * AdminStoreEditPage - Full store management: edit profile, cover, logo, products
  */
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/hooks/useI18n";
 import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -14,6 +15,7 @@ import ffmpegCoreUrl from "@ffmpeg/core?url";
 import ffmpegWasmUrl from "@ffmpeg/core/wasm?url";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import StoreOwnerLayout from "@/components/admin/StoreOwnerLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +32,7 @@ import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import StoreMapPicker from "@/components/admin/StoreMapPicker";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 
@@ -364,6 +366,7 @@ const emptyProduct = {
 export default function AdminStoreEditPage() {
   const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const { currentLanguage, changeLanguage, t } = useI18n();
   const { data: supportedLanguages } = useSupportedLanguages(true);
@@ -1137,34 +1140,40 @@ export default function AdminStoreEditPage() {
     }
   };
 
+  const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
+    <StoreOwnerLayout title={title} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url}>{children}</StoreOwnerLayout>
+  );
+
   if (isLoading) {
     return (
-      <AdminLayout title="Edit Store">
+      <Layout title="Edit Store">
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </AdminLayout>
+      </Layout>
     );
   }
 
   if (!store) {
     return (
-      <AdminLayout title="Store Not Found">
+      <Layout title="Store Not Found">
         <div className="text-center py-20 space-y-4">
           <p className="text-muted-foreground">Store not found</p>
-          <Button onClick={() => navigate("/admin/stores")} variant="outline">Back to Stores</Button>
+          <Button onClick={() => navigate(isAdmin ? "/admin/stores" : "/")} variant="outline">
+            {isAdmin ? "Back to Stores" : "Back to Home"}
+          </Button>
         </div>
-      </AdminLayout>
+      </Layout>
     );
   }
 
   return (
     <>
-    <AdminLayout title={`Edit: ${store.name}`}>
+    <Layout title={`Edit: ${store.name}`}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" onClick={() => navigate("/admin/stores")}>
+            <Button variant="outline" size="icon" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
@@ -2439,7 +2448,7 @@ export default function AdminStoreEditPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </Layout>
     {store && (
       <StoreLiveChat
         storeId={store.id}
