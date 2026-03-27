@@ -28,6 +28,7 @@ import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useI18n } from "@/hooks/useI18n";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import { CheckoutPinMap } from "@/components/grocery/CheckoutPinMap";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -73,6 +74,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const savedProfile = getSavedProfile();
 
   const [address, setAddress] = useState(savedAddr?.address || "");
+  const [addressCoords, setAddressCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [addressSuggestions, setAddressSuggestions] = useState<{ display: string; mainText: string; placeId: string }[]>([]);
   const [showAddrSuggestions, setShowAddrSuggestions] = useState(false);
   const [isSearchingAddr, setIsSearchingAddr] = useState(false);
@@ -81,6 +83,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const [phone, setPhone] = useState(savedProfile.phone);
   const [gpsAutoFilled, setGpsAutoFilled] = useState(false);
   const [profileAutoFilled, setProfileAutoFilled] = useState(false);
+  const [showPinMap, setShowPinMap] = useState(false);
 
   // Auto-fill contact info from user profile
   useEffect(() => {
@@ -97,6 +100,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
       setGpsAutoFilled(true);
       getCurrentLocation()
         .then(async (loc) => {
+          setAddressCoords({ lat: loc.lat, lng: loc.lng });
           const addr = await reverseGeocode(loc.lat, loc.lng);
           if (addr && addr !== "Unknown location") {
             setAddress(addr);
@@ -486,7 +490,35 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   </AnimatePresence>
                 </div>
 
-                {/* Delivery preferences */}
+                {/* Adjust pin button */}
+                {address && !showPinMap && (
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setShowPinMap(true)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/5 border border-primary/15 mb-4 w-full hover:bg-primary/10 transition-colors"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[11px] font-semibold text-primary">
+                      {t("grocery.checkout.adjust_pin") || "Adjust pin on map"}
+                    </span>
+                  </motion.button>
+                )}
+
+                {/* Draggable pin map */}
+                <AnimatePresence>
+                  {showPinMap && (
+                    <CheckoutPinMap
+                      coords={addressCoords}
+                      onLocationChange={(lat, lng, addr) => {
+                        setAddressCoords({ lat, lng });
+                        setAddress(addr);
+                      }}
+                    />
+                  )}
+                </AnimatePresence>
+
                 <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
                   <Package className="h-3.5 w-3.5 text-primary" />
                   {t("grocery.checkout.delivery_preferences")}
