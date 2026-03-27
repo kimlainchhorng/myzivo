@@ -487,6 +487,10 @@ export default function AdminStoreEditPage() {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryPositions, setGalleryPositions] = useState<Record<string, number>>({});
+  const [repositioningGalleryIdx, setRepositioningGalleryIdx] = useState<number | null>(null);
+  const [galleryDragStartY, setGalleryDragStartY] = useState<number | null>(null);
+  const [galleryDragStartPos, setGalleryDragStartPos] = useState(50);
   // Post state
   const [postDialog, setPostDialog] = useState(false);
   const [postCaption, setPostCaption] = useState("");
