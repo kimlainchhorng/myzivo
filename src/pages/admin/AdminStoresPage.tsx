@@ -292,12 +292,38 @@ export default function AdminStoresPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Logo URL</Label>
-                <Input value={form.logo_url} onChange={e => updateField("logo_url", e.target.value)} placeholder="https://..." />
+                <Label>Logo</Label>
+                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadStoreImage(f, "logo"); e.target.value = ""; }} />
+                {form.logo_url ? (
+                  <div className="relative w-20 h-20 rounded-xl border border-border overflow-hidden group">
+                    <img src={form.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                      <button type="button" onClick={() => logoInputRef.current?.click()} className="h-6 w-6 rounded-full bg-background/80 flex items-center justify-center"><Upload className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => updateField("logo_url", "")} className="h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"><X className="h-3 w-3" /></button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} className="w-20 h-20 rounded-xl border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                    {uploadingLogo ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Upload className="h-5 w-5" /><span className="text-[10px]">Upload</span></>}
+                  </button>
+                )}
               </div>
               <div className="space-y-2">
-                <Label>Banner URL</Label>
-                <Input value={form.banner_url} onChange={e => updateField("banner_url", e.target.value)} placeholder="https://..." />
+                <Label>Banner</Label>
+                <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadStoreImage(f, "banner"); e.target.value = ""; }} />
+                {form.banner_url ? (
+                  <div className="relative w-full h-20 rounded-xl border border-border overflow-hidden group">
+                    <img src={form.banner_url} alt="Banner" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                      <button type="button" onClick={() => bannerInputRef.current?.click()} className="h-6 w-6 rounded-full bg-background/80 flex items-center justify-center"><Upload className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => updateField("banner_url", "")} className="h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"><X className="h-3 w-3" /></button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => bannerInputRef.current?.click()} disabled={uploadingBanner} className="w-full h-20 rounded-xl border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                    {uploadingBanner ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Upload className="h-5 w-5" /><span className="text-[10px]">Upload</span></>}
+                  </button>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
