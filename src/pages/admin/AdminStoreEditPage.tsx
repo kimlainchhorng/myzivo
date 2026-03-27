@@ -507,8 +507,9 @@ export default function AdminStoreEditPage() {
   const repairedPreviewUrlsRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
-    if (store) {
+   if (store) {
       setGalleryImages((store as any).gallery_images || []);
+      setGalleryPositions((store as any).gallery_positions || {});
     }
   }, [store]);
 
