@@ -40,11 +40,9 @@ function timeAgo(dateStr: string): string {
 function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const objectUrlRef = useRef<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
-  const [resolvedSrc, setResolvedSrc] = useState(urls[0] ?? "");
   const [isMediaLoading, setIsMediaLoading] = useState(false);
 
   const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
@@ -74,10 +72,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const nextPoster = canvas.toDataURL("image/jpeg", 0.82);
-      setPosterUrl((prev) => {
-        if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-        return nextPoster;
-      });
+      setPosterUrl(nextPoster);
     } catch {
       // Ignore poster extraction failures and fall back to video surface.
     }
@@ -86,8 +81,6 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
   const playCurrentVideo = async () => {
     const video = videoRef.current;
     if (!video) return;
-
-    ensureVisibleFrame(video);
 
     try {
       await video.play();
@@ -125,69 +118,26 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     }
   };
 
+  // Reset player state when the active slide changes.
+  // `urls` is intentionally excluded from deps: including an array prop causes the
+  // effect to fire on every parent re-render (new reference each time) which would
+  // call video.load() mid-playback and abort it. The urls value for the current
+  // activeIndex is read inside the effect but should only react to index changes.
+  // `isVideo` and `videoRef` are stable references that never need to trigger a reset.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setIsPlaying(false);
     setIsMuted(true);
     setPosterUrl(null);
 
-    const nextSrc = urls[activeIndex] ?? "";
-    if (!nextSrc || !isVideo(nextSrc)) {
-      if (objectUrlRef.current) {
-        URL.revokeObjectURL(objectUrlRef.current);
-        objectUrlRef.current = null;
-      }
-      setResolvedSrc(nextSrc);
-      setIsMediaLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setIsMediaLoading(true);
-
-    fetch(nextSrc)
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Failed to load video");
-        return response.blob();
-      })
-      .then((blob) => {
-        if (cancelled) return;
-        if (objectUrlRef.current) {
-          URL.revokeObjectURL(objectUrlRef.current);
-        }
-        const objectUrl = URL.createObjectURL(blob);
-        objectUrlRef.current = objectUrl;
-        setResolvedSrc(objectUrl);
-      })
-      .catch(() => {
-        if (!cancelled) setResolvedSrc(nextSrc);
-      })
-      .finally(() => {
-        if (!cancelled) setIsMediaLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeIndex, urls]);
-
-  useEffect(() => {
     const video = videoRef.current;
-    if (!video || !isVideo(urls[activeIndex])) return;
+    if (!video || !isVideo(urls[activeIndex] ?? "")) return;
 
     video.pause();
     video.currentTime = 0;
     video.muted = true;
     video.load();
-  }, [activeIndex, resolvedSrc, urls]);
-
-  useEffect(() => {
-    return () => {
-      if (objectUrlRef.current) {
-        URL.revokeObjectURL(objectUrlRef.current);
-        objectUrlRef.current = null;
-      }
-    };
-  }, []);
+  }, [activeIndex]);
 
   return (
     <div className="relative bg-muted">
@@ -195,9 +145,9 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
         {isVideo(urls[activeIndex]) ? (
           <div className="relative w-full h-full">
             <video
-              key={resolvedSrc}
+              key={urls[activeIndex]}
               ref={videoRef}
-              src={resolvedSrc}
+              src={urls[activeIndex]}
               poster={posterUrl ?? undefined}
               className="w-full h-full object-cover"
               playsInline
@@ -205,6 +155,8 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               muted
               preload="metadata"
               onClick={toggleVideo}
+              onLoadStart={() => setIsMediaLoading(true)}
+              onCanPlay={() => setIsMediaLoading(false)}
               onLoadedMetadata={(event) => {
                 event.currentTarget.muted = isMuted;
                 ensureVisibleFrame(event.currentTarget);
@@ -212,13 +164,14 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               onLoadedData={(event) => {
                 ensureVisibleFrame(event.currentTarget);
                 capturePosterFrame(event.currentTarget);
+                setIsMediaLoading(false);
               }}
               onPlay={(event) => {
                 setIsMuted(event.currentTarget.muted);
                 setIsPlaying(true);
               }}
               onPause={() => setIsPlaying(false)}
-              onError={() => setIsPlaying(false)}
+              onError={() => { setIsPlaying(false); setIsMediaLoading(false); }}
             />
             <button
               type="button"
