@@ -484,7 +484,6 @@ export default function StoreProfilePage() {
                       const discountKhr = hasDiscount ? p.discount_price_khr : null;
                       const discountUsd = hasDiscount ? parseFloat((discountKhr / ((store as any)?.khr_rate || 4050)).toFixed(2)) : null;
                       const discountPct = hasDiscount && p.discount_type === "percentage" ? p.discount_value : null;
-                      const discountPct = hasDiscount && p.discount_type === "percentage" ? p.discount_value : null;
                       return (
                 <motion.div
                   key={product.id}
