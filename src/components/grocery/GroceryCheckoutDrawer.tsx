@@ -442,7 +442,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   {t("grocery.checkout.delivery_address")}
                 </h3>
                 <div className="relative mb-4">
-                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 z-10" />
+                  {isGettingLocation ? (
+                    <Loader2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-primary animate-spin z-10" />
+                  ) : (
+                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 z-10" />
+                  )}
                   <Input
                     value={address}
                     onChange={(e) => searchAddressAutocomplete(e.target.value)}
