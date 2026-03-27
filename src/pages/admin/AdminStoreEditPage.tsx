@@ -1141,8 +1141,9 @@ export default function AdminStoreEditPage() {
     }
   };
 
+  const storeOwnerTitle = activeTab === "products" ? "Products" : activeTab === "payment" ? "Payment" : `Edit: ${store?.name || "Store"}`;
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
-    <StoreOwnerLayout title={title} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
+    <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
   );
 
   if (isLoading) {
@@ -1172,6 +1173,7 @@ export default function AdminStoreEditPage() {
     <>
     <Layout title={`Edit: ${store.name}`}>
       <div className="space-y-6">
+        {(isAdmin || activeTab === "profile") && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="outline" size="icon" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
@@ -1245,7 +1247,9 @@ export default function AdminStoreEditPage() {
             </Button>
           </div>
         </div>
+        )}
 
+        {(isAdmin || activeTab === "profile") && (<>
         <Card className="overflow-hidden">
           <div
             ref={coverContainerRef}
@@ -1463,6 +1467,7 @@ export default function AdminStoreEditPage() {
             <p className="text-[11px] text-muted-foreground mt-2">These images appear as a scrolling banner on your store page.</p>
           </CardContent>
         </Card>
+        </>)}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           {isAdmin && (
@@ -1473,6 +1478,7 @@ export default function AdminStoreEditPage() {
             </TabsList>
           )}
 
+          {(isAdmin || activeTab === "profile") && (
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-card">
             <span className="text-sm font-medium text-foreground whitespace-nowrap">៛ KHR Rate</span>
             <span className="text-xs text-muted-foreground whitespace-nowrap">1 USD =</span>
@@ -1487,6 +1493,7 @@ export default function AdminStoreEditPage() {
             />
             <span className="text-xs text-muted-foreground">KHR</span>
           </div>
+          )}
 
           <TabsContent value="profile">
             <Card>
