@@ -66,22 +66,29 @@ async function transcodeFeedVideoForPlayback(sourceUrl: string) {
   await ffmpeg.writeFile(inputName, await fetchFile(blob));
 
   try {
-    await ffmpeg.exec([
-      "-i", inputName,
-      "-movflags", "+faststart",
-      "-pix_fmt", "yuv420p",
-      "-c:v", "libx264",
-      "-preset", "veryfast",
-      "-profile:v", "baseline",
-      "-level", "3.0",
-      "-c:a", "aac",
-      "-profile:a", "aac_low",
-      "-b:a", "128k",
-      "-ar", "44100",
-      "-ac", "2",
-      "-y",
-      outputName,
-    ]);
+    try {
+      await ffmpeg.exec([
+        "-i", inputName,
+        "-movflags", "+faststart",
+        "-c:v", "copy",
+        "-an",
+        "-y",
+        outputName,
+      ]);
+    } catch {
+      await ffmpeg.exec([
+        "-i", inputName,
+        "-movflags", "+faststart",
+        "-pix_fmt", "yuv420p",
+        "-c:v", "libx264",
+        "-preset", "veryfast",
+        "-profile:v", "baseline",
+        "-level", "3.0",
+        "-an",
+        "-y",
+        outputName,
+      ]);
+    }
 
     const data = await ffmpeg.readFile(outputName);
     if (!(data instanceof Uint8Array)) {
@@ -219,7 +226,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     try {
       setIsMediaLoading(true);
       autoplayAfterRecoveryRef.current = autoplayAfterRecovery;
-      toast.info("Preparing this video for playback...");
+      toast.info("Fixing video format...");
       const fixedUrl = await transcodeFeedVideoForPlayback(sourceUrl);
       cleanupObjectUrl();
       objectUrlRef.current = fixedUrl;
@@ -227,7 +234,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
       setHasRecoveredVideo(true);
     } catch {
       autoplayAfterRecoveryRef.current = false;
-      toast.error("This video format is not supported on this device.");
+      toast.error("This video could not be repaired for playback.");
     } finally {
       setIsMediaLoading(false);
     }
