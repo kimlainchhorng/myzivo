@@ -1247,6 +1247,7 @@ export default function AdminStoreEditPage() {
             </Button>
           </div>
         </div>
+        )}
 
         {(isAdmin || activeTab === "profile") && (<>
         <Card className="overflow-hidden">
