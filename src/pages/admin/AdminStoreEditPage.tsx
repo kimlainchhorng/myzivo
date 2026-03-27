@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet } from "lucide-react";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
+import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
@@ -1747,127 +1748,7 @@ export default function AdminStoreEditPage() {
 
           {/* Payment Tab */}
           <TabsContent value="payment">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <CreditCard className="h-4 w-4" />
-                  Payment Method
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Manage how this store receives payments from customers and how payouts are processed.
-                </p>
-                {/* Card / Stripe */}
-                <div className="rounded-xl border border-border p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <CreditCard className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">Card Payment</p>
-                      <p className="text-xs text-muted-foreground">Accept Visa, Mastercard & more via Stripe</p>
-                    </div>
-                    <Switch />
-                  </div>
-                </div>
-
-                {/* ABA PayWay */}
-                <div className="rounded-xl border border-border overflow-hidden space-y-0">
-                  <div className="relative h-24 w-full">
-                    <img src={abaBanner} alt="ABA KHQR" className="h-full w-full object-cover" loading="lazy" />
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center">
-                        <img src={abaLogo} alt="ABA" className="h-full w-full object-cover" loading="lazy" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">ABA PayWay</p>
-                        <p className="text-xs text-muted-foreground">Accept payments via ABA mobile & KHQR</p>
-                      </div>
-                      <Switch />
-                    </div>
-                    <div className="space-y-2 pt-1">
-                      <Input placeholder="ABA Account Number" className="text-sm" />
-                      <Input placeholder="Account Holder Name" className="text-sm" />
-                      <Button variant="outline" className="w-full gap-2 text-sm">
-                        <QrCode className="h-4 w-4" />
-                        Upload QR Code
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Wing */}
-                <div className="rounded-xl border border-border overflow-hidden space-y-0">
-                  <div className="relative h-24 w-full">
-                    <img src={wingBanner} alt="Wing Bank" className="h-full w-full object-cover" loading="lazy" />
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center">
-                        <img src={wingLogo} alt="Wing" className="h-full w-full object-cover" loading="lazy" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">Wing Bank</p>
-                        <p className="text-xs text-muted-foreground">Accept payments via Wing mobile wallet</p>
-                      </div>
-                      <Switch />
-                    </div>
-                    <div className="space-y-2 pt-1">
-                      <Input placeholder="Wing Account Number" className="text-sm" />
-                      <Input placeholder="Account Holder Name" className="text-sm" />
-                      <Button variant="outline" className="w-full gap-2 text-sm">
-                        <QrCode className="h-4 w-4" />
-                        Upload QR Code
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ACLEDA */}
-                <div className="rounded-xl border border-border overflow-hidden space-y-0">
-                  <div className="relative h-24 w-full">
-                    <img src={acledaBanner} alt="ACLEDA Bank" className="h-full w-full object-cover" loading="lazy" />
-                  </div>
-                  <div className="p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center bg-muted">
-                      <img src={acledaLogo} alt="ACLEDA" className="h-10 w-10 object-contain" loading="lazy" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">ACLEDA Bank</p>
-                      <p className="text-xs text-muted-foreground">Accept payments via ACLEDA mobile & KHQR</p>
-                    </div>
-                    <Switch />
-                  </div>
-                  <div className="space-y-2 pt-1">
-                    <Input placeholder="ACLEDA Account Number" className="text-sm" />
-                    <Input placeholder="Account Holder Name" className="text-sm" />
-                    <Button variant="outline" className="w-full gap-2 text-sm">
-                      <QrCode className="h-4 w-4" />
-                      Upload QR Code
-                    </Button>
-                  </div>
-                  </div>
-                </div>
-
-                {/* Cash */}
-                <div className="rounded-xl border border-border p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                      <DollarSign className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">Cash on Delivery</p>
-                      <p className="text-xs text-muted-foreground">Customers pay in cash upon receiving their order</p>
-                    </div>
-                    <Switch />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <StorePaymentSection storeId={storeId!} />
           </TabsContent>
 
 
