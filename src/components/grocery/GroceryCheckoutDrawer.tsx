@@ -26,6 +26,8 @@ import { GROCERY_STORES } from "@/config/groceryStores";
 import { SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee, calcMarkup, getMarkupPct } from "@/config/groceryPricing";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useI18n } from "@/hooks/useI18n";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -65,6 +67,8 @@ function getSavedProfile(): { name: string; phone: string; subPref: Substitution
 
 export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity }: GroceryCheckoutDrawerProps) {
   const { t } = useI18n();
+  const { data: userProfile } = useUserProfile();
+  const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
   const savedAddr = getSavedAddress();
   const savedProfile = getSavedProfile();
 
@@ -75,6 +79,32 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const addrDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const [name, setName] = useState(savedProfile.name);
   const [phone, setPhone] = useState(savedProfile.phone);
+  const [gpsAutoFilled, setGpsAutoFilled] = useState(false);
+  const [profileAutoFilled, setProfileAutoFilled] = useState(false);
+
+  // Auto-fill contact info from user profile
+  useEffect(() => {
+    if (userProfile && !profileAutoFilled) {
+      if (userProfile.full_name && !name) setName(userProfile.full_name);
+      if (userProfile.phone && !phone) setPhone(userProfile.phone);
+      setProfileAutoFilled(true);
+    }
+  }, [userProfile, profileAutoFilled]);
+
+  // Auto-fill address from live GPS
+  useEffect(() => {
+    if (!address && !gpsAutoFilled) {
+      setGpsAutoFilled(true);
+      getCurrentLocation()
+        .then(async (loc) => {
+          const addr = await reverseGeocode(loc.lat, loc.lng);
+          if (addr && addr !== "Unknown location") {
+            setAddress(addr);
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
   const [tip, setTip] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
@@ -352,7 +382,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 </div>
 
                 {/* Auto-filled address badge */}
-                {savedAddr && address === savedAddr.address && (
+                {address && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -361,6 +391,20 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     <CheckCircle className="h-3 w-3 text-emerald-500" />
                     <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                       {t("grocery.checkout.address_autofilled")}
+                    </span>
+                  </motion.div>
+                )}
+
+                {/* Profile auto-filled badge */}
+                {profileAutoFilled && userProfile?.full_name && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/15 w-fit mb-3"
+                  >
+                    <User className="h-3 w-3 text-blue-500" />
+                    <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
+                      {t("grocery.checkout.contact_autofilled") || "Contact auto-filled from your account"}
                     </span>
                   </motion.div>
                 )}
@@ -398,7 +442,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   {t("grocery.checkout.delivery_address")}
                 </h3>
                 <div className="relative mb-4">
-                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 z-10" />
+                  {isGettingLocation ? (
+                    <Loader2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-primary animate-spin z-10" />
+                  ) : (
+                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 z-10" />
+                  )}
                   <Input
                     value={address}
                     onChange={(e) => searchAddressAutocomplete(e.target.value)}
