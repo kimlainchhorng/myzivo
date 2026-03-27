@@ -694,16 +694,16 @@ export default function StoreProfilePage() {
                       <div className="min-w-0 flex-1">
                         {/* Size pills */}
                         {hasSizes && (
-                          <div className="flex flex-wrap gap-1 mb-1">
+                          <div className="flex flex-wrap gap-1.5 mb-1.5">
                             {sizeVariants.map((sv, sIdx) => (
                               <button
                                 key={sv.size}
                                 onClick={(e) => { e.stopPropagation(); setSelectedSizes(prev => ({ ...prev, [product.id]: sIdx })); }}
                                 className={cn(
-                                  "h-5 px-2 rounded-md text-[9px] font-extrabold tracking-wide border transition-all",
+                                  "h-7 px-3 rounded-xl text-[11px] font-extrabold tracking-wide border-2 transition-all",
                                   selectedIdx === sIdx
-                                    ? "bg-primary/15 border-primary/30 text-primary shadow-sm shadow-primary/10"
-                                    : "bg-muted/10 border-border/20 text-muted-foreground/60 hover:border-primary/20"
+                                    ? "bg-primary/15 border-primary/40 text-primary shadow-md shadow-primary/15 scale-105"
+                                    : "bg-muted/10 border-border/30 text-muted-foreground/50 hover:border-primary/20"
                                 )}
                               >
                                 {sv.size}
