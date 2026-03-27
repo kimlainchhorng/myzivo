@@ -587,7 +587,7 @@ export default function StoreProfilePage() {
                           animate={{ scale: 1, rotate: 0 }}
                           exit={{ scale: 0, rotate: 30 }}
                           transition={{ type: "spring", stiffness: 400, damping: 18 }}
-                          className="absolute top-2 right-2 h-6 min-w-[24px] px-1.5 rounded-full bg-primary flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30 z-20"
+                          className="absolute bottom-2 left-2 h-6 min-w-[24px] px-1.5 rounded-full bg-primary flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30 z-20"
                         >
                           <span className="text-[9px] font-black text-primary-foreground">{cartItem.quantity}</span>
                         </motion.div>
