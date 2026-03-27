@@ -1655,7 +1655,7 @@ export default function AdminStoreEditPage() {
                     })()}
                     <div className="divide-y divide-border">
                       {products
-                        .filter((product: any) => !productCategoryFilter || product.category === productCategoryFilter)
+                        .filter((product: any) => !productCategoryFilter || (productCategoryFilter === "__uncategorized__" ? !product.category : product.category === productCategoryFilter))
                         .map((product: any) => (
                         <div key={product.id} className="flex items-center justify-between py-3">
                           <div className="flex items-center gap-3">
