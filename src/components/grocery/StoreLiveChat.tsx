@@ -36,6 +36,38 @@ interface ChatThread {
   unread_count?: number;
 }
 
+/* ─── Confirm dialog ─── */
+function ConfirmDialog({ open, message, onConfirm, onCancel }: { open: boolean; message: string; onConfirm: () => void; onCancel: () => void }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onCancel}>
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-background rounded-2xl border border-border/30 shadow-2xl p-5 mx-6 max-w-sm w-full space-y-4"
+      >
+        <p className="text-sm font-medium text-foreground text-center">{message}</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 h-10 rounded-xl border border-border/30 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 h-10 rounded-xl bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors"
+          >
+            Yes, Delete
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 /* ─── Admin chat list ─── */
 function AdminChatList({
   storeId,
