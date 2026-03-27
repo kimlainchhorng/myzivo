@@ -424,7 +424,7 @@ export default function GroceryMarketplace() {
           <GroceryReorder />
 
           {/* Database-backed stores (e.g. Cambodia local stores) */}
-          {dbStores.length > 0 && (
+          {dbStores.filter((ds) => category === "all" || ds.category === category).filter((ds) => !filter.trim() || ds.name.toLowerCase().includes(filter.toLowerCase())).length > 0 && (
             <div className="px-4 pt-5">
               <div className="flex items-center gap-1.5 mb-2.5">
                 <Store className="h-3.5 w-3.5 text-primary" />
