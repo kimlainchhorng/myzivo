@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LogOut, ChevronLeft, Menu, Home, Store,
-  Package, CreditCard, MessageCircle, Users, Megaphone
+  Package, CreditCard, MessageCircle, Users, Megaphone, ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,15 +23,17 @@ interface StoreOwnerLayoutProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
   productCount?: number;
+  orderCount?: number;
 }
 
-export default function StoreOwnerLayout({ children, title, storeId, storeName, storeLogoUrl, activeTab, onTabChange, productCount }: StoreOwnerLayoutProps) {
+export default function StoreOwnerLayout({ children, title, storeId, storeName, storeLogoUrl, activeTab, onTabChange, productCount, orderCount }: StoreOwnerLayoutProps) {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = [
     { id: "profile", label: "Profile", icon: Store },
+    { id: "orders", label: `Orders${orderCount ? ` (${orderCount})` : ""}`, icon: ClipboardList },
     { id: "products", label: `Products${productCount != null ? ` (${productCount})` : ""}`, icon: Package },
     { id: "payment", label: "Payment", icon: CreditCard },
     { id: "customers", label: "Customers", icon: Users },

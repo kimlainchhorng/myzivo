@@ -30,6 +30,7 @@ import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
 import StoreMarketingSection from "@/components/admin/StoreMarketingSection";
+import StoreOrdersSection from "@/components/admin/StoreOrdersSection";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
@@ -1143,7 +1144,7 @@ export default function AdminStoreEditPage() {
     }
   };
 
-  const storeOwnerTitle = activeTab === "products" ? "Products" : activeTab === "payment" ? "Payment" : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : `Edit: ${store?.name || "Store"}`;
+  const storeOwnerTitle = activeTab === "orders" ? "Orders" : activeTab === "products" ? "Products" : activeTab === "payment" ? "Payment" : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : `Edit: ${store?.name || "Store"}`;
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
     <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
   );
@@ -1766,6 +1767,12 @@ export default function AdminStoreEditPage() {
           <TabsContent value="payment">
             <StorePaymentSection storeId={storeId!} />
           </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders">
+            <StoreOrdersSection storeId={storeId!} />
+          </TabsContent>
+
           {/* Customers Tab */}
           <TabsContent value="customers">
             <StoreCustomersSection storeId={storeId!} />
