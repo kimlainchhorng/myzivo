@@ -494,7 +494,7 @@ export default function StoreProfilePage() {
                   className={cn(
                     "group relative rounded-[16px] overflow-hidden transition-all duration-300 snap-start shrink-0",
                     "bg-card/60 backdrop-blur-xl border",
-                    "w-[46vw] min-w-[170px] max-w-[200px]",
+                    "w-[72vw] min-w-[240px] max-w-[280px]",
                     cartItem
                       ? "border-primary/25 shadow-xl shadow-primary/10 ring-1 ring-primary/10"
                       : "border-white/[0.06] shadow-lg shadow-black/5 hover:shadow-xl hover:border-white/[0.12]"
