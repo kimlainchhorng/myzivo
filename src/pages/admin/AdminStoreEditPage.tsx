@@ -479,6 +479,7 @@ export default function AdminStoreEditPage() {
   });
 
   const [mapPickerOpen, setMapPickerOpen] = useState(false);
+  const [productCategoryFilter, setProductCategoryFilter] = useState("");
   const [productDialog, setProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState(emptyProduct);
