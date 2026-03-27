@@ -463,7 +463,8 @@ export default function StoreProfilePage() {
                     variants={container}
                     initial="hidden"
                     animate="show"
-                    className="grid grid-cols-2 gap-2"
+                    className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+                    style={{ WebkitOverflowScrolling: "touch" }}
                   >
                     {catProducts.map((product, i) => {
                       const p = product as any;
