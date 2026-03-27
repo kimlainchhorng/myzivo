@@ -1240,7 +1240,6 @@ export default function AdminStoreEditPage() {
                               playsInline
                               preload="auto"
                               muted={true}
-                              crossOrigin="anonymous"
                               onLoadedMetadata={(event) => {
                                 ensurePostVideoFrame(event.currentTarget);
                               }}
