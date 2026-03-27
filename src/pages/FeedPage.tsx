@@ -88,7 +88,10 @@ async function transcodeFeedVideoForPlayback(sourceUrl: string) {
       throw new Error("Failed to read converted video");
     }
 
-    return URL.createObjectURL(new Blob([data], { type: "video/mp4" }));
+    const normalizedBuffer = new ArrayBuffer(data.byteLength);
+    new Uint8Array(normalizedBuffer).set(data);
+
+    return URL.createObjectURL(new Blob([normalizedBuffer], { type: "video/mp4" }));
   } finally {
     await Promise.allSettled([
       ffmpeg.deleteFile(inputName),
