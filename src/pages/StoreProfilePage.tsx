@@ -335,6 +335,78 @@ export default function StoreProfilePage() {
                 </div>
               </motion.a>
             )}
+
+            {/* Live Chat button */}
+            <motion.button
+              whileTap={{ scale: 0.94, rotateX: 2 }}
+              whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
+              onClick={() => setChatOpen(true)}
+              className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
+              style={{
+                transformStyle: "preserve-3d",
+                boxShadow: "0 6px 24px -6px hsl(217 90% 55% / 0.2), 0 2px 6px -2px hsl(0 0% 0% / 0.12), inset 0 1px 0 0 hsl(0 0% 100% / 0.12)",
+              }}
+            >
+              <div className="absolute inset-0 z-0 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600" />
+              <div className="absolute inset-0 z-[1] bg-black/20" />
+              <motion.div
+                className="absolute inset-0 z-[2] pointer-events-none"
+                animate={{ opacity: [0, 0.3, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                style={{ background: "linear-gradient(135deg, transparent 30%, hsl(0 0% 100% / 0.15) 50%, transparent 70%)" }}
+              />
+              <div className="relative z-[3] h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-white/20"
+                style={{
+                  background: "linear-gradient(135deg, hsl(217 90% 55% / 0.9), hsl(217 90% 45% / 0.7))",
+                  boxShadow: "0 3px 10px -2px hsl(217 90% 55% / 0.5)",
+                  transform: "translateZ(16px)",
+                }}
+              >
+                <MessageCircle className="h-4 w-4 text-white drop-shadow-md" />
+              </div>
+              <div className="relative z-[3] flex flex-col items-start min-w-0">
+                <p className="text-[11px] font-bold text-white drop-shadow-md">Live Chat</p>
+                <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Chat with store</p>
+              </div>
+            </motion.button>
+
+            {/* Facebook button */}
+            {(store as any).facebook_url && (
+              <motion.a
+                whileTap={{ scale: 0.94, rotateX: 2 }}
+                whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
+                href={(store as any).facebook_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
+                style={{
+                  transformStyle: "preserve-3d",
+                  boxShadow: "0 6px 24px -6px hsl(221 44% 41% / 0.2), 0 2px 6px -2px hsl(0 0% 0% / 0.12), inset 0 1px 0 0 hsl(0 0% 100% / 0.12)",
+                }}
+              >
+                <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#1877F2] via-[#166FE5] to-[#0C5DC7]" />
+                <div className="absolute inset-0 z-[1] bg-black/15" />
+                <motion.div
+                  className="absolute inset-0 z-[2] pointer-events-none"
+                  animate={{ opacity: [0, 0.25, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+                  style={{ background: "linear-gradient(225deg, transparent 30%, hsl(0 0% 100% / 0.12) 50%, transparent 70%)" }}
+                />
+                <div className="relative z-[3] h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-white/20"
+                  style={{
+                    background: "linear-gradient(135deg, #1877F2, #0C5DC7)",
+                    boxShadow: "0 3px 10px -2px hsl(221 44% 41% / 0.5)",
+                    transform: "translateZ(16px)",
+                  }}
+                >
+                  <Facebook className="h-4 w-4 text-white drop-shadow-md" />
+                </div>
+                <div className="relative z-[3] flex flex-col items-start min-w-0">
+                  <p className="text-[11px] font-bold text-white drop-shadow-md">Facebook</p>
+                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Visit page</p>
+                </div>
+              </motion.a>
+            )}
           </div>
         </motion.div>
       </div>
@@ -717,6 +789,15 @@ export default function StoreProfilePage() {
           onOrderPlaced={() => { cart.clearCart(); setShowCart(false); }}
           onRemoveItem={cart.removeItem}
           onUpdateQuantity={cart.updateQuantity}
+        />
+      )}
+      {store && (
+        <StoreLiveChat
+          storeId={store.id}
+          storeName={store.name}
+          storeLogo={store.logo_url}
+          open={chatOpen}
+          onClose={() => setChatOpen(false)}
         />
       )}
       <ZivoMobileNav />
