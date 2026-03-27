@@ -64,6 +64,7 @@ function getSavedProfile(): { name: string; phone: string; subPref: Substitution
 }
 
 export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity }: GroceryCheckoutDrawerProps) {
+  const { t } = useI18n();
   const savedAddr = getSavedAddress();
   const savedProfile = getSavedProfile();
 
