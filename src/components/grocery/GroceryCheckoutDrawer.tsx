@@ -73,6 +73,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const savedProfile = getSavedProfile();
 
   const [address, setAddress] = useState(savedAddr?.address || "");
+  const [addressCoords, setAddressCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [addressSuggestions, setAddressSuggestions] = useState<{ display: string; mainText: string; placeId: string }[]>([]);
   const [showAddrSuggestions, setShowAddrSuggestions] = useState(false);
   const [isSearchingAddr, setIsSearchingAddr] = useState(false);
@@ -81,6 +82,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const [phone, setPhone] = useState(savedProfile.phone);
   const [gpsAutoFilled, setGpsAutoFilled] = useState(false);
   const [profileAutoFilled, setProfileAutoFilled] = useState(false);
+  const [showPinMap, setShowPinMap] = useState(false);
 
   // Auto-fill contact info from user profile
   useEffect(() => {
@@ -97,6 +99,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
       setGpsAutoFilled(true);
       getCurrentLocation()
         .then(async (loc) => {
+          setAddressCoords({ lat: loc.lat, lng: loc.lng });
           const addr = await reverseGeocode(loc.lat, loc.lng);
           if (addr && addr !== "Unknown location") {
             setAddress(addr);
