@@ -23,7 +23,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle } from "lucide-react";
+import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
@@ -371,6 +372,7 @@ export default function AdminStoreEditPage() {
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [savedBrands, setSavedBrands] = useState<string[]>([]);
   const [savedCategories, setSavedCategories] = useState<string[]>([]);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const { data: store, isLoading } = useQuery({
     queryKey: ["admin-store", storeId],
@@ -1156,6 +1158,7 @@ export default function AdminStoreEditPage() {
   }
 
   return (
+    <>
     <AdminLayout title={`Edit: ${store.name}`}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -1223,6 +1226,9 @@ export default function AdminStoreEditPage() {
               </PopoverContent>
             </Popover>
 
+            <Button onClick={() => setChatOpen(true)} variant="outline" className="gap-2">
+              <MessageCircle className="h-4 w-4" /> Live Chat
+            </Button>
             <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" className="gap-2">
               <Eye className="h-4 w-4" /> {t("admin.store.preview")}
             </Button>
@@ -2576,5 +2582,15 @@ export default function AdminStoreEditPage() {
         </DialogContent>
       </Dialog>
     </AdminLayout>
+    {store && (
+      <StoreLiveChat
+        storeId={store.id}
+        storeName={store.name}
+        storeLogo={store.logo_url}
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+      />
+    )}
+    </>
   );
 }
