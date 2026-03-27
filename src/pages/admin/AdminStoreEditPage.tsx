@@ -1584,6 +1584,14 @@ export default function AdminStoreEditPage() {
                     <Input type="number" value={form.delivery_min} onChange={e => updateField("delivery_min", parseInt(e.target.value) || 0)} />
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <Label>Facebook URL</Label>
+                  <Input
+                    value={form.facebook_url}
+                    onChange={e => updateField("facebook_url", e.target.value)}
+                    placeholder="https://facebook.com/yourstore"
+                  />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>{t("admin.store.rating")}</Label>
