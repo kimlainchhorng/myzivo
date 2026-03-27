@@ -203,7 +203,6 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               playsInline
               loop
               muted
-              controls={!isPlaying}
               preload="metadata"
               onClick={toggleVideo}
               onLoadedMetadata={(event) => {
