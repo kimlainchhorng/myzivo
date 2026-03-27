@@ -1173,6 +1173,7 @@ export default function AdminStoreEditPage() {
     <>
     <Layout title={`Edit: ${store.name}`}>
       <div className="space-y-6">
+        {(isAdmin || activeTab === "profile") && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="outline" size="icon" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
