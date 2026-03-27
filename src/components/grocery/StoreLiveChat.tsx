@@ -301,7 +301,16 @@ function AdminChatList({
                   )}
                 </div>
                 {chat.last_message && (
-                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">{chat.last_message}</p>
+                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                    {(() => {
+                      const rich = parseRichContent(chat.last_message);
+                      if (!rich) return chat.last_message;
+                      if (rich.type === "location") return `📍 ${rich.address}`;
+                      if (rich.type === "payment_qr") return `💳 Payment QR${rich.amount ? ` — ${rich.amount}` : ""}`;
+                      if (rich.type === "tracking") return `🚚 Tracking: ${rich.orderId}`;
+                      return chat.last_message;
+                    })()}
+                  </p>
                 )}
               </div>
               <div className="flex items-center gap-1 shrink-0">
