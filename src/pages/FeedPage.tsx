@@ -8,7 +8,7 @@ import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { Loader2, Heart, MessageCircle, Share2, Store, Play } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -43,19 +43,30 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
   const [isPlaying, setIsPlaying] = useState(false);
 
   const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
-  const getVideoPreviewSrc = (url: string) => (url.includes("#") ? url : `${url}#t=0.001`);
 
-  const handleVideoLoaded = async () => {
+  const ensureVisibleFrame = (video: HTMLVideoElement) => {
+    if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+
+    const targetTime = Math.min(1, Math.max(video.duration * 0.1, 0.25));
+    if (Math.abs(video.currentTime - targetTime) < 0.01) return;
+
+    try {
+      video.currentTime = targetTime;
+    } catch {
+      // Ignore seek failures on restrictive browsers.
+    }
+  };
+
+  const tryAutoplay = async () => {
     const video = videoRef.current;
     if (!video) return;
+
+    ensureVisibleFrame(video);
 
     try {
       await video.play();
       setIsPlaying(true);
     } catch {
-      if (video.currentTime < 0.01) {
-        video.currentTime = 0.001;
-      }
       setIsPlaying(false);
     }
   };
@@ -65,6 +76,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     if (!video) return;
 
     if (video.paused) {
+      ensureVisibleFrame(video);
       video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     } else {
       video.pause();
@@ -72,26 +84,41 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     }
   };
 
+  useEffect(() => {
+    setIsPlaying(false);
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.pause();
+    video.currentTime = 0;
+    video.load();
+  }, [activeIndex, urls]);
+
   return (
     <div className="relative bg-muted">
       <div className="aspect-square overflow-hidden">
         {isVideo(urls[activeIndex]) ? (
           <div className="relative w-full h-full" onClick={toggleVideo}>
             <video
+              key={urls[activeIndex]}
               ref={videoRef}
-              src={getVideoPreviewSrc(urls[activeIndex])}
+              src={urls[activeIndex]}
               className="w-full h-full object-cover"
               playsInline
               autoPlay
               loop
               muted
-              preload="auto"
-              onLoadedData={handleVideoLoaded}
+              controls
+              preload="metadata"
+              onLoadedMetadata={(event) => {
+                ensureVisibleFrame(event.currentTarget);
+              }}
+              onLoadedData={tryAutoplay}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
             />
             {!isPlaying && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
                 <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
                   <Play className="w-6 h-6 text-foreground ml-0.5" fill="currentColor" />
                 </div>
