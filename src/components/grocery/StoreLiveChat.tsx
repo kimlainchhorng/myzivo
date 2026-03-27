@@ -203,9 +203,6 @@ function AdminChatList({
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] text-muted-foreground truncate">
-                  {[chat.customer_email, chat.customer_phone].filter(Boolean).join(" · ")}
-                </p>
                 {chat.last_message && (
                   <p className="text-[11px] text-muted-foreground truncate mt-0.5">{chat.last_message}</p>
                 )}
@@ -413,7 +410,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
     ? (selectedChat.customer_name || selectedChat.customer_email || "Customer")
     : storeName;
   const chatSubtitle = isAdmin && selectedChat
-    ? [selectedChat.customer_email, selectedChat.customer_phone].filter(Boolean).join(" · ")
+    ? "Customer Chat"
     : "Live Chat";
 
   return (
