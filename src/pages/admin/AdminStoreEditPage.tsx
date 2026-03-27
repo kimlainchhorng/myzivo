@@ -356,6 +356,7 @@ const emptyProduct = {
   discount_type: null as string | null, discount_value: null as number | null,
   discount_price_khr: null as number | null, discount_expires_at: "" as string,
   buy_quantity: 1, get_quantity: 0,
+  size_variants: [] as { size: string; price_khr: number; price_usd: number }[],
 };
 
 export default function AdminStoreEditPage() {
@@ -961,6 +962,7 @@ export default function AdminStoreEditPage() {
       discount_expires_at: p.discount_expires_at || "",
       buy_quantity: p.buy_quantity || 1,
       get_quantity: p.get_quantity || 0,
+      size_variants: (p.size_variants as any[]) || [],
     });
     setProductDialog(true);
   };
