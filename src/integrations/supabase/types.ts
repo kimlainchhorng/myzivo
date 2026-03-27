@@ -36414,6 +36414,7 @@ export type Database = {
           name: string
           price: number
           price_khr: number | null
+          size_variants: Json | null
           sku: string | null
           sort_order: number | null
           store_id: string
@@ -36439,6 +36440,7 @@ export type Database = {
           name: string
           price: number
           price_khr?: number | null
+          size_variants?: Json | null
           sku?: string | null
           sort_order?: number | null
           store_id: string
@@ -36464,6 +36466,7 @@ export type Database = {
           name?: string
           price?: number
           price_khr?: number | null
+          size_variants?: Json | null
           sku?: string | null
           sort_order?: number | null
           store_id?: string
