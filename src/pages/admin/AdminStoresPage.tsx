@@ -30,6 +30,30 @@ export default function AdminStoresPage() {
   const [form, setForm] = useState(emptyStore);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadStoreImage = async (file: File, type: "logo" | "banner") => {
+    const isLogo = type === "logo";
+    isLogo ? setUploadingLogo(true) : setUploadingBanner(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `temp/${type}-${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("store-assets")
+        .upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
+      updateField(isLogo ? "logo_url" : "banner_url", urlData.publicUrl);
+      toast.success(`${isLogo ? "Logo" : "Banner"} uploaded`);
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      isLogo ? setUploadingLogo(false) : setUploadingBanner(false);
+    }
+  };
 
   const { data: stores = [], isLoading } = useQuery({
     queryKey: ["admin-stores"],
