@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LogOut, ChevronLeft, Menu, Home, Store,
-  Package, CreditCard, MessageCircle
+  Package, CreditCard, MessageCircle, Users, Megaphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,8 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "profile", label: "Profile", icon: Store },
     { id: "products", label: `Products${productCount != null ? ` (${productCount})` : ""}`, icon: Package },
     { id: "payment", label: "Payment", icon: CreditCard },
+    { id: "customers", label: "Customers", icon: Users },
+    { id: "marketing", label: "Marketing & Ads", icon: Megaphone },
   ];
 
   return (
