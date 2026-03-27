@@ -21,6 +21,7 @@ export interface StoreProfile {
   delivery_min: number | null;
   gallery_images: string[] | null;
   is_active: boolean;
+  facebook_url: string | null;
 }
 
 export interface StoreProductItem {
