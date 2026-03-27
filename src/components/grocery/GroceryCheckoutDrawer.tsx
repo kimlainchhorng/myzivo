@@ -740,7 +740,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   {/* Price breakdown */}
                   <div className="px-3.5 pb-3.5 pt-2 border-t border-border/10 space-y-1.5">
                     <div className="flex justify-between text-[12px] text-muted-foreground">
-                      <span>Subtotal</span>
+                      <span>{t("grocery.checkout.subtotal")}</span>
                       <span className="text-foreground tabular-nums">${total.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] text-muted-foreground">
@@ -901,7 +901,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 disabled={!isValid}
                 onClick={goToReview}
               >
-                Review Order
+                {t("grocery.checkout.review_order")}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </motion.div>
