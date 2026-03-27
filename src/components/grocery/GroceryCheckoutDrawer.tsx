@@ -684,6 +684,12 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                       <span className="text-muted-foreground">{t("grocery.checkout.subtotal")}</span>
                       <span className="text-foreground font-medium tabular-nums">${total.toFixed(2)}</span>
                     </div>
+                    {!isCambodia && (
+                      <div className="flex justify-between text-[12px]">
+                        <span className="text-muted-foreground">Platform fee ({markupPct}%)</span>
+                        <span className="text-foreground font-medium tabular-nums">${platformMarkup.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-[12px]">
                       <span className="text-muted-foreground flex items-center gap-1.5">
                         <Truck className="h-3 w-3" /> {t("grocery.checkout.delivery_fee") || "Delivery Fee"} ({distanceLabel})
