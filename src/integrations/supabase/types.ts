@@ -36483,6 +36483,7 @@ export type Database = {
       store_profiles: {
         Row: {
           address: string | null
+          banner_position: number | null
           banner_url: string | null
           category: string
           created_at: string | null
@@ -36505,6 +36506,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          banner_position?: number | null
           banner_url?: string | null
           category?: string
           created_at?: string | null
@@ -36527,6 +36529,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          banner_position?: number | null
           banner_url?: string | null
           category?: string
           created_at?: string | null
