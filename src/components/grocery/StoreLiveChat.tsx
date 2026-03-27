@@ -31,6 +31,7 @@ interface ChatThread {
   created_at: string;
   customer_email?: string;
   customer_name?: string;
+  customer_phone?: string;
   last_message?: string;
   last_message_at?: string;
   unread_count?: number;
@@ -108,7 +109,7 @@ function AdminChatList({
       const userIds = chatRows.map((c) => c.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name, email")
+        .select("id, full_name, email, phone, phone_e164")
         .in("id", userIds);
 
       const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
@@ -136,6 +137,7 @@ function AdminChatList({
           ...chat,
           customer_email: profile?.email || "Unknown",
           customer_name: profile?.full_name || undefined,
+          customer_phone: profile?.phone_e164 || profile?.phone || undefined,
           last_message: lastMsg?.content,
           last_message_at: lastMsg?.created_at,
           unread_count: count || 0,
@@ -201,9 +203,9 @@ function AdminChatList({
                     </span>
                   )}
                 </div>
-                {chat.customer_name && (
-                  <p className="text-[10px] text-muted-foreground truncate">{chat.customer_email}</p>
-                )}
+                <p className="text-[10px] text-muted-foreground truncate">
+                  {[chat.customer_email, chat.customer_phone].filter(Boolean).join(" · ")}
+                </p>
                 {chat.last_message && (
                   <p className="text-[11px] text-muted-foreground truncate mt-0.5">{chat.last_message}</p>
                 )}
