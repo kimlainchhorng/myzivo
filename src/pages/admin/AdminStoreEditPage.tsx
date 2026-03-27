@@ -31,10 +31,6 @@ import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
-function withVideoPreviewOffset(url: string): string {
-  if (!url) return "";
-  return url.includes("#") ? url : `${url}#t=0.001`;
-}
 
 function normalizeLocalizedNumberInput(value: string): string {
   const khmerToLatin: Record<string, string> = {
@@ -1232,28 +1228,24 @@ export default function AdminStoreEditPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {posts.filter((p: any) => p.media_type === "video" || p.media_type === "mixed").map((post: any) => {
                       const primaryMediaUrl = normalizeStorePostMediaUrl(post.media_urls?.[0] || "");
-                      const previewMediaUrl = withVideoPreviewOffset(primaryMediaUrl);
 
                       return (
                       <div key={post.id} className="rounded-xl border border-border overflow-hidden bg-card group">
                         <div className="aspect-[9/16] relative overflow-hidden bg-muted/10">
                           {primaryMediaUrl && (
                             <video
-                              src={previewMediaUrl}
+                              src={primaryMediaUrl}
                               className="w-full h-full object-contain"
                               controls
                               playsInline
-                              preload="metadata"
-                              muted
+                              preload="auto"
+                              muted={true}
+                              crossOrigin="anonymous"
                               onLoadedMetadata={(event) => {
                                 ensurePostVideoFrame(event.currentTarget);
                               }}
                               onLoadedData={(event) => {
                                 ensurePostVideoFrame(event.currentTarget);
-                                event.currentTarget.pause();
-                              }}
-                              onSeeked={(event) => {
-                                event.currentTarget.pause();
                               }}
                             />
                           )}
