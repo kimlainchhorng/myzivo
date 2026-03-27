@@ -3,6 +3,10 @@
  * Customers can browse content posted by stores
  */
 import { useQuery } from "@tanstack/react-query";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { fetchFile } from "@ffmpeg/util";
+import ffmpegCoreUrl from "@ffmpeg/core?url";
+import ffmpegWasmUrl from "@ffmpeg/core/wasm?url";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -40,7 +44,13 @@ function timeAgo(dateStr: string): string {
 function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const ffmpegRef = useRef<FFmpeg | null>(null);
+  const ffmpegLoadPromiseRef = useRef<Promise<FFmpeg> | null>(null);
+  const compatibilityCacheRef = useRef<Map<string, string>>(new Map());
+  const pendingPlayRef = useRef(false);
+  const [resolvedVideoSrc, setResolvedVideoSrc] = useState(urls[0] ?? "");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPreparingFallback, setIsPreparingFallback] = useState(false);
 
   const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
 
@@ -57,7 +67,73 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     }
   };
 
-  const playVideo = async () => {
+  const ensureFFmpegLoaded = async () => {
+    if (ffmpegRef.current) return ffmpegRef.current;
+
+    if (!ffmpegLoadPromiseRef.current) {
+      ffmpegLoadPromiseRef.current = (async () => {
+        const ffmpeg = new FFmpeg();
+        await ffmpeg.load({
+          coreURL: ffmpegCoreUrl,
+          wasmURL: ffmpegWasmUrl,
+        });
+        ffmpegRef.current = ffmpeg;
+        return ffmpeg;
+      })().catch((error) => {
+        ffmpegLoadPromiseRef.current = null;
+        throw error;
+      });
+    }
+
+    return ffmpegLoadPromiseRef.current;
+  };
+
+  const createCompatibilitySrc = async (sourceUrl: string) => {
+    const cached = compatibilityCacheRef.current.get(sourceUrl);
+    if (cached) return cached;
+
+    const ffmpeg = await ensureFFmpegLoaded();
+    const response = await fetch(sourceUrl);
+    if (!response.ok) {
+      throw new Error("Unable to fetch video for compatibility playback.");
+    }
+
+    const inputName = `feed-video-${activeIndex}.mp4`;
+    const outputName = `feed-video-${activeIndex}-compat.mp4`;
+
+    await ffmpeg.writeFile(inputName, await fetchFile(await response.blob()));
+
+    try {
+      await ffmpeg.exec([
+        "-i", inputName,
+        "-movflags", "+faststart",
+        "-pix_fmt", "yuv420p",
+        "-c:v", "libx264",
+        "-preset", "veryfast",
+        "-profile:v", "baseline",
+        "-level", "3.0",
+        "-an",
+        "-y",
+        outputName,
+      ]);
+
+      const data = await ffmpeg.readFile(outputName);
+      if (!(data instanceof Uint8Array)) {
+        throw new Error("Failed to build compatible video.");
+      }
+
+      const objectUrl = URL.createObjectURL(new Blob([data], { type: "video/mp4" }));
+      compatibilityCacheRef.current.set(sourceUrl, objectUrl);
+      return objectUrl;
+    } finally {
+      await Promise.allSettled([
+        ffmpeg.deleteFile(inputName),
+        ffmpeg.deleteFile(outputName),
+      ]);
+    }
+  };
+
+  const playCurrentVideo = async () => {
     const video = videoRef.current;
     if (!video) return;
 
@@ -65,10 +141,20 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
 
     try {
       await video.play();
+      video.controls = false;
       setIsPlaying(true);
     } catch {
-      setIsPlaying(false);
-      video.controls = true;
+      try {
+        setIsPreparingFallback(true);
+        pendingPlayRef.current = true;
+        const compatibleSrc = await createCompatibilitySrc(urls[activeIndex]);
+        setResolvedVideoSrc(compatibleSrc);
+      } catch {
+        video.controls = true;
+        setIsPlaying(false);
+      } finally {
+        setIsPreparingFallback(false);
+      }
     }
   };
 
@@ -86,14 +172,21 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     if (!video) return;
 
     if (video.paused) {
-      void playVideo();
+      void playCurrentVideo();
     } else {
       pauseVideo();
     }
   };
 
   useEffect(() => {
+    const nextSource = urls[activeIndex] ?? "";
+    setResolvedVideoSrc(compatibilityCacheRef.current.get(nextSource) ?? nextSource);
     setIsPlaying(false);
+    setIsPreparingFallback(false);
+    pendingPlayRef.current = false;
+  }, [activeIndex, urls]);
+
+  useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
@@ -101,7 +194,29 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     video.controls = true;
     video.currentTime = 0;
     video.load();
-  }, [activeIndex, urls]);
+  }, [resolvedVideoSrc]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !pendingPlayRef.current) return;
+
+    pendingPlayRef.current = false;
+    ensureVisibleFrame(video);
+    video.play().then(() => {
+      video.controls = false;
+      setIsPlaying(true);
+    }).catch(() => {
+      video.controls = true;
+      setIsPlaying(false);
+    });
+  }, [resolvedVideoSrc]);
+
+  useEffect(() => {
+    return () => {
+      compatibilityCacheRef.current.forEach((objectUrl) => URL.revokeObjectURL(objectUrl));
+      compatibilityCacheRef.current.clear();
+    };
+  }, []);
 
   return (
     <div className="relative bg-muted">
@@ -109,9 +224,9 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
         {isVideo(urls[activeIndex]) ? (
           <div className="relative w-full h-full">
             <video
-              key={urls[activeIndex]}
+              key={resolvedVideoSrc}
               ref={videoRef}
-              src={urls[activeIndex]}
+              src={resolvedVideoSrc}
               className="w-full h-full object-cover"
               playsInline
               loop
@@ -131,7 +246,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
                 setIsPlaying(false);
               }}
             />
-            {!isPlaying && (
+            {!isPlaying && !isPreparingFallback && (
               <button
                 type="button"
                 onClick={toggleVideo}
@@ -142,6 +257,12 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
                   <Play className="w-6 h-6 text-foreground ml-0.5" fill="currentColor" />
                 </div>
               </button>
+            )}
+            {isPreparingFallback && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/35 text-white">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span className="text-sm font-medium">Preparing video…</span>
+              </div>
             )}
           </div>
         ) : (
