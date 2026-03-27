@@ -2589,6 +2589,7 @@ export default function AdminStoreEditPage() {
         storeLogo={store.logo_url}
         open={chatOpen}
         onClose={() => setChatOpen(false)}
+        isAdmin
       />
     )}
     </>
