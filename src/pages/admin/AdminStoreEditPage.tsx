@@ -2135,6 +2135,76 @@ export default function AdminStoreEditPage() {
               />
             </div>
 
+            {/* ── Size Variants / តម្លៃតាមទំហំ ── */}
+            <div className="space-y-3 rounded-xl border border-border/50 bg-muted/30 p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Ruler className="h-4 w-4 text-primary" />
+                  <Label className="font-semibold text-sm">Size Prices / តម្លៃតាមទំហំ</Label>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1"
+                  onClick={() => {
+                    const variants = [...(productForm.size_variants || [])];
+                    variants.push({ size: "", price_khr: 0, price_usd: 0 });
+                    updateProductField("size_variants", variants);
+                  }}
+                >
+                  <Plus className="h-3 w-3" /> Add Size
+                </Button>
+              </div>
+              {(productForm.size_variants || []).length > 0 && (
+                <div className="space-y-2">
+                  {(productForm.size_variants || []).map((v: { size: string; price_khr: number; price_usd: number }, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <Input
+                        value={v.size}
+                        onChange={e => {
+                          const variants = [...(productForm.size_variants || [])];
+                          variants[idx] = { ...variants[idx], size: e.target.value };
+                          updateProductField("size_variants", variants);
+                        }}
+                        placeholder="Size name (S, M, L...)"
+                        className="flex-1"
+                      />
+                      <div className="w-24">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          value={v.price_khr || ""}
+                          onChange={e => {
+                            const val = e.target.value.replace(/[^0-9]/g, "");
+                            const khr = val === "" ? 0 : parseInt(val, 10);
+                            const variants = [...(productForm.size_variants || [])];
+                            variants[idx] = { ...variants[idx], price_khr: khr, price_usd: parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)) };
+                            updateProductField("size_variants", variants);
+                          }}
+                          placeholder="៛ KHR"
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground w-14 text-right">${v.price_usd || 0}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const variants = (productForm.size_variants || []).filter((_: any, i: number) => i !== idx);
+                          updateProductField("size_variants", variants);
+                        }}
+                        className="w-6 h-6 rounded-full bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive/20 transition-colors shrink-0"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {(productForm.size_variants || []).length === 0 && (
+                <p className="text-xs text-muted-foreground">Add sizes with different prices (e.g. Small, Medium, Large)</p>
+              )}
+            </div>
+
             {/* Badge / Tag selector */}
             <div className="space-y-2">
               <Label>Badge / ស្លាក</Label>
