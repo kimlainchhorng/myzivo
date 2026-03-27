@@ -1140,30 +1140,36 @@ export default function AdminStoreEditPage() {
     }
   };
 
+  const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
+    <StoreOwnerLayout title={title} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url}>{children}</StoreOwnerLayout>
+  );
+
   if (isLoading) {
     return (
-      <AdminLayout title="Edit Store">
+      <Layout title="Edit Store">
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </AdminLayout>
+      </Layout>
     );
   }
 
   if (!store) {
     return (
-      <AdminLayout title="Store Not Found">
+      <Layout title="Store Not Found">
         <div className="text-center py-20 space-y-4">
           <p className="text-muted-foreground">Store not found</p>
-          <Button onClick={() => navigate("/admin/stores")} variant="outline">Back to Stores</Button>
+          <Button onClick={() => navigate(isAdmin ? "/admin/stores" : "/")} variant="outline">
+            {isAdmin ? "Back to Stores" : "Back to Home"}
+          </Button>
         </div>
-      </AdminLayout>
+      </Layout>
     );
   }
 
   return (
     <>
-    <AdminLayout title={`Edit: ${store.name}`}>
+    <Layout title={`Edit: ${store.name}`}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
