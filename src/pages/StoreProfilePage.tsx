@@ -346,6 +346,7 @@ export default function StoreProfilePage() {
             <StoreHeroCarousel
               images={store.gallery_images!}
               storeName={store.name}
+              positions={(store as any).gallery_positions}
             />
           </motion.div>
         </div>
