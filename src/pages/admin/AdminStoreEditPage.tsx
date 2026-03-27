@@ -2159,43 +2159,74 @@ export default function AdminStoreEditPage() {
               {(productForm.size_variants || []).length > 0 && (
                 <div className="space-y-2">
                   {(productForm.size_variants || []).map((v: { size: string; price_khr: number; price_usd: number }, idx: number) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <Input
-                        value={v.size}
-                        onChange={e => {
-                          const variants = [...(productForm.size_variants || [])];
-                          variants[idx] = { ...variants[idx], size: e.target.value };
-                          updateProductField("size_variants", variants);
-                        }}
-                        placeholder="Size name (S, M, L...)"
-                        className="flex-1"
-                      />
-                      <div className="w-24">
+                    <div key={idx} className="space-y-1.5 rounded-lg border border-border/40 bg-background/50 p-2.5">
+                      <div className="flex items-center gap-2">
                         <Input
-                          type="text"
-                          inputMode="numeric"
-                          value={v.price_khr || ""}
+                          value={v.size}
                           onChange={e => {
-                            const val = e.target.value.replace(/[^0-9]/g, "");
-                            const khr = val === "" ? 0 : parseInt(val, 10);
                             const variants = [...(productForm.size_variants || [])];
-                            variants[idx] = { ...variants[idx], price_khr: khr, price_usd: parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)) };
+                            variants[idx] = { ...variants[idx], size: e.target.value };
                             updateProductField("size_variants", variants);
                           }}
-                          placeholder="៛ KHR"
+                          placeholder="Size name (S, M, L...)"
+                          className="flex-1"
                         />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const variants = (productForm.size_variants || []).filter((_: any, i: number) => i !== idx);
+                            updateProductField("size_variants", variants);
+                          }}
+                          className="w-6 h-6 rounded-full bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive/20 transition-colors shrink-0"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </div>
-                      <span className="text-xs text-muted-foreground w-14 text-right">${v.price_usd || 0}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const variants = (productForm.size_variants || []).filter((_: any, i: number) => i !== idx);
-                          updateProductField("size_variants", variants);
-                        }}
-                        className="w-6 h-6 rounded-full bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive/20 transition-colors shrink-0"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-0.5">
+                          <Label className="text-[10px] text-muted-foreground">Price (៛ KHR)</Label>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            value={v.price_khr || ""}
+                            onChange={e => {
+                              const val = e.target.value.replace(/[^0-9]/g, "");
+                              const khr = val === "" ? 0 : parseInt(val, 10);
+                              const variants = [...(productForm.size_variants || [])];
+                              variants[idx] = { ...variants[idx], price_khr: khr, price_usd: parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)) };
+                              updateProductField("size_variants", variants);
+                            }}
+                            placeholder="0"
+                          />
+                        </div>
+                        <div className="space-y-0.5">
+                          <Label className="text-[10px] text-muted-foreground">Price ($)</Label>
+                          <Input
+                            type="text"
+                            inputMode="decimal"
+                            value={v.price_usd || ""}
+                            onChange={e => {
+                              const parts = e.target.value.split(".");
+                              const safe = parts.length > 1
+                                ? `${parts[0].replace(/[^0-9]/g, "")}.${parts.slice(1).join("").replace(/[^0-9]/g, "")}`
+                                : e.target.value.replace(/[^0-9]/g, "");
+                              if (safe === "" || safe === ".") {
+                                const variants = [...(productForm.size_variants || [])];
+                                variants[idx] = { ...variants[idx], price_khr: 0, price_usd: 0 };
+                                updateProductField("size_variants", variants);
+                                return;
+                              }
+                              const usd = parseFloat(safe);
+                              if (!Number.isNaN(usd)) {
+                                const variants = [...(productForm.size_variants || [])];
+                                variants[idx] = { ...variants[idx], price_usd: usd, price_khr: Math.round(usd * (form.khr_rate || 4062.5)) };
+                                updateProductField("size_variants", variants);
+                              }
+                            }}
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
