@@ -32,7 +32,9 @@ import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
-
+import abaLogo from "@/assets/payments/aba-logo.png";
+import wingLogo from "@/assets/payments/wing-logo.png";
+import acledaLogo from "@/assets/payments/acleda-logo.png";
 function normalizeLocalizedNumberInput(value: string): string {
   const khmerToLatin: Record<string, string> = {
     "០": "0", "១": "1", "២": "2", "៣": "3", "៤": "4",
@@ -1770,8 +1772,8 @@ export default function AdminStoreEditPage() {
                 {/* ABA PayWay */}
                 <div className="rounded-xl border border-border p-4 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                      <Banknote className="h-5 w-5 text-blue-600" />
+                    <div className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center bg-muted">
+                      <img src={abaLogo} alt="ABA" className="h-10 w-10 object-contain" loading="lazy" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">ABA PayWay</p>
@@ -1792,8 +1794,8 @@ export default function AdminStoreEditPage() {
                 {/* Wing */}
                 <div className="rounded-xl border border-border p-4 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                      <Smartphone className="h-5 w-5 text-orange-600" />
+                    <div className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center bg-muted">
+                      <img src={wingLogo} alt="Wing" className="h-10 w-10 object-contain" loading="lazy" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">Wing</p>
@@ -1814,8 +1816,8 @@ export default function AdminStoreEditPage() {
                 {/* ACLEDA */}
                 <div className="rounded-xl border border-border p-4 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                      <Building2 className="h-5 w-5 text-yellow-600" />
+                    <div className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center bg-muted">
+                      <img src={acledaLogo} alt="ACLEDA" className="h-10 w-10 object-contain" loading="lazy" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">ACLEDA Bank</p>
