@@ -1753,19 +1753,54 @@ export default function AdminStoreEditPage() {
                 <p className="text-sm text-muted-foreground">
                   Manage how this store receives payments from customers and how payouts are processed.
                 </p>
+                {/* Card / Stripe */}
                 <div className="rounded-xl border border-border p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                       <CreditCard className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">Store Payment Setup</p>
-                      <p className="text-xs text-muted-foreground">Connect a payment method to receive payouts</p>
+                      <p className="text-sm font-medium text-foreground">Card Payment</p>
+                      <p className="text-xs text-muted-foreground">Accept Visa, Mastercard & more via Stripe</p>
                     </div>
                   </div>
                   <Button className="w-full gap-2" variant="outline">
                     <CreditCard className="h-4 w-4" />
-                    Add Payment Method
+                    Add Card Payment
+                  </Button>
+                </div>
+
+                {/* ABA PayWay */}
+                <div className="rounded-xl border border-border p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <Banknote className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">ABA PayWay</p>
+                      <p className="text-xs text-muted-foreground">Accept payments via ABA mobile & KHQR</p>
+                    </div>
+                  </div>
+                  <Button className="w-full gap-2" variant="outline">
+                    <Banknote className="h-4 w-4" />
+                    Connect ABA PayWay
+                  </Button>
+                </div>
+
+                {/* Cash */}
+                <div className="rounded-xl border border-border p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                      <DollarSign className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">Cash on Delivery</p>
+                      <p className="text-xs text-muted-foreground">Customers pay in cash upon receiving their order</p>
+                    </div>
+                  </div>
+                  <Button className="w-full gap-2" variant="outline">
+                    <DollarSign className="h-4 w-4" />
+                    Enable Cash Payment
                   </Button>
                 </div>
               </CardContent>
