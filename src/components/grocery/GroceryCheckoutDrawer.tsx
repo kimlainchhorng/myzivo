@@ -28,6 +28,7 @@ import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useI18n } from "@/hooks/useI18n";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import { useCountry } from "@/hooks/useCountry";
 import { CheckoutPinMap } from "@/components/grocery/CheckoutPinMap";
 
 interface GroceryCheckoutDrawerProps {
@@ -134,14 +135,17 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   }, [storeCfg]);
 
   const { isPlus } = useZivoPlus();
+  const { isCambodia } = useCountry();
 
-  const priorityFee = isPlus ? 0 : getPriorityFee(scheduler.speed); // ZIVO+ gets free priority
-  // Distance-based delivery fee (estimate: ~3mi, ETA-based minutes)
-  const estimatedMiles = 3;
-  const deliveryFee = calcDeliveryFee(estimatedMiles, liveEta);
-  // Platform markup: 3-5% of subtotal
-  const platformMarkup = calcMarkup(total);
-  const markupPct = getMarkupPct(total);
+  const priorityFee = isPlus ? 0 : getPriorityFee(scheduler.speed);
+  // Distance-based delivery fee — Cambodia uses km, others use miles
+  const estimatedDistance = isCambodia ? 5 : 3; // ~5km or ~3mi
+  const estimatedMilesEquiv = isCambodia ? estimatedDistance * 0.621 : estimatedDistance;
+  const deliveryFee = calcDeliveryFee(estimatedMilesEquiv, liveEta);
+  const distanceLabel = isCambodia ? `~${estimatedDistance}km` : `~${estimatedDistance}mi`;
+  // Platform markup: 0% for Cambodia, 3-5% elsewhere
+  const platformMarkup = isCambodia ? 0 : calcMarkup(total);
+  const markupPct = isCambodia ? 0 : getMarkupPct(total);
   // Service fee: waived for ZIVO+ members
   const serviceFee = isPlus ? 0 : calcServiceFee(total);
   const grandTotal = Math.max(0, total + platformMarkup + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
@@ -381,7 +385,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                         {liveEta}–{liveEta + 15} {t("grocery.checkout.min")}
                       </motion.span>
                     </p>
-                    <p className="text-[10px] text-muted-foreground">{t("grocery.checkout.driver_will_shop")}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {isCambodia
+                        ? (t("grocery.checkout.driver_will_shop_kh") || "Driver will shop & deliver by motorcycle/tuk tuk")
+                        : t("grocery.checkout.driver_will_shop")}
+                    </p>
                   </div>
                 </div>
 
@@ -678,7 +686,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     </div>
                     <div className="flex justify-between text-[12px]">
                       <span className="text-muted-foreground flex items-center gap-1.5">
-                        <Truck className="h-3 w-3" /> {t("grocery.checkout.delivery_fee") || "Delivery Fee"} (~{estimatedMiles}mi)
+                        <Truck className="h-3 w-3" /> {t("grocery.checkout.delivery_fee") || "Delivery Fee"} ({distanceLabel})
                       </span>
                       <span className="text-foreground font-medium tabular-nums">${deliveryFee.toFixed(2)}</span>
                     </div>
@@ -866,12 +874,14 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                       <span>{t("grocery.checkout.subtotal")}</span>
                       <span className="text-foreground tabular-nums">${total.toFixed(2)}</span>
                     </div>
+                    {!isCambodia && (
+                      <div className="flex justify-between text-[12px] text-muted-foreground">
+                        <span>Platform fee ({markupPct}%)</span>
+                        <span className="text-foreground tabular-nums">${platformMarkup.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-[12px] text-muted-foreground">
-                      <span>Platform fee ({markupPct}%)</span>
-                      <span className="text-foreground tabular-nums">${platformMarkup.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-[12px] text-muted-foreground">
-                      <span className="flex items-center gap-1.5"><Truck className="h-3 w-3" /> Delivery (~{estimatedMiles}mi)</span>
+                      <span className="flex items-center gap-1.5"><Truck className="h-3 w-3" /> {isCambodia ? "Delivery" : "Delivery"} ({distanceLabel})</span>
                       <span className="text-foreground tabular-nums">${deliveryFee.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] text-muted-foreground">
