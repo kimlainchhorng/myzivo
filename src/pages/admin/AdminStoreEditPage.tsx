@@ -1464,6 +1464,7 @@ export default function AdminStoreEditPage() {
             <p className="text-[11px] text-muted-foreground mt-2">These images appear as a scrolling banner on your store page.</p>
           </CardContent>
         </Card>
+        </>)}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           {isAdmin && (
