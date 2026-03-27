@@ -689,10 +689,30 @@ export default function StoreProfilePage() {
                       )}
                     </p>
 
+                    {/* Size selector */}
+                    {hasSizes && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {sizeVariants.map((sv, sIdx) => (
+                          <button
+                            key={sv.size}
+                            onClick={(e) => { e.stopPropagation(); setSelectedSizes(prev => ({ ...prev, [product.id]: sIdx })); }}
+                            className={cn(
+                              "px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all",
+                              selectedIdx === sIdx
+                                ? "bg-primary/15 border-primary/40 text-primary"
+                                : "bg-muted/20 border-border/30 text-muted-foreground hover:border-primary/20"
+                            )}
+                          >
+                            {sv.size}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Price row */}
                     <div className="flex items-end justify-between">
                       <div>
-                        {hasDiscount ? (
+                        {hasDiscount && !hasSizes ? (
                           <>
                             <span className="text-base font-black text-destructive tracking-tight leading-none block">
                               ៛{discountKhr.toLocaleString()}
@@ -712,7 +732,7 @@ export default function StoreProfilePage() {
                               ៛{khrPrice.toLocaleString()}
                             </span>
                             <span className="text-[11px] font-medium text-muted-foreground/60 block mt-0.5">
-                              ${product.price.toFixed(2)}
+                              ${activePrice.toFixed(2)}
                             </span>
                           </>
                         )}
@@ -723,7 +743,7 @@ export default function StoreProfilePage() {
                         <motion.button
                           whileTap={{ scale: 0.75, rotate: -15 }}
                           whileHover={{ scale: 1.1, y: -2 }}
-                          onClick={(e) => { e.stopPropagation(); handleAddToCart(product); }}
+                          onClick={(e) => { e.stopPropagation(); handleAddToCart(product, activeVariant || undefined); }}
                           className="h-9 w-9 rounded-[14px] bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-xl shadow-primary/30 border border-primary/30 relative overflow-hidden"
                         >
                           {/* Button shine */}
