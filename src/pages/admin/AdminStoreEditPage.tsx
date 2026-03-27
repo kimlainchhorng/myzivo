@@ -1772,8 +1772,8 @@ export default function AdminStoreEditPage() {
                 {/* ABA PayWay */}
                 <div className="rounded-xl border border-border p-4 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center bg-muted">
-                      <img src={abaLogo} alt="ABA" className="h-10 w-10 object-contain" loading="lazy" />
+                    <div className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center">
+                      <img src={abaLogo} alt="ABA" className="h-full w-full object-cover" loading="lazy" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">ABA PayWay</p>
