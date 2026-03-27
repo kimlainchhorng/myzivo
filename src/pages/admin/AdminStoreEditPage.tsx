@@ -1610,38 +1610,52 @@ export default function AdminStoreEditPage() {
                     {/* Category Filter Bar */}
                     {(() => {
                       const allCats = Array.from(new Set(products.map((p: any) => p.category).filter(Boolean))).sort() as string[];
-                      if (allCats.length === 0) return null;
                       return (
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
                           <button
                             onClick={() => setProductCategoryFilter("")}
-                            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                            className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                               !productCategoryFilter
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-muted/60 text-muted-foreground border-border hover:bg-muted"
                             }`}
                           >
-                            All
+                            All ({products.length})
                           </button>
-                          {allCats.map(cat => (
+                          {allCats.map(cat => {
+                            const count = products.filter((p: any) => p.category === cat).length;
+                            return (
+                              <button
+                                key={cat}
+                                onClick={() => setProductCategoryFilter(productCategoryFilter === cat ? "" : cat)}
+                                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                                  productCategoryFilter === cat
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-muted/60 text-muted-foreground border-border hover:bg-muted"
+                                }`}
+                              >
+                                {cat} ({count})
+                              </button>
+                            );
+                          })}
+                          {products.some((p: any) => !p.category) && (
                             <button
-                              key={cat}
-                              onClick={() => setProductCategoryFilter(productCategoryFilter === cat ? "" : cat)}
-                              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                                productCategoryFilter === cat
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                              onClick={() => setProductCategoryFilter("__uncategorized__")}
+                              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                                productCategoryFilter === "__uncategorized__"
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-muted/60 text-muted-foreground border-border hover:bg-muted"
                               }`}
                             >
-                              {cat}
+                              Uncategorized ({products.filter((p: any) => !p.category).length})
                             </button>
-                          ))}
+                          )}
                         </div>
                       );
                     })()}
                     <div className="divide-y divide-border">
                       {products
-                        .filter((product: any) => !productCategoryFilter || product.category === productCategoryFilter)
+                        .filter((product: any) => !productCategoryFilter || (productCategoryFilter === "__uncategorized__" ? !product.category : product.category === productCategoryFilter))
                         .map((product: any) => (
                         <div key={product.id} className="flex items-center justify-between py-3">
                           <div className="flex items-center gap-3">
