@@ -53,6 +53,152 @@ function generateSku(storeName: string, category: string, name: string): string 
   return `${s}-${c}-${n}${rand}`;
 }
 
+function ensureVisibleVideoFrame(video: HTMLVideoElement) {
+  if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+
+  const targetTime = Math.min(1, Math.max(video.duration * 0.1, 0.25));
+  if (Math.abs(video.currentTime - targetTime) < 0.01) return;
+
+  try {
+    video.currentTime = targetTime;
+  } catch {
+    // Ignore seek failures on restrictive browsers.
+  }
+}
+
+function captureVideoPosterFrame(video: HTMLVideoElement, setPosterUrl: (value: string | null | ((prev: string | null) => string | null)) => void) {
+  if (video.videoWidth === 0 || video.videoHeight === 0) return;
+
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const nextPoster = canvas.toDataURL("image/jpeg", 0.82);
+    setPosterUrl((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return nextPoster;
+    });
+  } catch {
+    // Ignore poster extraction failures.
+  }
+}
+
+function AdminVideoPreview({
+  src,
+  className,
+  videoClassName,
+  controls = true,
+  autoPlay = false,
+  loop = false,
+  muted = true,
+}: {
+  src: string;
+  className?: string;
+  videoClassName?: string;
+  controls?: boolean;
+  autoPlay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+}) {
+  const [posterUrl, setPosterUrl] = useState<string | null>(null);
+  const [hasPlaybackError, setHasPlaybackError] = useState(false);
+  const [triedBlobFallback, setTriedBlobFallback] = useState(false);
+  const [blobSrc, setBlobSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    setHasPlaybackError(false);
+    setTriedBlobFallback(false);
+    setPosterUrl((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return null;
+    });
+
+    setBlobSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  }, [src]);
+
+  useEffect(() => {
+    return () => {
+      setPosterUrl((prev) => {
+        if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+        return prev;
+      });
+      setBlobSrc((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return prev;
+      });
+    };
+  }, []);
+
+  const tryBlobFallback = async () => {
+    if (triedBlobFallback) return;
+
+    setTriedBlobFallback(true);
+
+    try {
+      const response = await fetch(src);
+      if (!response.ok) throw new Error("fetch failed");
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      setBlobSrc((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return objectUrl;
+      });
+      setHasPlaybackError(false);
+    } catch {
+      setHasPlaybackError(true);
+    }
+  };
+
+  return (
+    <div className={cn("relative bg-black", className)}>
+      <video
+        key={blobSrc || src}
+        src={blobSrc || src}
+        poster={posterUrl ?? undefined}
+        className={cn("w-full h-full", videoClassName)}
+        controls={controls}
+        playsInline
+        preload="auto"
+        muted={muted}
+        autoPlay={autoPlay}
+        loop={loop}
+        onLoadedMetadata={(event) => {
+          event.currentTarget.muted = muted;
+          ensureVisibleVideoFrame(event.currentTarget);
+          if (!autoPlay) event.currentTarget.pause();
+        }}
+        onLoadedData={(event) => {
+          setHasPlaybackError(false);
+          ensureVisibleVideoFrame(event.currentTarget);
+          captureVideoPosterFrame(event.currentTarget, setPosterUrl);
+          if (!autoPlay) event.currentTarget.pause();
+        }}
+        onError={() => {
+          if (!triedBlobFallback) {
+            void tryBlobFallback();
+          } else {
+            setHasPlaybackError(true);
+          }
+        }}
+      />
+
+      {hasPlaybackError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-foreground/20 px-4 text-center backdrop-blur-sm">
+          <p className="text-xs font-medium text-background">Video preview unavailable — try Replace or Reprocess.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const emptyProduct = {
   name: "", description: "", price: 0, price_khr: 0, image_url: "", image_urls: [] as string[], category: "",
   brand: "", sku: "", unit: "", badge: "" as string, in_stock: true, sort_order: 0,
@@ -221,18 +367,6 @@ export default function AdminStoreEditPage() {
     updater: (item: { id: string; previewUrl: string; uploadedUrl?: string; isVideo: boolean; isUploading: boolean }) => { id: string; previewUrl: string; uploadedUrl?: string; isVideo: boolean; isUploading: boolean },
   ) => {
     setPostMediaItems((prev) => prev.map((item) => (item.id === id ? updater(item) : item)));
-  };
-
-  const ensurePostVideoFrame = (video: HTMLVideoElement) => {
-    if (!Number.isFinite(video.duration) || video.duration <= 0) return;
-    const targetTime = Math.min(1, Math.max(video.duration * 0.1, 0.25));
-    if (Math.abs(video.currentTime - targetTime) < 0.01) return;
-
-    try {
-      video.currentTime = targetTime;
-    } catch {
-      // Ignore seek failures on restrictive browsers.
-    }
   };
 
   const probeVideoFile = async (file: File) => {
@@ -508,7 +642,7 @@ export default function AdminStoreEditPage() {
         }
 
         toast.info("Downloading video for reprocessing...");
-        const resp = await fetch(url);
+        const resp = await fetch(normalizeStorePostMediaUrl(url));
         if (!resp.ok) throw new Error("Failed to download video");
         const blob = await resp.blob();
         const originalFile = new File([blob], "reprocess.mp4", { type: blob.type || "video/mp4" });
@@ -555,8 +689,16 @@ export default function AdminStoreEditPage() {
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
+      const videoIndex = (post.media_urls || []).findIndex((url: string) =>
+        isVideoUrl(normalizeStorePostMediaUrl(url))
+      );
+
+      if (videoIndex === -1) {
+        throw new Error("No video file found to replace.");
+      }
+
       const nextUrls = (post.media_urls || []).map((url: string, index: number) =>
-        index === 0 ? urlData.publicUrl : url
+        index === videoIndex ? urlData.publicUrl : url
       );
 
       const { error: updateError } = await supabase
@@ -1269,19 +1411,12 @@ export default function AdminStoreEditPage() {
                       <div key={post.id} className="rounded-xl border border-border overflow-hidden bg-card group">
                         <div className="aspect-[9/16] relative overflow-hidden bg-muted/10">
                           {primaryMediaUrl && (
-                            <video
+                            <AdminVideoPreview
                               src={primaryMediaUrl}
-                              className="w-full h-full object-contain"
+                              className="h-full w-full"
+                              videoClassName="object-contain"
                               controls
-                              playsInline
-                              preload="auto"
-                              muted={true}
-                              onLoadedMetadata={(event) => {
-                                ensurePostVideoFrame(event.currentTarget);
-                              }}
-                              onLoadedData={(event) => {
-                                ensurePostVideoFrame(event.currentTarget);
-                              }}
+                              muted
                             />
                           )}
                           {post.media_urls?.length > 1 && (
@@ -1813,19 +1948,14 @@ export default function AdminStoreEditPage() {
                   <div key={`${preview.previewUrl}-${i}`}>
                     <div className="relative overflow-hidden rounded-lg border border-border bg-muted/20">
                       {preview.isVideo ? (
-                        <video
+                        <AdminVideoPreview
                           src={preview.previewUrl}
+                          className="rounded-lg"
+                          videoClassName="rounded-lg bg-muted object-contain"
                           controls
-                          playsInline
                           muted
                           autoPlay
                           loop
-                          preload="auto"
-                          className="w-full rounded-lg bg-muted"
-                          style={{ aspectRatio: "9 / 16", maxHeight: 320 }}
-                          onLoadedMetadata={(event) => {
-                            ensurePostVideoFrame(event.currentTarget);
-                          }}
                         />
                       ) : (
                         <img
