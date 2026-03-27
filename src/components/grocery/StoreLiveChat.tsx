@@ -1,9 +1,10 @@
 /**
  * StoreLiveChat — Real-time in-app chat between customer and store
+ * Supports admin mode: shows customer info, lists all chats, allows deletion
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, MessageCircle, Loader2 } from "lucide-react";
+import { X, Send, MessageCircle, Loader2, Trash2, ChevronLeft, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -13,6 +14,7 @@ interface StoreLiveChatProps {
   storeLogo?: string | null;
   open: boolean;
   onClose: () => void;
+  isAdmin?: boolean;
 }
 
 interface ChatMessage {
@@ -23,21 +25,209 @@ interface ChatMessage {
   is_read: boolean;
 }
 
-export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onClose }: StoreLiveChatProps) {
+interface ChatThread {
+  id: string;
+  user_id: string;
+  created_at: string;
+  customer_email?: string;
+  customer_name?: string;
+  last_message?: string;
+  last_message_at?: string;
+  unread_count?: number;
+}
+
+/* ─── Admin chat list ─── */
+function AdminChatList({
+  storeId,
+  storeName,
+  storeLogo,
+  onSelectChat,
+  onDeleteChat,
+  onClose,
+}: {
+  storeId: string;
+  storeName: string;
+  storeLogo?: string | null;
+  onSelectChat: (chat: ChatThread) => void;
+  onDeleteChat: (chatId: string) => void;
+  onClose: () => void;
+}) {
+  const [chats, setChats] = useState<ChatThread[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadChats = async () => {
+      setLoading(true);
+      // Get all chats for this store
+      const { data: chatRows } = await supabase
+        .from("store_chats")
+        .select("id, user_id, created_at")
+        .eq("store_id", storeId)
+        .order("updated_at", { ascending: false });
+
+      if (!chatRows?.length) {
+        setChats([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get customer profiles
+      const userIds = chatRows.map((c) => c.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", userIds);
+
+      const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+      // Get last message per chat
+      const enriched: ChatThread[] = [];
+      for (const chat of chatRows) {
+        const { data: lastMsg } = await supabase
+          .from("store_chat_messages")
+          .select("content, created_at, is_read, sender_type")
+          .eq("chat_id", chat.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const { count } = await supabase
+          .from("store_chat_messages")
+          .select("*", { count: "exact", head: true })
+          .eq("chat_id", chat.id)
+          .eq("is_read", false)
+          .eq("sender_type", "customer");
+
+        const profile = profileMap.get(chat.user_id);
+        enriched.push({
+          ...chat,
+          customer_email: profile?.email || "Unknown",
+          customer_name: profile?.full_name || undefined,
+          last_message: lastMsg?.content,
+          last_message_at: lastMsg?.created_at,
+          unread_count: count || 0,
+        });
+      }
+
+      setChats(enriched);
+      setLoading(false);
+    };
+
+    loadChats();
+  }, [storeId]);
+
+  return (
+    <>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/30 shrink-0">
+        <div className="h-10 w-10 rounded-full bg-muted border border-border/30 overflow-hidden flex items-center justify-center">
+          {storeLogo ? (
+            <img src={storeLogo} alt={storeName} className="h-full w-full object-contain p-1" />
+          ) : (
+            <MessageCircle className="h-5 w-5 text-muted-foreground" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-foreground truncate">{storeName}</p>
+          <p className="text-[10px] text-muted-foreground">Customer Chats</p>
+        </div>
+        <button onClick={onClose} className="p-2 rounded-full hover:bg-muted transition-colors">
+          <X className="h-5 w-5 text-muted-foreground" />
+        </button>
+      </div>
+
+      {/* Chat list */}
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          </div>
+        ) : chats.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-32 text-center">
+            <MessageCircle className="h-8 w-8 text-muted-foreground/30 mb-2" />
+            <p className="text-sm text-muted-foreground">No customer chats yet</p>
+          </div>
+        ) : (
+          chats.map((chat) => (
+            <div
+              key={chat.id}
+              className="flex items-center gap-3 px-4 py-3 border-b border-border/10 hover:bg-muted/50 transition-colors cursor-pointer group"
+              onClick={() => onSelectChat(chat)}
+            >
+              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <User className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {chat.customer_name || chat.customer_email}
+                  </p>
+                  {(chat.unread_count ?? 0) > 0 && (
+                    <span className="h-5 min-w-[20px] px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                      {chat.unread_count}
+                    </span>
+                  )}
+                </div>
+                {chat.customer_name && (
+                  <p className="text-[10px] text-muted-foreground truncate">{chat.customer_email}</p>
+                )}
+                {chat.last_message && (
+                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">{chat.last_message}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                {chat.last_message_at && (
+                  <span className="text-[9px] text-muted-foreground">
+                    {new Date(chat.last_message_at).toLocaleDateString([], { month: "short", day: "numeric" })}
+                  </span>
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm("Delete this chat? This cannot be undone.")) {
+                      onDeleteChat(chat.id);
+                    }
+                  }}
+                  className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all"
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  );
+}
+
+/* ─── Main component ─── */
+export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onClose, isAdmin }: StoreLiveChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [chatId, setChatId] = useState<string | null>(null);
+  const [selectedChat, setSelectedChat] = useState<ChatThread | null>(null);
+  const [chatListKey, setChatListKey] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // Get or create chat
+  // Reset state on close
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setChatId(null);
+      setSelectedChat(null);
+      setMessages([]);
+    }
+  }, [open]);
+
+  // Customer mode: get or create chat
+  useEffect(() => {
+    if (!open || isAdmin) return;
     let cancelled = false;
 
     const initChat = async () => {
@@ -49,7 +239,6 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
         return;
       }
 
-      // Try to find existing chat
       const { data: existing } = await supabase
         .from("store_chats")
         .select("id")
@@ -75,7 +264,6 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
       if (cancelled) return;
       setChatId(id);
 
-      // Load messages
       const { data: msgs } = await supabase
         .from("store_chat_messages")
         .select("id, sender_type, content, created_at, is_read")
@@ -91,7 +279,33 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
 
     initChat();
     return () => { cancelled = true; };
-  }, [open, storeId, onClose, scrollToBottom]);
+  }, [open, storeId, isAdmin, onClose, scrollToBottom]);
+
+  // Admin mode: load messages for selected chat
+  useEffect(() => {
+    if (!selectedChat || !isAdmin) return;
+    let cancelled = false;
+
+    const loadMessages = async () => {
+      setLoading(true);
+      setChatId(selectedChat.id);
+
+      const { data: msgs } = await supabase
+        .from("store_chat_messages")
+        .select("id, sender_type, content, created_at, is_read")
+        .eq("chat_id", selectedChat.id)
+        .order("created_at", { ascending: true });
+
+      if (!cancelled) {
+        setMessages(msgs || []);
+        setLoading(false);
+        setTimeout(scrollToBottom, 100);
+      }
+    };
+
+    loadMessages();
+    return () => { cancelled = true; };
+  }, [selectedChat, isAdmin, scrollToBottom]);
 
   // Realtime subscription
   useEffect(() => {
@@ -128,13 +342,36 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
     const { error } = await supabase.from("store_chat_messages").insert({
       chat_id: chatId,
       sender_id: user.id,
-      sender_type: "customer",
+      sender_type: isAdmin ? "store" : "customer",
       content: text,
     });
 
     if (error) toast.error("Failed to send message");
     setSending(false);
   };
+
+  const handleDeleteChat = async (deleteChatId: string) => {
+    const { error } = await supabase.from("store_chats").delete().eq("id", deleteChatId);
+    if (error) {
+      toast.error("Failed to delete chat");
+    } else {
+      toast.success("Chat deleted");
+      setChatListKey((k) => k + 1);
+      if (chatId === deleteChatId) {
+        setChatId(null);
+        setSelectedChat(null);
+        setMessages([]);
+      }
+    }
+  };
+
+  const showChatList = isAdmin && !selectedChat;
+  const chatTitle = isAdmin && selectedChat
+    ? (selectedChat.customer_name || selectedChat.customer_email || "Customer")
+    : storeName;
+  const chatSubtitle = isAdmin && selectedChat
+    ? selectedChat.customer_email
+    : "Live Chat";
 
   return (
     <AnimatePresence>
@@ -154,82 +391,122 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
             onClick={(e) => e.stopPropagation()}
             className="absolute bottom-0 left-0 right-0 h-[85vh] bg-background rounded-t-3xl border-t border-border/30 flex flex-col overflow-hidden"
           >
-            {/* Header */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-border/30 shrink-0">
-              <div className="h-10 w-10 rounded-full bg-muted border border-border/30 overflow-hidden flex items-center justify-center">
-                {storeLogo ? (
-                  <img src={storeLogo} alt={storeName} className="h-full w-full object-contain p-1" />
-                ) : (
-                  <MessageCircle className="h-5 w-5 text-muted-foreground" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground truncate">{storeName}</p>
-                <p className="text-[10px] text-muted-foreground">Live Chat</p>
-              </div>
-              <button onClick={onClose} className="p-2 rounded-full hover:bg-muted transition-colors">
-                <X className="h-5 w-5 text-muted-foreground" />
-              </button>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
-              {loading ? (
-                <div className="flex items-center justify-center h-32">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                </div>
-              ) : messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-32 text-center">
-                  <MessageCircle className="h-8 w-8 text-muted-foreground/30 mb-2" />
-                  <p className="text-sm text-muted-foreground">Start a conversation with {storeName}</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-1">Ask about products, availability, or delivery</p>
-                </div>
-              ) : (
-                messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.sender_type === "customer" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[75%] px-3 py-2 rounded-2xl text-[13px] ${
-                        msg.sender_type === "customer"
-                          ? "bg-primary text-primary-foreground rounded-br-md"
-                          : "bg-muted text-foreground rounded-bl-md"
-                      }`}
+            {showChatList ? (
+              <AdminChatList
+                key={chatListKey}
+                storeId={storeId}
+                storeName={storeName}
+                storeLogo={storeLogo}
+                onSelectChat={setSelectedChat}
+                onDeleteChat={handleDeleteChat}
+                onClose={onClose}
+              />
+            ) : (
+              <>
+                {/* Header */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-border/30 shrink-0">
+                  {isAdmin && (
+                    <button
+                      onClick={() => { setSelectedChat(null); setChatId(null); setMessages([]); }}
+                      className="p-1.5 rounded-full hover:bg-muted transition-colors"
                     >
-                      {msg.content}
-                      <p className={`text-[9px] mt-1 ${
-                        msg.sender_type === "customer" ? "text-primary-foreground/60" : "text-muted-foreground"
-                      }`}>
-                        {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+                    </button>
+                  )}
+                  <div className="h-10 w-10 rounded-full bg-muted border border-border/30 overflow-hidden flex items-center justify-center">
+                    {isAdmin ? (
+                      <User className="h-5 w-5 text-primary" />
+                    ) : storeLogo ? (
+                      <img src={storeLogo} alt={storeName} className="h-full w-full object-contain p-1" />
+                    ) : (
+                      <MessageCircle className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">{chatTitle}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{chatSubtitle}</p>
+                  </div>
+                  {isAdmin && chatId && (
+                    <button
+                      onClick={() => {
+                        if (confirm("Delete this chat? This cannot be undone.")) {
+                          handleDeleteChat(chatId);
+                        }
+                      }}
+                      className="p-2 rounded-full hover:bg-destructive/10 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </button>
+                  )}
+                  <button onClick={onClose} className="p-2 rounded-full hover:bg-muted transition-colors">
+                    <X className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+                  {loading ? (
+                    <div className="flex items-center justify-center h-32">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-32 text-center">
+                      <MessageCircle className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        {isAdmin ? "No messages yet" : `Start a conversation with ${storeName}`}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/60 mt-1">
+                        {isAdmin ? "Waiting for customer to send a message" : "Ask about products, availability, or delivery"}
                       </p>
                     </div>
-                  </div>
-                ))
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                  ) : (
+                    messages.map((msg) => {
+                      const isOwn = isAdmin ? msg.sender_type === "store" : msg.sender_type === "customer";
+                      return (
+                        <div key={msg.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
+                          <div
+                            className={`max-w-[75%] px-3 py-2 rounded-2xl text-[13px] ${
+                              isOwn
+                                ? "bg-primary text-primary-foreground rounded-br-md"
+                                : "bg-muted text-foreground rounded-bl-md"
+                            }`}
+                          >
+                            {msg.content}
+                            <p className={`text-[9px] mt-1 ${
+                              isOwn ? "text-primary-foreground/60" : "text-muted-foreground"
+                            }`}>
+                              {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
 
-            {/* Input */}
-            <div className="px-4 py-3 border-t border-border/30 shrink-0 pb-safe">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                  placeholder="Type a message..."
-                  className="flex-1 h-10 px-4 rounded-full bg-muted border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
-                />
-                <button
-                  onClick={sendMessage}
-                  disabled={!input.trim() || sending}
-                  className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-opacity"
-                >
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
+                {/* Input */}
+                <div className="px-4 py-3 border-t border-border/30 shrink-0 pb-safe">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                      placeholder={isAdmin ? "Reply as store..." : "Type a message..."}
+                      className="flex-1 h-10 px-4 rounded-full bg-muted border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
+                    />
+                    <button
+                      onClick={sendMessage}
+                      disabled={!input.trim() || sending}
+                      className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-opacity"
+                    >
+                      {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </motion.div>
         </motion.div>
       )}
