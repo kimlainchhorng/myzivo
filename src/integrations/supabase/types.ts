@@ -36353,6 +36353,76 @@ export type Database = {
         }
         Relationships: []
       }
+      store_chat_messages: {
+        Row: {
+          chat_id: string
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          sender_id: string
+          sender_type: string
+        }
+        Insert: {
+          chat_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          sender_id: string
+          sender_type?: string
+        }
+        Update: {
+          chat_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          sender_id?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "store_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_chats: {
+        Row: {
+          created_at: string
+          id: string
+          store_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          store_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          store_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_chats_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_posts: {
         Row: {
           caption: string | null
@@ -36492,6 +36562,7 @@ export type Database = {
           created_at: string | null
           delivery_min: number | null
           description: string | null
+          facebook_url: string | null
           gallery_images: Json | null
           gallery_positions: Json | null
           hours: string | null
@@ -36516,6 +36587,7 @@ export type Database = {
           created_at?: string | null
           delivery_min?: number | null
           description?: string | null
+          facebook_url?: string | null
           gallery_images?: Json | null
           gallery_positions?: Json | null
           hours?: string | null
@@ -36540,6 +36612,7 @@ export type Database = {
           created_at?: string | null
           delivery_min?: number | null
           description?: string | null
+          facebook_url?: string | null
           gallery_images?: Json | null
           gallery_positions?: Json | null
           hours?: string | null
