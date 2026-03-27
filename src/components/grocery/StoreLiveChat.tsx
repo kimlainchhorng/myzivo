@@ -60,6 +60,7 @@ function wrapRich(payload: RichPayload): string {
 function RichMessageCard({ payload, isOwn }: { payload: RichPayload; isOwn: boolean }) {
   if (payload.type === "location") {
     const mapUrl = `https://www.google.com/maps?q=${payload.lat},${payload.lng}`;
+    const rideUrl = `/rides/hub?destination=${encodeURIComponent(payload.address)}&destLat=${payload.lat}&destLng=${payload.lng}`;
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-1.5">
@@ -67,16 +68,26 @@ function RichMessageCard({ payload, isOwn }: { payload: RichPayload; isOwn: bool
           <span className="text-xs font-semibold">Store Location</span>
         </div>
         <p className="text-[11px] leading-relaxed">{payload.address}</p>
-        <a
-          href={mapUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`inline-flex items-center gap-1 text-[11px] font-medium underline ${
-            isOwn ? "text-primary-foreground/80" : "text-primary"
-          }`}
-        >
-          Open in Maps →
-        </a>
+        <div className="flex flex-col gap-1.5">
+          <a
+            href={mapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center gap-1 text-[11px] font-medium underline ${
+              isOwn ? "text-primary-foreground/80" : "text-primary"
+            }`}
+          >
+            Open in Maps →
+          </a>
+          {!isOwn && (
+            <a
+              href={rideUrl}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur text-[11px] font-semibold hover:bg-white/30 transition-colors w-fit"
+            >
+              🚗 Ride There
+            </a>
+          )}
+        </div>
       </div>
     );
   }
