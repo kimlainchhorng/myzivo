@@ -1716,7 +1716,7 @@ export default function AdminStoreEditPage() {
               <Camera className="h-4 w-4" /> Feed Posts
               <Badge variant="secondary" className="text-[10px]">{posts.length}</Badge>
             </CardTitle>
-            <p className="text-xs text-muted-foreground">Post photos or videos that appear in your store's Feed</p>
+            <p className="text-xs text-muted-foreground">Create posts like Facebook & TikTok — photos, videos, and reels for your store</p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3">
@@ -1729,8 +1729,8 @@ export default function AdminStoreEditPage() {
                   <ImagePlus className="h-6 w-6" />
                 </div>
                 <div className="text-center">
-                  <span className="block text-sm font-semibold text-foreground">Photo Post</span>
-                  <span className="block text-[11px] text-muted-foreground mt-0.5">JPG, PNG images</span>
+                  <span className="block text-sm font-semibold text-foreground">📷 Photo Post</span>
+                  <span className="block text-[11px] text-muted-foreground mt-0.5">JPG, PNG, WebP</span>
                 </div>
               </button>
               <button
@@ -1742,8 +1742,8 @@ export default function AdminStoreEditPage() {
                   <Video className="h-6 w-6" />
                 </div>
                 <div className="text-center">
-                  <span className="block text-sm font-semibold text-foreground">Video Post</span>
-                  <span className="block text-[11px] text-muted-foreground mt-0.5">MP4, MOV videos</span>
+                  <span className="block text-sm font-semibold text-foreground">🎬 Video Post</span>
+                  <span className="block text-[11px] text-muted-foreground mt-0.5">MP4, MOV, WebM</span>
                 </div>
               </button>
             </div>
@@ -1751,10 +1751,14 @@ export default function AdminStoreEditPage() {
             {/* Existing posts list */}
             {posts.length > 0 && (
               <div className="mt-4 space-y-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Posts</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Posts</p>
+                  <span className="text-[10px] text-muted-foreground">{posts.length} total</span>
+                </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                   {posts.slice(0, 10).map((post: any) => {
                     const firstUrl = (post.media_urls || [])[0];
+                    const mediaCount = (post.media_urls || []).length;
                     const isVideo = firstUrl && isVideoUrl(normalizeStorePostMediaUrl(firstUrl));
                     return (
                       <div key={post.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
@@ -1779,6 +1783,19 @@ export default function AdminStoreEditPage() {
                             <ImagePlus className="h-5 w-5 text-muted-foreground" />
                           </div>
                         )}
+                        {/* Media type badge */}
+                        <div className="absolute top-1 left-1 z-10 flex items-center gap-0.5">
+                          {isVideo && (
+                            <div className="rounded bg-background/80 px-1 py-0.5 flex items-center gap-0.5">
+                              <Video className="h-2.5 w-2.5 text-foreground" />
+                            </div>
+                          )}
+                          {mediaCount > 1 && (
+                            <div className="rounded bg-background/80 px-1 py-0.5">
+                              <span className="text-[9px] font-medium text-foreground">{mediaCount}</span>
+                            </div>
+                          )}
+                        </div>
                         {post.caption && (
                           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5">
                             <p className="text-[10px] text-white line-clamp-1">{post.caption}</p>
