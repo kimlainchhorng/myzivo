@@ -417,6 +417,53 @@ function animatePolyline(
   return { bgLine, animatedLine, cancel: () => { cancelled = true; } };
 }
 
+// ─── Traffic-colored route rendering ───
+const TRAFFIC_COLORS: Record<string, string> = {
+  NORMAL: "#22c55e",      // green
+  SLOW: "#f59e0b",        // amber/orange
+  TRAFFIC_JAM: "#ef4444", // red
+};
+
+function renderTrafficColoredRoute(
+  map: google.maps.Map,
+  path: { lat: number; lng: number }[],
+  segments: { startPolylinePointIndex: number; endPolylinePointIndex: number; speed: string }[],
+  polylinesRef: React.MutableRefObject<google.maps.Polyline[]>
+) {
+  // First draw a subtle background line
+  const bgLine = new google.maps.Polyline({
+    path,
+    strokeColor: "#94a3b8",
+    strokeWeight: 6,
+    strokeOpacity: 0.2,
+    geodesic: true,
+    zIndex: 9,
+    map,
+  });
+  polylinesRef.current.push(bgLine);
+
+  // Draw each traffic segment with its color
+  for (const seg of segments) {
+    const start = Math.max(0, seg.startPolylinePointIndex);
+    const end = Math.min(path.length, seg.endPolylinePointIndex + 1);
+    if (end <= start || end - start < 2) continue;
+
+    const segmentPath = path.slice(start, end);
+    const color = TRAFFIC_COLORS[seg.speed] || TRAFFIC_COLORS.NORMAL;
+
+    const line = new google.maps.Polyline({
+      path: segmentPath,
+      strokeColor: color,
+      strokeWeight: 5,
+      strokeOpacity: 0.9,
+      geodesic: true,
+      zIndex: seg.speed === "TRAFFIC_JAM" ? 13 : seg.speed === "SLOW" ? 12 : 11,
+      map,
+    });
+    polylinesRef.current.push(line);
+  }
+}
+
 // Ambient cars removed — only real driver positions are shown on map
 
 function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, trafficSegments, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers = [], showUserLocationDot = true, className, onMapReady, onCenterChanged, suppressAutoViewport = false, mapInteractive = true }: RideMapProps) {
