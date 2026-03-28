@@ -135,7 +135,9 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
       const resp = await fetch(url);
       if (!resp.ok) throw new Error("fetch failed");
       const blob = await resp.blob();
-      const objectUrl = URL.createObjectURL(blob);
+      // Try with explicit mp4 type first, then original type
+      const mp4Blob = new Blob([blob], { type: "video/mp4" });
+      const objectUrl = URL.createObjectURL(mp4Blob);
       setBlobSrc(objectUrl);
       setHasPlaybackError(false);
     } catch {
