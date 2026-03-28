@@ -1163,7 +1163,7 @@ export default function AdminStoreEditPage() {
     }
   };
 
-  const storeOwnerTitle = activeTab === "orders" ? "Orders" : activeTab === "products" ? "Products" : activeTab === "payment" ? "Payment" : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : `Edit: ${store?.name || "Store"}`;
+  const storeOwnerTitle = activeTab === "orders" ? "Orders" : activeTab === "products" ? "Products" : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : `Edit: ${store?.name || "Store"}`;
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
     <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
   );
@@ -1497,9 +1497,9 @@ export default function AdminStoreEditPage() {
               <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
               <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> {t("admin.store.products")} ({products.length})</TabsTrigger>
               {form.category === "car-dealership" ? (
-                <TabsTrigger value="payment" className="gap-1.5"><CalendarIcon className="h-3.5 w-3.5" /> Booking Appointment</TabsTrigger>
+                <TabsTrigger value="payment" className="gap-1.5"><CalendarIcon className="h-3.5 w-3.5" /> {t("admin.store.booking_appointment")}</TabsTrigger>
               ) : (
-                <TabsTrigger value="payment" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Payment</TabsTrigger>
+                <TabsTrigger value="payment" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> {t("admin.store.payment")}</TabsTrigger>
               )}
             </TabsList>
           )}
@@ -1793,38 +1793,41 @@ export default function AdminStoreEditPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CalendarIcon className="h-5 w-5 text-primary" />
-                    Booking Appointment Settings
+                    {t("admin.store.booking_settings")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="font-medium">Available Days</Label>
+                      <Label className="font-medium">{t("admin.store.available_days")}</Label>
                       <div className="flex flex-wrap gap-2">
-                        {["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map(day => (
-                          <button
-                            key={day}
-                            type="button"
-                            onClick={() => {
-                              const days = form.booking_days || [];
-                              const updated = days.includes(day) ? days.filter((d: string) => d !== day) : [...days, day];
-                              updateField("booking_days", updated);
-                            }}
-                            className={cn(
-                              "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
-                              (form.booking_days || []).includes(day)
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50"
-                            )}
-                          >
-                            {day}
-                          </button>
-                        ))}
+                        {(["monday","tuesday","wednesday","thursday","friday","saturday","sunday"] as const).map(dayKey => {
+                          const dayEn = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
+                          return (
+                            <button
+                              key={dayEn}
+                              type="button"
+                              onClick={() => {
+                                const days = form.booking_days || [];
+                                const updated = days.includes(dayEn) ? days.filter((d: string) => d !== dayEn) : [...days, dayEn];
+                                updateField("booking_days", updated);
+                              }}
+                              className={cn(
+                                "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                                (form.booking_days || []).includes(dayEn)
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50"
+                              )}
+                            >
+                              {t(`admin.store.${dayKey}`)}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Start Time</Label>
+                        <Label>{t("admin.store.start_time")}</Label>
                         <select
                           value={form.booking_start_time || "09:00 AM"}
                           onChange={e => updateField("booking_start_time", e.target.value)}
@@ -1836,11 +1839,11 @@ export default function AdminStoreEditPage() {
                             const ampm = h < 12 ? "AM" : "PM";
                             const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
                             return `${h12}:${m} ${ampm}`;
-                          }).map(t => <option key={t} value={t}>{t}</option>)}
+                          }).map(ti => <option key={ti} value={ti}>{ti}</option>)}
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <Label>End Time</Label>
+                        <Label>{t("admin.store.end_time")}</Label>
                         <select
                           value={form.booking_end_time || "5:00 PM"}
                           onChange={e => updateField("booking_end_time", e.target.value)}
@@ -1852,31 +1855,31 @@ export default function AdminStoreEditPage() {
                             const ampm = h < 12 ? "AM" : "PM";
                             const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
                             return `${h12}:${m} ${ampm}`;
-                          }).map(t => <option key={t} value={t}>{t}</option>)}
+                          }).map(ti => <option key={ti} value={ti}>{ti}</option>)}
                         </select>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Appointment Duration (minutes)</Label>
+                      <Label>{t("admin.store.appointment_duration")}</Label>
                       <select
                         value={form.booking_duration || "30"}
                         onChange={e => updateField("booking_duration", e.target.value)}
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                       >
-                        <option value="15">15 minutes</option>
-                        <option value="30">30 minutes</option>
-                        <option value="45">45 minutes</option>
-                        <option value="60">1 hour</option>
-                        <option value="90">1.5 hours</option>
-                        <option value="120">2 hours</option>
+                        <option value="15">{t("admin.store.minutes_15")}</option>
+                        <option value="30">{t("admin.store.minutes_30")}</option>
+                        <option value="45">{t("admin.store.minutes_45")}</option>
+                        <option value="60">{t("admin.store.hours_1")}</option>
+                        <option value="90">{t("admin.store.hours_1_5")}</option>
+                        <option value="120">{t("admin.store.hours_2")}</option>
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Booking Note / Instructions</Label>
+                      <Label>{t("admin.store.booking_note")}</Label>
                       <Textarea
                         value={form.booking_note || ""}
                         onChange={e => updateField("booking_note", e.target.value)}
-                        placeholder="e.g. Please bring your ID and driver's license for test drive appointments."
+                        placeholder={t("admin.store.booking_note_placeholder")}
                         rows={3}
                       />
                     </div>
@@ -2063,11 +2066,11 @@ export default function AdminStoreEditPage() {
               <div className="space-y-3 rounded-xl border border-border/50 bg-muted/30 p-3">
                 <div className="flex items-center gap-2">
                   <Car className="h-4 w-4 text-primary" />
-                  <Label className="font-semibold text-sm">Vehicle Details</Label>
+                  <Label className="font-semibold text-sm">{t("admin.store.vehicle_details")}</Label>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">Make *</Label>
+                    <Label className="text-xs">{t("admin.store.make")} *</Label>
                     <select
                       value={productForm.car_make}
                       onChange={e => updateProductField("car_make", e.target.value)}
@@ -2080,17 +2083,17 @@ export default function AdminStoreEditPage() {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Model *</Label>
+                    <Label className="text-xs">{t("admin.store.model")} *</Label>
                     <Input value={productForm.car_model} onChange={e => updateProductField("car_model", e.target.value)} placeholder="e.g. Camry" className="h-9 text-sm" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Year *</Label>
+                    <Label className="text-xs">{t("admin.store.year")} *</Label>
                     <select
                       value={productForm.car_year}
                       onChange={e => updateProductField("car_year", e.target.value)}
                       className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
                     >
-                      <option value="">Year</option>
+                      <option value="">{t("admin.store.year")}</option>
                       {Array.from({ length: 30 }, (_, i) => new Date().getFullYear() + 1 - i).map(y => (
                         <option key={y} value={String(y)}>{y}</option>
                       ))}
@@ -2099,17 +2102,17 @@ export default function AdminStoreEditPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">VIN</Label>
+                    <Label className="text-xs">{t("admin.store.vin")}</Label>
                     <Input value={productForm.car_vin} onChange={e => updateProductField("car_vin", e.target.value.toUpperCase())} placeholder="17-character VIN" maxLength={17} className="h-9 text-sm font-mono" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Mileage (km)</Label>
+                    <Label className="text-xs">{t("admin.store.mileage")}</Label>
                     <Input type="text" inputMode="numeric" value={productForm.car_mileage} onChange={e => updateProductField("car_mileage", e.target.value.replace(/[^0-9]/g, ""))} placeholder="e.g. 45000" className="h-9 text-sm" />
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">Transmission</Label>
+                    <Label className="text-xs">{t("admin.store.transmission")}</Label>
                     <select value={productForm.car_transmission} onChange={e => updateProductField("car_transmission", e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm">
                       <option value="">Select</option>
                       <option value="Automatic">Automatic</option>
@@ -2118,7 +2121,7 @@ export default function AdminStoreEditPage() {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Fuel Type</Label>
+                    <Label className="text-xs">{t("admin.store.fuel_type")}</Label>
                     <select value={productForm.car_fuel_type} onChange={e => updateProductField("car_fuel_type", e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm">
                       <option value="">Select</option>
                       <option value="Gasoline">Gasoline</option>
@@ -2129,7 +2132,7 @@ export default function AdminStoreEditPage() {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Condition</Label>
+                    <Label className="text-xs">{t("admin.store.condition")}</Label>
                     <select value={productForm.car_condition} onChange={e => updateProductField("car_condition", e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm">
                       <option value="">Select</option>
                       <option value="New">New</option>
@@ -2140,15 +2143,15 @@ export default function AdminStoreEditPage() {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">Color</Label>
+                    <Label className="text-xs">{t("admin.store.color")}</Label>
                     <Input value={productForm.car_color} onChange={e => updateProductField("car_color", e.target.value)} placeholder="e.g. Silver" className="h-9 text-sm" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Engine</Label>
+                    <Label className="text-xs">{t("admin.store.engine")}</Label>
                     <Input value={productForm.car_engine} onChange={e => updateProductField("car_engine", e.target.value)} placeholder="e.g. 2.5L 4-Cyl" className="h-9 text-sm" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Body Type</Label>
+                    <Label className="text-xs">{t("admin.store.body_type")}</Label>
                     <select value={productForm.car_body_type} onChange={e => updateProductField("car_body_type", e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm">
                       <option value="">Select</option>
                       <option value="Sedan">Sedan</option>
