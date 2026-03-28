@@ -1486,7 +1486,11 @@ export default function AdminStoreEditPage() {
             <TabsList>
               <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
               <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> {t("admin.store.products")} ({products.length})</TabsTrigger>
-              <TabsTrigger value="payment" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Payment</TabsTrigger>
+              {form.category === "car-dealership" ? (
+                <TabsTrigger value="payment" className="gap-1.5"><CalendarIcon className="h-3.5 w-3.5" /> Booking Appointment</TabsTrigger>
+              ) : (
+                <TabsTrigger value="payment" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Payment</TabsTrigger>
+              )}
             </TabsList>
           )}
 
@@ -1772,9 +1776,106 @@ export default function AdminStoreEditPage() {
             </Card>
           </TabsContent>
 
-          {/* Payment Tab */}
+          {/* Payment / Booking Tab */}
           <TabsContent value="payment">
-            <StorePaymentSection storeId={storeId!} />
+            {form.category === "car-dealership" ? (
+              <Card className="rounded-2xl border-border/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CalendarIcon className="h-5 w-5 text-primary" />
+                    Booking Appointment Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="font-medium">Available Days</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map(day => (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => {
+                              const days = form.booking_days || [];
+                              const updated = days.includes(day) ? days.filter((d: string) => d !== day) : [...days, day];
+                              updateField("booking_days", updated);
+                            }}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                              (form.booking_days || []).includes(day)
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50"
+                            )}
+                          >
+                            {day}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Start Time</Label>
+                        <select
+                          value={form.booking_start_time || "09:00 AM"}
+                          onChange={e => updateField("booking_start_time", e.target.value)}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                          {Array.from({ length: 48 }, (_, i) => {
+                            const h = Math.floor(i / 2);
+                            const m = i % 2 === 0 ? "00" : "30";
+                            const ampm = h < 12 ? "AM" : "PM";
+                            const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                            return `${h12}:${m} ${ampm}`;
+                          }).map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>End Time</Label>
+                        <select
+                          value={form.booking_end_time || "5:00 PM"}
+                          onChange={e => updateField("booking_end_time", e.target.value)}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                          {Array.from({ length: 48 }, (_, i) => {
+                            const h = Math.floor(i / 2);
+                            const m = i % 2 === 0 ? "00" : "30";
+                            const ampm = h < 12 ? "AM" : "PM";
+                            const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                            return `${h12}:${m} ${ampm}`;
+                          }).map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Appointment Duration (minutes)</Label>
+                      <select
+                        value={form.booking_duration || "30"}
+                        onChange={e => updateField("booking_duration", e.target.value)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="15">15 minutes</option>
+                        <option value="30">30 minutes</option>
+                        <option value="45">45 minutes</option>
+                        <option value="60">1 hour</option>
+                        <option value="90">1.5 hours</option>
+                        <option value="120">2 hours</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Booking Note / Instructions</Label>
+                      <Textarea
+                        value={form.booking_note || ""}
+                        onChange={e => updateField("booking_note", e.target.value)}
+                        placeholder="e.g. Please bring your ID and driver's license for test drive appointments."
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <StorePaymentSection storeId={storeId!} />
+            )}
           </TabsContent>
 
           {/* Orders Tab */}
