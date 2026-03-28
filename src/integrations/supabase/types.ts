@@ -36736,6 +36736,7 @@ export type Database = {
           market: string
           name: string
           owner_id: string | null
+          payment_types: string[]
           phone: string | null
           rating: number | null
           setup_complete: boolean
@@ -36763,6 +36764,7 @@ export type Database = {
           market?: string
           name: string
           owner_id?: string | null
+          payment_types?: string[]
           phone?: string | null
           rating?: number | null
           setup_complete?: boolean
@@ -36790,6 +36792,7 @@ export type Database = {
           market?: string
           name?: string
           owner_id?: string | null
+          payment_types?: string[]
           phone?: string | null
           rating?: number | null
           setup_complete?: boolean
