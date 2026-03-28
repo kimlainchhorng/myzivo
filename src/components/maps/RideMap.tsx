@@ -537,10 +537,6 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       mapRef.current = map;
       setMapReady(true);
       onMapReady?.(map);
-
-      // Add real-time Google Traffic Layer
-      const trafficLayer = new google.maps.TrafficLayer();
-      trafficLayer.setMap(map);
       map.addListener("idle", () => {
         const c = map.getCenter();
         const latestOnCenterChanged = onCenterChangedRef.current;
