@@ -20,6 +20,22 @@ import storeRideBg from "@/assets/store-ride-bg.jpg";
 import storeCallBg from "@/assets/store-call-bg.jpg";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 
+/**
+ * Extract the correct language part from dual-format text like "Khmer/English".
+ * If lang is "km" → return Khmer part (before "/"), otherwise English part (after "/").
+ * If no "/" separator found, return the text as-is.
+ */
+function localizedName(text: string, lang: string): string {
+  if (!text) return text;
+  const slashIdx = text.indexOf("/");
+  if (slashIdx === -1) return text;
+  const kmPart = text.slice(0, slashIdx).trim();
+  const enPart = text.slice(slashIdx + 1).trim();
+  if (!enPart) return kmPart;
+  if (!kmPart) return enPart;
+  return lang === "km" ? kmPart : enPart;
+}
+
 const container = {
   hidden: {},
   show: { transition: { staggerChildren: 0.04 } },
@@ -55,16 +71,17 @@ export default function StoreProfilePage() {
   const [chatOpen, setChatOpen] = useState(false);
   // Track selected size per product: productId -> variant index
   const [selectedSizes, setSelectedSizes] = useState<Record<string, number>>({});
-  const { t } = useI18n();
+  const { t, currentLanguage } = useI18n();
 
   const { data: store, isLoading: loadingStore } = useStoreProfile(slug || "");
   const { data: products = [], isLoading: loadingProducts } = useStoreProducts(store?.id, selectedCategory);
   const { data: categories = [] } = useStoreProductCategories(store?.id);
 
   const handleAddToCart = (product: StoreProductItem, sizeVariant?: { size: string; price_khr: number; price_usd: number }) => {
+    const displayName = localizedName(product.name, currentLanguage);
     cart.addItem({
       productId: sizeVariant ? `${product.id}__${sizeVariant.size}` : product.id,
-      name: sizeVariant ? `${product.name} (${sizeVariant.size})` : product.name,
+      name: sizeVariant ? `${displayName} (${sizeVariant.size})` : displayName,
       price: sizeVariant ? sizeVariant.price_usd : product.price,
       image: product.image_url || "",
       brand: product.brand || "",
@@ -481,7 +498,7 @@ export default function StoreProfilePage() {
                 {selectedCategory === cat && (
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-b from-white/20 via-transparent to-black/10 pointer-events-none" />
                 )}
-                <span className="relative z-10">{cat}</span>
+                <span className="relative z-10">{localizedName(cat, currentLanguage)}</span>
               </motion.button>
             ))}
           </div>
@@ -493,7 +510,7 @@ export default function StoreProfilePage() {
         <div className="flex items-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5 text-primary" />
           <h2 className="text-sm font-bold text-foreground">
-            {selectedCategory || t("store.all_products")}
+            {selectedCategory ? localizedName(selectedCategory, currentLanguage) : t("store.all_products")}
           </h2>
         </div>
         <span className="text-[10px] text-muted-foreground font-medium">
@@ -537,7 +554,7 @@ export default function StoreProfilePage() {
                       <div className="h-7 w-7 rounded-xl bg-primary/10 flex items-center justify-center">
                         <Package className="h-3.5 w-3.5 text-primary" />
                       </div>
-                      <h3 className="text-[13px] font-bold text-foreground tracking-tight">{cat}</h3>
+                      <h3 className="text-[13px] font-bold text-foreground tracking-tight">{localizedName(cat, currentLanguage)}</h3>
                       <span className="text-[10px] text-muted-foreground/60 font-medium bg-muted/30 px-2 py-0.5 rounded-full">{catProducts.length}</span>
                       <div className="flex-1 h-px bg-border/30 ml-1" />
                     </div>
@@ -587,7 +604,7 @@ export default function StoreProfilePage() {
                     {product.image_url ? (
                       <img
                         src={product.image_url}
-                        alt={product.name}
+                        alt={localizedName(product.name, currentLanguage)}
                         className="h-full w-full object-contain p-1.5"
                         loading="lazy"
                       />
@@ -599,21 +616,21 @@ export default function StoreProfilePage() {
 
                     {/* Badge - top right */}
                     {(product as any).badge && (() => {
-                      const badgeMap: Record<string, { labelKm: string; cls: string }> = {
-                        "new": { labelKm: "ថ្មី", cls: "from-blue-500 to-indigo-600" },
-                        "hot": { labelKm: "ក្ដៅ", cls: "from-red-500 to-orange-500" },
-                        "popular": { labelKm: "កំពូល", cls: "from-amber-400 to-orange-500" },
-                        "best-seller": { labelKm: "លក់ដាច់", cls: "from-emerald-500 to-teal-500" },
-                        "limited": { labelKm: "មានកំណត់", cls: "from-purple-500 to-pink-500" },
-                        "recommended": { labelKm: "ណែនាំ", cls: "from-sky-400 to-blue-500" },
-                        "organic": { labelKm: "ធម្មជាតិ", cls: "from-green-500 to-emerald-500" },
-                        "imported": { labelKm: "នាំចូល", cls: "from-violet-500 to-fuchsia-500" },
+                      const badgeMap: Record<string, { labelKm: string; labelEn: string; cls: string }> = {
+                        "new": { labelKm: "ថ្មី", labelEn: "New", cls: "from-blue-500 to-indigo-600" },
+                        "hot": { labelKm: "ក្ដៅ", labelEn: "Hot", cls: "from-red-500 to-orange-500" },
+                        "popular": { labelKm: "កំពូល", labelEn: "Popular", cls: "from-amber-400 to-orange-500" },
+                        "best-seller": { labelKm: "លក់ដាច់", labelEn: "Best Seller", cls: "from-emerald-500 to-teal-500" },
+                        "limited": { labelKm: "មានកំណត់", labelEn: "Limited", cls: "from-purple-500 to-pink-500" },
+                        "recommended": { labelKm: "ណែនាំ", labelEn: "Recommended", cls: "from-sky-400 to-blue-500" },
+                        "organic": { labelKm: "ធម្មជាតិ", labelEn: "Organic", cls: "from-green-500 to-emerald-500" },
+                        "imported": { labelKm: "នាំចូល", labelEn: "Imported", cls: "from-violet-500 to-fuchsia-500" },
                       };
                       const b = badgeMap[(product as any).badge];
                       if (!b) return null;
                       return (
                         <div className={cn("absolute top-1 right-1 px-1.5 py-0.5 rounded-md bg-gradient-to-r text-white text-[6px] font-bold z-10", b.cls)}>
-                          {b.labelKm}
+                          {currentLanguage === "km" ? b.labelKm : b.labelEn}
                         </div>
                       );
                     })()}
@@ -658,7 +675,7 @@ export default function StoreProfilePage() {
                   {/* Info */}
                   <div className="px-1.5 pt-1 pb-1.5">
                     <p className="text-[9px] font-semibold text-foreground line-clamp-2 leading-tight min-h-[22px]">
-                      {product.name}
+                      {localizedName(product.name, currentLanguage)}
                     </p>
 
                     {/* Size pills */}
