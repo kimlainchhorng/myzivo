@@ -453,14 +453,14 @@ const VEHICLE_IMAGES: Record<string, string> = {
   "luxury-xl": "/vehicles/luxury-car-v2.png",
   "pet":       "/vehicles/pet-car-v2.png",
   "wheelchair": "/vehicles/wheelchair-car-v2.png",
-  "moto":      "/vehicles/zivo-moto.png",
+  "moto":      "/vehicles/zivo-moto-v2.png",
 };
 
 /* Cambodia-specific overrides */
 const CAMBODIA_VEHICLE_IMAGES: Record<string, string> = {
   "economy": "/vehicles/zivo-tuktuk.png",
   "share": "/vehicles/zivo-ev-tuktuk.png",
-  "moto": "/vehicles/zivo-moto.png",
+  "moto": "/vehicles/zivo-moto-v2.png",
 };
 const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
   "economy": "ZIVO Tuk Tuk",
