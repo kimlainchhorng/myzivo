@@ -147,6 +147,30 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     }
   };
 
+  // FFmpeg WASM repair as last resort
+  const tryFFmpegRepair = async (url: string) => {
+    if (triedFFmpegRepair) return;
+    setTriedFFmpegRepair(true);
+    setIsRepairing(true);
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error("fetch failed");
+      const blob = await resp.blob();
+      const repairedUrl = await repairVideoBlob(blob);
+      if (repairedUrl) {
+        if (blobSrc) URL.revokeObjectURL(blobSrc);
+        setBlobSrc(repairedUrl);
+        setHasPlaybackError(false);
+      } else {
+        setHasPlaybackError(true);
+      }
+    } catch {
+      setHasPlaybackError(true);
+    } finally {
+      setIsRepairing(false);
+    }
+  };
+
   useEffect(() => {
     setIsPlaying(false);
     setIsMuted(true);
