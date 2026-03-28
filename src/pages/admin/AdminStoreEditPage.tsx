@@ -834,11 +834,43 @@ export default function AdminStoreEditPage() {
   };
 
   const normalizeVideoUpload = async (file: File, _options?: { silent?: boolean }) => {
+    const lowerName = file.name.toLowerCase();
+    const isMp4Like = file.type === "video/mp4" || lowerName.endsWith(".mp4");
     const isLikelyBrowserNative =
-      file.type === "video/mp4" ||
+      isMp4Like ||
       file.type === "video/webm" ||
-      file.name.toLowerCase().endsWith(".mp4") ||
-      file.name.toLowerCase().endsWith(".webm");
+      lowerName.endsWith(".webm");
+
+    // Reels/feed playback is most reliable with MP4/H.264 in mobile webviews.
+    // Force non-MP4 uploads (e.g. MOV) through normalization before upload.
+    if (!isMp4Like) {
+      toast.info("Converting video to MP4 for reel compatibility...");
+      try {
+        const normalized = await withTimeout((async () => {
+          try {
+            const audioNormalized = await withTimeout(normalizeVideoAudioForBrowser(file), 20000, "Audio normalize timeout");
+            const playable = await probeVideoFile(audioNormalized);
+            if (playable) return audioNormalized;
+          } catch (error) {
+            console.warn("[PostMedia] Audio normalize failed:", error);
+          }
+
+          try {
+            const transcoded = await withTimeout(transcodeVideoForBrowser(file), 30000, "Transcode timeout");
+            const playable = await probeVideoFile(transcoded);
+            if (playable) return transcoded;
+          } catch (error) {
+            console.warn("[PostMedia] Transcode failed:", error);
+          }
+
+          return null;
+        })(), 45000, "Overall normalization timeout");
+
+        if (normalized) return normalized;
+      } catch (error) {
+        console.warn("[PostMedia] Forced MP4 normalization timed out:", error);
+      }
+    }
 
     if (isLikelyBrowserNative) {
       try {
@@ -1983,6 +2015,16 @@ export default function AdminStoreEditPage() {
                               <span className="text-[9px] text-muted-foreground">{postDate}</span>
                             </div>
                             <div className="flex items-center gap-1">
+                              {isVideo && (
+                                <button
+                                  onClick={() => reprocessPostVideo(post)}
+                                  disabled={reprocessingPostId === post.id}
+                                  className="h-5 w-5 rounded-full hover:bg-blue-500/10 flex items-center justify-center transition-colors disabled:opacity-50"
+                                  title="Reprocess video (fix playback)"
+                                >
+                                  <RefreshCw className={`h-3 w-3 text-blue-500 ${reprocessingPostId === post.id ? "animate-spin" : ""}`} />
+                                </button>
+                              )}
                               <button onClick={() => openEditPost(post)} className="h-5 w-5 rounded-full hover:bg-muted flex items-center justify-center transition-colors" title="Edit">
                                 <Edit className="h-3 w-3 text-muted-foreground" />
                               </button>

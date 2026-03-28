@@ -87,7 +87,7 @@ export default function AdminShoppingOrders() {
   return (
     <div className="min-h-screen bg-background pb-8">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/50">
+      <div className="safe-area-top sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button onClick={() => navigate(-1)} className="p-1.5 rounded-xl hover:bg-muted">
             <ArrowLeft className="h-5 w-5" />

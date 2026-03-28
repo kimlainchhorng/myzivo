@@ -9,7 +9,7 @@ import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { Loader2, Heart, MessageCircle, Share2, Store, Play, Volume2, VolumeX, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { repairVideoBlob } from "@/utils/videoRepair";
@@ -51,7 +51,16 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
   const [isRepairing, setIsRepairing] = useState(false);
   const [blobSrc, setBlobSrc] = useState<string | null>(null);
 
-  const isVideo = (url: string) => mediaType === "video" || /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
+  const normalizedUrls = useMemo(
+    () => urls.map((url) => normalizeStorePostMediaUrl(url)).filter(Boolean),
+    [urls]
+  );
+
+  const isVideo = (url: string) => {
+    const normalized = normalizeStorePostMediaUrl(url);
+    if (mediaType === "video") return true;
+    return /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(normalized) || /\.(mp4|mov|webm|avi|mkv)/i.test(normalized);
+  };
 
   const ensureVisibleFrame = (video: HTMLVideoElement) => {
     if (!Number.isFinite(video.duration) || video.duration <= 0) return;
@@ -183,27 +192,35 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
       URL.revokeObjectURL(blobSrc);
       setBlobSrc(null);
     }
-  }, [activeIndex, urls]);
+  }, [activeIndex, normalizedUrls]);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !isVideo(urls[activeIndex])) return;
+    if (!video || normalizedUrls.length === 0 || !isVideo(normalizedUrls[activeIndex])) return;
 
     video.pause();
     video.currentTime = 0;
     video.muted = true;
     video.load();
-  }, [activeIndex, urls]);
+  }, [activeIndex, normalizedUrls]);
+
+  if (normalizedUrls.length === 0) {
+    return (
+      <div className="relative bg-muted">
+        <div className="aspect-square w-full bg-muted" />
+      </div>
+    );
+  }
 
   return (
     <div className="relative bg-muted">
-      <div className={cn("overflow-hidden bg-black", isVideo(urls[activeIndex]) ? "aspect-[9/16]" : "aspect-square")}>
-        {isVideo(urls[activeIndex]) ? (
+      <div className={cn("overflow-hidden bg-black", isVideo(normalizedUrls[activeIndex]) ? "aspect-[9/16]" : "aspect-square")}>
+        {isVideo(normalizedUrls[activeIndex]) ? (
           <div className="relative w-full h-full">
             <video
-              key={blobSrc || urls[activeIndex]}
+              key={blobSrc || normalizedUrls[activeIndex]}
               ref={videoRef}
-              src={blobSrc || urls[activeIndex]}
+              src={blobSrc || normalizedUrls[activeIndex]}
               poster={posterUrl ?? undefined}
               className="w-full h-full object-cover"
               playsInline
@@ -235,7 +252,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               onPause={() => setIsPlaying(false)}
               onError={async () => {
                 setIsPlaying(false);
-                const currentUrl = urls[activeIndex];
+                const currentUrl = normalizedUrls[activeIndex];
                 console.warn("[FeedVideo] Playback error for:", currentUrl, "blobTried:", triedBlobFallback, "ffmpegTried:", triedFFmpegRepair);
                 if (!triedBlobFallback) {
                   await tryBlobFallback(currentUrl);
@@ -292,7 +309,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
           </div>
         ) : (
           <img
-            src={urls[activeIndex]}
+            src={normalizedUrls[activeIndex]}
             alt=""
             className="w-full h-full object-cover"
             loading="lazy"
@@ -301,9 +318,9 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
       </div>
 
       {/* Dots indicator */}
-      {urls.length > 1 && (
+      {normalizedUrls.length > 1 && (
         <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1.5">
-          {urls.map((_, i) => (
+          {normalizedUrls.map((_, i) => (
             <button
               key={i}
               onClick={() => setActiveIndex(i)}
