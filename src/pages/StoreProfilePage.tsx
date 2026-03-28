@@ -632,8 +632,6 @@ export default function StoreProfilePage() {
                           {currentLanguage === "km" ? b.labelKm : b.labelEn}
                         </div>
                       );
-                        </div>
-                      );
                     })()}
 
                     {/* Discount badge */}
