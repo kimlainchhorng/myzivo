@@ -478,6 +478,7 @@ const CAMBODIA_VEHICLE_DESCS: Record<string, string> = {
 const CAMBODIA_VEHICLE_CAPACITY: Record<string, number> = {
   "economy": 3,
   "share": 3,
+  "moto": 1,
 };
 const CAMBODIA_BOOKING_FEE = 0.13;
 const CAMBODIA_PER_KM_KHR = 1550; // KHR per km
