@@ -103,6 +103,8 @@ function AdminVideoPreview({
   autoPlay = false,
   loop = false,
   muted = true,
+  canRepair = false,
+  onRepair,
 }: {
   src: string;
   className?: string;
@@ -111,9 +113,13 @@ function AdminVideoPreview({
   autoPlay?: boolean;
   loop?: boolean;
   muted?: boolean;
+  canRepair?: boolean;
+  onRepair?: (src: string) => Promise<string>;
 }) {
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(src);
+  const [isRepairing, setIsRepairing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -122,6 +128,8 @@ function AdminVideoPreview({
       return null;
     });
     setIsPlaying(false);
+    setCurrentSrc(src);
+    setIsRepairing(false);
   }, [src]);
 
   const handlePlayToggle = () => {
@@ -141,7 +149,7 @@ function AdminVideoPreview({
       <video
         key={src}
         ref={videoRef}
-        src={src}
+        src={currentSrc}
         poster={posterUrl ?? undefined}
         className={cn("h-full w-full", videoClassName)}
         controls={false}
@@ -166,6 +174,21 @@ function AdminVideoPreview({
         onEnded={() => {
           if (!loop) setIsPlaying(false);
         }}
+        onError={() => {
+          if (!canRepair || !onRepair || isRepairing || currentSrc.startsWith("blob:")) return;
+
+          setIsRepairing(true);
+          void onRepair(src)
+            .then((repairedSrc) => {
+              setCurrentSrc(repairedSrc);
+            })
+            .catch(() => {
+              // ignore and keep current UI state
+            })
+            .finally(() => {
+              setIsRepairing(false);
+            });
+        }}
       />
       {/* Large tap-to-play overlay */}
       <button
@@ -182,6 +205,12 @@ function AdminVideoPreview({
           </div>
         )}
       </button>
+      {isRepairing && (
+        <div className="absolute inset-0 z-[3] flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span className="text-xs font-medium text-foreground">Repairing preview...</span>
+        </div>
+      )}
       {/* Minimal bottom bar with progress */}
       {controls && isPlaying && (
         <div className="absolute bottom-0 left-0 right-0 z-[2] bg-gradient-to-t from-black/50 to-transparent p-1.5">
@@ -2745,6 +2774,8 @@ export default function AdminStoreEditPage() {
                             muted
                             autoPlay={false}
                             loop
+                            canRepair={preview.status === "done"}
+                            onRepair={repairVideoPreviewSource}
                           />
                           {preview.status === "done" && (
                             <div className="absolute bottom-1 left-1 z-10 flex items-center gap-1 rounded bg-green-600/90 px-1.5 py-0.5">
