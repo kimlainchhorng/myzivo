@@ -892,29 +892,47 @@ export default function AdminStoreEditPage() {
     if (cached) return cached;
 
     const response = await fetch(normalizedUrl);
-    if (!response.ok) throw new Error("Failed to download video for repair.");
+    if (!response.ok) {
+      // Can't download — just return the original URL as blob fallback
+      return normalizedUrl;
+    }
 
     const blob = await response.blob();
     const file = new File([blob], "preview-repair.mp4", { type: blob.type || "video/mp4" });
 
     // Try fixing HE-AAC audio first, then strip audio, then full transcode
-    let repairedFile: File;
+    let repairedFile: File | null = null;
     try {
       repairedFile = await withTimeout(normalizeVideoAudioForBrowser(file), 20000, "Audio normalize timeout");
       const isPlayable = await probeVideoFile(repairedFile);
-      if (!isPlayable) throw new Error("Still not playable");
+      if (!isPlayable) repairedFile = null;
     } catch {
+      repairedFile = null;
+    }
+
+    if (!repairedFile) {
       try {
         repairedFile = await withTimeout(stripVideoAudioForPreview(file), 15000, "Strip audio timeout");
         const isPlayable = await probeVideoFile(repairedFile);
-        if (!isPlayable) throw new Error("Still not playable");
+        if (!isPlayable) repairedFile = null;
       } catch {
-        try {
-          repairedFile = await withTimeout(transcodeVideoForBrowser(file), 45000, "Transcode timeout");
-        } catch {
-          throw new Error("Could not repair video for preview.");
-        }
+        repairedFile = null;
       }
+    }
+
+    if (!repairedFile) {
+      try {
+        repairedFile = await withTimeout(transcodeVideoForBrowser(file), 45000, "Transcode timeout");
+      } catch {
+        repairedFile = null;
+      }
+    }
+
+    // If all repair attempts failed, return a blob URL of the original download
+    if (!repairedFile) {
+      const fallbackUrl = URL.createObjectURL(blob);
+      repairedPreviewUrlsRef.current.set(normalizedUrl, fallbackUrl);
+      return fallbackUrl;
     }
 
     const repairedUrl = URL.createObjectURL(repairedFile);
