@@ -114,6 +114,7 @@ export async function getRoute(
       traffic_level: data.traffic_level ?? null,
       traffic_ratio: data.traffic_ratio ?? null,
       polyline: data.polyline,
+      traffic_segments: data.traffic_segments ?? null,
       start_address: data.start_address,
       end_address: data.end_address,
       eta_iso: data.eta_iso,
