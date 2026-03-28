@@ -3,6 +3,8 @@
  */
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
 import { useI18n } from "@/hooks/useI18n";
 import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
