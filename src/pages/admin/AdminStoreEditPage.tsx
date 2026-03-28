@@ -333,7 +333,17 @@ export default function AdminStoreEditPage() {
   // Post state
   const [postDialog, setPostDialog] = useState(false);
   const [postCaption, setPostCaption] = useState("");
-  const [postMediaItems, setPostMediaItems] = useState<Array<{ id: string; previewUrl: string; uploadedUrl?: string; isVideo: boolean; isUploading: boolean }>>([]);
+  const [postMediaItems, setPostMediaItems] = useState<Array<{
+    id: string;
+    previewUrl: string;
+    uploadedUrl?: string;
+    isVideo: boolean;
+    isUploading: boolean;
+    progress: number;
+    status: "uploading" | "done" | "error";
+    error?: string;
+    sourceFile?: File;
+  }>>([]);
   const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [reprocessingPostId, setReprocessingPostId] = useState<string | null>(null);
@@ -344,6 +354,7 @@ export default function AdminStoreEditPage() {
   const ffmpegRef = useRef<FFmpeg | null>(null);
   const ffmpegLoadPromiseRef = useRef<Promise<FFmpeg> | null>(null);
   const repairedPreviewUrlsRef = useRef<Map<string, string>>(new Map());
+  const postMediaProgressTimersRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
    if (store) {
@@ -358,13 +369,24 @@ export default function AdminStoreEditPage() {
         if (url.startsWith("blob:")) URL.revokeObjectURL(url);
       });
       repairedPreviewUrlsRef.current.clear();
+      postMediaProgressTimersRef.current.forEach((timerId) => {
+        window.clearInterval(timerId);
+      });
+      postMediaProgressTimersRef.current.clear();
     };
   }, []);
+
+  useEffect(() => {
+    setUploadingPostMedia(postMediaItems.some((item) => item.isUploading));
+  }, [postMediaItems]);
 
   const cleanupPreviews = () => {
     postMediaItems.forEach((p) => {
       if (p.previewUrl.startsWith("blob:")) URL.revokeObjectURL(p.previewUrl);
+      const timerId = postMediaProgressTimersRef.current.get(p.id);
+      if (timerId) window.clearInterval(timerId);
     });
+    postMediaProgressTimersRef.current.clear();
   };
 
   const resetPostState = () => {
@@ -375,9 +397,53 @@ export default function AdminStoreEditPage() {
 
   const updatePostMediaItem = (
     id: string,
-    updater: (item: { id: string; previewUrl: string; uploadedUrl?: string; isVideo: boolean; isUploading: boolean }) => { id: string; previewUrl: string; uploadedUrl?: string; isVideo: boolean; isUploading: boolean },
+    updater: (item: {
+      id: string;
+      previewUrl: string;
+      uploadedUrl?: string;
+      isVideo: boolean;
+      isUploading: boolean;
+      progress: number;
+      status: "uploading" | "done" | "error";
+      error?: string;
+      sourceFile?: File;
+    }) => {
+      id: string;
+      previewUrl: string;
+      uploadedUrl?: string;
+      isVideo: boolean;
+      isUploading: boolean;
+      progress: number;
+      status: "uploading" | "done" | "error";
+      error?: string;
+      sourceFile?: File;
+    },
   ) => {
     setPostMediaItems((prev) => prev.map((item) => (item.id === id ? updater(item) : item)));
+  };
+
+  const clearPostMediaProgressTimer = (id: string) => {
+    const timerId = postMediaProgressTimersRef.current.get(id);
+    if (timerId) {
+      window.clearInterval(timerId);
+      postMediaProgressTimersRef.current.delete(id);
+    }
+  };
+
+  const startPostMediaProgressTimer = (id: string, target: number) => {
+    clearPostMediaProgressTimer(id);
+
+    const timerId = window.setInterval(() => {
+      setPostMediaItems((prev) => prev.map((item) => {
+        if (item.id !== id || !item.isUploading) return item;
+        if (item.progress >= target) return item;
+
+        const step = item.progress < 25 ? 4 : item.progress < 60 ? 2 : 1;
+        return { ...item, progress: Math.min(target, item.progress + step) };
+      }));
+    }, 400);
+
+    postMediaProgressTimersRef.current.set(id, timerId);
   };
 
   const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number, message: string) => {
@@ -544,8 +610,16 @@ export default function AdminStoreEditPage() {
     }
 
     const localPreviewUrl = URL.createObjectURL(file);
-    setPostMediaItems(prev => [...prev, { id: mediaItemId, previewUrl: localPreviewUrl, isVideo: fileIsVideo, isUploading: true }]);
-    setUploadingPostMedia(true);
+    setPostMediaItems(prev => [...prev, {
+      id: mediaItemId,
+      previewUrl: localPreviewUrl,
+      isVideo: fileIsVideo,
+      isUploading: true,
+      progress: 1,
+      status: "uploading",
+      sourceFile: file,
+    }]);
+    startPostMediaProgressTimer(mediaItemId, fileIsVideo ? 42 : 78);
 
     try {
       let uploadFile = file;
@@ -553,10 +627,21 @@ export default function AdminStoreEditPage() {
         try {
           uploadFile = await normalizeVideoUpload(file);
           const normalizedPreviewUrl = URL.createObjectURL(uploadFile);
-          updatePostMediaItem(mediaItemId, (item) => ({ ...item, previewUrl: normalizedPreviewUrl }));
+          updatePostMediaItem(mediaItemId, (item) => ({
+            ...item,
+            previewUrl: normalizedPreviewUrl,
+            progress: Math.max(item.progress, 58),
+            sourceFile: uploadFile,
+          }));
+          startPostMediaProgressTimer(mediaItemId, 88);
           URL.revokeObjectURL(localPreviewUrl);
         } catch (transcodeErr: any) {
           console.warn("[PostMedia] Transcoding failed, uploading original:", transcodeErr);
+          updatePostMediaItem(mediaItemId, (item) => ({
+            ...item,
+            progress: Math.max(item.progress, 35),
+          }));
+          startPostMediaProgressTimer(mediaItemId, 82);
           toast.warning("Video optimization failed — uploading original file.");
         }
       }
@@ -572,28 +657,50 @@ export default function AdminStoreEditPage() {
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
       console.log("[PostMedia] publicUrl:", urlData.publicUrl);
+      clearPostMediaProgressTimer(mediaItemId);
       setPostMediaItems(prev => prev.map((item) => item.id === mediaItemId ? {
         ...item,
         uploadedUrl: urlData.publicUrl,
         isUploading: false,
+        progress: 100,
+        status: "done",
+        error: undefined,
       } : item));
     } catch (e: any) {
-      setPostMediaItems(prev => {
-        const currentItem = prev.find((p) => p.id === mediaItemId);
-        if (currentItem?.previewUrl.startsWith("blob:")) URL.revokeObjectURL(currentItem.previewUrl);
-        if (localPreviewUrl.startsWith("blob:")) URL.revokeObjectURL(localPreviewUrl);
-        return prev.filter((p) => p.id !== mediaItemId);
-      });
+      clearPostMediaProgressTimer(mediaItemId);
+      const errorMessage = e.message || "This video format could not be prepared for web playback.";
+      updatePostMediaItem(mediaItemId, (item) => ({
+        ...item,
+        isUploading: false,
+        progress: 100,
+        status: "error",
+        error: errorMessage,
+      }));
       console.error("[PostMedia] upload error:", e);
-      toast.error(e.message || "This video format could not be prepared for web playback.");
-    } finally {
-      setUploadingPostMedia(false);
+      toast.error(errorMessage);
     }
   };
+
+  const retryPostMedia = async (id: string) => {
+    const currentItem = postMediaItems.find((item) => item.id === id);
+    if (!currentItem?.sourceFile) {
+      toast.error("Please add the video again.");
+      return;
+    }
+
+    setPostMediaItems((prev) => prev.filter((item) => item.id !== id));
+    if (currentItem.previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(currentItem.previewUrl);
+    }
+    clearPostMediaProgressTimer(id);
+    await uploadPostMedia(currentItem.sourceFile);
+  };
+
   const removePostMedia = (index: number) => {
     setPostMediaItems(prev => {
       const preview = prev[index];
       if (preview?.previewUrl.startsWith("blob:")) URL.revokeObjectURL(preview.previewUrl);
+      if (preview?.id) clearPostMediaProgressTimer(preview.id);
       return prev.filter((_, i) => i !== index);
     });
   };
@@ -2604,9 +2711,32 @@ export default function AdminStoreEditPage() {
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
-                      {preview.isUploading && (
-                        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/70 backdrop-blur-[1px]">
-                          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      {(preview.isUploading || preview.status === "error") && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-lg bg-background/80 px-3 text-center backdrop-blur-[1px]">
+                          {preview.isUploading ? (
+                            <>
+                              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                              <div className="text-xs font-semibold text-foreground">{preview.progress}%</div>
+                              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+                                <div
+                                  className="h-full rounded-full bg-primary transition-all duration-300"
+                                  style={{ width: `${preview.progress}%` }}
+                                />
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <AlertTriangle className="h-5 w-5 text-destructive" />
+                              <div className="text-[11px] font-medium text-foreground">Upload failed</div>
+                              <button
+                                type="button"
+                                onClick={() => void retryPostMedia(preview.id)}
+                                className="rounded-md bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground"
+                              >
+                                Retry update
+                              </button>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -2616,7 +2746,6 @@ export default function AdminStoreEditPage() {
                   <button
                     type="button"
                     onClick={() => postMediaInputRef.current?.click()}
-                    disabled={uploadingPostMedia}
                     className={cn(
                       "rounded-lg border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer",
                       postMediaMode === "video" ? "w-full" : "aspect-square"
@@ -2628,7 +2757,7 @@ export default function AdminStoreEditPage() {
                     ) : (
                       <>
                         <Camera className="h-5 w-5" />
-                        <span className="text-[10px]">Add</span>
+                        <span className="text-[10px]">Add more</span>
                       </>
                     )}
                   </button>
@@ -2658,10 +2787,13 @@ export default function AdminStoreEditPage() {
                 ref={postMediaInputRef}
                 type="file"
                 accept={postMediaMode === "video" ? "video/*" : "image/*"}
+                multiple
                 className="hidden"
                 onChange={e => {
-                  const f = e.target.files?.[0];
-                  if (f) uploadPostMedia(f);
+                  const files = Array.from(e.target.files || []);
+                  files.forEach((file) => {
+                    void uploadPostMedia(file);
+                  });
                   e.target.value = "";
                 }}
               />
