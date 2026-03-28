@@ -640,8 +640,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                           <div key={sa.id} className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => {
+                              onClick={async () => {
                                 setAddress(sa.address);
+                                const coords = await forwardGeocode(sa.address);
+                                if (coords) setAddressCoords(coords);
                                 localStorage.setItem("zivo_selected_address", sa.id);
                                 setShowSavedPicker(false);
                               }}
