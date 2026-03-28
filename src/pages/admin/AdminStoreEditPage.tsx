@@ -973,6 +973,22 @@ export default function AdminStoreEditPage() {
       const uploadFile = fileIsVideo ? await normalizeVideoUpload(file) : file;
       if (fileIsVideo) {
         startPostMediaProgressTimer(mediaItemId, 85);
+        // Capture video duration
+        try {
+          const tempVideo = document.createElement("video");
+          tempVideo.preload = "metadata";
+          tempVideo.src = localPreviewUrl;
+          await new Promise<void>((resolve) => {
+            tempVideo.onloadedmetadata = () => {
+              if (Number.isFinite(tempVideo.duration)) {
+                setPostMediaItems(prev => prev.map(item => item.id === mediaItemId ? { ...item, duration: tempVideo.duration } : item));
+              }
+              resolve();
+            };
+            tempVideo.onerror = () => resolve();
+            setTimeout(resolve, 3000);
+          });
+        } catch { /* ignore duration capture failures */ }
       }
 
       const ext = uploadFile.name.split(".").pop() || "jpg";
