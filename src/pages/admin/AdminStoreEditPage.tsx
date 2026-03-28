@@ -447,6 +447,11 @@ export default function AdminStoreEditPage() {
     latitude: null as number | null, longitude: null as number | null,
     banner_position: 50,
     facebook_url: "",
+    booking_days: [] as string[],
+    booking_start_time: "9:00 AM",
+    booking_end_time: "5:00 PM",
+    booking_duration: "30",
+    booking_note: "",
   });
   const [isRepositioning, setIsRepositioning] = useState(false);
   const [dragStartY, setDragStartY] = useState<number | null>(null);
@@ -474,6 +479,11 @@ export default function AdminStoreEditPage() {
         latitude: (store as any).latitude ?? null,
         longitude: (store as any).longitude ?? null,
         facebook_url: (store as any).facebook_url || "",
+        booking_days: (store as any).booking_days || [],
+        booking_start_time: (store as any).booking_start_time || "9:00 AM",
+        booking_end_time: (store as any).booking_end_time || "5:00 PM",
+        booking_duration: (store as any).booking_duration || "30",
+        booking_note: (store as any).booking_note || "",
       });
     }
   }, [store]);
