@@ -129,6 +129,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const [promoCode, setPromoCode] = useState("");
   const [subPref, setSubPref] = useState<SubstitutionPref>(savedProfile.subPref);
   const [scheduler, setScheduler] = useState<SchedulerState>(DEFAULT_SCHEDULER);
+  const [selectedPayment, setSelectedPayment] = useState<StorePaymentType>(
+    storePaymentTypes.includes("cash") ? "cash" : storePaymentTypes[0] || "card"
+  );
   // Live ETA
   const storeName = items[0]?.store || "Walmart";
   const storeCfg = GROCERY_STORES.find(s => s.name.toLowerCase() === storeName.toLowerCase());
