@@ -113,38 +113,88 @@ function AdminVideoPreview({
   muted?: boolean;
 }) {
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     setPosterUrl((prev) => {
       if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
       return null;
     });
+    setIsPlaying(false);
   }, [src]);
+
+  const handlePlayToggle = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    if (vid.paused) {
+      vid.muted = true;
+      void vid.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+    } else {
+      vid.pause();
+      setIsPlaying(false);
+    }
+  };
 
   return (
     <div className={cn("relative bg-black", className)}>
       <video
         key={src}
+        ref={videoRef}
         src={src}
         poster={posterUrl ?? undefined}
         className={cn("h-full w-full", videoClassName)}
-        controls={controls}
+        controls={false}
         playsInline
-        preload="metadata"
+        preload="auto"
         muted={muted}
-        autoPlay={autoPlay}
         loop={loop}
         onLoadedMetadata={(event) => {
           event.currentTarget.muted = muted;
           ensureVisibleVideoFrame(event.currentTarget);
-          if (!autoPlay) event.currentTarget.pause();
         }}
         onLoadedData={(event) => {
           ensureVisibleVideoFrame(event.currentTarget);
           captureVideoPosterFrame(event.currentTarget, setPosterUrl);
-          if (!autoPlay) event.currentTarget.pause();
+          if (autoPlay) {
+            event.currentTarget.muted = true;
+            void event.currentTarget.play().then(() => setIsPlaying(true)).catch(() => {});
+          }
+        }}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => {
+          if (!loop) setIsPlaying(false);
         }}
       />
+      {/* Large tap-to-play overlay */}
+      <button
+        type="button"
+        onClick={handlePlayToggle}
+        className="absolute inset-0 z-[1] flex items-center justify-center"
+        aria-label={isPlaying ? "Pause" : "Play"}
+      >
+        {!isPlaying && (
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-background/70 shadow-lg backdrop-blur-sm">
+            <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
+              <path d="M2 1L18 11L2 21V1Z" fill="hsl(var(--foreground))" />
+            </svg>
+          </div>
+        )}
+      </button>
+      {/* Minimal bottom bar with progress */}
+      {controls && isPlaying && (
+        <div className="absolute bottom-0 left-0 right-0 z-[2] bg-gradient-to-t from-black/50 to-transparent p-1.5">
+          <div className="flex items-center gap-1.5">
+            <button type="button" onClick={handlePlayToggle} className="text-white" aria-label="Pause">
+              <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+                <rect width="3" height="12" fill="white" />
+                <rect x="7" width="3" height="12" fill="white" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2686,15 +2736,23 @@ export default function AdminStoreEditPage() {
                   <div key={`${preview.previewUrl}-${i}`}>
                     <div className="relative overflow-hidden rounded-lg border border-border bg-muted/20">
                       {preview.isVideo ? (
-                        <AdminVideoPreview
-                          src={preview.previewUrl}
-                          className="rounded-lg"
-                          videoClassName="rounded-lg bg-muted object-contain"
-                          controls
-                          muted
-                          autoPlay
-                          loop
-                        />
+                        <>
+                          <AdminVideoPreview
+                            src={preview.status === "done" && preview.uploadedUrl ? preview.uploadedUrl : preview.previewUrl}
+                            className="rounded-lg"
+                            videoClassName="rounded-lg bg-muted object-contain"
+                            controls
+                            muted
+                            autoPlay={false}
+                            loop
+                          />
+                          {preview.status === "done" && (
+                            <div className="absolute bottom-1 left-1 z-10 flex items-center gap-1 rounded bg-green-600/90 px-1.5 py-0.5">
+                              <CheckCircle2 className="h-3 w-3 text-white" />
+                              <span className="text-[10px] font-medium text-white">Ready</span>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <img
                           src={preview.previewUrl}
