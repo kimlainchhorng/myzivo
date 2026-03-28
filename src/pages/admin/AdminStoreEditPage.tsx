@@ -670,11 +670,20 @@ export default function AdminStoreEditPage() {
     if (!ffmpegLoadPromiseRef.current) {
       ffmpegLoadPromiseRef.current = (async () => {
         const ffmpeg = new FFmpeg();
-        await ffmpeg.load({
-          coreURL: ffmpegCoreUrl,
-          wasmURL: ffmpegWasmUrl,
-          workerURL: ffmpegWorkerUrl,
-        });
+        try {
+          await ffmpeg.load({
+            coreURL: ffmpegCoreUrl,
+            wasmURL: ffmpegWasmUrl,
+            workerURL: ffmpegWorkerUrl,
+          });
+        } catch (workerErr) {
+          console.warn("[FFmpeg] Worker load failed, retrying without workerURL:", workerErr);
+          // Fallback: load without explicit workerURL — lets the library create its own
+          await ffmpeg.load({
+            coreURL: ffmpegCoreUrl,
+            wasmURL: ffmpegWasmUrl,
+          });
+        }
         ffmpegRef.current = ffmpeg;
         return ffmpeg;
       })().catch((error) => {
