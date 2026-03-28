@@ -14,7 +14,7 @@ import {
   Smartphone, Wallet, X, Baby, Sparkles,
   Route, Timer, Bell, Package, Plane, Hotel, TrendingDown, Gem,
   PawPrint, Accessibility, Plus, ShoppingCart, Fuel, UtensilsCrossed, Store, Pill,
-  Globe
+  Globe, Bike
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -141,6 +141,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 const DEFAULT_VEHICLE_OPTIONS = [
   // Popular
   { id: "economy", category: "popular", name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, pricePerMile: 1.50, basePrice: 3.50, perMinute: 0.35, bookingFee: 2.50, minimumFare: 7.00, capacity: 3, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "moto", category: "popular", name: "ZIVO Moto", desc: "Fast motorcycle rides", etaMin: 3, pricePerMile: 0.80, basePrice: 1.50, perMinute: 0.15, bookingFee: 0.13, minimumFare: 0.25, capacity: 1, icon: Bike, carSeat: false, surgeMultiplier: 1.0 },
   { id: "share", category: "popular", name: "ZIVO Share", desc: "Share a ride, save money", etaMin: 6, pricePerMile: 1.00, basePrice: 2.00, perMinute: 0.20, bookingFee: 1.50, minimumFare: 4.00, capacity: 2, icon: Users, carSeat: false, surgeMultiplier: 0.7 },
   { id: "comfort", category: "popular", name: "ZIVO Comfort", desc: "Top-rated drivers, extra legroom", etaMin: 5, pricePerMile: 2.50, basePrice: 5.00, perMinute: 0.50, bookingFee: 3.00, minimumFare: 10.00, capacity: 3, icon: Sparkles, carSeat: false, surgeMultiplier: 1.0 },
   { id: "ev", category: "popular", name: "ZIVO EV", desc: "Electric, zero-emission rides", etaMin: 5, pricePerMile: 2.00, basePrice: 4.00, perMinute: 0.40, bookingFee: 2.50, minimumFare: 8.00, capacity: 3, icon: Zap, carSeat: false, surgeMultiplier: 1.0 },
@@ -452,16 +453,19 @@ const VEHICLE_IMAGES: Record<string, string> = {
   "luxury-xl": "/vehicles/luxury-car-v2.png",
   "pet":       "/vehicles/pet-car-v2.png",
   "wheelchair": "/vehicles/wheelchair-car-v2.png",
+  "moto":      "/vehicles/zivo-moto.png",
 };
 
 /* Cambodia-specific overrides */
 const CAMBODIA_VEHICLE_IMAGES: Record<string, string> = {
   "economy": "/vehicles/zivo-tuktuk.png",
   "share": "/vehicles/zivo-ev-tuktuk.png",
+  "moto": "/vehicles/zivo-moto.png",
 };
 const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
   "economy": "ZIVO Tuk Tuk",
   "share": "ZIVO EV Tuk Tuk",
+  "moto": "ZIVO Moto",
 };
 const CAMBODIA_VEHICLE_DESCS: Record<string, string> = {
   "economy": "ការធ្វើដំណើរប្រចាំថ្ងៃតម្លៃសមរម្យ",
@@ -469,10 +473,12 @@ const CAMBODIA_VEHICLE_DESCS: Record<string, string> = {
   "comfort": "អ្នកបើកបរល្អបំផុត កន្លែងដាក់ជើងទូលាយ",
   "ev": "អគ្គិសនី សូន្យការបំភាយ",
   "xl": "កន្លែងបន្ថែមសម្រាប់ក្រុម",
+  "moto": "ម៉ូតូរហ័សនិងសន្សំសំចៃ",
 };
 const CAMBODIA_VEHICLE_CAPACITY: Record<string, number> = {
   "economy": 3,
   "share": 3,
+  "moto": 1,
 };
 const CAMBODIA_BOOKING_FEE = 0.13;
 const CAMBODIA_PER_KM_KHR = 1550; // KHR per km
@@ -762,6 +768,10 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
         minimumFare: 0.25,
         surgeMultiplier: 1.0,
       }));
+    }
+    // Filter: moto only available in Cambodia
+    if (!useKm) {
+      options = options.filter((v) => v.id !== "moto");
     }
     return options;
   }, [cityPricingMap, currentLanguage]);
