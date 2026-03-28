@@ -20,6 +20,22 @@ import storeRideBg from "@/assets/store-ride-bg.jpg";
 import storeCallBg from "@/assets/store-call-bg.jpg";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 
+/**
+ * Extract the correct language part from dual-format text like "Khmer/English".
+ * If lang is "km" → return Khmer part (before "/"), otherwise English part (after "/").
+ * If no "/" separator found, return the text as-is.
+ */
+function localizedName(text: string, lang: string): string {
+  if (!text) return text;
+  const slashIdx = text.indexOf("/");
+  if (slashIdx === -1) return text;
+  const kmPart = text.slice(0, slashIdx).trim();
+  const enPart = text.slice(slashIdx + 1).trim();
+  if (!enPart) return kmPart;
+  if (!kmPart) return enPart;
+  return lang === "km" ? kmPart : enPart;
+}
+
 const container = {
   hidden: {},
   show: { transition: { staggerChildren: 0.04 } },
