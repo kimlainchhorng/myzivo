@@ -2097,25 +2097,64 @@ export default function AdminStoreEditPage() {
                     <Label className="text-xs">{t("admin.store.model")} *</Label>
                     {productForm.car_make === "BYD" ? (
                       <>
-                        <select
-                          value={["Atto 3","Dolphin","Seal","Han","Tang","Song Plus","Song Pro","Yuan Plus","Shark","Sealion 6","Sealion 7","Denza D9","Yangwang U8","Yangwang U9","e6","T3"].includes(productForm.car_model) ? productForm.car_model : productForm.car_model ? "__other__" : ""}
-                          onChange={e => {
-                            if (e.target.value === "__other__") {
-                              updateProductField("car_model", "");
-                            } else {
-                              updateProductField("car_model", e.target.value);
-                            }
-                          }}
-                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
-                        >
-                          <option value="">Select Model</option>
-                          {["Atto 3","Dolphin","Seal","Han","Tang","Song Plus","Song Pro","Yuan Plus","Shark","Sealion 6","Sealion 7","Denza D9","Yangwang U8","Yangwang U9","e6","T3"].map(m => (
-                            <option key={m} value={m}>{m}</option>
-                          ))}
-                          <option value="__other__">+ Other (custom)</option>
-                        </select>
-                        {!["Atto 3","Dolphin","Seal","Han","Tang","Song Plus","Song Pro","Yuan Plus","Shark","Sealion 6","Sealion 7","Denza D9","Yangwang U8","Yangwang U9","e6","T3",""].includes(productForm.car_model) && (
-                          <Input value={productForm.car_model} onChange={e => updateProductField("car_model", e.target.value)} placeholder="Enter custom model" className="h-9 text-sm mt-1" />
+                        {addingBydModel ? (
+                          <div className="flex gap-1">
+                            <Input
+                              value={newBydModelName}
+                              onChange={e => setNewBydModelName(e.target.value)}
+                              placeholder="Enter model name"
+                              className="h-9 text-sm flex-1"
+                              autoFocus
+                              onKeyDown={e => {
+                                if (e.key === "Enter" && newBydModelName.trim()) {
+                                  const name = newBydModelName.trim();
+                                  const updated = [...new Set([...customBydModels, name])];
+                                  setCustomBydModels(updated);
+                                  localStorage.setItem("zivo_custom_byd_models", JSON.stringify(updated));
+                                  updateProductField("car_model", name);
+                                  setNewBydModelName("");
+                                  setAddingBydModel(false);
+                                }
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="h-9 text-xs"
+                              disabled={!newBydModelName.trim()}
+                              onClick={() => {
+                                const name = newBydModelName.trim();
+                                if (!name) return;
+                                const updated = [...new Set([...customBydModels, name])];
+                                setCustomBydModels(updated);
+                                localStorage.setItem("zivo_custom_byd_models", JSON.stringify(updated));
+                                updateProductField("car_model", name);
+                                setNewBydModelName("");
+                                setAddingBydModel(false);
+                              }}
+                            >
+                              Save
+                            </Button>
+                            <Button type="button" size="sm" variant="ghost" className="h-9 text-xs" onClick={() => { setAddingBydModel(false); setNewBydModelName(""); }}>
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-1">
+                            <select
+                              value={productForm.car_model}
+                              onChange={e => updateProductField("car_model", e.target.value)}
+                              className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm flex-1"
+                            >
+                              <option value="">Select Model</option>
+                              {[...["Atto 3","Dolphin","Seal","Han","Tang","Song Plus","Song Pro","Yuan Plus","Shark","Sealion 6","Sealion 7","Denza D9","Yangwang U8","Yangwang U9","e6","T3"], ...customBydModels].map(m => (
+                                <option key={m} value={m}>{m}</option>
+                              ))}
+                            </select>
+                            <Button type="button" size="sm" variant="outline" className="h-9 text-xs shrink-0 gap-1" onClick={() => setAddingBydModel(true)}>
+                              <Plus className="h-3 w-3" /> Add
+                            </Button>
+                          </div>
                         )}
                       </>
                     ) : (
