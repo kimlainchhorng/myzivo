@@ -1539,15 +1539,34 @@ export default function AdminStoreEditPage() {
                     const isVideo = firstUrl && isVideoUrl(normalizeStorePostMediaUrl(firstUrl));
                     return (
                       <div key={post.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
-                        {isVideo ? (
-                          <div className="w-full h-full flex items-center justify-center bg-muted">
-                            <Video className="h-5 w-5 text-muted-foreground" />
+                        {isVideo && firstUrl ? (
+                          <div className="relative w-full h-full">
+                            <video
+                              src={normalizeStorePostMediaUrl(firstUrl)}
+                              className="w-full h-full object-cover"
+                              muted
+                              preload="metadata"
+                              onLoadedData={(e) => {
+                                const vid = e.currentTarget;
+                                if (vid.duration > 0) vid.currentTime = Math.min(vid.duration * 0.1, 1);
+                              }}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <div className="h-8 w-8 rounded-full bg-background/70 backdrop-blur-sm flex items-center justify-center">
+                                <Video className="h-4 w-4 text-foreground" />
+                              </div>
+                            </div>
                           </div>
                         ) : firstUrl ? (
                           <img src={normalizeStorePostMediaUrl(firstUrl)} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-muted">
                             <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                        {post.caption && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5">
+                            <p className="text-[10px] text-white line-clamp-1">{post.caption}</p>
                           </div>
                         )}
                         <button
