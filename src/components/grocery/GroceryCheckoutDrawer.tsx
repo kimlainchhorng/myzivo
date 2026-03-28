@@ -12,6 +12,7 @@ import {
   MessageSquare, DoorOpen, Star, Gift, RefreshCw, AlertTriangle,
   Banknote, QrCode,
 } from "lucide-react";
+import { Home, Building2, Bookmark, Trash2, Plus } from "lucide-react";
 import { GroceryDeliveryScheduler, DEFAULT_SCHEDULER, getPriorityFee, type SchedulerState } from "@/components/grocery/GroceryDeliveryScheduler";
 import { addLoyaltyPoints } from "@/components/grocery/GroceryLoyaltyBanner";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,28 @@ import { CheckoutPinMap } from "@/components/grocery/CheckoutPinMap";
 import { CheckoutRouteMap } from "@/components/grocery/CheckoutRouteMap";
 
 export type StorePaymentType = "cash" | "card" | "aba";
+
+interface SavedDeliveryAddress {
+  id: string;
+  label: string;
+  address: string;
+  isDefault: boolean;
+}
+
+function getAllSavedAddresses(): SavedDeliveryAddress[] {
+  try {
+    const raw = localStorage.getItem("zivo_delivery_addresses");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+  return [];
+}
+
+function persistAddresses(addresses: SavedDeliveryAddress[]) {
+  localStorage.setItem("zivo_delivery_addresses", JSON.stringify(addresses));
+}
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -92,6 +115,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const [gpsAutoFilled, setGpsAutoFilled] = useState(false);
   const [profileAutoFilled, setProfileAutoFilled] = useState(false);
   const [showPinMap, setShowPinMap] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<SavedDeliveryAddress[]>(getAllSavedAddresses);
+  const [showSavedPicker, setShowSavedPicker] = useState(false);
+  const [saveLabel, setSaveLabel] = useState<"home" | "work" | "other">("home");
+  const [showSaveForm, setShowSaveForm] = useState(false);
 
   // Auto-fill contact info from user profile
   useEffect(() => {
@@ -511,7 +538,69 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
                   <MapPin className="h-3.5 w-3.5 text-primary" />
                   {t("grocery.checkout.delivery_address")}
+                  {savedAddresses.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSavedPicker(!showSavedPicker)}
+                      className="ml-auto text-[11px] font-semibold text-primary flex items-center gap-1 hover:underline"
+                    >
+                      <Bookmark className="h-3 w-3" />
+                      Saved ({savedAddresses.length})
+                    </button>
+                  )}
                 </h3>
+
+                {/* Saved address picker */}
+                <AnimatePresence>
+                  {showSavedPicker && savedAddresses.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mb-3 space-y-1.5 overflow-hidden"
+                    >
+                      {savedAddresses.map((sa) => {
+                        const LabelIcon = sa.label === "home" ? Home : sa.label === "work" ? Building2 : MapPin;
+                        const isActive = address === sa.address;
+                        return (
+                          <div key={sa.id} className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAddress(sa.address);
+                                localStorage.setItem("zivo_selected_address", sa.id);
+                                setShowSavedPicker(false);
+                              }}
+                              className={`flex-1 flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all text-left ${
+                                isActive ? "bg-primary/5 border-primary/20" : "bg-muted/10 border-border/15 hover:bg-muted/20"
+                              }`}
+                            >
+                              <LabelIcon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[11px] font-bold text-foreground capitalize">{sa.label}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{sa.address}</p>
+                              </div>
+                              {isActive && <CheckCircle className="h-4 w-4 text-primary shrink-0" />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = savedAddresses.filter((a) => a.id !== sa.id);
+                                setSavedAddresses(updated);
+                                persistAddresses(updated);
+                                toast.success("Address removed");
+                              }}
+                              className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <div className="relative mb-4">
                   {isGettingLocation ? (
                     <Loader2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-primary animate-spin z-10" />
@@ -571,6 +660,85 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                       {t("grocery.checkout.adjust_pin") || "Adjust pin on map"}
                     </span>
                   </motion.button>
+                )}
+
+                {/* Save address button */}
+                {address.trim().length > 5 && !savedAddresses.some((sa) => sa.address === address) && (
+                  <AnimatePresence>
+                    {!showSaveForm ? (
+                      <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setShowSaveForm(true)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent/50 border border-border/15 mb-4 w-full hover:bg-accent/70 transition-colors"
+                      >
+                        <Plus className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-[11px] font-semibold text-foreground">Save this address</span>
+                      </motion.button>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-4 p-3 rounded-xl bg-muted/15 border border-border/15 space-y-2.5 overflow-hidden"
+                      >
+                        <p className="text-[11px] font-bold text-foreground">Label this address</p>
+                        <div className="flex gap-2">
+                          {(["home", "work", "other"] as const).map((label) => {
+                            const Icon = label === "home" ? Home : label === "work" ? Building2 : MapPin;
+                            return (
+                              <button
+                                key={label}
+                                type="button"
+                                onClick={() => setSaveLabel(label)}
+                                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border text-[11px] font-semibold capitalize transition-all ${
+                                  saveLabel === label
+                                    ? "bg-primary/10 border-primary/30 text-primary"
+                                    : "bg-muted/10 border-border/15 text-muted-foreground hover:bg-muted/20"
+                                }`}
+                              >
+                                <Icon className="h-3.5 w-3.5" />
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 rounded-lg text-[11px] h-8"
+                            onClick={() => setShowSaveForm(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 rounded-lg text-[11px] h-8"
+                            onClick={() => {
+                              const newAddr: SavedDeliveryAddress = {
+                                id: crypto.randomUUID(),
+                                label: saveLabel,
+                                address: address.trim(),
+                                isDefault: savedAddresses.length === 0,
+                              };
+                              const updated = [...savedAddresses, newAddr];
+                              setSavedAddresses(updated);
+                              persistAddresses(updated);
+                              localStorage.setItem("zivo_selected_address", newAddr.id);
+                              setShowSaveForm(false);
+                              toast.success("Address saved!");
+                            }}
+                          >
+                            <Bookmark className="h-3 w-3 mr-1" />
+                            Save
+                          </Button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 )}
 
                 {/* Draggable pin map */}
