@@ -384,6 +384,11 @@ export default function AdminStoreEditPage() {
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [savedBrands, setSavedBrands] = useState<string[]>([]);
   const [savedCategories, setSavedCategories] = useState<string[]>([]);
+  const [customBydModels, setCustomBydModels] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("zivo_custom_byd_models") || "[]"); } catch { return []; }
+  });
+  const [addingBydModel, setAddingBydModel] = useState(false);
+  const [newBydModelName, setNewBydModelName] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
 
