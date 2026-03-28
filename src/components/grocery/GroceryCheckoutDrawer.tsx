@@ -32,6 +32,8 @@ import { useCountry } from "@/hooks/useCountry";
 import { CheckoutPinMap } from "@/components/grocery/CheckoutPinMap";
 import { CheckoutRouteMap } from "@/components/grocery/CheckoutRouteMap";
 
+export type StorePaymentType = "cash" | "card" | "aba";
+
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
   total: number;
@@ -41,6 +43,7 @@ interface GroceryCheckoutDrawerProps {
   onUpdateQuantity?: (productId: string, quantity: number) => void;
   storeCoords?: { lat: number; lng: number } | null;
   storeName?: string;
+  storePaymentTypes?: StorePaymentType[];
 }
 
 type SubstitutionPref = "contact_me" | "best_match" | "refund";

@@ -24,6 +24,7 @@ export interface StoreProfile {
   facebook_url: string | null;
   latitude: number | null;
   longitude: number | null;
+  payment_types: string[];
 }
 
 export interface StoreProductItem {
