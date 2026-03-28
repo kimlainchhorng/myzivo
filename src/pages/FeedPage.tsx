@@ -48,7 +48,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
   const [triedBlobFallback, setTriedBlobFallback] = useState(false);
   const [blobSrc, setBlobSrc] = useState<string | null>(null);
 
-  const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
+  const isVideo = (url: string) => mediaType === "video" || /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
 
   const ensureVisibleFrame = (video: HTMLVideoElement) => {
     if (!Number.isFinite(video.duration) || video.duration <= 0) return;
@@ -135,7 +135,9 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
       const resp = await fetch(url);
       if (!resp.ok) throw new Error("fetch failed");
       const blob = await resp.blob();
-      const objectUrl = URL.createObjectURL(blob);
+      // Try with explicit mp4 type first, then original type
+      const mp4Blob = new Blob([blob], { type: "video/mp4" });
+      const objectUrl = URL.createObjectURL(mp4Blob);
       setBlobSrc(objectUrl);
       setHasPlaybackError(false);
     } catch {
@@ -203,10 +205,23 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
                 setHasPlaybackError(false);
               }}
               onPause={() => setIsPlaying(false)}
-              onError={() => {
+              onError={async () => {
                 setIsPlaying(false);
+                const currentUrl = urls[activeIndex];
                 if (!triedBlobFallback) {
-                  void tryBlobFallback(urls[activeIndex]);
+                  await tryBlobFallback(currentUrl);
+                } else if (blobSrc && !hasPlaybackError) {
+                  // Blob also failed — try once more with original blob type
+                  try {
+                    const resp = await fetch(currentUrl);
+                    if (!resp.ok) throw new Error();
+                    const blob = await resp.blob();
+                    const newUrl = URL.createObjectURL(blob);
+                    URL.revokeObjectURL(blobSrc);
+                    setBlobSrc(newUrl);
+                  } catch {
+                    setHasPlaybackError(true);
+                  }
                 } else {
                   setHasPlaybackError(true);
                 }
