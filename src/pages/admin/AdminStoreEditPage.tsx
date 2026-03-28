@@ -818,17 +818,23 @@ export default function AdminStoreEditPage() {
     const blob = await response.blob();
     const file = new File([blob], "preview-repair.mp4", { type: blob.type || "video/mp4" });
 
-    // Try stripping audio first (fastest), then full transcode
+    // Try fixing HE-AAC audio first, then strip audio, then full transcode
     let repairedFile: File;
     try {
-      repairedFile = await withTimeout(stripVideoAudioForPreview(file), 15000, "Strip audio timeout");
+      repairedFile = await withTimeout(normalizeVideoAudioForBrowser(file), 20000, "Audio normalize timeout");
       const isPlayable = await probeVideoFile(repairedFile);
       if (!isPlayable) throw new Error("Still not playable");
     } catch {
       try {
-        repairedFile = await withTimeout(transcodeVideoForBrowser(file), 45000, "Transcode timeout");
+        repairedFile = await withTimeout(stripVideoAudioForPreview(file), 15000, "Strip audio timeout");
+        const isPlayable = await probeVideoFile(repairedFile);
+        if (!isPlayable) throw new Error("Still not playable");
       } catch {
-        throw new Error("Could not repair video for preview.");
+        try {
+          repairedFile = await withTimeout(transcodeVideoForBrowser(file), 45000, "Transcode timeout");
+        } catch {
+          throw new Error("Could not repair video for preview.");
+        }
       }
     }
 
@@ -865,9 +871,7 @@ export default function AdminStoreEditPage() {
     startPostMediaProgressTimer(mediaItemId, fileIsVideo ? 42 : 78);
 
     try {
-      // Always upload the original file directly — no client-side transcoding.
-      // Videos are already H.264 MP4 which is browser-compatible for playback.
-      const uploadFile = file;
+      const uploadFile = fileIsVideo ? await normalizeVideoUpload(file) : file;
       if (fileIsVideo) {
         startPostMediaProgressTimer(mediaItemId, 85);
       }
@@ -1696,6 +1700,8 @@ export default function AdminStoreEditPage() {
                               muted
                               loop
                               autoPlay
+                              canRepair
+                              onRepair={repairVideoPreviewSource}
                             />
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                               <div className="h-8 w-8 rounded-full bg-background/70 backdrop-blur-sm flex items-center justify-center">
