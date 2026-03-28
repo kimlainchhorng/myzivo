@@ -491,6 +491,11 @@ export default function AdminStoreEditPage() {
   // Post state
   const [postDialog, setPostDialog] = useState(false);
   const [postCaption, setPostCaption] = useState("");
+  const [postHashtags, setPostHashtags] = useState("");
+  const [postLocation, setPostLocation] = useState("");
+  const [postScheduledAt, setPostScheduledAt] = useState<Date | undefined>(undefined);
+  const [postScheduleTime, setPostScheduleTime] = useState("12:00");
+  const [isScheduled, setIsScheduled] = useState(false);
   const [postMediaItems, setPostMediaItems] = useState<Array<{
     id: string;
     previewUrl: string;
@@ -501,14 +506,18 @@ export default function AdminStoreEditPage() {
     status: "uploading" | "done" | "error";
     error?: string;
     sourceFile?: File;
+    duration?: number;
   }>>([]);
   const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [reprocessingPostId, setReprocessingPostId] = useState<string | null>(null);
   const [replacingPostId, setReplacingPostId] = useState<string | null>(null);
   const [postMediaMode, setPostMediaMode] = useState<"image" | "video">("image");
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const postMediaInputRef = useRef<HTMLInputElement>(null);
   const replaceVideoInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const ffmpegRef = useRef<FFmpeg | null>(null);
   const ffmpegLoadPromiseRef = useRef<Promise<FFmpeg> | null>(null);
   const repairedPreviewUrlsRef = useRef<Map<string, string>>(new Map());
@@ -549,8 +558,30 @@ export default function AdminStoreEditPage() {
 
   const resetPostState = () => {
     setPostCaption("");
+    setPostHashtags("");
+    setPostLocation("");
+    setPostScheduledAt(undefined);
+    setPostScheduleTime("12:00");
+    setIsScheduled(false);
+    setDragOverIndex(null);
+    setDraggingIndex(null);
     cleanupPreviews();
     setPostMediaItems([]);
+  };
+
+  const formatDuration = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const reorderMedia = (fromIndex: number, toIndex: number) => {
+    setPostMediaItems((prev) => {
+      const items = [...prev];
+      const [moved] = items.splice(fromIndex, 1);
+      items.splice(toIndex, 0, moved);
+      return items;
+    });
   };
 
   const updatePostMediaItem = (
