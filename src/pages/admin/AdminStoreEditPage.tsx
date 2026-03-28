@@ -1803,145 +1803,149 @@ export default function AdminStoreEditPage() {
             <DialogTitle>{editingProduct ? "Edit Product" : "Add Product"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>Product Name *</Label>
-              <Input value={productForm.name} onChange={e => updateProductField("name", e.target.value)} placeholder="Product name" />
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea value={productForm.description} onChange={e => updateProductField("description", e.target.value)} rows={2} />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Price (៛ KHR) *</Label>
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  value={productForm.price_khr || ""}
-                  onChange={e => {
-                    const normalized = normalizeLocalizedNumberInput(e.target.value);
-                    const val = normalized.replace(/[^0-9]/g, "");
-                    if (val === "") {
-                      updateProductField("price_khr", 0);
-                      updateProductField("price", 0);
-                      return;
-                    }
-                    const khr = parseInt(val, 10);
-                    if (!Number.isNaN(khr)) {
-                      updateProductField("price_khr", khr);
-                      updateProductField("price", parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)));
-                    }
-                  }}
-                  placeholder="0"
-                />
-                <p className="text-[10px] text-muted-foreground">Rate: 1 USD = {(form.khr_rate || 4062.5).toLocaleString()} KHR</p>
-              </div>
-              <div className="space-y-2">
-                <Label>Price ($)</Label>
-                <Input
-                  type="text"
-                  inputMode="decimal"
-                  value={productForm.price || ""}
-                  onChange={e => {
-                    const normalized = normalizeLocalizedNumberInput(e.target.value);
-                    const parts = normalized.split(".");
-                    const safeDecimal = parts.length > 1
-                      ? `${parts[0].replace(/[^0-9]/g, "")}.${parts.slice(1).join("").replace(/[^0-9]/g, "")}`
-                      : normalized.replace(/[^0-9]/g, "");
-                    if (safeDecimal === "" || safeDecimal === ".") {
-                      updateProductField("price", 0);
-                      updateProductField("price_khr", 0);
-                      return;
-                    }
-                    const num = parseFloat(safeDecimal);
-                    if (!Number.isNaN(num)) {
-                      updateProductField("price", num);
-                      updateProductField("price_khr", Math.round(num * (form.khr_rate || 4062.5)));
-                    }
-                  }}
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>SKU</Label>
-                <div className="flex gap-2">
-                  <Input value={productForm.sku} onChange={e => updateProductField("sku", e.target.value)} className="flex-1" placeholder="Auto-generated" />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0 text-xs"
-                    onClick={() => updateProductField("sku", generateSku(form.name, productForm.category, productForm.name))}
-                  >
-                    Auto
-                  </Button>
+            {form.category !== "car-dealership" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Product Name *</Label>
+                  <Input value={productForm.name} onChange={e => updateProductField("name", e.target.value)} placeholder="Product name" />
                 </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Images ({(productForm.image_urls || []).length}/8)</Label>
-              <input ref={productImageInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadProductImage(f); e.target.value = ""; }} />
-              <div className="flex flex-wrap gap-2">
-                {(productForm.image_urls || []).map((url: string, idx: number) => (
-                  <div key={idx} className="relative group shrink-0">
-                    <img src={url} alt={`Product ${idx + 1}`} className="w-20 h-20 rounded-xl object-cover border border-border" />
-                    <button
-                      type="button"
-                      onClick={() => removeProductImage(idx)}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs shadow-sm"
-                    >
-                      ×
-                    </button>
-                    {idx === 0 && (
-                      <span className="absolute bottom-0.5 left-0.5 text-[8px] bg-primary text-primary-foreground px-1 rounded">Main</span>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea value={productForm.description} onChange={e => updateProductField("description", e.target.value)} rows={2} />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Price (៛ KHR) *</Label>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      value={productForm.price_khr || ""}
+                      onChange={e => {
+                        const normalized = normalizeLocalizedNumberInput(e.target.value);
+                        const val = normalized.replace(/[^0-9]/g, "");
+                        if (val === "") {
+                          updateProductField("price_khr", 0);
+                          updateProductField("price", 0);
+                          return;
+                        }
+                        const khr = parseInt(val, 10);
+                        if (!Number.isNaN(khr)) {
+                          updateProductField("price_khr", khr);
+                          updateProductField("price", parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)));
+                        }
+                      }}
+                      placeholder="0"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Rate: 1 USD = {(form.khr_rate || 4062.5).toLocaleString()} KHR</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Price ($)</Label>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      value={productForm.price || ""}
+                      onChange={e => {
+                        const normalized = normalizeLocalizedNumberInput(e.target.value);
+                        const parts = normalized.split(".");
+                        const safeDecimal = parts.length > 1
+                          ? `${parts[0].replace(/[^0-9]/g, "")}.${parts.slice(1).join("").replace(/[^0-9]/g, "")}`
+                          : normalized.replace(/[^0-9]/g, "");
+                        if (safeDecimal === "" || safeDecimal === ".") {
+                          updateProductField("price", 0);
+                          updateProductField("price_khr", 0);
+                          return;
+                        }
+                        const num = parseFloat(safeDecimal);
+                        if (!Number.isNaN(num)) {
+                          updateProductField("price", num);
+                          updateProductField("price_khr", Math.round(num * (form.khr_rate || 4062.5)));
+                        }
+                      }}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>SKU</Label>
+                    <div className="flex gap-2">
+                      <Input value={productForm.sku} onChange={e => updateProductField("sku", e.target.value)} className="flex-1" placeholder="Auto-generated" />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 text-xs"
+                        onClick={() => updateProductField("sku", generateSku(form.name, productForm.category, productForm.name))}
+                      >
+                        Auto
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Images ({(productForm.image_urls || []).length}/8)</Label>
+                  <input ref={productImageInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadProductImage(f); e.target.value = ""; }} />
+                  <div className="flex flex-wrap gap-2">
+                    {(productForm.image_urls || []).map((url: string, idx: number) => (
+                      <div key={idx} className="relative group shrink-0">
+                        <img src={url} alt={`Product ${idx + 1}`} className="w-20 h-20 rounded-xl object-cover border border-border" />
+                        <button
+                          type="button"
+                          onClick={() => removeProductImage(idx)}
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs shadow-sm"
+                        >
+                          ×
+                        </button>
+                        {idx === 0 && (
+                          <span className="absolute bottom-0.5 left-0.5 text-[8px] bg-primary text-primary-foreground px-1 rounded">Main</span>
+                        )}
+                      </div>
+                    ))}
+                    {(productForm.image_urls || []).length < 8 && (
+                      <button
+                        type="button"
+                        onClick={() => productImageInputRef.current?.click()}
+                        disabled={uploadingProductImage}
+                        className="w-20 h-20 rounded-xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center gap-1 hover:bg-muted transition-colors shrink-0"
+                      >
+                        {uploadingProductImage ? (
+                          <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+                        ) : (
+                          <>
+                            <Upload className="h-5 w-5 text-muted-foreground" />
+                            <span className="text-[10px] text-muted-foreground">Upload</span>
+                          </>
+                        )}
+                      </button>
                     )}
                   </div>
-                ))}
-                {(productForm.image_urls || []).length < 8 && (
-                  <button
-                    type="button"
-                    onClick={() => productImageInputRef.current?.click()}
-                    disabled={uploadingProductImage}
-                    className="w-20 h-20 rounded-xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center gap-1 hover:bg-muted transition-colors shrink-0"
-                  >
-                    {uploadingProductImage ? (
-                      <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
-                    ) : (
-                      <>
-                        <Upload className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-[10px] text-muted-foreground">Upload</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Category</Label>
-                <ManagedTagDropdown
-                  label="Category"
-                  value={productForm.category}
-                  onChange={(v) => updateProductField("category", v)}
-                  savedItems={savedCategories}
-                  onSaveItem={(item) => setSavedCategories((prev) => [...new Set([...prev, item])])}
-                  onDeleteItem={(item) => setSavedCategories((prev) => prev.filter((c) => c !== item))}
-                  placeholder="e.g. Snacks"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Brand</Label>
-                <ManagedTagDropdown
-                  label="Brand"
-                  value={productForm.brand}
-                  onChange={(v) => updateProductField("brand", v)}
-                  savedItems={savedBrands}
-                  onSaveItem={(item) => setSavedBrands((prev) => [...new Set([...prev, item])])}
-                  onDeleteItem={(item) => setSavedBrands((prev) => prev.filter((b) => b !== item))}
-                  placeholder="e.g. Coca-Cola"
-                />
-              </div>
-            </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <ManagedTagDropdown
+                      label="Category"
+                      value={productForm.category}
+                      onChange={(v) => updateProductField("category", v)}
+                      savedItems={savedCategories}
+                      onSaveItem={(item) => setSavedCategories((prev) => [...new Set([...prev, item])])}
+                      onDeleteItem={(item) => setSavedCategories((prev) => prev.filter((c) => c !== item))}
+                      placeholder="e.g. Snacks"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Brand</Label>
+                    <ManagedTagDropdown
+                      label="Brand"
+                      value={productForm.brand}
+                      onChange={(v) => updateProductField("brand", v)}
+                      savedItems={savedBrands}
+                      onSaveItem={(item) => setSavedBrands((prev) => [...new Set([...prev, item])])}
+                      onDeleteItem={(item) => setSavedBrands((prev) => prev.filter((b) => b !== item))}
+                      placeholder="e.g. Coca-Cola"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* ── Car Dealership Fields ── */}
             {form.category === "car-dealership" && (
