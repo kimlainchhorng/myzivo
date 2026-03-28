@@ -453,6 +453,7 @@ const VEHICLE_IMAGES: Record<string, string> = {
   "luxury-xl": "/vehicles/luxury-car-v2.png",
   "pet":       "/vehicles/pet-car-v2.png",
   "wheelchair": "/vehicles/wheelchair-car-v2.png",
+  "moto":      "/vehicles/zivo-moto.png",
 };
 
 /* Cambodia-specific overrides */
