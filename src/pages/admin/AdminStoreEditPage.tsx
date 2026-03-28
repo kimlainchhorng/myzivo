@@ -1143,6 +1143,85 @@ export default function AdminStoreEditPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  // Edit post mutation
+  const editPost = useMutation({
+    mutationFn: async () => {
+      if (!editPostId) throw new Error("No post selected");
+      const tagsFromField = editHashtags.match(/#[\w\u1780-\u17FF]+/g) || [];
+      const tagsFromCaption = editCaption.match(/#[\w\u1780-\u17FF]+/g) || [];
+      const allTags = [...new Set([...tagsFromField, ...tagsFromCaption].map(t => t.toLowerCase()))];
+      const { error } = await supabase.from("store_posts").update({
+        caption: editCaption || null,
+        hashtags: allTags,
+        location: editLocation || null,
+      } as any).eq("id", editPostId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
+      setEditPostId(null);
+      toast.success("Post updated!");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  // Comments query
+  const { data: postComments = [] } = useQuery({
+    queryKey: ["post-comments", viewPostId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_post_comments")
+        .select("*")
+        .eq("post_id", viewPostId!)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!viewPostId,
+  });
+
+  // Add comment mutation
+  const addComment = useMutation({
+    mutationFn: async () => {
+      if (!viewPostId || !newComment.trim()) throw new Error("Empty comment");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const { error } = await supabase.from("store_post_comments").insert({
+        post_id: viewPostId,
+        user_id: user.id,
+        content: newComment.trim(),
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["post-comments", viewPostId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
+      setNewComment("");
+      toast.success("Comment added");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteComment = useMutation({
+    mutationFn: async (commentId: string) => {
+      const { error } = await supabase.from("store_post_comments").delete().eq("id", commentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["post-comments", viewPostId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const openEditPost = (post: any) => {
+    setEditPostId(post.id);
+    setEditCaption(post.caption || "");
+    setEditHashtags((post.hashtags || []).join(" "));
+    setEditLocation(post.location || "");
+  };
+
+
   const reprocessPostVideo = async (post: any) => {
     if (reprocessingPostId) return;
     setReprocessingPostId(post.id);
