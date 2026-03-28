@@ -4,6 +4,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { Loader2, Heart, MessageCircle, Share2, Store, Play, Volume2, VolumeX } from "lucide-react";
@@ -374,7 +375,7 @@ export default function FeedPage() {
                   </div>
 
                   {/* Media */}
-                  <FeedMediaCarousel urls={post.media_urls} mediaType={post.media_type} />
+                  <FeedMediaCarousel urls={(post.media_urls || []).map(normalizeStorePostMediaUrl)} mediaType={post.media_type} />
 
                   {/* Actions */}
                   <div className="px-4 pt-3 pb-1 flex items-center gap-5">

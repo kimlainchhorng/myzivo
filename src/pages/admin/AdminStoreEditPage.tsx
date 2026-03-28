@@ -14,6 +14,7 @@ import { fetchFile } from "@ffmpeg/util";
 import ffmpegCoreUrl from "@ffmpeg/core?url";
 import ffmpegWasmUrl from "@ffmpeg/core/wasm?url";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import AdminLayout from "@/components/admin/AdminLayout";
 import StoreOwnerLayout from "@/components/admin/StoreOwnerLayout";
 import { Button } from "@/components/ui/button";
@@ -789,17 +790,6 @@ export default function AdminStoreEditPage() {
     return /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
   };
 
-  const normalizeStorePostMediaUrl = (url: string) => {
-    if (!url) return "";
-    if (/^https?:\/\//i.test(url) || url.startsWith("blob:")) return url;
-
-    let cleaned = url.trim();
-    cleaned = cleaned.replace(/^\/+/, "");
-    cleaned = cleaned.replace(/^storage\/v1\/object\/public\/store-posts\//, "");
-    cleaned = cleaned.replace(/^store-posts\//, "");
-
-    return supabase.storage.from("store-posts").getPublicUrl(cleaned).data.publicUrl;
-  };
 
   const getMediaType = (urls: string[]): string => {
     const hasVideo = urls.some((url) => isVideoUrl(normalizeStorePostMediaUrl(url)));
