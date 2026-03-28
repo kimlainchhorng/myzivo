@@ -279,6 +279,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, route
       dropoffCoords={dropoffCoords}
       stopCoords={stopCoords}
       routePolyline={routePolyline}
+      trafficSegments={trafficSegments}
       driverCoords={driverCoords}
       driverNavigationTarget={driverNavigationTarget}
       userLocation={userLocation}
