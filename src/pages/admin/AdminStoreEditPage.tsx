@@ -205,21 +205,29 @@ function AdminVideoPreview({
     }
   }, [blobSrc, canRepair, currentSrc, isRepairing, onRepair, recoveryStage, src]);
 
+  // Give large videos (9+ MB) enough time to buffer before treating them as stalled.
+  // The original 800 ms timeout caused unnecessary FFmpeg repair cycles on every load.
   useEffect(() => {
     if (!canRepair || hasLoadedFrame || recoveryStage === "repair") return;
 
     const timeoutId = window.setTimeout(() => {
       const video = videoRef.current;
-      const looksStalled = !video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || video.videoWidth === 0 || video.videoHeight === 0;
+      // Only trigger recovery if the network has truly stalled or if dimensions are
+      // missing after metadata loaded (iOS black-frame bug). NETWORK_LOADING means the
+      // browser is actively downloading — do not interrupt that.
+      const looksStalled =
+        !video ||
+        video.networkState === HTMLMediaElement.NETWORK_STALLED ||
+        (video.readyState >= HTMLMediaElement.HAVE_METADATA &&
+          (video.videoWidth === 0 || video.videoHeight === 0));
 
       if (looksStalled) {
         void runRecovery();
       }
-    }, autoPlay ? 800 : 1200);
+    }, autoPlay ? 4000 : 5000);
 
     return () => window.clearTimeout(timeoutId);
   }, [autoPlay, canRepair, hasLoadedFrame, recoveryStage, runRecovery]);
-
   const handlePlayToggle = () => {
     const vid = videoRef.current;
     if (!vid) return;
@@ -670,7 +678,6 @@ export default function AdminStoreEditPage() {
           finalize(hasDuration && hasVideo);
         };
         video.onloadedmetadata = () => {
-          // Early fail if metadata says duration is 0/NaN
           if (!Number.isFinite(video.duration) || video.duration <= 0) {
             finalize(false);
           }

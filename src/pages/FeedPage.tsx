@@ -67,6 +67,9 @@ function ReelCard({
   const isVideoPost = post.media_type === "video" || Boolean(detectedVideoUrl);
   const sourceUrl = detectedVideoUrl || firstUrl;
 
+  // Must be defined before effects that reference it
+  const currentSrc = blobSrc || sourceUrl;
+
   // Auto-play / pause when active changes
   useEffect(() => {
     const video = videoRef.current;
@@ -81,6 +84,19 @@ function ReelCard({
       setIsPlaying(false);
     }
   }, [isActive, isVideoPost]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-attempt play whenever the video source changes (e.g. after blob/repair recovery).
+  // When <video key={currentSrc}> remounts with a new src the isActive effect above
+  // does NOT re-run (its deps are unchanged), so this dedicated effect fills that gap.
+  // globalMuted is intentionally excluded — mute sync is handled by its own effect.
+  useEffect(() => {
+    if (!isActive || !isVideoPost || !currentSrc) return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = globalMuted;
+    void video.play().then(() => setIsPlaying(true)).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSrc]);
 
   // Reset per-post playback state when source changes
   useEffect(() => {
@@ -187,32 +203,38 @@ function ReelCard({
     setHasPlaybackError(true);
   };
 
-  const currentSrc = blobSrc || sourceUrl;
-
-  // iOS can stall on a black frame without firing video error; detect and recover.
+  // Stall detection: fires once after 6 s if the video has not shown a frame.
+  // triedBlobFallback / triedFFmpegRepair are intentionally NOT in the dep array —
+  // including them caused stacked timers that prematurely set hasPlaybackError=true
+  // (as early as 5.4 s) before async recovery finished on slow connections.
+  // The stall condition avoids false positives for videos that are merely buffering.
   useEffect(() => {
-    if (!isActive || !isVideoPost || !currentSrc || hasLoadedFrame) return;
+    if (!isActive || !isVideoPost || !currentSrc || hasLoadedFrame || isRepairing) return;
 
     const timeoutId = window.setTimeout(() => {
       const video = videoRef.current;
       if (!video) return;
 
-      const stalled =
-        video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
-        video.videoWidth === 0 ||
-        video.videoHeight === 0;
+      // Only recover when the network has truly stalled, or when metadata is loaded
+      // but dimensions are zero (the iOS black-frame bug). Do NOT trigger while the
+      // browser is still buffering normally (NETWORK_LOADING).
+      const trulyStalled =
+        video.networkState === HTMLMediaElement.NETWORK_STALLED ||
+        (video.readyState >= HTMLMediaElement.HAVE_METADATA &&
+          (video.videoWidth === 0 || video.videoHeight === 0));
 
-      if (stalled) {
+      if (trulyStalled) {
         void runRecovery();
       }
-    }, 1800);
+    }, 6000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [isActive, isVideoPost, currentSrc, hasLoadedFrame, triedBlobFallback, triedFFmpegRepair]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive, isVideoPost, currentSrc, hasLoadedFrame, isRepairing]);
 
   return (
     <div className="relative w-full h-[100dvh] bg-black overflow-hidden snap-start flex-shrink-0">
-      {/* ── Media ── */}
+      {/* Media */}
       {isVideoPost ? (
         <video
           ref={videoRef}
@@ -253,7 +275,7 @@ function ReelCard({
         />
       )}
 
-      {/* ── Tap-to-play/pause ── */}
+      {/* Tap-to-play/pause */}
       {isVideoPost && !hasPlaybackError && !isRepairing && (
         <button
           type="button"
@@ -263,7 +285,7 @@ function ReelCard({
         />
       )}
 
-      {/* ── Paused indicator ── */}
+      {/* Paused indicator */}
       {isVideoPost && !isPlaying && !hasPlaybackError && !isRepairing && (
         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
           <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
@@ -272,28 +294,28 @@ function ReelCard({
         </div>
       )}
 
-      {/* ── Converting overlay ── */}
+      {/* Converting overlay */}
       {isRepairing && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/70">
           <RefreshCw className="w-10 h-10 text-white animate-spin" />
-          <p className="text-sm text-white font-medium">Converting video…</p>
+          <p className="text-sm text-white font-medium">Converting video\u2026</p>
         </div>
       )}
 
-      {/* ── Playback error ── */}
+      {/* Playback error */}
       {hasPlaybackError && !isRepairing && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 bg-black/70 px-8 text-center">
           <p className="text-sm font-semibold text-white">Video needs to be fixed</p>
           <p className="text-xs text-white/70">
-            Go to Store Admin → Feed Posts → tap "Fix Video"
+            Go to Store Admin \u2192 Feed Posts \u2192 tap &quot;Fix Video&quot;
           </p>
         </div>
       )}
 
-      {/* ── Gradient for readability ── */}
+      {/* Gradient for readability */}
       <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-t from-black/65 via-transparent to-black/10" />
 
-      {/* ── Bottom-left: store info + caption ── */}
+      {/* Bottom-left: store info + caption */}
       <div
         className="absolute bottom-0 left-0 right-16 z-30 px-4"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
@@ -321,7 +343,7 @@ function ReelCard({
         )}
       </div>
 
-      {/* ── Right-side action buttons (TikTok-style) ── */}
+      {/* Right-side action buttons (TikTok-style) */}
       <div
         className="absolute right-3 z-30 flex flex-col items-center gap-5"
         style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)" }}
@@ -377,7 +399,7 @@ function ReelCard({
   );
 }
 
-// ── Main FeedPage ─────────────────────────────────────────────────────────────
+// Main FeedPage
 
 export default function FeedPage() {
   const { t } = useI18n();
@@ -419,7 +441,7 @@ export default function FeedPage() {
     },
   });
 
-  // IntersectionObserver — set activeIndex when a card is ≥60% visible
+  // IntersectionObserver: set activeIndex when a card is 60% visible
   useEffect(() => {
     if (posts.length === 0) return;
     const observers: IntersectionObserver[] = [];
@@ -489,4 +511,3 @@ export default function FeedPage() {
     </div>
   );
 }
-
