@@ -897,9 +897,9 @@ export default function AdminStoreEditPage() {
       console.warn("[PostMedia] Normalization timed out:", error);
     }
 
-    console.warn("[PostMedia] Normalization failed, uploading original file.");
-    toast.info("Uploading original video.");
-    return file;
+    console.warn("[PostMedia] All normalization strategies failed.");
+    toast.error("This video format couldn't be converted for web playback. Please try a different video or re-record in standard MP4 format.");
+    throw new Error("Video normalization failed — unsupported format");
   };
 
   const repairVideoPreviewSource = async (url: string) => {
