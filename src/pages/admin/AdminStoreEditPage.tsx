@@ -727,45 +727,133 @@ export default function AdminStoreEditPage() {
     return ffmpegLoadPromiseRef.current;
   };
 
-  const transcodeVideoForBrowser = async (file: File) => {
-    const ffmpeg = await ensureFFmpegLoaded();
-    const inputName = `input-${Date.now()}.mp4`;
-    const outputName = `output-${Date.now()}.mp4`;
+  const transcodeVideoWithMediaRecorder = async (file: File): Promise<File | null> => {
+    if (typeof MediaRecorder === "undefined") return null;
 
-    await ffmpeg.writeFile(inputName, await fetchFile(file));
+    const objectUrl = URL.createObjectURL(file);
+    const video = document.createElement("video");
+    video.preload = "auto";
+    video.muted = true;
+    video.playsInline = true;
+    video.src = objectUrl;
+
+    const mimeCandidates = [
+      'video/mp4;codecs="avc1.42E01E,mp4a.40.2"',
+      "video/mp4",
+    ];
+    const mimeType = mimeCandidates.find((candidate) => MediaRecorder.isTypeSupported(candidate));
+    if (!mimeType) {
+      URL.revokeObjectURL(objectUrl);
+      return null;
+    }
 
     try {
-      // Simplified pipeline — minimal filters to avoid crashes
-      await ffmpeg.exec([
-        "-i", inputName,
-        "-movflags", "+faststart",
-        "-pix_fmt", "yuv420p",
-        "-c:v", "libx264",
-        "-preset", "ultrafast",
-        "-profile:v", "baseline",
-        "-level", "3.0",
-        "-an",
-        "-y",
-        outputName,
-      ]);
+      await new Promise<void>((resolve, reject) => {
+        const timeoutId = window.setTimeout(() => reject(new Error("metadata timeout")), 8000);
+        video.onloadedmetadata = () => {
+          window.clearTimeout(timeoutId);
+          resolve();
+        };
+        video.onerror = () => {
+          window.clearTimeout(timeoutId);
+          reject(new Error("video load failed"));
+        };
+        video.load();
+      });
 
-      const data = await ffmpeg.readFile(outputName);
-      if (!(data instanceof Uint8Array)) {
-        throw new Error("Failed to read transcoded video output.");
-      }
+      const stream = (video as any).captureStream?.() || (video as any).mozCaptureStream?.();
+      if (!stream) return null;
 
-      const normalizedBuffer = new ArrayBuffer(data.byteLength);
-      new Uint8Array(normalizedBuffer).set(data);
+      const chunks: BlobPart[] = [];
+      const recorder = new MediaRecorder(stream, {
+        mimeType,
+        videoBitsPerSecond: 2_000_000,
+      });
 
-      return new File([normalizedBuffer], `video-${Date.now()}.mp4`, {
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) chunks.push(event.data);
+      };
+
+      const stopped = new Promise<void>((resolve, reject) => {
+        recorder.onstop = () => resolve();
+        recorder.onerror = () => reject(new Error("recording failed"));
+      });
+
+      recorder.start(300);
+      await video.play();
+
+      await new Promise<void>((resolve) => {
+        video.onended = () => resolve();
+      });
+
+      if (recorder.state !== "inactive") recorder.stop();
+      await stopped;
+
+      const blob = new Blob(chunks, { type: mimeType });
+      if (blob.size === 0) return null;
+
+      const output = new File([blob], `video-rec-${Date.now()}.mp4`, {
         type: "video/mp4",
         lastModified: Date.now(),
       });
+
+      const playable = await probeVideoFile(output).catch(() => false);
+      if (!playable) return null;
+      return output;
     } finally {
-      await Promise.allSettled([
-        ffmpeg.deleteFile(inputName),
-        ffmpeg.deleteFile(outputName),
-      ]);
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
+
+  const transcodeVideoForBrowser = async (file: File) => {
+    try {
+      const ffmpeg = await ensureFFmpegLoaded();
+      const inputName = `input-${Date.now()}.mp4`;
+      const outputName = `output-${Date.now()}.mp4`;
+
+      await ffmpeg.writeFile(inputName, await fetchFile(file));
+
+      try {
+        // Simplified pipeline — minimal filters to avoid crashes
+        await ffmpeg.exec([
+          "-i", inputName,
+          "-movflags", "+faststart",
+          "-pix_fmt", "yuv420p",
+          "-c:v", "libx264",
+          "-preset", "ultrafast",
+          "-profile:v", "baseline",
+          "-level", "3.0",
+          "-an",
+          "-y",
+          outputName,
+        ]);
+
+        const data = await ffmpeg.readFile(outputName);
+        if (!(data instanceof Uint8Array)) {
+          throw new Error("Failed to read transcoded video output.");
+        }
+
+        const normalizedBuffer = new ArrayBuffer(data.byteLength);
+        new Uint8Array(normalizedBuffer).set(data);
+
+        return new File([normalizedBuffer], `video-${Date.now()}.mp4`, {
+          type: "video/mp4",
+          lastModified: Date.now(),
+        });
+      } finally {
+        await Promise.allSettled([
+          ffmpeg.deleteFile(inputName),
+          ffmpeg.deleteFile(outputName),
+        ]);
+      }
+    } catch (error) {
+      console.warn("[PostMedia] FFmpeg transcode failed, trying MediaRecorder fallback:", error);
+      const fallback = await transcodeVideoWithMediaRecorder(file);
+      if (fallback) return fallback;
+      throw error;
     }
   };
 
