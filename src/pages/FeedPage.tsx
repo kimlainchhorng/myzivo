@@ -375,7 +375,7 @@ export default function FeedPage() {
                   </div>
 
                   {/* Media */}
-                  <FeedMediaCarousel urls={post.media_urls} mediaType={post.media_type} />
+                  <FeedMediaCarousel urls={(post.media_urls || []).map(normalizeStorePostMediaUrl)} mediaType={post.media_type} />
 
                   {/* Actions */}
                   <div className="px-4 pt-3 pb-1 flex items-center gap-5">
