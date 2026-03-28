@@ -27,7 +27,7 @@ import { getLiveEta } from "@/utils/storeStatus";
 import { GROCERY_STORES } from "@/config/groceryStores";
 import { SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee, calcMarkup, getMarkupPct } from "@/config/groceryPricing";
 import { useCityPricing } from "@/hooks/useCityPricing";
-import { getRoute } from "@/services/mapsApi";
+import { getRoute, getPlaceDetails, forwardGeocode } from "@/services/mapsApi";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useI18n } from "@/hooks/useI18n";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -286,10 +286,21 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
     }, 400);
   }, []);
 
-  const selectAddressSuggestion = useCallback((s: { display: string }) => {
+  const selectAddressSuggestion = useCallback(async (s: { display: string; placeId?: string }) => {
     setAddress(s.display);
     setAddressSuggestions([]);
     setShowAddrSuggestions(false);
+
+    if (s.placeId) {
+      const details = await getPlaceDetails(s.placeId);
+      if (details) {
+        setAddressCoords({ lat: details.lat, lng: details.lng });
+        return;
+      }
+    }
+
+    const coords = await forwardGeocode(s.display);
+    if (coords) setAddressCoords(coords);
   }, []);
 
   // Persist profile
@@ -629,8 +640,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                           <div key={sa.id} className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => {
+                              onClick={async () => {
                                 setAddress(sa.address);
+                                const coords = await forwardGeocode(sa.address);
+                                if (coords) setAddressCoords(coords);
                                 localStorage.setItem("zivo_selected_address", sa.id);
                                 setShowSavedPicker(false);
                               }}
