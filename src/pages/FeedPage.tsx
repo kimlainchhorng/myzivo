@@ -7,11 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { Loader2, Heart, MessageCircle, Share2, Store, Play, Volume2, VolumeX } from "lucide-react";
+import { Loader2, Heart, MessageCircle, Share2, Store, Play, Volume2, VolumeX, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { repairVideoBlob } from "@/utils/videoRepair";
 
 interface FeedPost {
   id: string;
@@ -46,6 +47,8 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
   const [triedBlobFallback, setTriedBlobFallback] = useState(false);
+  const [triedFFmpegRepair, setTriedFFmpegRepair] = useState(false);
+  const [isRepairing, setIsRepairing] = useState(false);
   const [blobSrc, setBlobSrc] = useState<string | null>(null);
 
   const isVideo = (url: string) => mediaType === "video" || /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
