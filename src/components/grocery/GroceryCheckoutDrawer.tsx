@@ -73,7 +73,7 @@ function getSavedProfile(): { name: string; phone: string; subPref: Substitution
   return { name: "", phone: "", subPref: "contact_me" };
 }
 
-export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity, storeCoords, storeName: storeNameProp }: GroceryCheckoutDrawerProps) {
+export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity, storeCoords, storeName: storeNameProp, storePaymentTypes = ["cash", "card"] }: GroceryCheckoutDrawerProps) {
   const { t } = useI18n();
   const { data: userProfile } = useUserProfile();
   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
