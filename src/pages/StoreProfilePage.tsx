@@ -71,7 +71,7 @@ export default function StoreProfilePage() {
   const [chatOpen, setChatOpen] = useState(false);
   // Track selected size per product: productId -> variant index
   const [selectedSizes, setSelectedSizes] = useState<Record<string, number>>({});
-  const { t } = useI18n();
+  const { t, currentLanguage } = useI18n();
 
   const { data: store, isLoading: loadingStore } = useStoreProfile(slug || "");
   const { data: products = [], isLoading: loadingProducts } = useStoreProducts(store?.id, selectedCategory);
