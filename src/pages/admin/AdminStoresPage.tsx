@@ -279,7 +279,13 @@ export default function AdminStoresPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Name *</Label>
-                <Input value={form.name} onChange={e => updateField("name", e.target.value)} placeholder="Store name" />
+                <Input value={form.name} onChange={e => {
+                  const name = e.target.value;
+                  updateField("name", name);
+                  if (!editingStore) {
+                    updateField("slug", name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
+                  }
+                }} placeholder="Store name" />
               </div>
               <div className="space-y-2">
                 <Label>Slug *</Label>
