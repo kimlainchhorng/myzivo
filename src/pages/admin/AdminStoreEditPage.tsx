@@ -643,27 +643,22 @@ export default function AdminStoreEditPage() {
 
   const transcodeVideoForBrowser = async (file: File) => {
     const ffmpeg = await ensureFFmpegLoaded();
-    const inputExtension = file.name.split(".").pop()?.toLowerCase() || "mp4";
-    const safeBaseName = (file.name.replace(/\.[^.]+$/, "") || "video").replace(/[^a-zA-Z0-9-_]/g, "-");
-    const inputName = `${safeBaseName}.${inputExtension}`;
-    const outputName = `${safeBaseName}-browser.mp4`;
+    const inputName = `input-${Date.now()}.mp4`;
+    const outputName = `output-${Date.now()}.mp4`;
 
     await ffmpeg.writeFile(inputName, await fetchFile(file));
 
     try {
+      // Simplified pipeline — minimal filters to avoid crashes
       await ffmpeg.exec([
         "-i", inputName,
         "-movflags", "+faststart",
         "-pix_fmt", "yuv420p",
         "-c:v", "libx264",
-        "-preset", "veryfast",
+        "-preset", "ultrafast",
         "-profile:v", "baseline",
         "-level", "3.0",
-        "-c:a", "aac",
-        "-profile:a", "aac_low",
-        "-b:a", "128k",
-        "-ar", "44100",
-        "-ac", "2",
+        "-an",
         "-y",
         outputName,
       ]);
@@ -676,7 +671,7 @@ export default function AdminStoreEditPage() {
       const normalizedBuffer = new ArrayBuffer(data.byteLength);
       new Uint8Array(normalizedBuffer).set(data);
 
-      return new File([normalizedBuffer], `${safeBaseName}.mp4`, {
+      return new File([normalizedBuffer], `video-${Date.now()}.mp4`, {
         type: "video/mp4",
         lastModified: Date.now(),
       });
@@ -736,8 +731,18 @@ export default function AdminStoreEditPage() {
     setUploadingPostMedia(true);
 
     try {
-      // Upload video directly without browser-side transcoding for speed & reliability
-      const uploadFile = file;
+      let uploadFile = file;
+      if (fileIsVideo) {
+        try {
+          uploadFile = await normalizeVideoUpload(file);
+          const normalizedPreviewUrl = URL.createObjectURL(uploadFile);
+          updatePostMediaItem(mediaItemId, (item) => ({ ...item, previewUrl: normalizedPreviewUrl }));
+          URL.revokeObjectURL(localPreviewUrl);
+        } catch (transcodeErr: any) {
+          console.warn("[PostMedia] Transcoding failed, uploading original:", transcodeErr);
+          toast.warning("Video optimization failed — uploading original file.");
+        }
+      }
 
       const ext = uploadFile.name.split(".").pop() || "jpg";
       const path = `posts/${storeId}/${Date.now()}.${ext}`;
