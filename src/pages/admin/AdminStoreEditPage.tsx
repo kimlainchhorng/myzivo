@@ -240,7 +240,7 @@ function AdminVideoPreview({
         src={blobSrc || currentSrc}
         poster={posterUrl ?? undefined}
         className={cn("h-full w-full", videoClassName)}
-        controls={controls && isPlaying}
+        controls={controls}
         playsInline
         preload="auto"
         muted={muted}
@@ -834,108 +834,35 @@ export default function AdminStoreEditPage() {
   };
 
   const normalizeVideoUpload = async (file: File, _options?: { silent?: boolean }) => {
-    const lowerName = file.name.toLowerCase();
-    const isMp4Like = file.type === "video/mp4" || lowerName.endsWith(".mp4");
-    const isLikelyBrowserNative =
-      isMp4Like ||
-      file.type === "video/webm" ||
-      lowerName.endsWith(".webm");
+    toast.info("Converting video to reel-safe format...");
 
-    // Reels/feed playback is most reliable with MP4/H.264 in mobile webviews.
-    // Force non-MP4 uploads (e.g. MOV) through normalization before upload.
-    if (!isMp4Like) {
-      toast.info("Converting video to MP4 for reel compatibility...");
-      try {
-        const normalized = await withTimeout((async () => {
-          try {
-            const audioNormalized = await withTimeout(normalizeVideoAudioForBrowser(file), 20000, "Audio normalize timeout");
-            const playable = await probeVideoFile(audioNormalized);
-            if (playable) return audioNormalized;
-          } catch (error) {
-            console.warn("[PostMedia] Audio normalize failed:", error);
-          }
-
-          try {
-            const transcoded = await withTimeout(transcodeVideoForBrowser(file), 30000, "Transcode timeout");
-            const playable = await probeVideoFile(transcoded);
-            if (playable) return transcoded;
-          } catch (error) {
-            console.warn("[PostMedia] Transcode failed:", error);
-          }
-
-          return null;
-        })(), 45000, "Overall normalization timeout");
-
-        if (normalized) return normalized;
-      } catch (error) {
-        console.warn("[PostMedia] Forced MP4 normalization timed out:", error);
-      }
+    // Conversion-first strategy: always target MP4/H.264 baseline for iOS webview reliability.
+    try {
+      const transcoded = await withTimeout(transcodeVideoForBrowser(file), 45000, "Transcode timeout");
+      const playable = await probeVideoFile(transcoded);
+      if (playable) return transcoded;
+      console.warn("[PostMedia] Transcoded output not playable, trying fallback strategies.");
+    } catch (error) {
+      console.warn("[PostMedia] Primary transcode failed:", error);
     }
-
-    if (isLikelyBrowserNative) {
-      try {
-        const directlyPlayable = await withTimeout(
-          probeVideoFile(file),
-          6000,
-          "Native video probe timeout"
-        );
-
-        if (directlyPlayable) {
-          console.log("[PostMedia] Browser-playable video detected, uploading directly:", file.type || file.name);
-          return file;
-        }
-
-        console.warn("[PostMedia] Native-looking video is not browser-playable, normalizing before upload:", file.type || file.name);
-      } catch (error) {
-        console.warn("[PostMedia] Native video probe failed, attempting normalization:", error);
-      }
-    } else {
-      console.log("[PostMedia] Non-standard format, attempting normalization:", file.type || file.name);
-    }
-
-    toast.info("Converting video for web playback...");
 
     try {
-      const normalized = await withTimeout((async () => {
-        try {
-          const audioNormalized = await withTimeout(normalizeVideoAudioForBrowser(file), 20000, "Audio normalize timeout");
-          const playable = await probeVideoFile(audioNormalized);
-          if (playable) return audioNormalized;
-        } catch (error) {
-          console.warn("[PostMedia] Audio normalize failed:", error);
-        }
-
-        try {
-          const stripped = await withTimeout(stripVideoAudioForPreview(file), 15000, "Strip audio timeout");
-          const playable = await probeVideoFile(stripped);
-          if (playable) return stripped;
-        } catch (error) {
-          console.warn("[PostMedia] Strip audio failed:", error);
-        }
-
-        try {
-          const transcoded = await withTimeout(transcodeVideoForBrowser(file), 30000, "Transcode timeout");
-          const playable = await probeVideoFile(transcoded);
-          if (playable) return transcoded;
-        } catch (error) {
-          console.warn("[PostMedia] Transcode failed:", error);
-        }
-
-        return null;
-      })(), 45000, "Overall normalization timeout");
-
-      if (normalized) return normalized;
+      const normalized = await withTimeout(normalizeVideoAudioForBrowser(file), 25000, "Audio normalize timeout");
+      const playable = await probeVideoFile(normalized);
+      if (playable) return normalized;
     } catch (error) {
-      console.warn("[PostMedia] Normalization timed out:", error);
+      console.warn("[PostMedia] Audio normalize failed:", error);
     }
 
-    const originalPlayable = await probeVideoFile(file).catch(() => false);
-    if (originalPlayable) {
-      console.warn("[PostMedia] Normalization failed, but original file is playable in browser; uploading original.");
-      return file;
+    try {
+      const stripped = await withTimeout(stripVideoAudioForPreview(file), 20000, "Strip audio timeout");
+      const playable = await probeVideoFile(stripped);
+      if (playable) return stripped;
+    } catch (error) {
+      console.warn("[PostMedia] Strip audio failed:", error);
     }
 
-    // Hard-stop here so we do not upload a broken video that will show as "Ready" but never play.
+    // Hard-stop here so we do not upload a broken video that shows as "Ready" but cannot play.
     throw new Error("Video format is not supported yet. Please use MP4 (H.264) or a shorter/lower-resolution clip.");
   };
 
