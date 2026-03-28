@@ -1264,8 +1264,9 @@ export default function AdminStoreEditPage() {
     if (reprocessingPostId) return;
     setReprocessingPostId(post.id);
     try {
-      const videoUrls = (post.media_urls || []).filter((u: string) =>
-        /\.(mp4|mov|webm|avi|mkv)/i.test(u)
+      const allUrls: string[] = post.media_urls || [];
+      const videoUrls = allUrls.filter((u: string) =>
+        isVideoUrl(normalizeStorePostMediaUrl(u))
       );
       if (videoUrls.length === 0) {
         toast.error("No video files found in this post");
@@ -1273,21 +1274,23 @@ export default function AdminStoreEditPage() {
       }
 
       const newUrls: string[] = [];
-      for (const url of post.media_urls as string[]) {
-        if (!/\.(mp4|mov|webm|avi|mkv)/i.test(url)) {
+      for (const url of allUrls) {
+        if (!isVideoUrl(normalizeStorePostMediaUrl(url))) {
           newUrls.push(url);
           continue;
         }
 
-        toast.info("Downloading video for reprocessing...");
-        const resp = await fetch(normalizeStorePostMediaUrl(url));
-        if (!resp.ok) throw new Error("Failed to download video");
+        const normalizedUrl = normalizeStorePostMediaUrl(url);
+        toast.info("Step 1/3: Downloading video...");
+        const resp = await fetch(normalizedUrl);
+        if (!resp.ok) throw new Error(`Download failed (${resp.status}): ${normalizedUrl}`);
         const blob = await resp.blob();
         const originalFile = new File([blob], "reprocess.mp4", { type: blob.type || "video/mp4" });
 
-        toast.info("Transcoding video...");
+        toast.info("Step 2/3: Converting to iOS-compatible format...");
         const transcodedFile = await transcodeVideoForBrowser(originalFile);
 
+        toast.info("Step 3/3: Uploading fixed video...");
         const path = `${storeId}/reprocessed-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`;
         const { error: uploadError } = await supabase.storage
           .from("store-posts")
@@ -1305,9 +1308,10 @@ export default function AdminStoreEditPage() {
       if (updateError) throw updateError;
 
       queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
-      toast.success("Video reprocessed successfully!");
+      toast.success("✅ Video fixed! It should now play in the feed.");
     } catch (e: any) {
-      toast.error(e?.message || "Failed to reprocess video");
+      console.error("[reprocessPostVideo] failed:", e);
+      toast.error(`Fix failed: ${e?.message || "Unknown error"}`);
     } finally {
       setReprocessingPostId(null);
     }
@@ -1975,6 +1979,13 @@ export default function AdminStoreEditPage() {
                               <ImagePlus className="h-5 w-5 text-muted-foreground" />
                             </div>
                           )}
+                          {/* Reprocessing overlay */}
+                          {isVideo && reprocessingPostId === post.id && (
+                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-black/70">
+                              <RefreshCw className="h-8 w-8 text-white animate-spin" />
+                              <span className="text-[11px] text-white font-medium text-center px-2">Converting video...</span>
+                            </div>
+                          )}
                           {/* Overlay badges */}
                           <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1">
                             {isVideo && (
@@ -1995,6 +2006,20 @@ export default function AdminStoreEditPage() {
                             </div>
                           )}
                         </div>
+                        {/* Fix Video button — full-width, easy to tap on mobile */}
+                        {isVideo && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); void reprocessPostVideo(post); }}
+                            disabled={reprocessingPostId === post.id}
+                            className="w-full flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 hover:bg-blue-500/20 active:bg-blue-500/30 border-b border-blue-500/20 transition-colors disabled:opacity-60"
+                          >
+                            <RefreshCw className={`h-3.5 w-3.5 text-blue-600 ${reprocessingPostId === post.id ? "animate-spin" : ""}`} />
+                            <span className="text-[11px] font-semibold text-blue-600">
+                              {reprocessingPostId === post.id ? "Converting..." : "Fix Video"}
+                            </span>
+                          </button>
+                        )}
                         {/* Post info */}
                         <div className="p-2 space-y-1.5">
                           {post.caption && (
@@ -2015,20 +2040,10 @@ export default function AdminStoreEditPage() {
                               <span className="text-[9px] text-muted-foreground">{postDate}</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              {isVideo && (
-                                <button
-                                  onClick={() => reprocessPostVideo(post)}
-                                  disabled={reprocessingPostId === post.id}
-                                  className="h-5 w-5 rounded-full hover:bg-blue-500/10 flex items-center justify-center transition-colors disabled:opacity-50"
-                                  title="Reprocess video (fix playback)"
-                                >
-                                  <RefreshCw className={`h-3 w-3 text-blue-500 ${reprocessingPostId === post.id ? "animate-spin" : ""}`} />
-                                </button>
-                              )}
-                              <button onClick={() => openEditPost(post)} className="h-5 w-5 rounded-full hover:bg-muted flex items-center justify-center transition-colors" title="Edit">
+                              <button onClick={(e) => { e.stopPropagation(); openEditPost(post); }} className="h-5 w-5 rounded-full hover:bg-muted flex items-center justify-center transition-colors" title="Edit">
                                 <Edit className="h-3 w-3 text-muted-foreground" />
                               </button>
-                              <button onClick={() => setDeletePostId(post.id)} className="h-5 w-5 rounded-full hover:bg-destructive/10 flex items-center justify-center transition-colors" title="Delete">
+                              <button onClick={(e) => { e.stopPropagation(); setDeletePostId(post.id); }} className="h-5 w-5 rounded-full hover:bg-destructive/10 flex items-center justify-center transition-colors" title="Delete">
                                 <Trash2 className="h-3 w-3 text-destructive" />
                               </button>
                             </div>
