@@ -733,7 +733,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     }
   }, [driverCoords, mapReady]);
 
-  // ─── Animated route rendering ───
+  // ─── Animated route rendering with traffic colors ───
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -741,12 +741,18 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     let stale = false;
 
     if (decodedRoute && decodedRoute.length > 1) {
-      const { bgLine, animatedLine, cancel } = animatePolyline(map, decodedRoute, (finalLine) => {
-        polylineRef.current = finalLine;
-      });
-      bgPolylineRef.current = bgLine;
-      polylineRef.current = animatedLine;
-      polylineAnimCancelRef.current = cancel;
+      // If we have traffic segments from Routes API, render colored polylines
+      if (trafficSegments && trafficSegments.length > 0) {
+        renderTrafficColoredRoute(map, decodedRoute, trafficSegments, trafficPolylinesRef);
+      } else {
+        // Fallback: single green animated polyline
+        const { bgLine, animatedLine, cancel } = animatePolyline(map, decodedRoute, (finalLine) => {
+          polylineRef.current = finalLine;
+        });
+        bgPolylineRef.current = bgLine;
+        polylineRef.current = animatedLine;
+        polylineAnimCancelRef.current = cancel;
+      }
       // Snap dropoff marker to actual route endpoint
       const dropoffMarker = (markersRef as any).__dropoffMarker as google.maps.Marker | undefined;
       if (dropoffMarker) {
