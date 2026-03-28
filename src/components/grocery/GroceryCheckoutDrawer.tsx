@@ -10,6 +10,7 @@ import {
   ChevronDown, Lock, CheckCircle, Package, Clock, Heart,
   CreditCard, Sparkles, Timer, BadgeCheck, ArrowRight, ArrowLeft,
   MessageSquare, DoorOpen, Star, Gift, RefreshCw, AlertTriangle,
+  Banknote, QrCode,
 } from "lucide-react";
 import { GroceryDeliveryScheduler, DEFAULT_SCHEDULER, getPriorityFee, type SchedulerState } from "@/components/grocery/GroceryDeliveryScheduler";
 import { addLoyaltyPoints } from "@/components/grocery/GroceryLoyaltyBanner";
@@ -338,7 +339,6 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
           : `Order placed! Complete ABA payment`
       );
       if (orderId) {
-        saveToOrderHistory(items, orderId);
         onOrderPlaced(orderId);
       }
     } catch (err: any) {
@@ -1036,6 +1036,57 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   </div>
                 ) : (
                   <>
+                    {/* Payment Method Selector */}
+                    {storePaymentTypes.length > 1 && (
+                      <div className="mb-4">
+                        <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
+                          <CreditCard className="h-3.5 w-3.5 text-primary" />
+                          Payment Method
+                        </h3>
+                        <div className="flex gap-2">
+                          {storePaymentTypes.includes("cash") && (
+                            <motion.button
+                              whileTap={{ scale: 0.92 }}
+                              onClick={() => { setSelectedPayment("cash"); resetInlinePayment(); }}
+                              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                                selectedPayment === "cash"
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                  : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                              }`}
+                            >
+                              <Banknote className="h-3.5 w-3.5" /> Cash
+                            </motion.button>
+                          )}
+                          {storePaymentTypes.includes("card") && (
+                            <motion.button
+                              whileTap={{ scale: 0.92 }}
+                              onClick={() => { setSelectedPayment("card"); resetInlinePayment(); }}
+                              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                                selectedPayment === "card"
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                  : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                              }`}
+                            >
+                              <CreditCard className="h-3.5 w-3.5" /> Card
+                            </motion.button>
+                          )}
+                          {storePaymentTypes.includes("aba") && (
+                            <motion.button
+                              whileTap={{ scale: 0.92 }}
+                              onClick={() => { setSelectedPayment("aba"); resetInlinePayment(); }}
+                              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                                selectedPayment === "aba"
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                  : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                              }`}
+                            >
+                              <QrCode className="h-3.5 w-3.5" /> ABA
+                            </motion.button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Tip selection */}
                     <div className="mb-4">
                       <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
@@ -1075,7 +1126,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     </div>
 
                     <p className="text-[9px] text-muted-foreground/60 text-center mb-3 leading-relaxed px-4">
-                      Your card is processed inline by Stripe. A verified ZIVO driver will shop your items and deliver to your door.
+                      {selectedPayment === "cash"
+                        ? "Pay your driver in cash upon delivery. A verified ZIVO driver will shop your items and deliver to your door."
+                        : selectedPayment === "aba"
+                        ? "You'll receive an ABA QR code to scan after placing your order."
+                        : "Your card is processed inline by Stripe. A verified ZIVO driver will shop your items and deliver to your door."}
                     </p>
 
                     {/* Policy disclosures */}
