@@ -3043,13 +3043,14 @@ export default function AdminStoreEditPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {postMediaMode === "video" ? (
-                <><Video className="h-4.5 w-4.5 text-blue-500" /> {t("admin.store.add_video_post")}</>
+                <><Video className="h-4.5 w-4.5 text-primary" /> {t("admin.store.add_video_post")}</>
               ) : (
-                <><ImagePlus className="h-4.5 w-4.5 text-emerald-500" /> {t("admin.store.add_photo_post")}</>
+                <><ImagePlus className="h-4.5 w-4.5 text-primary" /> {t("admin.store.add_photo_post")}</>
               )}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2 overflow-y-auto pr-1 max-h-[calc(90vh-11rem)]">
+            {/* Caption */}
             <div className="space-y-2">
               <Label>{t("admin.store.post_caption")}</Label>
               <Textarea
@@ -3065,6 +3066,73 @@ export default function AdminStoreEditPage() {
                 </span>
               </div>
             </div>
+
+            {/* Hashtags */}
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5">
+                <Tag className="h-3.5 w-3.5" /> Hashtags
+              </Label>
+              <Input
+                value={postHashtags}
+                onChange={e => setPostHashtags(e.target.value)}
+                placeholder="#food #delivery #promo"
+                className="text-sm"
+              />
+              <span className="text-[10px] text-muted-foreground">Separate with spaces. Auto-detected from caption too.</span>
+            </div>
+
+            {/* Location */}
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" /> Location
+              </Label>
+              <Input
+                value={postLocation}
+                onChange={e => setPostLocation(e.target.value)}
+                placeholder="Phnom Penh, Cambodia"
+                className="text-sm"
+              />
+            </div>
+
+            {/* Schedule */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1.5">
+                  <CalendarIcon className="h-3.5 w-3.5" /> Schedule Post
+                </Label>
+                <Switch checked={isScheduled} onCheckedChange={setIsScheduled} />
+              </div>
+              {isScheduled && (
+                <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 p-3">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs", !postScheduledAt && "text-muted-foreground")}>
+                        <CalendarIcon className="h-3.5 w-3.5" />
+                        {postScheduledAt ? format(postScheduledAt, "PPP") : "Pick date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={postScheduledAt}
+                        onSelect={setPostScheduledAt}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Input
+                    type="time"
+                    value={postScheduleTime}
+                    onChange={e => setPostScheduleTime(e.target.value)}
+                    className="w-28 h-8 text-xs"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Media Grid with drag-to-reorder */}
             <div className="space-y-2">
               <Label>{t("admin.store.post_media")}</Label>
               <div className={cn(
@@ -3073,7 +3141,27 @@ export default function AdminStoreEditPage() {
                   : "grid grid-cols-3 gap-2"
               )}>
                 {postMediaItems.map((preview, i) => (
-                  <div key={`${preview.previewUrl}-${i}`}>
+                  <div
+                    key={`${preview.id}-${i}`}
+                    draggable={preview.status === "done" && postMediaItems.length > 1}
+                    onDragStart={() => setDraggingIndex(i)}
+                    onDragOver={(e) => { e.preventDefault(); setDragOverIndex(i); }}
+                    onDragLeave={() => setDragOverIndex(null)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (draggingIndex !== null && draggingIndex !== i) {
+                        reorderMedia(draggingIndex, i);
+                      }
+                      setDraggingIndex(null);
+                      setDragOverIndex(null);
+                    }}
+                    onDragEnd={() => { setDraggingIndex(null); setDragOverIndex(null); }}
+                    className={cn(
+                      "transition-all",
+                      draggingIndex === i && "opacity-40 scale-95",
+                      dragOverIndex === i && draggingIndex !== i && "ring-2 ring-primary rounded-lg"
+                    )}
+                  >
                     <div className="relative overflow-hidden rounded-lg border border-border bg-muted/20">
                       {preview.isVideo ? (
                         <>
@@ -3088,10 +3176,16 @@ export default function AdminStoreEditPage() {
                             canRepair={preview.status === "done"}
                             onRepair={repairVideoPreviewSource}
                           />
+                          {/* Duration badge */}
+                          {preview.duration != null && preview.duration > 0 && (
+                            <div className="absolute bottom-1 right-1 z-10 rounded bg-background/80 px-1.5 py-0.5">
+                              <span className="text-[10px] font-mono font-medium text-foreground">{formatDuration(preview.duration)}</span>
+                            </div>
+                          )}
                           {preview.status === "done" && (
-                            <div className="absolute bottom-1 left-1 z-10 flex items-center gap-1 rounded bg-green-600/90 px-1.5 py-0.5">
-                              <CheckCircle2 className="h-3 w-3 text-white" />
-                              <span className="text-[10px] font-medium text-white">Ready</span>
+                            <div className="absolute bottom-1 left-1 z-10 flex items-center gap-1 rounded bg-primary/90 px-1.5 py-0.5">
+                              <CheckCircle2 className="h-3 w-3 text-primary-foreground" />
+                              <span className="text-[10px] font-medium text-primary-foreground">Ready</span>
                             </div>
                           )}
                         </>
@@ -3103,14 +3197,22 @@ export default function AdminStoreEditPage() {
                           style={{ aspectRatio: "1 / 1" }}
                         />
                       )}
-                      <button
-                        type="button"
-                        onClick={() => removePostMedia(i)}
-                        className="absolute right-1 top-1 z-10 rounded-full bg-destructive p-1 text-destructive-foreground"
-                        aria-label="Remove media"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {/* Drag handle + remove button */}
+                      <div className="absolute right-1 top-1 z-10 flex items-center gap-1">
+                        {postMediaItems.length > 1 && preview.status === "done" && (
+                          <div className="rounded-full bg-background/80 p-1 cursor-grab" title="Drag to reorder">
+                            <Move className="h-3 w-3 text-foreground" />
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removePostMedia(i)}
+                          className="rounded-full bg-destructive p-1 text-destructive-foreground"
+                          aria-label="Remove media"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                       {preview.sourceFile && preview.status !== "error" && (
                         <div className="absolute top-1 left-1 z-10 rounded bg-background/80 px-1 py-0.5">
                           <span className="text-[9px] font-medium text-foreground">
@@ -3227,12 +3329,13 @@ export default function AdminStoreEditPage() {
                   e.target.value = "";
                 }}
               />
-              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
                 <span>📎 Max 10 files</span>
                 <span>•</span>
                 <span>{postMediaMode === "video" ? "🎬 100 MB per video" : "📷 20 MB per image"}</span>
                 <span>•</span>
                 <span>✨ Drag & drop supported</span>
+                {postMediaItems.length > 1 && <><span>•</span><span>↕️ Drag to reorder</span></>}
               </div>
             </div>
           </div>
@@ -3240,6 +3343,7 @@ export default function AdminStoreEditPage() {
             <div className="flex w-full items-center justify-between">
               <span className="text-[10px] text-muted-foreground">
                 {postMediaUrls.length > 0 ? `${postMediaUrls.length} file${postMediaUrls.length > 1 ? "s" : ""} ready` : "No files added"}
+                {isScheduled && postScheduledAt ? ` · Scheduled` : ""}
               </span>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => { setPostDialog(false); }}>Cancel</Button>
@@ -3249,7 +3353,7 @@ export default function AdminStoreEditPage() {
                   disabled={savePost.isPending || postMediaUrls.length === 0 || hasPendingPostUploads}
                 >
                   {savePost.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
-                  {savePost.isPending ? "Posting..." : hasPendingPostUploads ? "Uploading..." : t("admin.store.add_post")}
+                  {savePost.isPending ? "Posting..." : hasPendingPostUploads ? "Uploading..." : isScheduled ? "Schedule" : t("admin.store.add_post")}
                 </Button>
               </div>
             </div>
