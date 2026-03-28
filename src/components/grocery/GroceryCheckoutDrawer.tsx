@@ -299,6 +299,56 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
     }
   }, [grandTotal, onOrderPlaced, paymentOrderId]);
 
+  // Cash / ABA order — no Stripe
+  const handleCashOrAbaOrder = async () => {
+    setIsSubmitting(true);
+    try {
+      const orderItems = items.map((i) => ({
+        productId: i.productId, name: i.name, price: i.price,
+        image: i.image, brand: i.brand, quantity: i.quantity, store: i.store,
+      }));
+      const { data: user } = await supabase.auth.getUser();
+      const { data, error } = await supabase.from("grocery_orders" as any).insert({
+        user_id: user?.user?.id || null,
+        store: items[0]?.store || "Unknown",
+        items: orderItems,
+        subtotal: total,
+        delivery_fee: deliveryFee,
+        service_fee: serviceFee,
+        platform_markup: platformMarkup,
+        tip,
+        priority_fee: priorityFee,
+        promo_discount: promoDiscount,
+        total_amount: grandTotal,
+        delivery_address: address.trim(),
+        customer_name: name.trim(),
+        customer_phone: phone.trim() || null,
+        delivery_note: deliveryNote || null,
+        leave_at_door: leaveAtDoor,
+        substitution_pref: subPref,
+        payment_method: selectedPayment,
+        status: "pending",
+      } as any).select("id").single();
+      if (error) throw new Error(error.message);
+      const orderId = (data as any)?.id;
+      const earnedPoints = addLoyaltyPoints(grandTotal);
+      toast.success(
+        selectedPayment === "cash"
+          ? `Order placed! Pay $${grandTotal.toFixed(2)} cash on delivery`
+          : `Order placed! Complete ABA payment`
+      );
+      if (orderId) {
+        saveToOrderHistory(items, orderId);
+        onOrderPlaced(orderId);
+      }
+    } catch (err: any) {
+      console.error("Cash/ABA order error:", err);
+      toast.error(err.message || "Failed to place order");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const SUB_OPTIONS: { value: SubstitutionPref; label: string; desc: string; icon: typeof RefreshCw }[] = [
     { value: "contact_me", label: "Contact Me", desc: "Driver will message you", icon: MessageSquare },
     { value: "best_match", label: "Best Match", desc: "Pick a similar item", icon: RefreshCw },
