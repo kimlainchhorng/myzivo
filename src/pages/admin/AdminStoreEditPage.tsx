@@ -636,13 +636,122 @@ export default function AdminStoreEditPage() {
     }
   };
 
-  const normalizeVideoUpload = async (file: File) => {
+  const normalizeVideoAudioForBrowser = async (file: File) => {
+    const ffmpeg = await ensureFFmpegLoaded();
+    const inputName = `input-audio-fix-${Date.now()}.mp4`;
+    const outputName = `output-audio-fix-${Date.now()}.mp4`;
+
+    await ffmpeg.writeFile(inputName, await fetchFile(file));
+
+    try {
+      await ffmpeg.exec([
+        "-i", inputName,
+        "-movflags", "+faststart",
+        "-c:v", "copy",
+        "-c:a", "aac",
+        "-profile:a", "aac_low",
+        "-b:a", "128k",
+        "-y",
+        outputName,
+      ]);
+
+      const data = await ffmpeg.readFile(outputName);
+      if (!(data instanceof Uint8Array)) {
+        throw new Error("Failed to read audio-normalized video output.");
+      }
+
+      const normalizedBuffer = new ArrayBuffer(data.byteLength);
+      new Uint8Array(normalizedBuffer).set(data);
+
+      return new File([normalizedBuffer], `video-audio-fixed-${Date.now()}.mp4`, {
+        type: "video/mp4",
+        lastModified: Date.now(),
+      });
+    } finally {
+      await Promise.allSettled([
+        ffmpeg.deleteFile(inputName),
+        ffmpeg.deleteFile(outputName),
+      ]);
+    }
+  };
+
+  const stripVideoAudioForPreview = async (file: File) => {
+    const ffmpeg = await ensureFFmpegLoaded();
+    const inputName = `input-mute-fix-${Date.now()}.mp4`;
+    const outputName = `output-mute-fix-${Date.now()}.mp4`;
+
+    await ffmpeg.writeFile(inputName, await fetchFile(file));
+
+    try {
+      await ffmpeg.exec([
+        "-i", inputName,
+        "-movflags", "+faststart",
+        "-c:v", "copy",
+        "-an",
+        "-y",
+        outputName,
+      ]);
+
+      const data = await ffmpeg.readFile(outputName);
+      if (!(data instanceof Uint8Array)) {
+        throw new Error("Failed to read muted preview video output.");
+      }
+
+      const normalizedBuffer = new ArrayBuffer(data.byteLength);
+      new Uint8Array(normalizedBuffer).set(data);
+
+      return new File([normalizedBuffer], `video-muted-${Date.now()}.mp4`, {
+        type: "video/mp4",
+        lastModified: Date.now(),
+      });
+    } finally {
+      await Promise.allSettled([
+        ffmpeg.deleteFile(inputName),
+        ffmpeg.deleteFile(outputName),
+      ]);
+    }
+  };
+
+  const normalizeVideoUpload = async (file: File, options?: { silent?: boolean }) => {
     const originalIsPlayable = await probeVideoFile(file);
     if (originalIsPlayable) {
       return file;
     }
 
-    toast.info("Optimizing video for browser playback...");
+    if (!options?.silent) {
+      toast.info("Optimizing video for browser playback...");
+    }
+
+    try {
+      const audioNormalizedFile = await withTimeout(
+        normalizeVideoAudioForBrowser(file),
+        20000,
+        "Audio normalization took too long.",
+      );
+      const audioNormalizedIsPlayable = await probeVideoFile(audioNormalizedFile);
+
+      if (audioNormalizedIsPlayable) {
+        return audioNormalizedFile;
+      }
+    } catch (error) {
+      console.warn("[PostMedia] Audio normalization failed:", error);
+    }
+
+    try {
+      const mutedPreviewFile = await withTimeout(
+        stripVideoAudioForPreview(file),
+        15000,
+        "Muted preview conversion took too long.",
+      );
+      const mutedPreviewIsPlayable = await probeVideoFile(mutedPreviewFile);
+
+      if (mutedPreviewIsPlayable) {
+        return mutedPreviewFile;
+      }
+    } catch (error) {
+      console.warn("[PostMedia] Muted preview conversion failed:", error);
+    }
+
     const normalizedFile = await withTimeout(
       transcodeVideoForBrowser(file),
       45000,
@@ -667,7 +776,7 @@ export default function AdminStoreEditPage() {
 
     const blob = await response.blob();
     const file = new File([blob], "preview-repair.mp4", { type: blob.type || "video/mp4" });
-    const repairedFile = await transcodeVideoForBrowser(file);
+    const repairedFile = await normalizeVideoUpload(file, { silent: true });
     const repairedUrl = URL.createObjectURL(repairedFile);
     repairedPreviewUrlsRef.current.set(normalizedUrl, repairedUrl);
     return repairedUrl;
