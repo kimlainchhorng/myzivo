@@ -3,7 +3,7 @@
  * Used by both admin upload and customer feed playback.
  */
 import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile } from "@ffmpeg/util";
+import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import ffmpegWorkerUrl from "@ffmpeg/ffmpeg/worker?url";
 import ffmpegCoreUrl from "@ffmpeg/core?url";
 import ffmpegWasmUrl from "@ffmpeg/core/wasm?url";
@@ -18,17 +18,30 @@ async function ensureFFmpeg(): Promise<FFmpeg> {
     ffmpegLoadPromise = (async () => {
       const ffmpeg = new FFmpeg();
       try {
+        const blobCoreURL = await toBlobURL(ffmpegCoreUrl, "text/javascript");
+        const blobWasmURL = await toBlobURL(ffmpegWasmUrl, "application/wasm");
+        const blobWorkerURL = await toBlobURL(ffmpegWorkerUrl, "text/javascript");
+
         await ffmpeg.load({
-          coreURL: ffmpegCoreUrl,
-          wasmURL: ffmpegWasmUrl,
-          workerURL: ffmpegWorkerUrl,
+          coreURL: blobCoreURL,
+          wasmURL: blobWasmURL,
+          workerURL: blobWorkerURL,
         });
-      } catch {
-        console.warn("[videoRepair] Worker load failed, retrying without workerURL");
-        await ffmpeg.load({
-          coreURL: ffmpegCoreUrl,
-          wasmURL: ffmpegWasmUrl,
-        });
+      } catch (blobErr) {
+        console.warn("[videoRepair] Blob URL load failed, retrying with direct URLs", blobErr);
+        try {
+          await ffmpeg.load({
+            coreURL: ffmpegCoreUrl,
+            wasmURL: ffmpegWasmUrl,
+            workerURL: ffmpegWorkerUrl,
+          });
+        } catch (workerErr) {
+          console.warn("[videoRepair] Worker URL load failed, retrying without workerURL", workerErr);
+          await ffmpeg.load({
+            coreURL: ffmpegCoreUrl,
+            wasmURL: ffmpegWasmUrl,
+          });
+        }
       }
       ffmpegInstance = ffmpeg;
       return ffmpeg;

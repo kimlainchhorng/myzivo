@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile } from "@ffmpeg/util";
+import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import ffmpegWorkerUrl from "@ffmpeg/ffmpeg/worker?url";
 import ffmpegCoreUrl from "@ffmpeg/core?url";
 import ffmpegWasmUrl from "@ffmpeg/core/wasm?url";
@@ -691,18 +691,30 @@ export default function AdminStoreEditPage() {
       ffmpegLoadPromiseRef.current = (async () => {
         const ffmpeg = new FFmpeg();
         try {
+          const blobCoreURL = await toBlobURL(ffmpegCoreUrl, "text/javascript");
+          const blobWasmURL = await toBlobURL(ffmpegWasmUrl, "application/wasm");
+          const blobWorkerURL = await toBlobURL(ffmpegWorkerUrl, "text/javascript");
+
           await ffmpeg.load({
-            coreURL: ffmpegCoreUrl,
-            wasmURL: ffmpegWasmUrl,
-            workerURL: ffmpegWorkerUrl,
+            coreURL: blobCoreURL,
+            wasmURL: blobWasmURL,
+            workerURL: blobWorkerURL,
           });
-        } catch (workerErr) {
-          console.warn("[FFmpeg] Worker load failed, retrying without workerURL:", workerErr);
-          // Fallback: load without explicit workerURL — lets the library create its own
-          await ffmpeg.load({
-            coreURL: ffmpegCoreUrl,
-            wasmURL: ffmpegWasmUrl,
-          });
+        } catch (blobErr) {
+          console.warn("[FFmpeg] Blob URL load failed, retrying with direct asset URLs:", blobErr);
+          try {
+            await ffmpeg.load({
+              coreURL: ffmpegCoreUrl,
+              wasmURL: ffmpegWasmUrl,
+              workerURL: ffmpegWorkerUrl,
+            });
+          } catch (workerErr) {
+            console.warn("[FFmpeg] Worker URL load failed, retrying without workerURL:", workerErr);
+            await ffmpeg.load({
+              coreURL: ffmpegCoreUrl,
+              wasmURL: ffmpegWasmUrl,
+            });
+          }
         }
         ffmpegRef.current = ffmpeg;
         return ffmpeg;
