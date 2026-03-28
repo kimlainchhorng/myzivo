@@ -768,6 +768,10 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
         surgeMultiplier: 1.0,
       }));
     }
+    // Filter: moto only available in Cambodia
+    if (!useKm) {
+      options = options.filter((v) => v.id !== "moto");
+    }
     return options;
   }, [cityPricingMap, currentLanguage]);
   const [stops, setStops] = useState<{ id: string; place: PlaceData | null; display: string }[]>([]);
