@@ -10,6 +10,7 @@ import {
   ChevronDown, Lock, CheckCircle, Package, Clock, Heart,
   CreditCard, Sparkles, Timer, BadgeCheck, ArrowRight, ArrowLeft,
   MessageSquare, DoorOpen, Star, Gift, RefreshCw, AlertTriangle,
+  Banknote, QrCode,
 } from "lucide-react";
 import { GroceryDeliveryScheduler, DEFAULT_SCHEDULER, getPriorityFee, type SchedulerState } from "@/components/grocery/GroceryDeliveryScheduler";
 import { addLoyaltyPoints } from "@/components/grocery/GroceryLoyaltyBanner";
@@ -32,6 +33,8 @@ import { useCountry } from "@/hooks/useCountry";
 import { CheckoutPinMap } from "@/components/grocery/CheckoutPinMap";
 import { CheckoutRouteMap } from "@/components/grocery/CheckoutRouteMap";
 
+export type StorePaymentType = "cash" | "card" | "aba";
+
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
   total: number;
@@ -41,6 +44,7 @@ interface GroceryCheckoutDrawerProps {
   onUpdateQuantity?: (productId: string, quantity: number) => void;
   storeCoords?: { lat: number; lng: number } | null;
   storeName?: string;
+  storePaymentTypes?: StorePaymentType[];
 }
 
 type SubstitutionPref = "contact_me" | "best_match" | "refund";
@@ -70,7 +74,7 @@ function getSavedProfile(): { name: string; phone: string; subPref: Substitution
   return { name: "", phone: "", subPref: "contact_me" };
 }
 
-export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity, storeCoords, storeName: storeNameProp }: GroceryCheckoutDrawerProps) {
+export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity, storeCoords, storeName: storeNameProp, storePaymentTypes = ["cash", "card"] }: GroceryCheckoutDrawerProps) {
   const { t } = useI18n();
   const { data: userProfile } = useUserProfile();
   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
@@ -126,6 +130,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const [promoCode, setPromoCode] = useState("");
   const [subPref, setSubPref] = useState<SubstitutionPref>(savedProfile.subPref);
   const [scheduler, setScheduler] = useState<SchedulerState>(DEFAULT_SCHEDULER);
+  const [selectedPayment, setSelectedPayment] = useState<StorePaymentType>(
+    storePaymentTypes.includes("cash") ? "cash" : storePaymentTypes[0] || "card"
+  );
   // Live ETA
   const storeName = items[0]?.store || "Walmart";
   const storeCfg = GROCERY_STORES.find(s => s.name.toLowerCase() === storeName.toLowerCase());
@@ -292,6 +299,55 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
       setIsSubmitting(false);
     }
   }, [grandTotal, onOrderPlaced, paymentOrderId]);
+
+  // Cash / ABA order — no Stripe
+  const handleCashOrAbaOrder = async () => {
+    setIsSubmitting(true);
+    try {
+      const orderItems = items.map((i) => ({
+        productId: i.productId, name: i.name, price: i.price,
+        image: i.image, brand: i.brand, quantity: i.quantity, store: i.store,
+      }));
+      const { data: user } = await supabase.auth.getUser();
+      const { data, error } = await supabase.from("grocery_orders" as any).insert({
+        user_id: user?.user?.id || null,
+        store: items[0]?.store || "Unknown",
+        items: orderItems,
+        subtotal: total,
+        delivery_fee: deliveryFee,
+        service_fee: serviceFee,
+        platform_markup: platformMarkup,
+        tip,
+        priority_fee: priorityFee,
+        promo_discount: promoDiscount,
+        total_amount: grandTotal,
+        delivery_address: address.trim(),
+        customer_name: name.trim(),
+        customer_phone: phone.trim() || null,
+        delivery_note: deliveryNote || null,
+        leave_at_door: leaveAtDoor,
+        substitution_pref: subPref,
+        payment_method: selectedPayment,
+        status: "pending",
+      } as any).select("id").single();
+      if (error) throw new Error(error.message);
+      const orderId = (data as any)?.id;
+      const earnedPoints = addLoyaltyPoints(grandTotal);
+      toast.success(
+        selectedPayment === "cash"
+          ? `Order placed! Pay $${grandTotal.toFixed(2)} cash on delivery`
+          : `Order placed! Complete ABA payment`
+      );
+      if (orderId) {
+        onOrderPlaced(orderId);
+      }
+    } catch (err: any) {
+      console.error("Cash/ABA order error:", err);
+      toast.error(err.message || "Failed to place order");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const SUB_OPTIONS: { value: SubstitutionPref; label: string; desc: string; icon: typeof RefreshCw }[] = [
     { value: "contact_me", label: "Contact Me", desc: "Driver will message you", icon: MessageSquare },
@@ -980,6 +1036,57 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   </div>
                 ) : (
                   <>
+                    {/* Payment Method Selector */}
+                    {storePaymentTypes.length > 1 && (
+                      <div className="mb-4">
+                        <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
+                          <CreditCard className="h-3.5 w-3.5 text-primary" />
+                          Payment Method
+                        </h3>
+                        <div className="flex gap-2">
+                          {storePaymentTypes.includes("cash") && (
+                            <motion.button
+                              whileTap={{ scale: 0.92 }}
+                              onClick={() => { setSelectedPayment("cash"); resetInlinePayment(); }}
+                              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                                selectedPayment === "cash"
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                  : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                              }`}
+                            >
+                              <Banknote className="h-3.5 w-3.5" /> Cash
+                            </motion.button>
+                          )}
+                          {storePaymentTypes.includes("card") && (
+                            <motion.button
+                              whileTap={{ scale: 0.92 }}
+                              onClick={() => { setSelectedPayment("card"); resetInlinePayment(); }}
+                              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                                selectedPayment === "card"
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                  : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                              }`}
+                            >
+                              <CreditCard className="h-3.5 w-3.5" /> Card
+                            </motion.button>
+                          )}
+                          {storePaymentTypes.includes("aba") && (
+                            <motion.button
+                              whileTap={{ scale: 0.92 }}
+                              onClick={() => { setSelectedPayment("aba"); resetInlinePayment(); }}
+                              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                                selectedPayment === "aba"
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                  : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                              }`}
+                            >
+                              <QrCode className="h-3.5 w-3.5" /> ABA
+                            </motion.button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Tip selection */}
                     <div className="mb-4">
                       <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
@@ -1019,7 +1126,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     </div>
 
                     <p className="text-[9px] text-muted-foreground/60 text-center mb-3 leading-relaxed px-4">
-                      Your card is processed inline by Stripe. A verified ZIVO driver will shop your items and deliver to your door.
+                      {selectedPayment === "cash"
+                        ? "Pay your driver in cash upon delivery. A verified ZIVO driver will shop your items and deliver to your door."
+                        : selectedPayment === "aba"
+                        ? "You'll receive an ABA QR code to scan after placing your order."
+                        : "Your card is processed inline by Stripe. A verified ZIVO driver will shop your items and deliver to your door."}
                     </p>
 
                     {/* Policy disclosures */}
@@ -1069,12 +1180,22 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
               <Button
                 className="w-full h-[50px] rounded-2xl text-[14px] font-bold shadow-lg shadow-primary/20 gap-2"
                 disabled={isSubmitting}
-                onClick={handleCreateInlinePayment}
+                onClick={selectedPayment === "card" ? handleCreateInlinePayment : handleCashOrAbaOrder}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4.5 w-4.5 animate-spin" />
-                    Preparing secure payment…
+                    {selectedPayment === "card" ? "Preparing secure payment…" : "Placing order…"}
+                  </>
+                ) : selectedPayment === "cash" ? (
+                  <>
+                    <Banknote className="h-4 w-4" />
+                    Place Order · ${grandTotal.toFixed(2)} Cash
+                  </>
+                ) : selectedPayment === "aba" ? (
+                  <>
+                    <QrCode className="h-4 w-4" />
+                    Place Order · ${grandTotal.toFixed(2)} ABA
                   </>
                 ) : (
                   <>
@@ -1087,7 +1208,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
           )}
           <div className="flex items-center justify-center gap-1.5 mt-2">
             <Lock className="h-2.5 w-2.5 text-muted-foreground/40" />
-            <span className="text-[9px] text-muted-foreground/40">Powered by Stripe · 256-bit encryption</span>
+            <span className="text-[9px] text-muted-foreground/40">
+              {selectedPayment === "cash" ? "Cash on delivery" : selectedPayment === "aba" ? "ABA Bank · Secure QR" : "Powered by Stripe · 256-bit encryption"}
+            </span>
           </div>
         </div>
       </motion.div>
