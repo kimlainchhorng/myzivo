@@ -1716,7 +1716,7 @@ export default function AdminStoreEditPage() {
               <Camera className="h-4 w-4" /> Feed Posts
               <Badge variant="secondary" className="text-[10px]">{posts.length}</Badge>
             </CardTitle>
-            <p className="text-xs text-muted-foreground">Post photos or videos that appear in your store's Feed</p>
+            <p className="text-xs text-muted-foreground">Create posts like Facebook & TikTok — photos, videos, and reels for your store</p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3">
@@ -1729,8 +1729,8 @@ export default function AdminStoreEditPage() {
                   <ImagePlus className="h-6 w-6" />
                 </div>
                 <div className="text-center">
-                  <span className="block text-sm font-semibold text-foreground">Photo Post</span>
-                  <span className="block text-[11px] text-muted-foreground mt-0.5">JPG, PNG images</span>
+                  <span className="block text-sm font-semibold text-foreground">📷 Photo Post</span>
+                  <span className="block text-[11px] text-muted-foreground mt-0.5">JPG, PNG, WebP</span>
                 </div>
               </button>
               <button
@@ -1742,8 +1742,8 @@ export default function AdminStoreEditPage() {
                   <Video className="h-6 w-6" />
                 </div>
                 <div className="text-center">
-                  <span className="block text-sm font-semibold text-foreground">Video Post</span>
-                  <span className="block text-[11px] text-muted-foreground mt-0.5">MP4, MOV videos</span>
+                  <span className="block text-sm font-semibold text-foreground">🎬 Video Post</span>
+                  <span className="block text-[11px] text-muted-foreground mt-0.5">MP4, MOV, WebM</span>
                 </div>
               </button>
             </div>
@@ -1751,10 +1751,14 @@ export default function AdminStoreEditPage() {
             {/* Existing posts list */}
             {posts.length > 0 && (
               <div className="mt-4 space-y-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Posts</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Posts</p>
+                  <span className="text-[10px] text-muted-foreground">{posts.length} total</span>
+                </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                   {posts.slice(0, 10).map((post: any) => {
                     const firstUrl = (post.media_urls || [])[0];
+                    const mediaCount = (post.media_urls || []).length;
                     const isVideo = firstUrl && isVideoUrl(normalizeStorePostMediaUrl(firstUrl));
                     return (
                       <div key={post.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
@@ -1779,6 +1783,19 @@ export default function AdminStoreEditPage() {
                             <ImagePlus className="h-5 w-5 text-muted-foreground" />
                           </div>
                         )}
+                        {/* Media type badge */}
+                        <div className="absolute top-1 left-1 z-10 flex items-center gap-0.5">
+                          {isVideo && (
+                            <div className="rounded bg-background/80 px-1 py-0.5 flex items-center gap-0.5">
+                              <Video className="h-2.5 w-2.5 text-foreground" />
+                            </div>
+                          )}
+                          {mediaCount > 1 && (
+                            <div className="rounded bg-background/80 px-1 py-0.5">
+                              <span className="text-[9px] font-medium text-foreground">{mediaCount}</span>
+                            </div>
+                          )}
+                        </div>
                         {post.caption && (
                           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5">
                             <p className="text-[10px] text-white line-clamp-1">{post.caption}</p>
@@ -2958,7 +2975,13 @@ export default function AdminStoreEditPage() {
       }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden">
           <DialogHeader>
-            <DialogTitle>{postMediaMode === "video" ? t("admin.store.add_video_post") : t("admin.store.add_photo_post")}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              {postMediaMode === "video" ? (
+                <><Video className="h-4.5 w-4.5 text-blue-500" /> {t("admin.store.add_video_post")}</>
+              ) : (
+                <><ImagePlus className="h-4.5 w-4.5 text-emerald-500" /> {t("admin.store.add_photo_post")}</>
+              )}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2 overflow-y-auto pr-1 max-h-[calc(90vh-11rem)]">
             <div className="space-y-2">
@@ -2968,7 +2991,13 @@ export default function AdminStoreEditPage() {
                 onChange={e => setPostCaption(e.target.value)}
                 placeholder={t("admin.store.post_caption_placeholder")}
                 rows={3}
+                maxLength={2200}
               />
+              <div className="flex justify-between">
+                <span className="text-[10px] text-muted-foreground">
+                  {postCaption.length > 0 ? `${postCaption.length}/2,200` : "Optional"}
+                </span>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>{t("admin.store.post_media")}</Label>
@@ -3016,29 +3045,40 @@ export default function AdminStoreEditPage() {
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
+                      {preview.sourceFile && preview.status !== "error" && (
+                        <div className="absolute top-1 left-1 z-10 rounded bg-background/80 px-1 py-0.5">
+                          <span className="text-[9px] font-medium text-foreground">
+                            {(preview.sourceFile.size / (1024 * 1024)).toFixed(1)} MB
+                          </span>
+                        </div>
+                      )}
                       {(preview.isUploading || preview.status === "error") && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-lg bg-background/80 px-3 text-center backdrop-blur-[1px]">
                           {preview.isUploading ? (
                             <>
                               <Loader2 className="h-5 w-5 animate-spin text-primary" />
                               <div className="text-xs font-semibold text-foreground">{preview.progress}%</div>
-                              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+                              <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
                                 <div
                                   className="h-full rounded-full bg-primary transition-all duration-300"
                                   style={{ width: `${preview.progress}%` }}
                                 />
                               </div>
+                              <span className="text-[9px] text-muted-foreground">Uploading...</span>
                             </>
                           ) : (
                             <>
                               <AlertTriangle className="h-5 w-5 text-destructive" />
                               <div className="text-[11px] font-medium text-foreground">Upload failed</div>
+                              {preview.error && (
+                                <div className="text-[9px] text-muted-foreground line-clamp-2">{preview.error}</div>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => void retryPostMedia(preview.id)}
-                                className="rounded-md bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground"
+                                className="rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground"
                               >
-                                Retry update
+                                Retry
                               </button>
                             </>
                           )}
@@ -3048,11 +3088,19 @@ export default function AdminStoreEditPage() {
                   </div>
                 ))}
                 {postMediaItems.length < 10 && (
-                  <button
-                    type="button"
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const files = Array.from(e.dataTransfer.files).filter(f =>
+                        postMediaMode === "video" ? f.type.startsWith("video/") : f.type.startsWith("image/")
+                      );
+                      files.forEach((file) => void uploadPostMedia(file));
+                    }}
                     onClick={() => postMediaInputRef.current?.click()}
                     className={cn(
-                      "rounded-lg border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer",
+                      "rounded-lg border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1.5 text-muted-foreground hover:text-primary transition-all cursor-pointer hover:bg-primary/5",
                       postMediaMode === "video" ? "w-full" : "aspect-square"
                     )}
                     style={postMediaMode === "video" ? { aspectRatio: "9 / 16" } : undefined}
@@ -3061,11 +3109,22 @@ export default function AdminStoreEditPage() {
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
                       <>
-                        <Camera className="h-5 w-5" />
-                        <span className="text-[10px]">Add more</span>
+                        <div className="h-10 w-10 rounded-full bg-muted/60 flex items-center justify-center">
+                          {postMediaMode === "video" ? (
+                            <Video className="h-5 w-5" />
+                          ) : (
+                            <Camera className="h-5 w-5" />
+                          )}
+                        </div>
+                        <span className="text-[10px] font-medium">
+                          {postMediaItems.length === 0 ? "Tap or drag to add" : "Add more"}
+                        </span>
+                        <span className="text-[9px] text-muted-foreground/70">
+                          {postMediaMode === "video" ? "MP4, MOV, WebM" : "JPG, PNG, WebP"}
+                        </span>
                       </>
                     )}
-                  </button>
+                  </div>
                 )}
               </div>
               <input
@@ -3091,7 +3150,7 @@ export default function AdminStoreEditPage() {
               <input
                 ref={postMediaInputRef}
                 type="file"
-                accept={postMediaMode === "video" ? "video/*" : "image/*"}
+                accept={postMediaMode === "video" ? "video/mp4,video/quicktime,video/webm,video/x-matroska" : "image/jpeg,image/png,image/webp,image/gif"}
                 multiple
                 className="hidden"
                 onChange={e => {
@@ -3102,18 +3161,32 @@ export default function AdminStoreEditPage() {
                   e.target.value = "";
                 }}
               />
-              <p className="text-[10px] text-muted-foreground">Supports images (JPG, PNG) and videos (MP4, MOV). Max 10 files, 100 MB per video.</p>
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                <span>📎 Max 10 files</span>
+                <span>•</span>
+                <span>{postMediaMode === "video" ? "🎬 100 MB per video" : "📷 20 MB per image"}</span>
+                <span>•</span>
+                <span>✨ Drag & drop supported</span>
+              </div>
             </div>
           </div>
           <DialogFooter className="border-t border-border pt-4">
-            <Button variant="outline" onClick={() => { setPostDialog(false); }}>Cancel</Button>
-            <Button
-              onClick={() => savePost.mutate()}
-              disabled={savePost.isPending || postMediaUrls.length === 0 || hasPendingPostUploads}
-            >
-              {savePost.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
-              {savePost.isPending ? "Posting..." : t("admin.store.add_post")}
-            </Button>
+            <div className="flex w-full items-center justify-between">
+              <span className="text-[10px] text-muted-foreground">
+                {postMediaUrls.length > 0 ? `${postMediaUrls.length} file${postMediaUrls.length > 1 ? "s" : ""} ready` : "No files added"}
+              </span>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => { setPostDialog(false); }}>Cancel</Button>
+                <Button
+                  size="sm"
+                  onClick={() => savePost.mutate()}
+                  disabled={savePost.isPending || postMediaUrls.length === 0 || hasPendingPostUploads}
+                >
+                  {savePost.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+                  {savePost.isPending ? "Posting..." : hasPendingPostUploads ? "Uploading..." : t("admin.store.add_post")}
+                </Button>
+              </div>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
