@@ -32,10 +32,10 @@ const DB_TO_VEHICLE_ID: Record<string, string> = {
   luxury_xl: "luxury-xl",
   pet: "pet",
   wheelchair: "wheelchair",
-  // Cambodia-specific: tuktuk IS the economy vehicle, moto IS share
+  // Cambodia-specific: tuktuk IS the economy vehicle
   tuktuk: "economy",
   tuktuk_ev: "share",
-  moto: "share",
+  moto: "moto",
   share_xl: "share-xl",
 };
 
