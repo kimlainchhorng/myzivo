@@ -75,7 +75,7 @@ interface RideMapProps {
   dropoffCoords?: { lat: number; lng: number } | null;
   stopCoords?: { lat: number; lng: number }[];
   routePolyline?: string | { lat: number; lng: number }[] | null;
-  trafficSegments?: TrafficSegment[] | null;
+  trafficSegments?: { startPolylinePointIndex: number; endPolylinePointIndex: number; speed: string }[] | null;
   driverCoords?: { lat: number; lng: number } | null;
   /** Target for driver navigation line (pickup during en-route, dropoff during trip) */
   driverNavigationTarget?: { lat: number; lng: number } | null;
