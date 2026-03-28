@@ -177,6 +177,8 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     setPosterUrl(null);
     setHasPlaybackError(false);
     setTriedBlobFallback(false);
+    setTriedFFmpegRepair(false);
+    setIsRepairing(false);
     if (blobSrc) {
       URL.revokeObjectURL(blobSrc);
       setBlobSrc(null);
@@ -234,20 +236,12 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               onError={async () => {
                 setIsPlaying(false);
                 const currentUrl = urls[activeIndex];
+                console.warn("[FeedVideo] Playback error for:", currentUrl, "blobTried:", triedBlobFallback, "ffmpegTried:", triedFFmpegRepair);
                 if (!triedBlobFallback) {
                   await tryBlobFallback(currentUrl);
-                } else if (blobSrc && !hasPlaybackError) {
-                  // Blob also failed — try once more with original blob type
-                  try {
-                    const resp = await fetch(currentUrl);
-                    if (!resp.ok) throw new Error();
-                    const blob = await resp.blob();
-                    const newUrl = URL.createObjectURL(blob);
-                    URL.revokeObjectURL(blobSrc);
-                    setBlobSrc(newUrl);
-                  } catch {
-                    setHasPlaybackError(true);
-                  }
+                } else if (!triedFFmpegRepair) {
+                  // Blob also failed — try FFmpeg WASM repair
+                  await tryFFmpegRepair(currentUrl);
                 } else {
                   setHasPlaybackError(true);
                 }
@@ -259,7 +253,13 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               className="absolute inset-0 z-10"
               aria-label={isPlaying ? "Pause video" : "Play video"}
             />
-            {!isPlaying && !hasPlaybackError && (
+            {isRepairing && (
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/60">
+                <RefreshCw className="w-8 h-8 text-white animate-spin" />
+                <p className="text-sm text-white/90 font-medium">Converting video...</p>
+              </div>
+            )}
+            {!isPlaying && !hasPlaybackError && !isRepairing && (
               <button
                 type="button"
                 onClick={toggleVideo}
@@ -271,7 +271,7 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
                 </div>
               </button>
             )}
-            {hasPlaybackError && (
+            {hasPlaybackError && !isRepairing && (
               <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-foreground/20 px-6 text-center backdrop-blur-sm">
                 <p className="max-w-xs text-sm font-medium text-background">
                   This video format isn&apos;t supported here yet.
