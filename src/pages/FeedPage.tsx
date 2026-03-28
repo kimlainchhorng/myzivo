@@ -189,6 +189,13 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
                 setHasPlaybackError(false);
                 ensureVisibleFrame(event.currentTarget);
                 capturePosterFrame(event.currentTarget);
+                event.currentTarget.muted = true;
+                void event.currentTarget.play().then(() => {
+                  setIsPlaying(true);
+                  setIsMuted(true);
+                }).catch(() => {
+                  setIsPlaying(false);
+                });
               }}
               onPlay={(event) => {
                 setIsMuted(event.currentTarget.muted);
