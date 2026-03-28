@@ -789,8 +789,6 @@ export default function AdminStoreEditPage() {
     return /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
   };
 
-  // Use shared utility
-  const { normalizeStorePostMediaUrl } = await import("@/utils/normalizeStorePostMediaUrl");
 
   const getMediaType = (urls: string[]): string => {
     const hasVideo = urls.some((url) => isVideoUrl(normalizeStorePostMediaUrl(url)));
