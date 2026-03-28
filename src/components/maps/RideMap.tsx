@@ -500,6 +500,9 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     if (polylineRef.current) { polylineRef.current.setMap(null); polylineRef.current = null; }
     if (bgPolylineRef.current) { bgPolylineRef.current.setMap(null); bgPolylineRef.current = null; }
     if (directionsRendererRef.current) { directionsRendererRef.current.setMap(null); directionsRendererRef.current = null; }
+    // Clear traffic-colored segments
+    trafficPolylinesRef.current.forEach(p => p.setMap(null));
+    trafficPolylinesRef.current = [];
   }, []);
 
   const clearAmbientCars = useCallback(() => {
