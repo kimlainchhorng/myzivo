@@ -14,6 +14,7 @@ import { fetchFile } from "@ffmpeg/util";
 import ffmpegCoreUrl from "@ffmpeg/core?url";
 import ffmpegWasmUrl from "@ffmpeg/core/wasm?url";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import AdminLayout from "@/components/admin/AdminLayout";
 import StoreOwnerLayout from "@/components/admin/StoreOwnerLayout";
 import { Button } from "@/components/ui/button";
