@@ -203,6 +203,7 @@ function MapSection({
   driverNavigationTarget,
   userLocation,
   routePolyline,
+  trafficSegments,
   nearbyDrivers,
   onLocateUser,
   onCenterChanged,
@@ -221,6 +222,7 @@ function MapSection({
   driverNavigationTarget?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: string | null;
+  trafficSegments?: { startPolylinePointIndex: number; endPolylinePointIndex: number; speed: string }[] | null;
   nearbyDrivers?: { lat: number; lng: number }[];
   onLocateUser?: () => void;
   onCenterChanged?: (center: { lat: number; lng: number }) => void;
