@@ -60,6 +60,7 @@ interface RouteData {
   duration_in_traffic_minutes?: number | null;
   polyline: string | null;
   traffic_level?: string;
+  traffic_segments?: { startPolylinePointIndex: number; endPolylinePointIndex: number; speed: string }[] | null;
 }
 
 /** Detect if user is in Cambodia based on pickup address or coordinates */
@@ -203,6 +204,7 @@ function MapSection({
   driverNavigationTarget,
   userLocation,
   routePolyline,
+  trafficSegments,
   nearbyDrivers,
   onLocateUser,
   onCenterChanged,
@@ -221,6 +223,7 @@ function MapSection({
   driverNavigationTarget?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: string | null;
+  trafficSegments?: { startPolylinePointIndex: number; endPolylinePointIndex: number; speed: string }[] | null;
   nearbyDrivers?: { lat: number; lng: number }[];
   onLocateUser?: () => void;
   onCenterChanged?: (center: { lat: number; lng: number }) => void;
@@ -277,6 +280,7 @@ function MapSection({
           nearbyDrivers={nearbyDrivers}
           showUserLocationDot={showUserLocationDot}
           routePolyline={routePolyline || null}
+          trafficSegments={trafficSegments}
           onMapReady={(map) => { mapRef.current = map; onMapReadyExtra?.(map); }}
           onCenterChanged={onCenterChanged}
           suppressAutoViewport={suppressAutoViewport}
@@ -1815,6 +1819,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
           duration_in_traffic_minutes: data.duration_in_traffic_minutes ?? null,
           polyline: data.polyline,
           traffic_level: data.traffic_level,
+          traffic_segments: data.traffic_segments ?? null,
         });
       } else {
         // Fallback: haversine including waypoints
@@ -2361,6 +2366,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
               showUserLocationDot={!pickup}
               onLocateUser={handleLocateUser}
               routePolyline={viewStep === "search" && pinPlacementMode ? null : (routeData?.polyline || null)}
+              trafficSegments={viewStep === "search" && pinPlacementMode ? null : (routeData?.traffic_segments || null)}
               onCenterChanged={handleMapCenterChanged}
               suppressAutoViewport={viewStep === "search" && (!pickupConfirmed || !!pinPlacementMode)}
               mapInteractive={viewStep !== "search" || !pickupConfirmed || !!pinPlacementMode}

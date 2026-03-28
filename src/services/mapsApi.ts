@@ -22,6 +22,12 @@ export interface PlaceDetails {
   lng: number;
 }
 
+export interface TrafficSegment {
+  startPolylinePointIndex: number;
+  endPolylinePointIndex: number;
+  speed: "NORMAL" | "SLOW" | "TRAFFIC_JAM";
+}
+
 export interface RouteResult {
   distance_miles: number;
   duration_minutes: number;
@@ -29,6 +35,7 @@ export interface RouteResult {
   traffic_level: "light" | "moderate" | "heavy" | null;
   traffic_ratio: number | null;
   polyline: string | null;
+  traffic_segments?: TrafficSegment[] | null;
   start_address?: string;
   end_address?: string;
   eta_iso?: string;
@@ -107,6 +114,7 @@ export async function getRoute(
       traffic_level: data.traffic_level ?? null,
       traffic_ratio: data.traffic_ratio ?? null,
       polyline: data.polyline,
+      traffic_segments: data.traffic_segments ?? null,
       start_address: data.start_address,
       end_address: data.end_address,
       eta_iso: data.eta_iso,

@@ -5,7 +5,7 @@
 /// <reference types="google.maps" />
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { decodePolyline } from "@/services/mapsApi";
+import { decodePolyline, type TrafficSegment } from "@/services/mapsApi";
 
 const DEFAULT_CENTER = { lat: 40.7128, lng: -73.9857 };
 const MAP_INIT_TIMEOUT_MS = 5000;
@@ -75,6 +75,7 @@ interface RideMapProps {
   dropoffCoords?: { lat: number; lng: number } | null;
   stopCoords?: { lat: number; lng: number }[];
   routePolyline?: string | { lat: number; lng: number }[] | null;
+  trafficSegments?: { startPolylinePointIndex: number; endPolylinePointIndex: number; speed: string }[] | null;
   driverCoords?: { lat: number; lng: number } | null;
   /** Target for driver navigation line (pickup during en-route, dropoff during trip) */
   driverNavigationTarget?: { lat: number; lng: number } | null;
@@ -150,7 +151,7 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
   return googleMapsPromise;
 }
 
-export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers, showUserLocationDot = true, className, onMapReady, onCenterChanged, suppressAutoViewport = false, mapInteractive = true }: RideMapProps) {
+export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, routePolyline, trafficSegments, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers, showUserLocationDot = true, className, onMapReady, onCenterChanged, suppressAutoViewport = false, mapInteractive = true }: RideMapProps) {
   const [isReady, setIsReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failedReason, setFailedReason] = useState<string>("");
@@ -278,6 +279,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, route
       dropoffCoords={dropoffCoords}
       stopCoords={stopCoords}
       routePolyline={routePolyline}
+      trafficSegments={trafficSegments}
       driverCoords={driverCoords}
       driverNavigationTarget={driverNavigationTarget}
       userLocation={userLocation}
@@ -415,9 +417,56 @@ function animatePolyline(
   return { bgLine, animatedLine, cancel: () => { cancelled = true; } };
 }
 
+// ─── Traffic-colored route rendering ───
+const TRAFFIC_COLORS: Record<string, string> = {
+  NORMAL: "#22c55e",      // green
+  SLOW: "#f59e0b",        // amber/orange
+  TRAFFIC_JAM: "#ef4444", // red
+};
+
+function renderTrafficColoredRoute(
+  map: google.maps.Map,
+  path: { lat: number; lng: number }[],
+  segments: { startPolylinePointIndex: number; endPolylinePointIndex: number; speed: string }[],
+  polylinesRef: React.MutableRefObject<google.maps.Polyline[]>
+) {
+  // First draw a subtle background line
+  const bgLine = new google.maps.Polyline({
+    path,
+    strokeColor: "#94a3b8",
+    strokeWeight: 6,
+    strokeOpacity: 0.2,
+    geodesic: true,
+    zIndex: 9,
+    map,
+  });
+  polylinesRef.current.push(bgLine);
+
+  // Draw each traffic segment with its color
+  for (const seg of segments) {
+    const start = Math.max(0, seg.startPolylinePointIndex);
+    const end = Math.min(path.length, seg.endPolylinePointIndex + 1);
+    if (end <= start || end - start < 2) continue;
+
+    const segmentPath = path.slice(start, end);
+    const color = TRAFFIC_COLORS[seg.speed] || TRAFFIC_COLORS.NORMAL;
+
+    const line = new google.maps.Polyline({
+      path: segmentPath,
+      strokeColor: color,
+      strokeWeight: 5,
+      strokeOpacity: 0.9,
+      geodesic: true,
+      zIndex: seg.speed === "TRAFFIC_JAM" ? 13 : seg.speed === "SLOW" ? 12 : 11,
+      map,
+    });
+    polylinesRef.current.push(line);
+  }
+}
+
 // Ambient cars removed — only real driver positions are shown on map
 
-function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers = [], showUserLocationDot = true, className, onMapReady, onCenterChanged, suppressAutoViewport = false, mapInteractive = true }: RideMapProps) {
+function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePolyline, trafficSegments, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers = [], showUserLocationDot = true, className, onMapReady, onCenterChanged, suppressAutoViewport = false, mapInteractive = true }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -425,6 +474,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
   const polylineRef = useRef<google.maps.Polyline | null>(null);
   const bgPolylineRef = useRef<google.maps.Polyline | null>(null);
   const polylineAnimCancelRef = useRef<(() => void) | null>(null);
+  const trafficPolylinesRef = useRef<google.maps.Polyline[]>([]);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
@@ -497,6 +547,9 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     if (polylineRef.current) { polylineRef.current.setMap(null); polylineRef.current = null; }
     if (bgPolylineRef.current) { bgPolylineRef.current.setMap(null); bgPolylineRef.current = null; }
     if (directionsRendererRef.current) { directionsRendererRef.current.setMap(null); directionsRendererRef.current = null; }
+    // Clear traffic-colored segments
+    trafficPolylinesRef.current.forEach(p => p.setMap(null));
+    trafficPolylinesRef.current = [];
   }, []);
 
   const clearAmbientCars = useCallback(() => {
@@ -727,7 +780,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     }
   }, [driverCoords, mapReady]);
 
-  // ─── Animated route rendering ───
+  // ─── Animated route rendering with traffic colors ───
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -735,12 +788,18 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
     let stale = false;
 
     if (decodedRoute && decodedRoute.length > 1) {
-      const { bgLine, animatedLine, cancel } = animatePolyline(map, decodedRoute, (finalLine) => {
-        polylineRef.current = finalLine;
-      });
-      bgPolylineRef.current = bgLine;
-      polylineRef.current = animatedLine;
-      polylineAnimCancelRef.current = cancel;
+      // If we have traffic segments from Routes API, render colored polylines
+      if (trafficSegments && trafficSegments.length > 0) {
+        renderTrafficColoredRoute(map, decodedRoute, trafficSegments, trafficPolylinesRef);
+      } else {
+        // Fallback: single green animated polyline
+        const { bgLine, animatedLine, cancel } = animatePolyline(map, decodedRoute, (finalLine) => {
+          polylineRef.current = finalLine;
+        });
+        bgPolylineRef.current = bgLine;
+        polylineRef.current = animatedLine;
+        polylineAnimCancelRef.current = cancel;
+      }
       // Snap dropoff marker to actual route endpoint
       const dropoffMarker = (markersRef as any).__dropoffMarker as google.maps.Marker | undefined;
       if (dropoffMarker) {
@@ -800,7 +859,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, stopCoords = [], routePo
       );
     }
     return () => { stale = true; };
-  }, [decodedRoute, pickupCoords, dropoffCoords, stopCoords, clearRoute, mapReady]);
+  }, [decodedRoute, trafficSegments, pickupCoords, dropoffCoords, stopCoords, clearRoute, mapReady]);
 
   // ─── Driver marker (car icon) ───
   useEffect(() => {
