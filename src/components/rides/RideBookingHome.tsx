@@ -791,6 +791,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
   const stopsRef = useRef(stops);
   stopsRef.current = stops;
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
+  const hasAutoSelectedDefaultVehicleRef = useRef(false);
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [nearbyDriverCount, setNearbyDriverCount] = useState(0);
@@ -885,6 +886,29 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
   // Route data
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+
+  useEffect(() => {
+    if (!vehicleOptions.length) return;
+
+    const selectedStillExists = vehicleOptions.some((vehicle) => vehicle.id === selectedVehicle);
+    if (!selectedStillExists) {
+      setSelectedVehicle(vehicleOptions[0].id);
+      return;
+    }
+
+    if (
+      !hasAutoSelectedDefaultVehicleRef.current &&
+      isCambodiaCountry &&
+      selectedVehicle === "economy" &&
+      vehicleOptions.some((vehicle) => vehicle.id === "moto")
+    ) {
+      hasAutoSelectedDefaultVehicleRef.current = true;
+      setSelectedVehicle("moto");
+      return;
+    }
+
+    hasAutoSelectedDefaultVehicleRef.current = true;
+  }, [vehicleOptions, isCambodiaCountry, selectedVehicle]);
 
   const COLLAPSED_SHEET_HEIGHT = 330 + stops.length * 56 + (routeData ? 48 : 0);
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
