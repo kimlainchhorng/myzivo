@@ -671,6 +671,9 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "grocery.checkout.subtotal": "Subtotal",
     "grocery.checkout.delivery_fee": "Delivery Fee",
     "grocery.checkout.total": "Total",
+    "grocery.checkout.fee_summary": "Fee Summary",
+    "grocery.checkout.estimated_total": "Estimated Total",
+    "grocery.checkout.service_fee": "Service Fee",
   },
   km: {
     "flights.roundtrip": "ទៅមក",
@@ -1330,6 +1333,9 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "grocery.checkout.subtotal": "សរុបរង",
     "grocery.checkout.delivery_fee": "ថ្លៃដឹកជញ្ជូន",
     "grocery.checkout.total": "សរុប",
+    "grocery.checkout.fee_summary": "សង្ខេបថ្លៃសេវា",
+    "grocery.checkout.estimated_total": "សរុបប៉ាន់ស្មាន",
+    "grocery.checkout.service_fee": "ថ្លៃសេវាកម្ម",
   },
   ko: {
     "flights.roundtrip": "왕복",
