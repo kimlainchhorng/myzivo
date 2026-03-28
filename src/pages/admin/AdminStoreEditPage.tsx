@@ -834,44 +834,69 @@ export default function AdminStoreEditPage() {
   };
 
   const normalizeVideoUpload = async (file: File, _options?: { silent?: boolean }) => {
-    // MP4 and WebM are natively supported by all modern browsers — upload directly
-    const isMp4 = file.type === "video/mp4" || file.name.toLowerCase().endsWith(".mp4");
-    const isWebm = file.type === "video/webm" || file.name.toLowerCase().endsWith(".webm");
+    const isLikelyBrowserNative =
+      file.type === "video/mp4" ||
+      file.type === "video/webm" ||
+      file.name.toLowerCase().endsWith(".mp4") ||
+      file.name.toLowerCase().endsWith(".webm");
 
-    if (isMp4 || isWebm) {
-      console.log("[PostMedia] Browser-native format detected, uploading directly:", file.type);
-      return file;
+    if (isLikelyBrowserNative) {
+      try {
+        const directlyPlayable = await withTimeout(
+          probeVideoFile(file),
+          6000,
+          "Native video probe timeout"
+        );
+
+        if (directlyPlayable) {
+          console.log("[PostMedia] Browser-playable video detected, uploading directly:", file.type || file.name);
+          return file;
+        }
+
+        console.warn("[PostMedia] Native-looking video is not browser-playable, normalizing before upload:", file.type || file.name);
+      } catch (error) {
+        console.warn("[PostMedia] Native video probe failed, attempting normalization:", error);
+      }
+    } else {
+      console.log("[PostMedia] Non-standard format, attempting normalization:", file.type || file.name);
     }
 
-    // For non-standard formats (MOV, AVI, MKV, etc.), try quick normalization
-    console.log("[PostMedia] Non-standard format, attempting normalization:", file.type);
     toast.info("Converting video for web playback...");
 
     try {
       const normalized = await withTimeout((async () => {
         try {
-          const transcoded = await withTimeout(transcodeVideoForBrowser(file), 30000, "Transcode timeout");
-          return transcoded;
+          const audioNormalized = await withTimeout(normalizeVideoAudioForBrowser(file), 20000, "Audio normalize timeout");
+          const playable = await probeVideoFile(audioNormalized);
+          if (playable) return audioNormalized;
         } catch (error) {
-          console.warn("[PostMedia] Transcode failed:", error);
+          console.warn("[PostMedia] Audio normalize failed:", error);
         }
 
         try {
           const stripped = await withTimeout(stripVideoAudioForPreview(file), 15000, "Strip audio timeout");
-          return stripped;
+          const playable = await probeVideoFile(stripped);
+          if (playable) return stripped;
         } catch (error) {
           console.warn("[PostMedia] Strip audio failed:", error);
         }
 
+        try {
+          const transcoded = await withTimeout(transcodeVideoForBrowser(file), 30000, "Transcode timeout");
+          const playable = await probeVideoFile(transcoded);
+          if (playable) return transcoded;
+        } catch (error) {
+          console.warn("[PostMedia] Transcode failed:", error);
+        }
+
         return null;
-      })(), 35000, "Overall normalization timeout");
+      })(), 45000, "Overall normalization timeout");
 
       if (normalized) return normalized;
     } catch (error) {
       console.warn("[PostMedia] Normalization timed out:", error);
     }
 
-    // Fallback: upload original as-is
     console.warn("[PostMedia] Normalization failed, uploading original file.");
     toast.info("Uploading original video.");
     return file;
