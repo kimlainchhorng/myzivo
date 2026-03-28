@@ -29,7 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send } from "lucide-react";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
@@ -512,6 +512,12 @@ export default function AdminStoreEditPage() {
   }>>([]);
   const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const [viewPostId, setViewPostId] = useState<string | null>(null);
+  const [editPostId, setEditPostId] = useState<string | null>(null);
+  const [editCaption, setEditCaption] = useState("");
+  const [editHashtags, setEditHashtags] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [newComment, setNewComment] = useState("");
   const [reprocessingPostId, setReprocessingPostId] = useState<string | null>(null);
   const [replacingPostId, setReplacingPostId] = useState<string | null>(null);
   const [postMediaMode, setPostMediaMode] = useState<"image" | "video">("image");
@@ -1136,6 +1142,85 @@ export default function AdminStoreEditPage() {
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  // Edit post mutation
+  const editPost = useMutation({
+    mutationFn: async () => {
+      if (!editPostId) throw new Error("No post selected");
+      const tagsFromField = editHashtags.match(/#[\w\u1780-\u17FF]+/g) || [];
+      const tagsFromCaption = editCaption.match(/#[\w\u1780-\u17FF]+/g) || [];
+      const allTags = [...new Set([...tagsFromField, ...tagsFromCaption].map(t => t.toLowerCase()))];
+      const { error } = await supabase.from("store_posts").update({
+        caption: editCaption || null,
+        hashtags: allTags,
+        location: editLocation || null,
+      } as any).eq("id", editPostId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
+      setEditPostId(null);
+      toast.success("Post updated!");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  // Comments query
+  const { data: postComments = [] } = useQuery({
+    queryKey: ["post-comments", viewPostId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_post_comments")
+        .select("*")
+        .eq("post_id", viewPostId!)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!viewPostId,
+  });
+
+  // Add comment mutation
+  const addComment = useMutation({
+    mutationFn: async () => {
+      if (!viewPostId || !newComment.trim()) throw new Error("Empty comment");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const { error } = await supabase.from("store_post_comments").insert({
+        post_id: viewPostId,
+        user_id: user.id,
+        content: newComment.trim(),
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["post-comments", viewPostId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
+      setNewComment("");
+      toast.success("Comment added");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteComment = useMutation({
+    mutationFn: async (commentId: string) => {
+      const { error } = await supabase.from("store_post_comments").delete().eq("id", commentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["post-comments", viewPostId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const openEditPost = (post: any) => {
+    setEditPostId(post.id);
+    setEditCaption(post.caption || "");
+    setEditHashtags((post.hashtags || []).join(" "));
+    setEditLocation(post.location || "");
+  };
+
 
   const reprocessPostVideo = async (post: any) => {
     if (reprocessingPostId) return;
@@ -1823,15 +1908,17 @@ export default function AdminStoreEditPage() {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Posts</p>
                   <span className="text-[10px] text-muted-foreground">{posts.length} total</span>
                 </div>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                  {posts.slice(0, 10).map((post: any) => {
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {posts.slice(0, 12).map((post: any) => {
                     const firstUrl = (post.media_urls || [])[0];
                     const mediaCount = (post.media_urls || []).length;
                     const isVideo = firstUrl && isVideoUrl(normalizeStorePostMediaUrl(firstUrl));
+                    const postDate = post.created_at ? format(new Date(post.created_at), "MMM d") : "";
                     return (
-                      <div key={post.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
-                        {isVideo && firstUrl ? (
-                          <div className="relative h-full w-full bg-muted">
+                      <div key={post.id} className="relative group rounded-xl overflow-hidden border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
+                        {/* Thumbnail */}
+                        <div className="aspect-square relative cursor-pointer" onClick={() => setViewPostId(post.id)}>
+                          {isVideo && firstUrl ? (
                             <AdminVideoPreview
                               src={normalizeStorePostMediaUrl(firstUrl)}
                               className="h-full w-full"
@@ -1843,38 +1930,71 @@ export default function AdminStoreEditPage() {
                               canRepair
                               onRepair={repairVideoPreviewSource}
                             />
-                          </div>
-                        ) : firstUrl ? (
-                          <img src={normalizeStorePostMediaUrl(firstUrl)} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-muted">
-                            <ImagePlus className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                        )}
-                        {/* Media type badge */}
-                        <div className="absolute top-1 left-1 z-10 flex items-center gap-0.5">
-                          {isVideo && (
-                            <div className="rounded bg-background/80 px-1 py-0.5 flex items-center gap-0.5">
-                              <Video className="h-2.5 w-2.5 text-foreground" />
+                          ) : firstUrl ? (
+                            <img src={normalizeStorePostMediaUrl(firstUrl)} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-muted">
+                              <ImagePlus className="h-5 w-5 text-muted-foreground" />
                             </div>
                           )}
-                          {mediaCount > 1 && (
-                            <div className="rounded bg-background/80 px-1 py-0.5">
-                              <span className="text-[9px] font-medium text-foreground">{mediaCount}</span>
+                          {/* Overlay badges */}
+                          <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1">
+                            {isVideo && (
+                              <div className="rounded-md bg-background/80 backdrop-blur-sm px-1.5 py-0.5 flex items-center gap-0.5">
+                                <Video className="h-2.5 w-2.5 text-foreground" />
+                              </div>
+                            )}
+                            {mediaCount > 1 && (
+                              <div className="rounded-md bg-background/80 backdrop-blur-sm px-1.5 py-0.5">
+                                <span className="text-[9px] font-medium text-foreground">{mediaCount} files</span>
+                              </div>
+                            )}
+                          </div>
+                          {post.scheduled_at && new Date(post.scheduled_at) > new Date() && (
+                            <div className="absolute top-1.5 right-1.5 z-10 rounded-md bg-accent/90 backdrop-blur-sm px-1.5 py-0.5 flex items-center gap-0.5">
+                              <Clock className="h-2.5 w-2.5 text-accent-foreground" />
+                              <span className="text-[9px] font-medium text-accent-foreground">Scheduled</span>
                             </div>
                           )}
                         </div>
-                        {post.caption && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5">
-                            <p className="text-[10px] text-white line-clamp-1">{post.caption}</p>
+                        {/* Post info */}
+                        <div className="p-2 space-y-1.5">
+                          {post.caption && (
+                            <p className="text-[11px] text-foreground line-clamp-2 leading-tight">{post.caption}</p>
+                          )}
+                          {/* Analytics row */}
+                          <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                            <span className="flex items-center gap-0.5"><Heart className="h-3 w-3" /> {post.likes_count || 0}</span>
+                            <span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3" /> {post.comments_count || 0}</span>
+                            <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" /> {post.view_count || 0}</span>
                           </div>
-                        )}
-                        <button
-                          onClick={() => setDeletePostId(post.id)}
-                          className="absolute top-1 right-1 z-20 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
+                          {/* Meta row */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              {post.location && (
+                                <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground"><MapPin className="h-2.5 w-2.5" />{post.location.length > 12 ? post.location.slice(0, 12) + "…" : post.location}</span>
+                              )}
+                              <span className="text-[9px] text-muted-foreground">{postDate}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => openEditPost(post)} className="h-5 w-5 rounded-full hover:bg-muted flex items-center justify-center transition-colors" title="Edit">
+                                <Edit className="h-3 w-3 text-muted-foreground" />
+                              </button>
+                              <button onClick={() => setDeletePostId(post.id)} className="h-5 w-5 rounded-full hover:bg-destructive/10 flex items-center justify-center transition-colors" title="Delete">
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              </button>
+                            </div>
+                          </div>
+                          {/* Hashtags */}
+                          {post.hashtags && post.hashtags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {post.hashtags.slice(0, 3).map((tag: string) => (
+                                <span key={tag} className="text-[9px] text-primary font-medium">{tag}</span>
+                              ))}
+                              {post.hashtags.length > 3 && <span className="text-[9px] text-muted-foreground">+{post.hashtags.length - 3}</span>}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -3374,6 +3494,138 @@ export default function AdminStoreEditPage() {
             <Button variant="outline" onClick={() => setDeletePostId(null)}>Cancel</Button>
             <Button variant="destructive" onClick={() => deletePostId && deletePost.mutate(deletePostId)} disabled={deletePost.isPending}>
               {deletePost.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Post Detail Dialog */}
+      <Dialog open={!!viewPostId} onOpenChange={() => setViewPostId(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden">
+          {(() => {
+            const post = posts.find((p: any) => p.id === viewPostId);
+            if (!post) return null;
+            const firstUrl = (post.media_urls || [])[0];
+            const isVid = firstUrl && isVideoUrl(normalizeStorePostMediaUrl(firstUrl));
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Eye className="h-4 w-4" /> Post Detail
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 overflow-y-auto max-h-[calc(90vh-10rem)] pr-1">
+                  {/* Media preview */}
+                  <div className="rounded-xl overflow-hidden border border-border bg-muted">
+                    {isVid && firstUrl ? (
+                      <AdminVideoPreview
+                        src={normalizeStorePostMediaUrl(firstUrl)}
+                        className="w-full"
+                        videoClassName="w-full max-h-80 object-contain"
+                        controls
+                        muted
+                        loop
+                        canRepair
+                        onRepair={repairVideoPreviewSource}
+                      />
+                    ) : firstUrl ? (
+                      <img src={normalizeStorePostMediaUrl(firstUrl)} alt="" className="w-full max-h-80 object-contain" />
+                    ) : null}
+                  </div>
+                  {/* Post info */}
+                  {post.caption && <p className="text-sm text-foreground">{post.caption}</p>}
+                  {/* Analytics */}
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1"><Heart className="h-4 w-4" /> {post.likes_count || 0} likes</span>
+                    <span className="flex items-center gap-1"><MessageCircle className="h-4 w-4" /> {post.comments_count || 0} comments</span>
+                    <span className="flex items-center gap-1"><Eye className="h-4 w-4" /> {post.view_count || 0} views</span>
+                  </div>
+                  {post.location && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5" /> {post.location}
+                    </div>
+                  )}
+                  {post.hashtags && post.hashtags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {post.hashtags.map((tag: string) => (
+                        <span key={tag} className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  {/* Comments section */}
+                  <div className="space-y-3 border-t border-border pt-3">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Comments ({postComments.length})</p>
+                    {postComments.length === 0 ? (
+                      <p className="text-xs text-muted-foreground py-4 text-center">No comments yet</p>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {postComments.map((comment: any) => (
+                          <div key={comment.id} className="flex items-start justify-between gap-2 rounded-lg bg-muted/30 p-2">
+                            <div>
+                              <p className="text-xs text-foreground">{comment.content}</p>
+                              <span className="text-[10px] text-muted-foreground">{format(new Date(comment.created_at), "MMM d, h:mm a")}</span>
+                            </div>
+                            <button onClick={() => deleteComment.mutate(comment.id)} className="shrink-0 h-5 w-5 rounded-full hover:bg-destructive/10 flex items-center justify-center">
+                              <Trash2 className="h-3 w-3 text-destructive" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Add comment */}
+                    <div className="flex gap-2">
+                      <Input
+                        value={newComment}
+                        onChange={e => setNewComment(e.target.value)}
+                        placeholder="Add a comment..."
+                        className="text-sm"
+                        onKeyDown={e => { if (e.key === "Enter" && newComment.trim()) addComment.mutate(); }}
+                      />
+                      <Button size="sm" onClick={() => addComment.mutate()} disabled={!newComment.trim() || addComment.isPending}>
+                        <Send className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" size="sm" onClick={() => { setViewPostId(null); openEditPost(post); }}>
+                    <Edit className="h-3.5 w-3.5 mr-1.5" /> Edit Post
+                  </Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Post Dialog */}
+      <Dialog open={!!editPostId} onOpenChange={() => setEditPostId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-4 w-4" /> Edit Post
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Caption</Label>
+              <Textarea value={editCaption} onChange={e => setEditCaption(e.target.value)} rows={3} maxLength={2200} />
+              <span className="text-[10px] text-muted-foreground">{editCaption.length}/2,200</span>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" /> Hashtags</Label>
+              <Input value={editHashtags} onChange={e => setEditHashtags(e.target.value)} placeholder="#food #delivery" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> Location</Label>
+              <Input value={editLocation} onChange={e => setEditLocation(e.target.value)} placeholder="Phnom Penh" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setEditPostId(null)}>Cancel</Button>
+            <Button size="sm" onClick={() => editPost.mutate()} disabled={editPost.isPending}>
+              {editPost.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>

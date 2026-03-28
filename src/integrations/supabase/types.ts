@@ -36584,13 +36584,79 @@ export type Database = {
         }
         Relationships: []
       }
+      store_post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "store_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "store_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_posts: {
         Row: {
           caption: string | null
+          comments_count: number | null
           created_at: string
           hashtags: string[] | null
           id: string
           is_published: boolean
+          likes_count: number | null
           location: string | null
           media_type: string
           media_urls: string[]
@@ -36598,13 +36664,16 @@ export type Database = {
           store_id: string
           thumbnail_url: string | null
           updated_at: string
+          view_count: number | null
         }
         Insert: {
           caption?: string | null
+          comments_count?: number | null
           created_at?: string
           hashtags?: string[] | null
           id?: string
           is_published?: boolean
+          likes_count?: number | null
           location?: string | null
           media_type?: string
           media_urls?: string[]
@@ -36612,13 +36681,16 @@ export type Database = {
           store_id: string
           thumbnail_url?: string | null
           updated_at?: string
+          view_count?: number | null
         }
         Update: {
           caption?: string | null
+          comments_count?: number | null
           created_at?: string
           hashtags?: string[] | null
           id?: string
           is_published?: boolean
+          likes_count?: number | null
           location?: string | null
           media_type?: string
           media_urls?: string[]
@@ -36626,6 +36698,7 @@ export type Database = {
           store_id?: string
           thumbnail_url?: string | null
           updated_at?: string
+          view_count?: number | null
         }
         Relationships: [
           {
@@ -47372,10 +47445,12 @@ export type Database = {
         }
         Returns: {
           caption: string | null
+          comments_count: number | null
           created_at: string
           hashtags: string[] | null
           id: string
           is_published: boolean
+          likes_count: number | null
           location: string | null
           media_type: string
           media_urls: string[]
@@ -47383,6 +47458,7 @@ export type Database = {
           store_id: string
           thumbnail_url: string | null
           updated_at: string
+          view_count: number | null
         }
         SetofOptions: {
           from: "*"
