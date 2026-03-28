@@ -120,6 +120,8 @@ function AdminVideoPreview({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [isRepairing, setIsRepairing] = useState(false);
+  const [triedBlobFallback, setTriedBlobFallback] = useState(false);
+  const [blobSrc, setBlobSrc] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -130,7 +132,38 @@ function AdminVideoPreview({
     setIsPlaying(false);
     setCurrentSrc(src);
     setIsRepairing(false);
+    setTriedBlobFallback(false);
+    setBlobSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
   }, [src]);
+
+  useEffect(() => {
+    return () => {
+      if (blobSrc) URL.revokeObjectURL(blobSrc);
+    };
+  }, [blobSrc]);
+
+  const tryBlobFallback = async (url: string) => {
+    if (triedBlobFallback) return false;
+
+    setTriedBlobFallback(true);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch video preview.");
+
+      const blob = await response.blob();
+      setBlobSrc((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(blob);
+      });
+      setCurrentSrc(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const handlePlayToggle = () => {
     const vid = videoRef.current;
@@ -147,9 +180,9 @@ function AdminVideoPreview({
   return (
     <div className={cn("relative bg-black", className)}>
       <video
-        key={src}
+        key={blobSrc || currentSrc}
         ref={videoRef}
-        src={currentSrc}
+        src={blobSrc || currentSrc}
         poster={posterUrl ?? undefined}
         className={cn("h-full w-full", videoClassName)}
         controls={false}
@@ -162,6 +195,7 @@ function AdminVideoPreview({
           ensureVisibleVideoFrame(event.currentTarget);
         }}
         onLoadedData={(event) => {
+          setIsRepairing(false);
           ensureVisibleVideoFrame(event.currentTarget);
           captureVideoPosterFrame(event.currentTarget, setPosterUrl);
           if (autoPlay) {
@@ -175,19 +209,26 @@ function AdminVideoPreview({
           if (!loop) setIsPlaying(false);
         }}
         onError={() => {
-          if (!canRepair || !onRepair || isRepairing || currentSrc.startsWith("blob:")) return;
+          void (async () => {
+            if (!blobSrc) {
+              const blobWorked = await tryBlobFallback(currentSrc);
+              if (blobWorked) return;
+            }
 
-          setIsRepairing(true);
-          void onRepair(src)
-            .then((repairedSrc) => {
-              setCurrentSrc(repairedSrc);
-            })
-            .catch(() => {
-              // ignore and keep current UI state
-            })
-            .finally(() => {
-              setIsRepairing(false);
-            });
+            if (!canRepair || !onRepair || isRepairing || currentSrc.startsWith("blob:")) return;
+
+            setIsRepairing(true);
+            void onRepair(src)
+              .then((repairedSrc) => {
+                setCurrentSrc(repairedSrc);
+              })
+              .catch(() => {
+                // ignore and keep current UI state
+              })
+              .finally(() => {
+                setIsRepairing(false);
+              });
+          })();
         }}
       />
       {/* Large tap-to-play overlay */}
