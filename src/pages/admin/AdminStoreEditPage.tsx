@@ -512,6 +512,12 @@ export default function AdminStoreEditPage() {
   }>>([]);
   const [uploadingPostMedia, setUploadingPostMedia] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const [viewPostId, setViewPostId] = useState<string | null>(null);
+  const [editPostId, setEditPostId] = useState<string | null>(null);
+  const [editCaption, setEditCaption] = useState("");
+  const [editHashtags, setEditHashtags] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [newComment, setNewComment] = useState("");
   const [reprocessingPostId, setReprocessingPostId] = useState<string | null>(null);
   const [replacingPostId, setReplacingPostId] = useState<string | null>(null);
   const [postMediaMode, setPostMediaMode] = useState<"image" | "video">("image");
