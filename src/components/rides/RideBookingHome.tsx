@@ -3394,7 +3394,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 leading-snug">
-                      {etaTime(v.etaMin)} · {getVehicleDesc(v.id, v.desc, isCambodiaCountry)}
+                      {etaTime(v.etaMin + (routeData?.duration_in_traffic_minutes ?? routeData?.duration_minutes ?? 0))} · {getVehicleDesc(v.id, v.desc, isCambodiaCountry)}
                     </p>
                   </div>
 
