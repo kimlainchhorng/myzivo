@@ -1075,11 +1075,30 @@ export default function AdminStoreEditPage() {
       console.log("[SavePost] starting save", { postMediaUrls, hasPendingPostUploads, postMediaItems, postMediaMode });
       if (postMediaUrls.length === 0) throw new Error("Add at least one picture or video");
       if (hasPendingPostUploads) throw new Error("Please wait for media upload to finish");
+
+      // Parse hashtags from dedicated field and caption
+      const tagsFromField = postHashtags.match(/#[\w\u1780-\u17FF]+/g) || [];
+      const tagsFromCaption = postCaption.match(/#[\w\u1780-\u17FF]+/g) || [];
+      const allTags = [...new Set([...tagsFromField, ...tagsFromCaption].map(t => t.toLowerCase()))];
+
+      // Build scheduled timestamp
+      let scheduledTimestamp: string | null = null;
+      if (isScheduled && postScheduledAt) {
+        const [hours, minutes] = postScheduleTime.split(":").map(Number);
+        const scheduled = new Date(postScheduledAt);
+        scheduled.setHours(hours || 0, minutes || 0, 0, 0);
+        if (scheduled <= new Date()) throw new Error("Scheduled time must be in the future");
+        scheduledTimestamp = scheduled.toISOString();
+      }
+
       const insertPayload = {
         store_id: storeId!,
         caption: postCaption || null,
         media_urls: postMediaUrls,
         media_type: postMediaMode === "video" ? "video" : "image",
+        hashtags: allTags.length > 0 ? allTags : [],
+        location: postLocation || null,
+        scheduled_at: scheduledTimestamp,
       };
       console.log("[SavePost] inserting:", JSON.stringify(insertPayload));
       const { data, error } = await supabase.from("store_posts").insert(insertPayload as any).select();
@@ -1091,7 +1110,7 @@ export default function AdminStoreEditPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-store-posts", storeId] });
       setPostDialog(false);
       resetPostState();
-      toast.success("Post created!");
+      toast.success(isScheduled ? "Post scheduled!" : "Post created!");
     },
     onError: (e: any) => {
       const message = typeof e?.message === "string" ? e.message : "Failed to create post";
