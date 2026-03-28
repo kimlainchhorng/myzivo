@@ -814,57 +814,76 @@ export default function AdminStoreEditPage() {
   };
 
   const normalizeVideoUpload = async (file: File, options?: { silent?: boolean }) => {
-    const originalIsPlayable = await probeVideoFile(file);
-    if (originalIsPlayable) {
-      return file;
+    // Quick check — if the original is already playable, skip everything
+    try {
+      const originalIsPlayable = await probeVideoFile(file);
+      if (originalIsPlayable) {
+        return file;
+      }
+    } catch {
+      // probe failed — try normalization anyway
     }
 
     if (!options?.silent) {
       toast.info("Optimizing video for browser playback...");
     }
 
+    // Try each normalization strategy, but if ALL fail, upload the original
     try {
-      const audioNormalizedFile = await withTimeout(
-        normalizeVideoAudioForBrowser(file),
-        20000,
-        "Audio normalization took too long.",
-      );
-      const audioNormalizedIsPlayable = await probeVideoFile(audioNormalizedFile);
+      try {
+        const audioNormalizedFile = await withTimeout(
+          normalizeVideoAudioForBrowser(file),
+          20000,
+          "Audio normalization took too long.",
+        );
+        const audioNormalizedIsPlayable = await probeVideoFile(audioNormalizedFile);
 
-      if (audioNormalizedIsPlayable) {
-        return audioNormalizedFile;
+        if (audioNormalizedIsPlayable) {
+          return audioNormalizedFile;
+        }
+      } catch (error) {
+        console.warn("[PostMedia] Audio normalization failed:", error);
       }
-    } catch (error) {
-      console.warn("[PostMedia] Audio normalization failed:", error);
-    }
 
-    try {
-      const mutedPreviewFile = await withTimeout(
-        stripVideoAudioForPreview(file),
-        15000,
-        "Muted preview conversion took too long.",
-      );
-      const mutedPreviewIsPlayable = await probeVideoFile(mutedPreviewFile);
+      try {
+        const mutedPreviewFile = await withTimeout(
+          stripVideoAudioForPreview(file),
+          15000,
+          "Muted preview conversion took too long.",
+        );
+        const mutedPreviewIsPlayable = await probeVideoFile(mutedPreviewFile);
 
-      if (mutedPreviewIsPlayable) {
-        return mutedPreviewFile;
+        if (mutedPreviewIsPlayable) {
+          return mutedPreviewFile;
+        }
+      } catch (error) {
+        console.warn("[PostMedia] Muted preview conversion failed:", error);
       }
-    } catch (error) {
-      console.warn("[PostMedia] Muted preview conversion failed:", error);
+
+      try {
+        const normalizedFile = await withTimeout(
+          transcodeVideoForBrowser(file),
+          45000,
+          "Video optimization took too long.",
+        );
+        const normalizedIsPlayable = await probeVideoFile(normalizedFile);
+
+        if (normalizedIsPlayable) {
+          return normalizedFile;
+        }
+      } catch (error) {
+        console.warn("[PostMedia] Full transcode failed:", error);
+      }
+    } catch (outerError) {
+      console.warn("[PostMedia] Normalization pipeline error:", outerError);
     }
 
-    const normalizedFile = await withTimeout(
-      transcodeVideoForBrowser(file),
-      45000,
-      "Video optimization took too long.",
-    );
-    const normalizedIsPlayable = await probeVideoFile(normalizedFile);
-
-    if (!normalizedIsPlayable) {
-      throw new Error("This video could not be converted into a browser-safe format.");
+    // All normalization attempts failed — upload the original file as-is
+    console.warn("[PostMedia] All normalization failed, uploading original file.");
+    if (!options?.silent) {
+      toast.info("Uploading original video (optimization unavailable).");
     }
-
-    return normalizedFile;
+    return file;
   };
 
   const repairVideoPreviewSource = async (url: string) => {
@@ -873,29 +892,47 @@ export default function AdminStoreEditPage() {
     if (cached) return cached;
 
     const response = await fetch(normalizedUrl);
-    if (!response.ok) throw new Error("Failed to download video for repair.");
+    if (!response.ok) {
+      // Can't download — just return the original URL as blob fallback
+      return normalizedUrl;
+    }
 
     const blob = await response.blob();
     const file = new File([blob], "preview-repair.mp4", { type: blob.type || "video/mp4" });
 
     // Try fixing HE-AAC audio first, then strip audio, then full transcode
-    let repairedFile: File;
+    let repairedFile: File | null = null;
     try {
       repairedFile = await withTimeout(normalizeVideoAudioForBrowser(file), 20000, "Audio normalize timeout");
       const isPlayable = await probeVideoFile(repairedFile);
-      if (!isPlayable) throw new Error("Still not playable");
+      if (!isPlayable) repairedFile = null;
     } catch {
+      repairedFile = null;
+    }
+
+    if (!repairedFile) {
       try {
         repairedFile = await withTimeout(stripVideoAudioForPreview(file), 15000, "Strip audio timeout");
         const isPlayable = await probeVideoFile(repairedFile);
-        if (!isPlayable) throw new Error("Still not playable");
+        if (!isPlayable) repairedFile = null;
       } catch {
-        try {
-          repairedFile = await withTimeout(transcodeVideoForBrowser(file), 45000, "Transcode timeout");
-        } catch {
-          throw new Error("Could not repair video for preview.");
-        }
+        repairedFile = null;
       }
+    }
+
+    if (!repairedFile) {
+      try {
+        repairedFile = await withTimeout(transcodeVideoForBrowser(file), 45000, "Transcode timeout");
+      } catch {
+        repairedFile = null;
+      }
+    }
+
+    // If all repair attempts failed, return a blob URL of the original download
+    if (!repairedFile) {
+      const fallbackUrl = URL.createObjectURL(blob);
+      repairedPreviewUrlsRef.current.set(normalizedUrl, fallbackUrl);
+      return fallbackUrl;
     }
 
     const repairedUrl = URL.createObjectURL(repairedFile);
