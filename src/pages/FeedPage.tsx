@@ -1,15 +1,18 @@
 /**
- * FeedPage — Social media style feed showing store posts (photos & videos)
- * Customers can browse content posted by stores
+ * FeedPage — TikTok / Facebook Reels style full-screen vertical feed
+ * Each post fills the entire viewport. Swipe up/down to navigate.
+ * Videos auto-play when scrolled into view, pause when scrolled away.
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { Loader2, Heart, MessageCircle, Share2, Store, Play, Volume2, VolumeX, RefreshCw } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Loader2, Heart, MessageCircle, Share2, Store,
+  Play, Volume2, VolumeX, RefreshCw,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { repairVideoBlob } from "@/utils/videoRepair";
@@ -25,121 +28,90 @@ interface FeedPost {
   store_name?: string;
   store_logo?: string;
   store_slug?: string;
+  likes_count?: number;
+  comments_count?: number;
 }
 
-function timeAgo(dateStr: string): string {
-  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d`;
-  return new Date(dateStr).toLocaleDateString();
-}
+// ── Individual reel card ──────────────────────────────────────────────────────
 
-function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: string }) {
-  const [activeIndex, setActiveIndex] = useState(0);
+function ReelCard({
+  post,
+  isActive,
+  globalMuted,
+  onToggleMute,
+  onNavigate,
+}: {
+  post: FeedPost;
+  isActive: boolean;
+  globalMuted: boolean;
+  onToggleMute: () => void;
+  onNavigate: (slug: string) => void;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
-  const [triedBlobFallback, setTriedBlobFallback] = useState(false);
-  const [triedFFmpegRepair, setTriedFFmpegRepair] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
   const [blobSrc, setBlobSrc] = useState<string | null>(null);
+  const [triedBlobFallback, setTriedBlobFallback] = useState(false);
+  const [triedFFmpegRepair, setTriedFFmpegRepair] = useState(false);
+  const [liked, setLiked] = useState(false);
 
-  const normalizedUrls = useMemo(
-    () => urls.map((url) => normalizeStorePostMediaUrl(url)).filter(Boolean),
-    [urls]
-  );
+  const firstUrl = normalizeStorePostMediaUrl((post.media_urls || [])[0] || "");
+  const isVideoPost =
+    post.media_type === "video" ||
+    /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(firstUrl);
 
-  const isVideo = (url: string) => {
-    const normalized = normalizeStorePostMediaUrl(url);
-    if (mediaType === "video") return true;
-    return /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(normalized) || /\.(mp4|mov|webm|avi|mkv)/i.test(normalized);
-  };
+  // Auto-play / pause when active changes
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isVideoPost) return;
 
-  const ensureVisibleFrame = (video: HTMLVideoElement) => {
-    if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+    if (isActive) {
+      video.muted = globalMuted;
+      void video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+    } else {
+      video.pause();
+      video.currentTime = 0;
+      setIsPlaying(false);
+    }
+  }, [isActive, isVideoPost]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const targetTime = Math.min(1, Math.max(video.duration * 0.1, 0.25));
-    if (Math.abs(video.currentTime - targetTime) < 0.01) return;
+  // Sync global mute toggle
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) video.muted = globalMuted;
+  }, [globalMuted]);
 
-    try {
-      video.currentTime = targetTime;
-    } catch {
-      // Ignore seek failures on restrictive browsers.
+  // Cleanup blob URL
+  useEffect(() => {
+    return () => {
+      if (blobSrc) URL.revokeObjectURL(blobSrc);
+    };
+  }, [blobSrc]);
+
+  const togglePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      void video.play().then(() => setIsPlaying(true)).catch(() => {});
+    } else {
+      video.pause();
+      setIsPlaying(false);
     }
   };
 
-  const capturePosterFrame = (video: HTMLVideoElement) => {
-    if (video.videoWidth === 0 || video.videoHeight === 0) return;
-
+  const capturePoster = (video: HTMLVideoElement) => {
+    if (video.videoWidth === 0) return;
     try {
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const nextPoster = canvas.toDataURL("image/jpeg", 0.82);
-      setPosterUrl((prev) => {
-        if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-        return nextPoster;
-      });
-    } catch {
-      // Ignore poster extraction failures and fall back to video surface.
-    }
+      canvas.getContext("2d")?.drawImage(video, 0, 0);
+      setPosterUrl(canvas.toDataURL("image/jpeg", 0.8));
+    } catch { /* ignore */ }
   };
 
-  const playCurrentVideo = async () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    ensureVisibleFrame(video);
-
-    try {
-      await video.play();
-      setIsPlaying(true);
-    } catch {
-      setIsPlaying(false);
-      setHasPlaybackError(true);
-    }
-  };
-
-  const pauseVideo = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    video.pause();
-    setIsPlaying(false);
-  };
-
-  const toggleMute = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const nextMuted = !video.muted;
-    video.muted = nextMuted;
-    setIsMuted(nextMuted);
-  };
-
-  const toggleVideo = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (video.paused) {
-      void playCurrentVideo();
-    } else {
-      pauseVideo();
-    }
-  };
-
-  // When the video element errors, try fetching as blob (bypasses some codec detection issues)
   const tryBlobFallback = async (url: string) => {
     if (triedBlobFallback) return;
     setTriedBlobFallback(true);
@@ -147,16 +119,13 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
       const resp = await fetch(url);
       if (!resp.ok) throw new Error("fetch failed");
       const blob = await resp.blob();
-      const typedBlob = new Blob([blob], { type: blob.type || "video/mp4" });
-      const objectUrl = URL.createObjectURL(typedBlob);
-      setBlobSrc(objectUrl);
+      setBlobSrc(URL.createObjectURL(new Blob([blob], { type: blob.type || "video/mp4" })));
       setHasPlaybackError(false);
     } catch {
       setHasPlaybackError(true);
     }
   };
 
-  // FFmpeg WASM repair as last resort
   const tryFFmpegRepair = async (url: string) => {
     if (triedFFmpegRepair) return;
     setTriedFFmpegRepair(true);
@@ -180,173 +149,187 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     }
   };
 
-  useEffect(() => {
-    setIsPlaying(false);
-    setIsMuted(true);
-    setPosterUrl(null);
-    setHasPlaybackError(false);
-    setTriedBlobFallback(false);
-    setTriedFFmpegRepair(false);
-    setIsRepairing(false);
-    if (blobSrc) {
-      URL.revokeObjectURL(blobSrc);
-      setBlobSrc(null);
-    }
-  }, [activeIndex, normalizedUrls]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || normalizedUrls.length === 0 || !isVideo(normalizedUrls[activeIndex])) return;
-
-    video.pause();
-    video.currentTime = 0;
-    video.muted = true;
-    video.load();
-  }, [activeIndex, normalizedUrls]);
-
-  if (normalizedUrls.length === 0) {
-    return (
-      <div className="relative bg-muted">
-        <div className="aspect-square w-full bg-muted" />
-      </div>
-    );
-  }
+  const currentSrc = blobSrc || firstUrl;
 
   return (
-    <div className="relative bg-muted">
-      <div className={cn("overflow-hidden bg-black", isVideo(normalizedUrls[activeIndex]) ? "aspect-[9/16]" : "aspect-square")}>
-        {isVideo(normalizedUrls[activeIndex]) ? (
-          <div className="relative w-full h-full">
-            <video
-              key={blobSrc || normalizedUrls[activeIndex]}
-              ref={videoRef}
-              src={blobSrc || normalizedUrls[activeIndex]}
-              poster={posterUrl ?? undefined}
-              className="w-full h-full object-cover"
-              playsInline
-              loop
-              muted
-              preload="auto"
-              onClick={toggleVideo}
-              onLoadedMetadata={(event) => {
-                event.currentTarget.muted = isMuted;
-                ensureVisibleFrame(event.currentTarget);
-              }}
-              onLoadedData={(event) => {
-                setHasPlaybackError(false);
-                ensureVisibleFrame(event.currentTarget);
-                capturePosterFrame(event.currentTarget);
-                event.currentTarget.muted = true;
-                void event.currentTarget.play().then(() => {
-                  setIsPlaying(true);
-                  setIsMuted(true);
-                }).catch(() => {
-                  setIsPlaying(false);
-                });
-              }}
-              onPlay={(event) => {
-                setIsMuted(event.currentTarget.muted);
-                setIsPlaying(true);
-                setHasPlaybackError(false);
-              }}
-              onPause={() => setIsPlaying(false)}
-              onError={async () => {
-                setIsPlaying(false);
-                const currentUrl = normalizedUrls[activeIndex];
-                console.warn("[FeedVideo] Playback error for:", currentUrl, "blobTried:", triedBlobFallback, "ffmpegTried:", triedFFmpegRepair);
-                if (!triedBlobFallback) {
-                  await tryBlobFallback(currentUrl);
-                } else if (!triedFFmpegRepair) {
-                  // Blob also failed — try FFmpeg WASM repair
-                  await tryFFmpegRepair(currentUrl);
-                } else {
-                  setHasPlaybackError(true);
-                }
-              }}
-            />
-            <button
-              type="button"
-              onClick={toggleVideo}
-              className="absolute inset-0 z-10"
-              aria-label={isPlaying ? "Pause video" : "Play video"}
-            />
-            {isRepairing && (
-              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/60">
-                <RefreshCw className="w-8 h-8 text-white animate-spin" />
-                <p className="text-sm text-white/90 font-medium">Converting video...</p>
-              </div>
-            )}
-            {!isPlaying && !hasPlaybackError && !isRepairing && (
-              <button
-                type="button"
-                onClick={toggleVideo}
-                className="absolute inset-0 z-20 flex items-center justify-center bg-black/20"
-                aria-label="Play video"
-              >
-                <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                  <Play className="w-6 h-6 text-foreground ml-0.5" fill="currentColor" />
-                </div>
-              </button>
-            )}
-            {hasPlaybackError && !isRepairing && (
-              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-foreground/20 px-6 text-center backdrop-blur-sm">
-                <p className="max-w-xs text-sm font-medium text-background">
-                  This video format isn&apos;t supported here yet.
-                </p>
-                <p className="max-w-xs text-xs text-background/80">
-                  Please re-upload it from the store admin page and it will be converted automatically.
-                </p>
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={toggleMute}
-              className="absolute right-3 bottom-3 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur-sm"
-              aria-label={isMuted ? "Unmute video" : "Mute video"}
-            >
-              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </button>
+    <div className="relative w-full h-[100dvh] bg-black overflow-hidden snap-start flex-shrink-0">
+      {/* ── Media ── */}
+      {isVideoPost ? (
+        <video
+          ref={videoRef}
+          key={currentSrc}
+          src={currentSrc}
+          poster={posterUrl ?? undefined}
+          className="absolute inset-0 w-full h-full object-cover"
+          playsInline
+          loop
+          muted
+          preload={isActive ? "auto" : "metadata"}
+          onLoadedData={(e) => {
+            capturePoster(e.currentTarget);
+            if (isActive) {
+              e.currentTarget.muted = globalMuted;
+              void e.currentTarget.play().then(() => setIsPlaying(true)).catch(() => {});
+            }
+          }}
+          onLoadedMetadata={(e) => {
+            const t = Math.min(1, e.currentTarget.duration * 0.1);
+            try { e.currentTarget.currentTime = t; } catch { /* ignore */ }
+          }}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onError={async () => {
+            setIsPlaying(false);
+            if (!triedBlobFallback) await tryBlobFallback(currentSrc);
+            else if (!triedFFmpegRepair) await tryFFmpegRepair(firstUrl);
+            else setHasPlaybackError(true);
+          }}
+        />
+      ) : (
+        <img
+          src={firstUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          loading={isActive ? "eager" : "lazy"}
+        />
+      )}
+
+      {/* ── Tap-to-play/pause ── */}
+      {isVideoPost && !hasPlaybackError && !isRepairing && (
+        <button
+          type="button"
+          onClick={togglePlay}
+          className="absolute inset-0 z-10"
+          aria-label={isPlaying ? "Pause" : "Play"}
+        />
+      )}
+
+      {/* ── Paused indicator ── */}
+      {isVideoPost && !isPlaying && !hasPlaybackError && !isRepairing && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+          <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
+            <Play className="w-7 h-7 text-white ml-1" fill="white" />
           </div>
-        ) : (
-          <img
-            src={normalizedUrls[activeIndex]}
-            alt=""
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
+        </div>
+      )}
+
+      {/* ── Converting overlay ── */}
+      {isRepairing && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/70">
+          <RefreshCw className="w-10 h-10 text-white animate-spin" />
+          <p className="text-sm text-white font-medium">Converting video…</p>
+        </div>
+      )}
+
+      {/* ── Playback error ── */}
+      {hasPlaybackError && !isRepairing && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 bg-black/70 px-8 text-center">
+          <p className="text-sm font-semibold text-white">Video needs to be fixed</p>
+          <p className="text-xs text-white/70">
+            Go to Store Admin → Feed Posts → tap "Fix Video"
+          </p>
+        </div>
+      )}
+
+      {/* ── Gradient for readability ── */}
+      <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-t from-black/65 via-transparent to-black/10" />
+
+      {/* ── Bottom-left: store info + caption ── */}
+      <div
+        className="absolute bottom-0 left-0 right-16 z-30 px-4"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
+      >
+        <button
+          type="button"
+          onClick={() => post.store_slug && onNavigate(post.store_slug)}
+          className="flex items-center gap-2.5 mb-2.5 active:opacity-70"
+        >
+          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/80 bg-black/40 flex-shrink-0">
+            {post.store_logo ? (
+              <img src={post.store_logo} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Store className="w-5 h-5 text-white" />
+              </div>
+            )}
+          </div>
+          <span className="text-white font-bold text-sm drop-shadow-lg">{post.store_name}</span>
+        </button>
+        {post.caption && (
+          <p className="text-white text-sm line-clamp-3 drop-shadow leading-snug">
+            {post.caption}
+          </p>
         )}
       </div>
 
-      {/* Dots indicator */}
-      {normalizedUrls.length > 1 && (
-        <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1.5">
-          {normalizedUrls.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setActiveIndex(i)}
-              className={cn(
-                "w-1.5 h-1.5 rounded-full transition-all duration-200",
-                i === activeIndex
-                  ? "bg-white w-4 shadow-md"
-                  : "bg-white/50"
-              )}
-            />
-          ))}
-        </div>
-      )}
+      {/* ── Right-side action buttons (TikTok-style) ── */}
+      <div
+        className="absolute right-3 z-30 flex flex-col items-center gap-5"
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)" }}
+      >
+        {/* Mute/Unmute */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onToggleMute(); }}
+          className="flex flex-col items-center gap-1"
+          aria-label={globalMuted ? "Unmute" : "Mute"}
+        >
+          <div className="w-11 h-11 rounded-full bg-black/40 flex items-center justify-center">
+            {globalMuted
+              ? <VolumeX className="w-5 h-5 text-white" />
+              : <Volume2 className="w-5 h-5 text-white" />
+            }
+          </div>
+        </button>
+
+        {/* Like */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setLiked((l) => !l); }}
+          className="flex flex-col items-center gap-1"
+          aria-label="Like"
+        >
+          <Heart
+            className={cn(
+              "w-9 h-9 drop-shadow-lg transition-transform active:scale-125",
+              liked ? "text-red-500 fill-red-500" : "text-white",
+            )}
+          />
+          <span className="text-white text-xs font-semibold drop-shadow">
+            {(post.likes_count || 0) + (liked ? 1 : 0)}
+          </span>
+        </button>
+
+        {/* Comment */}
+        <button type="button" className="flex flex-col items-center gap-1" aria-label="Comment">
+          <MessageCircle className="w-9 h-9 text-white drop-shadow-lg" />
+          <span className="text-white text-xs font-semibold drop-shadow">
+            {post.comments_count || 0}
+          </span>
+        </button>
+
+        {/* Share */}
+        <button type="button" className="flex flex-col items-center gap-1" aria-label="Share">
+          <Share2 className="w-9 h-9 text-white drop-shadow-lg" />
+          <span className="text-white text-xs font-semibold drop-shadow">Share</span>
+        </button>
+      </div>
     </div>
   );
 }
 
+// ── Main FeedPage ─────────────────────────────────────────────────────────────
+
 export default function FeedPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [globalMuted, setGlobalMuted] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["customer-feed"],
     queryFn: async () => {
-      // Fetch posts with store info
       const { data: postsData, error } = await supabase
         .from("store_posts")
         .select("*")
@@ -355,7 +338,6 @@ export default function FeedPage() {
         .limit(50);
       if (error) throw error;
 
-      // Get unique store IDs
       const storeIds = [...new Set((postsData || []).map((p: any) => p.store_id))];
       if (storeIds.length === 0) return [];
 
@@ -378,112 +360,74 @@ export default function FeedPage() {
     },
   });
 
-  const toggleLike = (postId: string) => {
-    setLikedPosts(prev => {
-      const next = new Set(prev);
-      if (next.has(postId)) next.delete(postId);
-      else next.add(postId);
-      return next;
+  // IntersectionObserver — set activeIndex when a card is ≥60% visible
+  useEffect(() => {
+    if (posts.length === 0) return;
+    const observers: IntersectionObserver[] = [];
+
+    cardRefs.current.forEach((card, index) => {
+      if (!card) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+            setActiveIndex(index);
+          }
+        },
+        { threshold: 0.6 },
+      );
+      obs.observe(card);
+      observers.push(obs);
     });
-  };
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, [posts.length]);
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+        <Loader2 className="h-9 w-9 animate-spin text-white" />
+      </div>
+    );
+  }
+
+  if (posts.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50">
+        <Store className="h-14 w-14 text-white/20" />
+        <p className="text-white font-semibold">{t("feed.no_posts")}</p>
+        <p className="text-white/50 text-sm text-center px-8">{t("feed.no_posts_desc")}</p>
+        <ZivoMobileNav />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30">
-        <div className="flex items-center justify-center h-12 max-w-lg mx-auto px-4">
-          <h1 className="text-lg font-bold text-foreground tracking-tight">{t("nav.feed")}</h1>
-        </div>
+    <div className="fixed inset-0 bg-black">
+      {/* Snap-scroll reel container */}
+      <div
+        className="w-full h-full overflow-y-scroll snap-y snap-mandatory"
+        style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+      >
+        {posts.map((post, index) => (
+          <div
+            key={post.id}
+            ref={(el) => { cardRefs.current[index] = el; }}
+            className="w-full h-[100dvh] snap-start"
+          >
+            <ReelCard
+              post={post}
+              isActive={activeIndex === index}
+              globalMuted={globalMuted}
+              onToggleMute={() => setGlobalMuted((m) => !m)}
+              onNavigate={(slug) => navigate(`/grocery/shop/${slug}`)}
+            />
+          </div>
+        ))}
       </div>
 
-      {/* Feed content */}
-      <div className="max-w-lg mx-auto">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-7 w-7 animate-spin text-primary" />
-          </div>
-        ) : posts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-            <Store className="h-12 w-12 text-muted-foreground/20 mb-4" />
-            <p className="text-base font-medium text-foreground mb-1">{t("feed.no_posts")}</p>
-            <p className="text-sm text-muted-foreground">{t("feed.no_posts_desc")}</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-border/30">
-            <AnimatePresence>
-              {posts.map((post, index) => (
-                <motion.article
-                  key={post.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.3 }}
-                  className="bg-background"
-                >
-                  {/* Post header - store info */}
-                  <div
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer"
-                    onClick={() => post.store_slug && navigate(`/grocery/shop/${post.store_slug}`)}
-                  >
-                    <div className="w-9 h-9 rounded-full overflow-hidden bg-muted border border-border/50 flex-shrink-0">
-                      {post.store_logo ? (
-                        <img src={post.store_logo} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Store className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground truncate">{post.store_name}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground flex-shrink-0">{timeAgo(post.created_at)}</span>
-                  </div>
-
-                  {/* Media */}
-                  <FeedMediaCarousel urls={(post.media_urls || []).map(normalizeStorePostMediaUrl)} mediaType={post.media_type} />
-
-                  {/* Actions */}
-                  <div className="px-4 pt-3 pb-1 flex items-center gap-5">
-                    <button
-                      onClick={() => toggleLike(post.id)}
-                      className="touch-manipulation active:scale-90 transition-transform"
-                    >
-                      <Heart
-                        className={cn(
-                          "w-6 h-6 transition-colors",
-                          likedPosts.has(post.id)
-                            ? "text-red-500 fill-red-500"
-                            : "text-foreground"
-                        )}
-                      />
-                    </button>
-                    <button className="touch-manipulation active:scale-90 transition-transform">
-                      <MessageCircle className="w-6 h-6 text-foreground" />
-                    </button>
-                    <button className="touch-manipulation active:scale-90 transition-transform">
-                      <Share2 className="w-6 h-6 text-foreground" />
-                    </button>
-                  </div>
-
-                  {/* Caption */}
-                  {post.caption && (
-                    <div className="px-4 pb-3 pt-1">
-                      <p className="text-sm text-foreground">
-                        <span className="font-semibold mr-1.5">{post.store_name}</span>
-                        {post.caption}
-                      </p>
-                    </div>
-                  )}
-
-                  {!post.caption && <div className="pb-2" />}
-                </motion.article>
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
-      </div>
-
+      {/* Bottom navigation overlaid on top */}
       <ZivoMobileNav />
     </div>
   );
 }
+
