@@ -736,13 +736,8 @@ export default function AdminStoreEditPage() {
     setUploadingPostMedia(true);
 
     try {
-      const uploadFile = fileIsVideo ? await normalizeVideoUpload(file) : file;
-
-      if (uploadFile !== file) {
-        const normalizedPreviewUrl = URL.createObjectURL(uploadFile);
-        updatePostMediaItem(mediaItemId, (item) => ({ ...item, previewUrl: normalizedPreviewUrl }));
-        URL.revokeObjectURL(localPreviewUrl);
-      }
+      // Upload video directly without browser-side transcoding for speed & reliability
+      const uploadFile = file;
 
       const ext = uploadFile.name.split(".").pop() || "jpg";
       const path = `posts/${storeId}/${Date.now()}.${ext}`;
