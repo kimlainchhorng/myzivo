@@ -213,7 +213,7 @@ function AdminVideoPreview({
       if (looksStalled) {
         void runRecovery();
       }
-    }, autoPlay ? 1600 : 2200);
+    }, autoPlay ? 800 : 1200);
 
     return () => window.clearTimeout(timeoutId);
   }, [autoPlay, canRepair, hasLoadedFrame, recoveryStage, runRecovery]);
@@ -637,12 +637,24 @@ export default function AdminStoreEditPage() {
           resolve(result);
         };
 
-        const timeoutId = window.setTimeout(() => finalize(false), 4000);
+        const timeoutId = window.setTimeout(() => finalize(false), 5000);
 
-        video.preload = "metadata";
+        video.preload = "auto";
         video.muted = true;
         video.playsInline = true;
-        video.onloadedmetadata = () => finalize(Number.isFinite(video.duration) && video.duration > 0);
+
+        // Use canplaythrough for a stronger playability signal
+        video.oncanplaythrough = () => {
+          const hasDuration = Number.isFinite(video.duration) && video.duration > 0;
+          const hasVideo = video.videoWidth > 0 && video.videoHeight > 0;
+          finalize(hasDuration && hasVideo);
+        };
+        video.onloadedmetadata = () => {
+          // Early fail if metadata says duration is 0/NaN
+          if (!Number.isFinite(video.duration) || video.duration <= 0) {
+            finalize(false);
+          }
+        };
         video.onerror = () => finalize(false);
         video.src = objectUrl;
         video.load();
@@ -1742,11 +1754,6 @@ export default function AdminStoreEditPage() {
                               canRepair
                               onRepair={repairVideoPreviewSource}
                             />
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                              <div className="h-8 w-8 rounded-full bg-background/70 backdrop-blur-sm flex items-center justify-center">
-                                <Video className="h-4 w-4 text-foreground" />
-                              </div>
-                            </div>
                           </div>
                         ) : firstUrl ? (
                           <img src={normalizeStorePostMediaUrl(firstUrl)} alt="" className="w-full h-full object-cover" />
