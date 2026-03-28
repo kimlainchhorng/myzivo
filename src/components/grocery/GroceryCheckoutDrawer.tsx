@@ -210,11 +210,36 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const { isPlus } = useZivoPlus();
   const { isCambodia } = useCountry();
 
+  // Extract city from address for moto pricing lookup
+  const pickupCity = useMemo(() => {
+    if (!address) return isCambodia ? "Phnom Penh" : "default";
+    // Try to extract city from address string (e.g. "..., Phnom Penh, ...")
+    const parts = address.split(",").map(p => p.trim()).filter(Boolean);
+    // City is typically the second-to-last or third-to-last part
+    if (parts.length >= 3) return parts[parts.length - 3] || parts[parts.length - 2] || "default";
+    if (parts.length >= 2) return parts[parts.length - 2] || "default";
+    return isCambodia ? "Phnom Penh" : "default";
+  }, [address, isCambodia]);
+
+  const { data: cityPricingMap } = useCityPricing(pickupCity);
+
   const priorityFee = isPlus ? 0 : getPriorityFee(scheduler.speed);
   const effectiveDurationMinutes = routeMetrics?.durationMinutes ?? liveEta;
   const effectiveDistanceMiles = routeMetrics?.distanceMiles ?? (isCambodia ? 5 * 0.621371 : 3);
   const effectiveDistanceKm = effectiveDistanceMiles * 1.609344;
-  const deliveryFee = calcDeliveryFee(effectiveDistanceMiles, effectiveDurationMinutes);
+
+  // Calculate delivery fee using ZIVO Moto pricing from city_pricing table
+  const deliveryFee = useMemo(() => {
+    const motoPricing = cityPricingMap?.["moto"];
+    if (motoPricing) {
+      // moto pricing: base_fare + per_mile * distance + per_minute * duration
+      const raw = motoPricing.base_fare + motoPricing.per_mile * effectiveDistanceMiles + motoPricing.per_minute * effectiveDurationMinutes;
+      return Math.round(Math.max(motoPricing.minimum_fare, raw) * 100) / 100;
+    }
+    // Fallback to generic delivery fee if moto pricing not available
+    return calcDeliveryFee(effectiveDistanceMiles, effectiveDurationMinutes);
+  }, [cityPricingMap, effectiveDistanceMiles, effectiveDurationMinutes]);
+
   const distanceLabel = isCambodia
     ? `~${effectiveDistanceKm < 10 ? effectiveDistanceKm.toFixed(1) : Math.round(effectiveDistanceKm)}km`
     : `~${effectiveDistanceMiles < 10 ? effectiveDistanceMiles.toFixed(1) : Math.round(effectiveDistanceMiles)}mi`;
