@@ -26,6 +26,7 @@ import GroceryInlinePaymentForm from "@/components/grocery/GroceryInlinePaymentF
 import { getLiveEta } from "@/utils/storeStatus";
 import { GROCERY_STORES } from "@/config/groceryStores";
 import { SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee, calcMarkup, getMarkupPct } from "@/config/groceryPricing";
+import { getRoute } from "@/services/mapsApi";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useI18n } from "@/hooks/useI18n";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -68,6 +69,11 @@ interface GroceryCheckoutDrawerProps {
   storeCoords?: { lat: number; lng: number } | null;
   storeName?: string;
   storePaymentTypes?: StorePaymentType[];
+}
+
+interface GroceryRouteMetrics {
+  distanceMiles: number;
+  durationMinutes: number;
 }
 
 type SubstitutionPref = "contact_me" | "best_match" | "refund";
@@ -164,6 +170,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const storeName = items[0]?.store || "Walmart";
   const storeCfg = GROCERY_STORES.find(s => s.name.toLowerCase() === storeName.toLowerCase());
   const [liveEta, setLiveEta] = useState(storeCfg?.deliveryMin ?? 35);
+  const [routeMetrics, setRouteMetrics] = useState<GroceryRouteMetrics | null>(null);
   useEffect(() => {
     const compute = () => setLiveEta(getLiveEta(storeCfg?.deliveryMin ?? 35));
     compute();
@@ -171,15 +178,45 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
     return () => clearInterval(interval);
   }, [storeCfg]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!storeCoords || !addressCoords) {
+      setRouteMetrics(null);
+      return;
+    }
+
+    (async () => {
+      const route = await getRoute(storeCoords, addressCoords);
+      if (cancelled) return;
+
+      if (!route) {
+        setRouteMetrics(null);
+        return;
+      }
+
+      setRouteMetrics({
+        distanceMiles: route.distance_miles,
+        durationMinutes: route.duration_in_traffic_minutes ?? route.duration_minutes,
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeCoords, addressCoords]);
+
   const { isPlus } = useZivoPlus();
   const { isCambodia } = useCountry();
 
   const priorityFee = isPlus ? 0 : getPriorityFee(scheduler.speed);
-  // Distance-based delivery fee — Cambodia uses km, others use miles
-  const estimatedDistance = isCambodia ? 5 : 3; // ~5km or ~3mi
-  const estimatedMilesEquiv = isCambodia ? estimatedDistance * 0.621 : estimatedDistance;
-  const deliveryFee = calcDeliveryFee(estimatedMilesEquiv, liveEta);
-  const distanceLabel = isCambodia ? `~${estimatedDistance}km` : `~${estimatedDistance}mi`;
+  const effectiveDurationMinutes = routeMetrics?.durationMinutes ?? liveEta;
+  const effectiveDistanceMiles = routeMetrics?.distanceMiles ?? (isCambodia ? 5 * 0.621371 : 3);
+  const effectiveDistanceKm = effectiveDistanceMiles * 1.609344;
+  const deliveryFee = calcDeliveryFee(effectiveDistanceMiles, effectiveDurationMinutes);
+  const distanceLabel = isCambodia
+    ? `~${effectiveDistanceKm < 10 ? effectiveDistanceKm.toFixed(1) : Math.round(effectiveDistanceKm)}km`
+    : `~${effectiveDistanceMiles < 10 ? effectiveDistanceMiles.toFixed(1) : Math.round(effectiveDistanceMiles)}mi`;
   // Platform markup: 0% for Cambodia, 3-5% elsewhere
   const platformMarkup = isCambodia ? 0 : calcMarkup(total);
   const markupPct = isCambodia ? 0 : getMarkupPct(total);
@@ -467,8 +504,8 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   <div className="flex-1">
                     <p className="text-[12px] font-bold text-foreground">
                       {t("grocery.checkout.estimated_delivery")}:{" "}
-                      <motion.span key={liveEta} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-primary">
-                        {liveEta}–{liveEta + 15} {t("grocery.checkout.min")}
+                      <motion.span key={effectiveDurationMinutes} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-primary">
+                        {effectiveDurationMinutes} {t("grocery.checkout.min")}
                       </motion.span>
                     </p>
                     <p className="text-[10px] text-muted-foreground">
@@ -811,7 +848,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 <GroceryDeliveryScheduler
                   state={scheduler}
                   onChange={setScheduler}
-                  baseEta={liveEta}
+                  baseEta={effectiveDurationMinutes}
                 />
 
                 <div className="mt-4" />
@@ -1019,8 +1056,8 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   <div className="flex-1">
                     <span className="text-[11px] font-bold text-foreground">
                       Est. delivery:{" "}
-                      <motion.span key={liveEta} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-primary">
-                        {liveEta}–{liveEta + 15} min
+                      <motion.span key={effectiveDurationMinutes} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-primary">
+                        {effectiveDurationMinutes} min
                       </motion.span>
                     </span>
                   </div>
