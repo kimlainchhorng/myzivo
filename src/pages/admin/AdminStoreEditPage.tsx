@@ -1908,15 +1908,17 @@ export default function AdminStoreEditPage() {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Posts</p>
                   <span className="text-[10px] text-muted-foreground">{posts.length} total</span>
                 </div>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                  {posts.slice(0, 10).map((post: any) => {
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {posts.slice(0, 12).map((post: any) => {
                     const firstUrl = (post.media_urls || [])[0];
                     const mediaCount = (post.media_urls || []).length;
                     const isVideo = firstUrl && isVideoUrl(normalizeStorePostMediaUrl(firstUrl));
+                    const postDate = post.created_at ? format(new Date(post.created_at), "MMM d") : "";
                     return (
-                      <div key={post.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
-                        {isVideo && firstUrl ? (
-                          <div className="relative h-full w-full bg-muted">
+                      <div key={post.id} className="relative group rounded-xl overflow-hidden border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
+                        {/* Thumbnail */}
+                        <div className="aspect-square relative cursor-pointer" onClick={() => setViewPostId(post.id)}>
+                          {isVideo && firstUrl ? (
                             <AdminVideoPreview
                               src={normalizeStorePostMediaUrl(firstUrl)}
                               className="h-full w-full"
@@ -1928,38 +1930,71 @@ export default function AdminStoreEditPage() {
                               canRepair
                               onRepair={repairVideoPreviewSource}
                             />
-                          </div>
-                        ) : firstUrl ? (
-                          <img src={normalizeStorePostMediaUrl(firstUrl)} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-muted">
-                            <ImagePlus className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                        )}
-                        {/* Media type badge */}
-                        <div className="absolute top-1 left-1 z-10 flex items-center gap-0.5">
-                          {isVideo && (
-                            <div className="rounded bg-background/80 px-1 py-0.5 flex items-center gap-0.5">
-                              <Video className="h-2.5 w-2.5 text-foreground" />
+                          ) : firstUrl ? (
+                            <img src={normalizeStorePostMediaUrl(firstUrl)} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-muted">
+                              <ImagePlus className="h-5 w-5 text-muted-foreground" />
                             </div>
                           )}
-                          {mediaCount > 1 && (
-                            <div className="rounded bg-background/80 px-1 py-0.5">
-                              <span className="text-[9px] font-medium text-foreground">{mediaCount}</span>
+                          {/* Overlay badges */}
+                          <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1">
+                            {isVideo && (
+                              <div className="rounded-md bg-background/80 backdrop-blur-sm px-1.5 py-0.5 flex items-center gap-0.5">
+                                <Video className="h-2.5 w-2.5 text-foreground" />
+                              </div>
+                            )}
+                            {mediaCount > 1 && (
+                              <div className="rounded-md bg-background/80 backdrop-blur-sm px-1.5 py-0.5">
+                                <span className="text-[9px] font-medium text-foreground">{mediaCount} files</span>
+                              </div>
+                            )}
+                          </div>
+                          {post.scheduled_at && new Date(post.scheduled_at) > new Date() && (
+                            <div className="absolute top-1.5 right-1.5 z-10 rounded-md bg-accent/90 backdrop-blur-sm px-1.5 py-0.5 flex items-center gap-0.5">
+                              <Clock className="h-2.5 w-2.5 text-accent-foreground" />
+                              <span className="text-[9px] font-medium text-accent-foreground">Scheduled</span>
                             </div>
                           )}
                         </div>
-                        {post.caption && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5">
-                            <p className="text-[10px] text-white line-clamp-1">{post.caption}</p>
+                        {/* Post info */}
+                        <div className="p-2 space-y-1.5">
+                          {post.caption && (
+                            <p className="text-[11px] text-foreground line-clamp-2 leading-tight">{post.caption}</p>
+                          )}
+                          {/* Analytics row */}
+                          <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                            <span className="flex items-center gap-0.5"><Heart className="h-3 w-3" /> {post.likes_count || 0}</span>
+                            <span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3" /> {post.comments_count || 0}</span>
+                            <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" /> {post.view_count || 0}</span>
                           </div>
-                        )}
-                        <button
-                          onClick={() => setDeletePostId(post.id)}
-                          className="absolute top-1 right-1 z-20 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
+                          {/* Meta row */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              {post.location && (
+                                <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground"><MapPin className="h-2.5 w-2.5" />{post.location.length > 12 ? post.location.slice(0, 12) + "…" : post.location}</span>
+                              )}
+                              <span className="text-[9px] text-muted-foreground">{postDate}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => openEditPost(post)} className="h-5 w-5 rounded-full hover:bg-muted flex items-center justify-center transition-colors" title="Edit">
+                                <Edit className="h-3 w-3 text-muted-foreground" />
+                              </button>
+                              <button onClick={() => setDeletePostId(post.id)} className="h-5 w-5 rounded-full hover:bg-destructive/10 flex items-center justify-center transition-colors" title="Delete">
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              </button>
+                            </div>
+                          </div>
+                          {/* Hashtags */}
+                          {post.hashtags && post.hashtags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {post.hashtags.slice(0, 3).map((tag: string) => (
+                                <span key={tag} className="text-[9px] text-primary font-medium">{tag}</span>
+                              ))}
+                              {post.hashtags.length > 3 && <span className="text-[9px] text-muted-foreground">+{post.hashtags.length - 3}</span>}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
