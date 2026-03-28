@@ -814,68 +814,70 @@ export default function AdminStoreEditPage() {
   };
 
   const normalizeVideoUpload = async (file: File, options?: { silent?: boolean }) => {
-    // Quick check — if the original is already playable, skip everything
-    try {
-      const originalIsPlayable = await probeVideoFile(file);
-      if (originalIsPlayable) {
+    // For common browser-safe formats, try a quick probe first
+    const isMp4 = file.type === "video/mp4" || file.name.toLowerCase().endsWith(".mp4");
+    const isWebm = file.type === "video/webm" || file.name.toLowerCase().endsWith(".webm");
+
+    if (isMp4 || isWebm) {
+      try {
+        const isPlayable = await withTimeout(probeVideoFile(file), 3000, "Probe timeout");
+        if (isPlayable) return file;
+      } catch {
+        // Probe timed out or failed — still try to upload as-is for mp4/webm
+        console.warn("[PostMedia] Quick probe failed, uploading original mp4/webm.");
         return file;
       }
-    } catch {
-      // probe failed — try normalization anyway
     }
 
     if (!options?.silent) {
       toast.info("Optimizing video for browser playback...");
     }
 
-    // Try each normalization strategy, but if ALL fail, upload the original
+    // Wrap entire normalization in a global timeout — never block upload for more than 30s
     try {
-      try {
-        const audioNormalizedFile = await withTimeout(
-          normalizeVideoAudioForBrowser(file),
-          20000,
-          "Audio normalization took too long.",
-        );
-        const audioNormalizedIsPlayable = await probeVideoFile(audioNormalizedFile);
-
-        if (audioNormalizedIsPlayable) {
-          return audioNormalizedFile;
+      const normalized = await withTimeout((async () => {
+        try {
+          const audioNormalizedFile = await withTimeout(
+            normalizeVideoAudioForBrowser(file),
+            20000,
+            "Audio normalization took too long.",
+          );
+          const audioNormalizedIsPlayable = await probeVideoFile(audioNormalizedFile);
+          if (audioNormalizedIsPlayable) return audioNormalizedFile;
+        } catch (error) {
+          console.warn("[PostMedia] Audio normalization failed:", error);
         }
-      } catch (error) {
-        console.warn("[PostMedia] Audio normalization failed:", error);
-      }
 
-      try {
-        const mutedPreviewFile = await withTimeout(
-          stripVideoAudioForPreview(file),
-          15000,
-          "Muted preview conversion took too long.",
-        );
-        const mutedPreviewIsPlayable = await probeVideoFile(mutedPreviewFile);
-
-        if (mutedPreviewIsPlayable) {
-          return mutedPreviewFile;
+        try {
+          const mutedPreviewFile = await withTimeout(
+            stripVideoAudioForPreview(file),
+            15000,
+            "Muted preview conversion took too long.",
+          );
+          const mutedPreviewIsPlayable = await probeVideoFile(mutedPreviewFile);
+          if (mutedPreviewIsPlayable) return mutedPreviewFile;
+        } catch (error) {
+          console.warn("[PostMedia] Muted preview conversion failed:", error);
         }
-      } catch (error) {
-        console.warn("[PostMedia] Muted preview conversion failed:", error);
-      }
 
-      try {
-        const normalizedFile = await withTimeout(
-          transcodeVideoForBrowser(file),
-          45000,
-          "Video optimization took too long.",
-        );
-        const normalizedIsPlayable = await probeVideoFile(normalizedFile);
-
-        if (normalizedIsPlayable) {
-          return normalizedFile;
+        try {
+          const normalizedFile = await withTimeout(
+            transcodeVideoForBrowser(file),
+            45000,
+            "Video optimization took too long.",
+          );
+          const normalizedIsPlayable = await probeVideoFile(normalizedFile);
+          if (normalizedIsPlayable) return normalizedFile;
+        } catch (error) {
+          console.warn("[PostMedia] Full transcode failed:", error);
         }
-      } catch (error) {
-        console.warn("[PostMedia] Full transcode failed:", error);
-      }
-    } catch (outerError) {
-      console.warn("[PostMedia] Normalization pipeline error:", outerError);
+
+        return null;
+      })(), 30000, "Overall normalization timeout");
+
+      if (normalized) return normalized;
+    } catch (error) {
+      console.warn("[PostMedia] Normalization pipeline timed out:", error);
     }
 
     // All normalization attempts failed — upload the original file as-is
