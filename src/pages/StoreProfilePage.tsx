@@ -800,6 +800,7 @@ export default function StoreProfilePage() {
           onUpdateQuantity={cart.updateQuantity}
           storeCoords={store?.latitude && store?.longitude ? { lat: store.latitude, lng: store.longitude } : null}
           storeName={store?.name}
+          storePaymentTypes={(store?.payment_types as any[]) || ["cash", "card"]}
         />
       )}
       {store && (
