@@ -36,7 +36,7 @@ import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import StoreMapPicker from "@/components/admin/StoreMapPicker";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 
 
@@ -122,6 +122,8 @@ function AdminVideoPreview({
   const [isRepairing, setIsRepairing] = useState(false);
   const [triedBlobFallback, setTriedBlobFallback] = useState(false);
   const [blobSrc, setBlobSrc] = useState<string | null>(null);
+  const [hasLoadedFrame, setHasLoadedFrame] = useState(false);
+  const [hasAttemptedRecovery, setHasAttemptedRecovery] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -133,6 +135,8 @@ function AdminVideoPreview({
     setCurrentSrc(src);
     setIsRepairing(false);
     setTriedBlobFallback(false);
+    setHasLoadedFrame(false);
+    setHasAttemptedRecovery(false);
     setBlobSrc((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return null;
@@ -165,6 +169,50 @@ function AdminVideoPreview({
     }
   };
 
+  const tryAutoplay = useCallback((video: HTMLVideoElement) => {
+    if (!autoPlay) return;
+    video.muted = true;
+    void video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+  }, [autoPlay]);
+
+  const runRecovery = useCallback(async () => {
+    if (hasAttemptedRecovery || isRepairing) return;
+
+    setHasAttemptedRecovery(true);
+
+    if (!blobSrc) {
+      const blobWorked = await tryBlobFallback(currentSrc);
+      if (blobWorked) return;
+    }
+
+    if (!canRepair || !onRepair || currentSrc.startsWith("blob:")) return;
+
+    setIsRepairing(true);
+    try {
+      const repairedSrc = await onRepair(src);
+      setCurrentSrc(repairedSrc);
+    } catch {
+      // ignore and keep current UI state
+    } finally {
+      setIsRepairing(false);
+    }
+  }, [blobSrc, canRepair, currentSrc, hasAttemptedRecovery, isRepairing, onRepair, src]);
+
+  useEffect(() => {
+    if (!canRepair || hasLoadedFrame || hasAttemptedRecovery) return;
+
+    const timeoutId = window.setTimeout(() => {
+      const video = videoRef.current;
+      const looksStalled = !video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || video.videoWidth === 0 || video.videoHeight === 0;
+
+      if (looksStalled) {
+        void runRecovery();
+      }
+    }, autoPlay ? 1600 : 2200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [autoPlay, canRepair, hasAttemptedRecovery, hasLoadedFrame, runRecovery]);
+
   const handlePlayToggle = () => {
     const vid = videoRef.current;
     if (!vid) return;
@@ -196,12 +244,15 @@ function AdminVideoPreview({
         }}
         onLoadedData={(event) => {
           setIsRepairing(false);
+          setHasLoadedFrame(true);
           ensureVisibleVideoFrame(event.currentTarget);
           captureVideoPosterFrame(event.currentTarget, setPosterUrl);
-          if (autoPlay) {
-            event.currentTarget.muted = true;
-            void event.currentTarget.play().then(() => setIsPlaying(true)).catch(() => {});
-          }
+          tryAutoplay(event.currentTarget);
+        }}
+        onSeeked={(event) => {
+          setHasLoadedFrame(true);
+          captureVideoPosterFrame(event.currentTarget, setPosterUrl);
+          tryAutoplay(event.currentTarget);
         }}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
@@ -209,26 +260,8 @@ function AdminVideoPreview({
           if (!loop) setIsPlaying(false);
         }}
         onError={() => {
-          void (async () => {
-            if (!blobSrc) {
-              const blobWorked = await tryBlobFallback(currentSrc);
-              if (blobWorked) return;
-            }
-
-            if (!canRepair || !onRepair || isRepairing || currentSrc.startsWith("blob:")) return;
-
-            setIsRepairing(true);
-            void onRepair(src)
-              .then((repairedSrc) => {
-                setCurrentSrc(repairedSrc);
-              })
-              .catch(() => {
-                // ignore and keep current UI state
-              })
-              .finally(() => {
-                setIsRepairing(false);
-              });
-          })();
+          setIsPlaying(false);
+          void runRecovery();
         }}
       />
       {/* Large tap-to-play overlay */}
