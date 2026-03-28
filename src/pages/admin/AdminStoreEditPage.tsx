@@ -380,6 +380,22 @@ export default function AdminStoreEditPage() {
     setPostMediaItems((prev) => prev.map((item) => (item.id === id ? updater(item) : item)));
   };
 
+  const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number, message: string) => {
+    return await new Promise<T>((resolve, reject) => {
+      const timeoutId = window.setTimeout(() => reject(new Error(message)), timeoutMs);
+
+      promise
+        .then((value) => {
+          window.clearTimeout(timeoutId);
+          resolve(value);
+        })
+        .catch((error) => {
+          window.clearTimeout(timeoutId);
+          reject(error);
+        });
+    });
+  };
+
   const probeVideoFile = async (file: File) => {
     const objectUrl = URL.createObjectURL(file);
 
@@ -476,8 +492,17 @@ export default function AdminStoreEditPage() {
   };
 
   const normalizeVideoUpload = async (file: File) => {
+    const originalIsPlayable = await probeVideoFile(file);
+    if (originalIsPlayable) {
+      return file;
+    }
+
     toast.info("Optimizing video for browser playback...");
-    const normalizedFile = await transcodeVideoForBrowser(file);
+    const normalizedFile = await withTimeout(
+      transcodeVideoForBrowser(file),
+      45000,
+      "Video optimization took too long.",
+    );
     const normalizedIsPlayable = await probeVideoFile(normalizedFile);
 
     if (!normalizedIsPlayable) {
@@ -537,9 +562,12 @@ export default function AdminStoreEditPage() {
       }
 
       const ext = uploadFile.name.split(".").pop() || "jpg";
-      const path = `posts/${storeId}/${Date.now()}.${ext}`;
+      const path = `posts/${storeId}/${Date.now()}-${mediaItemId}.${ext}`;
       console.log("[PostMedia] uploading to storage path:", path);
-      const { error: upErr, data: uploadData } = await supabase.storage.from("store-posts").upload(path, uploadFile, { upsert: true });
+      const { error: upErr, data: uploadData } = await supabase.storage.from("store-posts").upload(path, uploadFile, {
+        upsert: true,
+        contentType: uploadFile.type || undefined,
+      });
       console.log("[PostMedia] upload result:", { error: upErr, data: uploadData });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
