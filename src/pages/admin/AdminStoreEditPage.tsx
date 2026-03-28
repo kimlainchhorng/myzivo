@@ -2736,21 +2736,23 @@ export default function AdminStoreEditPage() {
                   <div key={`${preview.previewUrl}-${i}`}>
                     <div className="relative overflow-hidden rounded-lg border border-border bg-muted/20">
                       {preview.isVideo ? (
-                        <AdminVideoPreview
-                          src={preview.status === "done" && preview.uploadedUrl ? preview.uploadedUrl : preview.previewUrl}
-                          className="rounded-lg"
-                          videoClassName="rounded-lg bg-muted object-contain"
-                          controls
-                          muted
-                          autoPlay={false}
-                          loop
-                        />
-                        {preview.status === "done" && (
-                          <div className="absolute bottom-1 left-1 z-10 flex items-center gap-1 rounded bg-green-600/90 px-1.5 py-0.5">
-                            <CheckCircle2 className="h-3 w-3 text-white" />
-                            <span className="text-[10px] font-medium text-white">Ready</span>
-                          </div>
-                        )}
+                        <>
+                          <AdminVideoPreview
+                            src={preview.status === "done" && preview.uploadedUrl ? preview.uploadedUrl : preview.previewUrl}
+                            className="rounded-lg"
+                            videoClassName="rounded-lg bg-muted object-contain"
+                            controls
+                            muted
+                            autoPlay={false}
+                            loop
+                          />
+                          {preview.status === "done" && (
+                            <div className="absolute bottom-1 left-1 z-10 flex items-center gap-1 rounded bg-green-600/90 px-1.5 py-0.5">
+                              <CheckCircle2 className="h-3 w-3 text-white" />
+                              <span className="text-[10px] font-medium text-white">Ready</span>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <img
                           src={preview.previewUrl}
