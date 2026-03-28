@@ -14,7 +14,7 @@ import {
   Smartphone, Wallet, X, Baby, Sparkles,
   Route, Timer, Bell, Package, Plane, Hotel, TrendingDown, Gem,
   PawPrint, Accessibility, Plus, ShoppingCart, Fuel, UtensilsCrossed, Store, Pill,
-  Globe
+  Globe, Bike
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
