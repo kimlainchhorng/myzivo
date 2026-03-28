@@ -123,7 +123,7 @@ function AdminVideoPreview({
   const [triedBlobFallback, setTriedBlobFallback] = useState(false);
   const [blobSrc, setBlobSrc] = useState<string | null>(null);
   const [hasLoadedFrame, setHasLoadedFrame] = useState(false);
-  const [hasAttemptedRecovery, setHasAttemptedRecovery] = useState(false);
+  const [recoveryStage, setRecoveryStage] = useState<"idle" | "blob" | "repair">("idle");
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -136,7 +136,7 @@ function AdminVideoPreview({
     setIsRepairing(false);
     setTriedBlobFallback(false);
     setHasLoadedFrame(false);
-    setHasAttemptedRecovery(false);
+    setRecoveryStage("idle");
     setBlobSrc((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return null;
@@ -176,30 +176,34 @@ function AdminVideoPreview({
   }, [autoPlay]);
 
   const runRecovery = useCallback(async () => {
-    if (hasAttemptedRecovery || isRepairing) return;
+    if (isRepairing) return;
 
-    setHasAttemptedRecovery(true);
-
-    if (!blobSrc) {
+    if (recoveryStage === "idle" && !blobSrc) {
+      setRecoveryStage("blob");
       const blobWorked = await tryBlobFallback(currentSrc);
       if (blobWorked) return;
     }
 
-    if (!canRepair || !onRepair || currentSrc.startsWith("blob:")) return;
+    if (!canRepair || !onRepair || recoveryStage === "repair") return;
 
+    setRecoveryStage("repair");
     setIsRepairing(true);
     try {
       const repairedSrc = await onRepair(src);
+      setBlobSrc((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
       setCurrentSrc(repairedSrc);
     } catch {
       // ignore and keep current UI state
     } finally {
       setIsRepairing(false);
     }
-  }, [blobSrc, canRepair, currentSrc, hasAttemptedRecovery, isRepairing, onRepair, src]);
+  }, [blobSrc, canRepair, currentSrc, isRepairing, onRepair, recoveryStage, src]);
 
   useEffect(() => {
-    if (!canRepair || hasLoadedFrame || hasAttemptedRecovery) return;
+    if (!canRepair || hasLoadedFrame || recoveryStage === "repair") return;
 
     const timeoutId = window.setTimeout(() => {
       const video = videoRef.current;
@@ -211,7 +215,7 @@ function AdminVideoPreview({
     }, autoPlay ? 1600 : 2200);
 
     return () => window.clearTimeout(timeoutId);
-  }, [autoPlay, canRepair, hasAttemptedRecovery, hasLoadedFrame, runRecovery]);
+  }, [autoPlay, canRepair, hasLoadedFrame, recoveryStage, runRecovery]);
 
   const handlePlayToggle = () => {
     const vid = videoRef.current;
