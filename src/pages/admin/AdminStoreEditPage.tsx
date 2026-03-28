@@ -776,7 +776,21 @@ export default function AdminStoreEditPage() {
 
     const blob = await response.blob();
     const file = new File([blob], "preview-repair.mp4", { type: blob.type || "video/mp4" });
-    const repairedFile = await normalizeVideoUpload(file, { silent: true });
+
+    // Try stripping audio first (fastest), then full transcode
+    let repairedFile: File;
+    try {
+      repairedFile = await withTimeout(stripVideoAudioForPreview(file), 15000, "Strip audio timeout");
+      const isPlayable = await probeVideoFile(repairedFile);
+      if (!isPlayable) throw new Error("Still not playable");
+    } catch {
+      try {
+        repairedFile = await withTimeout(transcodeVideoForBrowser(file), 45000, "Transcode timeout");
+      } catch {
+        throw new Error("Could not repair video for preview.");
+      }
+    }
+
     const repairedUrl = URL.createObjectURL(repairedFile);
     repairedPreviewUrlsRef.current.set(normalizedUrl, repairedUrl);
     return repairedUrl;
@@ -810,28 +824,11 @@ export default function AdminStoreEditPage() {
     startPostMediaProgressTimer(mediaItemId, fileIsVideo ? 42 : 78);
 
     try {
-      let uploadFile = file;
+      // Always upload the original file directly — no client-side transcoding.
+      // Videos are already H.264 MP4 which is browser-compatible for playback.
+      const uploadFile = file;
       if (fileIsVideo) {
-        try {
-          uploadFile = await normalizeVideoUpload(file);
-          const normalizedPreviewUrl = URL.createObjectURL(uploadFile);
-          updatePostMediaItem(mediaItemId, (item) => ({
-            ...item,
-            previewUrl: normalizedPreviewUrl,
-            progress: Math.max(item.progress, 58),
-            sourceFile: uploadFile,
-          }));
-          startPostMediaProgressTimer(mediaItemId, 88);
-          URL.revokeObjectURL(localPreviewUrl);
-        } catch (transcodeErr: any) {
-          console.warn("[PostMedia] Transcoding failed, uploading original:", transcodeErr);
-          updatePostMediaItem(mediaItemId, (item) => ({
-            ...item,
-            progress: Math.max(item.progress, 35),
-          }));
-          startPostMediaProgressTimer(mediaItemId, 82);
-          toast.warning("Video optimization failed — uploading original file.");
-        }
+        startPostMediaProgressTimer(mediaItemId, 85);
       }
 
       const ext = uploadFile.name.split(".").pop() || "jpg";
