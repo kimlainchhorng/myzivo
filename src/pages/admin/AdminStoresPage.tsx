@@ -382,7 +382,12 @@ export default function AdminStoresPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Phone</Label>
-                <Input value={form.phone} onChange={e => updateField("phone", e.target.value)} placeholder="023 900 888" />
+                <div className="flex gap-1">
+                  <span className="flex h-10 items-center rounded-md border border-input bg-muted px-2 text-sm text-muted-foreground whitespace-nowrap">
+                    {{ KH: "+855", US: "+1", VN: "+84", TH: "+66", CN: "+86", KR: "+82", JP: "+81", IN: "+91", GB: "+44", AU: "+61", SG: "+65", MY: "+60", PH: "+63", ID: "+62", LA: "+856", MM: "+95" }[form.market] || "+855"}
+                  </span>
+                  <Input value={form.phone} onChange={e => updateField("phone", e.target.value)} placeholder="23 900 888" className="flex-1" />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Hours</Label>
