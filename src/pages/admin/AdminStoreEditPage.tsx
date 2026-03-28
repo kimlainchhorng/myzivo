@@ -813,78 +813,47 @@ export default function AdminStoreEditPage() {
     }
   };
 
-  const normalizeVideoUpload = async (file: File, options?: { silent?: boolean }) => {
-    // For common browser-safe formats, try a quick probe first
+  const normalizeVideoUpload = async (file: File, _options?: { silent?: boolean }) => {
+    // MP4 and WebM are natively supported by all modern browsers — upload directly
     const isMp4 = file.type === "video/mp4" || file.name.toLowerCase().endsWith(".mp4");
     const isWebm = file.type === "video/webm" || file.name.toLowerCase().endsWith(".webm");
 
     if (isMp4 || isWebm) {
-      try {
-        const isPlayable = await withTimeout(probeVideoFile(file), 3000, "Probe timeout");
-        if (isPlayable) return file;
-      } catch {
-        // Probe timed out or failed — still try to upload as-is for mp4/webm
-        console.warn("[PostMedia] Quick probe failed, uploading original mp4/webm.");
-        return file;
-      }
+      console.log("[PostMedia] Browser-native format detected, uploading directly:", file.type);
+      return file;
     }
 
-    if (!options?.silent) {
-      toast.info("Optimizing video for browser playback...");
-    }
+    // For non-standard formats (MOV, AVI, MKV, etc.), try quick normalization
+    console.log("[PostMedia] Non-standard format, attempting normalization:", file.type);
+    toast.info("Converting video for web playback...");
 
-    // Wrap entire normalization in a global timeout — never block upload for more than 30s
     try {
       const normalized = await withTimeout((async () => {
         try {
-          const audioNormalizedFile = await withTimeout(
-            normalizeVideoAudioForBrowser(file),
-            20000,
-            "Audio normalization took too long.",
-          );
-          const audioNormalizedIsPlayable = await probeVideoFile(audioNormalizedFile);
-          if (audioNormalizedIsPlayable) return audioNormalizedFile;
+          const transcoded = await withTimeout(transcodeVideoForBrowser(file), 30000, "Transcode timeout");
+          return transcoded;
         } catch (error) {
-          console.warn("[PostMedia] Audio normalization failed:", error);
+          console.warn("[PostMedia] Transcode failed:", error);
         }
 
         try {
-          const mutedPreviewFile = await withTimeout(
-            stripVideoAudioForPreview(file),
-            15000,
-            "Muted preview conversion took too long.",
-          );
-          const mutedPreviewIsPlayable = await probeVideoFile(mutedPreviewFile);
-          if (mutedPreviewIsPlayable) return mutedPreviewFile;
+          const stripped = await withTimeout(stripVideoAudioForPreview(file), 15000, "Strip audio timeout");
+          return stripped;
         } catch (error) {
-          console.warn("[PostMedia] Muted preview conversion failed:", error);
-        }
-
-        try {
-          const normalizedFile = await withTimeout(
-            transcodeVideoForBrowser(file),
-            45000,
-            "Video optimization took too long.",
-          );
-          const normalizedIsPlayable = await probeVideoFile(normalizedFile);
-          if (normalizedIsPlayable) return normalizedFile;
-        } catch (error) {
-          console.warn("[PostMedia] Full transcode failed:", error);
+          console.warn("[PostMedia] Strip audio failed:", error);
         }
 
         return null;
-      })(), 30000, "Overall normalization timeout");
+      })(), 35000, "Overall normalization timeout");
 
       if (normalized) return normalized;
     } catch (error) {
-      console.warn("[PostMedia] Normalization pipeline timed out:", error);
+      console.warn("[PostMedia] Normalization timed out:", error);
     }
 
-    // All normalization attempts failed — upload the original file as-is
-    console.warn("[PostMedia] All normalization failed, uploading original file.");
-    if (!options?.silent) {
-      toast.info("Uploading original video (optimization unavailable).");
-    }
+    // Fallback: upload original as-is
+    console.warn("[PostMedia] Normalization failed, uploading original file.");
+    toast.info("Uploading original video.");
     return file;
   };
 
