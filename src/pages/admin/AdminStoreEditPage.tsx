@@ -1535,16 +1535,15 @@ export default function AdminStoreEditPage() {
                     return (
                       <div key={post.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
                         {isVideo && firstUrl ? (
-                          <div className="relative w-full h-full">
-                            <video
+                          <div className="relative h-full w-full bg-muted">
+                            <AdminVideoPreview
                               src={normalizeStorePostMediaUrl(firstUrl)}
-                              className="w-full h-full object-cover"
+                              className="h-full w-full"
+                              videoClassName="h-full w-full object-cover"
+                              controls={false}
                               muted
-                              preload="metadata"
-                              onLoadedData={(e) => {
-                                const vid = e.currentTarget;
-                                if (vid.duration > 0) vid.currentTime = Math.min(vid.duration * 0.1, 1);
-                              }}
+                              loop
+                              autoPlay
                             />
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                               <div className="h-8 w-8 rounded-full bg-background/70 backdrop-blur-sm flex items-center justify-center">
