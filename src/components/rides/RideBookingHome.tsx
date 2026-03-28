@@ -2364,6 +2364,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
               showUserLocationDot={!pickup}
               onLocateUser={handleLocateUser}
               routePolyline={viewStep === "search" && pinPlacementMode ? null : (routeData?.polyline || null)}
+              trafficSegments={viewStep === "search" && pinPlacementMode ? null : (routeData?.traffic_segments || null)}
               onCenterChanged={handleMapCenterChanged}
               suppressAutoViewport={viewStep === "search" && (!pickupConfirmed || !!pinPlacementMode)}
               mapInteractive={viewStep !== "search" || !pickupConfirmed || !!pinPlacementMode}
