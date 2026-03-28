@@ -2091,16 +2091,28 @@ export default function AdminStoreEditPage() {
                   <div className="space-y-1">
                     <Label className="text-xs">{t("admin.store.model")} *</Label>
                     {productForm.car_make === "BYD" ? (
-                      <select
-                        value={productForm.car_model}
-                        onChange={e => updateProductField("car_model", e.target.value)}
-                        className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
-                      >
-                        <option value="">Select Model</option>
-                        {["Atto 3","Dolphin","Seal","Han","Tang","Song Plus","Song Pro","Yuan Plus","Shark","Sealion 6","Sealion 7","Denza D9","Yangwang U8","Yangwang U9","e6","T3","Other"].map(m => (
-                          <option key={m} value={m}>{m}</option>
-                        ))}
-                      </select>
+                      <>
+                        <select
+                          value={["Atto 3","Dolphin","Seal","Han","Tang","Song Plus","Song Pro","Yuan Plus","Shark","Sealion 6","Sealion 7","Denza D9","Yangwang U8","Yangwang U9","e6","T3"].includes(productForm.car_model) ? productForm.car_model : productForm.car_model ? "__other__" : ""}
+                          onChange={e => {
+                            if (e.target.value === "__other__") {
+                              updateProductField("car_model", "");
+                            } else {
+                              updateProductField("car_model", e.target.value);
+                            }
+                          }}
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                        >
+                          <option value="">Select Model</option>
+                          {["Atto 3","Dolphin","Seal","Han","Tang","Song Plus","Song Pro","Yuan Plus","Shark","Sealion 6","Sealion 7","Denza D9","Yangwang U8","Yangwang U9","e6","T3"].map(m => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                          <option value="__other__">+ Other (custom)</option>
+                        </select>
+                        {!["Atto 3","Dolphin","Seal","Han","Tang","Song Plus","Song Pro","Yuan Plus","Shark","Sealion 6","Sealion 7","Denza D9","Yangwang U8","Yangwang U9","e6","T3",""].includes(productForm.car_model) && (
+                          <Input value={productForm.car_model} onChange={e => updateProductField("car_model", e.target.value)} placeholder="Enter custom model" className="h-9 text-sm mt-1" />
+                        )}
+                      </>
                     ) : (
                       <Input value={productForm.car_model} onChange={e => updateProductField("car_model", e.target.value)} placeholder="e.g. Camry" className="h-9 text-sm" />
                     )}
