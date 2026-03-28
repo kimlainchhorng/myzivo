@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
+import ffmpegWorkerUrl from "@ffmpeg/ffmpeg/worker?url";
 import ffmpegCoreUrl from "@ffmpeg/core?url";
 import ffmpegWasmUrl from "@ffmpeg/core/wasm?url";
 import { supabase } from "@/integrations/supabase/client";
@@ -660,6 +661,7 @@ export default function AdminStoreEditPage() {
         await ffmpeg.load({
           coreURL: ffmpegCoreUrl,
           wasmURL: ffmpegWasmUrl,
+          workerURL: ffmpegWorkerUrl,
         });
         ffmpegRef.current = ffmpeg;
         return ffmpeg;
