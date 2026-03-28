@@ -2220,165 +2220,169 @@ export default function AdminStoreEditPage() {
               )}
             </div>
 
-            {/* Unit selector */}
-            <div className="space-y-2">
-              <Label>Unit / ឯកតា</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {["ចំនួន", "គីឡូ", "កញ្ចប់", "ដប", "កំប៉ុង", "ប្រអប់", "ដុំ", "ចាន", "កែវ", "ថង់", "kg", "g", "pcs", "pack", "bottle", "box", "liter", "dozen"].map(u => (
-                  <button
-                    key={u}
-                    type="button"
-                    onClick={() => updateProductField("unit", productForm.unit === u ? "" : u)}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors",
-                      productForm.unit === u
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50"
-                    )}
-                  >
-                    {u}
-                  </button>
-                ))}
-              </div>
-              <Input
-                value={productForm.unit || ""}
-                onChange={e => updateProductField("unit", e.target.value)}
-                placeholder="Custom unit..."
-                className="mt-1"
-              />
-            </div>
-
-            {/* ── Size Variants / តម្លៃតាមទំហំ ── */}
-            <div className="space-y-3 rounded-xl border border-border/50 bg-muted/30 p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Ruler className="h-4 w-4 text-primary" />
-                  <Label className="font-semibold text-sm">Size Prices / តម្លៃតាមទំហំ</Label>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs gap-1"
-                  onClick={() => {
-                    const variants = [...(productForm.size_variants || [])];
-                    variants.push({ size: "", price_khr: 0, price_usd: 0 });
-                    updateProductField("size_variants", variants);
-                  }}
-                >
-                  <Plus className="h-3 w-3" /> Add Size
-                </Button>
-              </div>
-              {(productForm.size_variants || []).length > 0 && (
+            {form.category !== "car-dealership" && (
+              <>
+                {/* Unit selector */}
                 <div className="space-y-2">
-                  {(productForm.size_variants || []).map((v: { size: string; price_khr: number; price_usd: number }, idx: number) => (
-                    <div key={idx} className="space-y-1.5 rounded-lg border border-border/40 bg-background/50 p-2.5">
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={v.size}
-                          onChange={e => {
-                            const variants = [...(productForm.size_variants || [])];
-                            variants[idx] = { ...variants[idx], size: e.target.value };
-                            updateProductField("size_variants", variants);
-                          }}
-                          placeholder="Size name (S, M, L...)"
-                          className="flex-1"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const variants = (productForm.size_variants || []).filter((_: any, i: number) => i !== idx);
-                            updateProductField("size_variants", variants);
-                          }}
-                          className="w-6 h-6 rounded-full bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive/20 transition-colors shrink-0"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-0.5">
-                          <Label className="text-[10px] text-muted-foreground">Price (៛ KHR)</Label>
-                          <Input
-                            type="text"
-                            inputMode="numeric"
-                            value={v.price_khr || ""}
-                            onChange={e => {
-                              const val = e.target.value.replace(/[^0-9]/g, "");
-                              const khr = val === "" ? 0 : parseInt(val, 10);
-                              const variants = [...(productForm.size_variants || [])];
-                              variants[idx] = { ...variants[idx], price_khr: khr, price_usd: parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)) };
-                              updateProductField("size_variants", variants);
-                            }}
-                            placeholder="0"
-                          />
-                        </div>
-                        <div className="space-y-0.5">
-                          <Label className="text-[10px] text-muted-foreground">Price ($)</Label>
-                          <Input
-                            type="text"
-                            inputMode="decimal"
-                            value={v.price_usd || ""}
-                            onChange={e => {
-                              const parts = e.target.value.split(".");
-                              const safe = parts.length > 1
-                                ? `${parts[0].replace(/[^0-9]/g, "")}.${parts.slice(1).join("").replace(/[^0-9]/g, "")}`
-                                : e.target.value.replace(/[^0-9]/g, "");
-                              if (safe === "" || safe === ".") {
-                                const variants = [...(productForm.size_variants || [])];
-                                variants[idx] = { ...variants[idx], price_khr: 0, price_usd: 0 };
-                                updateProductField("size_variants", variants);
-                                return;
-                              }
-                              const usd = parseFloat(safe);
-                              if (!Number.isNaN(usd)) {
-                                const variants = [...(productForm.size_variants || [])];
-                                variants[idx] = { ...variants[idx], price_usd: usd, price_khr: Math.round(usd * (form.khr_rate || 4062.5)) };
-                                updateProductField("size_variants", variants);
-                              }
-                            }}
-                            placeholder="0"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                  <Label>Unit / ឯកតា</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {["ចំនួន", "គីឡូ", "កញ្ចប់", "ដប", "កំប៉ុង", "ប្រអប់", "ដុំ", "ចាន", "កែវ", "ថង់", "kg", "g", "pcs", "pack", "bottle", "box", "liter", "dozen"].map(u => (
+                      <button
+                        key={u}
+                        type="button"
+                        onClick={() => updateProductField("unit", productForm.unit === u ? "" : u)}
+                        className={cn(
+                          "px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors",
+                          productForm.unit === u
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50"
+                        )}
+                      >
+                        {u}
+                      </button>
+                    ))}
+                  </div>
+                  <Input
+                    value={productForm.unit || ""}
+                    onChange={e => updateProductField("unit", e.target.value)}
+                    placeholder="Custom unit..."
+                    className="mt-1"
+                  />
                 </div>
-              )}
-              {(productForm.size_variants || []).length === 0 && (
-                <p className="text-xs text-muted-foreground">Add sizes with different prices (e.g. Small, Medium, Large)</p>
-              )}
-            </div>
 
-            {/* Badge / Tag selector */}
-            <div className="space-y-2">
-              <Label>Badge / ស្លាក</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  { value: "new", label: "🆕 New Arrival / ទំនិញថ្មី", color: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
-                  { value: "hot", label: "🔥 Hot / ពេញនិយម", color: "bg-red-500/15 text-red-500 border-red-500/30" },
-                  { value: "popular", label: "⭐ Popular / កំពូល", color: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
-                  { value: "best-seller", label: "🏆 Best Seller / លក់ដាច់", color: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30" },
-                  { value: "limited", label: "⏰ Limited / មានកំណត់", color: "bg-purple-500/15 text-purple-500 border-purple-500/30" },
-                  { value: "recommended", label: "👍 Recommended / ណែនាំ", color: "bg-sky-500/15 text-sky-500 border-sky-500/30" },
-                  { value: "organic", label: "🌿 Organic / ធម្មជាតិ", color: "bg-green-500/15 text-green-500 border-green-500/30" },
-                  { value: "imported", label: "✈️ Imported / នាំចូល", color: "bg-violet-500/15 text-violet-500 border-violet-500/30" },
-                ].map(b => (
-                  <button
-                    key={b.value}
-                    type="button"
-                    onClick={() => updateProductField("badge", productForm.badge === b.value ? "" : b.value)}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors",
-                      productForm.badge === b.value
-                        ? b.color
-                        : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50"
-                    )}
-                  >
-                    {b.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+                {/* ── Size Variants / តម្លៃតាមទំហំ ── */}
+                <div className="space-y-3 rounded-xl border border-border/50 bg-muted/30 p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Ruler className="h-4 w-4 text-primary" />
+                      <Label className="font-semibold text-sm">Size Prices / តម្លៃតាមទំហំ</Label>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => {
+                        const variants = [...(productForm.size_variants || [])];
+                        variants.push({ size: "", price_khr: 0, price_usd: 0 });
+                        updateProductField("size_variants", variants);
+                      }}
+                    >
+                      <Plus className="h-3 w-3" /> Add Size
+                    </Button>
+                  </div>
+                  {(productForm.size_variants || []).length > 0 && (
+                    <div className="space-y-2">
+                      {(productForm.size_variants || []).map((v: { size: string; price_khr: number; price_usd: number }, idx: number) => (
+                        <div key={idx} className="space-y-1.5 rounded-lg border border-border/40 bg-background/50 p-2.5">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={v.size}
+                              onChange={e => {
+                                const variants = [...(productForm.size_variants || [])];
+                                variants[idx] = { ...variants[idx], size: e.target.value };
+                                updateProductField("size_variants", variants);
+                              }}
+                              placeholder="Size name (S, M, L...)"
+                              className="flex-1"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const variants = (productForm.size_variants || []).filter((_: any, i: number) => i !== idx);
+                                updateProductField("size_variants", variants);
+                              }}
+                              className="w-6 h-6 rounded-full bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive/20 transition-colors shrink-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-0.5">
+                              <Label className="text-[10px] text-muted-foreground">Price (៛ KHR)</Label>
+                              <Input
+                                type="text"
+                                inputMode="numeric"
+                                value={v.price_khr || ""}
+                                onChange={e => {
+                                  const val = e.target.value.replace(/[^0-9]/g, "");
+                                  const khr = val === "" ? 0 : parseInt(val, 10);
+                                  const variants = [...(productForm.size_variants || [])];
+                                  variants[idx] = { ...variants[idx], price_khr: khr, price_usd: parseFloat((khr / (form.khr_rate || 4062.5)).toFixed(2)) };
+                                  updateProductField("size_variants", variants);
+                                }}
+                                placeholder="0"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <Label className="text-[10px] text-muted-foreground">Price ($)</Label>
+                              <Input
+                                type="text"
+                                inputMode="decimal"
+                                value={v.price_usd || ""}
+                                onChange={e => {
+                                  const parts = e.target.value.split(".");
+                                  const safe = parts.length > 1
+                                    ? `${parts[0].replace(/[^0-9]/g, "")}.${parts.slice(1).join("").replace(/[^0-9]/g, "")}`
+                                    : e.target.value.replace(/[^0-9]/g, "");
+                                  if (safe === "" || safe === ".") {
+                                    const variants = [...(productForm.size_variants || [])];
+                                    variants[idx] = { ...variants[idx], price_khr: 0, price_usd: 0 };
+                                    updateProductField("size_variants", variants);
+                                    return;
+                                  }
+                                  const usd = parseFloat(safe);
+                                  if (!Number.isNaN(usd)) {
+                                    const variants = [...(productForm.size_variants || [])];
+                                    variants[idx] = { ...variants[idx], price_usd: usd, price_khr: Math.round(usd * (form.khr_rate || 4062.5)) };
+                                    updateProductField("size_variants", variants);
+                                  }
+                                }}
+                                placeholder="0"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {(productForm.size_variants || []).length === 0 && (
+                    <p className="text-xs text-muted-foreground">Add sizes with different prices (e.g. Small, Medium, Large)</p>
+                  )}
+                </div>
+
+                {/* Badge / Tag selector */}
+                <div className="space-y-2">
+                  <Label>Badge / ស្លាក</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { value: "new", label: "🆕 New Arrival / ទំនិញថ្មី", color: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
+                      { value: "hot", label: "🔥 Hot / ពេញនិយម", color: "bg-red-500/15 text-red-500 border-red-500/30" },
+                      { value: "popular", label: "⭐ Popular / កំពូល", color: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
+                      { value: "best-seller", label: "🏆 Best Seller / លក់ដាច់", color: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30" },
+                      { value: "limited", label: "⏰ Limited / មានកំណត់", color: "bg-purple-500/15 text-purple-500 border-purple-500/30" },
+                      { value: "recommended", label: "👍 Recommended / ណែនាំ", color: "bg-sky-500/15 text-sky-500 border-sky-500/30" },
+                      { value: "organic", label: "🌿 Organic / ធម្មជាតិ", color: "bg-green-500/15 text-green-500 border-green-500/30" },
+                      { value: "imported", label: "✈️ Imported / នាំចូល", color: "bg-violet-500/15 text-violet-500 border-violet-500/30" },
+                    ].map(b => (
+                      <button
+                        key={b.value}
+                        type="button"
+                        onClick={() => updateProductField("badge", productForm.badge === b.value ? "" : b.value)}
+                        className={cn(
+                          "px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors",
+                          productForm.badge === b.value
+                            ? b.color
+                            : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50"
+                        )}
+                      >
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
