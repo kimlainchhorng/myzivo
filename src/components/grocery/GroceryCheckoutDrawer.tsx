@@ -210,15 +210,14 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const { isPlus } = useZivoPlus();
   const { isCambodia } = useCountry();
 
-  // Extract city from address for moto pricing lookup
+  // Cambodia grocery uses ZIVO Moto pricing from city_pricing (stored in KHR/km and converted by useCityPricing)
   const pickupCity = useMemo(() => {
-    if (!address) return isCambodia ? "Phnom Penh" : "default";
-    // Try to extract city from address string (e.g. "..., Phnom Penh, ...")
-    const parts = address.split(",").map(p => p.trim()).filter(Boolean);
-    // City is typically the second-to-last or third-to-last part
+    if (isCambodia) return "Phnom Penh";
+    if (!address) return "default";
+    const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
     if (parts.length >= 3) return parts[parts.length - 3] || parts[parts.length - 2] || "default";
     if (parts.length >= 2) return parts[parts.length - 2] || "default";
-    return isCambodia ? "Phnom Penh" : "default";
+    return "default";
   }, [address, isCambodia]);
 
   const { data: cityPricingMap } = useCityPricing(pickupCity);
@@ -228,17 +227,23 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const effectiveDistanceMiles = routeMetrics?.distanceMiles ?? (isCambodia ? 5 * 0.621371 : 3);
   const effectiveDistanceKm = effectiveDistanceMiles * 1.609344;
 
-  // Calculate delivery fee using ZIVO Moto pricing from city_pricing table
   const deliveryFee = useMemo(() => {
     const motoPricing = cityPricingMap?.["moto"];
-    if (motoPricing) {
-      // moto pricing: base_fare + per_mile * distance + per_minute * duration
-      const raw = motoPricing.base_fare + motoPricing.per_mile * effectiveDistanceMiles + motoPricing.per_minute * effectiveDurationMinutes;
+
+    if (isCambodia && motoPricing) {
+      // In Cambodia the source data is 1000៛ base + 900៛/km with 3000៛ minimum.
+      // useCityPricing already converts KHR→USD and km→mile, so we price with distance only.
+      const raw = motoPricing.base_fare + motoPricing.per_mile * effectiveDistanceMiles + motoPricing.booking_fee;
       return Math.round(Math.max(motoPricing.minimum_fare, raw) * 100) / 100;
     }
-    // Fallback to generic delivery fee if moto pricing not available
+
+    if (motoPricing) {
+      const raw = motoPricing.base_fare + motoPricing.per_mile * effectiveDistanceMiles + motoPricing.per_minute * effectiveDurationMinutes + motoPricing.booking_fee;
+      return Math.round(Math.max(motoPricing.minimum_fare, raw) * 100) / 100;
+    }
+
     return calcDeliveryFee(effectiveDistanceMiles, effectiveDurationMinutes);
-  }, [cityPricingMap, effectiveDistanceMiles, effectiveDurationMinutes]);
+  }, [cityPricingMap, effectiveDistanceMiles, effectiveDurationMinutes, isCambodia]);
 
   const distanceLabel = isCambodia
     ? `~${effectiveDistanceKm < 10 ? effectiveDistanceKm.toFixed(1) : Math.round(effectiveDistanceKm)}km`
