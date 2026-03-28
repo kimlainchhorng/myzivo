@@ -286,10 +286,21 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
     }, 400);
   }, []);
 
-  const selectAddressSuggestion = useCallback((s: { display: string }) => {
+  const selectAddressSuggestion = useCallback(async (s: { display: string; placeId?: string }) => {
     setAddress(s.display);
     setAddressSuggestions([]);
     setShowAddrSuggestions(false);
+
+    if (s.placeId) {
+      const details = await getPlaceDetails(s.placeId);
+      if (details) {
+        setAddressCoords({ lat: details.lat, lng: details.lng });
+        return;
+      }
+    }
+
+    const coords = await forwardGeocode(s.display);
+    if (coords) setAddressCoords(coords);
   }, []);
 
   // Persist profile
