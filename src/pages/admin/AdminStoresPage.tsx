@@ -335,7 +335,32 @@ export default function AdminStoresPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Market</Label>
-                <Input value={form.market} onChange={e => updateField("market", e.target.value)} placeholder="KH" />
+                <select
+                  value={form.market}
+                  onChange={e => updateField("market", e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {[
+                    { code: "KH", label: "🇰🇭 Cambodia (KH)" },
+                    { code: "US", label: "🇺🇸 United States (US)" },
+                    { code: "VN", label: "🇻🇳 Vietnam (VN)" },
+                    { code: "TH", label: "🇹🇭 Thailand (TH)" },
+                    { code: "CN", label: "🇨🇳 China (CN)" },
+                    { code: "KR", label: "🇰🇷 South Korea (KR)" },
+                    { code: "JP", label: "🇯🇵 Japan (JP)" },
+                    { code: "IN", label: "🇮🇳 India (IN)" },
+                    { code: "GB", label: "🇬🇧 United Kingdom (GB)" },
+                    { code: "AU", label: "🇦🇺 Australia (AU)" },
+                    { code: "SG", label: "🇸🇬 Singapore (SG)" },
+                    { code: "MY", label: "🇲🇾 Malaysia (MY)" },
+                    { code: "PH", label: "🇵🇭 Philippines (PH)" },
+                    { code: "ID", label: "🇮🇩 Indonesia (ID)" },
+                    { code: "LA", label: "🇱🇦 Laos (LA)" },
+                    { code: "MM", label: "🇲🇲 Myanmar (MM)" },
+                  ].map(m => (
+                    <option key={m.code} value={m.code}>{m.label}</option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-2">
                 <Label>Category</Label>
