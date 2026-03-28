@@ -2073,18 +2073,37 @@ export default function AdminStoreEditPage() {
                     <Label className="text-xs">{t("admin.store.make")} *</Label>
                     <select
                       value={productForm.car_make}
-                      onChange={e => updateProductField("car_make", e.target.value)}
+                      onChange={e => {
+                        updateProductField("car_make", e.target.value);
+                        updateProductField("car_model", "");
+                      }}
                       className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
                     >
                       <option value="">Select Make</option>
-                      {["Toyota","Honda","Ford","Chevrolet","BMW","Mercedes-Benz","Audi","Hyundai","Kia","Nissan","Lexus","Mazda","Volkswagen","Subaru","Jeep","Tesla","Porsche","Land Rover","Volvo","Mitsubishi","Suzuki","Isuzu","Peugeot","Other"].map(m => (
+                      {(form.name?.toLowerCase().includes("byd")
+                        ? ["BYD"]
+                        : ["Toyota","Honda","Ford","Chevrolet","BMW","Mercedes-Benz","Audi","Hyundai","Kia","Nissan","Lexus","Mazda","Volkswagen","Subaru","Jeep","Tesla","Porsche","Land Rover","Volvo","Mitsubishi","Suzuki","Isuzu","Peugeot","BYD","Other"]
+                      ).map(m => (
                         <option key={m} value={m}>{m}</option>
                       ))}
                     </select>
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">{t("admin.store.model")} *</Label>
-                    <Input value={productForm.car_model} onChange={e => updateProductField("car_model", e.target.value)} placeholder="e.g. Camry" className="h-9 text-sm" />
+                    {productForm.car_make === "BYD" ? (
+                      <select
+                        value={productForm.car_model}
+                        onChange={e => updateProductField("car_model", e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                      >
+                        <option value="">Select Model</option>
+                        {["Atto 3","Dolphin","Seal","Han","Tang","Song Plus","Song Pro","Yuan Plus","Shark","Sealion 6","Sealion 7","Denza D9","Yangwang U8","Yangwang U9","e6","T3","Other"].map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <Input value={productForm.car_model} onChange={e => updateProductField("car_model", e.target.value)} placeholder="e.g. Camry" className="h-9 text-sm" />
+                    )}
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">{t("admin.store.year")} *</Label>
