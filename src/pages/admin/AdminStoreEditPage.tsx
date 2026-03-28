@@ -25,7 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car } from "lucide-react";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
@@ -364,6 +364,11 @@ const emptyProduct = {
   discount_price_khr: null as number | null, discount_expires_at: "" as string,
   buy_quantity: 1, get_quantity: 0,
   size_variants: [] as { size: string; price_khr: number; price_usd: number }[],
+  // Car dealership fields
+  car_make: "", car_model: "", car_year: "" as string, car_vin: "",
+  car_mileage: "", car_transmission: "" as string, car_fuel_type: "" as string,
+  car_color: "", car_condition: "" as string, car_engine: "", car_doors: "" as string,
+  car_body_type: "" as string,
 };
 
 export default function AdminStoreEditPage() {
@@ -1001,6 +1006,10 @@ export default function AdminStoreEditPage() {
       buy_quantity: p.buy_quantity || 1,
       get_quantity: p.get_quantity || 0,
       size_variants: (p.size_variants as any[]) || [],
+      car_make: p.car_make || "", car_model: p.car_model || "", car_year: p.car_year || "",
+      car_vin: p.car_vin || "", car_mileage: p.car_mileage || "", car_transmission: p.car_transmission || "",
+      car_fuel_type: p.car_fuel_type || "", car_color: p.car_color || "", car_condition: p.car_condition || "",
+      car_engine: p.car_engine || "", car_doors: p.car_doors || "", car_body_type: p.car_body_type || "",
     });
     setProductDialog(true);
   };
@@ -1933,6 +1942,114 @@ export default function AdminStoreEditPage() {
                 />
               </div>
             </div>
+
+            {/* ── Car Dealership Fields ── */}
+            {form.category === "car-dealership" && (
+              <div className="space-y-3 rounded-xl border border-border/50 bg-muted/30 p-3">
+                <div className="flex items-center gap-2">
+                  <Car className="h-4 w-4 text-primary" />
+                  <Label className="font-semibold text-sm">Vehicle Details</Label>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Make *</Label>
+                    <select
+                      value={productForm.car_make}
+                      onChange={e => updateProductField("car_make", e.target.value)}
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                    >
+                      <option value="">Select Make</option>
+                      {["Toyota","Honda","Ford","Chevrolet","BMW","Mercedes-Benz","Audi","Hyundai","Kia","Nissan","Lexus","Mazda","Volkswagen","Subaru","Jeep","Tesla","Porsche","Land Rover","Volvo","Mitsubishi","Suzuki","Isuzu","Peugeot","Other"].map(m => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Model *</Label>
+                    <Input value={productForm.car_model} onChange={e => updateProductField("car_model", e.target.value)} placeholder="e.g. Camry" className="h-9 text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Year *</Label>
+                    <select
+                      value={productForm.car_year}
+                      onChange={e => updateProductField("car_year", e.target.value)}
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                    >
+                      <option value="">Year</option>
+                      {Array.from({ length: 30 }, (_, i) => new Date().getFullYear() + 1 - i).map(y => (
+                        <option key={y} value={String(y)}>{y}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">VIN</Label>
+                    <Input value={productForm.car_vin} onChange={e => updateProductField("car_vin", e.target.value.toUpperCase())} placeholder="17-character VIN" maxLength={17} className="h-9 text-sm font-mono" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Mileage (km)</Label>
+                    <Input type="text" inputMode="numeric" value={productForm.car_mileage} onChange={e => updateProductField("car_mileage", e.target.value.replace(/[^0-9]/g, ""))} placeholder="e.g. 45000" className="h-9 text-sm" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Transmission</Label>
+                    <select value={productForm.car_transmission} onChange={e => updateProductField("car_transmission", e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm">
+                      <option value="">Select</option>
+                      <option value="Automatic">Automatic</option>
+                      <option value="Manual">Manual</option>
+                      <option value="CVT">CVT</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Fuel Type</Label>
+                    <select value={productForm.car_fuel_type} onChange={e => updateProductField("car_fuel_type", e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm">
+                      <option value="">Select</option>
+                      <option value="Gasoline">Gasoline</option>
+                      <option value="Diesel">Diesel</option>
+                      <option value="Hybrid">Hybrid</option>
+                      <option value="Electric">Electric</option>
+                      <option value="LPG">LPG</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Condition</Label>
+                    <select value={productForm.car_condition} onChange={e => updateProductField("car_condition", e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm">
+                      <option value="">Select</option>
+                      <option value="New">New</option>
+                      <option value="Used">Used</option>
+                      <option value="Certified Pre-Owned">Certified Pre-Owned</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Color</Label>
+                    <Input value={productForm.car_color} onChange={e => updateProductField("car_color", e.target.value)} placeholder="e.g. Silver" className="h-9 text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Engine</Label>
+                    <Input value={productForm.car_engine} onChange={e => updateProductField("car_engine", e.target.value)} placeholder="e.g. 2.5L 4-Cyl" className="h-9 text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Body Type</Label>
+                    <select value={productForm.car_body_type} onChange={e => updateProductField("car_body_type", e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm">
+                      <option value="">Select</option>
+                      <option value="Sedan">Sedan</option>
+                      <option value="SUV">SUV</option>
+                      <option value="Truck">Truck</option>
+                      <option value="Coupe">Coupe</option>
+                      <option value="Hatchback">Hatchback</option>
+                      <option value="Van">Van</option>
+                      <option value="Wagon">Wagon</option>
+                      <option value="Convertible">Convertible</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ── Discount Section ── */}
             <div className="space-y-3 rounded-xl border border-border/50 bg-muted/30 p-3">
               <div className="flex items-center gap-2">
