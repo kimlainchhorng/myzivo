@@ -391,7 +391,41 @@ export default function AdminStoresPage() {
               </div>
               <div className="space-y-2">
                 <Label>Hours</Label>
-                <Input value={form.hours} onChange={e => updateField("hours", e.target.value)} placeholder="7am–10pm" />
+                <div className="flex items-center gap-1">
+                  <select
+                    value={form.hours?.split("–")[0]?.trim() || "7:00 AM"}
+                    onChange={e => {
+                      const close = form.hours?.split("–")[1]?.trim() || "10:00 PM";
+                      updateField("hours", `${e.target.value}–${close}`);
+                    }}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {Array.from({ length: 48 }, (_, i) => {
+                      const h = Math.floor(i / 2);
+                      const m = i % 2 === 0 ? "00" : "30";
+                      const ampm = h < 12 ? "AM" : "PM";
+                      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                      return `${h12}:${m} ${ampm}`;
+                    }).map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                  <span className="text-muted-foreground text-sm">to</span>
+                  <select
+                    value={form.hours?.split("–")[1]?.trim() || "10:00 PM"}
+                    onChange={e => {
+                      const open = form.hours?.split("–")[0]?.trim() || "7:00 AM";
+                      updateField("hours", `${open}–${e.target.value}`);
+                    }}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {Array.from({ length: 48 }, (_, i) => {
+                      const h = Math.floor(i / 2);
+                      const m = i % 2 === 0 ? "00" : "30";
+                      const ampm = h < 12 ? "AM" : "PM";
+                      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                      return `${h12}:${m} ${ampm}`;
+                    }).map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
