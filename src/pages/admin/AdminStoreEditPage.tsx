@@ -1760,7 +1760,7 @@ export default function AdminStoreEditPage() {
                         )}
                         <button
                           onClick={() => setDeletePostId(post.id)}
-                          className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-1 right-1 z-20 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>
