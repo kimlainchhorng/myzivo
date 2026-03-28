@@ -78,9 +78,10 @@ export default function StoreProfilePage() {
   const { data: categories = [] } = useStoreProductCategories(store?.id);
 
   const handleAddToCart = (product: StoreProductItem, sizeVariant?: { size: string; price_khr: number; price_usd: number }) => {
+    const displayName = localizedName(product.name, currentLanguage);
     cart.addItem({
       productId: sizeVariant ? `${product.id}__${sizeVariant.size}` : product.id,
-      name: sizeVariant ? `${product.name} (${sizeVariant.size})` : product.name,
+      name: sizeVariant ? `${displayName} (${sizeVariant.size})` : displayName,
       price: sizeVariant ? sizeVariant.price_usd : product.price,
       image: product.image_url || "",
       brand: product.brand || "",
