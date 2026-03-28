@@ -205,10 +205,23 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
                 setHasPlaybackError(false);
               }}
               onPause={() => setIsPlaying(false)}
-              onError={() => {
+              onError={async () => {
                 setIsPlaying(false);
+                const currentUrl = urls[activeIndex];
                 if (!triedBlobFallback) {
-                  void tryBlobFallback(urls[activeIndex]);
+                  await tryBlobFallback(currentUrl);
+                } else if (blobSrc && !hasPlaybackError) {
+                  // Blob also failed — try once more with original blob type
+                  try {
+                    const resp = await fetch(currentUrl);
+                    if (!resp.ok) throw new Error();
+                    const blob = await resp.blob();
+                    const newUrl = URL.createObjectURL(blob);
+                    URL.revokeObjectURL(blobSrc);
+                    setBlobSrc(newUrl);
+                  } catch {
+                    setHasPlaybackError(true);
+                  }
                 } else {
                   setHasPlaybackError(true);
                 }
