@@ -60,6 +60,7 @@ interface RouteData {
   duration_in_traffic_minutes?: number | null;
   polyline: string | null;
   traffic_level?: string;
+  traffic_segments?: { startPolylinePointIndex: number; endPolylinePointIndex: number; speed: string }[] | null;
 }
 
 /** Detect if user is in Cambodia based on pickup address or coordinates */
