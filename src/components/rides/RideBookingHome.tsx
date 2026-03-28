@@ -1819,6 +1819,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
           duration_in_traffic_minutes: data.duration_in_traffic_minutes ?? null,
           polyline: data.polyline,
           traffic_level: data.traffic_level,
+          traffic_segments: data.traffic_segments ?? null,
         });
       } else {
         // Fallback: haversine including waypoints
