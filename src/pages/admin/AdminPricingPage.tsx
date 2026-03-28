@@ -61,7 +61,7 @@ const RIDE_TYPE_IMAGES: Record<string, string> = {
   wheelchair: "/vehicles/wheelchair-car-v2.png",
   tuktuk: "/vehicles/zivo-tuktuk.png",
   tuktuk_ev: "/vehicles/zivo-ev-tuktuk.png",
-  moto: "/vehicles/zivo-moto.png",
+  moto: "/vehicles/zivo-moto-v2.png",
   share_xl: "/vehicles/xl-car-v2.png",
 };
 
