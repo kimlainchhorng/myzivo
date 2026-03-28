@@ -1180,12 +1180,22 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
               <Button
                 className="w-full h-[50px] rounded-2xl text-[14px] font-bold shadow-lg shadow-primary/20 gap-2"
                 disabled={isSubmitting}
-                onClick={handleCreateInlinePayment}
+                onClick={selectedPayment === "card" ? handleCreateInlinePayment : handleCashOrAbaOrder}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4.5 w-4.5 animate-spin" />
-                    Preparing secure payment…
+                    {selectedPayment === "card" ? "Preparing secure payment…" : "Placing order…"}
+                  </>
+                ) : selectedPayment === "cash" ? (
+                  <>
+                    <Banknote className="h-4 w-4" />
+                    Place Order · ${grandTotal.toFixed(2)} Cash
+                  </>
+                ) : selectedPayment === "aba" ? (
+                  <>
+                    <QrCode className="h-4 w-4" />
+                    Place Order · ${grandTotal.toFixed(2)} ABA
                   </>
                 ) : (
                   <>
@@ -1198,7 +1208,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
           )}
           <div className="flex items-center justify-center gap-1.5 mt-2">
             <Lock className="h-2.5 w-2.5 text-muted-foreground/40" />
-            <span className="text-[9px] text-muted-foreground/40">Powered by Stripe · 256-bit encryption</span>
+            <span className="text-[9px] text-muted-foreground/40">
+              {selectedPayment === "cash" ? "Cash on delivery" : selectedPayment === "aba" ? "ABA Bank · Secure QR" : "Powered by Stripe · 256-bit encryption"}
+            </span>
           </div>
         </div>
       </motion.div>
