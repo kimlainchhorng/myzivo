@@ -36588,31 +36588,43 @@ export type Database = {
         Row: {
           caption: string | null
           created_at: string
+          hashtags: string[] | null
           id: string
           is_published: boolean
+          location: string | null
           media_type: string
           media_urls: string[]
+          scheduled_at: string | null
           store_id: string
+          thumbnail_url: string | null
           updated_at: string
         }
         Insert: {
           caption?: string | null
           created_at?: string
+          hashtags?: string[] | null
           id?: string
           is_published?: boolean
+          location?: string | null
           media_type?: string
           media_urls?: string[]
+          scheduled_at?: string | null
           store_id: string
+          thumbnail_url?: string | null
           updated_at?: string
         }
         Update: {
           caption?: string | null
           created_at?: string
+          hashtags?: string[] | null
           id?: string
           is_published?: boolean
+          location?: string | null
           media_type?: string
           media_urls?: string[]
+          scheduled_at?: string | null
           store_id?: string
+          thumbnail_url?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -47361,11 +47373,15 @@ export type Database = {
         Returns: {
           caption: string | null
           created_at: string
+          hashtags: string[] | null
           id: string
           is_published: boolean
+          location: string | null
           media_type: string
           media_urls: string[]
+          scheduled_at: string | null
           store_id: string
+          thumbnail_url: string | null
           updated_at: string
         }
         SetofOptions: {
