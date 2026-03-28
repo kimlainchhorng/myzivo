@@ -459,10 +459,12 @@ const VEHICLE_IMAGES: Record<string, string> = {
 const CAMBODIA_VEHICLE_IMAGES: Record<string, string> = {
   "economy": "/vehicles/zivo-tuktuk.png",
   "share": "/vehicles/zivo-ev-tuktuk.png",
+  "moto": "/vehicles/zivo-moto.png",
 };
 const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
   "economy": "ZIVO Tuk Tuk",
   "share": "ZIVO EV Tuk Tuk",
+  "moto": "ZIVO Moto",
 };
 const CAMBODIA_VEHICLE_DESCS: Record<string, string> = {
   "economy": "ការធ្វើដំណើរប្រចាំថ្ងៃតម្លៃសមរម្យ",
@@ -470,6 +472,7 @@ const CAMBODIA_VEHICLE_DESCS: Record<string, string> = {
   "comfort": "អ្នកបើកបរល្អបំផុត កន្លែងដាក់ជើងទូលាយ",
   "ev": "អគ្គិសនី សូន្យការបំភាយ",
   "xl": "កន្លែងបន្ថែមសម្រាប់ក្រុម",
+  "moto": "ម៉ូតូរហ័សនិងសន្សំសំចៃ",
 };
 const CAMBODIA_VEHICLE_CAPACITY: Record<string, number> = {
   "economy": 3,
