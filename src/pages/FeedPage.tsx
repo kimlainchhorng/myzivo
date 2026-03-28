@@ -12,7 +12,7 @@ import {
   Loader2, Heart, MessageCircle, Share2, Store,
   Play, Volume2, VolumeX, RefreshCw,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { repairVideoBlob } from "@/utils/videoRepair";
@@ -55,12 +55,17 @@ function ReelCard({
   const [blobSrc, setBlobSrc] = useState<string | null>(null);
   const [triedBlobFallback, setTriedBlobFallback] = useState(false);
   const [triedFFmpegRepair, setTriedFFmpegRepair] = useState(false);
+  const [hasLoadedFrame, setHasLoadedFrame] = useState(false);
   const [liked, setLiked] = useState(false);
 
-  const firstUrl = normalizeStorePostMediaUrl((post.media_urls || [])[0] || "");
-  const isVideoPost =
-    post.media_type === "video" ||
-    /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(firstUrl);
+  const normalizedUrls = useMemo(
+    () => (post.media_urls || []).map((u) => normalizeStorePostMediaUrl(u)).filter(Boolean),
+    [post.media_urls],
+  );
+  const firstUrl = normalizedUrls[0] || "";
+  const detectedVideoUrl = normalizedUrls.find((url) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url));
+  const isVideoPost = post.media_type === "video" || Boolean(detectedVideoUrl);
+  const sourceUrl = detectedVideoUrl || firstUrl;
 
   // Auto-play / pause when active changes
   useEffect(() => {
@@ -76,6 +81,20 @@ function ReelCard({
       setIsPlaying(false);
     }
   }, [isActive, isVideoPost]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset per-post playback state when source changes
+  useEffect(() => {
+    setIsPlaying(false);
+    setHasPlaybackError(false);
+    setIsRepairing(false);
+    setTriedBlobFallback(false);
+    setTriedFFmpegRepair(false);
+    setHasLoadedFrame(false);
+    if (blobSrc) {
+      URL.revokeObjectURL(blobSrc);
+      setBlobSrc(null);
+    }
+  }, [post.id, sourceUrl]);
 
   // Sync global mute toggle
   useEffect(() => {
@@ -122,7 +141,7 @@ function ReelCard({
       setBlobSrc(URL.createObjectURL(new Blob([blob], { type: blob.type || "video/mp4" })));
       setHasPlaybackError(false);
     } catch {
-      setHasPlaybackError(true);
+      // Keep quiet here; FFmpeg repair is attempted next.
     }
   };
 
@@ -149,7 +168,47 @@ function ReelCard({
     }
   };
 
-  const currentSrc = blobSrc || firstUrl;
+  const runRecovery = async () => {
+    if (!sourceUrl) {
+      setHasPlaybackError(true);
+      return;
+    }
+
+    if (!triedBlobFallback) {
+      await tryBlobFallback(sourceUrl);
+      return;
+    }
+
+    if (!triedFFmpegRepair) {
+      await tryFFmpegRepair(sourceUrl);
+      return;
+    }
+
+    setHasPlaybackError(true);
+  };
+
+  const currentSrc = blobSrc || sourceUrl;
+
+  // iOS can stall on a black frame without firing video error; detect and recover.
+  useEffect(() => {
+    if (!isActive || !isVideoPost || !currentSrc || hasLoadedFrame) return;
+
+    const timeoutId = window.setTimeout(() => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      const stalled =
+        video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+        video.videoWidth === 0 ||
+        video.videoHeight === 0;
+
+      if (stalled) {
+        void runRecovery();
+      }
+    }, 1800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isActive, isVideoPost, currentSrc, hasLoadedFrame, triedBlobFallback, triedFFmpegRepair]);
 
   return (
     <div className="relative w-full h-[100dvh] bg-black overflow-hidden snap-start flex-shrink-0">
@@ -166,6 +225,8 @@ function ReelCard({
           muted
           preload={isActive ? "auto" : "metadata"}
           onLoadedData={(e) => {
+            setHasLoadedFrame(true);
+            setHasPlaybackError(false);
             capturePoster(e.currentTarget);
             if (isActive) {
               e.currentTarget.muted = globalMuted;
@@ -180,9 +241,7 @@ function ReelCard({
           onPause={() => setIsPlaying(false)}
           onError={async () => {
             setIsPlaying(false);
-            if (!triedBlobFallback) await tryBlobFallback(currentSrc);
-            else if (!triedFFmpegRepair) await tryFFmpegRepair(firstUrl);
-            else setHasPlaybackError(true);
+            await runRecovery();
           }}
         />
       ) : (

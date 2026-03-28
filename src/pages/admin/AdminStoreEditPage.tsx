@@ -929,9 +929,14 @@ export default function AdminStoreEditPage() {
       console.warn("[PostMedia] Normalization timed out:", error);
     }
 
-    console.warn("[PostMedia] All normalization strategies failed, uploading original file.");
-    toast.warning("Video couldn't be optimized — uploading original. It will be auto-converted for viewers.");
-    return file;
+    const originalPlayable = await probeVideoFile(file).catch(() => false);
+    if (originalPlayable) {
+      console.warn("[PostMedia] Normalization failed, but original file is playable in browser; uploading original.");
+      return file;
+    }
+
+    // Hard-stop here so we do not upload a broken video that will show as "Ready" but never play.
+    throw new Error("Video format is not supported yet. Please use MP4 (H.264) or a shorter/lower-resolution clip.");
   };
 
   const repairVideoPreviewSource = async (url: string) => {
@@ -3351,7 +3356,7 @@ export default function AdminStoreEditPage() {
                       {preview.isVideo ? (
                         <>
                           <AdminVideoPreview
-                            src={preview.status === "done" && preview.uploadedUrl ? preview.uploadedUrl : preview.previewUrl}
+                            src={preview.previewUrl}
                             className="rounded-lg"
                             videoClassName="rounded-lg bg-muted object-contain"
                             controls
