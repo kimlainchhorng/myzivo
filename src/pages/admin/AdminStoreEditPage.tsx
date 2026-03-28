@@ -240,7 +240,7 @@ function AdminVideoPreview({
         src={blobSrc || currentSrc}
         poster={posterUrl ?? undefined}
         className={cn("h-full w-full", videoClassName)}
-        controls={false}
+        controls={controls && isPlaying}
         playsInline
         preload="auto"
         muted={muted}
@@ -271,39 +271,20 @@ function AdminVideoPreview({
           void runRecovery();
         }}
       />
-      {/* Large tap-to-play overlay */}
-      <button
-        type="button"
-        onClick={handlePlayToggle}
-        className="absolute inset-0 z-[1] flex items-center justify-center"
-        aria-label={isPlaying ? "Pause" : "Play"}
-      >
-        {!isPlaying && (
+      {/* Large tap-to-play overlay - only show when paused */}
+      {!isPlaying && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); handlePlayToggle(); }}
+          className="absolute inset-0 z-[10] flex items-center justify-center cursor-pointer"
+          aria-label="Play"
+        >
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-background/70 shadow-lg backdrop-blur-sm">
             <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
               <path d="M2 1L18 11L2 21V1Z" fill="hsl(var(--foreground))" />
             </svg>
           </div>
-        )}
-      </button>
-      {isRepairing && (
-        <div className="absolute inset-0 z-[3] flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
-          <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          <span className="text-xs font-medium text-foreground">Repairing preview...</span>
-        </div>
-      )}
-      {/* Minimal bottom bar with progress */}
-      {controls && isPlaying && (
-        <div className="absolute bottom-0 left-0 right-0 z-[2] bg-gradient-to-t from-black/50 to-transparent p-1.5">
-          <div className="flex items-center gap-1.5">
-            <button type="button" onClick={handlePlayToggle} className="text-white" aria-label="Pause">
-              <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
-                <rect width="3" height="12" fill="white" />
-                <rect x="7" width="3" height="12" fill="white" />
-              </svg>
-            </button>
-          </div>
-        </div>
+        </button>
       )}
     </div>
   );
