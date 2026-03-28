@@ -5,7 +5,7 @@
 /// <reference types="google.maps" />
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { decodePolyline } from "@/services/mapsApi";
+import { decodePolyline, type TrafficSegment } from "@/services/mapsApi";
 
 const DEFAULT_CENTER = { lat: 40.7128, lng: -73.9857 };
 const MAP_INIT_TIMEOUT_MS = 5000;
@@ -75,6 +75,7 @@ interface RideMapProps {
   dropoffCoords?: { lat: number; lng: number } | null;
   stopCoords?: { lat: number; lng: number }[];
   routePolyline?: string | { lat: number; lng: number }[] | null;
+  trafficSegments?: TrafficSegment[] | null;
   driverCoords?: { lat: number; lng: number } | null;
   /** Target for driver navigation line (pickup during en-route, dropoff during trip) */
   driverNavigationTarget?: { lat: number; lng: number } | null;
