@@ -2272,6 +2272,11 @@ export default function AdminStoreEditPage() {
           )}
 
           <TabsContent value="profile">
+            {/* Profile tab — cover, logo, posts, gallery (store info moved to Settings) */}
+          </TabsContent>
+
+          {/* Settings Tab — Store Information */}
+          <TabsContent value="settings">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">{t("admin.store.store_info")}</CardTitle>
