@@ -12,6 +12,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import {
   Loader2, Heart, MessageCircle, Share2, Store,
   Play, Volume2, VolumeX, RefreshCw, Send, X as XIcon, Eye,
+  Copy, Link2,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -54,6 +55,7 @@ function ReelCard({
   userLikedPostIds,
   onToggleLike,
   onOpenComments,
+  onOpenShare,
 }: {
   post: FeedPost;
   isActive: boolean;
@@ -64,6 +66,7 @@ function ReelCard({
   userLikedPostIds: Set<string>;
   onToggleLike: (postId: string, currentlyLiked: boolean) => void;
   onOpenComments: (postId: string) => void;
+  onOpenShare: (postId: string) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -496,34 +499,7 @@ function ReelCard({
         {/* Share */}
         <button
           type="button"
-          onClick={async (e) => {
-            e.stopPropagation();
-            const shareUrl = `${window.location.origin}/feed?post=${post.id}`;
-            try {
-              if (navigator.share) {
-                await navigator.share({ title: post.caption || "Check this out!", url: shareUrl });
-                return;
-              }
-            } catch (err: any) {
-              if (err?.name === "AbortError") return; // user cancelled
-            }
-            // Fallback: copy to clipboard
-            try {
-              await navigator.clipboard.writeText(shareUrl);
-              toast.success("Link copied!");
-            } catch {
-              // Final fallback for restricted contexts
-              const ta = document.createElement("textarea");
-              ta.value = shareUrl;
-              ta.style.position = "fixed";
-              ta.style.opacity = "0";
-              document.body.appendChild(ta);
-              ta.select();
-              document.execCommand("copy");
-              document.body.removeChild(ta);
-              toast.success("Link copied!");
-            }
-          }}
+          onClick={(e) => { e.stopPropagation(); onOpenShare(post.id); }}
           className="flex flex-col items-center gap-1"
           aria-label="Share"
         >
