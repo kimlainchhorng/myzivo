@@ -1,44 +1,27 @@
 import { useState, useRef, useCallback } from "react";
-import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
 import SEOHead from "@/components/SEOHead";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
-  User, Camera, ArrowLeft, Mail, Phone, Loader2, Save, Sparkles,
-  Shield, Star, Clock, ChevronRight, CreditCard, Bell, Lock, Gift,
+  User, ArrowLeft, Loader2, Sparkles,
+  Shield, Star, ChevronRight,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
-  AlertCircle, CheckCircle2, Settings,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
 import { useAffiliateAttribution } from "@/hooks/useAffiliateAttribution";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-const profileSchema = z.object({
-  first_name: z.string().trim().min(1, "First name is required").max(50, "Too long").optional().or(z.literal("")),
-  last_name: z.string().trim().min(1, "Last name is required").max(50, "Too long").optional().or(z.literal("")),
-  phone: z.string().trim().max(20, "Phone number too long").optional().or(z.literal("")),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
+import { motion, useScroll, useTransform } from "framer-motion";
 
 const LANGS = [
   { code: "en", label: "English", cc: "us" },
