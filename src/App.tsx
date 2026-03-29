@@ -209,6 +209,7 @@ const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 const Help = lazy(() => import("./pages/Help"));
 
 // Account pages
+const AccountSettingsPage = lazy(() => import("./pages/account/AccountSettingsPage"));
 const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
 const PreferencesPage = lazy(() => import("./pages/account/PreferencesPage"));
 const PrivacyControls = lazy(() => import("./pages/account/PrivacyControls"));
