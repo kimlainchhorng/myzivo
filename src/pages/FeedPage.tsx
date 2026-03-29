@@ -942,6 +942,7 @@ export default function FeedPage() {
               userLikedPostIds={userLikedPostIds}
               onToggleLike={handleToggleLike}
               onOpenComments={(id) => setCommentPostId(id)}
+              onOpenShare={(id) => setSharePostId(id)}
             />
           </div>
         ))}
@@ -953,6 +954,15 @@ export default function FeedPage() {
           postId={commentPostId}
           userId={userId}
           onClose={() => setCommentPostId(null)}
+        />
+      )}
+
+      {/* Share sheet */}
+      {sharePostId && (
+        <ShareSheet
+          postId={sharePostId}
+          caption={posts.find((p) => p.id === sharePostId)?.caption || ""}
+          onClose={() => setSharePostId(null)}
         />
       )}
 
