@@ -124,7 +124,7 @@ function AdminVideoPreview({
   controls = true,
   autoPlay = false,
   loop = false,
-  muted = true,
+  muted = false,
   canRepair = false,
   onRepair,
 }: {
@@ -264,7 +264,7 @@ function AdminVideoPreview({
     const vid = videoRef.current;
     if (!vid) return;
     if (vid.paused) {
-      vid.muted = true;
+      vid.muted = autoPlay ? true : muted;
       void vid.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     } else {
       vid.pause();
