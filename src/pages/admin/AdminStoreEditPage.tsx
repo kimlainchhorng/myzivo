@@ -2139,7 +2139,7 @@ export default function AdminStoreEditPage() {
                               controls={false}
                               muted
                               loop
-                              autoPlay
+                              autoPlay={false}
                               canRepair
                               onRepair={repairVideoPreviewSource}
                             />
