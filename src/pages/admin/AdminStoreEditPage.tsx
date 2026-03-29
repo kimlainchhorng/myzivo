@@ -142,6 +142,7 @@ function AdminVideoPreview({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [isRepairing, setIsRepairing] = useState(false);
+  const [isBlobLoading, setIsBlobLoading] = useState(false);
   const [triedBlobFallback, setTriedBlobFallback] = useState(false);
   const [blobSrc, setBlobSrc] = useState<string | null>(null);
   const [hasLoadedFrame, setHasLoadedFrame] = useState(false);
@@ -156,6 +157,7 @@ function AdminVideoPreview({
     setIsPlaying(false);
     setCurrentSrc(src);
     setIsRepairing(false);
+    setIsBlobLoading(false);
     setTriedBlobFallback(false);
     setHasLoadedFrame(false);
     setRecoveryStage("idle");
@@ -183,6 +185,7 @@ function AdminVideoPreview({
     if (triedBlobFallback) return false;
 
     setTriedBlobFallback(true);
+    setIsBlobLoading(true);
     try {
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch video preview.");
@@ -196,6 +199,8 @@ function AdminVideoPreview({
       return true;
     } catch {
       return false;
+    } finally {
+      setIsBlobLoading(false);
     }
   };
 
@@ -206,7 +211,7 @@ function AdminVideoPreview({
   }, [autoPlay]);
 
   const runRecovery = useCallback(async () => {
-    if (isRepairing) return;
+    if (isRepairing || isBlobLoading) return;
 
     if (recoveryStage === "idle" && !blobSrc) {
       setRecoveryStage("blob");
@@ -230,12 +235,12 @@ function AdminVideoPreview({
     } finally {
       setIsRepairing(false);
     }
-  }, [blobSrc, canRepair, currentSrc, isRepairing, onRepair, recoveryStage, src]);
+  }, [blobSrc, canRepair, currentSrc, isBlobLoading, isRepairing, onRepair, recoveryStage, src]);
 
   // Give large videos (9+ MB) enough time to buffer before treating them as stalled.
   // The original 800 ms timeout caused unnecessary FFmpeg repair cycles on every load.
   useEffect(() => {
-    if (!canRepair || hasLoadedFrame || recoveryStage === "repair") return;
+    if (!canRepair || hasLoadedFrame || recoveryStage === "repair" || isBlobLoading) return;
 
     const timeoutId = window.setTimeout(() => {
       const video = videoRef.current;
@@ -254,7 +259,7 @@ function AdminVideoPreview({
     }, autoPlay ? 4000 : 5000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [autoPlay, canRepair, hasLoadedFrame, recoveryStage, runRecovery]);
+  }, [autoPlay, canRepair, hasLoadedFrame, isBlobLoading, recoveryStage, runRecovery]);
   const handlePlayToggle = () => {
     const vid = videoRef.current;
     if (!vid) return;
@@ -272,7 +277,7 @@ function AdminVideoPreview({
       <video
         key={blobSrc || currentSrc}
         ref={videoRef}
-        src={blobSrc || currentSrc}
+        src={blobSrc || (isBlobLoading ? undefined : currentSrc)}
         poster={posterUrl ?? undefined}
         className={cn("h-full w-full", videoClassName)}
         controls={controls}
@@ -314,6 +319,7 @@ function AdminVideoPreview({
         }}
         onError={() => {
           setIsPlaying(false);
+          if (isBlobLoading) return;
           void runRecovery();
         }}
       />
