@@ -213,7 +213,6 @@ const AccessibilityStatement = () => {
                   <li>• JAWS (Windows)</li>
                   <li>• NVDA (Windows)</li>
                   <li>• VoiceOver (macOS, iOS)</li>
-                  <li>• TalkBack (Android)</li>
                   <li>• Dragon NaturallySpeaking</li>
                 </ul>
               </div>
@@ -242,13 +241,13 @@ const AccessibilityStatement = () => {
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-3">Android</h4>
+                <h4 className="font-semibold mb-3">Web</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• TalkBack support</li>
-                  <li>• Font size scaling</li>
-                  <li>• Switch Access compatible</li>
-                  <li>• High contrast text</li>
-                  <li>• Magnification gestures</li>
+                  <li>• Screen reader support</li>
+                  <li>• Keyboard navigation</li>
+                  <li>• Zoom and text scaling support</li>
+                  <li>• High contrast compatibility</li>
+                  <li>• Focus indicators for interactive elements</li>
                 </ul>
               </div>
             </div>

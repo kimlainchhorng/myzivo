@@ -128,7 +128,7 @@ const CarRentalBooking = () => {
     { id: "heated-seats", label: "Heated Seats", icon: "🔥" },
     { id: "sunroof", label: "Sunroof", icon: "☀️" },
     { id: "apple-carplay", label: "Apple CarPlay", icon: "🍎" },
-    { id: "android-auto", label: "Android Auto", icon: "🤖" },
+    { id: "smartphone-integration", label: "Smartphone Integration", icon: "📲" },
     { id: "keyless", label: "Keyless Entry", icon: "🔑" },
   ];
 

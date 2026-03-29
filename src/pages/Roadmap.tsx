@@ -95,8 +95,8 @@ const roadmapItems: RoadmapItem[] = [
   // Next - Coming Soon
   {
     id: "mobile-apps",
-    title: "Mobile Apps (iOS & Android)",
-    description: "Native mobile apps with offline access and push notifications",
+    title: "Mobile App Enhancements",
+    description: "Enhanced mobile experience with offline access and push notifications",
     icon: Smartphone,
     status: "coming_soon",
     category: "Platform",

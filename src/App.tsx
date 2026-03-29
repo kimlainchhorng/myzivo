@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { RemoteConfigProvider } from "@/contexts/RemoteConfigContext";
 import { ZivoPlusProvider } from "@/contexts/ZivoPlusContext";
 import { UTMProvider } from "@/contexts/UTMContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
@@ -72,6 +73,7 @@ const AdminShoppingOrders = lazy(() => import("./pages/admin/AdminShoppingOrders
 const AdminAnalyticsDashboard = lazy(() => import("./pages/admin/AdminAnalyticsDashboard"));
 const AdminUsersPage = lazy(() => import("./pages/admin/AdminUsersPage"));
 const AdminPricingPage = lazy(() => import("./pages/admin/AdminPricingPage"));
+const AdminRemoteConfigPage = lazy(() => import("./pages/admin/AdminRemoteConfigPage"));
 const AdminFlightOrders = lazy(() => import("./pages/admin/AdminFlightOrders"));
 const AdminFlightSearchAnalytics = lazy(() => import("./pages/admin/AdminFlightSearchAnalytics"));
 const AdminFlightApiMonitoring = lazy(() => import("./pages/admin/AdminFlightApiMonitoring"));
@@ -361,6 +363,7 @@ const App = () => (
                 <GeoDetector />
                 <RoutePrefetcher />
                 <AuthProvider>
+                   <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
                     <CurrencyProvider>
@@ -424,6 +427,7 @@ const App = () => (
                 <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalyticsDashboard /></ProtectedRoute>} />
                 <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
                 <Route path="/admin/pricing" element={<ProtectedRoute><AdminPricingPage /></ProtectedRoute>} />
+                <Route path="/admin/remote-config" element={<ProtectedRoute><AdminRemoteConfigPage /></ProtectedRoute>} />
                 <Route path="/admin/flight-orders" element={<ProtectedRoute><AdminFlightOrders /></ProtectedRoute>} />
                 <Route path="/admin/flight-searches" element={<ProtectedRoute><AdminFlightSearchAnalytics /></ProtectedRoute>} />
                 <Route path="/admin/flight-api" element={<ProtectedRoute><AdminFlightApiMonitoring /></ProtectedRoute>} />
@@ -657,6 +661,7 @@ const App = () => (
           <SpatialCursor />
           <BrandThemeApplicator />
         </ZivoPlusProvider>
+        </RemoteConfigProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

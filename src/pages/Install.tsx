@@ -23,7 +23,6 @@ const Install = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
-  const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
@@ -37,7 +36,6 @@ const Install = () => {
 
     const ua = navigator.userAgent;
     setIsIOS(/iPad|iPhone|iPod/.test(ua));
-    setIsAndroid(/Android/.test(ua));
 
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
@@ -196,11 +194,11 @@ const Install = () => {
               </li>
             </ol>
           </div>
-        ) : isAndroid ? (
+        ) : (
           <div className="p-6 rounded-3xl bg-muted/50 border border-border/50">
             <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
               <Smartphone className="w-5 h-5 text-primary" />
-              Install on Android
+              Install on Your Mobile Browser
             </h3>
             <ol className="space-y-4">
               <li className="flex items-start gap-3">
@@ -216,12 +214,6 @@ const Install = () => {
                 <span className="font-medium">Confirm the installation</span>
               </li>
             </ol>
-          </div>
-        ) : (
-          <div className="text-center p-6 rounded-3xl bg-muted/50 border border-border/50">
-            <Smartphone className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-            <h3 className="font-bold text-lg mb-1">Visit on Mobile</h3>
-            <p className="text-sm text-muted-foreground">Open this page on your phone to install ZIVO</p>
           </div>
         )}
       </div>
