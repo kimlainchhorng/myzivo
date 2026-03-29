@@ -527,6 +527,21 @@ function CommentSheet({
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Check if user has a verified account (phone_verified)
+  const { data: isVerified } = useQuery({
+    queryKey: ["user-verified", userId],
+    queryFn: async () => {
+      if (!userId) return false;
+      const { data } = await supabase
+        .from("profiles")
+        .select("phone_verified")
+        .eq("user_id", userId)
+        .single();
+      return data?.phone_verified ?? false;
+    },
+    enabled: !!userId,
+  });
+
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["post-comments", postId],
     queryFn: async () => {
