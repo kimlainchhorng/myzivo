@@ -498,7 +498,139 @@ function ReelCard({
   );
 }
 
-// Main FeedPage
+// ── Comment Sheet ────────────────────────────────────────────────────────────
+
+function CommentSheet({
+  postId,
+  userId,
+  onClose,
+}: {
+  postId: string;
+  userId: string | null;
+  onClose: () => void;
+}) {
+  const [commentText, setCommentText] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const queryClient = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: comments = [], isLoading } = useQuery({
+    queryKey: ["post-comments", postId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_post_comments")
+        .select("*")
+        .eq("post_id", postId)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const handleSubmit = async () => {
+    if (!commentText.trim() || !userId) {
+      if (!userId) toast.error("Please sign in to comment");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("store_post_comments").insert({
+      post_id: postId,
+      user_id: userId,
+      content: commentText.trim(),
+    });
+    if (error) {
+      toast.error("Failed to post comment");
+    } else {
+      setCommentText("");
+      queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
+      queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+    }
+    setSubmitting(false);
+  };
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex flex-col justify-end"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" />
+
+      {/* Sheet */}
+      <div
+        className="relative bg-background rounded-t-2xl max-h-[65vh] flex flex-col animate-in slide-in-from-bottom duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <span className="font-semibold text-foreground">Comments ({comments.length})</span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted"
+          >
+            <XIcon className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Comments list */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : comments.length === 0 ? (
+            <p className="text-center text-muted-foreground text-sm py-8">No comments yet. Be the first!</p>
+          ) : (
+            comments.map((c: any) => (
+              <div key={c.id} className="flex gap-2">
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-muted-foreground">
+                    {(c.user_id || "?").substring(0, 2).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground">{c.content}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {new Date(c.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Input */}
+        <div className="px-4 py-3 border-t border-border flex gap-2" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
+          <input
+            ref={inputRef}
+            type="text"
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            placeholder={userId ? "Add a comment..." : "Sign in to comment"}
+            className="flex-1 h-10 rounded-full bg-muted px-4 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+            disabled={!userId || submitting}
+          />
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!commentText.trim() || submitting || !userId}
+            className="w-10 h-10 rounded-full bg-primary flex items-center justify-center disabled:opacity-40"
+          >
+            <Send className="w-4 h-4 text-primary-foreground" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main FeedPage ─────────────────────────────────────────────────────────────
 
 export default function FeedPage() {
   const { t } = useI18n();
@@ -506,6 +638,7 @@ export default function FeedPage() {
   const [globalMuted, setGlobalMuted] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [commentPostId, setCommentPostId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
@@ -570,7 +703,6 @@ export default function FeedPage() {
       toast.error("Please sign in to like posts");
       return;
     }
-    // Optimistic update
     setUserLikedPostIds((prev) => {
       const next = new Set(prev);
       if (currentlyLiked) next.delete(postId);
@@ -583,11 +715,10 @@ export default function FeedPage() {
     } else {
       await supabase.from("store_post_likes").insert({ post_id: postId, user_id: userId });
     }
-    // Refresh feed to get updated counts
     queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
   }, [userId, queryClient]);
 
-  // IntersectionObserver: set activeIndex when a card is 60% visible
+  // IntersectionObserver
   useEffect(() => {
     if (posts.length === 0) return;
     const observers: IntersectionObserver[] = [];
@@ -650,10 +781,20 @@ export default function FeedPage() {
               userId={userId}
               userLikedPostIds={userLikedPostIds}
               onToggleLike={handleToggleLike}
+              onOpenComments={(id) => setCommentPostId(id)}
             />
           </div>
         ))}
       </div>
+
+      {/* Comment sheet */}
+      {commentPostId && (
+        <CommentSheet
+          postId={commentPostId}
+          userId={userId}
+          onClose={() => setCommentPostId(null)}
+        />
+      )}
 
       {/* Bottom navigation overlaid on top */}
       <ZivoMobileNav />
