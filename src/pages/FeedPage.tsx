@@ -499,15 +499,31 @@ function ReelCard({
           onClick={async (e) => {
             e.stopPropagation();
             const shareUrl = `${window.location.origin}/feed?post=${post.id}`;
-            if (navigator.share) {
-              try {
+            try {
+              if (navigator.share) {
                 await navigator.share({ title: post.caption || "Check this out!", url: shareUrl });
-              } catch { /* user cancelled */ }
-            } else {
+                return;
+              }
+            } catch (err: any) {
+              if (err?.name === "AbortError") return; // user cancelled
+            }
+            // Fallback: copy to clipboard
+            try {
               await navigator.clipboard.writeText(shareUrl);
               toast.success("Link copied!");
+            } catch {
+              // Final fallback for restricted contexts
+              const ta = document.createElement("textarea");
+              ta.value = shareUrl;
+              ta.style.position = "fixed";
+              ta.style.opacity = "0";
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand("copy");
+              document.body.removeChild(ta);
+              toast.success("Link copied!");
             }
-          }}
+          }
           className="flex flex-col items-center gap-1"
           aria-label="Share"
         >
