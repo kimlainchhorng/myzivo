@@ -6,15 +6,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Eye } from "lucide-react";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import {
   Loader2, Heart, MessageCircle, Share2, Store,
-  Play, Volume2, VolumeX, RefreshCw, Send, X as XIcon,
+  Play, Volume2, VolumeX, RefreshCw, Send, X as XIcon, Eye,
 } from "lucide-react";
-import { Eye } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
