@@ -97,7 +97,7 @@ const Login = () => {
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      email: localStorage.getItem("zivo_saved_email") || "",
       password: "",
     },
   });
