@@ -256,7 +256,6 @@ function ReelCard({
           key={currentSrc}
           src={currentSrc}
           poster={posterUrl ?? undefined}
-          crossOrigin="anonymous"
           className="absolute inset-0 w-full h-full object-cover"
           playsInline
           loop
