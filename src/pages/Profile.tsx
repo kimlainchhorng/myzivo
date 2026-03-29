@@ -769,9 +769,24 @@ const Profile = () => {
                   </GlassCard3D>
                 </ParallaxSection>
               )}
-            </div>
-          )}
-        </div>
+
+              {/* ── Sign Out (bottom) ── */}
+              {user && (
+                <ParallaxSection index={7}>
+                  <div className="pt-2 pb-4">
+                    <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-13 text-base font-semibold rounded-2xl backdrop-blur-xl bg-card/50 border-border/40 shadow-lg shadow-foreground/[0.03] hover:shadow-xl hover:bg-card/70 transition-all duration-300 touch-manipulation"
+                        onClick={async () => { await signOut(); navigate("/"); }}
+                      >
+                        {t("profile.sign_out")}
+                      </Button>
+                    </motion.div>
+                  </div>
+                </ParallaxSection>
+              )}
       </div>
 
       <ZivoMobileNav />
