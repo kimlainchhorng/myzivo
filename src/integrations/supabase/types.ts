@@ -28839,6 +28839,8 @@ export type Database = {
           avatar_url: string | null
           background_check_reason: string | null
           background_check_status: string
+          cover_position: number | null
+          cover_url: string | null
           created_at: string | null
           date_of_birth: string | null
           email: string | null
@@ -28876,6 +28878,8 @@ export type Database = {
           avatar_url?: string | null
           background_check_reason?: string | null
           background_check_status?: string
+          cover_position?: number | null
+          cover_url?: string | null
           created_at?: string | null
           date_of_birth?: string | null
           email?: string | null
@@ -28913,6 +28917,8 @@ export type Database = {
           avatar_url?: string | null
           background_check_reason?: string | null
           background_check_status?: string
+          cover_position?: number | null
+          cover_url?: string | null
           created_at?: string | null
           date_of_birth?: string | null
           email?: string | null
