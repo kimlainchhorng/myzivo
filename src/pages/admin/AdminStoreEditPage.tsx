@@ -1782,82 +1782,6 @@ export default function AdminStoreEditPage() {
     <>
     <Layout title={`Edit: ${store.name}`}>
       <div className="space-y-6">
-        {(isAdmin || activeTab === "profile") && (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h2 className="text-xl font-bold text-foreground">{store.name}</h2>
-              <p className="text-sm text-muted-foreground">/{store.slug} · {store.market}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Language Switcher */}
-            <Popover open={isLangOpen} onOpenChange={setIsLangOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2 h-9">
-                  {currentLangData?.flag_svg ? (
-                    <img src={currentLangData.flag_svg} alt="" className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm border border-foreground/10" />
-                  ) : (
-                    <Globe className="h-4 w-4" />
-                  )}
-                  <span className="text-xs font-medium">{currentLangData?.native_name || "English"}</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-72 p-0 bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-2xl overflow-hidden" align="end" sideOffset={8}>
-                {/* Header with background flag watermark */}
-                <div className="relative p-3 border-b border-border/50 bg-muted/30 overflow-hidden">
-                  {currentLangData?.flag_svg && (
-                    <img src={currentLangData.flag_svg} alt="" className="absolute -right-4 -top-4 w-32 h-32 opacity-[0.07] pointer-events-none blur-[1px]" style={{ transform: "rotate(-12deg) scale(1.3)" }} />
-                  )}
-                  <div className="flex items-center gap-2 relative z-10">
-                    <Globe className="w-4 h-4 text-muted-foreground" />
-                    <p className="text-sm font-medium">{t("admin.store.select_language")}</p>
-                  </div>
-                </div>
-                <div className="overflow-y-auto max-h-[360px] p-1">
-                  {activeLanguages.map(lang => (
-                    <button
-                      key={lang.code}
-                      onClick={() => { changeLanguage(lang.code); setIsLangOpen(false); }}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative overflow-hidden group",
-                        currentLanguage === lang.code ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "hover:bg-muted/60"
-                      )}
-                    >
-                      {/* Hover background flag watermark */}
-                      {lang.flag_svg && (
-                        <img src={lang.flag_svg} alt="" className="absolute right-1 top-1/2 -translate-y-1/2 w-16 h-16 opacity-0 group-hover:opacity-[0.08] transition-opacity duration-300 pointer-events-none blur-[0.5px]" style={{ transform: "translateY(-50%) rotate(-8deg)" }} />
-                      )}
-                      {lang.flag_svg ? (
-                        <img src={lang.flag_svg} alt={lang.name} className="w-6 h-[17px] rounded-[3px] object-cover shadow-sm border border-black/10 shrink-0 relative z-10" />
-                      ) : (
-                        <span className="text-lg">{lang.flag_emoji}</span>
-                      )}
-                      <div className="flex-1 text-left relative z-10">
-                        <p className="font-medium text-sm">{lang.name}</p>
-                        <p className="text-xs text-muted-foreground">{lang.native_name}</p>
-                      </div>
-                      <span className="text-[10px] font-mono text-muted-foreground/70 uppercase relative z-10">{lang.code}</span>
-                      {currentLanguage === lang.code && <Check className="w-4 h-4 text-primary relative z-10" />}
-                    </button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            <Button onClick={() => setChatOpen(true)} variant="outline" className="gap-2">
-              <MessageCircle className="h-4 w-4" /> Live Chat
-            </Button>
-            <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" className="gap-2">
-              <Eye className="h-4 w-4" /> {t("admin.store.preview")}
-            </Button>
-          </div>
-        </div>
-        )}
-
         {(isAdmin || activeTab === "profile") && (<>
         <Card className="overflow-hidden">
           <div
@@ -1960,7 +1884,85 @@ export default function AdminStoreEditPage() {
             )}
           </div>
         </Card>
+        </>)}
 
+        {(isAdmin || activeTab === "profile") && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="icon" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h2 className="text-xl font-bold text-foreground">{store.name}</h2>
+              <p className="text-sm text-muted-foreground">/{store.slug} · {store.market}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Language Switcher */}
+            <Popover open={isLangOpen} onOpenChange={setIsLangOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2 h-9">
+                  {currentLangData?.flag_svg ? (
+                    <img src={currentLangData.flag_svg} alt="" className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm border border-foreground/10" />
+                  ) : (
+                    <Globe className="h-4 w-4" />
+                  )}
+                  <span className="text-xs font-medium">{currentLangData?.native_name || "English"}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 p-0 bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-2xl overflow-hidden" align="end" sideOffset={8}>
+                {/* Header with background flag watermark */}
+                <div className="relative p-3 border-b border-border/50 bg-muted/30 overflow-hidden">
+                  {currentLangData?.flag_svg && (
+                    <img src={currentLangData.flag_svg} alt="" className="absolute -right-4 -top-4 w-32 h-32 opacity-[0.07] pointer-events-none blur-[1px]" style={{ transform: "rotate(-12deg) scale(1.3)" }} />
+                  )}
+                  <div className="flex items-center gap-2 relative z-10">
+                    <Globe className="w-4 h-4 text-muted-foreground" />
+                    <p className="text-sm font-medium">{t("admin.store.select_language")}</p>
+                  </div>
+                </div>
+                <div className="overflow-y-auto max-h-[360px] p-1">
+                  {activeLanguages.map(lang => (
+                    <button
+                      key={lang.code}
+                      onClick={() => { changeLanguage(lang.code); setIsLangOpen(false); }}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative overflow-hidden group",
+                        currentLanguage === lang.code ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "hover:bg-muted/60"
+                      )}
+                    >
+                      {/* Hover background flag watermark */}
+                      {lang.flag_svg && (
+                        <img src={lang.flag_svg} alt="" className="absolute right-1 top-1/2 -translate-y-1/2 w-16 h-16 opacity-0 group-hover:opacity-[0.08] transition-opacity duration-300 pointer-events-none blur-[0.5px]" style={{ transform: "translateY(-50%) rotate(-8deg)" }} />
+                      )}
+                      {lang.flag_svg ? (
+                        <img src={lang.flag_svg} alt={lang.name} className="w-6 h-[17px] rounded-[3px] object-cover shadow-sm border border-black/10 shrink-0 relative z-10" />
+                      ) : (
+                        <span className="text-lg">{lang.flag_emoji}</span>
+                      )}
+                      <div className="flex-1 text-left relative z-10">
+                        <p className="font-medium text-sm">{lang.name}</p>
+                        <p className="text-xs text-muted-foreground">{lang.native_name}</p>
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground/70 uppercase relative z-10">{lang.code}</span>
+                      {currentLanguage === lang.code && <Check className="w-4 h-4 text-primary relative z-10" />}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Button onClick={() => setChatOpen(true)} variant="outline" className="gap-2">
+              <MessageCircle className="h-4 w-4" /> Live Chat
+            </Button>
+            <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" className="gap-2">
+              <Eye className="h-4 w-4" /> {t("admin.store.preview")}
+            </Button>
+          </div>
+        </div>
+        )}
+
+        {(isAdmin || activeTab === "profile") && (<>
         {/* ── Gallery Images ── */}
         <Card>
           <CardHeader className="pb-3">
