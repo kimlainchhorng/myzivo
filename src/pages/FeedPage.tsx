@@ -607,14 +607,21 @@ function CommentSheet({
           ) : comments.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">No comments yet. Be the first!</p>
           ) : (
-            comments.map((c: any) => (
+            comments.map((c: any) => {
+              const prof = c.profiles;
+              const name = prof?.full_name || "User";
+              const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+              return (
               <div key={c.id} className="flex gap-2">
-                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-muted-foreground">
-                    {(c.user_id || "?").substring(0, 2).toUpperCase()}
-                  </span>
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden">
+                  {prof?.avatar_url ? (
+                    <img src={prof.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-bold text-muted-foreground">{initials}</span>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-foreground mb-0.5">{name}</p>
                   <p className="text-sm text-foreground">{c.content}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {new Date(c.created_at).toLocaleDateString()}
