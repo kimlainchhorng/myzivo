@@ -127,6 +127,16 @@ const Login = () => {
 
   const onLoginSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
+    
+    // Save or clear remembered email
+    if (rememberMe) {
+      localStorage.setItem("zivo_remember_me", "true");
+      localStorage.setItem("zivo_saved_email", data.email);
+    } else {
+      localStorage.removeItem("zivo_remember_me");
+      localStorage.removeItem("zivo_saved_email");
+    }
+
     const { error } = await signIn(data.email, data.password);
 
     if (error) {
