@@ -51,12 +51,18 @@ function ReelCard({
   globalMuted,
   onToggleMute,
   onNavigate,
+  userId,
+  userLikedPostIds,
+  onToggleLike,
 }: {
   post: FeedPost;
   isActive: boolean;
   globalMuted: boolean;
   onToggleMute: () => void;
   onNavigate: (slug: string) => void;
+  userId: string | null;
+  userLikedPostIds: Set<string>;
+  onToggleLike: (postId: string, currentlyLiked: boolean) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -68,7 +74,9 @@ function ReelCard({
   const [triedBlobFallback, setTriedBlobFallback] = useState(false);
   const [triedFFmpegRepair, setTriedFFmpegRepair] = useState(false);
   const [hasLoadedFrame, setHasLoadedFrame] = useState(false);
-  const [liked, setLiked] = useState(false);
+  const viewTracked = useRef(false);
+
+  const liked = userLikedPostIds.has(post.id);
 
   const normalizedUrls = useMemo(
     () => (post.media_urls || []).map((u) => normalizeStorePostMediaUrl(u)).filter(Boolean),
