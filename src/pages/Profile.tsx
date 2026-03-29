@@ -762,32 +762,9 @@ const Profile = () => {
                 </ParallaxSection>
               )}
 
-              {/* ── Account Status (3D glass) ── */}
-              <ParallaxSection index={6}>
-                <GlassCard3D className="shadow-xl">
-                  <div className="p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-emerald-600/10 flex items-center justify-center shadow-inner">
-                          <Shield className="w-5 h-5 text-emerald-500" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm">{t("profile.account_status")}</p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                            <Clock className="w-3 h-3" />
-                            {t("profile.member_since")} {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "recently"}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge className="bg-emerald-500/12 text-emerald-500 border-emerald-500/20 font-semibold text-xs rounded-full px-3">{t("profile.active")}</Badge>
-                    </div>
-                  </div>
-                </GlassCard3D>
-              </ParallaxSection>
-
               {/* ── Partner Attribution (3D glass) ── */}
               {affiliateAttribution.hasAffiliateAttribution && (
-                <ParallaxSection index={7}>
+                <ParallaxSection index={6}>
                   <GlassCard3D className="shadow-xl">
                     <div className="p-4">
                       <div className="flex items-center gap-3">
@@ -803,17 +780,6 @@ const Profile = () => {
                   </GlassCard3D>
                 </ParallaxSection>
               )}
-
-              {/* ── Delete Account (subtle) ── */}
-              <ParallaxSection index={8}>
-                <div className="pt-2 pb-4">
-                  <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
-                    <Button variant="ghost" className="w-full text-destructive/50 hover:text-destructive hover:bg-destructive/5 text-xs font-medium rounded-2xl" onClick={() => navigate("/profile/delete-account")}>
-                      {t("profile.delete_account")}
-                    </Button>
-                  </motion.div>
-                </div>
-              </ParallaxSection>
             </div>
           )}
         </div>
