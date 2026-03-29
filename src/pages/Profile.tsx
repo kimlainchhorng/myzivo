@@ -279,12 +279,7 @@ const Profile = () => {
     { icon: ShoppingBag, label: t("profile.my_orders"), href: "/grocery/orders", description: t("profile.orders_desc"), color: "from-blue-500/15 to-blue-600/10", iconColor: "text-blue-500" },
     { icon: Wallet, label: t("profile.wallet"), href: "/wallet", description: t("profile.wallet_desc"), color: "from-emerald-500/15 to-emerald-600/10", iconColor: "text-emerald-500" },
     { icon: Sparkles, label: t("profile.loyalty"), href: "/account/loyalty", description: t("profile.loyalty_desc"), color: "from-amber-500/15 to-amber-600/10", iconColor: "text-amber-500" },
-    { icon: Gift, label: t("profile.gift_cards"), href: "/account/gift-cards", description: t("profile.gift_cards_desc"), color: "from-pink-500/15 to-pink-600/10", iconColor: "text-pink-500" },
-    { icon: CreditCard, label: t("profile.payment_methods"), href: "/payment-methods", description: t("profile.payment_desc"), color: "from-violet-500/15 to-violet-600/10", iconColor: "text-violet-500" },
     { icon: MapPin, label: t("profile.saved_addresses"), href: "/account/addresses", description: t("profile.addresses_desc"), color: "from-rose-500/15 to-rose-600/10", iconColor: "text-rose-500" },
-    { icon: Bell, label: t("profile.notifications"), href: "/notifications", description: t("profile.notifications_desc"), color: "from-sky-500/15 to-sky-600/10", iconColor: "text-sky-500" },
-    { icon: Lock, label: t("profile.security"), href: "/account/security", description: t("profile.security_desc"), color: "from-teal-500/15 to-teal-600/10", iconColor: "text-teal-500" },
-    { icon: Globe, label: t("profile.preferences"), href: "/account/preferences", description: t("profile.preferences_desc"), color: "from-indigo-500/15 to-indigo-600/10", iconColor: "text-indigo-500" },
   ];
 
   const currentLang = LANGS.find(l => l.code === currentLanguage) || LANGS[0];
