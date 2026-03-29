@@ -787,6 +787,9 @@ const Profile = () => {
                   </div>
                 </ParallaxSection>
               )}
+            </div>
+          )}
+        </div>
       </div>
 
       <ZivoMobileNav />
