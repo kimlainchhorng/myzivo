@@ -893,13 +893,17 @@ export default function AdminStoreEditPage() {
         // Simplified pipeline — minimal filters to avoid crashes
         await ffmpeg.exec([
           "-i", inputName,
+          "-map", "0:v:0",
+          "-map", "0:a:0?",
           "-movflags", "+faststart",
           "-pix_fmt", "yuv420p",
           "-c:v", "libx264",
           "-preset", "ultrafast",
           "-profile:v", "baseline",
           "-level", "3.0",
-          "-an",
+          "-c:a", "aac",
+          "-profile:a", "aac_low",
+          "-b:a", "128k",
           "-y",
           outputName,
         ]);
