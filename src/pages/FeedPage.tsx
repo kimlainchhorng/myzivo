@@ -133,6 +133,14 @@ function ReelCard({
     };
   }, [blobSrc]);
 
+  useEffect(() => {
+    if (!isVideoPost || blobSrc || triedBlobFallback || !sourceUrl) return;
+    if (!/^https?:\/\//i.test(sourceUrl)) return;
+
+    // Capacitor iOS WebView is more reliable with same-origin blob URLs for remote videos.
+    void tryBlobFallback(sourceUrl);
+  }, [blobSrc, isVideoPost, sourceUrl, triedBlobFallback]);
+
   const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
