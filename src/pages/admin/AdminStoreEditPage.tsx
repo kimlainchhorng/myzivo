@@ -67,8 +67,9 @@ function generateSku(storeName: string, category: string, name: string): string 
 function ensureVisibleVideoFrame(video: HTMLVideoElement) {
   if (!Number.isFinite(video.duration) || video.duration <= 0) return;
 
-  const targetTime = Math.min(1, Math.max(video.duration * 0.1, 0.25));
-  if (Math.abs(video.currentTime - targetTime) < 0.01) return;
+  // Seek to 10% of duration, at least 1.5 s, capped at 3 s — skips dark iPhone intros.
+  const targetTime = Math.min(3, Math.max(video.duration * 0.1, 1.5));
+  if (Math.abs(video.currentTime - targetTime) < 0.05) return;
 
   try {
     video.currentTime = targetTime;
@@ -77,8 +78,14 @@ function ensureVisibleVideoFrame(video: HTMLVideoElement) {
   }
 }
 
-function captureVideoPosterFrame(video: HTMLVideoElement, setPosterUrl: (value: string | null | ((prev: string | null) => string | null)) => void) {
+function captureVideoPosterFrame(
+  video: HTMLVideoElement,
+  setPosterUrl: (value: string | null | ((prev: string | null) => string | null)) => void,
+  onCORSFailure?: () => void,
+) {
   if (video.videoWidth === 0 || video.videoHeight === 0) return;
+  // Don't capture the black frame that appears before the seek settles.
+  if (video.currentTime < 0.5) return;
 
   try {
     const canvas = document.createElement("canvas");
@@ -93,9 +100,21 @@ function captureVideoPosterFrame(video: HTMLVideoElement, setPosterUrl: (value: 
       if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
       return nextPoster;
     });
-  } catch {
-    // Ignore poster extraction failures.
+  } catch (err) {
+    // On CORS canvas taint (SecurityError), request a blob-URL reload so the next
+    // capture attempt can draw without cross-origin restrictions.
+    if (err instanceof DOMException && err.name === "SecurityError") {
+      onCORSFailure?.();
+    }
   }
+}
+
+function looksPlayableVideoElement(video: HTMLVideoElement) {
+  const hasDuration = Number.isFinite(video.duration) && video.duration > 0;
+  const hasDimensions = video.videoWidth > 0 && video.videoHeight > 0;
+  const hasDecodedFrame = video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+
+  return hasDuration && hasDimensions && hasDecodedFrame;
 }
 
 function AdminVideoPreview({
@@ -247,6 +266,7 @@ function AdminVideoPreview({
         ref={videoRef}
         src={blobSrc || currentSrc}
         poster={posterUrl ?? undefined}
+        crossOrigin="anonymous"
         className={cn("h-full w-full", videoClassName)}
         controls={controls}
         playsInline
@@ -261,12 +281,23 @@ function AdminVideoPreview({
           setIsRepairing(false);
           setHasLoadedFrame(true);
           ensureVisibleVideoFrame(event.currentTarget);
-          captureVideoPosterFrame(event.currentTarget, setPosterUrl);
+          captureVideoPosterFrame(event.currentTarget, setPosterUrl, () => {
+            if (!triedBlobFallback) void tryBlobFallback(currentSrc);
+          });
+          tryAutoplay(event.currentTarget);
+        }}
+        onCanPlay={(event) => {
+          setIsRepairing(false);
+          setHasLoadedFrame(true);
+          // Don't capture here — the seek from onLoadedMetadata hasn't finished yet.
+          // onSeeked will fire once the frame is at the seeked position.
           tryAutoplay(event.currentTarget);
         }}
         onSeeked={(event) => {
           setHasLoadedFrame(true);
-          captureVideoPosterFrame(event.currentTarget, setPosterUrl);
+          captureVideoPosterFrame(event.currentTarget, setPosterUrl, () => {
+            if (!triedBlobFallback) void tryBlobFallback(currentSrc);
+          });
           tryAutoplay(event.currentTarget);
         }}
         onPlay={() => setIsPlaying(true)}
@@ -665,21 +696,43 @@ export default function AdminStoreEditPage() {
           resolve(result);
         };
 
-        const timeoutId = window.setTimeout(() => finalize(false), 5000);
+        const timeoutId = window.setTimeout(() => finalize(false), 8000);
 
         video.preload = "auto";
         video.muted = true;
         video.playsInline = true;
+        video.setAttribute("playsinline", "true");
+        video.setAttribute("webkit-playsinline", "true");
 
-        // Use canplaythrough for a stronger playability signal
-        video.oncanplaythrough = () => {
-          const hasDuration = Number.isFinite(video.duration) && video.duration > 0;
-          const hasVideo = video.videoWidth > 0 && video.videoHeight > 0;
-          finalize(hasDuration && hasVideo);
+        const confirmPlayable = () => {
+          if (looksPlayableVideoElement(video)) {
+            finalize(true);
+          }
         };
+
+        video.onloadeddata = confirmPlayable;
+        video.oncanplay = confirmPlayable;
+        video.oncanplaythrough = confirmPlayable;
+        video.onseeked = confirmPlayable;
+
         video.onloadedmetadata = () => {
-          if (!Number.isFinite(video.duration) || video.duration <= 0) {
+          const hasDuration = Number.isFinite(video.duration) && video.duration > 0;
+          const hasDimensions = video.videoWidth > 0 && video.videoHeight > 0;
+
+          if (!hasDuration || !hasDimensions) {
             finalize(false);
+            return;
+          }
+
+          // Safari/iOS WebView may never fire canplaythrough for otherwise valid files.
+          // Seek slightly forward to force a decodable frame before rejecting the upload.
+          try {
+            const targetTime = Math.min(0.1, Math.max(video.duration * 0.05, 0.05));
+            if (Number.isFinite(targetTime) && targetTime > 0) {
+              video.currentTime = targetTime;
+            }
+          } catch {
+            window.setTimeout(confirmPlayable, 0);
           }
         };
         video.onerror = () => finalize(false);
