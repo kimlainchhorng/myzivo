@@ -5,7 +5,7 @@ import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
 import SEOHead from "@/components/SEOHead";
 import {
-  User, ArrowLeft, Loader2, Sparkles,
+  User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
   Shield, Star, ChevronRight,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
   Settings,
@@ -15,13 +15,15 @@ import { CardContent, CardHeader, CardTitle, CardDescription } from "@/component
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
 import { useAffiliateAttribution } from "@/hooks/useAffiliateAttribution";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const LANGS = [
   { code: "en", label: "English", cc: "us" },
