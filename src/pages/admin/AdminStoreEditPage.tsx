@@ -1750,7 +1750,7 @@ export default function AdminStoreEditPage() {
     }
   };
 
-  const storeOwnerTitle = activeTab === "orders" ? "Orders" : activeTab === "products" ? "Products" : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : `Edit: ${store?.name || "Store"}`;
+  const storeOwnerTitle = activeTab === "orders" ? "Orders" : activeTab === "products" ? "Products" : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`;
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
     <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
   );
@@ -2254,7 +2254,7 @@ export default function AdminStoreEditPage() {
             </TabsList>
           )}
 
-          {(isAdmin || activeTab === "profile") && (
+          {(isAdmin || activeTab === "profile" || activeTab === "settings") && (
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-card">
             <span className="text-sm font-medium text-foreground whitespace-nowrap">៛ KHR Rate</span>
             <span className="text-xs text-muted-foreground whitespace-nowrap">1 USD =</span>
@@ -2272,6 +2272,11 @@ export default function AdminStoreEditPage() {
           )}
 
           <TabsContent value="profile">
+            {/* Profile tab — cover, logo, posts, gallery (store info moved to Settings) */}
+          </TabsContent>
+
+          {/* Settings Tab — Store Information */}
+          <TabsContent value="settings">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">{t("admin.store.store_info")}</CardTitle>
