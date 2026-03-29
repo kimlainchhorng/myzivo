@@ -1000,7 +1000,8 @@ export default function AdminStoreEditPage() {
       const transcoded = await withTimeout(transcodeVideoForBrowser(file), 45000, "Transcode timeout");
       const playable = await probeVideoFile(transcoded);
       if (playable) return transcoded;
-      console.warn("[PostMedia] Transcoded output not playable, trying fallback strategies.");
+      console.warn("[PostMedia] Transcoded output failed browser probe; using converted MP4 anyway.");
+      return transcoded;
     } catch (error) {
       console.warn("[PostMedia] Primary transcode failed:", error);
     }
@@ -1009,6 +1010,8 @@ export default function AdminStoreEditPage() {
       const normalized = await withTimeout(normalizeVideoAudioForBrowser(file), 25000, "Audio normalize timeout");
       const playable = await probeVideoFile(normalized);
       if (playable) return normalized;
+      console.warn("[PostMedia] Audio-normalized output failed browser probe; using converted MP4 anyway.");
+      return normalized;
     } catch (error) {
       console.warn("[PostMedia] Audio normalize failed:", error);
     }
@@ -1017,8 +1020,42 @@ export default function AdminStoreEditPage() {
       const stripped = await withTimeout(stripVideoAudioForPreview(file), 20000, "Strip audio timeout");
       const playable = await probeVideoFile(stripped);
       if (playable) return stripped;
+      console.warn("[PostMedia] Audio-stripped output failed browser probe; using converted MP4 anyway.");
+      return stripped;
     } catch (error) {
       console.warn("[PostMedia] Strip audio failed:", error);
+    }
+
+    const originalLooksUsable = await new Promise<boolean>((resolve) => {
+      const objectUrl = URL.createObjectURL(file);
+      const video = document.createElement("video");
+      const finalize = (result: boolean) => {
+        video.removeAttribute("src");
+        video.load();
+        URL.revokeObjectURL(objectUrl);
+        resolve(result);
+      };
+      const timeoutId = window.setTimeout(() => finalize(false), 5000);
+
+      video.preload = "metadata";
+      video.muted = true;
+      video.playsInline = true;
+      video.onloadedmetadata = () => {
+        window.clearTimeout(timeoutId);
+        const ok = Number.isFinite(video.duration) && video.duration > 0 && video.videoWidth > 0 && video.videoHeight > 0;
+        finalize(ok);
+      };
+      video.onerror = () => {
+        window.clearTimeout(timeoutId);
+        finalize(false);
+      };
+      video.src = objectUrl;
+      video.load();
+    });
+
+    if (originalLooksUsable && /^(video\/mp4|video\/quicktime)$/i.test(file.type || "")) {
+      console.warn("[PostMedia] Falling back to original upload after conversion attempts failed.");
+      return file;
     }
 
     // Hard-stop here so we do not upload a broken video that shows as "Ready" but cannot play.
