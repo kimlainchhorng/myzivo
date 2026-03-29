@@ -3,8 +3,10 @@
  * Each post fills the entire viewport. Swipe up/down to navigate.
  * Videos auto-play when scrolled into view, pause when scrolled away.
  */
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Eye } from "lucide-react";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -12,7 +14,7 @@ import {
   Loader2, Heart, MessageCircle, Share2, Store,
   Play, Volume2, VolumeX, RefreshCw,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { repairVideoBlob } from "@/utils/videoRepair";
@@ -30,6 +32,7 @@ interface FeedPost {
   store_slug?: string;
   likes_count?: number;
   comments_count?: number;
+  view_count?: number;
 }
 
 function looksPlayableVideoElement(video: HTMLVideoElement) {
@@ -48,12 +51,18 @@ function ReelCard({
   globalMuted,
   onToggleMute,
   onNavigate,
+  userId,
+  userLikedPostIds,
+  onToggleLike,
 }: {
   post: FeedPost;
   isActive: boolean;
   globalMuted: boolean;
   onToggleMute: () => void;
   onNavigate: (slug: string) => void;
+  userId: string | null;
+  userLikedPostIds: Set<string>;
+  onToggleLike: (postId: string, currentlyLiked: boolean) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -65,7 +74,9 @@ function ReelCard({
   const [triedBlobFallback, setTriedBlobFallback] = useState(false);
   const [triedFFmpegRepair, setTriedFFmpegRepair] = useState(false);
   const [hasLoadedFrame, setHasLoadedFrame] = useState(false);
-  const [liked, setLiked] = useState(false);
+  const viewTracked = useRef(false);
+
+  const liked = userLikedPostIds.has(post.id);
 
   const normalizedUrls = useMemo(
     () => (post.media_urls || []).map((u) => normalizeStorePostMediaUrl(u)).filter(Boolean),
@@ -108,6 +119,14 @@ function ReelCard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSrc]);
 
+  // Track view when post becomes active (once per post per session)
+  useEffect(() => {
+    if (!isActive || viewTracked.current) return;
+    viewTracked.current = true;
+    // Fire-and-forget view increment
+    supabase.rpc("increment_store_post_view_count" as any, { p_post_id: post.id }).then(() => {});
+  }, [isActive, post.id]);
+
   // Reset per-post playback state when source changes
   useEffect(() => {
     setIsPlaying(false);
@@ -117,6 +136,7 @@ function ReelCard({
     setTriedBlobFallback(false);
     setTriedFFmpegRepair(false);
     setHasLoadedFrame(false);
+    viewTracked.current = false;
     if (blobSrc) {
       URL.revokeObjectURL(blobSrc);
       setBlobSrc(null);
@@ -250,7 +270,7 @@ function ReelCard({
       // but dimensions are zero (the iOS black-frame bug). Do NOT trigger while the
       // browser is still buffering normally (NETWORK_LOADING).
       const trulyStalled =
-        video.networkState === HTMLMediaElement.NETWORK_STALLED ||
+        video.networkState === 3 /* NETWORK_STALLED is not in all TS typings */ ||
         (video.readyState >= HTMLMediaElement.HAVE_METADATA &&
           (video.videoWidth === 0 || video.videoHeight === 0));
 
@@ -415,18 +435,18 @@ function ReelCard({
         {/* Like */}
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); setLiked((l) => !l); }}
+          onClick={(e) => { e.stopPropagation(); onToggleLike(post.id, liked); }}
           className="flex flex-col items-center gap-1"
           aria-label="Like"
         >
           <Heart
             className={cn(
               "w-9 h-9 drop-shadow-lg transition-transform active:scale-125",
-              liked ? "text-red-500 fill-red-500" : "text-white",
+              liked ? "text-destructive fill-destructive" : "text-white",
             )}
           />
           <span className="text-white text-xs font-semibold drop-shadow">
-            {(post.likes_count || 0) + (liked ? 1 : 0)}
+            {post.likes_count || 0}
           </span>
         </button>
 
@@ -438,8 +458,32 @@ function ReelCard({
           </span>
         </button>
 
+        {/* Views */}
+        <div className="flex flex-col items-center gap-1">
+          <Eye className="w-9 h-9 text-white drop-shadow-lg" />
+          <span className="text-white text-xs font-semibold drop-shadow">
+            {post.view_count || 0}
+          </span>
+        </div>
+
         {/* Share */}
-        <button type="button" className="flex flex-col items-center gap-1" aria-label="Share">
+        <button
+          type="button"
+          onClick={async (e) => {
+            e.stopPropagation();
+            const shareUrl = `${window.location.origin}/feed?post=${post.id}`;
+            if (navigator.share) {
+              try {
+                await navigator.share({ title: post.caption || "Check this out!", url: shareUrl });
+              } catch { /* user cancelled */ }
+            } else {
+              await navigator.clipboard.writeText(shareUrl);
+              toast.success("Link copied!");
+            }
+          }}
+          className="flex flex-col items-center gap-1"
+          aria-label="Share"
+        >
           <Share2 className="w-9 h-9 text-white drop-shadow-lg" />
           <span className="text-white text-xs font-semibold drop-shadow">Share</span>
         </button>
@@ -456,6 +500,17 @@ export default function FeedPage() {
   const [globalMuted, setGlobalMuted] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const queryClient = useQueryClient();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userLikedPostIds, setUserLikedPostIds] = useState<Set<string>>(new Set());
+
+  // Get current user
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id || null);
+    });
+  }, []);
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["customer-feed"],
@@ -489,6 +544,42 @@ export default function FeedPage() {
       });
     },
   });
+
+  // Fetch user's liked post IDs
+  useEffect(() => {
+    if (!userId || posts.length === 0) return;
+    const postIds = posts.map((p) => p.id);
+    supabase
+      .from("store_post_likes")
+      .select("post_id")
+      .eq("user_id", userId)
+      .in("post_id", postIds)
+      .then(({ data }) => {
+        setUserLikedPostIds(new Set((data || []).map((d: any) => d.post_id)));
+      });
+  }, [userId, posts]);
+
+  const handleToggleLike = useCallback(async (postId: string, currentlyLiked: boolean) => {
+    if (!userId) {
+      toast.error("Please sign in to like posts");
+      return;
+    }
+    // Optimistic update
+    setUserLikedPostIds((prev) => {
+      const next = new Set(prev);
+      if (currentlyLiked) next.delete(postId);
+      else next.add(postId);
+      return next;
+    });
+
+    if (currentlyLiked) {
+      await supabase.from("store_post_likes").delete().eq("post_id", postId).eq("user_id", userId);
+    } else {
+      await supabase.from("store_post_likes").insert({ post_id: postId, user_id: userId });
+    }
+    // Refresh feed to get updated counts
+    queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+  }, [userId, queryClient]);
 
   // IntersectionObserver: set activeIndex when a card is 60% visible
   useEffect(() => {
@@ -550,6 +641,9 @@ export default function FeedPage() {
               globalMuted={globalMuted}
               onToggleMute={() => setGlobalMuted((m) => !m)}
               onNavigate={(slug) => navigate(`/grocery/shop/${slug}`)}
+              userId={userId}
+              userLikedPostIds={userLikedPostIds}
+              onToggleLike={handleToggleLike}
             />
           </div>
         ))}
