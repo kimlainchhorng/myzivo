@@ -209,6 +209,7 @@ const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 const Help = lazy(() => import("./pages/Help"));
 
 // Account pages
+const AccountSettingsPage = lazy(() => import("./pages/account/AccountSettingsPage"));
 const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
 const PreferencesPage = lazy(() => import("./pages/account/PreferencesPage"));
 const PrivacyControls = lazy(() => import("./pages/account/PrivacyControls"));
@@ -506,6 +507,7 @@ const App = () => (
                 <Route path="/payment-methods" element={<ProtectedRoute><PaymentMethodsPage /></ProtectedRoute>} />
 
                 {/* Account sub-pages */}
+                <Route path="/account/settings" element={<ProtectedRoute><AccountSettingsPage /></ProtectedRoute>} />
                 <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacyControls /></ProtectedRoute>} />
                 <Route path="/account/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
