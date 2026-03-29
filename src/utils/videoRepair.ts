@@ -79,23 +79,14 @@ export function probeVideoPlayable(file: File | Blob): Promise<boolean> {
 }
 
 /**
-<<<<<<< HEAD
- * Repair a video blob so it plays in browsers.
- * Tries: 1) audio normalize (fast), 2) full transcode (slower).
-=======
  * Repair a video blob so it plays in browsers while preserving audio when present.
- * Tries: 1) video copy + AAC audio normalization, 2) full transcode.
->>>>>>> d28079693b65c9ce1fdf74c06f9e45fd7a250b2b
+ * Tries: 1) video copy + AAC audio normalization (fast), 2) full transcode (slower).
  * Returns a playable blob URL or null.
  */
 export async function repairVideoBlob(blob: Blob): Promise<string | null> {
   const file = new File([blob], "repair.mp4", { type: blob.type || "video/mp4" });
 
-<<<<<<< HEAD
-  // Stage 1: keep video stream, normalize audio to AAC-LC.
-=======
-  // Stage 1: keep video, normalize audio to AAC for broader browser compatibility.
->>>>>>> d28079693b65c9ce1fdf74c06f9e45fd7a250b2b
+  // Stage 1: keep video, normalize audio to AAC-LC for broader browser compatibility.
   try {
     const normalized = await withTimeout(ffmpegProcess(file, [
       "-i", "INPUT",
@@ -104,12 +95,9 @@ export async function repairVideoBlob(blob: Blob): Promise<string | null> {
       "-movflags", "+faststart",
       "-c:v", "copy",
       "-c:a", "aac",
-<<<<<<< HEAD
       "-profile:a", "aac_low",
-=======
       "-ar", "44100",
       "-ac", "2",
->>>>>>> d28079693b65c9ce1fdf74c06f9e45fd7a250b2b
       "-b:a", "128k",
       "-y",
       "OUTPUT",
@@ -134,12 +122,9 @@ export async function repairVideoBlob(blob: Blob): Promise<string | null> {
       "-profile:v", "baseline",
       "-level", "3.0",
       "-c:a", "aac",
-<<<<<<< HEAD
       "-profile:a", "aac_low",
-=======
       "-ar", "44100",
       "-ac", "2",
->>>>>>> d28079693b65c9ce1fdf74c06f9e45fd7a250b2b
       "-b:a", "128k",
       "-y",
       "OUTPUT",
