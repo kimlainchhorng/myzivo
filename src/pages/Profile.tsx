@@ -282,25 +282,14 @@ const Profile = () => {
                           transition={{ type: "spring", stiffness: 300 }}
                           style={{ transformStyle: "preserve-3d" }}
                         >
-                          {/* Multi-layer glow ring */}
                           <div className="absolute -inset-4 bg-gradient-to-r from-primary via-primary/50 to-primary rounded-full blur-2xl opacity-20 group-hover/avatar:opacity-45 transition-opacity animate-pulse" />
                           <div className="absolute -inset-2 bg-gradient-to-br from-primary/40 to-primary/20 rounded-full blur-md opacity-30" />
                           <Avatar className="relative h-24 w-24 ring-[3px] ring-primary/30 shadow-2xl shadow-primary/20">
-                            <AvatarImage src={avatarPreview || profile?.avatar_url || undefined} alt="Profile" />
+                            <AvatarImage src={profile?.avatar_url || undefined} alt="Profile" />
                             <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-2xl font-bold">
                               {getInitials()}
                             </AvatarFallback>
                           </Avatar>
-                          <motion.button
-                            whileHover={{ scale: 1.2, rotate: 15 }}
-                            whileTap={{ scale: 0.85 }}
-                            onClick={handleAvatarClick}
-                            disabled={uploadAvatar.isPending}
-                            className="absolute bottom-0 right-0 p-2.5 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 hover:opacity-90 transition-opacity disabled:opacity-50 touch-manipulation ring-2 ring-background"
-                          >
-                            {uploadAvatar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                          </motion.button>
-                          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture={undefined} onChange={handleFileChange} className="hidden" />
                         </motion.div>
                       </div>
                       <CardTitle className="flex items-center justify-center gap-2 text-xl font-bold">
@@ -528,15 +517,6 @@ const Profile = () => {
           </motion.div>
         </>,
         document.body
-      )}
-      {/* Phone Verification Dialog */}
-      {pendingProfileData?.phone && (
-        <PhoneVerificationDialog
-          open={showPhoneVerify}
-          onOpenChange={setShowPhoneVerify}
-          phoneNumber={pendingProfileData.phone}
-          onVerified={handlePhoneVerified}
-        />
       )}
     </div>
   );
