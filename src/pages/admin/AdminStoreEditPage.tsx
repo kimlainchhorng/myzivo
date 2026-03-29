@@ -266,7 +266,6 @@ function AdminVideoPreview({
         ref={videoRef}
         src={blobSrc || currentSrc}
         poster={posterUrl ?? undefined}
-        crossOrigin="anonymous"
         className={cn("h-full w-full", videoClassName)}
         controls={controls}
         playsInline
