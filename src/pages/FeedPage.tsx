@@ -53,6 +53,7 @@ function ReelCard({
   userId,
   userLikedPostIds,
   onToggleLike,
+  onOpenComments,
 }: {
   post: FeedPost;
   isActive: boolean;
@@ -62,6 +63,7 @@ function ReelCard({
   userId: string | null;
   userLikedPostIds: Set<string>;
   onToggleLike: (postId: string, currentlyLiked: boolean) => void;
+  onOpenComments: (postId: string) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
