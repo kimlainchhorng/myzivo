@@ -124,7 +124,7 @@ function ReelCard({
     if (!isActive || viewTracked.current) return;
     viewTracked.current = true;
     // Fire-and-forget view increment
-    supabase.rpc("increment_store_post_view_count", { p_post_id: post.id }).then(() => {});
+    supabase.rpc("increment_store_post_view_count" as any, { p_post_id: post.id }).then(() => {});
   }, [isActive, post.id]);
 
   // Reset per-post playback state when source changes
