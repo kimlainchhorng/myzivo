@@ -171,6 +171,14 @@ function AdminVideoPreview({
     };
   }, [blobSrc]);
 
+  useEffect(() => {
+    if (!canRepair || blobSrc || triedBlobFallback) return;
+    if (!/^https?:\/\//i.test(currentSrc)) return;
+
+    // Capacitor iOS WebView is more reliable with same-origin blob URLs for remote videos.
+    void tryBlobFallback(currentSrc);
+  }, [blobSrc, canRepair, currentSrc, triedBlobFallback]);
+
   const tryBlobFallback = async (url: string) => {
     if (triedBlobFallback) return false;
 
