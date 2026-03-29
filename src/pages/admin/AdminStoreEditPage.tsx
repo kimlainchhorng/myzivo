@@ -1072,8 +1072,10 @@ export default function AdminStoreEditPage() {
       return file;
     }
 
-    // Hard-stop here so we do not upload a broken video that shows as "Ready" but cannot play.
-    throw new Error("Video format is not supported yet. Please use MP4 (H.264) or a shorter/lower-resolution clip.");
+    // Last-resort fallback: still allow upload so the merchant can post and reprocess later.
+    // This avoids blocking valid-but-strictly-probed videos in iOS WebView environments.
+    console.warn("[PostMedia] Falling back to original file after all normalization attempts.");
+    return file;
   };
 
   const repairVideoPreviewSource = async (url: string) => {

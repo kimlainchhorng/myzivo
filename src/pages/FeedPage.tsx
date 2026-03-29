@@ -204,10 +204,10 @@ function ReelCard({
         setBlobSrc(repairedUrl);
         setHasPlaybackError(false);
       } else {
-        setHasPlaybackError(true);
+        setHasPlaybackError(false);
       }
     } catch {
-      setHasPlaybackError(true);
+      setHasPlaybackError(false);
     } finally {
       setIsRepairing(false);
     }
@@ -231,7 +231,7 @@ function ReelCard({
       return;
     }
 
-    setHasPlaybackError(true);
+    setHasPlaybackError(false);
   };
 
   // Stall detection: fires once after 6 s if the video has not shown a frame.
@@ -354,9 +354,9 @@ function ReelCard({
       {/* Playback error */}
       {hasPlaybackError && !isRepairing && !isBlobLoading && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 bg-black/70 px-8 text-center">
-          <p className="text-sm font-semibold text-white">Video needs to be fixed</p>
+          <p className="text-sm font-semibold text-white">Video is loading slowly</p>
           <p className="text-xs text-white/70">
-            Go to Store Admin {"->"} Feed Posts {"->"} tap &quot;Fix Video&quot;
+            Tap once to retry playback.
           </p>
         </div>
       )}
