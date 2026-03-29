@@ -36819,6 +36819,7 @@ export type Database = {
           gallery_positions: Json | null
           hours: string | null
           id: string
+          instagram_url: string | null
           is_active: boolean | null
           khr_rate: number | null
           latitude: number | null
@@ -36832,6 +36833,8 @@ export type Database = {
           rating: number | null
           setup_complete: boolean
           slug: string
+          telegram_url: string | null
+          tiktok_url: string | null
           updated_at: string | null
         }
         Insert: {
@@ -36847,6 +36850,7 @@ export type Database = {
           gallery_positions?: Json | null
           hours?: string | null
           id?: string
+          instagram_url?: string | null
           is_active?: boolean | null
           khr_rate?: number | null
           latitude?: number | null
@@ -36860,6 +36864,8 @@ export type Database = {
           rating?: number | null
           setup_complete?: boolean
           slug: string
+          telegram_url?: string | null
+          tiktok_url?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -36875,6 +36881,7 @@ export type Database = {
           gallery_positions?: Json | null
           hours?: string | null
           id?: string
+          instagram_url?: string | null
           is_active?: boolean | null
           khr_rate?: number | null
           latitude?: number | null
@@ -36888,6 +36895,8 @@ export type Database = {
           rating?: number | null
           setup_complete?: boolean
           slug?: string
+          telegram_url?: string | null
+          tiktok_url?: string | null
           updated_at?: string | null
         }
         Relationships: []
