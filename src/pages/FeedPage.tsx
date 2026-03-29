@@ -12,7 +12,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import {
   Loader2, Heart, MessageCircle, Share2, Store,
   Play, Volume2, VolumeX, RefreshCw, Send, X as XIcon, Eye,
-  Copy, Link2,
+  Copy, Link2, ShieldCheck,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -527,6 +527,21 @@ function CommentSheet({
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Check if user has a verified account (phone_verified)
+  const { data: isVerified } = useQuery({
+    queryKey: ["user-verified", userId],
+    queryFn: async () => {
+      if (!userId) return false;
+      const { data } = await supabase
+        .from("profiles")
+        .select("phone_verified")
+        .eq("user_id", userId)
+        .single();
+      return data?.phone_verified ?? false;
+    },
+    enabled: !!userId,
+  });
+
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["post-comments", postId],
     queryFn: async () => {
@@ -639,25 +654,36 @@ function CommentSheet({
         </div>
 
         {/* Input */}
-        <div className="px-4 py-3 border-t border-border flex gap-2" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
-          <input
-            ref={inputRef}
-            type="text"
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-            placeholder={userId ? "Add a comment..." : "Sign in to comment"}
-            className="flex-1 h-10 rounded-full bg-muted px-4 text-sm text-foreground placeholder:text-muted-foreground outline-none"
-            disabled={!userId || submitting}
-          />
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!commentText.trim() || submitting || !userId}
-            className="w-10 h-10 rounded-full bg-primary flex items-center justify-center disabled:opacity-40"
-          >
-            <Send className="w-4 h-4 text-primary-foreground" />
-          </button>
+        <div className="px-4 py-3 border-t border-border" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
+          {!userId ? (
+            <p className="text-center text-sm text-muted-foreground py-1">Sign in to comment</p>
+          ) : !isVerified ? (
+            <div className="flex items-center gap-2 justify-center py-1">
+              <ShieldCheck className="w-4 h-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Only verified accounts can comment</p>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                placeholder="Add a comment..."
+                className="flex-1 h-10 rounded-full bg-muted px-4 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                disabled={submitting}
+              />
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!commentText.trim() || submitting}
+                className="w-10 h-10 rounded-full bg-primary flex items-center justify-center disabled:opacity-40"
+              >
+                <Send className="w-4 h-4 text-primary-foreground" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
