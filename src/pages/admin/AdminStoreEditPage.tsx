@@ -2254,22 +2254,6 @@ export default function AdminStoreEditPage() {
             </TabsList>
           )}
 
-          {(isAdmin || activeTab === "profile" || activeTab === "settings") && (
-          <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-card">
-            <span className="text-sm font-medium text-foreground whitespace-nowrap">៛ KHR Rate</span>
-            <span className="text-xs text-muted-foreground whitespace-nowrap">1 USD =</span>
-            <Input
-              type="number"
-              step="0.5"
-              min="1"
-              value={form.khr_rate || ""}
-              onChange={e => updateField("khr_rate", parseFloat(e.target.value) || 0)}
-              placeholder="4062.5"
-              className="w-28 h-8 text-sm"
-            />
-            <span className="text-xs text-muted-foreground">KHR</span>
-          </div>
-          )}
 
           <TabsContent value="profile">
             {/* Profile tab — cover, logo, posts, gallery (store info moved to Settings) */}
