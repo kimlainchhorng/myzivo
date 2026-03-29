@@ -323,19 +323,21 @@ function AdminVideoPreview({
           void runRecovery();
         }}
       />
-      {/* Large tap-to-play overlay - only show when paused and controls are hidden */}
-      {!isPlaying && !controls && (
+      {/* Tap-to-play/pause overlay — only when controls are hidden (grid thumbnails) */}
+      {!controls && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); handlePlayToggle(); }}
           className="absolute inset-0 z-[10] flex items-center justify-center cursor-pointer"
-          aria-label="Play"
+          aria-label={isPlaying ? "Pause" : "Play"}
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-background/70 shadow-lg backdrop-blur-sm">
-            <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
-              <path d="M2 1L18 11L2 21V1Z" fill="hsl(var(--foreground))" />
-            </svg>
-          </div>
+          {!isPlaying && (
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-background/70 shadow-lg backdrop-blur-sm">
+              <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
+                <path d="M2 1L18 11L2 21V1Z" fill="hsl(var(--foreground))" />
+              </svg>
+            </div>
+          )}
         </button>
       )}
     </div>
