@@ -3,8 +3,10 @@
  * Each post fills the entire viewport. Swipe up/down to navigate.
  * Videos auto-play when scrolled into view, pause when scrolled away.
  */
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Eye } from "lucide-react";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -12,7 +14,7 @@ import {
   Loader2, Heart, MessageCircle, Share2, Store,
   Play, Volume2, VolumeX, RefreshCw,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { repairVideoBlob } from "@/utils/videoRepair";
@@ -30,6 +32,7 @@ interface FeedPost {
   store_slug?: string;
   likes_count?: number;
   comments_count?: number;
+  view_count?: number;
 }
 
 function looksPlayableVideoElement(video: HTMLVideoElement) {
