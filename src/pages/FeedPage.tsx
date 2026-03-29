@@ -798,6 +798,7 @@ export default function FeedPage() {
   const [activeIndex, setActiveIndex] = useState(0);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
+  const [sharePostId, setSharePostId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
