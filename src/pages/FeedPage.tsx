@@ -628,7 +628,8 @@ function CommentSheet({
                   </p>
                 </div>
               </div>
-            ))
+              );
+            })
           )}
         </div>
 
