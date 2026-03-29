@@ -1125,6 +1125,34 @@ export default function AdminStoreEditPage() {
     return repairedUrl;
   };
 
+  const videoHasAudioTrack = async (file: File) => {
+    try {
+      const ffmpeg = await ensureFFmpegLoaded();
+      const inputName = `input-audio-check-${Date.now()}.mp4`;
+
+      await ffmpeg.writeFile(inputName, await fetchFile(file));
+      try {
+        await ffmpeg.ffprobe([
+          "-v", "error",
+          "-select_streams", "a",
+          "-show_entries", "stream=codec_type",
+          "-of", "csv=p=0",
+          inputName,
+        ]);
+        const output = await ffmpeg.readFile("ffprobe_output");
+        const text = output instanceof Uint8Array ? new TextDecoder().decode(output).trim() : "";
+        return text.length > 0;
+      } finally {
+        await Promise.allSettled([
+          ffmpeg.deleteFile(inputName),
+          ffmpeg.deleteFile("ffprobe_output"),
+        ]);
+      }
+    } catch {
+      return true;
+    }
+  };
+
   const uploadPostMedia = async (file: File) => {
     console.log("[PostMedia] uploadPostMedia called", { name: file.name, type: file.type, size: file.size });
     if (postMediaItems.length >= 10) {
@@ -1423,6 +1451,11 @@ export default function AdminStoreEditPage() {
         if (!resp.ok) throw new Error(`Download failed (${resp.status}): ${normalizedUrl}`);
         const blob = await resp.blob();
         const originalFile = new File([blob], "reprocess.mp4", { type: blob.type || "video/mp4" });
+
+        const hasAudio = await videoHasAudioTrack(originalFile);
+        if (!hasAudio) {
+          throw new Error("This stored video has no audio track anymore. Please replace it with the original video file to restore sound.");
+        }
 
         toast.info("Step 2/3: Converting to iOS-compatible format...");
         const transcodedFile = await transcodeVideoForBrowser(originalFile);
