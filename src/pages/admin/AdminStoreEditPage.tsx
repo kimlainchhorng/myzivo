@@ -806,7 +806,9 @@ export default function AdminStoreEditPage() {
     const objectUrl = URL.createObjectURL(file);
     const video = document.createElement("video");
     video.preload = "auto";
-    video.muted = true;
+    video.muted = false;
+    video.defaultMuted = false;
+    video.volume = 1;
     video.playsInline = true;
     video.src = objectUrl;
 
@@ -836,6 +838,8 @@ export default function AdminStoreEditPage() {
 
       const stream = (video as any).captureStream?.() || (video as any).mozCaptureStream?.();
       if (!stream) return null;
+
+      const hasAudioTrack = stream.getAudioTracks().length > 0;
 
       const chunks: BlobPart[] = [];
       const recorder = new MediaRecorder(stream, {
@@ -871,7 +875,7 @@ export default function AdminStoreEditPage() {
       });
 
       const playable = await probeVideoFile(output).catch(() => false);
-      if (!playable) return null;
+      if (!playable || !hasAudioTrack) return null;
       return output;
     } finally {
       video.pause();
@@ -893,13 +897,18 @@ export default function AdminStoreEditPage() {
         // Simplified pipeline — minimal filters to avoid crashes
         await ffmpeg.exec([
           "-i", inputName,
+          "-map", "0:v:0",
+          "-map", "0:a:0?",
           "-movflags", "+faststart",
           "-pix_fmt", "yuv420p",
           "-c:v", "libx264",
           "-preset", "ultrafast",
           "-profile:v", "baseline",
           "-level", "3.0",
-          "-an",
+          "-c:a", "aac",
+          "-ar", "44100",
+          "-ac", "2",
+          "-b:a", "128k",
           "-y",
           outputName,
         ]);
@@ -940,10 +949,14 @@ export default function AdminStoreEditPage() {
     try {
       await ffmpeg.exec([
         "-i", inputName,
+        "-map", "0:v:0",
+        "-map", "0:a:0?",
         "-movflags", "+faststart",
         "-c:v", "copy",
         "-c:a", "aac",
         "-profile:a", "aac_low",
+        "-ar", "44100",
+        "-ac", "2",
         "-b:a", "128k",
         "-y",
         outputName,
@@ -1030,16 +1043,6 @@ export default function AdminStoreEditPage() {
       console.warn("[PostMedia] Audio normalize failed:", error);
     }
 
-    try {
-      const stripped = await withTimeout(stripVideoAudioForPreview(file), 20000, "Strip audio timeout");
-      const playable = await probeVideoFile(stripped);
-      if (playable) return stripped;
-      console.warn("[PostMedia] Audio-stripped output failed browser probe; using converted MP4 anyway.");
-      return stripped;
-    } catch (error) {
-      console.warn("[PostMedia] Strip audio failed:", error);
-    }
-
     const originalLooksUsable = await new Promise<boolean>((resolve) => {
       const objectUrl = URL.createObjectURL(file);
       const video = document.createElement("video");
@@ -1092,7 +1095,7 @@ export default function AdminStoreEditPage() {
     const blob = await response.blob();
     const file = new File([blob], "preview-repair.mp4", { type: blob.type || "video/mp4" });
 
-    // Try fixing HE-AAC audio first, then strip audio, then full transcode
+    // Try fixing audio first, then full transcode
     let repairedFile: File | null = null;
     try {
       repairedFile = await withTimeout(normalizeVideoAudioForBrowser(file), 20000, "Audio normalize timeout");
@@ -1100,16 +1103,6 @@ export default function AdminStoreEditPage() {
       if (!isPlayable) repairedFile = null;
     } catch {
       repairedFile = null;
-    }
-
-    if (!repairedFile) {
-      try {
-        repairedFile = await withTimeout(stripVideoAudioForPreview(file), 15000, "Strip audio timeout");
-        const isPlayable = await probeVideoFile(repairedFile);
-        if (!isPlayable) repairedFile = null;
-      } catch {
-        repairedFile = null;
-      }
     }
 
     if (!repairedFile) {
