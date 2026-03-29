@@ -523,7 +523,7 @@ function ReelCard({
               document.body.removeChild(ta);
               toast.success("Link copied!");
             }
-          }
+          }}
           className="flex flex-col items-center gap-1"
           aria-label="Share"
         >
