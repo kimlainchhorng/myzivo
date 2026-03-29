@@ -378,6 +378,18 @@ const Login = () => {
                   </FormItem>
                 )} />
 
+                {/* Remember Me */}
+                <div className="flex items-center gap-2 py-1">
+                  <button
+                    type="button"
+                    onClick={() => setRememberMe(!rememberMe)}
+                    className={`h-5 w-5 min-w-5 rounded border flex items-center justify-center transition-colors ${rememberMe ? 'bg-primary border-primary' : 'border-white/30 bg-white/5'}`}
+                  >
+                    {rememberMe && <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                  </button>
+                  <span className="text-xs text-white/60 select-none cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>Remember me</span>
+                </div>
+
                 <motion.div whileTap={{ scale: 0.97, y: 2 }} whileHover={{ scale: 1.01 }}>
                   <Button type="submit" className="w-full h-10 text-sm font-bold rounded-xl touch-manipulation transition-all relative overflow-hidden shadow-[0_6px_20px_-4px_rgba(34,197,94,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]" disabled={isLoading} style={{ background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%)" }}>
                     <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 pointer-events-none rounded-t-xl" />
