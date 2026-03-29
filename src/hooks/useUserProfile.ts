@@ -10,6 +10,8 @@ export type UserProfile = {
   email: string | null;
   phone: string | null;
   avatar_url: string | null;
+  cover_url: string | null;
+  cover_position: number | null;
   status: string | null;
   created_at: string;
   updated_at: string;
@@ -41,7 +43,7 @@ export const useUpdateUserProfile = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (updates: Partial<Pick<UserProfile, "full_name" | "phone" | "avatar_url">>) => {
+    mutationFn: async (updates: Partial<Pick<UserProfile, "full_name" | "phone" | "avatar_url" | "cover_url" | "cover_position">>) => {
       if (!user?.id) throw new Error("Not authenticated");
 
       const { data: existing, error: existingError } = await supabase
