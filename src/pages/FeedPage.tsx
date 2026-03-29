@@ -32,6 +32,14 @@ interface FeedPost {
   comments_count?: number;
 }
 
+function looksPlayableVideoElement(video: HTMLVideoElement) {
+  const hasDuration = Number.isFinite(video.duration) && video.duration > 0;
+  const hasDimensions = video.videoWidth > 0 && video.videoHeight > 0;
+  const hasDecodedFrame = video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+
+  return hasDuration && hasDimensions && hasDecodedFrame;
+}
+
 // ── Individual reel card ──────────────────────────────────────────────────────
 
 function ReelCard({
@@ -138,13 +146,20 @@ function ReelCard({
 
   const capturePoster = (video: HTMLVideoElement) => {
     if (video.videoWidth === 0) return;
+    // Skip the black frame that exists before the seek settles at a real position.
+    if (video.currentTime < 0.5) return;
     try {
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext("2d")?.drawImage(video, 0, 0);
       setPosterUrl(canvas.toDataURL("image/jpeg", 0.8));
-    } catch { /* ignore */ }
+    } catch (err) {
+      // On CORS canvas taint, fall back to blob so the next capture succeeds.
+      if (err instanceof DOMException && err.name === "SecurityError") {
+        void tryBlobFallback(blobSrc ?? sourceUrl ?? "");
+      }
+    }
   };
 
   const tryBlobFallback = async (url: string) => {
@@ -241,6 +256,7 @@ function ReelCard({
           key={currentSrc}
           src={currentSrc}
           poster={posterUrl ?? undefined}
+          crossOrigin="anonymous"
           className="absolute inset-0 w-full h-full object-cover"
           playsInline
           loop
@@ -255,9 +271,26 @@ function ReelCard({
               void e.currentTarget.play().then(() => setIsPlaying(true)).catch(() => {});
             }
           }}
+          onCanPlay={(e) => {
+            if (!looksPlayableVideoElement(e.currentTarget)) return;
+            setHasLoadedFrame(true);
+            setHasPlaybackError(false);
+            // Don't capture here — the seek from onLoadedMetadata hasn't finished yet.
+            if (isActive) {
+              e.currentTarget.muted = globalMuted;
+              void e.currentTarget.play().then(() => setIsPlaying(true)).catch(() => {});
+            }
+          }}
           onLoadedMetadata={(e) => {
-            const t = Math.min(1, e.currentTarget.duration * 0.1);
-            try { e.currentTarget.currentTime = t; } catch { /* ignore */ }
+            // Seek to 10% of duration, at least 1.5 s, capped at 3 s — skips dark iPhone intros.
+            const dur = e.currentTarget.duration;
+            if (Number.isFinite(dur) && dur > 0) {
+              const t = Math.min(3, Math.max(dur * 0.1, 1.5));
+              try { e.currentTarget.currentTime = t; } catch { /* ignore */ }
+            }
+          }}
+          onSeeked={(e) => {
+            capturePoster(e.currentTarget);
           }}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
