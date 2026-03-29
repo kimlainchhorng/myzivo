@@ -501,6 +501,17 @@ export default function FeedPage() {
   const [activeIndex, setActiveIndex] = useState(0);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  const queryClient = useQueryClient();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userLikedPostIds, setUserLikedPostIds] = useState<Set<string>>(new Set());
+
+  // Get current user
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id || null);
+    });
+  }, []);
+
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["customer-feed"],
     queryFn: async () => {
@@ -533,6 +544,42 @@ export default function FeedPage() {
       });
     },
   });
+
+  // Fetch user's liked post IDs
+  useEffect(() => {
+    if (!userId || posts.length === 0) return;
+    const postIds = posts.map((p) => p.id);
+    supabase
+      .from("store_post_likes")
+      .select("post_id")
+      .eq("user_id", userId)
+      .in("post_id", postIds)
+      .then(({ data }) => {
+        setUserLikedPostIds(new Set((data || []).map((d: any) => d.post_id)));
+      });
+  }, [userId, posts]);
+
+  const handleToggleLike = useCallback(async (postId: string, currentlyLiked: boolean) => {
+    if (!userId) {
+      toast.error("Please sign in to like posts");
+      return;
+    }
+    // Optimistic update
+    setUserLikedPostIds((prev) => {
+      const next = new Set(prev);
+      if (currentlyLiked) next.delete(postId);
+      else next.add(postId);
+      return next;
+    });
+
+    if (currentlyLiked) {
+      await supabase.from("store_post_likes").delete().eq("post_id", postId).eq("user_id", userId);
+    } else {
+      await supabase.from("store_post_likes").insert({ post_id: postId, user_id: userId });
+    }
+    // Refresh feed to get updated counts
+    queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+  }, [userId, queryClient]);
 
   // IntersectionObserver: set activeIndex when a card is 60% visible
   useEffect(() => {
@@ -594,6 +641,9 @@ export default function FeedPage() {
               globalMuted={globalMuted}
               onToggleMute={() => setGlobalMuted((m) => !m)}
               onNavigate={(slug) => navigate(`/grocery/shop/${slug}`)}
+              userId={userId}
+              userLikedPostIds={userLikedPostIds}
+              onToggleLike={handleToggleLike}
             />
           </div>
         ))}
