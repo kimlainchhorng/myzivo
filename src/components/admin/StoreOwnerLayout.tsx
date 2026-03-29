@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LogOut, ChevronLeft, Menu, Home, Store,
-  Package, CreditCard, MessageCircle, Users, Megaphone, ClipboardList
+  Package, CreditCard, MessageCircle, Users, Megaphone, ClipboardList, Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -38,6 +38,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "payment", label: "Payment", icon: CreditCard },
     { id: "customers", label: "Customers", icon: Users },
     { id: "marketing", label: "Marketing & Ads", icon: Megaphone },
+    { id: "settings", label: "Settings", icon: Settings },
   ];
 
   return (
