@@ -452,7 +452,12 @@ function ReelCard({
         </button>
 
         {/* Comment */}
-        <button type="button" className="flex flex-col items-center gap-1" aria-label="Comment">
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onOpenComments(post.id); }}
+          className="flex flex-col items-center gap-1"
+          aria-label="Comment"
+        >
           <MessageCircle className="w-9 h-9 text-white drop-shadow-lg" />
           <span className="text-white text-xs font-semibold drop-shadow">
             {post.comments_count || 0}
