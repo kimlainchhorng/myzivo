@@ -323,8 +323,8 @@ function AdminVideoPreview({
           void runRecovery();
         }}
       />
-      {/* Large tap-to-play overlay - only show when paused */}
-      {!isPlaying && (
+      {/* Large tap-to-play overlay - only show when paused and controls are hidden */}
+      {!isPlaying && !controls && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); handlePlayToggle(); }}
