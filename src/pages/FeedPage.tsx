@@ -540,7 +540,7 @@ function CommentSheet({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("store_post_comments")
-        .select("*")
+        .select("*, profiles:user_id(full_name, avatar_url)")
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
       if (error) throw error;
