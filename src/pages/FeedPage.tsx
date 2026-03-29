@@ -60,6 +60,7 @@ function ReelCard({
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
+  const [isBlobLoading, setIsBlobLoading] = useState(false);
   const [blobSrc, setBlobSrc] = useState<string | null>(null);
   const [triedBlobFallback, setTriedBlobFallback] = useState(false);
   const [triedFFmpegRepair, setTriedFFmpegRepair] = useState(false);
@@ -77,6 +78,7 @@ function ReelCard({
 
   // Must be defined before effects that reference it
   const currentSrc = blobSrc || sourceUrl;
+  const renderSrc = blobSrc || (isBlobLoading ? "" : sourceUrl);
 
   // Auto-play / pause when active changes
   useEffect(() => {
@@ -111,6 +113,7 @@ function ReelCard({
     setIsPlaying(false);
     setHasPlaybackError(false);
     setIsRepairing(false);
+    setIsBlobLoading(false);
     setTriedBlobFallback(false);
     setTriedFFmpegRepair(false);
     setHasLoadedFrame(false);
@@ -173,6 +176,7 @@ function ReelCard({
   const tryBlobFallback = async (url: string) => {
     if (triedBlobFallback) return;
     setTriedBlobFallback(true);
+    setIsBlobLoading(true);
     try {
       const resp = await fetch(url);
       if (!resp.ok) throw new Error("fetch failed");
@@ -181,6 +185,8 @@ function ReelCard({
       setHasPlaybackError(false);
     } catch {
       // Keep quiet here; FFmpeg repair is attempted next.
+    } finally {
+      setIsBlobLoading(false);
     }
   };
 
@@ -208,6 +214,8 @@ function ReelCard({
   };
 
   const runRecovery = async () => {
+    if (isBlobLoading) return;
+
     if (!sourceUrl) {
       setHasPlaybackError(true);
       return;
@@ -253,7 +261,7 @@ function ReelCard({
 
     return () => window.clearTimeout(timeoutId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, isVideoPost, currentSrc, hasLoadedFrame, isRepairing]);
+  }, [isActive, isVideoPost, currentSrc, hasLoadedFrame, isRepairing, isBlobLoading]);
 
   return (
     <div className="relative w-full h-[100dvh] bg-black overflow-hidden snap-start flex-shrink-0">
@@ -262,7 +270,7 @@ function ReelCard({
         <video
           ref={videoRef}
           key={currentSrc}
-          src={currentSrc}
+          src={renderSrc || undefined}
           poster={posterUrl ?? undefined}
           className="absolute inset-0 w-full h-full object-cover"
           playsInline
@@ -303,6 +311,7 @@ function ReelCard({
           onPause={() => setIsPlaying(false)}
           onError={async () => {
             setIsPlaying(false);
+            if (isBlobLoading) return;
             await runRecovery();
           }}
         />
@@ -316,7 +325,7 @@ function ReelCard({
       )}
 
       {/* Tap-to-play/pause */}
-      {isVideoPost && !hasPlaybackError && !isRepairing && (
+      {isVideoPost && !hasPlaybackError && !isRepairing && !isBlobLoading && (
         <button
           type="button"
           onClick={togglePlay}
@@ -326,7 +335,7 @@ function ReelCard({
       )}
 
       {/* Paused indicator */}
-      {isVideoPost && !isPlaying && !hasPlaybackError && !isRepairing && (
+      {isVideoPost && !isPlaying && !hasPlaybackError && !isRepairing && !isBlobLoading && (
         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
           <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
             <Play className="w-7 h-7 text-white ml-1" fill="white" />
@@ -335,19 +344,19 @@ function ReelCard({
       )}
 
       {/* Converting overlay */}
-      {isRepairing && (
+      {(isRepairing || isBlobLoading) && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/70">
           <RefreshCw className="w-10 h-10 text-white animate-spin" />
-          <p className="text-sm text-white font-medium">Converting video\u2026</p>
+          <p className="text-sm text-white font-medium">{isBlobLoading ? "Loading video..." : "Converting video..."}</p>
         </div>
       )}
 
       {/* Playback error */}
-      {hasPlaybackError && !isRepairing && (
+      {hasPlaybackError && !isRepairing && !isBlobLoading && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 bg-black/70 px-8 text-center">
           <p className="text-sm font-semibold text-white">Video needs to be fixed</p>
           <p className="text-xs text-white/70">
-            Go to Store Admin \u2192 Feed Posts \u2192 tap &quot;Fix Video&quot;
+            Go to Store Admin {"->"} Feed Posts {"->"} tap &quot;Fix Video&quot;
           </p>
         </div>
       )}
