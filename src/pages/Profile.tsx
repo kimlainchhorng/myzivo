@@ -12,7 +12,7 @@ import {
   User, Camera, ArrowLeft, Mail, Phone, Loader2, Save, Sparkles,
   Shield, Star, Clock, ChevronRight, CreditCard, Bell, Lock, Gift,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
-  AlertCircle, CheckCircle2,
+  AlertCircle, CheckCircle2, Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -284,6 +284,7 @@ const Profile = () => {
     { icon: Bell, label: t("profile.notifications"), href: "/notifications", description: t("profile.notifications_desc"), color: "from-sky-500/15 to-sky-600/10", iconColor: "text-sky-500" },
     { icon: Lock, label: t("profile.security"), href: "/account/security", description: t("profile.security_desc"), color: "from-teal-500/15 to-teal-600/10", iconColor: "text-teal-500" },
     { icon: Globe, label: t("profile.preferences"), href: "/account/preferences", description: t("profile.preferences_desc"), color: "from-indigo-500/15 to-indigo-600/10", iconColor: "text-indigo-500" },
+    { icon: Settings, label: "Settings", href: "/account/settings", description: "App settings & preferences", color: "from-gray-500/15 to-gray-600/10", iconColor: "text-muted-foreground" },
   ];
 
   const currentLang = LANGS.find(l => l.code === currentLanguage) || LANGS[0];
