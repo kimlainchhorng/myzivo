@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const devServerUrl = process.env.CAPACITOR_DEV_SERVER_URL;
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.72f993409c9f453aacff60e5a9b25774',
+  appId: 'com.hizovo.app',
   appName: 'myzivo',
   webDir: 'dist',
   ...(devServerUrl
