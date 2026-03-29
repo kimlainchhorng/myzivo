@@ -129,10 +129,21 @@ const Profile = () => {
   const { data: merchantData } = useMerchantRole();
   const affiliateAttribution = useAffiliateAttribution();
   const { isPlus, plan } = useZivoPlus();
+  const updateProfile = useUpdateUserProfile();
+  const uploadAvatar = useUploadAvatar();
   const langTriggerRef = useRef<HTMLButtonElement>(null);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const profileCardRef = useRef<HTMLDivElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // Cover photo state
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [coverRepositioning, setCoverRepositioning] = useState(false);
+  const [coverPosition, setCoverPosition] = useState<number>(profile?.cover_position ?? 50);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const coverDragRef = useRef<{ startY: number; startPos: number } | null>(null);
 
   const profileTilt = use3DTilt(profileCardRef);
 
@@ -145,6 +156,58 @@ const Profile = () => {
     if (profile?.full_name) return profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
     if (user?.email) return user.email[0].toUpperCase();
     return "U";
+  };
+
+  // Cover photo upload
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    if (file.size > 10 * 1024 * 1024) { toast.error("Cover image must be under 10MB"); return; }
+    setCoverUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/cover_${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+      await updateProfile.mutateAsync({ cover_url: publicUrl, cover_position: 50 });
+      setCoverPosition(50);
+      toast.success("Cover photo updated!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload cover");
+    } finally {
+      setCoverUploading(false);
+    }
+  };
+
+  // Avatar upload
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const reader = new FileReader();
+      reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+      await uploadAvatar.mutateAsync(file);
+      setAvatarPreview(null);
+    } catch { setAvatarPreview(null); }
+  };
+
+  // Cover repositioning handlers
+  const handleCoverDragStart = (clientY: number) => {
+    coverDragRef.current = { startY: clientY, startPos: coverPosition };
+  };
+  const handleCoverDragMove = (clientY: number) => {
+    if (!coverDragRef.current) return;
+    const delta = clientY - coverDragRef.current.startY;
+    const newPos = Math.max(0, Math.min(100, coverDragRef.current.startPos + delta * 0.3));
+    setCoverPosition(newPos);
+  };
+  const handleCoverDragEnd = () => { coverDragRef.current = null; };
+  const saveCoverPosition = async () => {
+    await updateProfile.mutateAsync({ cover_position: Math.round(coverPosition) });
+    setCoverRepositioning(false);
+    toast.success("Cover position saved!");
   };
 
   const quickLinks = [
