@@ -249,7 +249,7 @@ function AdminVideoPreview({
       // browser is actively downloading — do not interrupt that.
       const looksStalled =
         !video ||
-        video.networkState === HTMLMediaElement.NETWORK_STALLED ||
+        video.networkState === 3 /* NETWORK_STALLED */ ||
         (video.readyState >= HTMLMediaElement.HAVE_METADATA &&
           (video.videoWidth === 0 || video.videoHeight === 0));
 
