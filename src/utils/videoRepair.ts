@@ -79,41 +79,51 @@ export function probeVideoPlayable(file: File | Blob): Promise<boolean> {
 }
 
 /**
- * Repair a video blob so it plays in browsers.
- * Tries: 1) strip audio (fast), 2) full transcode (slower).
+ * Repair a video blob so it plays in browsers while preserving audio when present.
+ * Tries: 1) video copy + AAC audio normalization, 2) full transcode.
  * Returns a playable blob URL or null.
  */
 export async function repairVideoBlob(blob: Blob): Promise<string | null> {
   const file = new File([blob], "repair.mp4", { type: blob.type || "video/mp4" });
 
-  // Stage 1: strip audio (codec issues are often audio-related)
+  // Stage 1: keep video, normalize audio to AAC for broader browser compatibility.
   try {
-    const stripped = await withTimeout(ffmpegProcess(file, [
+    const normalized = await withTimeout(ffmpegProcess(file, [
       "-i", "INPUT",
+      "-map", "0:v:0",
+      "-map", "0:a:0?",
       "-movflags", "+faststart",
       "-c:v", "copy",
-      "-an",
+      "-c:a", "aac",
+      "-ar", "44100",
+      "-ac", "2",
+      "-b:a", "128k",
       "-y",
       "OUTPUT",
-    ]), 20000, "Strip audio timeout");
-    if (await probeVideoPlayable(stripped)) {
-      return URL.createObjectURL(stripped);
+    ]), 20000, "Audio normalize timeout");
+    if (await probeVideoPlayable(normalized)) {
+      return URL.createObjectURL(normalized);
     }
   } catch (e) {
-    console.warn("[videoRepair] Strip audio failed:", e);
+    console.warn("[videoRepair] Audio normalize failed:", e);
   }
 
   // Stage 2: full transcode
   try {
     const transcoded = await withTimeout(ffmpegProcess(file, [
       "-i", "INPUT",
+      "-map", "0:v:0",
+      "-map", "0:a:0?",
       "-movflags", "+faststart",
       "-pix_fmt", "yuv420p",
       "-c:v", "libx264",
       "-preset", "ultrafast",
       "-profile:v", "baseline",
       "-level", "3.0",
-      "-an",
+      "-c:a", "aac",
+      "-ar", "44100",
+      "-ac", "2",
+      "-b:a", "128k",
       "-y",
       "OUTPUT",
     ]), 35000, "Transcode timeout");
