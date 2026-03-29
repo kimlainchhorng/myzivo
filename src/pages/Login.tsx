@@ -54,6 +54,7 @@ const Login = () => {
     }
   }, [searchParams]);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem("zivo_remember_me") === "true");
   
   const [showLangMenu, setShowLangMenu] = useState(false);
   const { sheet, openSheet, setOpen } = useLegalSheet();
