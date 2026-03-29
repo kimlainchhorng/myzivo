@@ -538,13 +538,26 @@ function CommentSheet({
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["post-comments", postId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: rawComments, error } = await supabase
         .from("store_post_comments")
-        .select("*, profiles:user_id(full_name, avatar_url)")
+        .select("*")
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return data || [];
+      if (!rawComments || rawComments.length === 0) return [];
+
+      // Fetch profiles from public_profiles view (no RLS restriction)
+      const userIds = [...new Set(rawComments.map((c: any) => c.user_id).filter(Boolean))];
+      const { data: profiles } = await supabase
+        .from("public_profiles")
+        .select("id, full_name, avatar_url")
+        .in("id", userIds);
+
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      return rawComments.map((c: any) => ({
+        ...c,
+        profiles: profileMap.get(c.user_id) || null,
+      }));
     },
   });
 
