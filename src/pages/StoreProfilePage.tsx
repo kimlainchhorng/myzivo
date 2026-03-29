@@ -4,7 +4,7 @@
  */
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -430,6 +430,122 @@ export default function StoreProfilePage() {
                 <div className="relative z-[3] flex flex-col items-start min-w-0">
                   <p className="text-[11px] font-bold text-white drop-shadow-md">Facebook</p>
                   <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Visit page</p>
+                </div>
+              </motion.a>
+            )}
+
+            {/* Instagram button */}
+            {(store as any).instagram_url && (
+              <motion.a
+                whileTap={{ scale: 0.94, rotateX: 2 }}
+                whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
+                href={(store as any).instagram_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
+                style={{
+                  transformStyle: "preserve-3d",
+                  boxShadow: "0 6px 24px -6px hsl(330 80% 50% / 0.2), 0 2px 6px -2px hsl(0 0% 0% / 0.12), inset 0 1px 0 0 hsl(0 0% 100% / 0.12)",
+                }}
+              >
+                <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#833AB4] via-[#E4405F] to-[#FCAF45]" />
+                <div className="absolute inset-0 z-[1] bg-black/20" />
+                <motion.div
+                  className="absolute inset-0 z-[2] pointer-events-none"
+                  animate={{ opacity: [0, 0.25, 0] }}
+                  transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
+                  style={{ background: "linear-gradient(135deg, transparent 30%, hsl(0 0% 100% / 0.15) 50%, transparent 70%)" }}
+                />
+                <div className="relative z-[3] h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-white/20"
+                  style={{
+                    background: "linear-gradient(135deg, #E4405F, #833AB4)",
+                    boxShadow: "0 3px 10px -2px hsl(330 80% 50% / 0.5)",
+                    transform: "translateZ(16px)",
+                  }}
+                >
+                  <Instagram className="h-4 w-4 text-white drop-shadow-md" />
+                </div>
+                <div className="relative z-[3] flex flex-col items-start min-w-0">
+                  <p className="text-[11px] font-bold text-white drop-shadow-md">Instagram</p>
+                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Follow us</p>
+                </div>
+              </motion.a>
+            )}
+
+            {/* Telegram button */}
+            {(store as any).telegram_url && (
+              <motion.a
+                whileTap={{ scale: 0.94, rotateX: 2 }}
+                whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
+                href={(store as any).telegram_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
+                style={{
+                  transformStyle: "preserve-3d",
+                  boxShadow: "0 6px 24px -6px hsl(200 80% 50% / 0.2), 0 2px 6px -2px hsl(0 0% 0% / 0.12), inset 0 1px 0 0 hsl(0 0% 100% / 0.12)",
+                }}
+              >
+                <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#0088cc] via-[#0099dd] to-[#00aaee]" />
+                <div className="absolute inset-0 z-[1] bg-black/15" />
+                <motion.div
+                  className="absolute inset-0 z-[2] pointer-events-none"
+                  animate={{ opacity: [0, 0.3, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
+                  style={{ background: "linear-gradient(225deg, transparent 30%, hsl(0 0% 100% / 0.12) 50%, transparent 70%)" }}
+                />
+                <div className="relative z-[3] h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-white/20"
+                  style={{
+                    background: "linear-gradient(135deg, #0088cc, #006699)",
+                    boxShadow: "0 3px 10px -2px hsl(200 80% 50% / 0.5)",
+                    transform: "translateZ(16px)",
+                  }}
+                >
+                  <Send className="h-4 w-4 text-white drop-shadow-md" />
+                </div>
+                <div className="relative z-[3] flex flex-col items-start min-w-0">
+                  <p className="text-[11px] font-bold text-white drop-shadow-md">Telegram</p>
+                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Message us</p>
+                </div>
+              </motion.a>
+            )}
+
+            {/* TikTok button */}
+            {(store as any).tiktok_url && (
+              <motion.a
+                whileTap={{ scale: 0.94, rotateX: 2 }}
+                whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
+                href={(store as any).tiktok_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
+                style={{
+                  transformStyle: "preserve-3d",
+                  boxShadow: "0 6px 24px -6px hsl(0 0% 0% / 0.3), 0 2px 6px -2px hsl(0 0% 0% / 0.12), inset 0 1px 0 0 hsl(0 0% 100% / 0.12)",
+                }}
+              >
+                <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#010101] via-[#1a1a2e] to-[#010101]" />
+                <div className="absolute inset-0 z-[1] bg-black/10" />
+                <motion.div
+                  className="absolute inset-0 z-[2] pointer-events-none"
+                  animate={{ opacity: [0, 0.3, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+                  style={{ background: "linear-gradient(135deg, transparent 20%, hsl(180 100% 50% / 0.1) 40%, hsl(340 100% 50% / 0.1) 60%, transparent 80%)" }}
+                />
+                <div className="relative z-[3] h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-white/20"
+                  style={{
+                    background: "linear-gradient(135deg, #010101, #333)",
+                    boxShadow: "0 3px 10px -2px hsl(180 100% 50% / 0.3), 0 3px 10px -2px hsl(340 100% 50% / 0.3)",
+                    transform: "translateZ(16px)",
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 text-white drop-shadow-md" fill="currentColor">
+                    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V9.16a8.18 8.18 0 004.76 1.52v-3.4a4.85 4.85 0 01-1-.59z" />
+                  </svg>
+                </div>
+                <div className="relative z-[3] flex flex-col items-start min-w-0">
+                  <p className="text-[11px] font-bold text-white drop-shadow-md">TikTok</p>
+                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Watch videos</p>
                 </div>
               </motion.a>
             )}
