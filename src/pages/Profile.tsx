@@ -1,44 +1,27 @@
 import { useState, useRef, useCallback } from "react";
-import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
 import SEOHead from "@/components/SEOHead";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
-  User, Camera, ArrowLeft, Mail, Phone, Loader2, Save, Sparkles,
-  Shield, Star, Clock, ChevronRight, CreditCard, Bell, Lock, Gift,
+  User, ArrowLeft, Loader2, Sparkles,
+  Shield, Star, ChevronRight,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
-  AlertCircle, CheckCircle2, Settings,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
 import { useAffiliateAttribution } from "@/hooks/useAffiliateAttribution";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-const profileSchema = z.object({
-  first_name: z.string().trim().min(1, "First name is required").max(50, "Too long").optional().or(z.literal("")),
-  last_name: z.string().trim().min(1, "Last name is required").max(50, "Too long").optional().or(z.literal("")),
-  phone: z.string().trim().max(20, "Phone number too long").optional().or(z.literal("")),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
+import { motion, useScroll, useTransform } from "framer-motion";
 
 const LANGS = [
   { code: "en", label: "English", cc: "us" },
@@ -137,7 +120,6 @@ const GlassCard3D = ({ children, className = "", glow = false }: { children: Rea
 const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const phoneRequired = (location.state as any)?.phoneRequired === true;
   const { t, currentLanguage, changeLanguage } = useI18n();
   const { country, setCountry, countries } = useCountry();
   const { user, signOut, isAdmin } = useAuth();
@@ -145,25 +127,10 @@ const Profile = () => {
   const { data: merchantData } = useMerchantRole();
   const affiliateAttribution = useAffiliateAttribution();
   const { isPlus, plan } = useZivoPlus();
-  const updateProfile = useUpdateUserProfile();
-  const uploadAvatar = useUploadAvatar();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const langTriggerRef = useRef<HTMLButtonElement>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const profileCardRef = useRef<HTMLDivElement>(null);
-
-  // Email change state
-  const [newEmail, setNewEmail] = useState("");
-  const [emailEditMode, setEmailEditMode] = useState(false);
-  const [emailOtpSent, setEmailOtpSent] = useState(false);
-  const [emailOtp, setEmailOtp] = useState("");
-  const [emailChanging, setEmailChanging] = useState(false);
-
-  // Phone verification state
-  const [showPhoneVerify, setShowPhoneVerify] = useState(false);
-  const [pendingProfileData, setPendingProfileData] = useState<ProfileFormData | null>(null);
 
   const profileTilt = use3DTilt(profileCardRef);
 
@@ -171,102 +138,6 @@ const Profile = () => {
   const headerY = useTransform(scrollYProgress, [0, 0.3], [0, -30]);
   const headerScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
   const bgParallax = useTransform(scrollYProgress, [0, 1], [0, -80]);
-
-  // Parse first/last from full_name
-  const parsedFirst = profile?.full_name?.split(" ").slice(0, 1).join(" ") || "";
-  const parsedLast = profile?.full_name?.split(" ").slice(1).join(" ") || "";
-
-  const form = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: { first_name: "", last_name: "", phone: "" },
-    values: {
-      first_name: parsedFirst,
-      last_name: parsedLast,
-      phone: profile?.phone || "",
-    },
-  });
-
-  const handleAvatarClick = () => { fileInputRef.current?.click(); };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => { setAvatarPreview(ev.target?.result as string); };
-      reader.readAsDataURL(file);
-      await uploadAvatar.mutateAsync(file);
-      setAvatarPreview(null);
-    } catch (err) {
-      console.error("Avatar upload failed:", err);
-      setAvatarPreview(null);
-    }
-  };
-
-  const onSubmit = async (data: ProfileFormData) => {
-    const phoneChanged = (data.phone || "") !== (profile?.phone || "");
-    const hasNewPhone = !!data.phone?.trim();
-
-    // If phone changed and there's a new phone, verify it first
-    if (phoneChanged && hasNewPhone) {
-      setPendingProfileData(data);
-      setShowPhoneVerify(true);
-      return;
-    }
-
-    // No phone change or phone removed — save directly
-    const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ") || null;
-    await updateProfile.mutateAsync({
-      full_name: fullName,
-      phone: data.phone || null,
-    });
-  };
-
-  const handlePhoneVerified = async () => {
-    if (!pendingProfileData) return;
-    const fullName = [pendingProfileData.first_name, pendingProfileData.last_name].filter(Boolean).join(" ") || null;
-    await updateProfile.mutateAsync({
-      full_name: fullName,
-      phone: pendingProfileData.phone || null,
-    });
-    setPendingProfileData(null);
-  };
-
-  const handleEmailChangeRequest = async () => {
-    if (!newEmail || newEmail === user?.email) return;
-    setEmailChanging(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ email: newEmail });
-      if (error) throw error;
-      setEmailOtpSent(true);
-      toast.success("Verification email sent to " + newEmail);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to send verification");
-    } finally {
-      setEmailChanging(false);
-    }
-  };
-
-  const handleEmailVerifyOtp = async () => {
-    setEmailChanging(true);
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: newEmail,
-        token: emailOtp,
-        type: "email_change",
-      });
-      if (error) throw error;
-      toast.success("Email updated successfully!");
-      setEmailEditMode(false);
-      setEmailOtpSent(false);
-      setNewEmail("");
-      setEmailOtp("");
-    } catch (err: any) {
-      toast.error(err.message || "Invalid verification code");
-    } finally {
-      setEmailChanging(false);
-    }
-  };
 
   const getInitials = () => {
     if (profile?.full_name) return profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
@@ -411,25 +282,14 @@ const Profile = () => {
                           transition={{ type: "spring", stiffness: 300 }}
                           style={{ transformStyle: "preserve-3d" }}
                         >
-                          {/* Multi-layer glow ring */}
                           <div className="absolute -inset-4 bg-gradient-to-r from-primary via-primary/50 to-primary rounded-full blur-2xl opacity-20 group-hover/avatar:opacity-45 transition-opacity animate-pulse" />
                           <div className="absolute -inset-2 bg-gradient-to-br from-primary/40 to-primary/20 rounded-full blur-md opacity-30" />
                           <Avatar className="relative h-24 w-24 ring-[3px] ring-primary/30 shadow-2xl shadow-primary/20">
-                            <AvatarImage src={avatarPreview || profile?.avatar_url || undefined} alt="Profile" />
+                            <AvatarImage src={profile?.avatar_url || undefined} alt="Profile" />
                             <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-2xl font-bold">
                               {getInitials()}
                             </AvatarFallback>
                           </Avatar>
-                          <motion.button
-                            whileHover={{ scale: 1.2, rotate: 15 }}
-                            whileTap={{ scale: 0.85 }}
-                            onClick={handleAvatarClick}
-                            disabled={uploadAvatar.isPending}
-                            className="absolute bottom-0 right-0 p-2.5 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 hover:opacity-90 transition-opacity disabled:opacity-50 touch-manipulation ring-2 ring-background"
-                          >
-                            {uploadAvatar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                          </motion.button>
-                          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture={undefined} onChange={handleFileChange} className="hidden" />
                         </motion.div>
                       </div>
                       <CardTitle className="flex items-center justify-center gap-2 text-xl font-bold">
@@ -449,192 +309,18 @@ const Profile = () => {
                       </div>
                     </CardHeader>
 
-                    <CardContent className="pt-6 pb-8 px-6">
-                      <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                          {/* First Name & Last Name — side by side */}
-                          <div className="grid grid-cols-2 gap-3">
-                            <FormField control={form.control} name="first_name" render={({ field }) => (
-                              <FormItem className="space-y-1.5">
-                                <FormLabel className="flex items-center gap-1.5 font-semibold text-[13px]"><User className="h-3.5 w-3.5 text-primary" />First Name</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="First name"
-                                    className="h-12 rounded-2xl bg-muted/15 border-border/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] focus:border-primary/40 focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.04),0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-300 text-[15px] font-medium"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} />
-
-                            <FormField control={form.control} name="last_name" render={({ field }) => (
-                              <FormItem className="space-y-1.5">
-                                <FormLabel className="flex items-center gap-1.5 font-semibold text-[13px]"><User className="h-3.5 w-3.5 text-primary" />Last Name</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Last name"
-                                    className="h-12 rounded-2xl bg-muted/15 border-border/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] focus:border-primary/40 focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.04),0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-300 text-[15px] font-medium"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} />
-                          </div>
-
-                          {/* Email — editable with verification */}
-                          <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-[13px] font-semibold"><Mail className="h-3.5 w-3.5 text-primary" />{t("profile.email")}</label>
-                            
-                            {!emailEditMode ? (
-                              <div className="relative">
-                                <Input 
-                                  value={user?.email || ""} 
-                                  disabled 
-                                  className="h-12 rounded-2xl bg-muted/10 border-border/20 text-muted-foreground shadow-[inset_0_1px_3px_rgba(0,0,0,0.03)] pr-24 text-[15px]" 
-                                />
-                                <motion.button
-                                  type="button"
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.92 }}
-                                  onClick={() => { setEmailEditMode(true); setNewEmail(user?.email || ""); }}
-                                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl text-xs font-bold text-primary bg-primary/8 hover:bg-primary/15 border border-primary/15 transition-all duration-200 backdrop-blur-sm"
-                                >
-                                  Change
-                                </motion.button>
-                              </div>
-                            ) : (
-                              <AnimatePresence mode="wait">
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                                  className="space-y-3 overflow-hidden"
-                                >
-                                  {!emailOtpSent ? (
-                                    <div className="space-y-2.5">
-                                      <Input
-                                        type="email"
-                                        value={newEmail}
-                                        onChange={(e) => setNewEmail(e.target.value)}
-                                        placeholder="Enter new email"
-                                        autoFocus
-                                        className="h-12 rounded-2xl bg-muted/15 border-border/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] focus:border-primary/40 focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.04),0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-300 text-[15px] font-medium"
-                                      />
-                                      <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70">
-                                        <AlertCircle className="w-3 h-3 shrink-0" />
-                                        A verification link will be sent to your new email
-                                      </p>
-                                      <div className="flex gap-2">
-                                        <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                                          <Button
-                                            type="button"
-                                            onClick={handleEmailChangeRequest}
-                                            disabled={emailChanging || !newEmail || newEmail === user?.email}
-                                            className="w-full h-11 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/20 border border-primary/20"
-                                          >
-                                            {emailChanging ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
-                                            Verify Email
-                                          </Button>
-                                        </motion.div>
-                                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                          <Button
-                                            type="button"
-                                            variant="ghost"
-                                            onClick={() => { setEmailEditMode(false); setNewEmail(""); }}
-                                            className="h-11 rounded-2xl text-muted-foreground hover:text-foreground px-4"
-                                          >
-                                            Cancel
-                                          </Button>
-                                        </motion.div>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="space-y-3 rounded-2xl bg-primary/[0.04] border border-primary/10 p-4">
-                                      <div className="flex items-start gap-2.5">
-                                        <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                                        <div>
-                                          <p className="text-sm font-semibold text-foreground">Verification sent!</p>
-                                          <p className="text-xs text-muted-foreground mt-0.5">Check <span className="font-medium text-foreground">{newEmail}</span> and click the link to confirm.</p>
-                                        </div>
-                                      </div>
-                                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          onClick={() => { setEmailEditMode(false); setEmailOtpSent(false); setNewEmail(""); setEmailOtp(""); }}
-                                          className="w-full h-10 rounded-2xl border-border/30 text-sm font-semibold"
-                                        >
-                                          Done
-                                        </Button>
-                                      </motion.div>
-                                    </div>
-                                  )}
-                                </motion.div>
-                              </AnimatePresence>
-                            )}
-                          </div>
-
-                          {/* Phone Required Banner */}
-                          {phoneRequired && !form.watch("phone")?.trim() && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 flex items-start gap-2.5"
-                            >
-                              <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-                              <div>
-                                <p className="text-sm font-bold text-destructive">{t("profile.phone_required_title")}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">{t("profile.phone_required_desc")}</p>
-                              </div>
-                            </motion.div>
-                          )}
-
-                          {/* Phone — Country selector */}
-                          <FormField control={form.control} name="phone" render={({ field }) => (
-                            <FormItem className="space-y-1.5">
-                              <FormLabel className="flex items-center gap-2 font-semibold text-[13px]"><Phone className="h-3.5 w-3.5 text-primary" />{t("profile.phone")}</FormLabel>
-                              <FormControl>
-                                <CountryPhoneInput value={field.value || ""} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-
-                          {/* Save — 3D elevated button */}
-                          <motion.div
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.97, y: 1 }}
-                            style={{ perspective: "600px" }}
-                          >
-                            <Button
-                              type="submit"
-                              className="w-full h-13 text-base font-bold rounded-2xl bg-gradient-to-r from-primary to-primary/85 text-primary-foreground shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all duration-300 border border-primary/20"
-                              disabled={updateProfile.isPending || !form.formState.isDirty}
-                            >
-                              {updateProfile.isPending ? (
-                                <><Loader2 className="h-5 w-5 animate-spin mr-2" />{t("profile.saving")}</>
-                              ) : (
-                                <><Save className="h-5 w-5 mr-2" />{t("profile.save")}</>
-                              )}
-                            </Button>
-                          </motion.div>
-
-                          {/* Login/Signup for guests */}
-                          {!user && (
-                            <div className="flex gap-3">
-                              <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                                <Button type="button" variant="outline" className="w-full h-13 text-base font-semibold rounded-2xl backdrop-blur-xl" onClick={() => navigate("/login")}>{t("profile.log_in")}</Button>
-                              </motion.div>
-                              <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                                <Button type="button" variant="hero" className="w-full h-13 text-base font-semibold rounded-2xl" onClick={() => navigate("/signup")}>{t("profile.sign_up")}</Button>
-                              </motion.div>
-                            </div>
-                          )}
-                        </form>
-                      </Form>
+                    <CardContent className="pt-4 pb-6 px-6">
+                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+                        <Button
+                          variant="outline"
+                          className="w-full h-12 rounded-2xl font-semibold text-sm border-border/30 bg-muted/10"
+                          onClick={() => navigate("/account/profile-edit")}
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          Edit Profile Information
+                          <ChevronRight className="h-4 w-4 ml-auto" />
+                        </Button>
+                      </motion.div>
                     </CardContent>
                   </GlassCard3D>
                 </motion.div>
@@ -831,15 +517,6 @@ const Profile = () => {
           </motion.div>
         </>,
         document.body
-      )}
-      {/* Phone Verification Dialog */}
-      {pendingProfileData?.phone && (
-        <PhoneVerificationDialog
-          open={showPhoneVerify}
-          onOpenChange={setShowPhoneVerify}
-          phoneNumber={pendingProfileData.phone}
-          onVerified={handlePhoneVerified}
-        />
       )}
     </div>
   );

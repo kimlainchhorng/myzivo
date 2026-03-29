@@ -1,8 +1,16 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight } from "lucide-react";
+import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const settingsItems = [
+  {
+    icon: UserPen,
+    label: "Profile Information",
+    description: "Name, email & phone",
+    href: "/account/profile-edit",
+    color: "bg-emerald-500/15",
+    iconColor: "text-emerald-500",
+  },
   {
     icon: Shield,
     label: "Security",
