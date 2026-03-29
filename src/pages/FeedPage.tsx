@@ -654,25 +654,36 @@ function CommentSheet({
         </div>
 
         {/* Input */}
-        <div className="px-4 py-3 border-t border-border flex gap-2" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
-          <input
-            ref={inputRef}
-            type="text"
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-            placeholder={userId ? "Add a comment..." : "Sign in to comment"}
-            className="flex-1 h-10 rounded-full bg-muted px-4 text-sm text-foreground placeholder:text-muted-foreground outline-none"
-            disabled={!userId || submitting}
-          />
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!commentText.trim() || submitting || !userId}
-            className="w-10 h-10 rounded-full bg-primary flex items-center justify-center disabled:opacity-40"
-          >
-            <Send className="w-4 h-4 text-primary-foreground" />
-          </button>
+        <div className="px-4 py-3 border-t border-border" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
+          {!userId ? (
+            <p className="text-center text-sm text-muted-foreground py-1">Sign in to comment</p>
+          ) : !isVerified ? (
+            <div className="flex items-center gap-2 justify-center py-1">
+              <ShieldCheck className="w-4 h-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Only verified accounts can comment</p>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                placeholder="Add a comment..."
+                className="flex-1 h-10 rounded-full bg-muted px-4 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                disabled={submitting}
+              />
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!commentText.trim() || submitting}
+                className="w-10 h-10 rounded-full bg-primary flex items-center justify-center disabled:opacity-40"
+              >
+                <Send className="w-4 h-4 text-primary-foreground" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
