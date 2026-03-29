@@ -120,7 +120,6 @@ const GlassCard3D = ({ children, className = "", glow = false }: { children: Rea
 const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const phoneRequired = (location.state as any)?.phoneRequired === true;
   const { t, currentLanguage, changeLanguage } = useI18n();
   const { country, setCountry, countries } = useCountry();
   const { user, signOut, isAdmin } = useAuth();
@@ -128,25 +127,10 @@ const Profile = () => {
   const { data: merchantData } = useMerchantRole();
   const affiliateAttribution = useAffiliateAttribution();
   const { isPlus, plan } = useZivoPlus();
-  const updateProfile = useUpdateUserProfile();
-  const uploadAvatar = useUploadAvatar();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const langTriggerRef = useRef<HTMLButtonElement>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const profileCardRef = useRef<HTMLDivElement>(null);
-
-  // Email change state
-  const [newEmail, setNewEmail] = useState("");
-  const [emailEditMode, setEmailEditMode] = useState(false);
-  const [emailOtpSent, setEmailOtpSent] = useState(false);
-  const [emailOtp, setEmailOtp] = useState("");
-  const [emailChanging, setEmailChanging] = useState(false);
-
-  // Phone verification state
-  const [showPhoneVerify, setShowPhoneVerify] = useState(false);
-  const [pendingProfileData, setPendingProfileData] = useState<ProfileFormData | null>(null);
 
   const profileTilt = use3DTilt(profileCardRef);
 
@@ -154,102 +138,6 @@ const Profile = () => {
   const headerY = useTransform(scrollYProgress, [0, 0.3], [0, -30]);
   const headerScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
   const bgParallax = useTransform(scrollYProgress, [0, 1], [0, -80]);
-
-  // Parse first/last from full_name
-  const parsedFirst = profile?.full_name?.split(" ").slice(0, 1).join(" ") || "";
-  const parsedLast = profile?.full_name?.split(" ").slice(1).join(" ") || "";
-
-  const form = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: { first_name: "", last_name: "", phone: "" },
-    values: {
-      first_name: parsedFirst,
-      last_name: parsedLast,
-      phone: profile?.phone || "",
-    },
-  });
-
-  const handleAvatarClick = () => { fileInputRef.current?.click(); };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => { setAvatarPreview(ev.target?.result as string); };
-      reader.readAsDataURL(file);
-      await uploadAvatar.mutateAsync(file);
-      setAvatarPreview(null);
-    } catch (err) {
-      console.error("Avatar upload failed:", err);
-      setAvatarPreview(null);
-    }
-  };
-
-  const onSubmit = async (data: ProfileFormData) => {
-    const phoneChanged = (data.phone || "") !== (profile?.phone || "");
-    const hasNewPhone = !!data.phone?.trim();
-
-    // If phone changed and there's a new phone, verify it first
-    if (phoneChanged && hasNewPhone) {
-      setPendingProfileData(data);
-      setShowPhoneVerify(true);
-      return;
-    }
-
-    // No phone change or phone removed — save directly
-    const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ") || null;
-    await updateProfile.mutateAsync({
-      full_name: fullName,
-      phone: data.phone || null,
-    });
-  };
-
-  const handlePhoneVerified = async () => {
-    if (!pendingProfileData) return;
-    const fullName = [pendingProfileData.first_name, pendingProfileData.last_name].filter(Boolean).join(" ") || null;
-    await updateProfile.mutateAsync({
-      full_name: fullName,
-      phone: pendingProfileData.phone || null,
-    });
-    setPendingProfileData(null);
-  };
-
-  const handleEmailChangeRequest = async () => {
-    if (!newEmail || newEmail === user?.email) return;
-    setEmailChanging(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ email: newEmail });
-      if (error) throw error;
-      setEmailOtpSent(true);
-      toast.success("Verification email sent to " + newEmail);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to send verification");
-    } finally {
-      setEmailChanging(false);
-    }
-  };
-
-  const handleEmailVerifyOtp = async () => {
-    setEmailChanging(true);
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: newEmail,
-        token: emailOtp,
-        type: "email_change",
-      });
-      if (error) throw error;
-      toast.success("Email updated successfully!");
-      setEmailEditMode(false);
-      setEmailOtpSent(false);
-      setNewEmail("");
-      setEmailOtp("");
-    } catch (err: any) {
-      toast.error(err.message || "Invalid verification code");
-    } finally {
-      setEmailChanging(false);
-    }
-  };
 
   const getInitials = () => {
     if (profile?.full_name) return profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
