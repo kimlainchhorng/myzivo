@@ -12,8 +12,9 @@ import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import {
   Loader2, Heart, MessageCircle, Share2, Store,
-  Play, Volume2, VolumeX, RefreshCw,
+  Play, Volume2, VolumeX, RefreshCw, Send, X as XIcon,
 } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -295,7 +296,7 @@ function ReelCard({
           className="absolute inset-0 w-full h-full object-cover"
           playsInline
           loop
-          muted
+          muted={globalMuted}
           preload={isActive ? "auto" : "metadata"}
           onLoadedData={(e) => {
             setHasLoadedFrame(true);
