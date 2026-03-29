@@ -119,6 +119,14 @@ function ReelCard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSrc]);
 
+  // Track view when post becomes active (once per post per session)
+  useEffect(() => {
+    if (!isActive || viewTracked.current) return;
+    viewTracked.current = true;
+    // Fire-and-forget view increment
+    supabase.rpc("increment_store_post_view_count", { p_post_id: post.id }).then(() => {});
+  }, [isActive, post.id]);
+
   // Reset per-post playback state when source changes
   useEffect(() => {
     setIsPlaying(false);
@@ -128,6 +136,7 @@ function ReelCard({
     setTriedBlobFallback(false);
     setTriedFFmpegRepair(false);
     setHasLoadedFrame(false);
+    viewTracked.current = false;
     if (blobSrc) {
       URL.revokeObjectURL(blobSrc);
       setBlobSrc(null);
@@ -426,18 +435,18 @@ function ReelCard({
         {/* Like */}
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); setLiked((l) => !l); }}
+          onClick={(e) => { e.stopPropagation(); onToggleLike(post.id, liked); }}
           className="flex flex-col items-center gap-1"
           aria-label="Like"
         >
           <Heart
             className={cn(
               "w-9 h-9 drop-shadow-lg transition-transform active:scale-125",
-              liked ? "text-red-500 fill-red-500" : "text-white",
+              liked ? "text-destructive fill-destructive" : "text-white",
             )}
           />
           <span className="text-white text-xs font-semibold drop-shadow">
-            {(post.likes_count || 0) + (liked ? 1 : 0)}
+            {post.likes_count || 0}
           </span>
         </button>
 
@@ -449,8 +458,32 @@ function ReelCard({
           </span>
         </button>
 
+        {/* Views */}
+        <div className="flex flex-col items-center gap-1">
+          <Eye className="w-9 h-9 text-white drop-shadow-lg" />
+          <span className="text-white text-xs font-semibold drop-shadow">
+            {post.view_count || 0}
+          </span>
+        </div>
+
         {/* Share */}
-        <button type="button" className="flex flex-col items-center gap-1" aria-label="Share">
+        <button
+          type="button"
+          onClick={async (e) => {
+            e.stopPropagation();
+            const shareUrl = `${window.location.origin}/feed?post=${post.id}`;
+            if (navigator.share) {
+              try {
+                await navigator.share({ title: post.caption || "Check this out!", url: shareUrl });
+              } catch { /* user cancelled */ }
+            } else {
+              await navigator.clipboard.writeText(shareUrl);
+              toast.success("Link copied!");
+            }
+          }}
+          className="flex flex-col items-center gap-1"
+          aria-label="Share"
+        >
           <Share2 className="w-9 h-9 text-white drop-shadow-lg" />
           <span className="text-white text-xs font-semibold drop-shadow">Share</span>
         </button>
