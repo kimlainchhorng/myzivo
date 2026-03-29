@@ -327,7 +327,7 @@ const Profile = () => {
             </div>
           ) : (
             <div className="space-y-5">
-              {/* ── Profile Card (3D tilt + glassmorphism) ── */}
+              {/* ── Profile Card with Cover Photo ── */}
               <ParallaxSection index={2}>
                 <motion.div
                   ref={profileCardRef}
@@ -338,30 +338,112 @@ const Profile = () => {
                   style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
                   className="group"
                 >
-                  <GlassCard3D glow className="shadow-2xl shadow-primary/[0.08]">
-                    <CardHeader className="text-center pb-2 pt-8">
-                      <div className="flex justify-center mb-4">
+                  <GlassCard3D glow className="shadow-2xl shadow-primary/[0.08] overflow-hidden">
+                    {/* Cover Photo */}
+                    <div
+                      className="relative h-44 w-full overflow-hidden select-none"
+                      onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
+                      onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
+                      onMouseUp={coverRepositioning ? handleCoverDragEnd : undefined}
+                      onMouseLeave={coverRepositioning ? handleCoverDragEnd : undefined}
+                      onTouchStart={coverRepositioning ? (e) => handleCoverDragStart(e.touches[0].clientY) : undefined}
+                      onTouchMove={coverRepositioning ? (e) => handleCoverDragMove(e.touches[0].clientY) : undefined}
+                      onTouchEnd={coverRepositioning ? handleCoverDragEnd : undefined}
+                      style={{ cursor: coverRepositioning ? "ns-resize" : "default" }}
+                    >
+                      {profile?.cover_url ? (
+                        <img
+                          src={profile.cover_url}
+                          alt="Cover"
+                          className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-100"
+                          style={{ objectPosition: `center ${coverPosition}%` }}
+                          draggable={false}
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5" />
+                      )}
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-card/20 to-transparent" />
+
+                      {/* Cover action buttons */}
+                      {user && !coverRepositioning && (
+                        <div className="absolute top-3 right-3 flex gap-2 z-20">
+                          {profile?.cover_url && (
+                            <motion.button
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(true); }}
+                              className="p-2 rounded-full bg-background/70 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-lg border border-border/30"
+                            >
+                              <MoveVertical className="h-4 w-4" />
+                            </motion.button>
+                          )}
+                          <motion.button
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => coverInputRef.current?.click()}
+                            disabled={coverUploading}
+                            className="p-2 rounded-full bg-background/70 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-lg border border-border/30 disabled:opacity-50"
+                          >
+                            {coverUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                          </motion.button>
+                        </div>
+                      )}
+
+                      {/* Repositioning controls */}
+                      {coverRepositioning && (
+                        <div className="absolute inset-0 z-20 flex items-center justify-center">
+                          <div className="absolute inset-0 bg-background/30 backdrop-blur-[2px]" />
+                          <div className="relative flex items-center gap-3 bg-background/90 backdrop-blur-xl rounded-full px-4 py-2 shadow-xl border border-border/50">
+                            <MoveVertical className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-xs font-semibold text-foreground">Drag to reposition</span>
+                            <button onClick={saveCoverPosition} className="p-1.5 rounded-full bg-primary text-primary-foreground">
+                              <Check className="h-3.5 w-3.5" />
+                            </button>
+                            <button onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(false); }} className="p-1.5 rounded-full bg-muted text-muted-foreground">
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverUpload} className="hidden" />
+                    </div>
+
+                    {/* Avatar overlapping cover */}
+                    <div className="relative px-6 -mt-14 z-10">
+                      <div className="flex justify-center">
                         <motion.div
                           className="relative group/avatar"
-                          whileHover={{ scale: 1.08, rotateY: 10 }}
+                          whileHover={{ scale: 1.05 }}
                           transition={{ type: "spring", stiffness: 300 }}
-                          style={{ transformStyle: "preserve-3d" }}
                         >
-                          <div className="absolute -inset-4 bg-gradient-to-r from-primary via-primary/50 to-primary rounded-full blur-2xl opacity-20 group-hover/avatar:opacity-45 transition-opacity animate-pulse" />
-                          <div className="absolute -inset-2 bg-gradient-to-br from-primary/40 to-primary/20 rounded-full blur-md opacity-30" />
-                          <Avatar className="relative h-24 w-24 ring-[3px] ring-primary/30 shadow-2xl shadow-primary/20">
-                            <AvatarImage src={profile?.avatar_url || undefined} alt="Profile" />
+                          <div className="absolute -inset-2 bg-gradient-to-r from-primary via-primary/50 to-primary rounded-full blur-xl opacity-20 group-hover/avatar:opacity-40 transition-opacity" />
+                          <Avatar className="relative h-24 w-24 ring-4 ring-card shadow-2xl shadow-primary/20">
+                            <AvatarImage src={avatarPreview || profile?.avatar_url || undefined} alt="Profile" />
                             <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-2xl font-bold">
                               {getInitials()}
                             </AvatarFallback>
                           </Avatar>
+                          <motion.button
+                            whileHover={{ scale: 1.15, rotate: 10 }}
+                            whileTap={{ scale: 0.85 }}
+                            onClick={() => avatarInputRef.current?.click()}
+                            disabled={uploadAvatar.isPending}
+                            className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 ring-2 ring-card disabled:opacity-50"
+                          >
+                            {uploadAvatar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                          </motion.button>
+                          <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarUpload} className="hidden" />
                         </motion.div>
                       </div>
+                    </div>
+
+                    {/* Name & status */}
+                    <div className="text-center pt-3 pb-2 px-6">
                       <CardTitle className="flex items-center justify-center gap-2 text-xl font-bold">
                         <Sparkles className="h-4 w-4 text-primary" />
                         {profile?.full_name || t("profile.set_name")}
                       </CardTitle>
-                      <CardDescription className="text-sm">{user?.email}</CardDescription>
+                      <CardDescription className="text-sm mt-1">{user?.email}</CardDescription>
                       <div className="flex items-center justify-center gap-2 mt-3">
                         <Badge className="bg-primary/12 text-primary border-primary/25 font-semibold rounded-full px-3 py-1 shadow-sm">
                           <Star className="w-3 h-3 mr-1 fill-primary" /> {profile?.status || t("profile.active_member")}
@@ -372,9 +454,9 @@ const Profile = () => {
                           </Badge>
                         )}
                       </div>
-                    </CardHeader>
+                    </div>
 
-                    <CardContent className="pt-4 pb-6 px-6">
+                    <CardContent className="pt-3 pb-6 px-6">
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
                         <Button
                           variant="outline"
