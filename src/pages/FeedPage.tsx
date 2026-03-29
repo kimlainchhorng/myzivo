@@ -250,7 +250,7 @@ function ReelCard({
       // but dimensions are zero (the iOS black-frame bug). Do NOT trigger while the
       // browser is still buffering normally (NETWORK_LOADING).
       const trulyStalled =
-        video.networkState === HTMLMediaElement.NETWORK_STALLED ||
+        video.networkState === 3 /* NETWORK_STALLED is not in all TS typings */ ||
         (video.readyState >= HTMLMediaElement.HAVE_METADATA &&
           (video.videoWidth === 0 || video.videoHeight === 0));
 
