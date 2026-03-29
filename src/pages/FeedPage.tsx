@@ -176,6 +176,27 @@ function ReelCard({
     }
   };
 
+  const handleMuteToggle = () => {
+    const video = videoRef.current;
+    const nextMuted = !globalMuted;
+
+    onToggleMute();
+
+    if (!video) return;
+
+    video.muted = nextMuted;
+    video.defaultMuted = nextMuted;
+    video.volume = 1;
+
+    if (!nextMuted) {
+      void video.play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {
+          toast.error("Tap video once to enable sound");
+        });
+    }
+  };
+
   const capturePoster = (video: HTMLVideoElement) => {
     if (video.videoWidth === 0) return;
     // Skip the black frame that exists before the seek settles at a real position.
@@ -421,7 +442,7 @@ function ReelCard({
         {/* Mute/Unmute */}
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onToggleMute(); }}
+          onClick={(e) => { e.stopPropagation(); handleMuteToggle(); }}
           className="flex flex-col items-center gap-1"
           aria-label={globalMuted ? "Unmute" : "Mute"}
         >

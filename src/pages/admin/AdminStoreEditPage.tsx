@@ -124,7 +124,7 @@ function AdminVideoPreview({
   controls = true,
   autoPlay = false,
   loop = false,
-  muted = true,
+  muted = false,
   canRepair = false,
   onRepair,
 }: {
@@ -264,7 +264,7 @@ function AdminVideoPreview({
     const vid = videoRef.current;
     if (!vid) return;
     if (vid.paused) {
-      vid.muted = true;
+      vid.muted = autoPlay ? true : muted;
       void vid.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     } else {
       vid.pause();
@@ -323,8 +323,8 @@ function AdminVideoPreview({
           void runRecovery();
         }}
       />
-      {/* Large tap-to-play overlay - only show when paused */}
-      {!isPlaying && (
+      {/* Large tap-to-play overlay - only show when paused and controls are hidden */}
+      {!isPlaying && !controls && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); handlePlayToggle(); }}
@@ -806,7 +806,9 @@ export default function AdminStoreEditPage() {
     const objectUrl = URL.createObjectURL(file);
     const video = document.createElement("video");
     video.preload = "auto";
-    video.muted = true;
+    video.muted = false;
+    video.defaultMuted = false;
+    video.volume = 1;
     video.playsInline = true;
     video.src = objectUrl;
 
@@ -836,6 +838,8 @@ export default function AdminStoreEditPage() {
 
       const stream = (video as any).captureStream?.() || (video as any).mozCaptureStream?.();
       if (!stream) return null;
+
+      const hasAudioTrack = stream.getAudioTracks().length > 0;
 
       const chunks: BlobPart[] = [];
       const recorder = new MediaRecorder(stream, {
@@ -871,7 +875,7 @@ export default function AdminStoreEditPage() {
       });
 
       const playable = await probeVideoFile(output).catch(() => false);
-      if (!playable) return null;
+      if (!playable || !hasAudioTrack) return null;
       return output;
     } finally {
       video.pause();
@@ -902,7 +906,12 @@ export default function AdminStoreEditPage() {
           "-profile:v", "baseline",
           "-level", "3.0",
           "-c:a", "aac",
+<<<<<<< HEAD
           "-profile:a", "aac_low",
+=======
+          "-ar", "44100",
+          "-ac", "2",
+>>>>>>> d28079693b65c9ce1fdf74c06f9e45fd7a250b2b
           "-b:a", "128k",
           "-y",
           outputName,
@@ -944,10 +953,14 @@ export default function AdminStoreEditPage() {
     try {
       await ffmpeg.exec([
         "-i", inputName,
+        "-map", "0:v:0",
+        "-map", "0:a:0?",
         "-movflags", "+faststart",
         "-c:v", "copy",
         "-c:a", "aac",
         "-profile:a", "aac_low",
+        "-ar", "44100",
+        "-ac", "2",
         "-b:a", "128k",
         "-y",
         outputName,
@@ -1034,16 +1047,6 @@ export default function AdminStoreEditPage() {
       console.warn("[PostMedia] Audio normalize failed:", error);
     }
 
-    try {
-      const stripped = await withTimeout(stripVideoAudioForPreview(file), 20000, "Strip audio timeout");
-      const playable = await probeVideoFile(stripped);
-      if (playable) return stripped;
-      console.warn("[PostMedia] Audio-stripped output failed browser probe; using converted MP4 anyway.");
-      return stripped;
-    } catch (error) {
-      console.warn("[PostMedia] Strip audio failed:", error);
-    }
-
     const originalLooksUsable = await new Promise<boolean>((resolve) => {
       const objectUrl = URL.createObjectURL(file);
       const video = document.createElement("video");
@@ -1096,7 +1099,7 @@ export default function AdminStoreEditPage() {
     const blob = await response.blob();
     const file = new File([blob], "preview-repair.mp4", { type: blob.type || "video/mp4" });
 
-    // Try fixing HE-AAC audio first, then strip audio, then full transcode
+    // Try fixing audio first, then full transcode
     let repairedFile: File | null = null;
     try {
       repairedFile = await withTimeout(normalizeVideoAudioForBrowser(file), 20000, "Audio normalize timeout");
@@ -1104,16 +1107,6 @@ export default function AdminStoreEditPage() {
       if (!isPlayable) repairedFile = null;
     } catch {
       repairedFile = null;
-    }
-
-    if (!repairedFile) {
-      try {
-        repairedFile = await withTimeout(stripVideoAudioForPreview(file), 15000, "Strip audio timeout");
-        const isPlayable = await probeVideoFile(repairedFile);
-        if (!isPlayable) repairedFile = null;
-      } catch {
-        repairedFile = null;
-      }
     }
 
     if (!repairedFile) {
@@ -1134,6 +1127,34 @@ export default function AdminStoreEditPage() {
     const repairedUrl = URL.createObjectURL(repairedFile);
     repairedPreviewUrlsRef.current.set(normalizedUrl, repairedUrl);
     return repairedUrl;
+  };
+
+  const videoHasAudioTrack = async (file: File) => {
+    try {
+      const ffmpeg = await ensureFFmpegLoaded();
+      const inputName = `input-audio-check-${Date.now()}.mp4`;
+
+      await ffmpeg.writeFile(inputName, await fetchFile(file));
+      try {
+        await ffmpeg.ffprobe([
+          "-v", "error",
+          "-select_streams", "a",
+          "-show_entries", "stream=codec_type",
+          "-of", "csv=p=0",
+          inputName,
+        ]);
+        const output = await ffmpeg.readFile("ffprobe_output");
+        const text = output instanceof Uint8Array ? new TextDecoder().decode(output).trim() : "";
+        return text.length > 0;
+      } finally {
+        await Promise.allSettled([
+          ffmpeg.deleteFile(inputName),
+          ffmpeg.deleteFile("ffprobe_output"),
+        ]);
+      }
+    } catch {
+      return true;
+    }
   };
 
   const uploadPostMedia = async (file: File) => {
@@ -1434,6 +1455,11 @@ export default function AdminStoreEditPage() {
         if (!resp.ok) throw new Error(`Download failed (${resp.status}): ${normalizedUrl}`);
         const blob = await resp.blob();
         const originalFile = new File([blob], "reprocess.mp4", { type: blob.type || "video/mp4" });
+
+        const hasAudio = await videoHasAudioTrack(originalFile);
+        if (!hasAudio) {
+          throw new Error("This stored video has no audio track anymore. Please replace it with the original video file to restore sound.");
+        }
 
         toast.info("Step 2/3: Converting to iOS-compatible format...");
         const transcodedFile = await transcodeVideoForBrowser(originalFile);
