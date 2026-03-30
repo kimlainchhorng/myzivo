@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Heart, MessageCircle, Eye, X, SwitchCamera, Mic, MicOff, Sparkles,
   Share2, Play, Radio, ChevronDown, Globe, Users, Lock,
-  MapPin, Image, Film, Grid3X3, Clapperboard, Camera,
+  MapPin, Image, Film, Grid3X3, Clapperboard, Camera, Trash2, Pencil, MoreVertical,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -74,6 +74,9 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [showComposer, setShowComposer] = useState(false);
   const [composerType, setComposerType] = useState<"photo" | "reel" | null>(null);
   const [selectedPost, setSelectedPost] = useState<FeedItem | null>(null);
+  const [showPostMenu, setShowPostMenu] = useState(false);
+  const [editingCaption, setEditingCaption] = useState(false);
+  const [editCaptionValue, setEditCaptionValue] = useState("");
   const [showLive, setShowLive] = useState(false);
   const [feed, setFeed] = useState<FeedItem[]>(demoFeed);
 
@@ -210,6 +213,36 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
     }
   }, [persistLocalPost, uploadMediaToSupabase, user?.email, user?.id]);
 
+  const handleDeletePost = useCallback(async (postId: string) => {
+    setFeed((prev) => prev.filter((p) => p.id !== postId));
+    setSelectedPost(null);
+    setShowPostMenu(false);
+    try {
+      const existing = JSON.parse(localStorage.getItem(LOCAL_POSTS_KEY) || "[]") as FeedItem[];
+      localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(existing.filter((p) => p.id !== postId)));
+    } catch {}
+    if (user?.id) {
+      try { await (supabase as any).from("user_posts").delete().eq("id", postId); } catch {}
+    }
+    toast.success("Post deleted");
+  }, [user?.id]);
+
+  const handleEditCaption = useCallback(async (postId: string, newCaption: string) => {
+    setFeed((prev) => prev.map((p) => p.id === postId ? { ...p, caption: newCaption } : p));
+    setSelectedPost((prev) => prev ? { ...prev, caption: newCaption } : null);
+    setEditingCaption(false);
+    setShowPostMenu(false);
+    try {
+      const existing = JSON.parse(localStorage.getItem(LOCAL_POSTS_KEY) || "[]") as FeedItem[];
+      localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(existing.map((p) => p.id === postId ? { ...p, caption: newCaption } : p)));
+    } catch {}
+    if (user?.id) {
+      try { await (supabase as any).from("user_posts").update({ caption: newCaption }).eq("id", postId); } catch {}
+    }
+    toast.success("Caption updated");
+  }, [user?.id]);
+
+
   return (
     <div className="space-y-3">
       {/* Create Post Bar */}
@@ -310,7 +343,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
             >
               {/* Header */}
               <div className="flex items-center gap-3 p-3 shrink-0">
-                <button onClick={() => setSelectedPost(null)} className="text-white/80 p-1">
+                <button onClick={() => { setSelectedPost(null); setShowPostMenu(false); setEditingCaption(false); }} className="text-white/80 p-1">
                   <X className="w-6 h-6" />
                 </button>
                 <img src={selectedPost.user.avatar} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/20" />
@@ -318,6 +351,49 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   <p className="text-white text-sm font-semibold truncate">{selectedPost.user.name}</p>
                   <p className="text-white/50 text-[10px]">{selectedPost.time} ago</p>
                 </div>
+                {(selectedPost.user.name === "You" || selectedPost.user.name === (user?.email?.split("@")[0] || "")) && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowPostMenu(!showPostMenu)}
+                      className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+                    >
+                      <MoreVertical className="w-5 h-5" />
+                    </button>
+                    <AnimatePresence>
+                      {showPostMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9, y: -5 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.9, y: -5 }}
+                          className="absolute right-0 top-full mt-1 bg-card rounded-xl shadow-2xl border border-border/30 overflow-hidden z-50 min-w-[160px]"
+                        >
+                          <button
+                            onClick={() => {
+                              setEditCaptionValue(selectedPost.caption);
+                              setEditingCaption(true);
+                              setShowPostMenu(false);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Edit Caption
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (window.confirm("Delete this post? This can't be undone.")) {
+                                handleDeletePost(selectedPost.id);
+                              }
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete Post
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
               </div>
 
               {/* Content */}
@@ -332,7 +408,35 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
               {/* Bottom bar */}
               <div className="p-4 space-y-3 shrink-0 bg-gradient-to-t from-black/80 to-transparent">
-                <p className="text-white/90 text-sm">{selectedPost.caption}</p>
+                {editingCaption ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={editCaptionValue}
+                      onChange={(e) => setEditCaptionValue(e.target.value)}
+                      className="flex-1 bg-white/10 text-white text-sm rounded-lg px-3 py-2 border border-white/20 outline-none focus:border-primary"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleEditCaption(selectedPost.id, editCaptionValue);
+                        if (e.key === "Escape") setEditingCaption(false);
+                      }}
+                    />
+                    <button
+                      onClick={() => handleEditCaption(selectedPost.id, editCaptionValue)}
+                      className="px-3 py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-lg"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditingCaption(false)}
+                      className="px-3 py-2 text-white/60 text-xs"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-white/90 text-sm">{selectedPost.caption}</p>
+                )}
                 <div className="flex items-center gap-5">
                   <button className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors">
                     <Heart className="w-6 h-6" />
@@ -483,6 +587,18 @@ const COMPOSER_FILTERS = [
   { name: "UV", css: "hue-rotate(120deg) saturate(2.2) contrast(1.22) brightness(0.9)" },
   { name: "Mint", css: "saturate(0.95) hue-rotate(44deg) brightness(1.09) contrast(0.96)" },
   { name: "Glow Film", css: "sepia(0.14) brightness(1.18) contrast(0.9) saturate(1.1)" },
+  { name: "Bloom", css: "brightness(1.2) contrast(0.88) saturate(1.15)" },
+  { name: "Tokyo", css: "hue-rotate(-18deg) saturate(1.6) contrast(1.15) brightness(0.96)" },
+  { name: "Prism", css: "hue-rotate(88deg) saturate(1.9) contrast(1.08) brightness(0.94)" },
+  { name: "Smoke", css: "grayscale(0.35) contrast(1.2) brightness(0.9)" },
+  { name: "Cocoa", css: "sepia(0.4) saturate(1.05) contrast(0.92) brightness(1.02)" },
+  { name: "Pop Art", css: "contrast(1.35) saturate(1.6) brightness(1.05)" },
+  { name: "Haze", css: "brightness(1.15) contrast(0.8) saturate(0.78)" },
+  { name: "Soft Cyan", css: "hue-rotate(34deg) saturate(1.08) brightness(1.09) contrast(0.94)" },
+  { name: "Deep Contrast", css: "contrast(1.42) brightness(0.86) saturate(1.2)" },
+  { name: "Portra", css: "sepia(0.16) contrast(1.02) saturate(0.94) brightness(1.06)" },
+  { name: "Analog", css: "sepia(0.24) saturate(1.15) contrast(0.9) brightness(1.1)" },
+  { name: "Miami", css: "hue-rotate(-30deg) saturate(1.85) brightness(1.08) contrast(1.04)" },
 ];
 
 function ComposerForm({
@@ -717,6 +833,12 @@ const AR_STICKERS = [
   { name: "Aura", emoji: "🔮", sticker: "aura" },
   { name: "Laser Eyes", emoji: "🔴", sticker: "laser" },
   { name: "Tears", emoji: "🥹", sticker: "tears" },
+  { name: "Glitch", emoji: "📺", sticker: "glitch" },
+  { name: "Scanline", emoji: "🛰️", sticker: "scanline" },
+  { name: "Pixel Hearts", emoji: "💗", sticker: "pixelhearts" },
+  { name: "Frost", emoji: "🥶", sticker: "frost" },
+  { name: "Lightning", emoji: "⚡", sticker: "lightning" },
+  { name: "Confetti", emoji: "🎉", sticker: "confetti" },
 ];
 
 interface FaceBox {
@@ -1355,6 +1477,77 @@ function drawFaceFilter(
   ctx.restore();
 }
 
+<<<<<<< HEAD
+=======
+type FaceAnchor = {
+  x: number;
+  y: number;
+  size: number;
+};
+
+function drawTrackedSticker(
+  ctx: CanvasRenderingContext2D,
+  sticker: string,
+  w: number,
+  h: number,
+  faceAnchor: FaceAnchor | null,
+) {
+  if (!faceAnchor) {
+    const defaultFace: FaceBox = {
+      x: w * 0.25, y: h * 0.15, width: w * 0.5, height: h * 0.5,
+      eyeLeft: { x: w * 0.38, y: h * 0.32 }, eyeRight: { x: w * 0.62, y: h * 0.32 },
+    };
+    drawFaceFilter(ctx, sticker, defaultFace, w, h, performance.now());
+    return;
+  }
+
+  const cx = faceAnchor.x;
+  const cy = faceAnchor.y;
+  const faceSize = faceAnchor.size;
+  const fontSize = Math.max(22, faceSize * 0.42);
+  ctx.font = `${fontSize}px serif`;
+  ctx.textAlign = "center";
+
+  switch (sticker) {
+    case "cat":
+      ctx.fillText("🐱", cx - faceSize * 0.35, cy - faceSize * 0.65);
+      ctx.fillText("🐱", cx + faceSize * 0.35, cy - faceSize * 0.65);
+      ctx.fillText("👃", cx, cy + faceSize * 0.05);
+      break;
+    case "dog":
+      ctx.fillText("🐕", cx, cy - faceSize * 0.55);
+      ctx.fillText("👅", cx, cy + faceSize * 0.42);
+      break;
+    case "bunny":
+      ctx.fillText("🐰", cx, cy - faceSize * 0.72);
+      break;
+    case "crown":
+      ctx.fillText("👑", cx, cy - faceSize * 0.82);
+      break;
+    case "glasses":
+      ctx.fillText("🕶️", cx, cy);
+      break;
+    case "devil":
+      ctx.fillText("😈", cx, cy - faceSize * 0.85);
+      break;
+    case "angel":
+      ctx.fillText("😇", cx, cy - faceSize * 0.92);
+      break;
+    case "butterfly":
+      ctx.fillText("🦋", cx - faceSize * 0.6, cy - faceSize * 0.5);
+      ctx.fillText("🦋", cx + faceSize * 0.6, cy - faceSize * 0.45);
+      break;
+    default: {
+      const defaultFace2: FaceBox = {
+        x: w * 0.25, y: h * 0.15, width: w * 0.5, height: h * 0.5,
+        eyeLeft: { x: w * 0.38, y: h * 0.32 }, eyeRight: { x: w * 0.62, y: h * 0.32 },
+      };
+      drawFaceFilter(ctx, sticker, defaultFace2, w, h, performance.now());
+    }
+  }
+}
+
+>>>>>>> e7873455dcc388bcf4094e19d09f399f98d53c2c
 function LiveBroadcast({
   onClose,
   onPublishClip,
@@ -1434,6 +1627,18 @@ function LiveBroadcast({
     { name: "Matrix", css: "hue-rotate(76deg) saturate(2.6) brightness(0.92) contrast(1.3)", emoji: "🧬" },
     { name: "Glam Light", css: "brightness(1.2) contrast(0.96) saturate(1.18)", emoji: "💡" },
     { name: "Clay", css: "sepia(0.18) saturate(0.88) brightness(1.03) contrast(0.98)", emoji: "🏺" },
+    { name: "Bloom Pro", css: "brightness(1.24) contrast(0.9) saturate(1.16)", emoji: "🌼" },
+    { name: "Ruby", css: "hue-rotate(-24deg) saturate(1.65) contrast(1.1) brightness(0.98)", emoji: "♦️" },
+    { name: "Jade", css: "hue-rotate(62deg) saturate(1.86) contrast(1.08) brightness(0.95)", emoji: "🍃" },
+    { name: "Indigo", css: "hue-rotate(18deg) saturate(1.5) contrast(1.08) brightness(0.96)", emoji: "🔵" },
+    { name: "Old Cam", css: "sepia(0.32) contrast(0.88) brightness(1.12) saturate(0.92)", emoji: "📹" },
+    { name: "Urban", css: "contrast(1.34) brightness(0.86) saturate(1.24)", emoji: "🏙️" },
+    { name: "Mango", css: "sepia(0.22) hue-rotate(-8deg) saturate(1.32) brightness(1.08)", emoji: "🥭" },
+    { name: "Mint Ice", css: "hue-rotate(42deg) saturate(1.14) brightness(1.14) contrast(0.94)", emoji: "🧊" },
+    { name: "Mono Soft", css: "grayscale(0.92) contrast(1.16) brightness(1.02)", emoji: "⬜" },
+    { name: "Halation", css: "brightness(1.3) contrast(0.82) saturate(1.05)", emoji: "🌟" },
+    { name: "Night City", css: "brightness(0.82) contrast(1.44) saturate(1.32) hue-rotate(-8deg)", emoji: "🌃" },
+    { name: "TV", css: "contrast(1.22) saturate(1.08) brightness(0.94) sepia(0.08)", emoji: "📺" },
   ];
 
   const FACE_FILTERS = [
@@ -1479,6 +1684,18 @@ function LiveBroadcast({
     { name: "Ivory", css: "blur(0.62px) brightness(1.28) contrast(0.78) saturate(0.82)", emoji: "🤍" },
     { name: "Silk", css: "blur(0.68px) brightness(1.21) contrast(0.85) saturate(0.98)", emoji: "🪷" },
     { name: "Ultra Doll", css: "blur(1.18px) brightness(1.37) contrast(0.72) saturate(1.02)", emoji: "🎀" },
+    { name: "Pearl", css: "blur(0.74px) brightness(1.29) contrast(0.79) saturate(0.9)", emoji: "🫧" },
+    { name: "Velvet Skin", css: "blur(0.84px) brightness(1.24) contrast(0.81) saturate(1.04)", emoji: "🧴" },
+    { name: "Cinematic", css: "blur(0.34px) brightness(1.1) contrast(1.16) saturate(1.18)", emoji: "🎞️" },
+    { name: "Blush Pop", css: "blur(0.52px) brightness(1.23) contrast(0.84) saturate(1.34) hue-rotate(-10deg)", emoji: "💞" },
+    { name: "Glossy Skin", css: "blur(0.62px) brightness(1.31) contrast(0.77) saturate(1.02)", emoji: "💦" },
+    { name: "Honey Matte", css: "blur(0.76px) brightness(1.22) contrast(0.82) saturate(1.08) sepia(0.1)", emoji: "🍯" },
+    { name: "Lily", css: "blur(0.48px) brightness(1.25) contrast(0.8) saturate(1.06)", emoji: "🪻" },
+    { name: "Satin", css: "blur(0.66px) brightness(1.2) contrast(0.84) saturate(0.96)", emoji: "🎗️" },
+    { name: "Ultra Glow", css: "blur(1.06px) brightness(1.4) contrast(0.7) saturate(1.1)", emoji: "✨" },
+    { name: "Natural Plus", css: "blur(0.26px) brightness(1.1) contrast(0.96) saturate(1.04)", emoji: "🍀" },
+    { name: "Soft Focus", css: "blur(1.02px) brightness(1.27) contrast(0.76) saturate(0.94)", emoji: "🎯" },
+    { name: "Aura Skin", css: "blur(0.88px) brightness(1.3) contrast(0.74) saturate(1.0)", emoji: "🔮" },
   ];
 
   const activeFilters = filterTab === "color" ? COLOR_FILTERS : FACE_FILTERS;
@@ -1531,7 +1748,6 @@ function LiveBroadcast({
           if (faces.length > 0) {
             const f = faces[0];
             const bb = f.boundingBox;
-            // Scale from video coords to canvas coords
             const scaleX = cw / video.videoWidth;
             const scaleY = ch / video.videoHeight;
             const eyeL = f.landmarks?.find((l: any) => l.type === "eye")?.locations?.[0];
@@ -1552,7 +1768,6 @@ function LiveBroadcast({
         } catch { /* detection failed, use last known */ }
       }
 
-      // Fallback: centered face estimate if no detector or no face found
       const face: FaceBox = lastFace || {
         x: cw * 0.25, y: ch * 0.15,
         width: cw * 0.5, height: ch * 0.5,
