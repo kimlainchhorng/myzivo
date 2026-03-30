@@ -619,7 +619,7 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
         <div className="flex-1" />
       )}
 
-      {/* TikTok-style filter sidebar */}
+      {/* TikTok-style filter sidebar with tabs */}
       <AnimatePresence>
         {showFilters && (
           <motion.div
@@ -629,8 +629,34 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
             transition={{ type: "spring", damping: 22, stiffness: 280 }}
             className="absolute right-2 top-20 bottom-28 z-20 flex flex-col"
           >
-            <div className="bg-black/40 backdrop-blur-md rounded-2xl py-2 px-1 overflow-y-auto scrollbar-none max-h-full">
-              {FILTERS.map((f, i) => (
+            <div className="bg-black/40 backdrop-blur-md rounded-2xl py-2 px-1 overflow-y-auto scrollbar-none max-h-full flex flex-col">
+              {/* Tab switcher */}
+              <div className="flex gap-1 px-1 mb-2">
+                <button
+                  onClick={() => { setFilterTab("color"); setActiveFilter(0); }}
+                  className={cn(
+                    "flex-1 text-[10px] font-semibold py-1.5 rounded-lg transition-all",
+                    filterTab === "color"
+                      ? "bg-white/20 text-white"
+                      : "text-white/40"
+                  )}
+                >
+                  🎨 Color
+                </button>
+                <button
+                  onClick={() => { setFilterTab("face"); setActiveFilter(0); }}
+                  className={cn(
+                    "flex-1 text-[10px] font-semibold py-1.5 rounded-lg transition-all",
+                    filterTab === "face"
+                      ? "bg-white/20 text-white"
+                      : "text-white/40"
+                  )}
+                >
+                  ✨ Face
+                </button>
+              </div>
+              {/* Filter list */}
+              {activeFilters.map((f, i) => (
                 <button
                   key={f.name}
                   onClick={() => setActiveFilter(i)}
