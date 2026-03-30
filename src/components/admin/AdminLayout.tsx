@@ -36,6 +36,7 @@ const navEntries: NavEntry[] = [
     ],
   },
   { label: "Store", icon: Store, path: "/admin/stores" },
+  { label: "Employees", icon: Users, path: "/admin/employees" },
   { label: "Pricing", icon: DollarSign, path: "/admin/pricing" },
   { label: "System Health", icon: Activity, path: "/admin/system-health" },
 ];
