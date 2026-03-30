@@ -3538,13 +3538,19 @@ function LiveBroadcast({
     ? AR_STICKERS[activeSticker]?.name || "None"
     : currentFilter?.name || "Original";
   const visibleFilterIndexes = useMemo(() => {
-    const length = filterTab === "ar" ? AR_STICKERS.length : activeFilters.length;
+    if (filterTab === "ar") {
+      // Filter by AR category
+      return AR_STICKERS.map((_, i) => i).filter(i => 
+        arCategory === "All" || AR_STICKERS[i].category.includes(arCategory)
+      );
+    }
+    const length = activeFilters.length;
     const all = Array.from({ length }, (_v, i) => i);
     if (filterGroup === "all") return all;
     if (filterGroup === "trending") return all.filter((i) => i % 3 === 1).slice(0, 24);
     if (filterGroup === "new") return all.slice(Math.max(0, length - 24));
     return all.filter((i) => i % 5 === 0 || i % 7 === 0).slice(0, 28);
-  }, [filterTab, activeFilters.length, filterGroup]);
+  }, [filterTab, activeFilters.length, filterGroup, arCategory]);
 
   const randomizeCurrentTabFilter = () => {
     if (filterTab === "ar") {
