@@ -1,10 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, Heart, MessageCircle, Eye, X,
+  Plus, Heart, MessageCircle, Eye, X, SwitchCamera, Mic, MicOff,
   Share2, Play, Radio, ChevronDown, Globe, Users, Lock,
-  MapPin, Image, Film, Grid3X3, Clapperboard,
+  MapPin, Image, Film, Grid3X3, Clapperboard, Camera,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [showComposer, setShowComposer] = useState(false);
   const [composerType, setComposerType] = useState<"photo" | "reel" | null>(null);
   const [selectedPost, setSelectedPost] = useState<FeedItem | null>(null);
+  const [showLive, setShowLive] = useState(false);
 
   const filtered = activeTab === "all" ? demoFeed : demoFeed.filter((i) => i.type === activeTab);
 
@@ -230,7 +231,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                               if (opt.id === "live") {
                                 setShowComposer(false);
                                 setComposerType(null);
-                                toast.info("Starting Live stream...");
+                                setShowLive(true);
                               } else {
                                 setComposerType(opt.id);
                               }
@@ -262,6 +263,14 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               </motion.div>
             </motion.div>
           )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Live Broadcast Overlay */}
+      {createPortal(
+        <AnimatePresence>
+          {showLive && <LiveBroadcast onClose={() => setShowLive(false)} />}
         </AnimatePresence>,
         document.body
       )}
@@ -388,5 +397,194 @@ function ComposerForm({ type, onClose, onBack }: { type: "photo" | "reel"; onClo
         </button>
       </div>
     </div>
+  );
+}
+
+function LiveBroadcast({ onClose }: { onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [isLive, setIsLive] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const [elapsed, setElapsed] = useState(0);
+  const [viewers] = useState(() => Math.floor(Math.random() * 20) + 1);
+  const [comments, setComments] = useState<{ id: number; user: string; text: string }[]>([]);
+  const [commentInput, setCommentInput] = useState("");
+  const timerRef = useRef<ReturnType<typeof setInterval>>();
+
+  const startCamera = useCallback(async (facing: "user" | "environment") => {
+    try {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: facing, width: { ideal: 1080 }, height: { ideal: 1920 } },
+        audio: true,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch {
+      toast.error("Camera access denied");
+      onClose();
+    }
+  }, [onClose]);
+
+  useEffect(() => {
+    startCamera(facingMode);
+    return () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const goLive = () => {
+    setIsLive(true);
+    setElapsed(0);
+    timerRef.current = setInterval(() => setElapsed((s) => s + 1), 1000);
+    toast.success("You're LIVE! 🔴");
+  };
+
+  const endLive = () => {
+    setIsLive(false);
+    if (timerRef.current) clearInterval(timerRef.current);
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    toast.info(`Live ended • ${formatTime(elapsed)}`);
+    onClose();
+  };
+
+  const flipCamera = () => {
+    const next = facingMode === "user" ? "environment" : "user";
+    setFacingMode(next);
+    startCamera(next);
+  };
+
+  const toggleMic = () => {
+    const audioTrack = streamRef.current?.getAudioTracks()[0];
+    if (audioTrack) {
+      audioTrack.enabled = !audioTrack.enabled;
+      setMuted(!audioTrack.enabled);
+    }
+  };
+
+  const sendComment = () => {
+    if (!commentInput.trim()) return;
+    setComments((prev) => [...prev, { id: Date.now(), user: "You", text: commentInput.trim() }]);
+    setCommentInput("");
+  };
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[9999] bg-black flex flex-col"
+    >
+      {/* Camera feed */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
+      />
+
+      {/* Top overlay */}
+      <div className="relative z-10 flex items-center justify-between p-4 pt-12">
+        <div className="flex items-center gap-2">
+          {isLive && (
+            <motion.div
+              animate={{ opacity: [1, 0.5, 1] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+              className="flex items-center gap-1.5 bg-destructive px-3 py-1 rounded-full"
+            >
+              <div className="w-2 h-2 rounded-full bg-white" />
+              <span className="text-white text-xs font-bold">LIVE</span>
+            </motion.div>
+          )}
+          {isLive && (
+            <span className="text-white/80 text-xs font-mono bg-black/40 px-2 py-1 rounded-full">
+              {formatTime(elapsed)}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {isLive && (
+            <div className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full">
+              <Eye className="w-3.5 h-3.5 text-white" />
+              <span className="text-white text-xs font-bold">{viewers}</span>
+            </div>
+          )}
+          <button onClick={isLive ? endLive : onClose} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
+            <X className="w-5 h-5 text-white" />
+          </button>
+        </div>
+      </div>
+
+      {/* Comments overlay when live */}
+      {isLive && (
+        <div className="relative z-10 flex-1 flex flex-col justify-end px-4 pb-2">
+          <div className="max-h-[30vh] overflow-y-auto space-y-1.5 mb-3 scrollbar-none">
+            {comments.map((c) => (
+              <div key={c.id} className="bg-black/30 backdrop-blur-sm rounded-xl px-3 py-1.5 max-w-[80%]">
+                <span className="text-white text-xs font-bold mr-1.5">{c.user}</span>
+                <span className="text-white/90 text-xs">{c.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom controls */}
+      <div className="relative z-10 p-4 pb-8 bg-gradient-to-t from-black/60 to-transparent">
+        {isLive ? (
+          <div className="flex items-center gap-2">
+            <input
+              value={commentInput}
+              onChange={(e) => setCommentInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && sendComment()}
+              placeholder="Say something..."
+              className="flex-1 bg-white/15 backdrop-blur-sm text-white text-sm rounded-full px-4 py-2.5 placeholder:text-white/50 outline-none border border-white/10"
+            />
+            <button onClick={toggleMic} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+              {muted ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
+            </button>
+            <button onClick={flipCamera} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+              <SwitchCamera className="w-5 h-5 text-white" />
+            </button>
+            <button onClick={endLive} className="px-4 py-2.5 bg-destructive rounded-full">
+              <span className="text-white text-sm font-bold">End</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex items-center gap-4">
+              <button onClick={flipCamera} className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center">
+                <SwitchCamera className="w-6 h-6 text-white" />
+              </button>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={goLive}
+                className="w-20 h-20 rounded-full bg-destructive flex items-center justify-center shadow-lg shadow-destructive/40"
+              >
+                <Camera className="w-8 h-8 text-white" />
+              </motion.button>
+              <button onClick={toggleMic} className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center">
+                {muted ? <MicOff className="w-6 h-6 text-white" /> : <Mic className="w-6 h-6 text-white" />}
+              </button>
+            </div>
+            <span className="text-white/60 text-sm font-medium">Tap to Go Live</span>
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 }
