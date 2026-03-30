@@ -3423,7 +3423,7 @@ function LiveBroadcast({
             caption: "New live clip",
             url: clipUrl,
             file: clipFile,
-            filterCss: effectiveFilterCss,
+            filterCss: "none",
           });
           toast.success("Clip published to your feed");
         } catch {
