@@ -152,6 +152,17 @@ export default function EatsDriverDeliveryPage() {
         .update({ status: "assigned", assigned_driver_id: driverId } as any)
         .eq("id", jobId);
 
+      // Sync driver assignment back to food_orders
+      const offer = offers.find(o => o.id === offerId);
+      const jobNotes = offer?.job?.notes || "";
+      const foodOrderIdMatch = jobNotes.match(/Food order:\s*(.+)/);
+      if (foodOrderIdMatch?.[1]) {
+        await supabase
+          .from("food_orders")
+          .update({ driver_id: driverId, status: "confirmed" } as any)
+          .eq("id", foodOrderIdMatch[1].trim());
+      }
+
       toast.success("Delivery accepted!");
       await loadAllData();
       setTab("active");
@@ -176,12 +187,23 @@ export default function EatsDriverDeliveryPage() {
     if (error) {
       toast.error("Failed to update status");
     } else {
-      // Also update food_order status if this is a food delivery
+      // Sync food_order status from job status
       const job = activeJobs.find(j => j.id === jobId);
-      if (job?.notes?.includes("Food order:")) {
-        const foodOrderId = job.notes.replace("Food order: ", "").trim();
-        const foodStatus = newStatus === "en_route_dropoff" ? "out_for_delivery" : newStatus === "completed" ? "delivered" : newStatus;
-        await supabase.from("food_orders").update({ status: foodStatus } as any).eq("id", foodOrderId);
+      const foodOrderIdMatch = job?.notes?.match(/Food order:\s*(.+)/);
+      if (foodOrderIdMatch?.[1]) {
+        const foodOrderId = foodOrderIdMatch[1].trim();
+        const statusMap: Record<string, string> = {
+          en_route_pickup: "preparing",
+          arrived_pickup: "ready",
+          en_route_dropoff: "out_for_delivery",
+          completed: "delivered",
+        };
+        const foodStatus = statusMap[newStatus];
+        if (foodStatus) {
+          const updateData: any = { status: foodStatus };
+          if (foodStatus === "delivered") updateData.delivered_at = new Date().toISOString();
+          await supabase.from("food_orders").update(updateData).eq("id", foodOrderId);
+        }
       }
       toast.success(`Status updated to ${newStatus.replace(/_/g, " ")}`);
       await loadAllData();

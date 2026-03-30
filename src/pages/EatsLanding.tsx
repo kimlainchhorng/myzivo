@@ -2,7 +2,7 @@
  * EatsLanding - Food delivery hub page with full ordering flow
  * Connected to Supabase: restaurants, menu_items, food_orders
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Star, Clock, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, Sparkles, MessageSquare, Percent, Leaf, Award, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -12,7 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useEatsRestaurants, useEatsMenu, type EatsCartItem } from "@/hooks/useEatsData";
+import { supabase } from "@/integrations/supabase/client";
 import { useEatsOrder } from "@/hooks/useEatsOrder";
+import { getWalletBalance } from "@/hooks/useWalletPayment";
+import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 
@@ -62,8 +65,16 @@ function EatsStepIndicator({ currentStep }: { currentStep: string }) {
 // ─── Main Component ──────────────────────────────────────────────────
 export default function EatsLanding() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { placeOrder, placing: placingOrder } = useEatsOrder();
 
+  // Wallet balance for checkout
+  const [walletBalanceCents, setWalletBalanceCents] = useState<number>(0);
+  useEffect(() => {
+    if (user?.id) {
+      getWalletBalance(user.id).then(setWalletBalanceCents);
+    }
+  }, [user?.id]);
   // Data from Supabase
   const { data: restaurants = [], isLoading: loadingRestaurants } = useEatsRestaurants();
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
@@ -588,13 +599,20 @@ export default function EatsLanding() {
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5"><CreditCard className="w-3 h-3" /> Payment method</h3>
                 <div className="flex gap-2">
                   {([
-                    { id: "card" as const, label: "💳 Card", icon: CreditCard },
-                    { id: "cash" as const, label: "💵 Cash", icon: Package },
-                    { id: "wallet" as const, label: "👛 Wallet", icon: Award },
+                    { id: "card" as const, label: "💳 Card" },
+                    { id: "cash" as const, label: "💵 Cash" },
+                    { id: "wallet" as const, label: `👛 $${(walletBalanceCents / 100).toFixed(2)}` },
                   ]).map(p => (
-                    <button key={p.id} onClick={() => setPaymentType(p.id)}
+                    <button key={p.id} onClick={() => {
+                      if (p.id === "wallet" && walletBalanceCents < Math.round(grandTotal * 100)) {
+                        toast.error(`Insufficient wallet balance ($${(walletBalanceCents / 100).toFixed(2)})`);
+                        return;
+                      }
+                      setPaymentType(p.id);
+                    }}
                       className={cn("flex-1 py-3 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
-                        paymentType === p.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                        paymentType === p.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40",
+                        p.id === "wallet" && walletBalanceCents < Math.round(grandTotal * 100) && "opacity-50")}>
                       {p.label}
                     </button>
                   ))}
@@ -622,7 +640,30 @@ export default function EatsLanding() {
                   <Input placeholder="Enter promo code" value={promoCode} onChange={(e) => setPromoCode(e.target.value)}
                     disabled={promoApplied} className="h-10 rounded-xl flex-1 text-sm" />
                   <Button variant={promoApplied ? "outline" : "default"} size="sm"
-                    onClick={() => { if (promoCode.trim()) { setPromoApplied(true); toast.success("Promo applied!"); } }}
+                    onClick={async () => {
+                      if (!promoCode.trim()) return;
+                      // Validate promo code against DB
+                      const { data: promo } = await (supabase as any)
+                        .from("promo_codes")
+                        .select("id, discount_percent, discount_amount_cents, is_active, min_order_cents, expires_at")
+                        .eq("code", promoCode.trim().toUpperCase())
+                        .eq("is_active", true)
+                        .maybeSingle() as { data: any };
+                      if (!promo) {
+                        toast.error("Invalid or expired promo code");
+                        return;
+                      }
+                      if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+                        toast.error("This promo code has expired");
+                        return;
+                      }
+                      if (promo.min_order_cents && cartTotal * 100 < promo.min_order_cents) {
+                        toast.error(`Minimum order $${(promo.min_order_cents / 100).toFixed(2)} required`);
+                        return;
+                      }
+                      setPromoApplied(true);
+                      toast.success("Promo applied!");
+                    }}
                     disabled={promoApplied || !promoCode.trim()} className="rounded-xl h-10 px-4 text-xs font-bold">
                     {promoApplied ? <><CheckCircle className="w-3.5 h-3.5 mr-1" /> Applied</> : "Apply"}
                   </Button>

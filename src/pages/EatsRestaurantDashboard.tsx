@@ -86,8 +86,14 @@ export default function EatsRestaurantDashboard() {
         schema: "public",
         table: "food_orders",
         filter: `restaurant_id=eq.${restaurant.id}`,
-      }, () => {
+      }, (payload) => {
         loadOrders(restaurant.id);
+        // Notify on new orders
+        if (payload.eventType === "INSERT" && (payload.new as any)?.status === "pending") {
+          toast.info("🔔 New order received!", { description: `Order #${(payload.new as any)?.tracking_code || ""}` });
+          // Play notification sound if available
+          try { new Audio("/notification.mp3").play().catch(() => {}); } catch {}
+        }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
