@@ -15,7 +15,7 @@ export function usePWAUpdate(): PWAUpdateState {
 
   useEffect(() => {
     let cancelled = false;
-    let updateInterval: ReturnType<typeof window.setInterval> | null = null;
+    let updateInterval: ReturnType<typeof setInterval> | null = null;
     let visibilityHandler: (() => void) | null = null;
 
     const registerAppSW = async () => {
