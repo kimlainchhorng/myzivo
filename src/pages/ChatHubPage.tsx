@@ -86,27 +86,28 @@ export default function ChatHubPage() {
     },
   });
 
-  // Fetch ride chats (order_chats)
+  // Fetch ride chats via chat_messages with trip_id
   const { data: rideChats = [] } = useQuery({
     queryKey: ["chat-hub-ride", user?.id],
     enabled: !!user && active === "ride",
     queryFn: async () => {
       const { data } = await supabase
-        .from("order_chats")
-        .select("id, order_id, sender_id, message, created_at, is_read")
-        .or(`sender_id.eq.${user!.id},receiver_id.eq.${user!.id}`)
+        .from("chat_messages")
+        .select("id, chat_id, order_id, trip_id, sender_id, sender_type, message, created_at, is_read")
+        .eq("sender_id", user!.id)
         .order("created_at", { ascending: false })
-        .limit(30);
+        .limit(50);
 
       if (!data || data.length === 0) return [];
 
-      // Group by order_id, take latest message per order
+      // Group by chat_id, take latest message per chat
       const grouped = new Map<string, any>();
-      for (const msg of data) {
-        if (!grouped.has(msg.order_id)) {
-          grouped.set(msg.order_id, {
-            id: msg.order_id,
-            name: `Ride #${msg.order_id.slice(0, 6).toUpperCase()}`,
+      for (const msg of data as any[]) {
+        const key = msg.chat_id || msg.order_id || msg.id;
+        if (!grouped.has(key)) {
+          grouped.set(key, {
+            id: key,
+            name: `Ride #${key.slice(0, 6).toUpperCase()}`,
             lastMessage: msg.message,
             lastTime: msg.created_at,
             unread: (!msg.is_read && msg.sender_id !== user!.id) ? 1 : 0,
