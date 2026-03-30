@@ -4010,7 +4010,11 @@ function LiveBroadcast({
                         )}
                         style={{ filter: f.css }}
                       >
-                        <div className="w-full h-full bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500" />
+                        {filterThumbUrl ? (
+                          <img src={filterThumbUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500" />
+                        )}
                       </div>
                       <span className={cn(
                         "text-[10px] font-medium leading-tight",
