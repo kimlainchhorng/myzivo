@@ -22,7 +22,7 @@ interface Setting {
   updated_at?: string;
 }
 
-export function AdminRemoteConfigPanel() {
+export default function AdminRemoteConfigPanel() {
   const { updateSetting, refresh, config, loading, error } = useRemoteConfig();
   const [settings, setSettings] = useState<Setting[]>([]);
   const [isLoading, setIsLoading] = useState(false);
