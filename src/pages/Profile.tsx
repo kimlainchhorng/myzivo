@@ -484,6 +484,50 @@ const Profile = () => {
                           </Badge>
                         )}
                       </div>
+
+                      {/* Friend & Follow stats */}
+                      <div className="flex items-center justify-center gap-6 mt-3">
+                        <div className="text-center">
+                          <p className="text-base font-bold text-foreground">{friendCount}</p>
+                          <p className="text-[10px] text-muted-foreground">Friends</p>
+                        </div>
+                        <div className="w-px h-8 bg-border/50" />
+                        <div className="text-center">
+                          <p className="text-base font-bold text-foreground">{followerCount}</p>
+                          <p className="text-[10px] text-muted-foreground">Followers</p>
+                        </div>
+                      </div>
+
+                      {/* Add Friend & Follow buttons */}
+                      <div className="flex items-center justify-center gap-2 mt-3">
+                        <Button
+                          size="sm"
+                          variant={friendStatus === "none" ? "default" : "outline"}
+                          className="rounded-full px-5 h-9 text-xs font-bold gap-1.5"
+                          onClick={handleAddFriend}
+                          disabled={friendStatus !== "none"}
+                        >
+                          {friendStatus === "none" ? (
+                            <><UserPlus className="w-3.5 h-3.5" /> Add Friend</>
+                          ) : friendStatus === "pending" ? (
+                            <><UserCheck className="w-3.5 h-3.5" /> Pending</>
+                          ) : (
+                            <><UserCheck className="w-3.5 h-3.5" /> Friends</>
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={isFollowing ? "outline" : "secondary"}
+                          className="rounded-full px-5 h-9 text-xs font-bold gap-1.5"
+                          onClick={handleFollow}
+                        >
+                          {isFollowing ? (
+                            <><UserCheck className="w-3.5 h-3.5" /> Following</>
+                          ) : (
+                            <><Users className="w-3.5 h-3.5" /> Follow</>
+                          )}
+                        </Button>
+                      </div>
                     </div>
 
                     <CardContent className="pt-3 pb-6 px-6">
