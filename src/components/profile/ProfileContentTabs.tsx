@@ -3503,12 +3503,26 @@ function LiveBroadcast({
         style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
       />
 
-      {/* AI result overlay */}
+      {/* AI result preview card - bottom-left so camera stays visible */}
       {aiResultOverlay && (
-        <div className="absolute inset-0 z-[2] pointer-events-none">
-          <img src={aiResultOverlay} alt="AI result" className="w-full h-full object-cover" />
-          <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
-            <span className="text-white text-xs font-medium">🤖 AI Enhanced</span>
+        <div className="absolute bottom-32 left-3 z-[4] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/30" style={{ width: 140, height: 200 }}>
+          <img
+            src={aiResultOverlay}
+            alt="AI result"
+            className="w-full h-full object-cover"
+            onClick={() => {
+              // Tap to view fullscreen
+              window.open(aiResultOverlay, "_blank");
+            }}
+          />
+          <button
+            onClick={(e) => { e.stopPropagation(); setAiResultOverlay(null); setAiSelectedMode(null); }}
+            className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"
+          >
+            <X className="w-3 h-3 text-white" />
+          </button>
+          <div className="absolute bottom-1 left-1 bg-black/50 backdrop-blur-sm rounded-full px-2 py-0.5">
+            <span className="text-white text-[10px] font-medium">🤖 AI</span>
           </div>
         </div>
       )}
@@ -3553,16 +3567,7 @@ function LiveBroadcast({
               <span className="text-white text-xs font-bold">{viewers}</span>
             </div>
           )}
-          <button onClick={() => {
-            if (aiResultOverlay) {
-              setAiResultOverlay(null);
-              setAiSelectedMode(null);
-            } else if (isLive) {
-              endLive();
-            } else {
-              onClose();
-            }
-          }} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
+          <button onClick={isLive ? endLive : onClose} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
             <X className="w-5 h-5 text-white" />
           </button>
         </div>
