@@ -201,7 +201,6 @@ export default function EatsLanding() {
   // ─── Navigation ──────────────────────────────────────────────────
   const handleBack = () => {
     if (step === "checkout") setStep("cart");
-    else if (step === "checkout") setStep("cart");
     else if (step === "cart") setStep(selectedRestaurantId ? "restaurant" : "browse");
     else if (step === "restaurant") { setStep("browse"); setSelectedRestaurantId(null); }
     else navigate(-1);
