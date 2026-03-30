@@ -1026,6 +1026,21 @@ const AR_STICKERS = [
   { name: "Heart Spark", emoji: "💖", sticker: "heartspark" },
   { name: "Venom", emoji: "🕷️", sticker: "venom" },
   { name: "Royal Makeup", emoji: "👸", sticker: "royalmakeup" },
+  { name: "Cupid", emoji: "🏹", sticker: "cupid" },
+  { name: "Phoenix", emoji: "🕊️", sticker: "phoenix" },
+  { name: "Cyber Crown", emoji: "🛸", sticker: "cybercrown" },
+  { name: "Glitch Face", emoji: "📺", sticker: "glitchface" },
+  { name: "Moon Priestess", emoji: "🌙", sticker: "moonpriestess" },
+  { name: "Storm Queen", emoji: "⛈️", sticker: "stormqueen" },
+  { name: "Jelly Pop", emoji: "🍬", sticker: "jellypop" },
+  { name: "Rose Tears", emoji: "🥀", sticker: "rosetears" },
+  { name: "Metallic", emoji: "🪙", sticker: "metallic" },
+  { name: "Hyper Bloom", emoji: "🌺", sticker: "hyperbloom" },
+  { name: "Cloud Ring", emoji: "☁️", sticker: "cloudring" },
+  { name: "Cheetah", emoji: "🐆", sticker: "cheetah" },
+  { name: "Demon Wings", emoji: "🦇", sticker: "demonwings" },
+  { name: "Star Dust", emoji: "✨", sticker: "stardust" },
+  { name: "Frost Bite", emoji: "🥶", sticker: "frostbite" },
 ];
 
 interface FaceBox {
@@ -3142,6 +3157,135 @@ function drawFaceFilter(
       ctx.fillStyle = "rgba(255,220,100,0.75)"; ctx.fill();
       break;
     }
+    case "cupid": {
+      drawHeart(ctx, cx, eyeY - fh * 0.5, fw * 0.08, "rgba(255,80,140,0.8)");
+      ctx.beginPath();
+      ctx.moveTo(cx - fw * 0.35, eyeY - fh * 0.45);
+      ctx.lineTo(cx + fw * 0.35, eyeY - fh * 0.58);
+      ctx.strokeStyle = "rgba(255,220,120,0.7)"; ctx.lineWidth = 3; ctx.stroke();
+      break;
+    }
+    case "phoenix": {
+      for (let p = 0; p < 12; p++) {
+        const a = (p / 12) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, eyeY - fh * 0.2);
+        ctx.lineTo(cx + Math.cos(a) * fw * 0.55, eyeY - fh * 0.2 + Math.sin(a) * fh * 0.45);
+        ctx.strokeStyle = `rgba(255,${120 + p * 8},20,0.35)`; ctx.lineWidth = 4; ctx.stroke();
+      }
+      break;
+    }
+    case "cybercrown": {
+      for (let i = 0; i < 7; i++) {
+        const x = cx - fw * 0.3 + i * fw * 0.1;
+        const y = eyeY - fh * 0.42;
+        ctx.strokeStyle = "rgba(0,255,220,0.8)"; ctx.lineWidth = 2;
+        ctx.strokeRect(x - fw * 0.03, y - fh * 0.06, fw * 0.06, fh * 0.12);
+      }
+      break;
+    }
+    case "glitchface": {
+      for (let g = 0; g < 10; g++) {
+        const y = eyeY - fh * 0.35 + g * fh * 0.09;
+        const off = Math.sin(t * 0.02 + g) * fw * 0.08;
+        ctx.beginPath();
+        ctx.moveTo(cx - fw * 0.45 + off, y);
+        ctx.lineTo(cx + fw * 0.45 - off, y);
+        ctx.strokeStyle = `rgba(${g % 2 ? 255 : 80},${g % 2 ? 80 : 255},255,0.35)`;
+        ctx.lineWidth = 2; ctx.stroke();
+      }
+      break;
+    }
+    case "moonpriestess": {
+      ctx.beginPath();
+      ctx.arc(cx, eyeY - fh * 0.5, fw * 0.13, Math.PI * 0.2, Math.PI * 1.8);
+      ctx.strokeStyle = "rgba(230,230,255,0.8)"; ctx.lineWidth = 5; ctx.stroke();
+      break;
+    }
+    case "stormqueen": {
+      for (let l = 0; l < 3; l++) {
+        const x = cx - fw * 0.25 + l * fw * 0.25;
+        ctx.beginPath();
+        ctx.moveTo(x, eyeY - fh * 0.48);
+        ctx.lineTo(x - fw * 0.05, eyeY - fh * 0.2);
+        ctx.lineTo(x + fw * 0.03, eyeY - fh * 0.2);
+        ctx.lineTo(x - fw * 0.06, eyeY + fh * 0.05);
+        ctx.strokeStyle = "rgba(170,210,255,0.85)"; ctx.lineWidth = 3; ctx.stroke();
+      }
+      break;
+    }
+    case "jellypop": {
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, fw * 0.52, fh * 0.62, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,120,200,0.18)"; ctx.fill();
+      break;
+    }
+    case "rosetears": {
+      [eyeLX, eyeRX].forEach(ex => {
+        for (let i = 0; i < 6; i++) {
+          drawHeart(ctx, ex + (Math.random() - 0.5) * fw * 0.04, eyeY + fh * (0.08 + i * 0.06), fw * 0.018, "rgba(220,40,90,0.6)");
+        }
+      });
+      break;
+    }
+    case "metallic": {
+      const mg = ctx.createLinearGradient(cx - fw * 0.5, cy, cx + fw * 0.5, cy);
+      mg.addColorStop(0, "rgba(180,180,190,0.24)");
+      mg.addColorStop(0.5, "rgba(240,240,250,0.32)");
+      mg.addColorStop(1, "rgba(120,120,130,0.24)");
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, fw * 0.54, fh * 0.64, 0, 0, Math.PI * 2);
+      ctx.fillStyle = mg; ctx.fill();
+      break;
+    }
+    case "hyperbloom": {
+      for (let i = 0; i < 9; i++) {
+        const x = cx - fw * 0.35 + i * fw * 0.09;
+        drawHeart(ctx, x, eyeY - fh * 0.45 + Math.sin(i) * fh * 0.04, fw * 0.03, "rgba(255,100,180,0.5)");
+      }
+      break;
+    }
+    case "cloudring": {
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(a) * fw * 0.35, eyeY - fh * 0.45 + Math.sin(a) * fh * 0.12, fw * 0.05, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(240,245,255,0.5)"; ctx.fill();
+      }
+      break;
+    }
+    case "cheetah": {
+      for (let i = 0; i < 26; i++) {
+        const x = cx - fw * 0.45 + (Math.random() * fw * 0.9);
+        const y = eyeY - fh * 0.3 + (Math.random() * fh * 0.9);
+        ctx.beginPath(); ctx.ellipse(x, y, fw * 0.025, fw * 0.016, Math.random() * Math.PI, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(35,20,10,0.52)"; ctx.fill();
+      }
+      break;
+    }
+    case "demonwings": {
+      ctx.beginPath();
+      ctx.ellipse(cx - fw * 0.55, eyeY - fh * 0.25, fw * 0.22, fh * 0.35, -0.5, 0, Math.PI * 2);
+      ctx.ellipse(cx + fw * 0.55, eyeY - fh * 0.25, fw * 0.22, fh * 0.35, 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(40,0,40,0.4)"; ctx.fill();
+      break;
+    }
+    case "stardust": {
+      for (let i = 0; i < 34; i++) {
+        const x = cx - fw * 0.48 + ((i * 29 + t * 0.08) % (fw * 0.96));
+        const y = eyeY - fh * 0.55 + ((i * 47 + t * 0.06) % (fh * 1.4));
+        ctx.beginPath(); ctx.arc(x, y, fw * 0.01, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,220,0.7)"; ctx.fill();
+      }
+      break;
+    }
+    case "frostbite": {
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, fw * 0.55, fh * 0.66, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(160,220,255,0.16)"; ctx.fill();
+      ctx.strokeStyle = "rgba(220,245,255,0.5)"; ctx.lineWidth = 2; ctx.stroke();
+      break;
+    }
   }
   ctx.restore();
 }
@@ -3337,6 +3481,21 @@ function LiveBroadcast({
     { name: "Pearl Pink", css: "hue-rotate(-14deg) saturate(1.25) brightness(1.28) contrast(0.86)", emoji: "🩰" },
     { name: "Voltage", css: "hue-rotate(8deg) saturate(3.0) brightness(0.92) contrast(1.4)", emoji: "⚡" },
     { name: "Silver Film", css: "grayscale(0.55) contrast(1.22) brightness(1.16) saturate(0.7)", emoji: "🥈" },
+    { name: "Crush Pink", css: "hue-rotate(-20deg) saturate(2.2) brightness(1.12) contrast(1.08)", emoji: "💘" },
+    { name: "Blueberry Ice", css: "hue-rotate(-190deg) saturate(1.6) brightness(1.16) contrast(0.94)", emoji: "🫐" },
+    { name: "Sandstone", css: "sepia(0.34) saturate(1.08) brightness(1.08) contrast(0.92)", emoji: "🏜️" },
+    { name: "Infrared", css: "hue-rotate(-42deg) saturate(3.3) brightness(0.86) contrast(1.42)", emoji: "📡" },
+    { name: "Cerulean", css: "hue-rotate(20deg) saturate(1.9) brightness(1.08) contrast(1.02)", emoji: "🩵" },
+    { name: "Moody Violet", css: "hue-rotate(-170deg) saturate(1.7) brightness(0.78) contrast(1.22)", emoji: "🟣" },
+    { name: "Lemon Pop", css: "sepia(0.26) saturate(2.4) brightness(1.22) contrast(1.04)", emoji: "🍋" },
+    { name: "Deep Matte", css: "saturate(0.7) brightness(0.72) contrast(1.36)", emoji: "⚫" },
+    { name: "Sun Kiss", css: "sepia(0.18) saturate(1.46) brightness(1.18) contrast(0.96)", emoji: "🌤️" },
+    { name: "Mango", css: "hue-rotate(-16deg) saturate(1.9) brightness(1.12) contrast(1.02)", emoji: "🥭" },
+    { name: "Emerald", css: "hue-rotate(66deg) saturate(2.0) brightness(0.92) contrast(1.14)", emoji: "💚" },
+    { name: "Slate", css: "saturate(0.62) brightness(0.9) contrast(1.2) hue-rotate(10deg)", emoji: "🪨" },
+    { name: "Candy Peach", css: "hue-rotate(-10deg) saturate(1.75) brightness(1.2) contrast(0.96)", emoji: "🍑" },
+    { name: "Darkroom", css: "brightness(0.62) contrast(1.42) saturate(0.86)", emoji: "🛑" },
+    { name: "Aurora Borealis", css: "hue-rotate(46deg) saturate(1.95) brightness(1.02) contrast(1.08)", emoji: "🌌" },
   ];
 
   const FACE_FILTERS = [
@@ -3508,6 +3667,21 @@ function LiveBroadcast({
     { name: "Diamond Skin", css: "blur(0.52px) brightness(1.36) contrast(0.78) saturate(1.1)", emoji: "💠" },
     { name: "Pearl Tone", css: "blur(0.74px) brightness(1.3) contrast(0.76) saturate(0.92)", emoji: "⚪" },
     { name: "Ultra Idol", css: "blur(1.08px) brightness(1.38) contrast(0.7) saturate(1.0)", emoji: "🎤" },
+    { name: "Aura Skin", css: "blur(0.7px) brightness(1.32) contrast(0.76) saturate(1.08)", emoji: "🪄" },
+    { name: "Porcelain Pro", css: "blur(1.22px) brightness(1.4) contrast(0.66) saturate(0.8)", emoji: "🏺" },
+    { name: "Glow Candy", css: "blur(0.62px) brightness(1.3) contrast(0.8) saturate(1.28) hue-rotate(-10deg)", emoji: "🍭" },
+    { name: "Velvet Air", css: "blur(1.0px) brightness(1.22) contrast(0.78) saturate(1.0)", emoji: "🌬️" },
+    { name: "Angel Light", css: "blur(0.54px) brightness(1.38) contrast(0.74) saturate(0.96)", emoji: "😇" },
+    { name: "Cocoa Smooth", css: "blur(0.66px) brightness(1.12) contrast(0.9) saturate(1.22) sepia(0.14)", emoji: "🍫" },
+    { name: "Cool Tone", css: "blur(0.78px) brightness(1.26) contrast(0.8) saturate(0.86) hue-rotate(8deg)", emoji: "🧊" },
+    { name: "Pillow Skin", css: "blur(1.34px) brightness(1.36) contrast(0.66) saturate(0.92)", emoji: "🛏️" },
+    { name: "Gloss Skin", css: "blur(0.44px) brightness(1.32) contrast(0.84) saturate(1.14)", emoji: "💦" },
+    { name: "Honey Matte", css: "blur(0.58px) brightness(1.18) contrast(0.9) saturate(1.28) sepia(0.12)", emoji: "🍯" },
+    { name: "Glass Blur", css: "blur(1.48px) brightness(1.34) contrast(0.64) saturate(0.88)", emoji: "🪟" },
+    { name: "Silky Pro", css: "blur(0.92px) brightness(1.24) contrast(0.8) saturate(1.02)", emoji: "🧵" },
+    { name: "Ice Petal", css: "blur(0.84px) brightness(1.44) contrast(0.68) saturate(0.78) hue-rotate(-6deg)", emoji: "🪷" },
+    { name: "Nude Glow", css: "blur(0.64px) brightness(1.22) contrast(0.84) saturate(1.12) sepia(0.08)", emoji: "🤎" },
+    { name: "Dream Skin", css: "blur(1.38px) brightness(1.42) contrast(0.62) saturate(0.9)", emoji: "💭" },
   ];
 
   const expandedColorFilters = useMemo(
