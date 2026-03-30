@@ -3536,9 +3536,11 @@ function LiveBroadcast({
   const effectiveFilterCss = filterTab !== "ar"
     ? applyFilterStrength(currentFilter?.css || "none", filterStrength)
     : "none";
-  const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : activeFilters.length;
+  const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : filterTab === "ai" ? AI_MODES.length : activeFilters.length;
   const selectedFilterName = filterTab === "ar"
     ? AR_STICKERS[activeSticker]?.name || "None"
+    : filterTab === "ai"
+    ? (aiSelectedMode ? AI_MODES.find(m => m.id === aiSelectedMode)?.name : "None") || "None"
     : currentFilter?.name || "Original";
   const visibleFilterIndexes = useMemo(() => {
     if (filterTab === "ar") {
