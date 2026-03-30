@@ -40,7 +40,54 @@ const ProfileStories = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const STORY_DURATION = 5000;
 
+  // Load real stories from database (last 24h)
   useEffect(() => {
+    let alive = true;
+    const loadStories = async () => {
+      try {
+        const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data } = await (supabase as any)
+          .from("user_stories")
+          .select("id, user_id, media_url, media_type, caption, created_at")
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        if (!alive || !data) return;
+
+        // Group by user_id
+        const groupMap = new Map<string, StoryGroup>();
+        for (const row of data as any[]) {
+          const story: Story = {
+            id: row.id,
+            user_id: row.user_id,
+            media_url: row.media_url,
+            media_type: row.media_type || "image",
+            caption: row.caption || undefined,
+            created_at: row.created_at,
+            viewed: false,
+          };
+          if (!groupMap.has(row.user_id)) {
+            groupMap.set(row.user_id, {
+              user_id: row.user_id,
+              user_name: row.user_id === user?.id ? (profile?.full_name || "You") : "User",
+              user_avatar: null,
+              stories: [],
+              hasUnviewed: true,
+            });
+          }
+          groupMap.get(row.user_id)!.stories.push(story);
+        }
+        setStoryGroups(Array.from(groupMap.values()));
+      } catch {
+        // user_stories table may not exist yet
+      }
+    };
+    void loadStories();
+    return () => { alive = false; };
+  }, [user?.id, profile?.full_name]);
+
+
     if (!viewingGroup) return;
     setProgress(0);
     const startTime = Date.now();
