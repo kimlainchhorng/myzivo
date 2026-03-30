@@ -3213,11 +3213,7 @@ function LiveBroadcast({
     }
   };
 
-  useEffect(() => {
-    if (!aiResultOverlay || aiOverlayMode !== "fullscreen") return;
-    const id = setTimeout(() => setAiOverlayMode("card"), 1400);
-    return () => clearTimeout(id);
-  }, [aiResultOverlay, aiOverlayMode]);
+  // No auto-shrink needed — AI result always shows as card to keep camera visible
 
   useEffect(() => {
     const currentSticker = AR_STICKERS[activeSticker]?.sticker;
