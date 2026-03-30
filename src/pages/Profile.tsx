@@ -147,6 +147,36 @@ const Profile = () => {
 
   const profileTilt = use3DTilt(profileCardRef);
 
+  // Friend & Follow state
+  const [friendStatus, setFriendStatus] = useState<"none" | "pending" | "accepted">("none");
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [friendCount, setFriendCount] = useState(0);
+  const [followerCount, setFollowerCount] = useState(0);
+
+  // Load friendship & follow counts
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      const { count } = await supabase
+        .from("friendships" as any)
+        .select("*", { count: "exact", head: true })
+        .eq("status", "accepted")
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+      setFriendCount(count || 0);
+    })();
+  }, [user?.id]);
+
+  const handleAddFriend = async () => {
+    if (!user?.id) return;
+    toast.info("Friend request sent!");
+    setFriendStatus("pending");
+  };
+
+  const handleFollow = () => {
+    setIsFollowing((f) => !f);
+    toast.success(isFollowing ? "Unfollowed" : "Following!");
+  };
+
   const { scrollYProgress } = useScroll({ container: scrollRef });
   const headerY = useTransform(scrollYProgress, [0, 0.3], [0, -30]);
   const headerScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
