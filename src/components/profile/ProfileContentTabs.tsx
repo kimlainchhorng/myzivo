@@ -3177,6 +3177,7 @@ function LiveBroadcast({
   const [filterGroup, setFilterGroup] = useState<FilterGroup>("all");
   const [filterStrength, setFilterStrength] = useState(100);
   const [activeSticker, setActiveSticker] = useState(0);
+  const [arCategory, setArCategory] = useState<ARCategory>("All");
   const [isRecordingClip, setIsRecordingClip] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [isPublishingClip, setIsPublishingClip] = useState(false);
