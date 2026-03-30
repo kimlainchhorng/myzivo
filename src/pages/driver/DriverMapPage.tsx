@@ -276,7 +276,7 @@ export default function DriverMapPage() {
         toast.success("You're now offline");
       }
     }
-  }, [isOnline, driverId, mapState.driverLocation, mapState.heading, mapState.speed, mapState.locationError]);
+  }, [isOnline, driverId, mapState.driverLocation, mapState.heading, mapState.speed, mapState.locationError, gpsPermission, requestGps]);
 
   const handleAcceptOffer = useCallback(async () => {
     if (!activeOffer) return;
