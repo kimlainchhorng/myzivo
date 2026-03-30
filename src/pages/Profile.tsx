@@ -6,7 +6,7 @@ import { useCountry } from "@/hooks/useCountry";
 import SEOHead from "@/components/SEOHead";
 import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
-  Shield, Star, ChevronRight,
+  Shield, Star, ChevronRight, UserPlus, UserCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
   Settings,
 } from "lucide-react";
