@@ -28,61 +28,12 @@ interface StoryGroup {
   hasUnviewed: boolean;
 }
 
-const DEMO_STORIES: StoryGroup[] = [
-  {
-    user_id: "demo-1",
-    user_name: "Sarah",
-    user_avatar: null,
-    hasUnviewed: true,
-    stories: [
-      { id: "s1", user_id: "demo-1", media_url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=700&fit=crop", media_type: "image", caption: "Beach vibes 🏖️", created_at: new Date(Date.now() - 3600000).toISOString(), user_name: "Sarah", user_avatar: undefined },
-      { id: "s2", user_id: "demo-1", media_url: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=700&fit=crop", media_type: "image", caption: "Sunset cruise 🌅", created_at: new Date(Date.now() - 7200000).toISOString(), user_name: "Sarah", user_avatar: undefined },
-    ],
-  },
-  {
-    user_id: "demo-2",
-    user_name: "Mike",
-    user_avatar: null,
-    hasUnviewed: true,
-    stories: [
-      { id: "s3", user_id: "demo-2", media_url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&h=700&fit=crop", media_type: "image", caption: "Road trip! 🚗", created_at: new Date(Date.now() - 1800000).toISOString(), user_name: "Mike", user_avatar: undefined },
-    ],
-  },
-  {
-    user_id: "demo-3",
-    user_name: "Emma",
-    user_avatar: null,
-    hasUnviewed: false,
-    stories: [
-      { id: "s4", user_id: "demo-3", media_url: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=700&fit=crop", media_type: "image", caption: "Travel goals ✈️", created_at: new Date(Date.now() - 5400000).toISOString(), user_name: "Emma", user_avatar: undefined },
-    ],
-  },
-  {
-    user_id: "demo-4",
-    user_name: "Alex",
-    user_avatar: null,
-    hasUnviewed: true,
-    stories: [
-      { id: "s5", user_id: "demo-4", media_url: "https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=400&h=700&fit=crop", media_type: "image", caption: "Mountain hike 🏔️", created_at: new Date(Date.now() - 900000).toISOString(), user_name: "Alex", user_avatar: undefined },
-    ],
-  },
-  {
-    user_id: "demo-5",
-    user_name: "Lisa",
-    user_avatar: null,
-    hasUnviewed: true,
-    stories: [
-      { id: "s6", user_id: "demo-5", media_url: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400&h=700&fit=crop", media_type: "image", caption: "Paradise 🌴", created_at: new Date(Date.now() - 2700000).toISOString(), user_name: "Lisa", user_avatar: undefined },
-    ],
-  },
-];
-
 const ProfileStories = () => {
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [storyGroups] = useState<StoryGroup[]>(DEMO_STORIES);
+  const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [viewingGroup, setViewingGroup] = useState<StoryGroup | null>(null);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [progress, setProgress] = useState(0);
