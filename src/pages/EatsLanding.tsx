@@ -2,8 +2,8 @@
  * EatsLanding - Food delivery hub page with full ordering flow
  * Connected to Supabase: restaurants, menu_items, food_orders
  */
-import { useState, useEffect, useMemo } from "react";
-import { Star, Clock, ArrowRight, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, Gift, PartyPopper, Navigation, RefreshCw, Flame, Award, Sparkles, MessageSquare, Filter, X, Percent, Leaf, AlertTriangle, Loader2, Send } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Star, Clock, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Timer, Heart, Sparkles, MessageSquare, Percent, Leaf, Award, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -11,9 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useEatsRestaurants, useEatsMenu, type EatsCartItem, type EatsRestaurant } from "@/hooks/useEatsData";
+import { useEatsRestaurants, useEatsMenu, type EatsCartItem } from "@/hooks/useEatsData";
 import { useEatsOrder } from "@/hooks/useEatsOrder";
-import { supabase } from "@/integrations/supabase/client";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 
@@ -59,49 +58,6 @@ function EatsStepIndicator({ currentStep }: { currentStep: string }) {
   );
 }
 
-function OrderTrackingTimeline() {
-  const [activeStep, setActiveStep] = useState(0);
-  useEffect(() => {
-    const timers = [
-      setTimeout(() => setActiveStep(1), 2000),
-      setTimeout(() => setActiveStep(2), 5000),
-      setTimeout(() => setActiveStep(3), 9000),
-    ];
-    return () => timers.forEach(clearTimeout);
-  }, []);
-
-  const trackingSteps = [
-    { label: "Order placed", icon: CheckCircle, time: "Just now" },
-    { label: "Preparing your food", icon: Flame, time: "~10 min" },
-    { label: "Driver picking up", icon: Package, time: "~20 min" },
-    { label: "On the way!", icon: Truck, time: "~25 min" },
-  ];
-
-  return (
-    <div className="space-y-2">
-      {trackingSteps.map((s, i) => {
-        const Icon = s.icon;
-        const isDone = i <= activeStep;
-        const isActive = i === activeStep;
-        return (
-          <motion.div key={s.label} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.15 }}
-            className={cn("flex items-center gap-3 p-2.5 rounded-xl", isDone ? "opacity-100" : "opacity-40")}>
-            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-              isDone ? "bg-primary/10" : "bg-muted/30")}>
-              <Icon className={cn("w-4 h-4", isDone ? "text-primary" : "text-muted-foreground", isActive && "animate-pulse")} />
-            </div>
-            <div className="flex-1">
-              <p className={cn("text-xs font-bold", isDone ? "text-foreground" : "text-muted-foreground")}>{s.label}</p>
-              <p className="text-[10px] text-muted-foreground">{s.time}</p>
-            </div>
-            {isDone && i < activeStep && <CheckCircle className="w-3.5 h-3.5 text-primary" />}
-            {isActive && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-}
 
 // ─── Main Component ──────────────────────────────────────────────────
 export default function EatsLanding() {
