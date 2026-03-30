@@ -3505,14 +3505,8 @@ function LiveBroadcast({
 
       {/* AI result overlay */}
       {aiResultOverlay && (
-        <div className="absolute inset-0 z-[2]">
+        <div className="absolute inset-0 z-[2] pointer-events-none">
           <img src={aiResultOverlay} alt="AI result" className="w-full h-full object-cover" />
-          <button
-            onClick={() => { setAiResultOverlay(null); setAiSelectedMode(null); }}
-            className="absolute top-14 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2"
-          >
-            <X className="w-4 h-4 text-white" />
-          </button>
           <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
             <span className="text-white text-xs font-medium">🤖 AI Enhanced</span>
           </div>
