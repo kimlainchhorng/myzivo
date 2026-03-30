@@ -4,11 +4,12 @@
  */
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Shield, Lock, Smartphone, Monitor, MapPin, Clock, 
   LogOut, Download, Trash2, AlertTriangle, Key,
-  CheckCircle2, Loader2, Eye, EyeOff, Bell
+  CheckCircle2, Loader2, Eye, EyeOff, Bell, ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,10 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-// PhishingWarning removed
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/hooks/useI18n";
 import { supabase } from "@/integrations/supabase/client";
