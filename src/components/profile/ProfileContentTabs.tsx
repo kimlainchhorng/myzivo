@@ -3505,14 +3505,8 @@ function LiveBroadcast({
 
       {/* AI result overlay */}
       {aiResultOverlay && (
-        <div className="absolute inset-0 z-[2]">
+        <div className="absolute inset-0 z-[2] pointer-events-none">
           <img src={aiResultOverlay} alt="AI result" className="w-full h-full object-cover" />
-          <button
-            onClick={() => { setAiResultOverlay(null); setAiSelectedMode(null); }}
-            className="absolute top-14 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2"
-          >
-            <X className="w-4 h-4 text-white" />
-          </button>
           <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
             <span className="text-white text-xs font-medium">🤖 AI Enhanced</span>
           </div>
@@ -3559,7 +3553,16 @@ function LiveBroadcast({
               <span className="text-white text-xs font-bold">{viewers}</span>
             </div>
           )}
-          <button onClick={isLive ? endLive : onClose} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
+          <button onClick={() => {
+            if (aiResultOverlay) {
+              setAiResultOverlay(null);
+              setAiSelectedMode(null);
+            } else if (isLive) {
+              endLive();
+            } else {
+              onClose();
+            }
+          }} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
             <X className="w-5 h-5 text-white" />
           </button>
         </div>
