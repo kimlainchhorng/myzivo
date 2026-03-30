@@ -23,7 +23,7 @@ type Employee = {
   created_at: string;
 };
 
-const STAFF_ROLES = ["admin", "moderator", "support", "operations"];
+const STAFF_ROLES = ["admin", "moderator", "support", "operations"] as const;
 
 export default function AdminEmployeesPage() {
   const queryClient = useQueryClient();
