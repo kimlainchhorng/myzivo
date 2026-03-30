@@ -643,12 +643,12 @@ export default function EatsLanding() {
                     onClick={async () => {
                       if (!promoCode.trim()) return;
                       // Validate promo code against DB
-                      const { data: promo } = await supabase
-                        .from("promo_codes" as any)
+                      const { data: promo } = await (supabase as any)
+                        .from("promo_codes")
                         .select("id, discount_percent, discount_amount_cents, is_active, min_order_cents, expires_at")
                         .eq("code", promoCode.trim().toUpperCase())
                         .eq("is_active", true)
-                        .maybeSingle();
+                        .maybeSingle() as { data: any };
                       if (!promo) {
                         toast.error("Invalid or expired promo code");
                         return;
