@@ -87,12 +87,16 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       });
     };
 
+    const DEMO_IDS = new Set(["p1","p2","p3","p4","p5","p6","v1","v2","v3"]);
+
     const loadPersisted = async () => {
       try {
         const localRaw = localStorage.getItem(LOCAL_POSTS_KEY);
         if (localRaw && alive) {
-          const localPosts = JSON.parse(localRaw) as FeedItem[];
-          if (Array.isArray(localPosts) && localPosts.length > 0) {
+          const localPosts = (JSON.parse(localRaw) as FeedItem[]).filter(p => !DEMO_IDS.has(p.id));
+          // Clean up demo posts from storage
+          localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(localPosts));
+          if (localPosts.length > 0) {
             mergeFeed(localPosts);
           }
         }
