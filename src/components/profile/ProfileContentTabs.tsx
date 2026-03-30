@@ -415,16 +415,24 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
   const FILTERS = [
-    { name: "None", css: "none" },
-    { name: "Warm", css: "sepia(0.3) saturate(1.4) brightness(1.05)" },
-    { name: "Cool", css: "saturate(0.8) hue-rotate(15deg) brightness(1.05)" },
-    { name: "B&W", css: "grayscale(1) contrast(1.1)" },
-    { name: "Vintage", css: "sepia(0.5) contrast(0.9) brightness(1.1)" },
-    { name: "Vivid", css: "saturate(1.8) contrast(1.1)" },
-    { name: "Fade", css: "saturate(0.6) brightness(1.15) contrast(0.85)" },
-    { name: "Drama", css: "contrast(1.4) brightness(0.9) saturate(1.2)" },
-    { name: "Glow", css: "brightness(1.2) saturate(1.3) blur(0.3px)" },
-    { name: "Noir", css: "grayscale(0.8) contrast(1.3) brightness(0.9)" },
+    { name: "Original", css: "none", emoji: "✨" },
+    { name: "Warm", css: "sepia(0.3) saturate(1.4) brightness(1.05)", emoji: "🌅" },
+    { name: "Cool", css: "saturate(0.8) hue-rotate(20deg) brightness(1.05)", emoji: "❄️" },
+    { name: "B&W", css: "grayscale(1) contrast(1.1)", emoji: "🖤" },
+    { name: "Vintage", css: "sepia(0.5) contrast(0.9) brightness(1.1)", emoji: "📷" },
+    { name: "Vivid", css: "saturate(2) contrast(1.15)", emoji: "🎨" },
+    { name: "Fade", css: "saturate(0.5) brightness(1.2) contrast(0.8)", emoji: "🌫️" },
+    { name: "Drama", css: "contrast(1.5) brightness(0.85) saturate(1.3)", emoji: "🎭" },
+    { name: "Glow", css: "brightness(1.25) saturate(1.4)", emoji: "💫" },
+    { name: "Noir", css: "grayscale(0.8) contrast(1.4) brightness(0.85)", emoji: "🕶️" },
+    { name: "Sunset", css: "sepia(0.2) saturate(1.6) hue-rotate(-10deg) brightness(1.05)", emoji: "🌇" },
+    { name: "Ocean", css: "saturate(0.9) hue-rotate(30deg) brightness(1.1)", emoji: "🌊" },
+    { name: "Rose", css: "saturate(1.3) hue-rotate(-15deg) brightness(1.1)", emoji: "🌹" },
+    { name: "Neon", css: "saturate(2.5) contrast(1.2) brightness(1.1)", emoji: "💜" },
+    { name: "Film", css: "sepia(0.15) contrast(1.1) saturate(0.9) brightness(0.95)", emoji: "🎬" },
+    { name: "Pop", css: "saturate(1.8) brightness(1.1) contrast(1.05)", emoji: "🍭" },
+    { name: "Dreamy", css: "brightness(1.15) saturate(0.7) contrast(0.85) blur(0.2px)", emoji: "☁️" },
+    { name: "Chrome", css: "saturate(0.4) contrast(1.3) brightness(1.05)", emoji: "⚡" },
   ];
 
   const startCamera = useCallback(async (facing: "user" | "environment") => {
@@ -563,36 +571,37 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
         <div className="flex-1" />
       )}
 
-      {/* Filter picker */}
+      {/* TikTok-style filter sidebar */}
       <AnimatePresence>
         {showFilters && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="relative z-10 px-2 pb-2"
+            initial={{ opacity: 0, x: 60 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 60 }}
+            transition={{ type: "spring", damping: 22, stiffness: 280 }}
+            className="absolute right-2 top-20 bottom-28 z-20 flex flex-col"
           >
-            <div className="flex gap-2 overflow-x-auto scrollbar-none py-2 px-2">
+            <div className="bg-black/40 backdrop-blur-md rounded-2xl py-2 px-1 overflow-y-auto scrollbar-none max-h-full">
               {FILTERS.map((f, i) => (
                 <button
                   key={f.name}
                   onClick={() => setActiveFilter(i)}
-                  className={cn(
-                    "shrink-0 flex flex-col items-center gap-1",
-                  )}
+                  className="flex flex-col items-center gap-0.5 py-1.5 px-1 w-16"
                 >
                   <div
                     className={cn(
-                      "w-14 h-14 rounded-full border-2 overflow-hidden",
-                      activeFilter === i ? "border-primary" : "border-white/20"
+                      "w-10 h-10 rounded-xl overflow-hidden border-2 transition-all",
+                      activeFilter === i
+                        ? "border-white scale-110 shadow-lg shadow-white/20"
+                        : "border-transparent opacity-70"
                     )}
-                    style={{ background: "#333", filter: f.css }}
+                    style={{ filter: f.css }}
                   >
-                    <div className="w-full h-full bg-gradient-to-br from-orange-300 via-pink-300 to-blue-300" />
+                    <div className="w-full h-full bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500" />
                   </div>
                   <span className={cn(
-                    "text-[10px] font-medium",
-                    activeFilter === i ? "text-primary" : "text-white/60"
+                    "text-[9px] font-medium leading-tight",
+                    activeFilter === i ? "text-white" : "text-white/50"
                   )}>{f.name}</span>
                 </button>
               ))}
