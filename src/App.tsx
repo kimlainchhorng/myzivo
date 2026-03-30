@@ -444,6 +444,7 @@ const App = () => (
                 <Route path="/admin/stores" element={<ProtectedRoute><AdminStoresPage /></ProtectedRoute>} />
                 <Route path="/admin/stores/:storeId" element={<ProtectedRoute><AdminStoreEditPage /></ProtectedRoute>} />
                 <Route path="/store/setup" element={<ProtectedRoute><StoreSetup /></ProtectedRoute>} />
+                <Route path="/admin/employees" element={<ProtectedRoute><AdminEmployeesPage /></ProtectedRoute>} />
                 <Route path="/admin/system-health" element={<ProtectedRoute><AdminSystemHealth /></ProtectedRoute>} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
