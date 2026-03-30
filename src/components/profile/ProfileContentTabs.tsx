@@ -894,6 +894,21 @@ function ComposerForm({
   );
 }
 
+// AI face edit modes
+const AI_MODES = [
+  { id: "beauty", name: "AI Beauty", emoji: "✨", gradient: "linear-gradient(135deg, #FFB7C5, #FFC0CB)", desc: "Auto enhance" },
+  { id: "swap_male", name: "Male Model", emoji: "🧔", gradient: "linear-gradient(135deg, #4A90D9, #357ABD)", desc: "Face swap" },
+  { id: "swap_female", name: "Female Model", emoji: "👩", gradient: "linear-gradient(135deg, #FF69B4, #FF1493)", desc: "Face swap" },
+  { id: "swap_anime", name: "Anime", emoji: "🎌", gradient: "linear-gradient(135deg, #A29BFE, #6C5CE7)", desc: "Style transfer" },
+  { id: "swap_old", name: "Age Up", emoji: "👴", gradient: "linear-gradient(135deg, #95A5A6, #7F8C8D)", desc: "Face swap" },
+  { id: "swap_young", name: "Youth", emoji: "👶", gradient: "linear-gradient(135deg, #FFEAA7, #FDCB6E)", desc: "Face swap" },
+  { id: "bg_beach", name: "Beach", emoji: "🏖️", gradient: "linear-gradient(135deg, #00CEC9, #0984E3)", desc: "Background" },
+  { id: "bg_city", name: "City Night", emoji: "🌃", gradient: "linear-gradient(135deg, #2D3436, #636E72)", desc: "Background" },
+  { id: "bg_space", name: "Space", emoji: "🚀", gradient: "linear-gradient(135deg, #0C0C2D, #4A148C)", desc: "Background" },
+  { id: "bg_nature", name: "Forest", emoji: "🌲", gradient: "linear-gradient(135deg, #00B894, #00CEC9)", desc: "Background" },
+  { id: "bg_studio", name: "Studio", emoji: "📸", gradient: "linear-gradient(135deg, #636E72, #2D3436)", desc: "Background" },
+];
+
 // AR effect categories for TikTok-style tabs
 const AR_CATEGORIES = ["All", "Trending", "Beauty", "Fun", "Animals", "Fantasy", "Art"] as const;
 type ARCategory = typeof AR_CATEGORIES[number];
