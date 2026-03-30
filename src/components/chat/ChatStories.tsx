@@ -42,6 +42,10 @@ export default function ChatStories() {
   const [liked, setLiked] = useState(false);
   const [allGroups, setAllGroups] = useState<StoryGroup[]>([]);
   const [groupIdx, setGroupIdx] = useState(0);
+  const [showViewers, setShowViewers] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [groupIdx, setGroupIdx] = useState(0);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef(0);
   const elapsedRef = useRef(0);
