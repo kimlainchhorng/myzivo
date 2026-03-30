@@ -3,7 +3,7 @@
  * Large icons, clean labels, subtle active glow with photographic backgrounds
  */
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Rss, MapPin, Bell, User } from "lucide-react";
+import { Home, Rss, MapPin, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
@@ -36,7 +36,7 @@ const ZivoMobileNav = () => {
     { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
     { id: "feed", labelKey: "nav.feed", icon: Rss, path: "/feed", bg: navSearchBg, cssVar: "var(--flights)" },
     { id: "map", labelKey: "nav.map", icon: MapPin, path: "/store-map", bg: navTripsBg, cssVar: "var(--hotels)" },
-    { id: "alerts", labelKey: "nav.alerts", icon: Bell, path: "/notifications", badge: activeAlertsCount, bg: navAlertsBg, cssVar: "var(--cars)" },
+    { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: "/chat", bg: navAlertsBg, cssVar: "var(--cars)" },
     { id: "account", labelKey: "nav.account", icon: User, path: "/profile", bg: navAccountBg, cssVar: "var(--primary)" },
   ];
 
@@ -45,7 +45,7 @@ const ZivoMobileNav = () => {
     if (path === "/" || path === "") return "home";
     if (path.startsWith("/feed")) return "feed";
     if (path.startsWith("/store-map") || path.startsWith("/map")) return "map";
-    if (path.startsWith("/alerts") || path.startsWith("/price-alerts") || path.startsWith("/notifications")) return "alerts";
+    if (path.startsWith("/chat")) return "chat";
     if (path.startsWith("/account") || path.startsWith("/profile")) return "account";
     return "home";
   };

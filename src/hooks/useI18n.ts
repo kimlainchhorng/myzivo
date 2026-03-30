@@ -308,6 +308,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "nav.trips": "Trips",
     "nav.map": "Map",
     "nav.alerts": "Alerts",
+    "nav.chat": "Chat",
     "nav.account": "Account",
     // Home
     "home.rides": "Rides",
