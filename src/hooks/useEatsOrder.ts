@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { createFoodOrder, type EatsCartItem } from "./useEatsData";
 import { useEatsNotifications } from "./useEatsNotifications";
+import { deductWalletBalance } from "./useWalletPayment";
 
 export interface PlaceOrderParams {
   restaurantId: string;
@@ -91,6 +92,21 @@ export function useEatsOrder() {
           .from("food_orders")
           .update({ payment_status: "cash_on_delivery" } as any)
           .eq("id", orderId);
+      } else if (params.paymentType === "wallet") {
+        const amountCents = Math.round(params.totalAmount * 100);
+        const walletResult = await deductWalletBalance(user.id, amountCents, orderId, `Eats order #${trackingCode}`);
+        if (walletResult.success) {
+          await supabase
+            .from("food_orders")
+            .update({ payment_status: "paid" } as any)
+            .eq("id", orderId);
+        } else {
+          await supabase
+            .from("food_orders")
+            .update({ payment_status: "failed" } as any)
+            .eq("id", orderId);
+          toast.error("Wallet payment failed. Please try another method.");
+        }
       }
 
       // 3. Dispatch delivery driver via jobs table
