@@ -3131,6 +3131,7 @@ function LiveBroadcast({
   const [aiProcessing, setAiProcessing] = useState(false);
   const [aiResultOverlay, setAiResultOverlay] = useState<string | null>(null);
   const [aiSelectedMode, setAiSelectedMode] = useState<string | null>(null);
+  const [aiOverlayMode, setAiOverlayMode] = useState<"fullscreen" | "card">("fullscreen");
 
   const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : AI_MODES.length;
   const selectedFilterName = filterTab === "ar"
@@ -3201,6 +3202,7 @@ function LiveBroadcast({
       const data = await resp.json();
       if (data.imageUrl) {
         setAiResultOverlay(data.imageUrl);
+        setAiOverlayMode("fullscreen");
       }
     } catch (err) {
       console.error("AI face edit failed:", err);
@@ -3210,6 +3212,12 @@ function LiveBroadcast({
       setAiProcessing(false);
     }
   };
+
+  useEffect(() => {
+    if (!aiResultOverlay || aiOverlayMode !== "fullscreen") return;
+    const id = setTimeout(() => setAiOverlayMode("card"), 1400);
+    return () => clearTimeout(id);
+  }, [aiResultOverlay, aiOverlayMode]);
 
   useEffect(() => {
     const currentSticker = AR_STICKERS[activeSticker]?.sticker;
@@ -3503,25 +3511,46 @@ function LiveBroadcast({
         style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
       />
 
-      {/* AI result full-screen overlay */}
+      {/* AI result: brief fullscreen preview, then mini card so camera keeps moving */}
       {aiResultOverlay && (
-        <div className="absolute inset-0 z-[2]">
-          <img src={aiResultOverlay} alt="AI result" className="w-full h-full object-cover" />
-          <div className="absolute bottom-32 left-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
-            <span className="text-white text-xs font-medium">🤖 AI Enhanced</span>
+        aiOverlayMode === "fullscreen" ? (
+          <div className="absolute inset-0 z-[11]">
+            <img src={aiResultOverlay} alt="AI result" className="w-full h-full object-cover" />
+            <div className="absolute bottom-32 left-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
+              <span className="text-white text-xs font-medium">🤖 AI Enhanced</span>
+            </div>
+            <button
+              onClick={() => { setAiResultOverlay(null); setAiSelectedMode(null); }}
+              className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center"
+            >
+              <X className="w-4 h-4 text-white" />
+            </button>
           </div>
-          <button
-            onClick={() => { setAiResultOverlay(null); setAiSelectedMode(null); }}
-            className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center"
-          >
-            <X className="w-4 h-4 text-white" />
-          </button>
-        </div>
+        ) : (
+          <div className="absolute bottom-32 left-3 z-[4] w-[132px] h-[184px] rounded-2xl overflow-hidden shadow-2xl border border-white/30 bg-black/20 backdrop-blur-sm">
+            <button
+              type="button"
+              onClick={() => setAiOverlayMode("fullscreen")}
+              className="block w-full h-full"
+            >
+              <img src={aiResultOverlay} alt="AI result preview" className="w-full h-full object-cover" />
+            </button>
+            <button
+              onClick={() => { setAiResultOverlay(null); setAiSelectedMode(null); }}
+              className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"
+            >
+              <X className="w-3.5 h-3.5 text-white" />
+            </button>
+            <div className="absolute bottom-1.5 left-1.5 bg-black/55 backdrop-blur-sm rounded-full px-2 py-0.5">
+              <span className="text-white text-[10px] font-medium">🤖 AI</span>
+            </div>
+          </div>
+        )
       )}
 
       {/* AI processing overlay */}
       {aiProcessing && (
-        <div className="absolute inset-0 z-[3] bg-black/40 flex items-center justify-center">
+        <div className="absolute inset-0 z-[12] bg-black/40 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="w-10 h-10 border-3 border-white/30 border-t-white rounded-full animate-spin" />
             <span className="text-white text-sm font-medium">AI processing...</span>
@@ -3529,41 +3558,43 @@ function LiveBroadcast({
         </div>
       )}
 
-      <div className="relative z-10 flex items-center justify-between p-4 pt-12">
-        <div className="flex items-center gap-2">
-          {isLive && (
-            <motion.div
-              animate={{ opacity: [1, 0.5, 1] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-              className="flex items-center gap-1.5 bg-destructive px-3 py-1 rounded-full"
-            >
-              <div className="w-2 h-2 rounded-full bg-white" />
-              <span className="text-white text-xs font-bold">LIVE</span>
-            </motion.div>
-          )}
-          {isLive && (
-            <span className="text-white/80 text-xs font-mono bg-black/40 px-2 py-1 rounded-full">
-              {formatTime(elapsed)}
-            </span>
-          )}
-          {isRecordingClip && (
-            <span className="text-white/90 text-xs font-mono bg-red-600/80 px-2 py-1 rounded-full">
-              REC {formatTime(recordSeconds)}
-            </span>
-          )}
+      {!(aiResultOverlay && aiOverlayMode === "fullscreen") && (
+        <div className="relative z-10 flex items-center justify-between p-4 pt-12">
+          <div className="flex items-center gap-2">
+            {isLive && (
+              <motion.div
+                animate={{ opacity: [1, 0.5, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="flex items-center gap-1.5 bg-destructive px-3 py-1 rounded-full"
+              >
+                <div className="w-2 h-2 rounded-full bg-white" />
+                <span className="text-white text-xs font-bold">LIVE</span>
+              </motion.div>
+            )}
+            {isLive && (
+              <span className="text-white/80 text-xs font-mono bg-black/40 px-2 py-1 rounded-full">
+                {formatTime(elapsed)}
+              </span>
+            )}
+            {isRecordingClip && (
+              <span className="text-white/90 text-xs font-mono bg-red-600/80 px-2 py-1 rounded-full">
+                REC {formatTime(recordSeconds)}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {isLive && (
+              <div className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full">
+                <Eye className="w-3.5 h-3.5 text-white" />
+                <span className="text-white text-xs font-bold">{viewers}</span>
+              </div>
+            )}
+            <button onClick={isLive ? endLive : onClose} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
+              <X className="w-5 h-5 text-white" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          {isLive && (
-            <div className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full">
-              <Eye className="w-3.5 h-3.5 text-white" />
-              <span className="text-white text-xs font-bold">{viewers}</span>
-            </div>
-          )}
-          <button onClick={isLive ? endLive : onClose} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
-            <X className="w-5 h-5 text-white" />
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Spacer + Comments overlay */}
       {isLive ? (
