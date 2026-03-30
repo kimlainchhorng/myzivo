@@ -619,66 +619,66 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
         <div className="flex-1" />
       )}
 
-      {/* TikTok-style filter sidebar with tabs */}
+      {/* TikTok-style bottom filter panel */}
       <AnimatePresence>
         {showFilters && (
           <motion.div
-            initial={{ opacity: 0, x: 60 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 60 }}
-            transition={{ type: "spring", damping: 22, stiffness: 280 }}
-            className="absolute right-2 top-20 bottom-28 z-20 flex flex-col"
+            initial={{ opacity: 0, y: 200 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 200 }}
+            transition={{ type: "spring", damping: 24, stiffness: 260 }}
+            className="absolute left-0 right-0 bottom-0 z-20"
           >
-            <div className="bg-black/40 backdrop-blur-md rounded-2xl py-2 px-1 overflow-y-auto scrollbar-none max-h-full flex flex-col">
-              {/* Tab switcher */}
-              <div className="flex gap-1 px-1 mb-2">
+            <div className="bg-black/70 backdrop-blur-xl pt-3 pb-6 rounded-t-3xl">
+              {/* Category tabs - horizontal scroll */}
+              <div className="flex items-center gap-1 px-4 mb-3 overflow-x-auto scrollbar-none">
                 <button
-                  onClick={() => { setFilterTab("color"); setActiveFilter(0); }}
-                  className={cn(
-                    "flex-1 text-[10px] font-semibold py-1.5 rounded-lg transition-all",
-                    filterTab === "color"
-                      ? "bg-white/20 text-white"
-                      : "text-white/40"
-                  )}
+                  onClick={() => setShowFilters(false)}
+                  className="flex-shrink-0 w-8 h-8 flex items-center justify-center"
                 >
-                  🎨 Color
+                  <X className="w-4 h-4 text-white/60" />
                 </button>
-                <button
-                  onClick={() => { setFilterTab("face"); setActiveFilter(0); }}
-                  className={cn(
-                    "flex-1 text-[10px] font-semibold py-1.5 rounded-lg transition-all",
-                    filterTab === "face"
-                      ? "bg-white/20 text-white"
-                      : "text-white/40"
-                  )}
-                >
-                  ✨ Face
-                </button>
-              </div>
-              {/* Filter list */}
-              {activeFilters.map((f, i) => (
-                <button
-                  key={f.name}
-                  onClick={() => setActiveFilter(i)}
-                  className="flex flex-col items-center gap-0.5 py-1.5 px-1 w-16"
-                >
-                  <div
+                {(["color", "face"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => { setFilterTab(tab); setActiveFilter(0); }}
                     className={cn(
-                      "w-10 h-10 rounded-xl overflow-hidden border-2 transition-all",
-                      activeFilter === i
-                        ? "border-white scale-110 shadow-lg shadow-white/20"
-                        : "border-transparent opacity-70"
+                      "flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all",
+                      filterTab === tab
+                        ? "text-white border-b-2 border-white"
+                        : "text-white/40"
                     )}
-                    style={{ filter: f.css }}
                   >
-                    <div className="w-full h-full bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500" />
-                  </div>
-                  <span className={cn(
-                    "text-[9px] font-medium leading-tight",
-                    activeFilter === i ? "text-white" : "text-white/50"
-                  )}>{f.name}</span>
-                </button>
-              ))}
+                    {tab === "color" ? "🎨 Color" : "✨ Beauty"}
+                  </button>
+                ))}
+              </div>
+              {/* Filter grid - 4 columns */}
+              <div className="grid grid-cols-4 gap-3 px-4 max-h-[35vh] overflow-y-auto scrollbar-none">
+                {activeFilters.map((f, i) => (
+                  <button
+                    key={f.name}
+                    onClick={() => setActiveFilter(i)}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div
+                      className={cn(
+                        "w-16 h-16 rounded-xl overflow-hidden border-2 transition-all",
+                        activeFilter === i
+                          ? "border-white scale-105 shadow-lg shadow-white/20"
+                          : "border-transparent opacity-75"
+                      )}
+                      style={{ filter: f.css }}
+                    >
+                      <div className="w-full h-full bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500" />
+                    </div>
+                    <span className={cn(
+                      "text-[10px] font-medium leading-tight",
+                      activeFilter === i ? "text-white" : "text-white/50"
+                    )}>{f.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}
