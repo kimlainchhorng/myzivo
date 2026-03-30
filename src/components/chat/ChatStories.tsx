@@ -162,7 +162,7 @@ export default function ChatStories() {
       const pct = Math.min(elapsed / STORY_DURATION, 1);
       setProgress(pct);
       if (pct >= 1) {
-        nextStoryAuto();
+        // Auto-advance handled by effect watching progress
         return;
       }
       timerRef.current = requestAnimationFrame(tick);
