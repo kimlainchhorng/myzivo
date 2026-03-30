@@ -667,7 +667,7 @@ function ComposerForm({
   );
 }
 
-// AR sticker overlays drawn on canvas
+// AR filter overlays - face-tracked like TikTok
 const AR_STICKERS = [
   { name: "None", emoji: "⭕", sticker: null },
   { name: "Cat Ears", emoji: "🐱", sticker: "cat" },
@@ -687,122 +687,424 @@ const AR_STICKERS = [
   { name: "Snow", emoji: "❄️", sticker: "snow" },
 ];
 
-function drawSticker(ctx: CanvasRenderingContext2D, sticker: string, w: number, h: number) {
-  const cx = w / 2;
-  const fontSize = Math.min(w, h) * 0.12;
-  ctx.font = `${fontSize}px serif`;
-  ctx.textAlign = "center";
+interface FaceBox {
+  x: number; y: number; width: number; height: number;
+  eyeLeft: { x: number; y: number };
+  eyeRight: { x: number; y: number };
+}
+
+// Heart shape helper
+function drawHeart(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  const topY = y - size * 0.5;
+  ctx.moveTo(x, y + size * 0.7);
+  ctx.bezierCurveTo(x - size * 1.2, y - size * 0.3, x - size * 0.6, topY - size * 0.5, x, topY + size * 0.2);
+  ctx.bezierCurveTo(x + size * 0.6, topY - size * 0.5, x + size * 1.2, y - size * 0.3, x, y + size * 0.7);
+  ctx.fill();
+  ctx.restore();
+}
+
+// Star shape helper
+function drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const angle = (i * Math.PI) / 5 - Math.PI / 2;
+    const radius = i % 2 === 0 ? r : r * 0.4;
+    const px = x + Math.cos(angle) * radius;
+    const py = y + Math.sin(angle) * radius;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+// Sparkle shape
+function drawSparkle(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.save();
+  ctx.fillStyle = "rgba(255, 255, 220, 0.9)";
+  ctx.beginPath();
+  ctx.moveTo(x, y - size);
+  ctx.lineTo(x + size * 0.15, y - size * 0.15);
+  ctx.lineTo(x + size, y);
+  ctx.lineTo(x + size * 0.15, y + size * 0.15);
+  ctx.lineTo(x, y + size);
+  ctx.lineTo(x - size * 0.15, y + size * 0.15);
+  ctx.lineTo(x - size, y);
+  ctx.lineTo(x - size * 0.15, y - size * 0.15);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+// Flower shape
+function drawFlower(ctx: CanvasRenderingContext2D, x: number, y: number, r: number) {
+  ctx.save();
+  const colors = ["rgba(255,180,200,0.75)", "rgba(255,150,180,0.7)", "rgba(255,130,170,0.65)"];
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.ellipse(x + Math.cos(a) * r * 0.5, y + Math.sin(a) * r * 0.5, r * 0.5, r * 0.28, a, 0, Math.PI * 2);
+    ctx.fillStyle = colors[i % 3];
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(x, y, r * 0.2, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255, 220, 50, 0.85)";
+  ctx.fill();
+  ctx.restore();
+}
+
+// Flame shape
+function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.save();
+  const grd = ctx.createRadialGradient(x, y, 0, x, y - size, size * 2.5);
+  grd.addColorStop(0, "rgba(255, 255, 100, 0.8)");
+  grd.addColorStop(0.4, "rgba(255, 150, 0, 0.7)");
+  grd.addColorStop(1, "rgba(255, 50, 0, 0)");
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.quadraticCurveTo(x - size, y - size, x, y - size * 2.5);
+  ctx.quadraticCurveTo(x + size, y - size, x, y);
+  ctx.fill();
+  ctx.restore();
+}
+
+// Butterfly shape
+function drawButterfly(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, wingAngle: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.save();
+  ctx.scale(1 - wingAngle, 1);
+  ctx.beginPath();
+  ctx.ellipse(-size * 0.5, -size * 0.2, size, size * 0.6, -0.3, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(150, 100, 255, 0.6)";
+  ctx.fill();
+  ctx.restore();
+  ctx.save();
+  ctx.scale(1 + wingAngle, 1);
+  ctx.beginPath();
+  ctx.ellipse(size * 0.5, -size * 0.2, size, size * 0.6, 0.3, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255, 100, 200, 0.6)";
+  ctx.fill();
+  ctx.restore();
+  ctx.beginPath();
+  ctx.ellipse(0, 0, size * 0.07, size * 0.35, 0, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(60, 40, 40, 0.7)";
+  ctx.fill();
+  ctx.restore();
+}
+
+// Main face-tracked drawing function
+function drawFaceFilter(
+  ctx: CanvasRenderingContext2D, sticker: string,
+  face: FaceBox, cw: number, ch: number, t: number
+) {
+  const { x, y, width: fw, height: fh } = face;
+  const cx = x + fw / 2;
+  const top = y;
+  const eyeY = y + fh * 0.35;
+  const noseY = y + fh * 0.55;
+  const mouthY = y + fh * 0.72;
+  const eyeL = face.eyeLeft;
+  const eyeR = face.eyeRight;
+
+  ctx.save();
 
   switch (sticker) {
-    case "cat":
-      ctx.font = `${fontSize * 1.2}px serif`;
-      ctx.fillText("🐱", cx - w * 0.12, h * 0.18);
-      ctx.fillText("🐱", cx + w * 0.12, h * 0.18);
-      ctx.font = `${fontSize * 0.5}px serif`;
-      ctx.fillText("👃", cx, h * 0.35);
-      ctx.fillText("ω", cx, h * 0.38);
-      break;
-    case "dog":
-      ctx.font = `${fontSize * 1.3}px serif`;
-      ctx.fillText("🐕", cx, h * 0.15);
-      ctx.font = `${fontSize * 0.6}px serif`;
-      ctx.fillText("👅", cx, h * 0.42);
-      break;
-    case "bunny":
-      ctx.font = `${fontSize * 1.5}px serif`;
-      ctx.fillText("🐰", cx, h * 0.12);
-      break;
-    case "crown":
-      ctx.font = `${fontSize * 1.8}px serif`;
-      ctx.fillText("👑", cx, h * 0.14);
-      break;
-    case "hearts":
-      ctx.font = `${fontSize * 0.7}px serif`;
-      for (let i = 0; i < 8; i++) {
-        const x = Math.random() * w;
-        const y = Math.random() * h * 0.5 + h * 0.05;
-        ctx.fillText("❤️", x, y);
+    case "cat": {
+      // Triangular cat ears
+      const earSize = fw * 0.3;
+      const earY = top - earSize * 0.4;
+      for (const side of [-1, 1]) {
+        const ecx = cx + side * fw * 0.22;
+        ctx.beginPath();
+        ctx.moveTo(ecx - earSize * 0.35, earY + earSize);
+        ctx.lineTo(ecx, earY - earSize * 0.3);
+        ctx.lineTo(ecx + earSize * 0.35, earY + earSize);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(255, 180, 200, 0.88)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(80, 40, 40, 0.5)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Inner ear
+        ctx.beginPath();
+        ctx.moveTo(ecx - earSize * 0.2, earY + earSize * 0.7);
+        ctx.lineTo(ecx, earY + earSize * 0.05);
+        ctx.lineTo(ecx + earSize * 0.2, earY + earSize * 0.7);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(255, 130, 160, 0.7)";
+        ctx.fill();
       }
-      break;
-    case "stars":
-      ctx.font = `${fontSize * 0.6}px serif`;
-      for (let i = 0; i < 10; i++) {
-        const x = Math.random() * w;
-        const y = Math.random() * h * 0.6;
-        ctx.fillText("⭐", x, y);
-      }
-      break;
-    case "glasses":
-      ctx.font = `${fontSize * 1.6}px serif`;
-      ctx.fillText("🕶️", cx, h * 0.32);
-      break;
-    case "devil":
-      ctx.font = `${fontSize * 1.4}px serif`;
-      ctx.fillText("😈", cx, h * 0.12);
-      break;
-    case "angel":
-      ctx.font = `${fontSize * 1.4}px serif`;
-      ctx.fillText("😇", cx, h * 0.1);
-      ctx.font = `${fontSize * 0.8}px serif`;
-      ctx.fillText("🪽", cx - w * 0.3, h * 0.5);
-      ctx.fillText("🪽", cx + w * 0.3, h * 0.5);
-      break;
-    case "flowers":
-      ctx.font = `${fontSize * 0.7}px serif`;
-      const flowerEmojis = ["🌸", "🌺", "🌻", "💐", "🌷"];
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2;
-        const r = w * 0.3;
-        const x = cx + Math.cos(angle) * r;
-        const y = h * 0.2 + Math.sin(angle) * r * 0.3;
-        ctx.fillText(flowerEmojis[i % flowerEmojis.length], x, y);
-      }
-      break;
-    case "fire":
-      ctx.font = `${fontSize * 0.8}px serif`;
-      for (let i = 0; i < 5; i++) {
-        ctx.fillText("🔥", w * 0.1 + i * w * 0.2, h * 0.92);
-      }
-      break;
-    case "butterfly":
-      ctx.font = `${fontSize * 1.2}px serif`;
-      ctx.fillText("🦋", cx - w * 0.2, h * 0.15);
-      ctx.fillText("🦋", cx + w * 0.2, h * 0.2);
-      ctx.font = `${fontSize * 0.7}px serif`;
-      ctx.fillText("🦋", w * 0.15, h * 0.35);
-      break;
-    case "rainbow":
-      const gradient = ctx.createLinearGradient(0, h * 0.05, w, h * 0.05);
-      gradient.addColorStop(0, "rgba(255,0,0,0.3)");
-      gradient.addColorStop(0.17, "rgba(255,165,0,0.3)");
-      gradient.addColorStop(0.33, "rgba(255,255,0,0.3)");
-      gradient.addColorStop(0.5, "rgba(0,128,0,0.3)");
-      gradient.addColorStop(0.67, "rgba(0,0,255,0.3)");
-      gradient.addColorStop(0.83, "rgba(75,0,130,0.3)");
-      gradient.addColorStop(1, "rgba(238,130,238,0.3)");
+      // Cat nose
       ctx.beginPath();
-      ctx.arc(cx, h * 0.35, w * 0.45, Math.PI, 0);
-      ctx.lineWidth = h * 0.03;
-      ctx.strokeStyle = gradient;
+      ctx.ellipse(cx, noseY, fw * 0.04, fw * 0.03, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(50, 30, 30, 0.75)";
+      ctx.fill();
+      // Whiskers
+      ctx.strokeStyle = "rgba(80, 60, 60, 0.5)";
+      ctx.lineWidth = 1.5;
+      for (const s of [-1, 1]) {
+        for (const a of [-0.12, 0, 0.12]) {
+          ctx.beginPath();
+          ctx.moveTo(cx + s * fw * 0.06, noseY + fw * 0.02);
+          ctx.lineTo(cx + s * fw * 0.35, noseY + a * fw);
+          ctx.stroke();
+        }
+      }
+      break;
+    }
+
+    case "dog": {
+      // Floppy ears
+      const earW = fw * 0.22;
+      const earH = fw * 0.5;
+      for (const s of [-1, 1]) {
+        ctx.beginPath();
+        ctx.ellipse(cx + s * fw * 0.38, top + fh * 0.18, earW, earH, s * -0.3, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(160, 100, 60, 0.82)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(100, 60, 30, 0.4)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      // Dog nose
+      ctx.beginPath();
+      ctx.ellipse(cx, noseY, fw * 0.07, fw * 0.05, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(30, 20, 20, 0.82)";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx - fw * 0.02, noseY - fw * 0.015, fw * 0.02, fw * 0.01, -0.3, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.fill();
+      // Tongue
+      ctx.beginPath();
+      ctx.ellipse(cx, mouthY + fw * 0.08, fw * 0.06, fw * 0.1, 0, 0, Math.PI);
+      ctx.fillStyle = "rgba(255, 120, 140, 0.82)";
+      ctx.fill();
+      break;
+    }
+
+    case "bunny": {
+      const earW = fw * 0.12;
+      const earH = fw * 0.55;
+      for (const s of [-1, 1]) {
+        ctx.beginPath();
+        ctx.ellipse(cx + s * fw * 0.15, top - earH * 0.5, earW, earH, s * -0.1, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(240, 230, 230, 0.92)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(180, 160, 160, 0.4)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(cx + s * fw * 0.15, top - earH * 0.45, earW * 0.5, earH * 0.7, s * -0.1, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255, 180, 190, 0.6)";
+        ctx.fill();
+      }
+      // Nose
+      ctx.beginPath();
+      ctx.ellipse(cx, noseY, fw * 0.03, fw * 0.025, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 150, 170, 0.82)";
+      ctx.fill();
+      break;
+    }
+
+    case "crown": {
+      const crownW = fw * 0.7;
+      const crownH = fw * 0.35;
+      const crownTop = top - crownH * 1.2;
+      const grd = ctx.createLinearGradient(cx - crownW / 2, crownTop, cx + crownW / 2, crownTop + crownH);
+      grd.addColorStop(0, "rgba(255, 215, 0, 0.92)");
+      grd.addColorStop(1, "rgba(255, 180, 0, 0.92)");
+      ctx.beginPath();
+      ctx.moveTo(cx - crownW / 2, crownTop + crownH);
+      ctx.lineTo(cx - crownW / 2, crownTop + crownH * 0.4);
+      ctx.lineTo(cx - crownW * 0.25, crownTop + crownH * 0.7);
+      ctx.lineTo(cx - crownW * 0.1, crownTop);
+      ctx.lineTo(cx, crownTop + crownH * 0.5);
+      ctx.lineTo(cx + crownW * 0.1, crownTop);
+      ctx.lineTo(cx + crownW * 0.25, crownTop + crownH * 0.7);
+      ctx.lineTo(cx + crownW / 2, crownTop + crownH * 0.4);
+      ctx.lineTo(cx + crownW / 2, crownTop + crownH);
+      ctx.closePath();
+      ctx.fillStyle = grd;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(200, 150, 0, 0.6)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // Gems
+      const gems = ["#ff4444", "#4488ff", "#44ff44"];
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(cx + (i - 1) * crownW * 0.2, crownTop + crownH * 0.6, fw * 0.025, 0, Math.PI * 2);
+        ctx.fillStyle = gems[i];
+        ctx.fill();
+      }
+      break;
+    }
+
+    case "glasses": {
+      const glassR = fw * 0.14;
+      ctx.lineWidth = Math.max(3, fw * 0.02);
+      ctx.strokeStyle = "rgba(30, 30, 30, 0.85)";
+      // Left lens
+      ctx.beginPath();
+      ctx.arc(eyeL.x, eyeL.y, glassR, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(20, 20, 50, 0.45)";
+      ctx.fill();
+      ctx.stroke();
+      // Right lens
+      ctx.beginPath();
+      ctx.arc(eyeR.x, eyeR.y, glassR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      // Bridge
+      ctx.beginPath();
+      ctx.moveTo(eyeL.x + glassR, eyeL.y);
+      ctx.lineTo(eyeR.x - glassR, eyeR.y);
+      ctx.stroke();
+      // Arms
+      ctx.beginPath();
+      ctx.moveTo(eyeL.x - glassR, eyeL.y);
+      ctx.lineTo(x, eyeL.y + fw * 0.02);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(eyeR.x + glassR, eyeR.y);
+      ctx.lineTo(x + fw, eyeR.y + fw * 0.02);
       ctx.stroke();
       break;
-    case "sparkles":
-      ctx.font = `${fontSize * 0.5}px serif`;
+    }
+
+    case "devil": {
+      const hornH = fw * 0.4;
+      for (const s of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(cx + s * fw * 0.25, top);
+        ctx.quadraticCurveTo(cx + s * fw * 0.35, top - hornH, cx + s * fw * 0.15, top - hornH * 0.8);
+        ctx.lineTo(cx + s * fw * 0.2, top + fw * 0.05);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(200, 30, 30, 0.88)";
+        ctx.fill();
+      }
+      break;
+    }
+
+    case "angel": {
+      ctx.beginPath();
+      ctx.ellipse(cx, top - fw * 0.18, fw * 0.28, fw * 0.06, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255, 215, 0, 0.85)";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.shadowColor = "rgba(255, 215, 0, 0.5)";
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.ellipse(cx, top - fw * 0.18, fw * 0.28, fw * 0.06, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255, 225, 100, 0.6)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      break;
+    }
+
+    case "hearts": {
+      for (let i = 0; i < 8; i++) {
+        const hx = cx + Math.sin(t * 0.002 + i * 1.2) * fw * 0.6;
+        const baseY = top - fh * 0.1;
+        const hy = baseY + Math.cos(t * 0.003 + i * 0.8) * fh * 0.3 - (t * 0.05 + i * 20) % (fh * 0.5);
+        const hs = fw * 0.04 + Math.sin(i) * fw * 0.02;
+        const ha = Math.max(0, 1 - ((t * 0.05 + i * 20) % (fh * 0.5)) / (fh * 0.5));
+        if (ha <= 0) continue;
+        ctx.globalAlpha = ha * 0.85;
+        drawHeart(ctx, hx, hy, hs, "rgba(255, 60, 100, 0.9)");
+      }
+      ctx.globalAlpha = 1;
+      break;
+    }
+
+    case "stars": {
+      for (let i = 0; i < 10; i++) {
+        const sx = cx + Math.sin(t * 0.001 + i * 2) * fw * 0.8;
+        const sy = top + Math.cos(t * 0.002 + i * 1.5) * fh * 0.4;
+        const ss = fw * 0.035 + Math.sin(t * 0.005 + i) * fw * 0.01;
+        ctx.globalAlpha = 0.6 + Math.sin(t * 0.005 + i) * 0.3;
+        drawStar(ctx, sx, sy, ss, "rgba(255, 215, 0, 0.9)");
+      }
+      ctx.globalAlpha = 1;
+      break;
+    }
+
+    case "flowers": {
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + t * 0.001;
+        const r = fw * 0.5;
+        drawFlower(ctx, cx + Math.cos(a) * r, top + fh * 0.3 + Math.sin(a) * r * 0.3, fw * 0.06);
+      }
+      break;
+    }
+
+    case "fire": {
+      for (let i = 0; i < 5; i++) {
+        const fx = x + fw * 0.1 + i * fw * 0.2;
+        const fy = y + fh - fw * 0.05 + Math.sin(t * 0.01 + i * 2) * fw * 0.02;
+        drawFlame(ctx, fx, fy, fw * 0.08);
+      }
+      break;
+    }
+
+    case "butterfly": {
+      for (let i = 0; i < 3; i++) {
+        const bx = cx + Math.sin(t * 0.002 + i * 3) * fw * 0.5;
+        const by = top - fw * 0.1 + Math.cos(t * 0.003 + i * 2) * fh * 0.2;
+        drawButterfly(ctx, bx, by, fw * 0.08, Math.sin(t * 0.008 + i) * 0.3);
+      }
+      break;
+    }
+
+    case "rainbow": {
+      const colors = ["#ff000080", "#ff880080", "#ffff0080", "#00cc0080", "#0000ff80", "#4b008280", "#ee82ee80"];
+      for (let i = 0; i < colors.length; i++) {
+        ctx.beginPath();
+        ctx.arc(cx, top + fh * 0.3, fw * 0.65 - i * fw * 0.03, Math.PI, 0);
+        ctx.strokeStyle = colors[i];
+        ctx.lineWidth = fw * 0.025;
+        ctx.stroke();
+      }
+      break;
+    }
+
+    case "sparkles": {
       for (let i = 0; i < 15; i++) {
-        const x = Math.random() * w;
-        const y = Math.random() * h;
-        ctx.fillText("✨", x, y);
+        const sx = cx + Math.sin(t * 0.003 + i * 1.7) * cw * 0.35;
+        const sy = ch * 0.1 + Math.cos(t * 0.002 + i * 2.3) * ch * 0.4;
+        ctx.globalAlpha = Math.max(0, 0.4 + Math.sin(t * 0.008 + i * 3) * 0.5);
+        drawSparkle(ctx, sx, sy, fw * 0.035);
       }
+      ctx.globalAlpha = 1;
       break;
-    case "snow":
-      ctx.font = `${fontSize * 0.4}px serif`;
-      for (let i = 0; i < 20; i++) {
-        const x = Math.random() * w;
-        const y = Math.random() * h;
-        ctx.fillText("❄️", x, y);
+    }
+
+    case "snow": {
+      for (let i = 0; i < 25; i++) {
+        const sx = (Math.sin(i * 7.3) * 0.5 + 0.5) * cw;
+        const sy = ((t * 0.03 + i * ch * 0.04) % ch);
+        const ss = fw * 0.012 + (i % 3) * fw * 0.005;
+        ctx.globalAlpha = 0.65;
+        ctx.beginPath();
+        ctx.arc(sx + Math.sin(t * 0.002 + i) * 10, sy, ss, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+        ctx.fill();
       }
+      ctx.globalAlpha = 1;
       break;
+    }
   }
+  ctx.restore();
 }
 
 type FaceAnchor = {
@@ -948,7 +1250,7 @@ function LiveBroadcast({
   const activeFilters = filterTab === "color" ? COLOR_FILTERS : FACE_FILTERS;
   const currentFilter = activeFilters[activeFilter] || activeFilters[0];
 
-  // Canvas overlay for AR stickers
+  // Face detection + AR sticker canvas overlay
   useEffect(() => {
     const currentSticker = AR_STICKERS[activeSticker]?.sticker;
     if (!currentSticker) {
@@ -966,12 +1268,24 @@ function LiveBroadcast({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Try to use browser FaceDetector API (Chrome/Edge)
+    let faceDetector: any = null;
+    try {
+      if ("FaceDetector" in window) {
+        faceDetector = new (window as any).FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+      }
+    } catch { /* not supported */ }
+
     let running = true;
-    const draw = () => {
+    let lastFace: FaceBox | null = null;
+    let frameCount = 0;
+
+    const detectAndDraw = async () => {
       if (!running) return;
       canvas.width = canvas.offsetWidth * 2;
       canvas.height = canvas.offsetHeight * 2;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+<<<<<<< HEAD
       drawTrackedSticker(ctx, currentSticker, canvas.width, canvas.height, faceAnchor);
       animFrameRef.current = requestAnimationFrame(draw);
     };
@@ -984,11 +1298,59 @@ function LiveBroadcast({
           drawTrackedSticker(ctx, currentSticker, canvas.width, canvas.height, faceAnchor);
         }, 400)
       : undefined;
+=======
+
+      const video = videoRef.current;
+      const cw = canvas.width;
+      const ch = canvas.height;
+
+      // Detect face every 5 frames for performance
+      if (video && faceDetector && video.readyState >= 2 && frameCount % 5 === 0) {
+        try {
+          const faces = await faceDetector.detect(video);
+          if (faces.length > 0) {
+            const f = faces[0];
+            const bb = f.boundingBox;
+            // Scale from video coords to canvas coords
+            const scaleX = cw / video.videoWidth;
+            const scaleY = ch / video.videoHeight;
+            const eyeL = f.landmarks?.find((l: any) => l.type === "eye")?.locations?.[0];
+            const eyeR = f.landmarks?.filter((l: any) => l.type === "eye")?.[1]?.locations?.[0];
+            lastFace = {
+              x: bb.x * scaleX,
+              y: bb.y * scaleY,
+              width: bb.width * scaleX,
+              height: bb.height * scaleY,
+              eyeLeft: eyeL
+                ? { x: eyeL.x * scaleX, y: eyeL.y * scaleY }
+                : { x: (bb.x + bb.width * 0.32) * scaleX, y: (bb.y + bb.height * 0.35) * scaleY },
+              eyeRight: eyeR
+                ? { x: eyeR.x * scaleX, y: eyeR.y * scaleY }
+                : { x: (bb.x + bb.width * 0.68) * scaleX, y: (bb.y + bb.height * 0.35) * scaleY },
+            };
+          }
+        } catch { /* detection failed, use last known */ }
+      }
+
+      // Fallback: centered face estimate if no detector or no face found
+      const face: FaceBox = lastFace || {
+        x: cw * 0.25, y: ch * 0.15,
+        width: cw * 0.5, height: ch * 0.5,
+        eyeLeft: { x: cw * 0.38, y: ch * 0.32 },
+        eyeRight: { x: cw * 0.62, y: ch * 0.32 },
+      };
+
+      drawFaceFilter(ctx, currentSticker, face, cw, ch, performance.now());
+      frameCount++;
+      animFrameRef.current = requestAnimationFrame(detectAndDraw);
+    };
+
+    detectAndDraw();
+>>>>>>> 621dab074c92e160d15b8c2a0f381fa2ef63ffc4
 
     return () => {
       running = false;
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-      if (interval) clearInterval(interval);
     };
   }, [activeSticker, faceAnchor]);
 
