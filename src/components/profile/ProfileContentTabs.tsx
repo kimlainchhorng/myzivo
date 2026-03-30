@@ -3173,7 +3173,7 @@ function LiveBroadcast({
   const [commentInput, setCommentInput] = useState("");
   const [activeFilter, setActiveFilter] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
-  const [filterTab, setFilterTab] = useState<"color" | "face" | "ar">("color");
+  const [filterTab, setFilterTab] = useState<"color" | "face" | "ar" | "ai">("color");
   const [filterGroup, setFilterGroup] = useState<FilterGroup>("all");
   const [filterStrength, setFilterStrength] = useState(100);
   const [activeSticker, setActiveSticker] = useState(0);
