@@ -565,23 +565,23 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
             </button>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex items-center gap-4">
-              <button onClick={flipCamera} className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center">
-                <SwitchCamera className="w-6 h-6 text-white" />
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center gap-5">
+              <button onClick={flipCamera} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+                <SwitchCamera className="w-5 h-5 text-white" />
               </button>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={goLive}
-                className="w-20 h-20 rounded-full bg-destructive flex items-center justify-center shadow-lg shadow-destructive/40"
+                className="w-14 h-14 rounded-full bg-destructive flex items-center justify-center shadow-lg shadow-destructive/40"
               >
-                <Camera className="w-8 h-8 text-white" />
+                <Camera className="w-6 h-6 text-white" />
               </motion.button>
-              <button onClick={toggleMic} className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center">
-                {muted ? <MicOff className="w-6 h-6 text-white" /> : <Mic className="w-6 h-6 text-white" />}
+              <button onClick={toggleMic} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+                {muted ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
               </button>
             </div>
-            <span className="text-white/60 text-sm font-medium">Tap to Go Live</span>
+            <span className="text-white/60 text-xs font-medium">Tap to Go Live</span>
           </div>
         )}
       </div>
