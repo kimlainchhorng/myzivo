@@ -587,7 +587,11 @@ const Profile = () => {
                 </motion.div>
               </ParallaxSection>
 
-              {/* ── ZIVO+ Membership (3D premium card) — moved to top ── */}
+              {/* ── Social Content Tabs (Posts, Videos, Live, Status) ── */}
+              <ParallaxSection index={2.5}>
+                <ProfileContentTabs userId={user?.id} />
+              </ParallaxSection>
+
               {!isPlus && (
                 <ParallaxSection index={3}>
                   <Link to="/zivo-plus">
