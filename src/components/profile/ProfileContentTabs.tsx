@@ -1285,20 +1285,6 @@ function LiveBroadcast({
       canvas.width = canvas.offsetWidth * 2;
       canvas.height = canvas.offsetHeight * 2;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-<<<<<<< HEAD
-      drawTrackedSticker(ctx, currentSticker, canvas.width, canvas.height, faceAnchor);
-      animFrameRef.current = requestAnimationFrame(draw);
-    };
-    // Draw at slower rate for static stickers
-    draw();
-    // For animated stickers, redraw every 500ms
-    const interval = ["hearts", "stars", "sparkles", "snow"].includes(currentSticker)
-      ? setInterval(() => {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          drawTrackedSticker(ctx, currentSticker, canvas.width, canvas.height, faceAnchor);
-        }, 400)
-      : undefined;
-=======
 
       const video = videoRef.current;
       const cw = canvas.width;
@@ -1311,7 +1297,6 @@ function LiveBroadcast({
           if (faces.length > 0) {
             const f = faces[0];
             const bb = f.boundingBox;
-            // Scale from video coords to canvas coords
             const scaleX = cw / video.videoWidth;
             const scaleY = ch / video.videoHeight;
             const eyeL = f.landmarks?.find((l: any) => l.type === "eye")?.locations?.[0];
@@ -1332,7 +1317,6 @@ function LiveBroadcast({
         } catch { /* detection failed, use last known */ }
       }
 
-      // Fallback: centered face estimate if no detector or no face found
       const face: FaceBox = lastFace || {
         x: cw * 0.25, y: ch * 0.15,
         width: cw * 0.5, height: ch * 0.5,
@@ -1346,7 +1330,6 @@ function LiveBroadcast({
     };
 
     detectAndDraw();
->>>>>>> 621dab074c92e160d15b8c2a0f381fa2ef63ffc4
 
     return () => {
       running = false;
