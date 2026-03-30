@@ -3126,6 +3126,8 @@ function LiveBroadcast({
   const recordTimerRef = useRef<ReturnType<typeof setInterval>>();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
+  const compositeCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const compositeAnimRef = useRef<number>();
   const [aiProcessing, setAiProcessing] = useState(false);
   const [aiResultOverlay, setAiResultOverlay] = useState<string | null>(null);
   const [aiSelectedMode, setAiSelectedMode] = useState<string | null>(null);
@@ -3385,15 +3387,55 @@ function LiveBroadcast({
 
     try {
       chunksRef.current = [];
+
+      // If AI overlay is active, composite AI image onto a canvas and record that
+      let recordStream: MediaStream;
+      if (aiResultOverlay) {
+        const compCanvas = document.createElement("canvas");
+        compCanvas.width = 720;
+        compCanvas.height = 1280;
+        compositeCanvasRef.current = compCanvas;
+        const compCtx = compCanvas.getContext("2d")!;
+        
+        // Load AI image
+        const aiImg = document.createElement("img");
+        aiImg.crossOrigin = "anonymous";
+        aiImg.src = aiResultOverlay;
+
+        // Draw AI image on loop
+        const drawFrame = () => {
+          compCtx.drawImage(aiImg, 0, 0, compCanvas.width, compCanvas.height);
+          compositeAnimRef.current = requestAnimationFrame(drawFrame);
+        };
+        aiImg.onload = () => drawFrame();
+        // Start immediately even if image isn't loaded yet (will be black briefly)
+        if (aiImg.complete) drawFrame();
+
+        const canvasStream = compCanvas.captureStream(30);
+        // Add audio from camera
+        const audioTracks = stream.getAudioTracks();
+        audioTracks.forEach(t => canvasStream.addTrack(t));
+        recordStream = canvasStream;
+      } else {
+        recordStream = stream;
+      }
+
       const recorder = supported
-        ? new MediaRecorder(stream, { mimeType: supported })
-        : new MediaRecorder(stream);
+        ? new MediaRecorder(recordStream, { mimeType: supported })
+        : new MediaRecorder(recordStream);
 
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
 
       recorder.onstop = async () => {
+        // Stop composite loop
+        if (compositeAnimRef.current) {
+          cancelAnimationFrame(compositeAnimRef.current);
+          compositeAnimRef.current = undefined;
+        }
+        compositeCanvasRef.current = null;
+
         if (chunksRef.current.length === 0) return;
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "video/webm" });
         const clipUrl = URL.createObjectURL(blob);
