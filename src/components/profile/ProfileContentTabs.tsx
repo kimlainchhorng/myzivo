@@ -4012,29 +4012,17 @@ function LiveBroadcast({
                             ? "ring-2 ring-white scale-105 shadow-lg shadow-white/20"
                             : "opacity-80"
                         )}
+                        style={{ background: s.gradient }}
                       >
-                        {/* Camera snapshot as base */}
-                        {filterThumbUrl ? (
-                          <img src={filterThumbUrl} alt="" className="w-full h-full object-cover absolute inset-0" />
-                        ) : null}
-                        {/* Gradient overlay representing the effect */}
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            background: s.gradient,
-                            opacity: filterThumbUrl ? 0.55 : 1,
-                            mixBlendMode: filterThumbUrl ? "overlay" : "normal",
-                          }}
-                        />
-                        {/* Emoji icon in corner */}
-                        <div className="absolute bottom-1 right-1 text-sm drop-shadow-lg">
-                          {s.emoji}
-                        </div>
-                        {/* "None" special state */}
-                        {!s.sticker && (
+                        {/* Large centered emoji as effect icon */}
+                        {s.sticker ? (
+                          <div className="absolute inset-0 flex items-center justify-center text-3xl drop-shadow-lg">
+                            {s.emoji}
+                          </div>
+                        ) : (
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-8 h-8 rounded-full border-2 border-white/50 flex items-center justify-center">
-                              <div className="w-0.5 h-6 bg-white/50 rotate-45" />
+                            <div className="w-8 h-8 rounded-full border-2 border-white/60 flex items-center justify-center">
+                              <div className="w-0.5 h-6 bg-white/60 rotate-45" />
                             </div>
                           </div>
                         )}
