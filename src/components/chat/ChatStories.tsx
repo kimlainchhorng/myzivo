@@ -185,27 +185,12 @@ export default function ChatStories() {
     startTimer();
   }, [startTimer]);
 
-  const nextStoryAuto = useCallback(() => {
-    setViewIdx((prev) => {
-      setViewingGroup((group) => {
-        if (!group) return null;
-        if (prev < group.stories.length - 1) {
-          return group;
-        }
-        // Move to next user's stories
-        const nextGIdx = allGroups.findIndex((g) => g.userId === group.userId) + 1;
-        if (nextGIdx < allGroups.length) {
-          setGroupIdx(nextGIdx);
-          return allGroups[nextGIdx];
-        }
-        return null; // End
-      });
-      return (currentGroup: any) => {
-        // This won't work cleanly, handle in effect
-        return prev;
-      };
-    });
-  }, [allGroups]);
+  // Auto-advance when progress completes
+  useEffect(() => {
+    if (progress >= 1 && viewingGroup) {
+      goNext();
+    }
+  }, [progress >= 1]);
 
   // Simplified navigation
   const openViewer = (group: StoryGroup, groups?: StoryGroup[]) => {
