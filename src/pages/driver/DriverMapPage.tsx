@@ -305,6 +305,28 @@ export default function DriverMapPage() {
         ? "Airport pickup accepted — check flight arrival time"
         : "Ride accepted — customer location loading"
     );
+
+    // Notify the customer that a driver has been assigned
+    try {
+      const { data: job } = await supabase
+        .from("jobs")
+        .select("user_id")
+        .eq("id", activeOffer.jobId)
+        .maybeSingle();
+      if (job?.user_id) {
+        await supabase.functions.invoke("send-push-notification", {
+          body: {
+            user_id: job.user_id,
+            notification_type: "driver_assigned",
+            title: "Driver Found!",
+            body: "Your driver is on the way to your pickup location.",
+            data: { type: "driver_assigned", job_id: activeOffer.jobId },
+          },
+        });
+      }
+    } catch (err) {
+      console.warn("[DriverMap] Failed to notify customer:", err);
+    }
   }, [activeOffer]);
 
   const handleDeclineOffer = useCallback(async () => {
