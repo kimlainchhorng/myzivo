@@ -266,6 +266,14 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         </AnimatePresence>,
         document.body
       )}
+
+      {/* Live Broadcast Overlay */}
+      {createPortal(
+        <AnimatePresence>
+          {showLive && <LiveBroadcast onClose={() => setShowLive(false)} />}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
