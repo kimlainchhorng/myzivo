@@ -598,13 +598,20 @@ export default function EatsLanding() {
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5"><CreditCard className="w-3 h-3" /> Payment method</h3>
                 <div className="flex gap-2">
                   {([
-                    { id: "card" as const, label: "💳 Card", icon: CreditCard },
-                    { id: "cash" as const, label: "💵 Cash", icon: Package },
-                    { id: "wallet" as const, label: "👛 Wallet", icon: Award },
+                    { id: "card" as const, label: "💳 Card" },
+                    { id: "cash" as const, label: "💵 Cash" },
+                    { id: "wallet" as const, label: `👛 $${(walletBalanceCents / 100).toFixed(2)}` },
                   ]).map(p => (
-                    <button key={p.id} onClick={() => setPaymentType(p.id)}
+                    <button key={p.id} onClick={() => {
+                      if (p.id === "wallet" && walletBalanceCents < Math.round(grandTotal * 100)) {
+                        toast.error(`Insufficient wallet balance ($${(walletBalanceCents / 100).toFixed(2)})`);
+                        return;
+                      }
+                      setPaymentType(p.id);
+                    }}
                       className={cn("flex-1 py-3 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
-                        paymentType === p.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                        paymentType === p.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40",
+                        p.id === "wallet" && walletBalanceCents < Math.round(grandTotal * 100) && "opacity-50")}>
                       {p.label}
                     </button>
                   ))}
