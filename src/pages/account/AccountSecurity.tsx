@@ -459,8 +459,6 @@ export default function AccountSecurity() {
           </Card>
         </motion.div>
       </main>
-
-      <Footer />
-    </>
+    </div>
   );
 }
