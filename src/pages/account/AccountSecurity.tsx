@@ -4,11 +4,12 @@
  */
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Shield, Lock, Smartphone, Monitor, MapPin, Clock, 
   LogOut, Download, Trash2, AlertTriangle, Key,
-  CheckCircle2, Loader2, Eye, EyeOff, Bell
+  CheckCircle2, Loader2, Eye, EyeOff, Bell, ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,10 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-// PhishingWarning removed
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/hooks/useI18n";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +49,7 @@ import { formatDistanceToNow } from "date-fns";
 const activeSessions: { id: string; device: string; location: string; lastActive: Date; current?: boolean }[] = [];
 
 export default function AccountSecurity() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useI18n();
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -114,35 +113,39 @@ export default function AccountSecurity() {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-background">
       <SEOHead
         title="Security Settings | ZIVO Account"
         description="Manage your account security: password, two-factor authentication, active sessions, and data."
         noIndex
       />
-      <Header />
 
-      <main className="min-h-screen pt-20 pb-16 bg-muted/30">
+      {/* App-style top bar */}
+      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-semibold">{t("security.title")}</h1>
+        </div>
+      </div>
+
+      <main className="pb-24">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="container mx-auto px-4 max-w-3xl"
+          className="px-4 pt-6 max-w-3xl mx-auto"
         >
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-               <h1 className="text-2xl font-bold">{t("security.title")}</h1>
-                <p className="text-muted-foreground text-sm">
-                  {t("security.subtitle")}
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* Section subtitle */}
+          <p className="text-muted-foreground text-sm mb-6">
+            {t("security.subtitle")}
+          </p>
 
           {/* Phishing warning removed */}
 
@@ -456,8 +459,6 @@ export default function AccountSecurity() {
           </Card>
         </motion.div>
       </main>
-
-      <Footer />
-    </>
+    </div>
   );
 }
