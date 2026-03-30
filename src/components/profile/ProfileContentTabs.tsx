@@ -3912,7 +3912,7 @@ function LiveBroadcast({
                 >
                   <X className="w-4 h-4 text-white/60" />
                 </button>
-                {(["color", "face", "ar"] as const).map((tab) => (
+                {(["color", "face", "ar", "ai"] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => { setFilterTab(tab); setFilterGroup("all"); setActiveFilter(0); if (tab !== "ar") setActiveSticker(0); }}
@@ -3923,7 +3923,7 @@ function LiveBroadcast({
                         : "text-white/40"
                     )}
                   >
-                    {tab === "color" ? "🎨 Color" : tab === "face" ? "✨ Beauty" : "🎭 Effects"}
+                    {tab === "color" ? "🎨 Color" : tab === "face" ? "✨ Beauty" : tab === "ar" ? "🎭 Effects" : "🤖 AI"}
                   </button>
                 ))}
               </div>
