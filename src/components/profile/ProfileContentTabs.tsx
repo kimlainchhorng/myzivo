@@ -911,7 +911,7 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
   const activeFilters = filterTab === "color" ? COLOR_FILTERS : FACE_FILTERS;
   const currentFilter = activeFilters[activeFilter] || activeFilters[0];
 
-  // Canvas overlay for AR stickers
+  // Face detection + AR sticker canvas overlay
   useEffect(() => {
     const currentSticker = AR_STICKERS[activeSticker]?.sticker;
     if (!currentSticker) {
@@ -929,29 +929,74 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Try to use browser FaceDetector API (Chrome/Edge)
+    let faceDetector: any = null;
+    try {
+      if ("FaceDetector" in window) {
+        faceDetector = new (window as any).FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+      }
+    } catch { /* not supported */ }
+
     let running = true;
-    const draw = () => {
+    let lastFace: FaceBox | null = null;
+    let frameCount = 0;
+
+    const detectAndDraw = async () => {
       if (!running) return;
       canvas.width = canvas.offsetWidth * 2;
       canvas.height = canvas.offsetHeight * 2;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawSticker(ctx, currentSticker, canvas.width, canvas.height);
-      animFrameRef.current = requestAnimationFrame(draw);
+
+      const video = videoRef.current;
+      const cw = canvas.width;
+      const ch = canvas.height;
+
+      // Detect face every 5 frames for performance
+      if (video && faceDetector && video.readyState >= 2 && frameCount % 5 === 0) {
+        try {
+          const faces = await faceDetector.detect(video);
+          if (faces.length > 0) {
+            const f = faces[0];
+            const bb = f.boundingBox;
+            // Scale from video coords to canvas coords
+            const scaleX = cw / video.videoWidth;
+            const scaleY = ch / video.videoHeight;
+            const eyeL = f.landmarks?.find((l: any) => l.type === "eye")?.locations?.[0];
+            const eyeR = f.landmarks?.filter((l: any) => l.type === "eye")?.[1]?.locations?.[0];
+            lastFace = {
+              x: bb.x * scaleX,
+              y: bb.y * scaleY,
+              width: bb.width * scaleX,
+              height: bb.height * scaleY,
+              eyeLeft: eyeL
+                ? { x: eyeL.x * scaleX, y: eyeL.y * scaleY }
+                : { x: (bb.x + bb.width * 0.32) * scaleX, y: (bb.y + bb.height * 0.35) * scaleY },
+              eyeRight: eyeR
+                ? { x: eyeR.x * scaleX, y: eyeR.y * scaleY }
+                : { x: (bb.x + bb.width * 0.68) * scaleX, y: (bb.y + bb.height * 0.35) * scaleY },
+            };
+          }
+        } catch { /* detection failed, use last known */ }
+      }
+
+      // Fallback: centered face estimate if no detector or no face found
+      const face: FaceBox = lastFace || {
+        x: cw * 0.25, y: ch * 0.15,
+        width: cw * 0.5, height: ch * 0.5,
+        eyeLeft: { x: cw * 0.38, y: ch * 0.32 },
+        eyeRight: { x: cw * 0.62, y: ch * 0.32 },
+      };
+
+      drawFaceFilter(ctx, currentSticker, face, cw, ch, performance.now());
+      frameCount++;
+      animFrameRef.current = requestAnimationFrame(detectAndDraw);
     };
-    // Draw at slower rate for static stickers
-    draw();
-    // For animated stickers, redraw every 500ms
-    const interval = ["hearts", "stars", "sparkles", "snow"].includes(currentSticker)
-      ? setInterval(() => {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          drawSticker(ctx, currentSticker, canvas.width, canvas.height);
-        }, 400)
-      : undefined;
+
+    detectAndDraw();
 
     return () => {
       running = false;
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-      if (interval) clearInterval(interval);
     };
   }, [activeSticker]);
 
