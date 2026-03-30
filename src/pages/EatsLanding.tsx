@@ -2,8 +2,8 @@
  * EatsLanding - Food delivery hub page with full ordering flow
  * Connected to Supabase: restaurants, menu_items, food_orders
  */
-import { useState, useMemo } from "react";
-import { Star, Clock, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, Sparkles, MessageSquare, Percent, Leaf, Award, Loader2 } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Star, Clock, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, Sparkles, MessageSquare, Percent, Leaf, Award, Loader2, Wallet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useEatsRestaurants, useEatsMenu, type EatsCartItem } from "@/hooks/useEatsData";
 import { useEatsOrder } from "@/hooks/useEatsOrder";
+import { getWalletBalance } from "@/hooks/useWalletPayment";
+import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 
@@ -62,8 +64,16 @@ function EatsStepIndicator({ currentStep }: { currentStep: string }) {
 // ─── Main Component ──────────────────────────────────────────────────
 export default function EatsLanding() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { placeOrder, placing: placingOrder } = useEatsOrder();
 
+  // Wallet balance for checkout
+  const [walletBalanceCents, setWalletBalanceCents] = useState<number>(0);
+  useEffect(() => {
+    if (user?.id) {
+      getWalletBalance(user.id).then(setWalletBalanceCents);
+    }
+  }, [user?.id]);
   // Data from Supabase
   const { data: restaurants = [], isLoading: loadingRestaurants } = useEatsRestaurants();
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
