@@ -7,10 +7,11 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useDriverMapState } from "@/hooks/useDriverMapState";
 import { useCustomerLocation } from "@/hooks/useCustomerLocation";
+import { useGpsPermission } from "@/hooks/useGpsPermission";
 import DriverMapHeader from "@/components/driver/DriverMapHeader";
 import DriverBottomNav from "@/components/driver/DriverBottomNav";
 import { motion } from "framer-motion";
-import { MapPin, Navigation, Loader2, Car, Check, X, User, Plane } from "lucide-react";
+import { MapPin, Navigation, Loader2, Car, Check, X, User, Plane, LocateFixed } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ interface RideOffer {
 export default function DriverMapPage() {
   const mapState = useDriverMapState();
   const [isOnline, setIsOnline] = useState(false);
+  const { permission: gpsPermission, requestPermission: requestGps, skipPermission: skipGps } = useGpsPermission();
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [driverId, setDriverId] = useState<string | null>(null);
   const [activeOffer, setActiveOffer] = useState<RideOffer | null>(null);
@@ -220,6 +222,15 @@ export default function DriverMapPage() {
 
     const goingOnline = !isOnline;
 
+    // Request GPS permission when going online
+    if (goingOnline && gpsPermission !== "granted") {
+      const loc = await requestGps();
+      if (!loc) {
+        toast.error("Location access is required to go online");
+        return;
+      }
+    }
+
     setIsOnline(goingOnline);
 
     if (goingOnline) {
@@ -265,7 +276,7 @@ export default function DriverMapPage() {
         toast.success("You're now offline");
       }
     }
-  }, [isOnline, driverId, mapState.driverLocation, mapState.heading, mapState.speed, mapState.locationError]);
+  }, [isOnline, driverId, mapState.driverLocation, mapState.heading, mapState.speed, mapState.locationError, gpsPermission, requestGps]);
 
   const handleAcceptOffer = useCallback(async () => {
     if (!activeOffer) return;
@@ -294,6 +305,28 @@ export default function DriverMapPage() {
         ? "Airport pickup accepted — check flight arrival time"
         : "Ride accepted — customer location loading"
     );
+
+    // Notify the customer that a driver has been assigned
+    try {
+      const { data: job } = await supabase
+        .from("jobs")
+        .select("customer_id")
+        .eq("id", activeOffer.jobId)
+        .maybeSingle();
+      if (job?.customer_id) {
+        await supabase.functions.invoke("send-push-notification", {
+          body: {
+            user_id: job.customer_id,
+            notification_type: "driver_assigned",
+            title: "Driver Found!",
+            body: "Your driver is on the way to your pickup location.",
+            data: { type: "driver_assigned", job_id: activeOffer.jobId },
+          },
+        });
+      }
+    } catch (err) {
+      console.warn("[DriverMap] Failed to notify customer:", err);
+    }
   }, [activeOffer]);
 
   const handleDeclineOffer = useCallback(async () => {
@@ -322,6 +355,46 @@ export default function DriverMapPage() {
 
   return (
     <div className="h-[100dvh] flex flex-col bg-background relative overflow-hidden">
+      {/* GPS Permission Prompt */}
+      {gpsPermission === "prompt" && (
+        <div className="absolute inset-0 z-[200] bg-background/98 backdrop-blur-sm flex flex-col items-center justify-center px-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center text-center max-w-xs"
+          >
+            <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mb-6">
+              <LocateFixed className="w-10 h-10 text-primary" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground mb-2">Enable Location</h2>
+            <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+              ZIVO needs your location to show your position on the map, match you with nearby riders, and track trips.
+            </p>
+            <Button
+              onClick={requestGps}
+              className="w-full mb-3 h-12 text-base font-bold rounded-xl"
+            >
+              Allow Location Access
+            </Button>
+            <button
+              onClick={skipGps}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Not now
+            </button>
+          </motion.div>
+        </div>
+      )}
+
+      {gpsPermission === "checking" && (
+        <div className="absolute inset-0 z-[200] bg-background flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Getting your location…</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 relative bg-muted/30">
         <div className="absolute inset-0 flex items-center justify-center">
           {mapState.locationError ? (
