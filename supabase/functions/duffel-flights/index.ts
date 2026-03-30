@@ -898,7 +898,7 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
     .filter((o): o is DuffelOfferTransformed => o !== null);
 
   const buildFareVariantKey = (offer: DuffelOfferTransformed) => {
-    const bag = offer.baggageDetails;
+    const bag = offer.baggageDetails as Record<string, unknown>;
     const conditions = offer.conditions;
     return [
       offer.cabinClass,
