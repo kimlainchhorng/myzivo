@@ -3468,7 +3468,7 @@ function LiveBroadcast({
         className="absolute inset-0 w-full h-full object-cover"
         style={{
           transform: facingMode === "user" ? "scaleX(-1)" : "none",
-          filter: effectiveFilterCss,
+          filter: "none",
         }}
       />
       {/* AR sticker canvas overlay */}
