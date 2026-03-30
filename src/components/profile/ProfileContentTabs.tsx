@@ -343,7 +343,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
             >
               {/* Header */}
               <div className="flex items-center gap-3 p-3 shrink-0">
-                <button onClick={() => setSelectedPost(null)} className="text-white/80 p-1">
+                <button onClick={() => { setSelectedPost(null); setShowPostMenu(false); setEditingCaption(false); }} className="text-white/80 p-1">
                   <X className="w-6 h-6" />
                 </button>
                 <img src={selectedPost.user.avatar} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/20" />
@@ -351,6 +351,49 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   <p className="text-white text-sm font-semibold truncate">{selectedPost.user.name}</p>
                   <p className="text-white/50 text-[10px]">{selectedPost.time} ago</p>
                 </div>
+                {(selectedPost.user.name === "You" || selectedPost.user.name === (user?.email?.split("@")[0] || "")) && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowPostMenu(!showPostMenu)}
+                      className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+                    >
+                      <MoreVertical className="w-5 h-5" />
+                    </button>
+                    <AnimatePresence>
+                      {showPostMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9, y: -5 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.9, y: -5 }}
+                          className="absolute right-0 top-full mt-1 bg-card rounded-xl shadow-2xl border border-border/30 overflow-hidden z-50 min-w-[160px]"
+                        >
+                          <button
+                            onClick={() => {
+                              setEditCaptionValue(selectedPost.caption);
+                              setEditingCaption(true);
+                              setShowPostMenu(false);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Edit Caption
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (window.confirm("Delete this post? This can't be undone.")) {
+                                handleDeletePost(selectedPost.id);
+                              }
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete Post
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
               </div>
 
               {/* Content */}
@@ -365,7 +408,35 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
               {/* Bottom bar */}
               <div className="p-4 space-y-3 shrink-0 bg-gradient-to-t from-black/80 to-transparent">
-                <p className="text-white/90 text-sm">{selectedPost.caption}</p>
+                {editingCaption ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={editCaptionValue}
+                      onChange={(e) => setEditCaptionValue(e.target.value)}
+                      className="flex-1 bg-white/10 text-white text-sm rounded-lg px-3 py-2 border border-white/20 outline-none focus:border-primary"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleEditCaption(selectedPost.id, editCaptionValue);
+                        if (e.key === "Escape") setEditingCaption(false);
+                      }}
+                    />
+                    <button
+                      onClick={() => handleEditCaption(selectedPost.id, editCaptionValue)}
+                      className="px-3 py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-lg"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditingCaption(false)}
+                      className="px-3 py-2 text-white/60 text-xs"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-white/90 text-sm">{selectedPost.caption}</p>
+                )}
                 <div className="flex items-center gap-5">
                   <button className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors">
                     <Heart className="w-6 h-6" />
