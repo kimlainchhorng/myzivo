@@ -2,7 +2,7 @@
  * ChatHubPage — Unified messaging hub with category tabs:
  * Personal, Shop, Support, Ride
  */
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { format, isToday, isYesterday } from "date-fns";
+import ChatStories from "@/components/chat/ChatStories";
 
 type ChatCategory = "personal" | "shop" | "support" | "ride";
 
@@ -222,6 +223,9 @@ export default function ChatHubPage() {
           })}
         </div>
       </div>
+
+      {/* Stories Row */}
+      <ChatStories />
 
       {/* Chat List */}
       <AnimatePresence mode="wait">

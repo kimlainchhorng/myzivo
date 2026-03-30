@@ -42180,6 +42180,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_stories: {
+        Row: {
+          caption: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          media_type: string
+          media_url: string
+          user_id: string
+          views_count: number
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_type?: string
+          media_url: string
+          user_id: string
+          views_count?: number
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_type?: string
+          media_url?: string
+          user_id?: string
+          views_count?: number
+        }
+        Relationships: []
+      }
       user_subscriptions: {
         Row: {
           id: string
