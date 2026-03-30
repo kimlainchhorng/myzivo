@@ -3,7 +3,7 @@
  * Full-screen immersive viewer with auto-progress, swipe navigation
  */
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Plus, X, Eye, Trash2, Camera, Heart, Send, ChevronUp, ChevronDown, Pause, Play } from "lucide-react";
+import { Plus, X, Eye, Trash2, Camera, Heart, Send, ChevronUp, MessageCircle, Pause, Play, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
