@@ -579,9 +579,11 @@ const Profile = () => {
                           variant={friendStatus === "none" ? "default" : "outline"}
                           className="rounded-full px-5 h-9 text-xs font-bold gap-1.5"
                           onClick={handleAddFriend}
-                          disabled={friendStatus !== "none"}
+                          disabled={friendLoading}
                         >
-                          {friendStatus === "none" ? (
+                          {friendLoading ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : friendStatus === "none" ? (
                             <><UserPlus className="w-3.5 h-3.5" /> Add Friend</>
                           ) : friendStatus === "pending" ? (
                             <><UserCheck className="w-3.5 h-3.5" /> Pending</>
@@ -594,8 +596,11 @@ const Profile = () => {
                           variant={isFollowing ? "outline" : "secondary"}
                           className="rounded-full px-5 h-9 text-xs font-bold gap-1.5"
                           onClick={handleFollow}
+                          disabled={followLoading}
                         >
-                          {isFollowing ? (
+                          {followLoading ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : isFollowing ? (
                             <><UserCheck className="w-3.5 h-3.5" /> Following</>
                           ) : (
                             <><Users className="w-3.5 h-3.5" /> Follow</>
