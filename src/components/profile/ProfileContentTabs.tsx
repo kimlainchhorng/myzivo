@@ -1473,81 +1473,99 @@ function drawFaceFilter(
       }
       break;
     }
+
+    case "glitch": {
+      for (let i = 0; i < 12; i++) {
+        const gy = y + ((i + (t * 0.02) % 1) / 12) * fh;
+        const offset = Math.sin(t * 0.02 + i) * fw * 0.06;
+        ctx.fillStyle = i % 3 === 0 ? "rgba(255, 60, 120, 0.25)" : i % 3 === 1 ? "rgba(80, 220, 255, 0.22)" : "rgba(255, 255, 255, 0.12)";
+        ctx.fillRect(x + offset, gy, fw, fh * 0.03);
+      }
+      break;
+    }
+
+    case "scanline": {
+      ctx.strokeStyle = "rgba(160, 255, 180, 0.18)";
+      ctx.lineWidth = 1;
+      for (let sy = Math.floor(y); sy < y + fh; sy += 4) {
+        ctx.beginPath();
+        ctx.moveTo(x, sy);
+        ctx.lineTo(x + fw, sy);
+        ctx.stroke();
+      }
+      const barY = y + ((t * 0.06) % fh);
+      const barGrad = ctx.createLinearGradient(x, barY, x + fw, barY);
+      barGrad.addColorStop(0, "rgba(120, 255, 190, 0)");
+      barGrad.addColorStop(0.5, "rgba(120, 255, 190, 0.45)");
+      barGrad.addColorStop(1, "rgba(120, 255, 190, 0)");
+      ctx.fillStyle = barGrad;
+      ctx.fillRect(x, barY - fh * 0.03, fw, fh * 0.06);
+      break;
+    }
+
+    case "pixelhearts": {
+      const size = Math.max(4, fw * 0.02);
+      for (let i = 0; i < 10; i++) {
+        const px = x + ((i * 53 + t * 0.03) % fw);
+        const py = y + fh - ((i * 37 + t * 0.05) % (fh * 1.2));
+        ctx.fillStyle = "rgba(255, 90, 150, 0.8)";
+        ctx.fillRect(px, py, size, size);
+        ctx.fillRect(px + size * 2, py, size, size);
+        ctx.fillRect(px - size, py + size, size * 5, size);
+        ctx.fillRect(px, py + size * 2, size * 3, size);
+        ctx.fillRect(px + size, py + size * 3, size, size);
+      }
+      break;
+    }
+
+    case "frost": {
+      const frostGrad = ctx.createRadialGradient(cx, y + fh * 0.5, fw * 0.1, cx, y + fh * 0.5, fw * 0.8);
+      frostGrad.addColorStop(0, "rgba(220, 245, 255, 0)");
+      frostGrad.addColorStop(1, "rgba(200, 235, 255, 0.28)");
+      ctx.fillStyle = frostGrad;
+      ctx.fillRect(x - fw * 0.1, y - fh * 0.1, fw * 1.2, fh * 1.2);
+      for (let i = 0; i < 18; i++) {
+        const sx = x + (i / 18) * fw;
+        const sy = y + ((Math.sin(i * 2.4 + t * 0.004) * 0.5 + 0.5) * fh);
+        drawSparkle(ctx, sx, sy, fw * 0.02);
+      }
+      break;
+    }
+
+    case "lightning": {
+      ctx.strokeStyle = "rgba(255, 240, 110, 0.9)";
+      ctx.lineWidth = fw * 0.018;
+      for (const side of [-1, 1]) {
+        const lx = cx + side * fw * 0.32;
+        ctx.beginPath();
+        ctx.moveTo(lx, top - fh * 0.25);
+        ctx.lineTo(lx + side * fw * 0.06, top - fh * 0.02);
+        ctx.lineTo(lx - side * fw * 0.02, top + fh * 0.02);
+        ctx.lineTo(lx + side * fw * 0.08, top + fh * 0.26);
+        ctx.stroke();
+      }
+      break;
+    }
+
+    case "confetti": {
+      for (let i = 0; i < 36; i++) {
+        const cxp = (i * 67 + t * 0.04) % cw;
+        const cyp = (i * 41 + t * 0.06) % ch;
+        const w = fw * 0.018;
+        const h = fw * 0.05;
+        ctx.save();
+        ctx.translate(cxp, cyp);
+        ctx.rotate((i * 0.7 + t * 0.002) % (Math.PI * 2));
+        ctx.fillStyle = i % 4 === 0 ? "rgba(255, 90, 120, 0.8)" : i % 4 === 1 ? "rgba(80, 220, 255, 0.8)" : i % 4 === 2 ? "rgba(255, 230, 90, 0.8)" : "rgba(140, 255, 120, 0.8)";
+        ctx.fillRect(-w / 2, -h / 2, w, h);
+        ctx.restore();
+      }
+      break;
+    }
   }
   ctx.restore();
 }
 
-<<<<<<< HEAD
-=======
-type FaceAnchor = {
-  x: number;
-  y: number;
-  size: number;
-};
-
-function drawTrackedSticker(
-  ctx: CanvasRenderingContext2D,
-  sticker: string,
-  w: number,
-  h: number,
-  faceAnchor: FaceAnchor | null,
-) {
-  if (!faceAnchor) {
-    const defaultFace: FaceBox = {
-      x: w * 0.25, y: h * 0.15, width: w * 0.5, height: h * 0.5,
-      eyeLeft: { x: w * 0.38, y: h * 0.32 }, eyeRight: { x: w * 0.62, y: h * 0.32 },
-    };
-    drawFaceFilter(ctx, sticker, defaultFace, w, h, performance.now());
-    return;
-  }
-
-  const cx = faceAnchor.x;
-  const cy = faceAnchor.y;
-  const faceSize = faceAnchor.size;
-  const fontSize = Math.max(22, faceSize * 0.42);
-  ctx.font = `${fontSize}px serif`;
-  ctx.textAlign = "center";
-
-  switch (sticker) {
-    case "cat":
-      ctx.fillText("🐱", cx - faceSize * 0.35, cy - faceSize * 0.65);
-      ctx.fillText("🐱", cx + faceSize * 0.35, cy - faceSize * 0.65);
-      ctx.fillText("👃", cx, cy + faceSize * 0.05);
-      break;
-    case "dog":
-      ctx.fillText("🐕", cx, cy - faceSize * 0.55);
-      ctx.fillText("👅", cx, cy + faceSize * 0.42);
-      break;
-    case "bunny":
-      ctx.fillText("🐰", cx, cy - faceSize * 0.72);
-      break;
-    case "crown":
-      ctx.fillText("👑", cx, cy - faceSize * 0.82);
-      break;
-    case "glasses":
-      ctx.fillText("🕶️", cx, cy);
-      break;
-    case "devil":
-      ctx.fillText("😈", cx, cy - faceSize * 0.85);
-      break;
-    case "angel":
-      ctx.fillText("😇", cx, cy - faceSize * 0.92);
-      break;
-    case "butterfly":
-      ctx.fillText("🦋", cx - faceSize * 0.6, cy - faceSize * 0.5);
-      ctx.fillText("🦋", cx + faceSize * 0.6, cy - faceSize * 0.45);
-      break;
-    default: {
-      const defaultFace2: FaceBox = {
-        x: w * 0.25, y: h * 0.15, width: w * 0.5, height: h * 0.5,
-        eyeLeft: { x: w * 0.38, y: h * 0.32 }, eyeRight: { x: w * 0.62, y: h * 0.32 },
-      };
-      drawFaceFilter(ctx, sticker, defaultFace2, w, h, performance.now());
-    }
-  }
-}
-
->>>>>>> e7873455dcc388bcf4094e19d09f399f98d53c2c
 function LiveBroadcast({
   onClose,
   onPublishClip,
@@ -1700,6 +1718,10 @@ function LiveBroadcast({
 
   const activeFilters = filterTab === "color" ? COLOR_FILTERS : FACE_FILTERS;
   const currentFilter = activeFilters[activeFilter] || activeFilters[0];
+  const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : activeFilters.length;
+  const selectedFilterName = filterTab === "ar"
+    ? AR_STICKERS[activeSticker]?.name || "None"
+    : currentFilter?.name || "Original";
 
   // Face detection + AR sticker canvas overlay
   useEffect(() => {
@@ -2040,8 +2062,13 @@ function LiveBroadcast({
                   </button>
                 ))}
               </div>
+              <div className="px-4 mb-1 flex items-center justify-between text-[11px] text-white/65">
+                <span>{totalFilterCount} {filterTab === "ar" ? "effects" : "filters"}</span>
+                <span className="truncate max-w-[55%] text-right">Selected: {selectedFilterName}</span>
+              </div>
+              <div className="px-4 mb-2 text-[10px] text-white/45">Swipe up to see more options</div>
               {/* Filter/Sticker grid */}
-              <div className="grid grid-cols-4 gap-3 px-4 max-h-[35vh] overflow-y-auto scrollbar-none">
+              <div className="grid grid-cols-4 gap-3 px-4 pr-5 max-h-[48vh] overflow-y-auto">
                 {filterTab === "ar" ? (
                   AR_STICKERS.map((s, i) => (
                     <button
