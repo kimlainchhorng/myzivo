@@ -4057,7 +4057,7 @@ function LiveBroadcast({
         ) : (
           <div className="flex flex-col items-center gap-3">
             <button
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={toggleFilters}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium mb-1",
                 showFilters ? "bg-primary text-primary-foreground" : "bg-white/15 text-white/70"
