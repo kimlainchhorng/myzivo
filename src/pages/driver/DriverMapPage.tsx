@@ -355,6 +355,46 @@ export default function DriverMapPage() {
 
   return (
     <div className="h-[100dvh] flex flex-col bg-background relative overflow-hidden">
+      {/* GPS Permission Prompt */}
+      {gpsPermission === "prompt" && (
+        <div className="absolute inset-0 z-[200] bg-background/98 backdrop-blur-sm flex flex-col items-center justify-center px-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center text-center max-w-xs"
+          >
+            <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mb-6">
+              <LocateFixed className="w-10 h-10 text-primary" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground mb-2">Enable Location</h2>
+            <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+              ZIVO needs your location to show your position on the map, match you with nearby riders, and track trips.
+            </p>
+            <Button
+              onClick={requestGps}
+              className="w-full mb-3 h-12 text-base font-bold rounded-xl"
+            >
+              Allow Location Access
+            </Button>
+            <button
+              onClick={skipGps}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Not now
+            </button>
+          </motion.div>
+        </div>
+      )}
+
+      {gpsPermission === "checking" && (
+        <div className="absolute inset-0 z-[200] bg-background flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Getting your location…</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 relative bg-muted/30">
         <div className="absolute inset-0 flex items-center justify-center">
           {mapState.locationError ? (
