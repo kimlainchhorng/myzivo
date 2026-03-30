@@ -737,8 +737,14 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
         className="absolute inset-0 w-full h-full object-cover"
         style={{
           transform: facingMode === "user" ? "scaleX(-1)" : "none",
-          filter: currentFilter.css,
+          filter: filterTab !== "ar" ? currentFilter.css : "none",
         }}
+      />
+      {/* AR sticker canvas overlay */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full pointer-events-none z-[1]"
+        style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
       />
 
       {/* Top overlay */}
