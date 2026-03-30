@@ -24,6 +24,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const LANGS = [
   { code: "en", label: "English", cc: "us" },
@@ -559,51 +560,63 @@ const Profile = () => {
                         )}
                       </div>
 
-                      {/* Friend & Follow stats */}
-                      <div className="flex items-center justify-center gap-6 mt-3">
-                        <div className="text-center">
-                          <p className="text-base font-bold text-foreground">{friendCount}</p>
-                          <p className="text-[10px] text-muted-foreground">Friends</p>
-                        </div>
-                        <div className="w-px h-8 bg-border/50" />
-                        <div className="text-center">
-                          <p className="text-base font-bold text-foreground">{followerCount}</p>
-                          <p className="text-[10px] text-muted-foreground">Followers</p>
-                        </div>
+                      {/* Friend, Follower & Following stats — Facebook/TikTok style */}
+                      <div className="flex items-center justify-center gap-0 mt-4 mb-1">
+                        <button className="flex-1 text-center py-1 group" onClick={() => toast.info(`${friendCount} friends`)}>
+                          <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{friendCount}</p>
+                          <p className="text-[10px] text-muted-foreground font-medium">Friends</p>
+                        </button>
+                        <div className="w-px h-9 bg-border/40" />
+                        <button className="flex-1 text-center py-1 group" onClick={() => toast.info(`${followerCount} followers`)}>
+                          <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{followerCount}</p>
+                          <p className="text-[10px] text-muted-foreground font-medium">Followers</p>
+                        </button>
+                        <div className="w-px h-9 bg-border/40" />
+                        <button className="flex-1 text-center py-1 group" onClick={() => toast.info("Following list")}>
+                          <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">0</p>
+                          <p className="text-[10px] text-muted-foreground font-medium">Following</p>
+                        </button>
                       </div>
 
-                      {/* Add Friend & Follow buttons */}
-                      <div className="flex items-center justify-center gap-2 mt-3">
+                      {/* Action buttons — social style */}
+                      <div className="flex items-center gap-2 mt-2 px-2">
                         <Button
                           size="sm"
-                          variant={friendStatus === "none" ? "default" : "outline"}
-                          className="rounded-full px-5 h-9 text-xs font-bold gap-1.5"
+                          variant={friendStatus === "none" ? "default" : friendStatus === "accepted" ? "outline" : "secondary"}
+                          className={cn(
+                            "flex-1 rounded-xl h-10 text-sm font-bold gap-2 transition-all",
+                            friendStatus === "none" && "shadow-md shadow-primary/25",
+                            friendStatus === "accepted" && "border-primary/30 text-primary"
+                          )}
                           onClick={handleAddFriend}
                           disabled={friendLoading}
                         >
                           {friendLoading ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
                           ) : friendStatus === "none" ? (
-                            <><UserPlus className="w-3.5 h-3.5" /> Add Friend</>
+                            <><UserPlus className="w-4 h-4" /> Add Friend</>
                           ) : friendStatus === "pending" ? (
-                            <><UserCheck className="w-3.5 h-3.5" /> Pending</>
+                            <><Loader2 className="w-4 h-4" /> Pending</>
                           ) : (
-                            <><UserCheck className="w-3.5 h-3.5" /> Friends</>
+                            <><UserCheck className="w-4 h-4" /> Friends</>
                           )}
                         </Button>
                         <Button
                           size="sm"
                           variant={isFollowing ? "outline" : "secondary"}
-                          className="rounded-full px-5 h-9 text-xs font-bold gap-1.5"
+                          className={cn(
+                            "flex-1 rounded-xl h-10 text-sm font-bold gap-2 transition-all",
+                            isFollowing && "border-primary/30 text-primary"
+                          )}
                           onClick={handleFollow}
                           disabled={followLoading}
                         >
                           {followLoading ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
                           ) : isFollowing ? (
-                            <><UserCheck className="w-3.5 h-3.5" /> Following</>
+                            <><UserCheck className="w-4 h-4" /> Following</>
                           ) : (
-                            <><Users className="w-3.5 h-3.5" /> Follow</>
+                            <><Users className="w-4 h-4" /> Follow</>
                           )}
                         </Button>
                       </div>
