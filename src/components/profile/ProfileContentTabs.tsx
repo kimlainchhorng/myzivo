@@ -3905,7 +3905,32 @@ function LiveBroadcast({
         style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
       />
 
-      {/* Top overlay */}
+      {/* AI result overlay */}
+      {aiResultOverlay && (
+        <div className="absolute inset-0 z-[2]">
+          <img src={aiResultOverlay} alt="AI result" className="w-full h-full object-cover" />
+          <button
+            onClick={() => { setAiResultOverlay(null); setAiSelectedMode(null); }}
+            className="absolute top-14 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2"
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
+          <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
+            <span className="text-white text-xs font-medium">🤖 AI Enhanced</span>
+          </div>
+        </div>
+      )}
+
+      {/* AI processing overlay */}
+      {aiProcessing && (
+        <div className="absolute inset-0 z-[3] bg-black/40 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+            <span className="text-white text-sm font-medium">AI processing...</span>
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 flex items-center justify-between p-4 pt-12">
         <div className="flex items-center gap-2">
           {isLive && (
