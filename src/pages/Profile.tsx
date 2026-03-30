@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
@@ -6,7 +6,7 @@ import { useCountry } from "@/hooks/useCountry";
 import SEOHead from "@/components/SEOHead";
 import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
-  Shield, Star, ChevronRight,
+  Shield, Star, ChevronRight, UserPlus, UserCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
   Settings,
 } from "lucide-react";
@@ -146,6 +146,36 @@ const Profile = () => {
   const coverDragRef = useRef<{ startY: number; startPos: number } | null>(null);
 
   const profileTilt = use3DTilt(profileCardRef);
+
+  // Friend & Follow state
+  const [friendStatus, setFriendStatus] = useState<"none" | "pending" | "accepted">("none");
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [friendCount, setFriendCount] = useState(0);
+  const [followerCount, setFollowerCount] = useState(0);
+
+  // Load friendship & follow counts
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      const { count } = await supabase
+        .from("friendships" as any)
+        .select("*", { count: "exact", head: true })
+        .eq("status", "accepted")
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+      setFriendCount(count || 0);
+    })();
+  }, [user?.id]);
+
+  const handleAddFriend = async () => {
+    if (!user?.id) return;
+    toast.info("Friend request sent!");
+    setFriendStatus("pending");
+  };
+
+  const handleFollow = () => {
+    setIsFollowing((f) => !f);
+    toast.success(isFollowing ? "Unfollowed" : "Following!");
+  };
 
   const { scrollYProgress } = useScroll({ container: scrollRef });
   const headerY = useTransform(scrollYProgress, [0, 0.3], [0, -30]);
@@ -453,6 +483,50 @@ const Profile = () => {
                             <Crown className="w-3 h-3 mr-1" /> ZIVO+ {plan === "annual" ? "Annual" : "Monthly"}
                           </Badge>
                         )}
+                      </div>
+
+                      {/* Friend & Follow stats */}
+                      <div className="flex items-center justify-center gap-6 mt-3">
+                        <div className="text-center">
+                          <p className="text-base font-bold text-foreground">{friendCount}</p>
+                          <p className="text-[10px] text-muted-foreground">Friends</p>
+                        </div>
+                        <div className="w-px h-8 bg-border/50" />
+                        <div className="text-center">
+                          <p className="text-base font-bold text-foreground">{followerCount}</p>
+                          <p className="text-[10px] text-muted-foreground">Followers</p>
+                        </div>
+                      </div>
+
+                      {/* Add Friend & Follow buttons */}
+                      <div className="flex items-center justify-center gap-2 mt-3">
+                        <Button
+                          size="sm"
+                          variant={friendStatus === "none" ? "default" : "outline"}
+                          className="rounded-full px-5 h-9 text-xs font-bold gap-1.5"
+                          onClick={handleAddFriend}
+                          disabled={friendStatus !== "none"}
+                        >
+                          {friendStatus === "none" ? (
+                            <><UserPlus className="w-3.5 h-3.5" /> Add Friend</>
+                          ) : friendStatus === "pending" ? (
+                            <><UserCheck className="w-3.5 h-3.5" /> Pending</>
+                          ) : (
+                            <><UserCheck className="w-3.5 h-3.5" /> Friends</>
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={isFollowing ? "outline" : "secondary"}
+                          className="rounded-full px-5 h-9 text-xs font-bold gap-1.5"
+                          onClick={handleFollow}
+                        >
+                          {isFollowing ? (
+                            <><UserCheck className="w-3.5 h-3.5" /> Following</>
+                          ) : (
+                            <><Users className="w-3.5 h-3.5" /> Follow</>
+                          )}
+                        </Button>
                       </div>
                     </div>
 
