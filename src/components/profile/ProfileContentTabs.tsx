@@ -48,6 +48,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [showComposer, setShowComposer] = useState(false);
   const [composerType, setComposerType] = useState<"photo" | "reel" | null>(null);
   const [selectedPost, setSelectedPost] = useState<FeedItem | null>(null);
+  const [showLive, setShowLive] = useState(false);
 
   const filtered = activeTab === "all" ? demoFeed : demoFeed.filter((i) => i.type === activeTab);
 
