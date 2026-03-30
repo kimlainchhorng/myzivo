@@ -310,13 +310,13 @@ export default function DriverMapPage() {
     try {
       const { data: job } = await supabase
         .from("jobs")
-        .select("user_id")
+        .select("customer_id")
         .eq("id", activeOffer.jobId)
         .maybeSingle();
-      if (job?.user_id) {
+      if (job?.customer_id) {
         await supabase.functions.invoke("send-push-notification", {
           body: {
-            user_id: job.user_id,
+            user_id: job.customer_id,
             notification_type: "driver_assigned",
             title: "Driver Found!",
             body: "Your driver is on the way to your pickup location.",
