@@ -330,7 +330,6 @@ export default function ChatStories() {
     return () => stopTimer();
   }, [viewingGroup, viewIdx, paused]);
 
-  const currentStory = viewingGroup?.stories[viewIdx];
 
   return (
     <>
