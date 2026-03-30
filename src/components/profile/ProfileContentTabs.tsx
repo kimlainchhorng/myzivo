@@ -243,6 +243,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   }, [user?.id]);
 
 
+  return (
     <div className="space-y-3">
       {/* Create Post Bar */}
       <motion.button
