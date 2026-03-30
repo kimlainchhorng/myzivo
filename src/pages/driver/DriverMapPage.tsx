@@ -222,6 +222,15 @@ export default function DriverMapPage() {
 
     const goingOnline = !isOnline;
 
+    // Request GPS permission when going online
+    if (goingOnline && gpsPermission !== "granted") {
+      const loc = await requestGps();
+      if (!loc) {
+        toast.error("Location access is required to go online");
+        return;
+      }
+    }
+
     setIsOnline(goingOnline);
 
     if (goingOnline) {
