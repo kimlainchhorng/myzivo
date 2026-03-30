@@ -571,36 +571,37 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
         <div className="flex-1" />
       )}
 
-      {/* Filter picker */}
+      {/* TikTok-style filter sidebar */}
       <AnimatePresence>
         {showFilters && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="relative z-10 px-2 pb-2"
+            initial={{ opacity: 0, x: 60 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 60 }}
+            transition={{ type: "spring", damping: 22, stiffness: 280 }}
+            className="absolute right-2 top-20 bottom-28 z-20 flex flex-col"
           >
-            <div className="flex gap-2 overflow-x-auto scrollbar-none py-2 px-2">
+            <div className="bg-black/40 backdrop-blur-md rounded-2xl py-2 px-1 overflow-y-auto scrollbar-none max-h-full">
               {FILTERS.map((f, i) => (
                 <button
                   key={f.name}
                   onClick={() => setActiveFilter(i)}
-                  className={cn(
-                    "shrink-0 flex flex-col items-center gap-1",
-                  )}
+                  className="flex flex-col items-center gap-0.5 py-1.5 px-1 w-16"
                 >
                   <div
                     className={cn(
-                      "w-14 h-14 rounded-full border-2 overflow-hidden",
-                      activeFilter === i ? "border-primary" : "border-white/20"
+                      "w-10 h-10 rounded-xl overflow-hidden border-2 transition-all",
+                      activeFilter === i
+                        ? "border-white scale-110 shadow-lg shadow-white/20"
+                        : "border-transparent opacity-70"
                     )}
-                    style={{ background: "#333", filter: f.css }}
+                    style={{ filter: f.css }}
                   >
-                    <div className="w-full h-full bg-gradient-to-br from-orange-300 via-pink-300 to-blue-300" />
+                    <div className="w-full h-full bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500" />
                   </div>
                   <span className={cn(
-                    "text-[10px] font-medium",
-                    activeFilter === i ? "text-primary" : "text-white/60"
+                    "text-[9px] font-medium leading-tight",
+                    activeFilter === i ? "text-white" : "text-white/50"
                   )}>{f.name}</span>
                 </button>
               ))}
