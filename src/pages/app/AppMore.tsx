@@ -232,7 +232,7 @@ const AppMore = () => {
 
         {/* App Version */}
         <div className="text-center text-[10px] text-muted-foreground/50 pb-4 space-y-0.5">
-          <p className="font-bold">ZIVO v2.0.0</p>
+          <p className="font-bold"><p className="font-bold">ZIVO v1.0.4</p></p>
           <p>© 2026 ZIVO. All rights reserved.</p>
         </div>
       </div>
