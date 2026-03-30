@@ -3131,6 +3131,7 @@ function LiveBroadcast({
   const [aiProcessing, setAiProcessing] = useState(false);
   const [aiResultOverlay, setAiResultOverlay] = useState<string | null>(null);
   const [aiSelectedMode, setAiSelectedMode] = useState<string | null>(null);
+  const [aiOverlayMode, setAiOverlayMode] = useState<"fullscreen" | "card">("fullscreen");
 
   const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : AI_MODES.length;
   const selectedFilterName = filterTab === "ar"
@@ -3201,6 +3202,7 @@ function LiveBroadcast({
       const data = await resp.json();
       if (data.imageUrl) {
         setAiResultOverlay(data.imageUrl);
+        setAiOverlayMode("fullscreen");
       }
     } catch (err) {
       console.error("AI face edit failed:", err);
@@ -3210,6 +3212,12 @@ function LiveBroadcast({
       setAiProcessing(false);
     }
   };
+
+  useEffect(() => {
+    if (!aiResultOverlay || aiOverlayMode !== "fullscreen") return;
+    const id = setTimeout(() => setAiOverlayMode("card"), 1400);
+    return () => clearTimeout(id);
+  }, [aiResultOverlay, aiOverlayMode]);
 
   useEffect(() => {
     const currentSticker = AR_STICKERS[activeSticker]?.sticker;
