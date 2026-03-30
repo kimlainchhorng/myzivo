@@ -106,7 +106,7 @@ function OrderTrackingTimeline() {
 // ─── Main Component ──────────────────────────────────────────────────
 export default function EatsLanding() {
   const navigate = useNavigate();
-  const { notify: notifyEats } = useEatsNotifications();
+  const { placeOrder, placing: placingOrder } = useEatsOrder();
 
   // Data from Supabase
   const { data: restaurants = [], isLoading: loadingRestaurants } = useEatsRestaurants();
@@ -132,11 +132,8 @@ export default function EatsLanding() {
   const [specialInstructions, setSpecialInstructions] = useState<Record<string, string>>({});
   const [paymentType, setPaymentType] = useState<"cash" | "card" | "wallet">("card");
 
-  // Confirmation state
-  const [placingOrder, setPlacingOrder] = useState(false);
-  const [confirmedOrderId, setConfirmedOrderId] = useState<string | null>(null);
-  const [trackingCode, setTrackingCode] = useState("");
-  const [rateOrder, setRateOrder] = useState<number | null>(null);
+  // Favorites (local)
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   // Favorites (local)
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
