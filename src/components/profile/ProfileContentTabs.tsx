@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, Heart, MessageCircle, Eye, X, SwitchCamera, Mic, MicOff,
+  Plus, Heart, MessageCircle, Eye, X, SwitchCamera, Mic, MicOff, Sparkles,
   Share2, Play, Radio, ChevronDown, Globe, Users, Lock,
   MapPin, Image, Film, Grid3X3, Clapperboard, Camera,
 } from "lucide-react";
@@ -410,7 +410,22 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
   const [viewers] = useState(() => Math.floor(Math.random() * 20) + 1);
   const [comments, setComments] = useState<{ id: number; user: string; text: string }[]>([]);
   const [commentInput, setCommentInput] = useState("");
+  const [activeFilter, setActiveFilter] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
+
+  const FILTERS = [
+    { name: "None", css: "none" },
+    { name: "Warm", css: "sepia(0.3) saturate(1.4) brightness(1.05)" },
+    { name: "Cool", css: "saturate(0.8) hue-rotate(15deg) brightness(1.05)" },
+    { name: "B&W", css: "grayscale(1) contrast(1.1)" },
+    { name: "Vintage", css: "sepia(0.5) contrast(0.9) brightness(1.1)" },
+    { name: "Vivid", css: "saturate(1.8) contrast(1.1)" },
+    { name: "Fade", css: "saturate(0.6) brightness(1.15) contrast(0.85)" },
+    { name: "Drama", css: "contrast(1.4) brightness(0.9) saturate(1.2)" },
+    { name: "Glow", css: "brightness(1.2) saturate(1.3) blur(0.3px)" },
+    { name: "Noir", css: "grayscale(0.8) contrast(1.3) brightness(0.9)" },
+  ];
 
   const startCamera = useCallback(async (facing: "user" | "environment") => {
     try {
@@ -494,7 +509,10 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
         playsInline
         muted
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
+        style={{
+          transform: facingMode === "user" ? "scaleX(-1)" : "none",
+          filter: FILTERS[activeFilter].css,
+        }}
       />
 
       {/* Top overlay */}
@@ -545,6 +563,44 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
         <div className="flex-1" />
       )}
 
+      {/* Filter picker */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="relative z-10 px-2 pb-2"
+          >
+            <div className="flex gap-2 overflow-x-auto scrollbar-none py-2 px-2">
+              {FILTERS.map((f, i) => (
+                <button
+                  key={f.name}
+                  onClick={() => setActiveFilter(i)}
+                  className={cn(
+                    "shrink-0 flex flex-col items-center gap-1",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "w-14 h-14 rounded-full border-2 overflow-hidden",
+                      activeFilter === i ? "border-primary" : "border-white/20"
+                    )}
+                    style={{ background: "#333", filter: f.css }}
+                  >
+                    <div className="w-full h-full bg-gradient-to-br from-orange-300 via-pink-300 to-blue-300" />
+                  </div>
+                  <span className={cn(
+                    "text-[10px] font-medium",
+                    activeFilter === i ? "text-primary" : "text-white/60"
+                  )}>{f.name}</span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Bottom controls */}
       <div className="relative z-10 p-4 pb-8 bg-gradient-to-t from-black/60 to-transparent">
         {isLive ? (
@@ -556,11 +612,11 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
               placeholder="Say something..."
               className="flex-1 bg-white/15 backdrop-blur-sm text-white text-sm rounded-full px-4 py-2.5 placeholder:text-white/50 outline-none border border-white/10"
             />
+            <button onClick={() => setShowFilters(!showFilters)} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </button>
             <button onClick={toggleMic} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
               {muted ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
-            </button>
-            <button onClick={flipCamera} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
-              <SwitchCamera className="w-5 h-5 text-white" />
             </button>
             <button onClick={endLive} className="px-4 py-2.5 bg-destructive rounded-full">
               <span className="text-white text-sm font-bold">End</span>
@@ -568,6 +624,15 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium mb-1",
+                showFilters ? "bg-primary text-primary-foreground" : "bg-white/15 text-white/70"
+              )}
+            >
+              <Sparkles className="w-3.5 h-3.5" /> Filters
+            </button>
             <div className="flex items-center gap-5">
               <button onClick={flipCamera} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
                 <SwitchCamera className="w-5 h-5 text-white" />
