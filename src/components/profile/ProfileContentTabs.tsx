@@ -465,6 +465,24 @@ const COMPOSER_FILTERS = [
   { name: "Film", css: "sepia(0.18) contrast(1.1) saturate(0.9) brightness(0.96)" },
   { name: "Dreamy", css: "brightness(1.15) saturate(0.72) contrast(0.84)" },
   { name: "Cyber", css: "saturate(2.1) hue-rotate(-26deg) contrast(1.22) brightness(0.92)" },
+  { name: "Clean", css: "brightness(1.08) contrast(1.03) saturate(1.02)" },
+  { name: "Mocha", css: "sepia(0.36) brightness(1.05) contrast(0.93) saturate(1.15)" },
+  { name: "Candy", css: "saturate(1.9) brightness(1.12) contrast(0.9) hue-rotate(-10deg)" },
+  { name: "Aqua", css: "saturate(0.78) hue-rotate(34deg) brightness(1.14) contrast(0.95)" },
+  { name: "Crisp", css: "contrast(1.2) saturate(1.18) brightness(1.04)" },
+  { name: "Night Pop", css: "brightness(0.86) contrast(1.4) saturate(1.35)" },
+  { name: "Retro", css: "sepia(0.28) saturate(1.08) contrast(0.94) brightness(1.08)" },
+  { name: "Coral", css: "saturate(1.35) hue-rotate(-8deg) brightness(1.1) contrast(0.95)" },
+  { name: "Skyline", css: "saturate(0.82) hue-rotate(26deg) brightness(1.12) contrast(0.92)" },
+  { name: "Punch", css: "contrast(1.26) saturate(1.32) brightness(1.02)" },
+  { name: "Muted", css: "saturate(0.55) contrast(0.92) brightness(1.1)" },
+  { name: "Wine", css: "sepia(0.12) hue-rotate(-22deg) saturate(1.3) brightness(0.98)" },
+  { name: "Lime", css: "hue-rotate(62deg) saturate(1.8) contrast(1.12) brightness(0.96)" },
+  { name: "Paper", css: "sepia(0.22) brightness(1.16) contrast(0.86) saturate(0.88)" },
+  { name: "Monochrome+", css: "grayscale(1) contrast(1.45) brightness(0.92)" },
+  { name: "UV", css: "hue-rotate(120deg) saturate(2.2) contrast(1.22) brightness(0.9)" },
+  { name: "Mint", css: "saturate(0.95) hue-rotate(44deg) brightness(1.09) contrast(0.96)" },
+  { name: "Glow Film", css: "sepia(0.14) brightness(1.18) contrast(0.9) saturate(1.1)" },
 ];
 
 function ComposerForm({
@@ -677,6 +695,12 @@ const AR_STICKERS = [
   { name: "Hearts", emoji: "💕", sticker: "hearts" },
   { name: "Stars", emoji: "⭐", sticker: "stars" },
   { name: "Glasses", emoji: "🕶️", sticker: "glasses" },
+  { name: "Blush", emoji: "😊", sticker: "blush" },
+  { name: "Freckles", emoji: "🌟", sticker: "freckles" },
+  { name: "Liner", emoji: "🖤", sticker: "liner" },
+  { name: "Gloss", emoji: "💄", sticker: "gloss" },
+  { name: "Contour", emoji: "🪄", sticker: "contour" },
+  { name: "Anime Eyes", emoji: "👁️", sticker: "anime" },
   { name: "Devil", emoji: "😈", sticker: "devil" },
   { name: "Angel", emoji: "😇", sticker: "angel" },
   { name: "Flowers", emoji: "🌸", sticker: "flowers" },
@@ -685,6 +709,14 @@ const AR_STICKERS = [
   { name: "Rainbow", emoji: "🌈", sticker: "rainbow" },
   { name: "Sparkles", emoji: "✨", sticker: "sparkles" },
   { name: "Snow", emoji: "❄️", sticker: "snow" },
+  { name: "Halo", emoji: "🪽", sticker: "halo" },
+  { name: "Neon", emoji: "🪩", sticker: "neon" },
+  { name: "Pixel", emoji: "🕹️", sticker: "pixel" },
+  { name: "Comic", emoji: "💥", sticker: "comic" },
+  { name: "Mask", emoji: "🎭", sticker: "mask" },
+  { name: "Aura", emoji: "🔮", sticker: "aura" },
+  { name: "Laser Eyes", emoji: "🔴", sticker: "laser" },
+  { name: "Tears", emoji: "🥹", sticker: "tears" },
 ];
 
 interface FaceBox {
@@ -1012,6 +1044,94 @@ function drawFaceFilter(
       break;
     }
 
+    case "blush": {
+      ctx.beginPath();
+      ctx.ellipse(cx - fw * 0.2, mouthY - fh * 0.08, fw * 0.1, fw * 0.065, 0, 0, Math.PI * 2);
+      ctx.ellipse(cx + fw * 0.2, mouthY - fh * 0.08, fw * 0.1, fw * 0.065, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 120, 160, 0.28)";
+      ctx.fill();
+      break;
+    }
+
+    case "freckles": {
+      ctx.fillStyle = "rgba(120, 80, 60, 0.45)";
+      for (let i = 0; i < 16; i++) {
+        const sx = cx + (Math.random() - 0.5) * fw * 0.42;
+        const sy = noseY + (Math.random() - 0.2) * fh * 0.22;
+        const sr = fw * (0.006 + Math.random() * 0.01);
+        ctx.beginPath();
+        ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    }
+
+    case "liner": {
+      ctx.strokeStyle = "rgba(30, 20, 30, 0.88)";
+      ctx.lineWidth = Math.max(2, fw * 0.016);
+      for (const eye of [eyeL, eyeR]) {
+        ctx.beginPath();
+        ctx.moveTo(eye.x - fw * 0.09, eye.y);
+        ctx.quadraticCurveTo(eye.x, eye.y - fw * 0.05, eye.x + fw * 0.11, eye.y + fw * 0.01);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(eye.x + fw * 0.1, eye.y + fw * 0.005);
+        ctx.lineTo(eye.x + fw * 0.15, eye.y - fw * 0.03);
+        ctx.stroke();
+      }
+      break;
+    }
+
+    case "gloss": {
+      ctx.beginPath();
+      ctx.ellipse(cx, mouthY + fh * 0.02, fw * 0.14, fh * 0.05, 0, 0, Math.PI * 2);
+      const lipGrad = ctx.createLinearGradient(cx, mouthY - fh * 0.03, cx, mouthY + fh * 0.08);
+      lipGrad.addColorStop(0, "rgba(255, 130, 170, 0.72)");
+      lipGrad.addColorStop(1, "rgba(215, 40, 90, 0.68)");
+      ctx.fillStyle = lipGrad;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx - fw * 0.04, mouthY - fh * 0.002, fw * 0.03, fh * 0.01, -0.25, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.fill();
+      break;
+    }
+
+    case "contour": {
+      ctx.fillStyle = "rgba(110, 70, 40, 0.16)";
+      ctx.beginPath();
+      ctx.ellipse(cx - fw * 0.3, y + fh * 0.58, fw * 0.1, fh * 0.2, 0.25, 0, Math.PI * 2);
+      ctx.ellipse(cx + fw * 0.3, y + fh * 0.58, fw * 0.1, fh * 0.2, -0.25, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 245, 210, 0.16)";
+      ctx.beginPath();
+      ctx.ellipse(cx, y + fh * 0.48, fw * 0.08, fh * 0.18, 0, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case "anime": {
+      for (const eye of [eyeL, eyeR]) {
+        ctx.beginPath();
+        ctx.ellipse(eye.x, eye.y, fw * 0.12, fw * 0.085, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(eye.x, eye.y + fw * 0.01, fw * 0.07, fw * 0.055, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(40, 130, 255, 0.72)";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(eye.x, eye.y + fw * 0.012, fw * 0.032, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(20, 20, 30, 0.85)";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(eye.x - fw * 0.013, eye.y - fw * 0.01, fw * 0.01, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+        ctx.fill();
+      }
+      break;
+    }
+
     case "hearts": {
       for (let i = 0; i < 8; i++) {
         const hx = cx + Math.sin(t * 0.002 + i * 1.2) * fw * 0.6;
@@ -1103,67 +1223,136 @@ function drawFaceFilter(
       ctx.globalAlpha = 1;
       break;
     }
+
+    case "halo": {
+      const pulse = 1 + Math.sin(t * 0.006) * 0.04;
+      const haloY = top - fw * 0.18;
+      ctx.beginPath();
+      ctx.ellipse(cx, haloY, fw * 0.3 * pulse, fw * 0.08 * pulse, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255, 220, 120, 0.95)";
+      ctx.lineWidth = Math.max(3, fw * 0.026);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(cx, haloY, fw * 0.35 * pulse, fw * 0.1 * pulse, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255, 240, 180, 0.45)";
+      ctx.lineWidth = Math.max(2, fw * 0.014);
+      ctx.stroke();
+      break;
+    }
+
+    case "neon": {
+      const ringR = fw * 0.62 + Math.sin(t * 0.004) * fw * 0.03;
+      const neonColors = ["rgba(255, 0, 140, 0.7)", "rgba(0, 230, 255, 0.7)", "rgba(130, 255, 70, 0.7)"];
+      for (let i = 0; i < neonColors.length; i++) {
+        ctx.beginPath();
+        ctx.arc(cx, y + fh * 0.48, ringR - i * fw * 0.05, 0, Math.PI * 2);
+        ctx.strokeStyle = neonColors[i];
+        ctx.lineWidth = fw * 0.02;
+        ctx.stroke();
+      }
+      break;
+    }
+
+    case "pixel": {
+      const cell = Math.max(4, Math.round(fw * 0.04));
+      for (let py = -3; py <= 3; py++) {
+        for (let px = -5; px <= 5; px++) {
+          if (Math.abs(px) + Math.abs(py) > 7) continue;
+          const alpha = 0.18 + ((px + py + 12) % 4) * 0.1;
+          ctx.fillStyle = `rgba(80, 255, 180, ${alpha})`;
+          ctx.fillRect(cx + px * cell, noseY + py * cell, cell - 1, cell - 1);
+        }
+      }
+      break;
+    }
+
+    case "comic": {
+      const burst = fw * (0.45 + Math.sin(t * 0.01) * 0.05);
+      for (let i = 0; i < 14; i++) {
+        const a = (i / 14) * Math.PI * 2;
+        const r1 = burst * 0.5;
+        const r2 = burst;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * r1, eyeY + Math.sin(a) * r1);
+        ctx.lineTo(cx + Math.cos(a + 0.08) * r2, eyeY + Math.sin(a + 0.08) * r2);
+        ctx.lineTo(cx + Math.cos(a + 0.16) * r1, eyeY + Math.sin(a + 0.16) * r1);
+        ctx.closePath();
+        ctx.fillStyle = i % 2 === 0 ? "rgba(255, 240, 90, 0.4)" : "rgba(255, 70, 70, 0.35)";
+        ctx.fill();
+      }
+      break;
+    }
+
+    case "mask": {
+      const maskY = eyeY - fh * 0.03;
+      const maskW = fw * 0.78;
+      const maskH = fh * 0.34;
+      const grad = ctx.createLinearGradient(cx - maskW / 2, maskY, cx + maskW / 2, maskY + maskH);
+      grad.addColorStop(0, "rgba(30, 30, 40, 0.55)");
+      grad.addColorStop(1, "rgba(10, 10, 20, 0.78)");
+      ctx.beginPath();
+      ctx.roundRect(cx - maskW / 2, maskY, maskW, maskH, maskH * 0.45);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(eyeL.x, eyeL.y, fw * 0.11, fw * 0.08, 0, 0, Math.PI * 2);
+      ctx.ellipse(eyeR.x, eyeR.y, fw * 0.11, fw * 0.08, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(120, 210, 255, 0.28)";
+      ctx.fill();
+      break;
+    }
+
+    case "aura": {
+      const auraR = fw * 0.75;
+      const grad = ctx.createRadialGradient(cx, y + fh * 0.45, fw * 0.1, cx, y + fh * 0.45, auraR);
+      grad.addColorStop(0, "rgba(255, 120, 220, 0.05)");
+      grad.addColorStop(0.5, "rgba(120, 190, 255, 0.18)");
+      grad.addColorStop(1, "rgba(120, 120, 255, 0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, y + fh * 0.45, auraR, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case "laser": {
+      const pulse = 0.2 + Math.abs(Math.sin(t * 0.02)) * 0.45;
+      for (const eye of [eyeL, eyeR]) {
+        const beamY = eye.y + Math.sin(t * 0.014) * 2;
+        const beamLen = cw - eye.x;
+        const beamGrad = ctx.createLinearGradient(eye.x, beamY, eye.x + beamLen, beamY);
+        beamGrad.addColorStop(0, `rgba(255, 0, 40, ${0.85 + pulse})`);
+        beamGrad.addColorStop(1, "rgba(255, 0, 40, 0)");
+        ctx.strokeStyle = beamGrad;
+        ctx.lineWidth = fw * 0.04;
+        ctx.beginPath();
+        ctx.moveTo(eye.x, beamY);
+        ctx.lineTo(cw, beamY + Math.sin(t * 0.01) * 3);
+        ctx.stroke();
+      }
+      break;
+    }
+
+    case "tears": {
+      const dropOffset = (Math.sin(t * 0.01) + 1) * fh * 0.08;
+      for (const eye of [eyeL, eyeR]) {
+        const dx = eye.x;
+        const dy = eye.y + fh * 0.08 + dropOffset;
+        ctx.beginPath();
+        ctx.moveTo(dx, dy - fw * 0.04);
+        ctx.quadraticCurveTo(dx - fw * 0.03, dy + fw * 0.015, dx, dy + fw * 0.08);
+        ctx.quadraticCurveTo(dx + fw * 0.03, dy + fw * 0.015, dx, dy - fw * 0.04);
+        ctx.closePath();
+        const tearGrad = ctx.createLinearGradient(dx, dy - fw * 0.04, dx, dy + fw * 0.08);
+        tearGrad.addColorStop(0, "rgba(180, 230, 255, 0.8)");
+        tearGrad.addColorStop(1, "rgba(80, 170, 255, 0.25)");
+        ctx.fillStyle = tearGrad;
+        ctx.fill();
+      }
+      break;
+    }
   }
   ctx.restore();
-}
-
-type FaceAnchor = {
-  x: number;
-  y: number;
-  size: number;
-};
-
-function drawTrackedSticker(
-  ctx: CanvasRenderingContext2D,
-  sticker: string,
-  w: number,
-  h: number,
-  faceAnchor: FaceAnchor | null,
-) {
-  if (!faceAnchor) {
-    drawSticker(ctx, sticker, w, h);
-    return;
-  }
-
-  const cx = faceAnchor.x;
-  const cy = faceAnchor.y;
-  const faceSize = faceAnchor.size;
-  const fontSize = Math.max(22, faceSize * 0.42);
-  ctx.font = `${fontSize}px serif`;
-  ctx.textAlign = "center";
-
-  switch (sticker) {
-    case "cat":
-      ctx.fillText("🐱", cx - faceSize * 0.35, cy - faceSize * 0.65);
-      ctx.fillText("🐱", cx + faceSize * 0.35, cy - faceSize * 0.65);
-      ctx.fillText("👃", cx, cy + faceSize * 0.05);
-      break;
-    case "dog":
-      ctx.fillText("🐕", cx, cy - faceSize * 0.55);
-      ctx.fillText("👅", cx, cy + faceSize * 0.42);
-      break;
-    case "bunny":
-      ctx.fillText("🐰", cx, cy - faceSize * 0.72);
-      break;
-    case "crown":
-      ctx.fillText("👑", cx, cy - faceSize * 0.82);
-      break;
-    case "glasses":
-      ctx.fillText("🕶️", cx, cy);
-      break;
-    case "devil":
-      ctx.fillText("😈", cx, cy - faceSize * 0.85);
-      break;
-    case "angel":
-      ctx.fillText("😇", cx, cy - faceSize * 0.92);
-      break;
-    case "butterfly":
-      ctx.fillText("🦋", cx - faceSize * 0.6, cy - faceSize * 0.5);
-      ctx.fillText("🦋", cx + faceSize * 0.6, cy - faceSize * 0.45);
-      break;
-    default:
-      drawSticker(ctx, sticker, w, h);
-  }
 }
 
 function LiveBroadcast({
@@ -1188,7 +1377,6 @@ function LiveBroadcast({
   const [showFilters, setShowFilters] = useState(false);
   const [filterTab, setFilterTab] = useState<"color" | "face" | "ar">("color");
   const [activeSticker, setActiveSticker] = useState(0);
-  const [faceAnchor, setFaceAnchor] = useState<FaceAnchor | null>(null);
   const [isRecordingClip, setIsRecordingClip] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [isPublishingClip, setIsPublishingClip] = useState(false);
@@ -1226,6 +1414,26 @@ function LiveBroadcast({
     { name: "Thermal", css: "hue-rotate(90deg) saturate(2) contrast(1.3) brightness(0.9)", emoji: "🌡️" },
     { name: "Toxic", css: "hue-rotate(100deg) saturate(2.5) contrast(1.2) brightness(0.9)", emoji: "☢️" },
     { name: "Polaroid", css: "sepia(0.3) saturate(1.1) contrast(0.95) brightness(1.15)", emoji: "🖼️" },
+    { name: "Velvet", css: "brightness(0.94) contrast(1.22) saturate(1.08) sepia(0.08)", emoji: "🧵" },
+    { name: "Candy Pop", css: "saturate(2) brightness(1.14) contrast(0.88) hue-rotate(-12deg)", emoji: "🍬" },
+    { name: "Blue Mist", css: "saturate(0.72) hue-rotate(34deg) brightness(1.16) contrast(0.88)", emoji: "🌫️" },
+    { name: "Amber", css: "sepia(0.44) brightness(1.08) saturate(1.26) hue-rotate(-6deg)", emoji: "🟠" },
+    { name: "Night Vision", css: "grayscale(0.2) hue-rotate(60deg) saturate(2.3) brightness(0.95)", emoji: "🟢" },
+    { name: "Infra", css: "hue-rotate(132deg) saturate(2.4) contrast(1.35) brightness(0.86)", emoji: "📡" },
+    { name: "Clean Pro", css: "brightness(1.07) contrast(1.08) saturate(1.05)", emoji: "🧼" },
+    { name: "Street", css: "contrast(1.26) brightness(0.88) saturate(1.32)", emoji: "🚦" },
+    { name: "Retro VHS", css: "sepia(0.24) contrast(0.92) saturate(1.08) brightness(1.12)", emoji: "📼" },
+    { name: "Crimson", css: "hue-rotate(-18deg) saturate(1.55) contrast(1.08) brightness(0.98)", emoji: "🟥" },
+    { name: "Emerald", css: "hue-rotate(54deg) saturate(1.7) contrast(1.05) brightness(0.97)", emoji: "💚" },
+    { name: "Sapphire", css: "hue-rotate(24deg) saturate(1.45) brightness(1.03) contrast(1.02)", emoji: "💙" },
+    { name: "Dusty", css: "saturate(0.58) contrast(0.9) brightness(1.14)", emoji: "🪨" },
+    { name: "Punchy", css: "saturate(2.2) contrast(1.24) brightness(1.03)", emoji: "🥊" },
+    { name: "Sepia Pro", css: "sepia(0.46) saturate(1.2) brightness(1.08) contrast(0.91)", emoji: "🟤" },
+    { name: "Aster", css: "hue-rotate(-36deg) saturate(1.62) brightness(1.06) contrast(0.94)", emoji: "🪻" },
+    { name: "Lunar", css: "grayscale(0.62) contrast(1.32) brightness(0.9)", emoji: "🌙" },
+    { name: "Matrix", css: "hue-rotate(76deg) saturate(2.6) brightness(0.92) contrast(1.3)", emoji: "🧬" },
+    { name: "Glam Light", css: "brightness(1.2) contrast(0.96) saturate(1.18)", emoji: "💡" },
+    { name: "Clay", css: "sepia(0.18) saturate(0.88) brightness(1.03) contrast(0.98)", emoji: "🏺" },
   ];
 
   const FACE_FILTERS = [
@@ -1233,18 +1441,44 @@ function LiveBroadcast({
     { name: "Smooth", css: "blur(0.6px) brightness(1.12) contrast(0.9) saturate(1.1)", emoji: "🧴" },
     { name: "HD Smooth", css: "blur(0.8px) brightness(1.18) contrast(0.84) saturate(1.08)", emoji: "📸" },
     { name: "Ultra Smooth", css: "blur(1px) brightness(1.2) contrast(0.82) saturate(1.05)", emoji: "🫧" },
+    { name: "TikTok Soft", css: "blur(0.9px) brightness(1.22) contrast(0.86) saturate(1.12)", emoji: "🎵" },
+    { name: "TikTok Glow", css: "blur(0.7px) brightness(1.3) contrast(0.83) saturate(1.22) sepia(0.04)", emoji: "✨" },
     { name: "Cute", css: "blur(0.4px) brightness(1.2) saturate(1.4) contrast(0.86) sepia(0.05)", emoji: "🥰" },
     { name: "Baby Face", css: "blur(0.8px) brightness(1.22) contrast(0.8) saturate(1.15)", emoji: "👶" },
     { name: "Glow Up", css: "blur(0.4px) brightness(1.3) saturate(1.4) contrast(0.88)", emoji: "💎" },
     { name: "Glass Skin", css: "blur(0.5px) brightness(1.32) contrast(0.76) saturate(1.0)", emoji: "🪞" },
+    { name: "Doll Skin", css: "blur(1.05px) brightness(1.28) contrast(0.78) saturate(1.08) sepia(0.04)", emoji: "🪄" },
+    { name: "Peachy", css: "blur(0.45px) brightness(1.2) contrast(0.87) saturate(1.38) hue-rotate(-8deg)", emoji: "🍑" },
     { name: "K-Beauty", css: "blur(0.5px) brightness(1.25) contrast(0.82) saturate(0.92) sepia(0.06)", emoji: "🇰🇷" },
     { name: "Porcelain", css: "blur(0.5px) brightness(1.25) contrast(0.8) saturate(0.85) sepia(0.1)", emoji: "🪆" },
+    { name: "Studio", css: "blur(0.3px) brightness(1.16) contrast(1.05) saturate(1.22)", emoji: "🎬" },
     { name: "Angelic", css: "blur(0.8px) brightness(1.35) contrast(0.76) saturate(0.85) sepia(0.1)", emoji: "😇" },
     { name: "Full Glam", css: "blur(1px) brightness(1.35) contrast(0.78) saturate(1.4) sepia(0.06)", emoji: "👑" },
     { name: "Airbrushed", css: "blur(1.5px) brightness(1.3) contrast(0.78) saturate(1.1)", emoji: "🖌️" },
     { name: "Rosy", css: "blur(0.4px) brightness(1.15) saturate(1.5) contrast(0.88) hue-rotate(-15deg)", emoji: "🌸" },
     { name: "Sun-kissed", css: "blur(0.3px) brightness(1.2) saturate(1.35) contrast(0.92) sepia(0.18)", emoji: "☀️" },
+    { name: "Face Pop", css: "blur(0.55px) brightness(1.24) contrast(1.02) saturate(1.28)", emoji: "💥" },
     { name: "Filter Max", css: "blur(1.2px) brightness(1.4) contrast(0.75) saturate(1.3)", emoji: "⭐" },
+    { name: "Peony", css: "blur(0.45px) brightness(1.22) contrast(0.88) saturate(1.22) hue-rotate(-6deg)", emoji: "🌺" },
+    { name: "Cloud Skin", css: "blur(1.1px) brightness(1.33) contrast(0.74) saturate(0.92)", emoji: "☁️" },
+    { name: "Latte", css: "blur(0.5px) brightness(1.15) contrast(0.9) saturate(1.1) sepia(0.12)", emoji: "☕" },
+    { name: "Cherry", css: "blur(0.35px) brightness(1.18) contrast(0.9) saturate(1.48) hue-rotate(-14deg)", emoji: "🍒" },
+    { name: "Ice Doll", css: "blur(0.9px) brightness(1.34) contrast(0.74) saturate(0.86) hue-rotate(10deg)", emoji: "🧊" },
+    { name: "Runway", css: "blur(0.28px) brightness(1.12) contrast(1.14) saturate(1.25)", emoji: "🛫" },
+    { name: "Soft Matte", css: "blur(0.7px) brightness(1.18) contrast(0.83) saturate(0.95)", emoji: "🪶" },
+    { name: "Blossom", css: "blur(0.45px) brightness(1.24) contrast(0.82) saturate(1.2) sepia(0.08)", emoji: "🌼" },
+    { name: "Milk Skin", css: "blur(0.95px) brightness(1.3) contrast(0.76) saturate(0.9)", emoji: "🥛" },
+    { name: "Soft Peach", css: "blur(0.5px) brightness(1.22) contrast(0.84) saturate(1.24) hue-rotate(-7deg)", emoji: "🍯" },
+    { name: "Fresh", css: "blur(0.3px) brightness(1.16) contrast(0.94) saturate(1.1)", emoji: "🌱" },
+    { name: "Cloudy", css: "blur(1.2px) brightness(1.36) contrast(0.72) saturate(0.88)", emoji: "🌥️" },
+    { name: "Warm Matte", css: "blur(0.75px) brightness(1.18) contrast(0.84) saturate(1.02) sepia(0.09)", emoji: "🧡" },
+    { name: "Velour", css: "blur(0.62px) brightness(1.2) contrast(0.86) saturate(1.08)", emoji: "🧶" },
+    { name: "Honey Glow", css: "blur(0.42px) brightness(1.26) contrast(0.82) saturate(1.18) sepia(0.1)", emoji: "🍯" },
+    { name: "Studio Max", css: "blur(0.24px) brightness(1.14) contrast(1.18) saturate(1.22)", emoji: "🎛️" },
+    { name: "Cute Pop", css: "blur(0.56px) brightness(1.24) contrast(0.84) saturate(1.3)", emoji: "🩷" },
+    { name: "Ivory", css: "blur(0.62px) brightness(1.28) contrast(0.78) saturate(0.82)", emoji: "🤍" },
+    { name: "Silk", css: "blur(0.68px) brightness(1.21) contrast(0.85) saturate(0.98)", emoji: "🪷" },
+    { name: "Ultra Doll", css: "blur(1.18px) brightness(1.37) contrast(0.72) saturate(1.02)", emoji: "🎀" },
   ];
 
   const activeFilters = filterTab === "color" ? COLOR_FILTERS : FACE_FILTERS;
@@ -1285,20 +1519,6 @@ function LiveBroadcast({
       canvas.width = canvas.offsetWidth * 2;
       canvas.height = canvas.offsetHeight * 2;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-<<<<<<< HEAD
-      drawTrackedSticker(ctx, currentSticker, canvas.width, canvas.height, faceAnchor);
-      animFrameRef.current = requestAnimationFrame(draw);
-    };
-    // Draw at slower rate for static stickers
-    draw();
-    // For animated stickers, redraw every 500ms
-    const interval = ["hearts", "stars", "sparkles", "snow"].includes(currentSticker)
-      ? setInterval(() => {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          drawTrackedSticker(ctx, currentSticker, canvas.width, canvas.height, faceAnchor);
-        }, 400)
-      : undefined;
-=======
 
       const video = videoRef.current;
       const cw = canvas.width;
@@ -1346,53 +1566,12 @@ function LiveBroadcast({
     };
 
     detectAndDraw();
->>>>>>> 621dab074c92e160d15b8c2a0f381fa2ef63ffc4
 
     return () => {
       running = false;
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [activeSticker, faceAnchor]);
-
-  useEffect(() => {
-    const FaceDetectorCtor = (window as any).FaceDetector;
-    if (!FaceDetectorCtor) {
-      setFaceAnchor(null);
-      return;
-    }
-
-    let alive = true;
-    let rafId = 0;
-    const detector = new FaceDetectorCtor({ fastMode: true, maxDetectedFaces: 1 });
-
-    const detect = async () => {
-      if (!alive) return;
-      const video = videoRef.current;
-      if (video && video.readyState >= 2) {
-        try {
-          const faces = await detector.detect(video);
-          const box = faces?.[0]?.boundingBox;
-          if (box) {
-            const scaleX = (video.clientWidth || 1) / (video.videoWidth || 1);
-            const scaleY = (video.clientHeight || 1) / (video.videoHeight || 1);
-            const x = (box.x + box.width / 2) * scaleX * 2;
-            const y = (box.y + box.height / 2) * scaleY * 2;
-            const size = Math.max(box.width * scaleX * 2, 120);
-            setFaceAnchor({ x, y, size });
-          }
-        } catch {
-          // Face detector unsupported or blocked; keep static overlays.
-        }
-      }
-      rafId = requestAnimationFrame(detect);
-    };
-
-    rafId = requestAnimationFrame(detect);
-    return () => {
-      alive = false;
-      if (rafId) cancelAnimationFrame(rafId);
-    };
-  }, [facingMode]);
+  }, [activeSticker, facingMode]);
 
   const startCamera = useCallback(async (facing: "user" | "environment") => {
     try {
