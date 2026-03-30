@@ -457,17 +457,6 @@ const Profile = () => {
                     </div>
 
                     <CardContent className="pt-3 pb-6 px-6">
-                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                        <Button
-                          variant="outline"
-                          className="w-full h-12 rounded-2xl font-semibold text-sm border-border/30 bg-muted/10"
-                          onClick={() => navigate("/account/profile-edit")}
-                        >
-                          <User className="h-4 w-4 mr-2" />
-                          Edit Profile Information
-                          <ChevronRight className="h-4 w-4 ml-auto" />
-                        </Button>
-                      </motion.div>
                     </CardContent>
                   </GlassCard3D>
                 </motion.div>
