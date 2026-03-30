@@ -4037,7 +4037,7 @@ function LiveBroadcast({
               placeholder="Say something..."
               className="flex-1 bg-white/15 backdrop-blur-sm text-white text-sm rounded-full px-4 py-2.5 placeholder:text-white/50 outline-none border border-white/10"
             />
-            <button onClick={() => setShowFilters(!showFilters)} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+            <button onClick={toggleFilters} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </button>
             <button
