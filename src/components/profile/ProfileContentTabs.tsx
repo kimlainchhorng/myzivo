@@ -260,9 +260,18 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   );
 }
 
+type Visibility = "everyone" | "friends" | "only_me";
+const VISIBILITY_OPTIONS: { id: Visibility; label: string; icon: typeof Globe }[] = [
+  { id: "everyone", label: "Everyone", icon: Globe },
+  { id: "friends", label: "Friends Only", icon: Users },
+  { id: "only_me", label: "Only Me", icon: Lock },
+];
+
 function ComposerForm({ type, onClose, onBack }: { type: "photo" | "reel"; onClose: () => void; onBack: () => void }) {
   const [caption, setCaption] = useState("");
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [visibility, setVisibility] = useState<Visibility>("everyone");
+  const [showVisibilityPicker, setShowVisibilityPicker] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -280,6 +289,8 @@ function ComposerForm({ type, onClose, onBack }: { type: "photo" | "reel"; onClo
   const isReel = type === "reel";
   const TypeIcon = isReel ? Clapperboard : Image;
   const label = isReel ? "Reel" : "Photo";
+  const currentVis = VISIBILITY_OPTIONS.find((v) => v.id === visibility)!;
+  const VisIcon = currentVis.icon;
 
   return (
     <div className="p-5 space-y-4">
@@ -322,7 +333,47 @@ function ComposerForm({ type, onClose, onBack }: { type: "photo" | "reel"; onClo
         className="w-full bg-muted/30 rounded-xl p-3 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none border border-border/20 focus:border-primary/30 transition-colors"
       />
 
+      {/* Privacy & extras row */}
       <div className="flex items-center gap-3 text-muted-foreground">
+        {/* Visibility picker */}
+        <div className="relative">
+          <button
+            onClick={() => setShowVisibilityPicker(!showVisibilityPicker)}
+            className="flex items-center gap-1.5 text-xs font-medium hover:text-foreground transition-colors bg-muted/40 rounded-lg px-2.5 py-1.5 border border-border/20"
+          >
+            <VisIcon className="w-3.5 h-3.5" />
+            {currentVis.label}
+            <ChevronDown className={cn("w-3 h-3 transition-transform", showVisibilityPicker && "rotate-180")} />
+          </button>
+          <AnimatePresence>
+            {showVisibilityPicker && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="absolute bottom-full left-0 mb-1 bg-card border border-border/40 rounded-xl shadow-lg overflow-hidden z-20 min-w-[160px]"
+              >
+                {VISIBILITY_OPTIONS.map((opt) => {
+                  const OptIcon = opt.icon;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => { setVisibility(opt.id); setShowVisibilityPicker(false); }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium transition-colors",
+                        visibility === opt.id ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <OptIcon className="w-4 h-4" />
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         <button className="flex items-center gap-1.5 text-xs hover:text-foreground transition-colors">
           <MapPin className="w-4 h-4" /> Location
         </button>
