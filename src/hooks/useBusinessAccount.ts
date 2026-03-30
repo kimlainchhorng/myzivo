@@ -1,5 +1,6 @@
 /**
  * Business Account Hook — reads from business_accounts table
+ * Returns any-typed data for backward compat with consumer pages
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +23,7 @@ export function useBusinessAccount() {
   const { user } = useAuth();
   return useQuery({
     queryKey: ["business-account", user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<any> => {
       if (!user) return null;
       const { data, error } = await supabase
         .from("business_accounts")
@@ -30,7 +31,15 @@ export function useBusinessAccount() {
         .eq("owner_id", user.id)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      if (!data) return null;
+      // Add aliases for consumer pages
+      return {
+        ...data,
+        total_bookings: 0,
+        payment_method: null,
+        billing_contact_name: data.contact_name,
+        billing_contact_email: data.billing_email,
+      } as any;
     },
     enabled: !!user,
   });
@@ -39,7 +48,7 @@ export function useBusinessAccount() {
 export function useAuthorizedDrivers(accountId?: string) {
   return useQuery({
     queryKey: ["authorized-drivers", accountId],
-    queryFn: async () => {
+    queryFn: async (): Promise<AuthorizedDriver[]> => {
       if (!accountId) return [];
       const { data, error } = await (supabase as any)
         .from("business_authorized_drivers")
@@ -56,10 +65,16 @@ export function useAuthorizedDrivers(accountId?: string) {
 export function useAddAuthorizedDriver() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { business_id: string; name: string; email: string }) => {
+    mutationFn: async (data: any) => {
+      // Support both business_account_id and business_id
+      const payload = { ...data };
+      if (payload.business_account_id && !payload.business_id) {
+        payload.business_id = payload.business_account_id;
+        delete payload.business_account_id;
+      }
       const { error } = await (supabase as any)
         .from("business_authorized_drivers")
-        .insert(data);
+        .insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {

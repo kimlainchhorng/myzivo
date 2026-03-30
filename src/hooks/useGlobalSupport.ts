@@ -1,5 +1,6 @@
 /**
  * Global Support Hook — reads from support_tickets table
+ * Returns any-typed data for backward compat with consumer pages
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,11 +32,11 @@ export function useSupportTickets(statusFilter?: string) {
 
   return useQuery({
     queryKey: ["support-tickets", user?.id, statusFilter],
-    queryFn: async () => {
+    queryFn: async (): Promise<any[]> => {
       if (!user) return [];
       let query = supabase
         .from("support_tickets")
-        .select("id, ticket_number, subject, description, status, category, priority, created_at, updated_at, resolved_at")
+        .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -46,7 +47,11 @@ export function useSupportTickets(statusFilter?: string) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      // Map to include service_type alias
+      return (data || []).map(t => ({
+        ...t,
+        service_type: t.ticket_type || t.category,
+      })) as any[];
     },
     enabled: !!user,
   });
