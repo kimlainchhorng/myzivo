@@ -18,8 +18,16 @@ type FeedItem = {
   caption: string;
   time: string;
   url: string;
+  filterCss?: string;
   views?: number;
   user: { name: string; avatar: string };
+};
+
+type NewPostPayload = {
+  type: "photo" | "reel";
+  caption: string;
+  url: string;
+  filterCss: string;
 };
 
 const demoFeed: FeedItem[] = [
@@ -49,8 +57,28 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [composerType, setComposerType] = useState<"photo" | "reel" | null>(null);
   const [selectedPost, setSelectedPost] = useState<FeedItem | null>(null);
   const [showLive, setShowLive] = useState(false);
+  const [feed, setFeed] = useState<FeedItem[]>(demoFeed);
 
-  const filtered = activeTab === "all" ? demoFeed : demoFeed.filter((i) => i.type === activeTab);
+  const filtered = activeTab === "all" ? feed : feed.filter((i) => i.type === activeTab);
+
+  const handleCreatePost = useCallback((payload: NewPostPayload) => {
+    const authorName = user?.email?.split("@")[0] || "You";
+    setFeed((prev) => [
+      {
+        id: `post-${Date.now()}`,
+        type: payload.type,
+        likes: 0,
+        comments: 0,
+        caption: payload.caption,
+        time: "now",
+        url: payload.url,
+        filterCss: payload.filterCss,
+        views: payload.type === "reel" ? 0 : undefined,
+        user: { name: authorName, avatar: "https://i.pravatar.cc/100?img=3" },
+      },
+      ...prev,
+    ]);
+  }, [user?.email]);
 
   return (
     <div className="space-y-3">
@@ -109,7 +137,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               item.type === "reel" ? "aspect-[9/14]" : "aspect-square"
             )}
           >
-            <img src={item.url} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+            <img
+              src={item.url}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ filter: item.filterCss || "none" }}
+              loading="lazy"
+            />
             {item.type === "reel" && (
               <div className="absolute top-1.5 right-1.5 z-10">
                 <Play className="w-4 h-4 text-white fill-white drop-shadow-lg" />
@@ -158,7 +192,12 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
               {/* Content */}
               <div className="flex-1 flex items-center justify-center overflow-hidden">
-                <img src={selectedPost.url} alt="" className="w-full h-full object-contain" />
+                <img
+                  src={selectedPost.url}
+                  alt=""
+                  className="w-full h-full object-contain"
+                  style={{ filter: selectedPost.filterCss || "none" }}
+                />
               </div>
 
               {/* Bottom bar */}
@@ -256,6 +295,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 ) : (
                   <ComposerForm
                     type={composerType}
+                    onCreatePost={handleCreatePost}
                     onClose={() => { setShowComposer(false); setComposerType(null); }}
                     onBack={() => setComposerType(null)}
                   />
@@ -285,21 +325,64 @@ const VISIBILITY_OPTIONS: { id: Visibility; label: string; icon: typeof Globe }[
   { id: "only_me", label: "Only Me", icon: Lock },
 ];
 
-function ComposerForm({ type, onClose, onBack }: { type: "photo" | "reel"; onClose: () => void; onBack: () => void }) {
+const COMPOSER_FILTERS = [
+  { name: "Original", css: "none" },
+  { name: "Warm", css: "sepia(0.3) saturate(1.35) brightness(1.04)" },
+  { name: "Cool", css: "saturate(0.85) hue-rotate(18deg) brightness(1.06)" },
+  { name: "Vivid", css: "saturate(1.75) contrast(1.08)" },
+  { name: "Glow", css: "brightness(1.18) saturate(1.2) contrast(0.92)" },
+  { name: "Noir", css: "grayscale(0.9) contrast(1.35) brightness(0.88)" },
+  { name: "Film", css: "sepia(0.18) contrast(1.1) saturate(0.9) brightness(0.96)" },
+  { name: "Dreamy", css: "brightness(1.15) saturate(0.72) contrast(0.84)" },
+  { name: "Cyber", css: "saturate(2.1) hue-rotate(-26deg) contrast(1.22) brightness(0.92)" },
+];
+
+function ComposerForm({
+  type,
+  onCreatePost,
+  onClose,
+  onBack,
+}: {
+  type: "photo" | "reel";
+  onCreatePost: (payload: NewPostPayload) => void;
+  onClose: () => void;
+  onBack: () => void;
+}) {
   const [caption, setCaption] = useState("");
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [visibility, setVisibility] = useState<Visibility>("everyone");
   const [showVisibilityPicker, setShowVisibilityPicker] = useState(false);
+  const [activeFilter, setActiveFilter] = useState(0);
+  const previousPreviewRef = useRef<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setMediaPreview(URL.createObjectURL(file));
+    const nextUrl = URL.createObjectURL(file);
+    if (previousPreviewRef.current?.startsWith("blob:")) {
+      URL.revokeObjectURL(previousPreviewRef.current);
+    }
+    previousPreviewRef.current = nextUrl;
+    setMediaPreview(nextUrl);
   };
+
+  useEffect(() => {
+    return () => {
+      if (previousPreviewRef.current?.startsWith("blob:")) {
+        URL.revokeObjectURL(previousPreviewRef.current);
+      }
+    };
+  }, []);
 
   const handlePost = () => {
     if (!mediaPreview) { toast.error("Add media first!"); return; }
+    onCreatePost({
+      type,
+      caption: caption.trim(),
+      url: mediaPreview,
+      filterCss: COMPOSER_FILTERS[activeFilter]?.css || "none",
+    });
     toast.success("Posted successfully! 🎉");
     onClose();
   };
@@ -323,9 +406,19 @@ function ComposerForm({ type, onClose, onBack }: { type: "photo" | "reel"; onClo
       {mediaPreview ? (
         <div className="relative rounded-2xl overflow-hidden">
           {isReel ? (
-            <video src={mediaPreview} className="w-full max-h-[40vh] object-cover rounded-2xl" controls />
+            <video
+              src={mediaPreview}
+              className="w-full max-h-[40vh] object-cover rounded-2xl"
+              style={{ filter: COMPOSER_FILTERS[activeFilter]?.css || "none" }}
+              controls
+            />
           ) : (
-            <img src={mediaPreview} alt="" className="w-full max-h-[40vh] object-cover rounded-2xl" />
+            <img
+              src={mediaPreview}
+              alt=""
+              className="w-full max-h-[40vh] object-cover rounded-2xl"
+              style={{ filter: COMPOSER_FILTERS[activeFilter]?.css || "none" }}
+            />
           )}
           <button onClick={() => setMediaPreview(null)} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center">
             <X className="w-4 h-4 text-white" />
@@ -342,6 +435,29 @@ function ComposerForm({ type, onClose, onBack }: { type: "photo" | "reel"; onClo
         </motion.button>
       )}
       <input ref={fileRef} type="file" accept={isReel ? "video/*" : "image/*"} className="hidden" onChange={handleFile} />
+
+      {mediaPreview && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground">Choose filter style</p>
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {COMPOSER_FILTERS.map((filter, index) => (
+              <button
+                key={filter.name}
+                type="button"
+                onClick={() => setActiveFilter(index)}
+                className={cn(
+                  "shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
+                  activeFilter === index
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border/30 bg-muted/40 text-muted-foreground"
+                )}
+              >
+                {filter.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <textarea
         value={caption}
