@@ -135,9 +135,6 @@ export default function EatsLanding() {
   // Favorites (local)
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
-  // Favorites (local)
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
-
   // ─── Derived Data ────────────────────────────────────────────────
   const currentRestaurant = useMemo(
     () => restaurants.find(r => r.id === selectedRestaurantId) ?? null,
