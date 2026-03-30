@@ -629,9 +629,9 @@ export default function ChatStories() {
               )}
             </div>
 
-            {/* Bottom caption + reply bar */}
+            {/* Bottom caption + comment input */}
             <div className="absolute bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom,16px)]">
-              {currentStory.caption && (
+              {currentStory?.caption && (
                 <div className="px-5 pb-3">
                   <p className="text-white text-sm font-medium drop-shadow-lg leading-relaxed">
                     {currentStory.caption}
@@ -639,30 +639,158 @@ export default function ChatStories() {
                 </div>
               )}
 
-              {/* Reply bar */}
-              {viewingGroup.userId !== user?.id && (
+              {/* Comment input bar */}
+              {!isOwner && (
                 <div className="px-4 pb-3">
                   <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-2.5 border border-white/10">
                     <input
                       type="text"
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && commentText.trim()) {
+                          postComment.mutate(commentText.trim());
+                        }
+                      }}
                       placeholder={`Reply to ${viewingGroup.userName.split(" ")[0]}...`}
                       className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/50"
                       onFocus={() => setPaused(true)}
                       onBlur={() => setPaused(false)}
                     />
-                    <Send className="w-4 h-4 text-white/60" />
+                    <button
+                      onClick={() => { if (commentText.trim()) postComment.mutate(commentText.trim()); }}
+                      disabled={postComment.isPending}
+                    >
+                      <Send className="w-4 h-4 text-white/60" />
+                    </button>
                   </div>
                 </div>
               )}
-
-              {/* Swipe hint */}
-              <div className="flex justify-center pb-2">
-                <div className="flex flex-col items-center gap-0.5 opacity-40">
-                  <ChevronUp className="w-4 h-4 text-white animate-bounce" />
-                  <span className="text-[9px] text-white">Swipe for more</span>
-                </div>
-              </div>
             </div>
+
+            {/* ===== VIEWERS BOTTOM SHEET (owner only) ===== */}
+            <AnimatePresence>
+              {showViewers && isOwner && (
+                <motion.div
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className="absolute inset-x-0 bottom-0 z-30 bg-card/95 backdrop-blur-xl rounded-t-2xl max-h-[60vh] flex flex-col"
+                >
+                  <div className="flex items-center justify-between px-5 pt-4 pb-2 border-b border-border/30">
+                    <div className="flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-bold text-foreground">Viewers ({viewers.length})</span>
+                    </div>
+                    <button onClick={() => { setShowViewers(false); setPaused(false); }}>
+                      <X className="w-5 h-5 text-muted-foreground" />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    {viewers.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-8">No viewers yet</p>
+                    ) : (
+                      viewers.map((v: any) => (
+                        <div key={v.viewer_id} className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                            {v.avatar ? (
+                              <img src={v.avatar} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
+                                {v.name.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-foreground truncate">{v.name}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {formatDistanceToNow(new Date(v.viewed_at), { addSuffix: true })}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* ===== COMMENTS BOTTOM SHEET ===== */}
+            <AnimatePresence>
+              {showComments && (
+                <motion.div
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className="absolute inset-x-0 bottom-0 z-30 bg-card/95 backdrop-blur-xl rounded-t-2xl max-h-[65vh] flex flex-col"
+                >
+                  <div className="flex items-center justify-between px-5 pt-4 pb-2 border-b border-border/30">
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-bold text-foreground">Comments ({comments.length})</span>
+                    </div>
+                    <button onClick={() => { setShowComments(false); setPaused(false); }}>
+                      <X className="w-5 h-5 text-muted-foreground" />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    {comments.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-8">No comments yet. Only friends can comment.</p>
+                    ) : (
+                      comments.map((c: any) => (
+                        <div key={c.id} className="flex gap-2">
+                          <div className="w-8 h-8 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                            {c.avatar ? (
+                              <img src={c.avatar} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
+                                {c.name.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-xs font-bold text-foreground">{c.name}</span>
+                              <span className="text-[9px] text-muted-foreground">
+                                {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+                              </span>
+                            </div>
+                            <p className="text-sm text-foreground mt-0.5">{c.content}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {/* Comment input inside sheet */}
+                  <div className="p-3 border-t border-border/30">
+                    <div className="flex items-center gap-2 bg-muted rounded-full px-4 py-2">
+                      <input
+                        type="text"
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && commentText.trim()) {
+                            postComment.mutate(commentText.trim());
+                          }
+                        }}
+                        placeholder="Add a comment..."
+                        className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground"
+                      />
+                      <button
+                        onClick={() => { if (commentText.trim()) postComment.mutate(commentText.trim()); }}
+                        disabled={postComment.isPending || !commentText.trim()}
+                        className="text-primary disabled:opacity-40"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-[9px] text-muted-foreground text-center mt-1">Only friends can comment</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
