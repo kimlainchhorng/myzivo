@@ -231,7 +231,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                               if (opt.id === "live") {
                                 setShowComposer(false);
                                 setComposerType(null);
-                                toast.info("Starting Live stream...");
+                                setShowLive(true);
                               } else {
                                 setComposerType(opt.id);
                               }
