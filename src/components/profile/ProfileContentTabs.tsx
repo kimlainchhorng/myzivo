@@ -412,9 +412,10 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
   const [commentInput, setCommentInput] = useState("");
   const [activeFilter, setActiveFilter] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [filterTab, setFilterTab] = useState<"color" | "face">("color");
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
-  const FILTERS = [
+  const COLOR_FILTERS = [
     { name: "Original", css: "none", emoji: "✨" },
     { name: "Warm", css: "sepia(0.3) saturate(1.4) brightness(1.05)", emoji: "🌅" },
     { name: "Cool", css: "saturate(0.8) hue-rotate(20deg) brightness(1.05)", emoji: "❄️" },
@@ -431,7 +432,7 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
     { name: "Neon", css: "saturate(2.5) contrast(1.2) brightness(1.1)", emoji: "💜" },
     { name: "Film", css: "sepia(0.15) contrast(1.1) saturate(0.9) brightness(0.95)", emoji: "🎬" },
     { name: "Pop", css: "saturate(1.8) brightness(1.1) contrast(1.05)", emoji: "🍭" },
-    { name: "Dreamy", css: "brightness(1.15) saturate(0.7) contrast(0.85) blur(0.2px)", emoji: "☁️" },
+    { name: "Dreamy", css: "brightness(1.15) saturate(0.7) contrast(0.85)", emoji: "☁️" },
     { name: "Chrome", css: "saturate(0.4) contrast(1.3) brightness(1.05)", emoji: "⚡" },
     { name: "Ember", css: "sepia(0.4) saturate(1.8) hue-rotate(-20deg) brightness(0.95)", emoji: "🔥" },
     { name: "Arctic", css: "saturate(0.6) hue-rotate(40deg) brightness(1.15) contrast(0.9)", emoji: "🧊" },
@@ -454,7 +455,10 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
     { name: "Frost", css: "saturate(0.5) hue-rotate(25deg) brightness(1.3) contrast(0.8)", emoji: "❄️" },
     { name: "Toxic", css: "hue-rotate(100deg) saturate(2.5) contrast(1.2) brightness(0.9)", emoji: "☢️" },
     { name: "Polaroid", css: "sepia(0.3) saturate(1.1) contrast(0.95) brightness(1.15)", emoji: "🖼️" },
-    // ── Beauty / Face Filters ──
+  ];
+
+  const FACE_FILTERS = [
+    { name: "Natural", css: "blur(0.2px) brightness(1.08) contrast(0.95) saturate(1.1)", emoji: "🌿" },
     { name: "Smooth", css: "blur(0.5px) brightness(1.12) contrast(0.92) saturate(1.1)", emoji: "🧴" },
     { name: "Cute", css: "blur(0.3px) brightness(1.18) saturate(1.3) contrast(0.88) sepia(0.05)", emoji: "🥰" },
     { name: "Baby Face", css: "blur(0.6px) brightness(1.2) contrast(0.85) saturate(1.15)", emoji: "👶" },
@@ -473,9 +477,11 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
     { name: "Sun-kissed", css: "blur(0.2px) brightness(1.18) saturate(1.3) contrast(0.95) sepia(0.15)", emoji: "☀️" },
     { name: "Dewy", css: "blur(0.5px) brightness(1.25) contrast(0.82) saturate(1.15) sepia(0.05)", emoji: "💧" },
     { name: "Radiant", css: "blur(0.3px) brightness(1.32) contrast(0.85) saturate(1.2)", emoji: "🌟" },
-    { name: "Natural", css: "blur(0.2px) brightness(1.08) contrast(0.95) saturate(1.1)", emoji: "🌿" },
     { name: "Princess", css: "blur(0.5px) brightness(1.2) saturate(1.45) contrast(0.85) hue-rotate(-10deg) sepia(0.08)", emoji: "👸" },
   ];
+
+  const activeFilters = filterTab === "color" ? COLOR_FILTERS : FACE_FILTERS;
+  const currentFilter = activeFilters[activeFilter] || activeFilters[0];
 
   const startCamera = useCallback(async (facing: "user" | "environment") => {
     try {
