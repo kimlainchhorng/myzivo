@@ -112,7 +112,85 @@ export default function ChatStories() {
     },
   });
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Fetch viewers for current story (owner only)
+  const currentStory = viewingGroup?.stories[viewIdx];
+  const isOwner = viewingGroup?.userId === user?.id;
+
+  const { data: viewers = [] } = useQuery({
+    queryKey: ["story-viewers", currentStory?.id],
+    enabled: !!currentStory && isOwner,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("story_views" as any)
+        .select("viewer_id, viewed_at")
+        .eq("story_id", currentStory!.id)
+        .order("viewed_at", { ascending: false });
+      if (!data || data.length === 0) return [];
+      const viewerIds = (data as any[]).map((v: any) => v.viewer_id);
+      const { data: profiles } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", viewerIds);
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      return (data as any[]).map((v: any) => ({
+        ...v,
+        name: profileMap.get(v.viewer_id)?.full_name || "User",
+        avatar: profileMap.get(v.viewer_id)?.avatar_url,
+      }));
+    },
+  });
+
+  // Fetch comments for current story
+  const { data: comments = [] } = useQuery({
+    queryKey: ["story-comments", currentStory?.id],
+    enabled: !!currentStory,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("story_comments" as any)
+        .select("id, user_id, content, created_at")
+        .eq("story_id", currentStory!.id)
+        .order("created_at", { ascending: true });
+      if (!data || data.length === 0) return [];
+      const userIds = [...new Set((data as any[]).map((c: any) => c.user_id))];
+      const { data: profiles } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", userIds);
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      return (data as any[]).map((c: any) => ({
+        ...c,
+        name: profileMap.get(c.user_id)?.full_name || "User",
+        avatar: profileMap.get(c.user_id)?.avatar_url,
+      }));
+    },
+  });
+
+  // Record view when opening someone else's story
+  useEffect(() => {
+    if (!currentStory || !user || isOwner) return;
+    supabase.from("story_views" as any).upsert(
+      { story_id: currentStory.id, viewer_id: user.id },
+      { onConflict: "story_id,viewer_id" }
+    ).then();
+  }, [currentStory?.id, user?.id, isOwner]);
+
+  // Post comment
+  const postComment = useMutation({
+    mutationFn: async (content: string) => {
+      const { error } = await supabase.from("story_comments" as any).insert({
+        story_id: currentStory!.id,
+        user_id: user!.id,
+        content,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["story-comments", currentStory?.id] });
+      setCommentText("");
+    },
+    onError: (err: any) => {
+      if (err.message?.includes("violates row-level security")) {
+        toast.error("Only friends can comment on this story");
+      } else {
+        toast.error("Failed to post comment");
+      }
+    },
+  });
+
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
