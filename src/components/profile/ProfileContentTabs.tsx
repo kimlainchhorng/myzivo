@@ -3126,7 +3126,6 @@ function LiveBroadcast({
   const recordTimerRef = useRef<ReturnType<typeof setInterval>>();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
-  const [filterThumbUrl, setFilterThumbUrl] = useState<string | null>(null);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [aiResultOverlay, setAiResultOverlay] = useState<string | null>(null);
   const [aiSelectedMode, setAiSelectedMode] = useState<string | null>(null);
