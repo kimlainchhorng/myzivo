@@ -400,9 +400,149 @@ function ComposerForm({ type, onClose, onBack }: { type: "photo" | "reel"; onClo
   );
 }
 
+// AR sticker overlays drawn on canvas
+const AR_STICKERS = [
+  { name: "None", emoji: "⭕", sticker: null },
+  { name: "Cat Ears", emoji: "🐱", sticker: "cat" },
+  { name: "Dog", emoji: "🐶", sticker: "dog" },
+  { name: "Bunny", emoji: "🐰", sticker: "bunny" },
+  { name: "Crown", emoji: "👑", sticker: "crown" },
+  { name: "Hearts", emoji: "💕", sticker: "hearts" },
+  { name: "Stars", emoji: "⭐", sticker: "stars" },
+  { name: "Glasses", emoji: "🕶️", sticker: "glasses" },
+  { name: "Devil", emoji: "😈", sticker: "devil" },
+  { name: "Angel", emoji: "😇", sticker: "angel" },
+  { name: "Flowers", emoji: "🌸", sticker: "flowers" },
+  { name: "Fire", emoji: "🔥", sticker: "fire" },
+  { name: "Butterfly", emoji: "🦋", sticker: "butterfly" },
+  { name: "Rainbow", emoji: "🌈", sticker: "rainbow" },
+  { name: "Sparkles", emoji: "✨", sticker: "sparkles" },
+  { name: "Snow", emoji: "❄️", sticker: "snow" },
+];
+
+function drawSticker(ctx: CanvasRenderingContext2D, sticker: string, w: number, h: number) {
+  const cx = w / 2;
+  const fontSize = Math.min(w, h) * 0.12;
+  ctx.font = `${fontSize}px serif`;
+  ctx.textAlign = "center";
+
+  switch (sticker) {
+    case "cat":
+      ctx.font = `${fontSize * 1.2}px serif`;
+      ctx.fillText("🐱", cx - w * 0.12, h * 0.18);
+      ctx.fillText("🐱", cx + w * 0.12, h * 0.18);
+      ctx.font = `${fontSize * 0.5}px serif`;
+      ctx.fillText("👃", cx, h * 0.35);
+      ctx.fillText("ω", cx, h * 0.38);
+      break;
+    case "dog":
+      ctx.font = `${fontSize * 1.3}px serif`;
+      ctx.fillText("🐕", cx, h * 0.15);
+      ctx.font = `${fontSize * 0.6}px serif`;
+      ctx.fillText("👅", cx, h * 0.42);
+      break;
+    case "bunny":
+      ctx.font = `${fontSize * 1.5}px serif`;
+      ctx.fillText("🐰", cx, h * 0.12);
+      break;
+    case "crown":
+      ctx.font = `${fontSize * 1.8}px serif`;
+      ctx.fillText("👑", cx, h * 0.14);
+      break;
+    case "hearts":
+      ctx.font = `${fontSize * 0.7}px serif`;
+      for (let i = 0; i < 8; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * h * 0.5 + h * 0.05;
+        ctx.fillText("❤️", x, y);
+      }
+      break;
+    case "stars":
+      ctx.font = `${fontSize * 0.6}px serif`;
+      for (let i = 0; i < 10; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * h * 0.6;
+        ctx.fillText("⭐", x, y);
+      }
+      break;
+    case "glasses":
+      ctx.font = `${fontSize * 1.6}px serif`;
+      ctx.fillText("🕶️", cx, h * 0.32);
+      break;
+    case "devil":
+      ctx.font = `${fontSize * 1.4}px serif`;
+      ctx.fillText("😈", cx, h * 0.12);
+      break;
+    case "angel":
+      ctx.font = `${fontSize * 1.4}px serif`;
+      ctx.fillText("😇", cx, h * 0.1);
+      ctx.font = `${fontSize * 0.8}px serif`;
+      ctx.fillText("🪽", cx - w * 0.3, h * 0.5);
+      ctx.fillText("🪽", cx + w * 0.3, h * 0.5);
+      break;
+    case "flowers":
+      ctx.font = `${fontSize * 0.7}px serif`;
+      const flowerEmojis = ["🌸", "🌺", "🌻", "💐", "🌷"];
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const r = w * 0.3;
+        const x = cx + Math.cos(angle) * r;
+        const y = h * 0.2 + Math.sin(angle) * r * 0.3;
+        ctx.fillText(flowerEmojis[i % flowerEmojis.length], x, y);
+      }
+      break;
+    case "fire":
+      ctx.font = `${fontSize * 0.8}px serif`;
+      for (let i = 0; i < 5; i++) {
+        ctx.fillText("🔥", w * 0.1 + i * w * 0.2, h * 0.92);
+      }
+      break;
+    case "butterfly":
+      ctx.font = `${fontSize * 1.2}px serif`;
+      ctx.fillText("🦋", cx - w * 0.2, h * 0.15);
+      ctx.fillText("🦋", cx + w * 0.2, h * 0.2);
+      ctx.font = `${fontSize * 0.7}px serif`;
+      ctx.fillText("🦋", w * 0.15, h * 0.35);
+      break;
+    case "rainbow":
+      const gradient = ctx.createLinearGradient(0, h * 0.05, w, h * 0.05);
+      gradient.addColorStop(0, "rgba(255,0,0,0.3)");
+      gradient.addColorStop(0.17, "rgba(255,165,0,0.3)");
+      gradient.addColorStop(0.33, "rgba(255,255,0,0.3)");
+      gradient.addColorStop(0.5, "rgba(0,128,0,0.3)");
+      gradient.addColorStop(0.67, "rgba(0,0,255,0.3)");
+      gradient.addColorStop(0.83, "rgba(75,0,130,0.3)");
+      gradient.addColorStop(1, "rgba(238,130,238,0.3)");
+      ctx.beginPath();
+      ctx.arc(cx, h * 0.35, w * 0.45, Math.PI, 0);
+      ctx.lineWidth = h * 0.03;
+      ctx.strokeStyle = gradient;
+      ctx.stroke();
+      break;
+    case "sparkles":
+      ctx.font = `${fontSize * 0.5}px serif`;
+      for (let i = 0; i < 15; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * h;
+        ctx.fillText("✨", x, y);
+      }
+      break;
+    case "snow":
+      ctx.font = `${fontSize * 0.4}px serif`;
+      for (let i = 0; i < 20; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * h;
+        ctx.fillText("❄️", x, y);
+      }
+      break;
+  }
+}
+
 function LiveBroadcast({ onClose }: { onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const animFrameRef = useRef<number>();
   const [isLive, setIsLive] = useState(false);
   const [muted, setMuted] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
@@ -412,7 +552,8 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
   const [commentInput, setCommentInput] = useState("");
   const [activeFilter, setActiveFilter] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
-  const [filterTab, setFilterTab] = useState<"color" | "face">("color");
+  const [filterTab, setFilterTab] = useState<"color" | "face" | "ar">("color");
+  const [activeSticker, setActiveSticker] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
   const COLOR_FILTERS = [
@@ -436,75 +577,81 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
     { name: "Chrome", css: "saturate(0.4) contrast(1.3) brightness(1.05)", emoji: "⚡" },
     { name: "Ember", css: "sepia(0.4) saturate(1.8) hue-rotate(-20deg) brightness(0.95)", emoji: "🔥" },
     { name: "Arctic", css: "saturate(0.6) hue-rotate(40deg) brightness(1.15) contrast(0.9)", emoji: "🧊" },
-    { name: "Honey", css: "sepia(0.35) saturate(1.5) brightness(1.1) contrast(1.05)", emoji: "🍯" },
     { name: "Cyberpunk", css: "saturate(2.2) hue-rotate(-30deg) contrast(1.3) brightness(0.9)", emoji: "🤖" },
     { name: "Pastel", css: "saturate(0.6) brightness(1.25) contrast(0.75)", emoji: "🎀" },
     { name: "Moody", css: "contrast(1.3) brightness(0.75) saturate(1.1) sepia(0.1)", emoji: "🌑" },
     { name: "Golden", css: "sepia(0.4) saturate(1.3) brightness(1.15) hue-rotate(-5deg)", emoji: "👑" },
-    { name: "Emerald", css: "saturate(1.2) hue-rotate(60deg) brightness(1.05) contrast(1.1)", emoji: "💚" },
-    { name: "Berry", css: "saturate(1.5) hue-rotate(-40deg) contrast(1.15) brightness(0.95)", emoji: "🫐" },
-    { name: "Retro", css: "sepia(0.6) saturate(0.8) contrast(1.05) brightness(1.05)", emoji: "📼" },
-    { name: "Latte", css: "sepia(0.25) saturate(0.9) brightness(1.2) contrast(0.85)", emoji: "☕" },
-    { name: "Electric", css: "saturate(2.8) contrast(1.25) brightness(1.05) hue-rotate(10deg)", emoji: "⚡" },
-    { name: "Mystic", css: "hue-rotate(45deg) saturate(1.4) brightness(1.0) contrast(1.1)", emoji: "🔮" },
-    { name: "Infrared", css: "hue-rotate(180deg) saturate(1.5) contrast(1.2) brightness(0.95)", emoji: "👁️" },
-    { name: "Sepia", css: "sepia(0.8) contrast(1.0) brightness(1.05)", emoji: "🏛️" },
     { name: "X-Ray", css: "invert(1) hue-rotate(180deg) contrast(1.2)", emoji: "💀" },
     { name: "Thermal", css: "hue-rotate(90deg) saturate(2) contrast(1.3) brightness(0.9)", emoji: "🌡️" },
-    { name: "Candy", css: "saturate(2) hue-rotate(-50deg) brightness(1.15) contrast(1.05)", emoji: "🍬" },
-    { name: "Frost", css: "saturate(0.5) hue-rotate(25deg) brightness(1.3) contrast(0.8)", emoji: "❄️" },
     { name: "Toxic", css: "hue-rotate(100deg) saturate(2.5) contrast(1.2) brightness(0.9)", emoji: "☢️" },
     { name: "Polaroid", css: "sepia(0.3) saturate(1.1) contrast(0.95) brightness(1.15)", emoji: "🖼️" },
   ];
 
   const FACE_FILTERS = [
-    // Light touch
     { name: "Natural", css: "blur(0.2px) brightness(1.08) contrast(0.95) saturate(1.1)", emoji: "🌿" },
-    { name: "Selfie", css: "blur(0.25px) brightness(1.14) contrast(0.93) saturate(1.25)", emoji: "🤳" },
-    // Smooth skin
     { name: "Smooth", css: "blur(0.6px) brightness(1.12) contrast(0.9) saturate(1.1)", emoji: "🧴" },
-    { name: "Soft Skin", css: "blur(0.7px) brightness(1.15) contrast(0.86) saturate(1.05)", emoji: "🍑" },
     { name: "HD Smooth", css: "blur(0.8px) brightness(1.18) contrast(0.84) saturate(1.08)", emoji: "📸" },
     { name: "Ultra Smooth", css: "blur(1px) brightness(1.2) contrast(0.82) saturate(1.05)", emoji: "🫧" },
-    // Cute & sweet
     { name: "Cute", css: "blur(0.4px) brightness(1.2) saturate(1.4) contrast(0.86) sepia(0.05)", emoji: "🥰" },
     { name: "Baby Face", css: "blur(0.8px) brightness(1.22) contrast(0.8) saturate(1.15)", emoji: "👶" },
-    { name: "Doll", css: "blur(0.5px) brightness(1.2) saturate(1.5) contrast(0.88) hue-rotate(-8deg)", emoji: "🎎" },
-    { name: "Princess", css: "blur(0.6px) brightness(1.22) saturate(1.45) contrast(0.83) hue-rotate(-10deg) sepia(0.08)", emoji: "👸" },
-    // Glow & bright
     { name: "Glow Up", css: "blur(0.4px) brightness(1.3) saturate(1.4) contrast(0.88)", emoji: "💎" },
-    { name: "Radiant", css: "blur(0.4px) brightness(1.35) contrast(0.82) saturate(1.25)", emoji: "🌟" },
-    { name: "Lit", css: "blur(0.3px) brightness(1.4) contrast(0.8) saturate(1.3)", emoji: "🔆" },
-    { name: "Spotlight", css: "blur(0.35px) brightness(1.45) contrast(0.78) saturate(1.15)", emoji: "💡" },
-    // Skin tone enhancers
-    { name: "Porcelain", css: "blur(0.5px) brightness(1.25) contrast(0.8) saturate(0.85) sepia(0.1)", emoji: "🪆" },
     { name: "Glass Skin", css: "blur(0.5px) brightness(1.32) contrast(0.76) saturate(1.0)", emoji: "🪞" },
     { name: "K-Beauty", css: "blur(0.5px) brightness(1.25) contrast(0.82) saturate(0.92) sepia(0.06)", emoji: "🇰🇷" },
-    { name: "Dewy", css: "blur(0.6px) brightness(1.28) contrast(0.8) saturate(1.15) sepia(0.05)", emoji: "💧" },
-    // Warm tone face
-    { name: "Peach", css: "blur(0.4px) brightness(1.18) saturate(1.4) contrast(0.88) sepia(0.14) hue-rotate(-5deg)", emoji: "🍑" },
+    { name: "Porcelain", css: "blur(0.5px) brightness(1.25) contrast(0.8) saturate(0.85) sepia(0.1)", emoji: "🪆" },
+    { name: "Angelic", css: "blur(0.8px) brightness(1.35) contrast(0.76) saturate(0.85) sepia(0.1)", emoji: "😇" },
+    { name: "Full Glam", css: "blur(1px) brightness(1.35) contrast(0.78) saturate(1.4) sepia(0.06)", emoji: "👑" },
+    { name: "Airbrushed", css: "blur(1.5px) brightness(1.3) contrast(0.78) saturate(1.1)", emoji: "🖌️" },
     { name: "Rosy", css: "blur(0.4px) brightness(1.15) saturate(1.5) contrast(0.88) hue-rotate(-15deg)", emoji: "🌸" },
     { name: "Sun-kissed", css: "blur(0.3px) brightness(1.2) saturate(1.35) contrast(0.92) sepia(0.18)", emoji: "☀️" },
-    { name: "Honey Glow", css: "blur(0.4px) brightness(1.22) saturate(1.3) contrast(0.88) sepia(0.2) hue-rotate(-5deg)", emoji: "🍯" },
-    // Angelic & dreamy
-    { name: "Angelic", css: "blur(0.8px) brightness(1.35) contrast(0.76) saturate(0.85) sepia(0.1)", emoji: "😇" },
-    { name: "Fairy", css: "blur(0.7px) brightness(1.3) saturate(1.2) contrast(0.78) hue-rotate(10deg)", emoji: "🧚" },
-    { name: "Dream", css: "blur(1px) brightness(1.3) contrast(0.75) saturate(0.9)", emoji: "💭" },
-    { name: "Cloud", css: "blur(1.2px) brightness(1.35) contrast(0.72) saturate(0.8)", emoji: "☁️" },
-    // Power beauty
-    { name: "Flawless", css: "blur(0.6px) brightness(1.22) contrast(0.84) saturate(1.15) sepia(0.03)", emoji: "💅" },
-    { name: "Supermodel", css: "blur(0.5px) brightness(1.18) contrast(0.9) saturate(1.3) sepia(0.05)", emoji: "💃" },
-    { name: "Red Carpet", css: "blur(0.4px) brightness(1.15) contrast(0.92) saturate(1.35) sepia(0.08)", emoji: "🌹" },
-    { name: "Magazine", css: "blur(0.6px) brightness(1.2) contrast(0.88) saturate(1.2) sepia(0.04)", emoji: "📖" },
-    // Max power
-    { name: "Full Glam", css: "blur(1px) brightness(1.35) contrast(0.78) saturate(1.4) sepia(0.06)", emoji: "👑" },
     { name: "Filter Max", css: "blur(1.2px) brightness(1.4) contrast(0.75) saturate(1.3)", emoji: "⭐" },
-    { name: "Airbrushed", css: "blur(1.5px) brightness(1.3) contrast(0.78) saturate(1.1)", emoji: "🖌️" },
-    { name: "Silk", css: "blur(1px) brightness(1.25) contrast(0.8) saturate(1.05) sepia(0.04)", emoji: "🧣" },
   ];
 
   const activeFilters = filterTab === "color" ? COLOR_FILTERS : FACE_FILTERS;
   const currentFilter = activeFilters[activeFilter] || activeFilters[0];
+
+  // Canvas overlay for AR stickers
+  useEffect(() => {
+    const currentSticker = AR_STICKERS[activeSticker]?.sticker;
+    if (!currentSticker) {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let running = true;
+    const draw = () => {
+      if (!running) return;
+      canvas.width = canvas.offsetWidth * 2;
+      canvas.height = canvas.offsetHeight * 2;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawSticker(ctx, currentSticker, canvas.width, canvas.height);
+      animFrameRef.current = requestAnimationFrame(draw);
+    };
+    // Draw at slower rate for static stickers
+    draw();
+    // For animated stickers, redraw every 500ms
+    const interval = ["hearts", "stars", "sparkles", "snow"].includes(currentSticker)
+      ? setInterval(() => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawSticker(ctx, currentSticker, canvas.width, canvas.height);
+        }, 400)
+      : undefined;
+
+    return () => {
+      running = false;
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (interval) clearInterval(interval);
+    };
+  }, [activeSticker]);
 
   const startCamera = useCallback(async (facing: "user" | "environment") => {
     try {
