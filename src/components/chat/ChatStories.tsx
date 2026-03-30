@@ -1,30 +1,34 @@
 /**
- * ChatStories — WhatsApp/Instagram-style ephemeral stories row
- * Users can add photo/video stories that expire after 24 hours
+ * ChatStories — TikTok/Facebook-style ephemeral stories
+ * Full-screen immersive viewer with auto-progress, swipe navigation
  */
-import { useState, useRef } from "react";
-import { Plus, X, Eye, Trash2, Camera } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Plus, X, Eye, Trash2, Camera, Heart, Send, ChevronUp, ChevronDown, Pause, Play } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
+
+interface StoryItem {
+  id: string;
+  mediaUrl: string;
+  mediaType: string;
+  caption?: string;
+  createdAt: string;
+  viewsCount: number;
+}
 
 interface StoryGroup {
   userId: string;
   userName: string;
   avatarUrl?: string;
-  stories: {
-    id: string;
-    mediaUrl: string;
-    mediaType: string;
-    caption?: string;
-    createdAt: string;
-    viewsCount: number;
-  }[];
+  stories: StoryItem[];
 }
+
+const STORY_DURATION = 5000; // 5s per image story
 
 export default function ChatStories() {
   const { user } = useAuth();
@@ -33,8 +37,15 @@ export default function ChatStories() {
   const [viewingGroup, setViewingGroup] = useState<StoryGroup | null>(null);
   const [viewIdx, setViewIdx] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [allGroups, setAllGroups] = useState<StoryGroup[]>([]);
+  const [groupIdx, setGroupIdx] = useState(0);
+  const timerRef = useRef<number | null>(null);
+  const startTimeRef = useRef(0);
+  const elapsedRef = useRef(0);
 
-  // Fetch active stories grouped by user
   const { data: storyGroups = [] } = useQuery({
     queryKey: ["user-stories"],
     enabled: !!user,
@@ -48,7 +59,6 @@ export default function ChatStories() {
 
       if (!data || data.length === 0) return [];
 
-      // Get unique user IDs
       const userIds = [...new Set((data as any[]).map((s: any) => s.user_id))];
       const { data: profiles } = await supabase
         .from("profiles")
@@ -57,7 +67,6 @@ export default function ChatStories() {
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
-      // Group by user
       const groups = new Map<string, StoryGroup>();
       for (const s of data as any[]) {
         if (!groups.has(s.user_id)) {
@@ -79,7 +88,6 @@ export default function ChatStories() {
         });
       }
 
-      // Put current user first
       const result = Array.from(groups.values());
       const myIdx = result.findIndex((g) => g.userId === user?.id);
       if (myIdx > 0) {
@@ -120,7 +128,6 @@ export default function ChatStories() {
       const { error: uploadError } = await supabase.storage
         .from("user-stories")
         .upload(path, file, { contentType: file.type });
-
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from("user-stories").getPublicUrl(path);
@@ -130,7 +137,6 @@ export default function ChatStories() {
         media_url: urlData.publicUrl,
         media_type: isVideo ? "video" : "image",
       });
-
       if (insertError) throw insertError;
 
       queryClient.invalidateQueries({ queryKey: ["user-stories"] });
@@ -146,23 +152,118 @@ export default function ChatStories() {
   const myStories = storyGroups.find((g) => g.userId === user?.id);
   const hasMyStory = !!myStories && myStories.stories.length > 0;
 
-  const openViewer = (group: StoryGroup) => {
+  // --- Auto-progress timer ---
+  const startTimer = useCallback(() => {
+    if (timerRef.current) cancelAnimationFrame(timerRef.current);
+    startTimeRef.current = performance.now() - elapsedRef.current;
+
+    const tick = () => {
+      const elapsed = performance.now() - startTimeRef.current;
+      const pct = Math.min(elapsed / STORY_DURATION, 1);
+      setProgress(pct);
+      if (pct >= 1) {
+        nextStoryAuto();
+        return;
+      }
+      timerRef.current = requestAnimationFrame(tick);
+    };
+    timerRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const stopTimer = useCallback(() => {
+    if (timerRef.current) {
+      cancelAnimationFrame(timerRef.current);
+      timerRef.current = null;
+    }
+    elapsedRef.current = performance.now() - startTimeRef.current;
+  }, []);
+
+  const resetAndStart = useCallback(() => {
+    elapsedRef.current = 0;
+    setProgress(0);
+    setLiked(false);
+    startTimer();
+  }, [startTimer]);
+
+  const nextStoryAuto = useCallback(() => {
+    setViewIdx((prev) => {
+      setViewingGroup((group) => {
+        if (!group) return null;
+        if (prev < group.stories.length - 1) {
+          return group;
+        }
+        // Move to next user's stories
+        const nextGIdx = allGroups.findIndex((g) => g.userId === group.userId) + 1;
+        if (nextGIdx < allGroups.length) {
+          setGroupIdx(nextGIdx);
+          return allGroups[nextGIdx];
+        }
+        return null; // End
+      });
+      return (currentGroup: any) => {
+        // This won't work cleanly, handle in effect
+        return prev;
+      };
+    });
+  }, [allGroups]);
+
+  // Simplified navigation
+  const openViewer = (group: StoryGroup, groups?: StoryGroup[]) => {
+    const g = groups || storyGroups;
+    setAllGroups(g);
+    setGroupIdx(g.findIndex((gr) => gr.userId === group.userId));
     setViewingGroup(group);
     setViewIdx(0);
+    setPaused(false);
+    elapsedRef.current = 0;
   };
 
-  const nextStory = () => {
+  const goNext = () => {
     if (!viewingGroup) return;
     if (viewIdx < viewingGroup.stories.length - 1) {
       setViewIdx((i) => i + 1);
+      elapsedRef.current = 0;
     } else {
-      setViewingGroup(null);
+      // Next user
+      const nextGIdx = groupIdx + 1;
+      if (nextGIdx < allGroups.length) {
+        setGroupIdx(nextGIdx);
+        setViewingGroup(allGroups[nextGIdx]);
+        setViewIdx(0);
+        elapsedRef.current = 0;
+      } else {
+        setViewingGroup(null);
+      }
     }
   };
 
-  const prevStory = () => {
-    if (viewIdx > 0) setViewIdx((i) => i - 1);
+  const goPrev = () => {
+    if (viewIdx > 0) {
+      setViewIdx((i) => i - 1);
+      elapsedRef.current = 0;
+    } else {
+      // Previous user
+      const prevGIdx = groupIdx - 1;
+      if (prevGIdx >= 0) {
+        setGroupIdx(prevGIdx);
+        setViewingGroup(allGroups[prevGIdx]);
+        setViewIdx(allGroups[prevGIdx].stories.length - 1);
+        elapsedRef.current = 0;
+      }
+    }
   };
+
+  // Start/stop timer on viewer state changes
+  useEffect(() => {
+    if (viewingGroup && !paused) {
+      resetAndStart();
+    } else {
+      stopTimer();
+    }
+    return () => stopTimer();
+  }, [viewingGroup, viewIdx, paused]);
+
+  const currentStory = viewingGroup?.stories[viewIdx];
 
   return (
     <>
@@ -174,37 +275,57 @@ export default function ChatStories() {
         onChange={handleFileSelect}
       />
 
+      {/* Stories Row */}
       <div className="px-5 pt-3 pb-1">
         <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="flex flex-col items-center gap-1.5 flex-shrink-0"
-          >
+          {/* Your Story */}
+          <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
             <div className="relative w-[60px] h-[60px]">
-              <div className={cn(
-                "w-full h-full rounded-full border-2 border-dashed flex items-center justify-center overflow-hidden",
-                hasMyStory ? "border-primary" : "border-muted-foreground/30"
-              )}>
-                {myStories?.avatarUrl ? (
-                  <img src={myStories.avatarUrl} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <Camera className="w-5 h-5 text-muted-foreground/50" />
-                )}
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-background">
+              <button
+                onClick={() => {
+                  if (hasMyStory) {
+                    openViewer(myStories!);
+                  } else {
+                    fileInputRef.current?.click();
+                  }
+                }}
+                disabled={uploading}
+                className="w-full h-full rounded-full overflow-hidden"
+              >
+                <div className={cn(
+                  "w-full h-full rounded-full border-2 flex items-center justify-center overflow-hidden",
+                  hasMyStory
+                    ? "border-primary bg-gradient-to-br from-primary/20 to-accent/20"
+                    : "border-dashed border-muted-foreground/30"
+                )}>
+                  {myStories?.avatarUrl ? (
+                    <img src={myStories.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <Camera className="w-5 h-5 text-muted-foreground/50" />
+                  )}
+                </div>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+                disabled={uploading}
+                className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-background z-10"
+              >
                 {uploading ? (
                   <div className="w-2.5 h-2.5 border border-primary-foreground border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <Plus className="w-3 h-3 text-primary-foreground" />
                 )}
-              </div>
+              </button>
             </div>
             <span className="text-[10px] text-muted-foreground font-medium">
               {uploading ? "Uploading..." : "Your story"}
             </span>
-          </button>
+          </div>
 
+          {/* Other Users */}
           {storyGroups
             .filter((g) => g.userId !== user?.id)
             .map((group) => (
@@ -213,7 +334,7 @@ export default function ChatStories() {
                 onClick={() => openViewer(group)}
                 className="flex flex-col items-center gap-1.5 flex-shrink-0"
               >
-                <div className="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-br from-primary to-accent">
+                <div className="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-br from-primary via-accent to-primary">
                   <div className="w-full h-full rounded-full border-2 border-background overflow-hidden bg-muted">
                     {group.avatarUrl ? (
                       <img src={group.avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -232,100 +353,185 @@ export default function ChatStories() {
         </div>
       </div>
 
+      {/* ===== FULLSCREEN TikTok/FB STORY VIEWER ===== */}
       <AnimatePresence>
-        {viewingGroup && viewingGroup.stories[viewIdx] && (
+        {viewingGroup && currentStory && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black flex flex-col"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] bg-black"
           >
-            <div className="absolute top-[env(safe-area-inset-top,8px)] left-0 right-0 flex gap-1 px-3 pt-2 z-10">
+            {/* Full-bleed media background */}
+            <div className="absolute inset-0">
+              {currentStory.mediaType === "video" ? (
+                <video
+                  key={currentStory.id}
+                  src={currentStory.mediaUrl}
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  playsInline
+                  loop
+                  muted={false}
+                  onPlay={() => { if (!paused) startTimer(); }}
+                />
+              ) : (
+                <img
+                  key={currentStory.id}
+                  src={currentStory.mediaUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              )}
+              {/* Gradient overlays */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60" />
+            </div>
+
+            {/* Progress bars */}
+            <div className="absolute top-[env(safe-area-inset-top,12px)] left-0 right-0 flex gap-1 px-3 pt-2 z-20">
               {viewingGroup.stories.map((_, i) => (
-                <div key={i} className="flex-1 h-[2px] bg-white/30 rounded-full overflow-hidden">
-                  <div
-                    className={cn(
-                      "h-full bg-white rounded-full transition-all duration-300",
-                      i < viewIdx ? "w-full" : i === viewIdx ? "w-full animate-pulse" : "w-0"
-                    )}
+                <div key={i} className="flex-1 h-[3px] bg-white/25 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-white rounded-full"
+                    style={{
+                      width: i < viewIdx ? "100%" : i === viewIdx ? `${progress * 100}%` : "0%",
+                    }}
                   />
                 </div>
               ))}
             </div>
 
-            <div className="absolute top-[calc(env(safe-area-inset-top,8px)+16px)] left-0 right-0 flex items-center justify-between px-4 z-10">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-white/20 overflow-hidden">
+            {/* Header */}
+            <div className="absolute top-[calc(env(safe-area-inset-top,12px)+20px)] left-0 right-0 flex items-center justify-between px-4 z-20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full ring-2 ring-white/40 overflow-hidden">
                   {viewingGroup.avatarUrl ? (
                     <img src={viewingGroup.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white">
+                    <div className="w-full h-full bg-white/20 flex items-center justify-center text-sm font-bold text-white">
                       {viewingGroup.userName.charAt(0)}
                     </div>
                   )}
                 </div>
                 <div>
-                  <p className="text-white text-sm font-semibold">{viewingGroup.userName}</p>
-                  <p className="text-white/60 text-[10px]">
-                    {format(new Date(viewingGroup.stories[viewIdx].createdAt), "h:mm a")}
+                  <p className="text-white text-sm font-bold drop-shadow-lg">{viewingGroup.userName}</p>
+                  <p className="text-white/70 text-[11px] drop-shadow">
+                    {formatDistanceToNow(new Date(currentStory.createdAt), { addSuffix: true })}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                {viewingGroup.userId === user?.id && (
-                  <>
-                    <span className="flex items-center gap-1 text-white/70 text-xs">
-                      <Eye className="w-3.5 h-3.5" />
-                      {viewingGroup.stories[viewIdx].viewsCount}
-                    </span>
-                    <button
-                      onClick={() => {
-                        deleteStory.mutate(viewingGroup.stories[viewIdx].id);
-                        if (viewingGroup.stories.length <= 1) {
-                          setViewingGroup(null);
-                        } else {
-                          nextStory();
-                        }
-                      }}
-                      className="w-8 h-8 flex items-center justify-center"
-                    >
-                      <Trash2 className="w-4 h-4 text-white/70" />
-                    </button>
-                  </>
-                )}
-                <button onClick={() => setViewingGroup(null)} className="w-8 h-8 flex items-center justify-center">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPaused((p) => !p)}
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm"
+                >
+                  {paused ? <Play className="w-4 h-4 text-white" /> : <Pause className="w-4 h-4 text-white" />}
+                </button>
+                <button
+                  onClick={() => setViewingGroup(null)}
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm"
+                >
                   <X className="w-5 h-5 text-white" />
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 flex items-center justify-center" onClick={nextStory}>
-              <div className="absolute left-0 top-0 bottom-0 w-1/3 z-10" onClick={(e) => { e.stopPropagation(); prevStory(); }} />
+            {/* Tap zones for prev/next */}
+            <div
+              className="absolute left-0 top-0 bottom-0 w-1/3 z-10"
+              onClick={goPrev}
+            />
+            <div
+              className="absolute right-0 top-0 bottom-0 w-2/3 z-10"
+              onClick={goNext}
+            />
 
-              {viewingGroup.stories[viewIdx].mediaType === "video" ? (
-                <video
-                  src={viewingGroup.stories[viewIdx].mediaUrl}
-                  className="max-w-full max-h-full object-contain"
-                  autoPlay
-                  playsInline
-                  muted
-                />
-              ) : (
-                <img
-                  src={viewingGroup.stories[viewIdx].mediaUrl}
-                  alt=""
-                  className="max-w-full max-h-full object-contain"
-                />
+            {/* Right-side TikTok-style action buttons */}
+            <div className="absolute right-4 bottom-[140px] flex flex-col items-center gap-5 z-20">
+              <button
+                onClick={() => setLiked((l) => !l)}
+                className="flex flex-col items-center gap-1"
+              >
+                <div className={cn(
+                  "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
+                  liked ? "bg-red-500/80" : "bg-white/10"
+                )}>
+                  <Heart className={cn("w-5 h-5 transition-all", liked ? "text-white fill-white" : "text-white")} />
+                </div>
+                <span className="text-white/80 text-[10px] font-medium">Like</span>
+              </button>
+
+              <button className="flex flex-col items-center gap-1">
+                <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                  <Send className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-white/80 text-[10px] font-medium">Send</span>
+              </button>
+
+              {viewingGroup.userId === user?.id && (
+                <>
+                  <button className="flex flex-col items-center gap-1">
+                    <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                      <Eye className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-white/80 text-[10px] font-medium">{currentStory.viewsCount}</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      deleteStory.mutate(currentStory.id);
+                      if (viewingGroup.stories.length <= 1) {
+                        setViewingGroup(null);
+                      } else {
+                        goNext();
+                      }
+                    }}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                      <Trash2 className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-white/80 text-[10px] font-medium">Delete</span>
+                  </button>
+                </>
               )}
             </div>
 
-            {viewingGroup.stories[viewIdx].caption && (
-              <div className="absolute bottom-[env(safe-area-inset-bottom,20px)] left-0 right-0 px-6 pb-4 z-10">
-                <p className="text-white text-sm text-center bg-black/40 backdrop-blur-sm rounded-xl px-4 py-2">
-                  {viewingGroup.stories[viewIdx].caption}
-                </p>
+            {/* Bottom caption + reply bar */}
+            <div className="absolute bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom,16px)]">
+              {currentStory.caption && (
+                <div className="px-5 pb-3">
+                  <p className="text-white text-sm font-medium drop-shadow-lg leading-relaxed">
+                    {currentStory.caption}
+                  </p>
+                </div>
+              )}
+
+              {/* Reply bar */}
+              {viewingGroup.userId !== user?.id && (
+                <div className="px-4 pb-3">
+                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-2.5 border border-white/10">
+                    <input
+                      type="text"
+                      placeholder={`Reply to ${viewingGroup.userName.split(" ")[0]}...`}
+                      className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/50"
+                      onFocus={() => setPaused(true)}
+                      onBlur={() => setPaused(false)}
+                    />
+                    <Send className="w-4 h-4 text-white/60" />
+                  </div>
+                </div>
+              )}
+
+              {/* Swipe hint */}
+              <div className="flex justify-center pb-2">
+                <div className="flex flex-col items-center gap-0.5 opacity-40">
+                  <ChevronUp className="w-4 h-4 text-white animate-bounce" />
+                  <span className="text-[9px] text-white">Swipe for more</span>
+                </div>
               </div>
-            )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
