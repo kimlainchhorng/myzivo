@@ -5,8 +5,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft, Crown, Zap, Shield, Truck, Clock, Star,
-  Check, Loader2, Settings, Sparkles,
+  ArrowLeft, Crown, Zap, Shield, Star,
+  Check, Loader2, Settings, Sparkles, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,7 @@ import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const BENEFITS = [
   { icon: Sparkles, title: "No Service Fee", desc: "Save 5% on every grocery order — service fee completely waived." },
@@ -23,23 +24,170 @@ const BENEFITS = [
 ];
 
 const PLANS = [
-  {
-    id: "monthly" as const,
-    name: "Monthly",
-    price: "$9.99",
-    period: "/month",
-    savings: null,
-    badge: null,
-  },
-  {
-    id: "annual" as const,
-    name: "Annual",
-    price: "$79.99",
-    period: "/year",
-    savings: "Save 33%",
-    badge: "Best Value",
-  },
+  { id: "monthly" as const, name: "Monthly", price: "$9.99", period: "/month", savings: null, badge: null },
+  { id: "annual" as const, name: "Annual", price: "$79.99", period: "/year", savings: "Save 33%", badge: "Best Value" },
 ];
+
+/* ── Inline Legal Content ── */
+function TermsContent() {
+  return (
+    <div className="space-y-5 text-[13px] leading-relaxed text-foreground/90">
+      <p>By accessing or using ZIVO, you agree to these Terms of Service. Please read them carefully.</p>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">1. ZIVO Services</h3>
+        <p>ZIVO is an online travel platform that allows users to search, compare, and book travel services including flights, hotels, and car rentals. ZIVO operates a hybrid business model:</p>
+        <ul className="mt-2 space-y-1.5 list-disc list-inside text-foreground/80">
+          <li><strong>Hotels & Car Rentals:</strong> ZIVO is the merchant of record.</li>
+          <li><strong>Flights:</strong> ZIVO is NOT the merchant of record. Bookings are completed with licensed airline partners.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">2. Hotels & Car Rentals (Direct Sale)</h3>
+        <p>For hotel and car rental bookings, ZIVO acts as the merchant of record. ZIVO collects payment via secure payment processors (Stripe, Adyen), issues booking confirmations, and handles customer support.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">3. Flights (Partner Ticketing)</h3>
+        <p className="font-medium text-amber-600">⚠ Important: ZIVO does not issue airline tickets.</p>
+        <p className="mt-1">Flight bookings are completed with licensed airline partners who process payments and issue tickets. Changes, cancellations, and refunds are handled by the airline partner.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">4. Third-Party Providers</h3>
+        <p>ZIVO works with various third-party suppliers. The actual service is delivered by the respective property, rental company, or airline.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">5. Accuracy of Information</h3>
+        <p>ZIVO displays information provided by third-party suppliers. We do not guarantee pricing, availability, or completeness. Prices may change before checkout is completed.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">6. Prohibited Use</h3>
+        <p>You agree not to misuse the platform, attempt unauthorized access, scrape data, make fraudulent bookings, or use ZIVO for unlawful purposes.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">7. Platform Role</h3>
+        <p>ZIVO acts as a travel booking platform and sub-agent. ZIVO does not operate airlines, hotels, or transportation services.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">8. Limitation of Liability</h3>
+        <p>To the maximum extent permitted by law, ZIVO shall not be liable for any indirect, incidental, or consequential damages.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">9. Force Majeure</h3>
+        <p>ZIVO is not liable for disruptions caused by events beyond reasonable control.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">10. Fraud Prevention</h3>
+        <p>ZIVO reserves the right to cancel bookings, suspend accounts, or refuse service in cases of suspected fraud or abuse.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">11. Changes</h3>
+        <p>ZIVO may update these Terms at any time. Continued use constitutes acceptance.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">Contact</h3>
+        <p>For questions: <a href="mailto:support@hizivo.com" className="text-primary underline">support@hizivo.com</a></p>
+      </div>
+      <p className="text-[11px] text-muted-foreground">Last updated: February 2, 2026</p>
+    </div>
+  );
+}
+
+function PrivacyContent() {
+  return (
+    <div className="space-y-5 text-[13px] leading-relaxed text-foreground/90">
+      <p>ZIVO respects your privacy. This policy explains how we collect, use, and protect your information.</p>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">How We Operate</h3>
+        <ul className="space-y-1.5 list-disc list-inside text-foreground/80">
+          <li><strong>Hotels & Car Rentals:</strong> ZIVO is the merchant of record. We process your payment and booking information directly.</li>
+          <li><strong>Flights:</strong> We share your details with airline partners (with your consent) for ticketing.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">Information We Collect</h3>
+        <ul className="space-y-1.5 list-disc list-inside text-foreground/80">
+          <li><strong>Account Information:</strong> Name, email, phone number</li>
+          <li><strong>Booking Information:</strong> Traveler/guest details, travel dates, preferences</li>
+          <li><strong>Payment Information:</strong> For Hotels & Car Rentals only, processed securely via Stripe/Adyen</li>
+          <li><strong>Technical Data:</strong> Device information, browser type, IP address, cookies</li>
+        </ul>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">How We Use Information</h3>
+        <ul className="space-y-1.5 list-disc list-inside text-foreground/80">
+          <li>To process and confirm your bookings</li>
+          <li>To share traveler information with airline partners (with consent)</li>
+          <li>To send booking confirmations and travel updates</li>
+          <li>To process refunds and handle support requests</li>
+          <li>To improve platform performance and security</li>
+        </ul>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">Information Sharing</h3>
+        <p>We share your information only as necessary:</p>
+        <ul className="mt-1.5 space-y-1.5 list-disc list-inside text-foreground/80">
+          <li><strong>Airline Partners:</strong> Traveler details shared with your consent</li>
+          <li><strong>Wholesaler APIs:</strong> Booking details to confirm reservations</li>
+          <li><strong>Payment Processors:</strong> Stripe/Adyen for secure processing</li>
+        </ul>
+        <p className="mt-2 font-medium">We do not sell personal data to third parties.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">Cookies</h3>
+        <p>We use cookies to operate and improve our services. You can control cookies via your browser settings.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">Your Rights</h3>
+        <ul className="space-y-1 list-disc list-inside text-foreground/80">
+          <li>Access the personal information we hold about you</li>
+          <li>Request correction of inaccurate information</li>
+          <li>Request deletion of your personal information</li>
+          <li>Opt out of marketing communications</li>
+        </ul>
+        <p className="mt-2 text-muted-foreground">Contact us at support@hizivo.com to exercise these rights.</p>
+      </div>
+      <div>
+        <h3 className="text-[14px] font-bold text-foreground mb-2">Contact</h3>
+        <p>For privacy-related questions: <a href="mailto:support@hizivo.com" className="text-primary underline">support@hizivo.com</a></p>
+      </div>
+      <p className="text-[11px] text-muted-foreground">Last updated: February 2, 2026</p>
+    </div>
+  );
+}
+
+/* ── Legal Sheet Overlay ── */
+function LegalSheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end justify-center"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 28, stiffness: 300 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-background rounded-t-3xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl"
+      >
+        <div className="pt-3 pb-2 px-5">
+          <div className="w-10 h-1 rounded-full bg-muted-foreground/20 mx-auto mb-3" />
+          <div className="flex items-center justify-between">
+            <h2 className="text-[16px] font-bold text-foreground">{title}</h2>
+            <button onClick={onClose} className="p-2 rounded-xl hover:bg-muted/60 transition-colors">
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+        <ScrollArea className="flex-1 px-5 pb-8">
+          {children}
+        </ScrollArea>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 export default function ZivoPlusPage() {
   const navigate = useNavigate();
@@ -49,8 +197,8 @@ export default function ZivoPlusPage() {
   const [selectedPlan, setSelectedPlan] = useState<"monthly" | "annual">("annual");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isManaging, setIsManaging] = useState(false);
+  const [legalSheet, setLegalSheet] = useState<"terms" | "privacy" | null>(null);
 
-  // Handle success/cancel from Stripe
   useEffect(() => {
     if (searchParams.get("success") === "true") {
       toast.success("Welcome to ZIVO+! Your membership is now active.");
@@ -65,7 +213,6 @@ export default function ZivoPlusPage() {
       navigate("/login?redirect=/zivo-plus");
       return;
     }
-
     setIsCheckingOut(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-zivo-plus-checkout", {
@@ -152,13 +299,7 @@ export default function ZivoPlusPage() {
                 Renews on {new Date(subscriptionEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
               </p>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleManage}
-              disabled={isManaging}
-              className="gap-2"
-            >
+            <Button variant="outline" size="sm" onClick={handleManage} disabled={isManaging} className="gap-2">
               {isManaging ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Settings className="h-3.5 w-3.5" />}
               Manage Subscription
             </Button>
@@ -237,7 +378,7 @@ export default function ZivoPlusPage() {
               >
                 {isCheckingOut ? (
                   <>
-                    <Loader2 className="h-4.5 w-4.5 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     Preparing checkout…
                   </>
                 ) : (
@@ -251,8 +392,8 @@ export default function ZivoPlusPage() {
 
             <p className="text-[9px] text-muted-foreground/60 text-center leading-relaxed px-4">
               Cancel anytime from your account settings. By subscribing you agree to our{" "}
-              <a href="/terms" className="text-primary/60 underline">Terms</a> and{" "}
-              <a href="/privacy" className="text-primary/60 underline">Privacy Policy</a>.
+              <button onClick={() => setLegalSheet("terms")} className="text-primary/60 underline hover:text-primary transition-colors">Terms</button> and{" "}
+              <button onClick={() => setLegalSheet("privacy")} className="text-primary/60 underline hover:text-primary transition-colors">Privacy Policy</button>.
             </p>
           </div>
         )}
@@ -282,6 +423,18 @@ export default function ZivoPlusPage() {
           </div>
         </div>
       </div>
+
+      {/* Legal Bottom Sheets */}
+      {legalSheet === "terms" && (
+        <LegalSheet title="Terms of Service" onClose={() => setLegalSheet(null)}>
+          <TermsContent />
+        </LegalSheet>
+      )}
+      {legalSheet === "privacy" && (
+        <LegalSheet title="Privacy Policy" onClose={() => setLegalSheet(null)}>
+          <PrivacyContent />
+        </LegalSheet>
+      )}
 
       <ZivoMobileNav />
     </div>
