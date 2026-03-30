@@ -894,6 +894,21 @@ function ComposerForm({
   );
 }
 
+// AI face edit modes
+const AI_MODES = [
+  { id: "beauty", name: "AI Beauty", emoji: "✨", gradient: "linear-gradient(135deg, #FFB7C5, #FFC0CB)", desc: "Auto enhance" },
+  { id: "swap_male", name: "Male Model", emoji: "🧔", gradient: "linear-gradient(135deg, #4A90D9, #357ABD)", desc: "Face swap" },
+  { id: "swap_female", name: "Female Model", emoji: "👩", gradient: "linear-gradient(135deg, #FF69B4, #FF1493)", desc: "Face swap" },
+  { id: "swap_anime", name: "Anime", emoji: "🎌", gradient: "linear-gradient(135deg, #A29BFE, #6C5CE7)", desc: "Style transfer" },
+  { id: "swap_old", name: "Age Up", emoji: "👴", gradient: "linear-gradient(135deg, #95A5A6, #7F8C8D)", desc: "Face swap" },
+  { id: "swap_young", name: "Youth", emoji: "👶", gradient: "linear-gradient(135deg, #FFEAA7, #FDCB6E)", desc: "Face swap" },
+  { id: "bg_beach", name: "Beach", emoji: "🏖️", gradient: "linear-gradient(135deg, #00CEC9, #0984E3)", desc: "Background" },
+  { id: "bg_city", name: "City Night", emoji: "🌃", gradient: "linear-gradient(135deg, #2D3436, #636E72)", desc: "Background" },
+  { id: "bg_space", name: "Space", emoji: "🚀", gradient: "linear-gradient(135deg, #0C0C2D, #4A148C)", desc: "Background" },
+  { id: "bg_nature", name: "Forest", emoji: "🌲", gradient: "linear-gradient(135deg, #00B894, #00CEC9)", desc: "Background" },
+  { id: "bg_studio", name: "Studio", emoji: "📸", gradient: "linear-gradient(135deg, #636E72, #2D3436)", desc: "Background" },
+];
+
 // AR effect categories for TikTok-style tabs
 const AR_CATEGORIES = ["All", "Trending", "Beauty", "Fun", "Animals", "Fantasy", "Art"] as const;
 type ARCategory = typeof AR_CATEGORIES[number];
@@ -3173,7 +3188,7 @@ function LiveBroadcast({
   const [commentInput, setCommentInput] = useState("");
   const [activeFilter, setActiveFilter] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
-  const [filterTab, setFilterTab] = useState<"color" | "face" | "ar">("color");
+  const [filterTab, setFilterTab] = useState<"color" | "face" | "ar" | "ai">("color");
   const [filterGroup, setFilterGroup] = useState<FilterGroup>("all");
   const [filterStrength, setFilterStrength] = useState(100);
   const [activeSticker, setActiveSticker] = useState(0);
@@ -3186,6 +3201,9 @@ function LiveBroadcast({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const [filterThumbUrl, setFilterThumbUrl] = useState<string | null>(null);
+  const [aiProcessing, setAiProcessing] = useState(false);
+  const [aiResultOverlay, setAiResultOverlay] = useState<string | null>(null);
+  const [aiSelectedMode, setAiSelectedMode] = useState<string | null>(null);
 
   const COLOR_FILTERS = [
     { name: "Original", css: "none", emoji: "✨" },
@@ -3533,9 +3551,11 @@ function LiveBroadcast({
   const effectiveFilterCss = filterTab !== "ar"
     ? applyFilterStrength(currentFilter?.css || "none", filterStrength)
     : "none";
-  const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : activeFilters.length;
+  const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : filterTab === "ai" ? AI_MODES.length : activeFilters.length;
   const selectedFilterName = filterTab === "ar"
     ? AR_STICKERS[activeSticker]?.name || "None"
+    : filterTab === "ai"
+    ? (aiSelectedMode ? AI_MODES.find(m => m.id === aiSelectedMode)?.name : "None") || "None"
     : currentFilter?.name || "Original";
   const visibleFilterIndexes = useMemo(() => {
     if (filterTab === "ar") {
@@ -3586,6 +3606,57 @@ function LiveBroadcast({
   const toggleFilters = () => {
     if (!showFilters) captureFilterThumb();
     setShowFilters(!showFilters);
+  };
+
+  // AI_MODES moved outside component
+
+
+  const runAiFaceEdit = async (mode: string) => {
+    const video = videoRef.current;
+    if (!video || video.videoWidth === 0) return;
+    
+    setAiProcessing(true);
+    setAiSelectedMode(mode);
+    setAiResultOverlay(null);
+
+    try {
+      // Capture current frame
+      const c = document.createElement("canvas");
+      c.width = video.videoWidth;
+      c.height = video.videoHeight;
+      const ctx2 = c.getContext("2d");
+      if (!ctx2) throw new Error("Canvas failed");
+      ctx2.drawImage(video, 0, 0);
+      const imageBase64 = c.toDataURL("image/jpeg", 0.85);
+
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-face-edit`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ imageBase64, mode }),
+        }
+      );
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Failed" }));
+        throw new Error(err.error || `HTTP ${resp.status}`);
+      }
+
+      const data = await resp.json();
+      if (data.imageUrl) {
+        setAiResultOverlay(data.imageUrl);
+      }
+    } catch (err) {
+      console.error("AI face edit failed:", err);
+      const { toast } = await import("sonner");
+      toast.error(err instanceof Error ? err.message : "AI processing failed");
+    } finally {
+      setAiProcessing(false);
+    }
   };
 
   useEffect(() => {
@@ -3840,7 +3911,32 @@ function LiveBroadcast({
         style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
       />
 
-      {/* Top overlay */}
+      {/* AI result overlay */}
+      {aiResultOverlay && (
+        <div className="absolute inset-0 z-[2]">
+          <img src={aiResultOverlay} alt="AI result" className="w-full h-full object-cover" />
+          <button
+            onClick={() => { setAiResultOverlay(null); setAiSelectedMode(null); }}
+            className="absolute top-14 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2"
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
+          <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
+            <span className="text-white text-xs font-medium">🤖 AI Enhanced</span>
+          </div>
+        </div>
+      )}
+
+      {/* AI processing overlay */}
+      {aiProcessing && (
+        <div className="absolute inset-0 z-[3] bg-black/40 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+            <span className="text-white text-sm font-medium">AI processing...</span>
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 flex items-center justify-between p-4 pt-12">
         <div className="flex items-center gap-2">
           {isLive && (
@@ -3912,7 +4008,7 @@ function LiveBroadcast({
                 >
                   <X className="w-4 h-4 text-white/60" />
                 </button>
-                {(["color", "face", "ar"] as const).map((tab) => (
+                {(["color", "face", "ar", "ai"] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => { setFilterTab(tab); setFilterGroup("all"); setActiveFilter(0); if (tab !== "ar") setActiveSticker(0); }}
@@ -3923,7 +4019,7 @@ function LiveBroadcast({
                         : "text-white/40"
                     )}
                   >
-                    {tab === "color" ? "🎨 Color" : tab === "face" ? "✨ Beauty" : "🎭 Effects"}
+                    {tab === "color" ? "🎨 Color" : tab === "face" ? "✨ Beauty" : tab === "ar" ? "🎭 Effects" : "🤖 AI"}
                   </button>
                 ))}
               </div>
@@ -3994,9 +4090,47 @@ function LiveBroadcast({
                   ))}
                 </div>
               )}
-              {/* Filter/Sticker grid */}
+              {/* Filter/Sticker/AI grid */}
               <div className="grid grid-cols-4 gap-3 px-4 pr-5 max-h-[48vh] overflow-y-auto">
-                {filterTab === "ar" ? (
+                {filterTab === "ai" ? (
+                  AI_MODES.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => runAiFaceEdit(m.id)}
+                      disabled={aiProcessing}
+                      className="flex flex-col items-center gap-1.5"
+                    >
+                      <div
+                        className={cn(
+                          "w-[72px] h-[72px] rounded-2xl overflow-hidden relative transition-all",
+                          aiSelectedMode === m.id && aiResultOverlay
+                            ? "ring-2 ring-white scale-105 shadow-lg shadow-white/20"
+                            : aiProcessing && aiSelectedMode === m.id
+                            ? "ring-2 ring-primary animate-pulse"
+                            : "opacity-80"
+                        )}
+                        style={{ background: m.gradient }}
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center text-3xl drop-shadow-lg">
+                          {aiProcessing && aiSelectedMode === m.id ? (
+                            <div className="w-6 h-6 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            m.emoji
+                          )}
+                        </div>
+                        <div className="absolute bottom-1 left-1 right-1">
+                          <span className="text-[8px] text-white/70 font-medium bg-black/30 px-1 rounded">
+                            {m.desc}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-medium leading-tight text-center w-[72px] truncate",
+                        aiSelectedMode === m.id ? "text-white" : "text-white/55"
+                      )}>{m.name}</span>
+                    </button>
+                  ))
+                ) : filterTab === "ar" ? (
                   visibleFilterIndexes.map((i) => {
                     const s = AR_STICKERS[i];
                     return (
@@ -4014,7 +4148,6 @@ function LiveBroadcast({
                         )}
                         style={{ background: s.gradient }}
                       >
-                        {/* Large centered emoji as effect icon */}
                         {s.sticker ? (
                           <div className="absolute inset-0 flex items-center justify-center text-3xl drop-shadow-lg">
                             {s.emoji}
