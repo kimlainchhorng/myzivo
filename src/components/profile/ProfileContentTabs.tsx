@@ -213,7 +213,36 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
     }
   }, [persistLocalPost, uploadMediaToSupabase, user?.email, user?.id]);
 
-  return (
+  const handleDeletePost = useCallback(async (postId: string) => {
+    setFeed((prev) => prev.filter((p) => p.id !== postId));
+    setSelectedPost(null);
+    setShowPostMenu(false);
+    try {
+      const existing = JSON.parse(localStorage.getItem(LOCAL_POSTS_KEY) || "[]") as FeedItem[];
+      localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(existing.filter((p) => p.id !== postId)));
+    } catch {}
+    if (user?.id) {
+      try { await (supabase as any).from("user_posts").delete().eq("id", postId); } catch {}
+    }
+    toast.success("Post deleted");
+  }, [user?.id]);
+
+  const handleEditCaption = useCallback(async (postId: string, newCaption: string) => {
+    setFeed((prev) => prev.map((p) => p.id === postId ? { ...p, caption: newCaption } : p));
+    setSelectedPost((prev) => prev ? { ...prev, caption: newCaption } : null);
+    setEditingCaption(false);
+    setShowPostMenu(false);
+    try {
+      const existing = JSON.parse(localStorage.getItem(LOCAL_POSTS_KEY) || "[]") as FeedItem[];
+      localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(existing.map((p) => p.id === postId ? { ...p, caption: newCaption } : p)));
+    } catch {}
+    if (user?.id) {
+      try { await (supabase as any).from("user_posts").update({ caption: newCaption }).eq("id", postId); } catch {}
+    }
+    toast.success("Caption updated");
+  }, [user?.id]);
+
+
     <div className="space-y-3">
       {/* Create Post Bar */}
       <motion.button
