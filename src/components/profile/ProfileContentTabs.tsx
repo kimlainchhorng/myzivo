@@ -62,6 +62,7 @@ const TABS: { id: TabFilter; label: string; icon: typeof Grid3X3 }[] = [
 
 export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const { user } = useAuth();
+  const profileOwnerId = userId || user?.id;
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [showComposer, setShowComposer] = useState(false);
   const [composerType, setComposerType] = useState<"photo" | "reel" | null>(null);
@@ -105,12 +106,18 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       }
 
       try {
-        const { data } = await (supabase as any)
+        const query = (supabase as any)
           .from("user_posts")
           .select("id, user_id, media_type, media_url, caption, filter_css, likes_count, comments_count, views_count, created_at, is_published")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(50);
+
+        if (profileOwnerId) {
+          query.eq("user_id", profileOwnerId);
+        }
+
+        const { data } = await query;
 
         if (!alive || !data) return;
 
