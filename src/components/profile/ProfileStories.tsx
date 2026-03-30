@@ -87,7 +87,7 @@ const ProfileStories = () => {
     return () => { alive = false; };
   }, [user?.id, profile?.full_name]);
 
-
+  useEffect(() => {
     if (!viewingGroup) return;
     setProgress(0);
     const startTime = Date.now();
