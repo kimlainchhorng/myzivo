@@ -415,16 +415,24 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
   const FILTERS = [
-    { name: "None", css: "none" },
-    { name: "Warm", css: "sepia(0.3) saturate(1.4) brightness(1.05)" },
-    { name: "Cool", css: "saturate(0.8) hue-rotate(15deg) brightness(1.05)" },
-    { name: "B&W", css: "grayscale(1) contrast(1.1)" },
-    { name: "Vintage", css: "sepia(0.5) contrast(0.9) brightness(1.1)" },
-    { name: "Vivid", css: "saturate(1.8) contrast(1.1)" },
-    { name: "Fade", css: "saturate(0.6) brightness(1.15) contrast(0.85)" },
-    { name: "Drama", css: "contrast(1.4) brightness(0.9) saturate(1.2)" },
-    { name: "Glow", css: "brightness(1.2) saturate(1.3) blur(0.3px)" },
-    { name: "Noir", css: "grayscale(0.8) contrast(1.3) brightness(0.9)" },
+    { name: "Original", css: "none", emoji: "✨" },
+    { name: "Warm", css: "sepia(0.3) saturate(1.4) brightness(1.05)", emoji: "🌅" },
+    { name: "Cool", css: "saturate(0.8) hue-rotate(20deg) brightness(1.05)", emoji: "❄️" },
+    { name: "B&W", css: "grayscale(1) contrast(1.1)", emoji: "🖤" },
+    { name: "Vintage", css: "sepia(0.5) contrast(0.9) brightness(1.1)", emoji: "📷" },
+    { name: "Vivid", css: "saturate(2) contrast(1.15)", emoji: "🎨" },
+    { name: "Fade", css: "saturate(0.5) brightness(1.2) contrast(0.8)", emoji: "🌫️" },
+    { name: "Drama", css: "contrast(1.5) brightness(0.85) saturate(1.3)", emoji: "🎭" },
+    { name: "Glow", css: "brightness(1.25) saturate(1.4)", emoji: "💫" },
+    { name: "Noir", css: "grayscale(0.8) contrast(1.4) brightness(0.85)", emoji: "🕶️" },
+    { name: "Sunset", css: "sepia(0.2) saturate(1.6) hue-rotate(-10deg) brightness(1.05)", emoji: "🌇" },
+    { name: "Ocean", css: "saturate(0.9) hue-rotate(30deg) brightness(1.1)", emoji: "🌊" },
+    { name: "Rose", css: "saturate(1.3) hue-rotate(-15deg) brightness(1.1)", emoji: "🌹" },
+    { name: "Neon", css: "saturate(2.5) contrast(1.2) brightness(1.1)", emoji: "💜" },
+    { name: "Film", css: "sepia(0.15) contrast(1.1) saturate(0.9) brightness(0.95)", emoji: "🎬" },
+    { name: "Pop", css: "saturate(1.8) brightness(1.1) contrast(1.05)", emoji: "🍭" },
+    { name: "Dreamy", css: "brightness(1.15) saturate(0.7) contrast(0.85) blur(0.2px)", emoji: "☁️" },
+    { name: "Chrome", css: "saturate(0.4) contrast(1.3) brightness(1.05)", emoji: "⚡" },
   ];
 
   const startCamera = useCallback(async (facing: "user" | "environment") => {
