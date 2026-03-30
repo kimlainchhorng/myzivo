@@ -1165,8 +1165,13 @@ function drawTrackedSticker(
       ctx.fillText("🦋", cx - faceSize * 0.6, cy - faceSize * 0.5);
       ctx.fillText("🦋", cx + faceSize * 0.6, cy - faceSize * 0.45);
       break;
-    default:
-      drawSticker(ctx, sticker, w, h);
+    default: {
+      const defaultFace2: FaceBox = {
+        x: w * 0.25, y: h * 0.15, width: w * 0.5, height: h * 0.5,
+        eyeLeft: { x: w * 0.38, y: h * 0.32 }, eyeRight: { x: w * 0.62, y: h * 0.32 },
+      };
+      drawFaceFilter(ctx, sticker, defaultFace2, w, h, performance.now());
+    }
   }
 }
 
