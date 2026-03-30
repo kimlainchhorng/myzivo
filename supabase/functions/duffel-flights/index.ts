@@ -835,12 +835,18 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     baggageDetails: {
       carryOnIncluded,
       carryOnQuantity,
-      carryOnWeightKg,
-      carryOnWeightLb,
       checkedBagsIncluded,
       checkedBagQuantity,
-      checkedBagWeightKg,
-      checkedBagWeightLb,
+    } as {
+      carryOnIncluded: boolean;
+      carryOnQuantity: number;
+      carryOnWeightKg?: number | null;
+      carryOnWeightLb?: number | null;
+      checkedBagsIncluded: boolean;
+      checkedBagQuantity: number;
+      checkedBagWeightKg?: number | null;
+      checkedBagWeightLb?: number | null;
+      [key: string]: unknown;
     },
     segments: allSegs.map(seg => transformSegment(seg)),
     owner: firstCarrier,
@@ -892,7 +898,7 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
     .filter((o): o is DuffelOfferTransformed => o !== null);
 
   const buildFareVariantKey = (offer: DuffelOfferTransformed) => {
-    const bag = offer.baggageDetails;
+    const bag = offer.baggageDetails as Record<string, unknown>;
     const conditions = offer.conditions;
     return [
       offer.cabinClass,
@@ -919,7 +925,7 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
   const groups = new Map<string, DuffelOfferTransformed[]>();
   for (const offer of transformed) {
     // Build fingerprint from all segment flight numbers + times to uniquely identify the itinerary
-    const segFP = offer.segments.map(s => `${s.marketingCarrierCode}${s.flightNumber}-${s.departingAt}`).join('|');
+    const segFP = offer.segments.map((s: Record<string, string>) => `${s.marketingCarrierCode}${s.flightNumber}-${s.departingAt}`).join('|');
     const flightFP = `${offer.airlineCode}-${segFP}`;
     const group = groups.get(flightFP) || [];
     // Avoid only truly identical duplicates; preserve same-price Duffel fare bundles with different bags/rules

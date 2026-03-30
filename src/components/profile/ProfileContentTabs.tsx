@@ -1154,6 +1154,9 @@ function drawFaceFilter(
   const mouthY = y + fh * 0.72;
   const eyeL = face.eyeLeft;
   const eyeR = face.eyeRight;
+  const cy = y + fh / 2;
+  const eyeLX = eyeL.x;
+  const eyeRX = eyeR.x;
 
   ctx.save();
 
@@ -3177,6 +3180,7 @@ function LiveBroadcast({
   const recordTimerRef = useRef<ReturnType<typeof setInterval>>();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
+  const [filterThumbUrl, setFilterThumbUrl] = useState<string | null>(null);
 
   const COLOR_FILTERS = [
     { name: "Original", css: "none", emoji: "✨" },
@@ -3553,7 +3557,26 @@ function LiveBroadcast({
     setActiveFilter(next);
   };
 
-  // Face detection + AR sticker canvas overlay
+  const captureFilterThumb = () => {
+    const video = videoRef.current;
+    if (!video || video.videoWidth === 0) return;
+    const c = document.createElement("canvas");
+    c.width = 80;
+    c.height = 80;
+    const ctx2 = c.getContext("2d");
+    if (!ctx2) return;
+    const size = Math.min(video.videoWidth, video.videoHeight);
+    const sx = (video.videoWidth - size) / 2;
+    const sy = (video.videoHeight - size) / 2;
+    ctx2.drawImage(video, sx, sy, size, size, 0, 0, 80, 80);
+    setFilterThumbUrl(c.toDataURL("image/jpeg", 0.6));
+  };
+
+  const toggleFilters = () => {
+    if (!showFilters) captureFilterThumb();
+    setShowFilters(!showFilters);
+  };
+
   useEffect(() => {
     const currentSticker = AR_STICKERS[activeSticker]?.sticker;
     if (!currentSticker) {
@@ -3987,7 +4010,11 @@ function LiveBroadcast({
                         )}
                         style={{ filter: f.css }}
                       >
-                        <div className="w-full h-full bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500" />
+                        {filterThumbUrl ? (
+                          <img src={filterThumbUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500" />
+                        )}
                       </div>
                       <span className={cn(
                         "text-[10px] font-medium leading-tight",
@@ -4014,7 +4041,7 @@ function LiveBroadcast({
               placeholder="Say something..."
               className="flex-1 bg-white/15 backdrop-blur-sm text-white text-sm rounded-full px-4 py-2.5 placeholder:text-white/50 outline-none border border-white/10"
             />
-            <button onClick={() => setShowFilters(!showFilters)} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+            <button onClick={toggleFilters} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </button>
             <button
@@ -4034,7 +4061,7 @@ function LiveBroadcast({
         ) : (
           <div className="flex flex-col items-center gap-3">
             <button
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={toggleFilters}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium mb-1",
                 showFilters ? "bg-primary text-primary-foreground" : "bg-white/15 text-white/70"
