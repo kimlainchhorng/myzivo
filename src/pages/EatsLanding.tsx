@@ -639,7 +639,30 @@ export default function EatsLanding() {
                   <Input placeholder="Enter promo code" value={promoCode} onChange={(e) => setPromoCode(e.target.value)}
                     disabled={promoApplied} className="h-10 rounded-xl flex-1 text-sm" />
                   <Button variant={promoApplied ? "outline" : "default"} size="sm"
-                    onClick={() => { if (promoCode.trim()) { setPromoApplied(true); toast.success("Promo applied!"); } }}
+                    onClick={async () => {
+                      if (!promoCode.trim()) return;
+                      // Validate promo code against DB
+                      const { data: promo } = await supabase
+                        .from("promo_codes" as any)
+                        .select("id, discount_percent, discount_amount_cents, is_active, min_order_cents, expires_at")
+                        .eq("code", promoCode.trim().toUpperCase())
+                        .eq("is_active", true)
+                        .maybeSingle();
+                      if (!promo) {
+                        toast.error("Invalid or expired promo code");
+                        return;
+                      }
+                      if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+                        toast.error("This promo code has expired");
+                        return;
+                      }
+                      if (promo.min_order_cents && cartTotal * 100 < promo.min_order_cents) {
+                        toast.error(`Minimum order $${(promo.min_order_cents / 100).toFixed(2)} required`);
+                        return;
+                      }
+                      setPromoApplied(true);
+                      toast.success("Promo applied!");
+                    }}
                     disabled={promoApplied || !promoCode.trim()} className="rounded-xl h-10 px-4 text-xs font-bold">
                     {promoApplied ? <><CheckCircle className="w-3.5 h-3.5 mr-1" /> Applied</> : "Apply"}
                   </Button>
