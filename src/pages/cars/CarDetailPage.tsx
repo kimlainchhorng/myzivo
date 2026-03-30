@@ -51,11 +51,8 @@ export default function CarDetailPage() {
   // Queries
   const { data: vehicle, isLoading } = useP2PVehicleDetail(id);
   const { data: reviews = [] } = useVehicleReviews(id);
-  const { data: pricing } = useBookingPricing(
-    id,
-    pickupDate ? format(pickupDate, "yyyy-MM-dd") : undefined,
-    returnDate ? format(returnDate, "yyyy-MM-dd") : undefined
-  );
+  const totalDays = pickupDate && returnDate ? Math.max(1, differenceInDays(returnDate, pickupDate)) : 0;
+  const { data: pricing } = useBookingPricing(id, totalDays);
 
   if (isLoading) {
     return (
@@ -94,7 +91,6 @@ export default function CarDetailPage() {
   }
 
   const images = (vehicle.images as string[]) || [];
-  const totalDays = pickupDate && returnDate ? differenceInDays(returnDate, pickupDate) : 0;
 
   const handleBookNow = () => {
     if (!user) {
@@ -389,7 +385,7 @@ export default function CarDetailPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">
-                          ${pricing.dailyRate.toFixed(2)} × {pricing.totalDays} days
+                          ${pricing.dailyRate.toFixed(2)} × {pricing.days} days
                         </span>
                         <span>${pricing.subtotal.toFixed(2)}</span>
                       </div>
@@ -397,19 +393,20 @@ export default function CarDetailPage() {
                         <span className="text-muted-foreground">Service fee</span>
                         <span>${pricing.serviceFee.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Insurance</span>
-                        <span>${pricing.insuranceFee.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Taxes</span>
-                        <span>${pricing.taxes.toFixed(2)}</span>
-                      </div>
+                      {pricing.cleaningFee > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Cleaning fee</span>
+                          <span>${pricing.cleaningFee.toFixed(2)}</span>
+                        </div>
+                      )}
                       <Separator />
                       <div className="flex justify-between font-semibold text-base">
                         <span>Total</span>
-                        <span>${pricing.totalAmount.toFixed(2)}</span>
+                        <span>${pricing.total.toFixed(2)}</span>
                       </div>
+                      {pricing.deposit > 0 && (
+                        <p className="text-xs text-muted-foreground">+ ${pricing.deposit.toFixed(2)} refundable deposit</p>
+                      )}
                     </div>
                   )}
 
