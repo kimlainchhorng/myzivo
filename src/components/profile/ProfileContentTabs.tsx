@@ -3653,6 +3653,7 @@ function LiveBroadcast({
     }
   };
 
+  useEffect(() => {
     const currentSticker = AR_STICKERS[activeSticker]?.sticker;
     if (!currentSticker) {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
