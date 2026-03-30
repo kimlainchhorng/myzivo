@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Grid3X3, Play, Radio, FileText, ImageIcon, Heart, MessageCircle, Eye, X, Users, Mic, MicOff, Camera, SwitchCamera, Share2 } from "lucide-react";
+import { Grid3X3, Play, Radio, FileText, ImageIcon, Heart, MessageCircle, Eye, X, Users, Mic, MicOff, Camera, SwitchCamera, Share2, Send, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const tabs = [
   { id: "posts", label: "Posts", icon: Grid3X3 },
