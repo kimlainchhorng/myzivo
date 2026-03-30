@@ -504,11 +504,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                             key={opt.id}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => {
-                              if (opt.id === "live") {
-                                setShowComposer(false);
-                                setComposerType(null);
-                                setShowLive(true);
-                              } else {
+                            if (opt.id === "live") {
+                              toast("🔴 Go Live is coming soon!", { description: "Stay tuned for live broadcasting features." });
+                              return;
+                            } else {
                                 setComposerType(opt.id);
                               }
                             }}
