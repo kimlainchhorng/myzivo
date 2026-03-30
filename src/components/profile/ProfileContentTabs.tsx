@@ -2,9 +2,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, Heart, MessageCircle, Eye, X,
+  Plus, Heart, MessageCircle, Eye, X, SwitchCamera, Mic, MicOff,
   Share2, Play, Radio, ChevronDown, Globe, Users, Lock,
-  MapPin, Image, Film, Grid3X3, Clapperboard,
+  MapPin, Image, Film, Grid3X3, Clapperboard, Camera,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
