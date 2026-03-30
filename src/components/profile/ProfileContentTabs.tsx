@@ -3202,7 +3202,7 @@ function LiveBroadcast({
       const data = await resp.json();
       if (data.imageUrl) {
         setAiResultOverlay(data.imageUrl);
-        setAiOverlayMode("fullscreen");
+        setAiOverlayMode("card");
       }
     } catch (err) {
       console.error("AI face edit failed:", err);
