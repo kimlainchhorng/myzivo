@@ -49,6 +49,7 @@ import { formatDistanceToNow } from "date-fns";
 const activeSessions: { id: string; device: string; location: string; lastActive: Date; current?: boolean }[] = [];
 
 export default function AccountSecurity() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useI18n();
   const [isChangingPassword, setIsChangingPassword] = useState(false);
