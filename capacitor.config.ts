@@ -4,7 +4,7 @@ const devServerUrl = process.env.CAPACITOR_DEV_SERVER_URL;
 
 const config: CapacitorConfig = {
   appId: 'com.hizovo.app',
-  appName: 'myzivo',
+  appName: 'Zivo',
   webDir: 'dist',
   ...(devServerUrl
     ? {
