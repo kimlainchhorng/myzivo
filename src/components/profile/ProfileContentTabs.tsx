@@ -3507,41 +3507,20 @@ function LiveBroadcast({
         style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
       />
 
-      {/* AI result: brief fullscreen preview, then mini card so camera keeps moving */}
+      {/* AI result: always shown as mini card so camera stays visible */}
       {aiResultOverlay && (
-        aiOverlayMode === "fullscreen" ? (
-          <div className="absolute inset-0 z-[11]">
-            <img src={aiResultOverlay} alt="AI result" className="w-full h-full object-cover" />
-            <div className="absolute bottom-32 left-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
-              <span className="text-white text-xs font-medium">🤖 AI Enhanced</span>
-            </div>
-            <button
-              onClick={() => { setAiResultOverlay(null); setAiSelectedMode(null); }}
-              className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center"
-            >
-              <X className="w-4 h-4 text-white" />
-            </button>
+        <div className="absolute bottom-32 left-3 z-[4] w-[132px] h-[184px] rounded-2xl overflow-hidden shadow-2xl border border-white/30 bg-black/20 backdrop-blur-sm">
+          <img src={aiResultOverlay} alt="AI result preview" className="w-full h-full object-cover" />
+          <button
+            onClick={() => { setAiResultOverlay(null); setAiSelectedMode(null); }}
+            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"
+          >
+            <X className="w-3.5 h-3.5 text-white" />
+          </button>
+          <div className="absolute bottom-1.5 left-1.5 bg-black/55 backdrop-blur-sm rounded-full px-2 py-0.5">
+            <span className="text-white text-[10px] font-medium">🤖 AI</span>
           </div>
-        ) : (
-          <div className="absolute bottom-32 left-3 z-[4] w-[132px] h-[184px] rounded-2xl overflow-hidden shadow-2xl border border-white/30 bg-black/20 backdrop-blur-sm">
-            <button
-              type="button"
-              onClick={() => setAiOverlayMode("fullscreen")}
-              className="block w-full h-full"
-            >
-              <img src={aiResultOverlay} alt="AI result preview" className="w-full h-full object-cover" />
-            </button>
-            <button
-              onClick={() => { setAiResultOverlay(null); setAiSelectedMode(null); }}
-              className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"
-            >
-              <X className="w-3.5 h-3.5 text-white" />
-            </button>
-            <div className="absolute bottom-1.5 left-1.5 bg-black/55 backdrop-blur-sm rounded-full px-2 py-0.5">
-              <span className="text-white text-[10px] font-medium">🤖 AI</span>
-            </div>
-          </div>
-        )
+        </div>
       )}
 
       {/* AI processing overlay */}
