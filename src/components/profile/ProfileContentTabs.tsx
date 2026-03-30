@@ -509,7 +509,10 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
         playsInline
         muted
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
+        style={{
+          transform: facingMode === "user" ? "scaleX(-1)" : "none",
+          filter: FILTERS[activeFilter].css,
+        }}
       />
 
       {/* Top overlay */}
