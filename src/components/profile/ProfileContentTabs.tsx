@@ -3131,7 +3131,7 @@ function LiveBroadcast({
   const [aiProcessing, setAiProcessing] = useState(false);
   const [aiResultOverlay, setAiResultOverlay] = useState<string | null>(null);
   const [aiSelectedMode, setAiSelectedMode] = useState<string | null>(null);
-  const [aiOverlayMode, setAiOverlayMode] = useState<"fullscreen" | "card">("fullscreen");
+  const [aiOverlayMode, setAiOverlayMode] = useState<"fullscreen" | "card">("card");
 
   const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : AI_MODES.length;
   const selectedFilterName = filterTab === "ar"
