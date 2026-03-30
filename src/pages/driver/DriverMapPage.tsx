@@ -7,10 +7,11 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useDriverMapState } from "@/hooks/useDriverMapState";
 import { useCustomerLocation } from "@/hooks/useCustomerLocation";
+import { useGpsPermission } from "@/hooks/useGpsPermission";
 import DriverMapHeader from "@/components/driver/DriverMapHeader";
 import DriverBottomNav from "@/components/driver/DriverBottomNav";
 import { motion } from "framer-motion";
-import { MapPin, Navigation, Loader2, Car, Check, X, User, Plane } from "lucide-react";
+import { MapPin, Navigation, Loader2, Car, Check, X, User, Plane, LocateFixed } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
