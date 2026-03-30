@@ -224,6 +224,9 @@ export default function ChatHubPage() {
         </div>
       </div>
 
+      {/* Stories Row */}
+      <ChatStories />
+
       {/* Chat List */}
       <AnimatePresence mode="wait">
         <motion.div
