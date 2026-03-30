@@ -75,7 +75,7 @@ export default function ChatStories() {
           mediaType: s.media_type,
           caption: s.caption,
           createdAt: s.created_at,
-          views_count: s.views_count,
+          viewsCount: s.views_count ?? 0,
         });
       }
 
