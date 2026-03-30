@@ -529,8 +529,8 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
-      {/* Comments overlay when live */}
-      {isLive && (
+      {/* Spacer + Comments overlay */}
+      {isLive ? (
         <div className="relative z-10 flex-1 flex flex-col justify-end px-4 pb-2">
           <div className="max-h-[30vh] overflow-y-auto space-y-1.5 mb-3 scrollbar-none">
             {comments.map((c) => (
@@ -541,6 +541,8 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
             ))}
           </div>
         </div>
+      ) : (
+        <div className="flex-1" />
       )}
 
       {/* Bottom controls */}
