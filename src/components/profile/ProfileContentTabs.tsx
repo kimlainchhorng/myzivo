@@ -9,6 +9,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 type FeedItem = {
   id: string;
@@ -28,6 +29,23 @@ type NewPostPayload = {
   caption: string;
   url: string;
   filterCss: string;
+  file?: File | null;
+};
+
+const LOCAL_POSTS_KEY = "zivo_social_posts_v1";
+
+type UserPostRow = {
+  id: string;
+  user_id: string;
+  media_type: "photo" | "reel";
+  media_url: string;
+  caption: string | null;
+  filter_css: string | null;
+  likes_count: number | null;
+  comments_count: number | null;
+  views_count: number | null;
+  created_at: string;
+  is_published: boolean;
 };
 
 const demoFeed: FeedItem[] = [
@@ -61,24 +79,136 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
   const filtered = activeTab === "all" ? feed : feed.filter((i) => i.type === activeTab);
 
-  const handleCreatePost = useCallback((payload: NewPostPayload) => {
+  useEffect(() => {
+    let alive = true;
+
+    const mergeFeed = (incoming: FeedItem[]) => {
+      setFeed((prev) => {
+        const deduped = new Map<string, FeedItem>();
+        [...incoming, ...prev].forEach((item) => {
+          deduped.set(item.id, item);
+        });
+        return Array.from(deduped.values());
+      });
+    };
+
+    const loadPersisted = async () => {
+      try {
+        const localRaw = localStorage.getItem(LOCAL_POSTS_KEY);
+        if (localRaw && alive) {
+          const localPosts = JSON.parse(localRaw) as FeedItem[];
+          if (Array.isArray(localPosts) && localPosts.length > 0) {
+            mergeFeed(localPosts);
+          }
+        }
+      } catch {
+        // Ignore malformed local cache.
+      }
+
+      try {
+        const { data } = await (supabase as any)
+          .from("user_posts")
+          .select("id, user_id, media_type, media_url, caption, filter_css, likes_count, comments_count, views_count, created_at, is_published")
+          .eq("is_published", true)
+          .order("created_at", { ascending: false })
+          .limit(50);
+
+        if (!alive || !data) return;
+
+        const remotePosts: FeedItem[] = (data as UserPostRow[])
+          .map((row) => ({
+            id: row.id,
+            type: row.media_type,
+            likes: Number(row.likes_count ?? 0),
+            comments: Number(row.comments_count ?? 0),
+            caption: row.caption || "",
+            time: row.created_at ? "recent" : "now",
+            url: row.media_url,
+            filterCss: row.filter_css || undefined,
+            views: row.media_type === "reel" ? Number(row.views_count ?? 0) : undefined,
+            user: {
+              name: row.user_id === user?.id ? (user?.email?.split("@")[0] || "You") : "Zivo User",
+              avatar: "https://i.pravatar.cc/100?img=3",
+            },
+          }))
+          .filter((item) => Boolean(item.url));
+
+        if (remotePosts.length > 0) mergeFeed(remotePosts);
+      } catch {
+        // user_posts migration may not be applied yet; local mode still works.
+      }
+    };
+
+    void loadPersisted();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const uploadMediaToSupabase = useCallback(async (file?: File | null) => {
+    if (!file) return null;
+    const extension = file.name.split(".").pop() || (file.type.startsWith("video/") ? "webm" : "jpg");
+    const objectPath = `${user?.id || "guest"}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
+    try {
+      const { error } = await supabase.storage.from("user-posts").upload(objectPath, file, {
+        upsert: false,
+        contentType: file.type || undefined,
+      });
+      if (error) return null;
+      const { data } = supabase.storage.from("user-posts").getPublicUrl(objectPath);
+      return data.publicUrl;
+    } catch {
+      return null;
+    }
+  }, [user?.id]);
+
+  const persistLocalPost = useCallback((post: FeedItem) => {
+    if (post.url.startsWith("blob:")) return;
+    try {
+      const existing = JSON.parse(localStorage.getItem(LOCAL_POSTS_KEY) || "[]") as FeedItem[];
+      const next = [post, ...existing.filter((item) => item.id !== post.id)].slice(0, 100);
+      localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(next));
+    } catch {
+      // Local persistence is best effort.
+    }
+  }, []);
+
+  const handleCreatePost = useCallback(async (payload: NewPostPayload) => {
     const authorName = user?.email?.split("@")[0] || "You";
-    setFeed((prev) => [
-      {
-        id: `post-${Date.now()}`,
-        type: payload.type,
-        likes: 0,
-        comments: 0,
-        caption: payload.caption,
-        time: "now",
-        url: payload.url,
-        filterCss: payload.filterCss,
-        views: payload.type === "reel" ? 0 : undefined,
-        user: { name: authorName, avatar: "https://i.pravatar.cc/100?img=3" },
-      },
-      ...prev,
-    ]);
-  }, [user?.email]);
+    const uploadedUrl = await uploadMediaToSupabase(payload.file);
+    const mediaUrl = uploadedUrl || payload.url;
+
+    const createdPost: FeedItem = {
+      id: `post-${Date.now()}`,
+      type: payload.type,
+      likes: 0,
+      comments: 0,
+      caption: payload.caption,
+      time: "now",
+      url: mediaUrl,
+      filterCss: payload.filterCss,
+      views: payload.type === "reel" ? 0 : undefined,
+      user: { name: authorName, avatar: "https://i.pravatar.cc/100?img=3" },
+    };
+
+    setFeed((prev) => [createdPost, ...prev]);
+    persistLocalPost(createdPost);
+
+    if (user?.id) {
+      try {
+        await (supabase as any).from("user_posts").insert({
+          user_id: user.id,
+          media_type: createdPost.type,
+          media_url: createdPost.url,
+          caption: createdPost.caption,
+          filter_css: createdPost.filterCss || null,
+          is_published: true,
+        });
+      } catch {
+        // Ignore remote write issues; local feed already updated.
+      }
+    }
+  }, [persistLocalPost, uploadMediaToSupabase, user?.email, user?.id]);
 
   return (
     <div className="space-y-3">
@@ -310,7 +440,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       {/* Live Broadcast Overlay */}
       {createPortal(
         <AnimatePresence>
-          {showLive && <LiveBroadcast onClose={() => setShowLive(false)} />}
+          {showLive && <LiveBroadcast onClose={() => setShowLive(false)} onPublishClip={handleCreatePost} />}
         </AnimatePresence>,
         document.body
       )}
@@ -344,21 +474,24 @@ function ComposerForm({
   onBack,
 }: {
   type: "photo" | "reel";
-  onCreatePost: (payload: NewPostPayload) => void;
+  onCreatePost: (payload: NewPostPayload) => Promise<void>;
   onClose: () => void;
   onBack: () => void;
 }) {
   const [caption, setCaption] = useState("");
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [visibility, setVisibility] = useState<Visibility>("everyone");
   const [showVisibilityPicker, setShowVisibilityPicker] = useState(false);
   const [activeFilter, setActiveFilter] = useState(0);
+  const [isPosting, setIsPosting] = useState(false);
   const previousPreviewRef = useRef<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setSelectedFile(file);
     const nextUrl = URL.createObjectURL(file);
     if (previousPreviewRef.current?.startsWith("blob:")) {
       URL.revokeObjectURL(previousPreviewRef.current);
@@ -375,16 +508,34 @@ function ComposerForm({
     };
   }, []);
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!mediaPreview) { toast.error("Add media first!"); return; }
-    onCreatePost({
-      type,
-      caption: caption.trim(),
-      url: mediaPreview,
-      filterCss: COMPOSER_FILTERS[activeFilter]?.css || "none",
-    });
-    toast.success("Posted successfully! 🎉");
-    onClose();
+    if (isPosting) return;
+    setIsPosting(true);
+    try {
+      await onCreatePost({
+        type,
+        caption: caption.trim(),
+        url: mediaPreview,
+        file: selectedFile,
+        filterCss: COMPOSER_FILTERS[activeFilter]?.css || "none",
+      });
+      toast.success("Posted successfully! 🎉");
+      onClose();
+    } catch {
+      toast.error("Could not publish post right now");
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
+  const clearMediaPreview = () => {
+    if (previousPreviewRef.current?.startsWith("blob:")) {
+      URL.revokeObjectURL(previousPreviewRef.current);
+      previousPreviewRef.current = null;
+    }
+    setSelectedFile(null);
+    setMediaPreview(null);
   };
 
   const isReel = type === "reel";
@@ -398,8 +549,8 @@ function ComposerForm({
       <div className="flex items-center justify-between">
         <button onClick={onBack} className="text-sm text-primary font-medium">← Back</button>
         <h3 className="text-base font-bold text-foreground">New {label}</h3>
-        <motion.button whileTap={{ scale: 0.95 }} onClick={handlePost} className="bg-primary text-primary-foreground text-sm font-bold px-4 py-1.5 rounded-full">
-          Post
+        <motion.button whileTap={{ scale: 0.95 }} disabled={isPosting} onClick={handlePost} className="bg-primary text-primary-foreground text-sm font-bold px-4 py-1.5 rounded-full disabled:opacity-70">
+          {isPosting ? "Posting..." : "Post"}
         </motion.button>
       </div>
 
@@ -420,7 +571,7 @@ function ComposerForm({
               style={{ filter: COMPOSER_FILTERS[activeFilter]?.css || "none" }}
             />
           )}
-          <button onClick={() => setMediaPreview(null)} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center">
+            <button onClick={clearMediaPreview} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center">
             <X className="w-4 h-4 text-white" />
           </button>
         </div>
@@ -654,7 +805,72 @@ function drawSticker(ctx: CanvasRenderingContext2D, sticker: string, w: number, 
   }
 }
 
-function LiveBroadcast({ onClose }: { onClose: () => void }) {
+type FaceAnchor = {
+  x: number;
+  y: number;
+  size: number;
+};
+
+function drawTrackedSticker(
+  ctx: CanvasRenderingContext2D,
+  sticker: string,
+  w: number,
+  h: number,
+  faceAnchor: FaceAnchor | null,
+) {
+  if (!faceAnchor) {
+    drawSticker(ctx, sticker, w, h);
+    return;
+  }
+
+  const cx = faceAnchor.x;
+  const cy = faceAnchor.y;
+  const faceSize = faceAnchor.size;
+  const fontSize = Math.max(22, faceSize * 0.42);
+  ctx.font = `${fontSize}px serif`;
+  ctx.textAlign = "center";
+
+  switch (sticker) {
+    case "cat":
+      ctx.fillText("🐱", cx - faceSize * 0.35, cy - faceSize * 0.65);
+      ctx.fillText("🐱", cx + faceSize * 0.35, cy - faceSize * 0.65);
+      ctx.fillText("👃", cx, cy + faceSize * 0.05);
+      break;
+    case "dog":
+      ctx.fillText("🐕", cx, cy - faceSize * 0.55);
+      ctx.fillText("👅", cx, cy + faceSize * 0.42);
+      break;
+    case "bunny":
+      ctx.fillText("🐰", cx, cy - faceSize * 0.72);
+      break;
+    case "crown":
+      ctx.fillText("👑", cx, cy - faceSize * 0.82);
+      break;
+    case "glasses":
+      ctx.fillText("🕶️", cx, cy);
+      break;
+    case "devil":
+      ctx.fillText("😈", cx, cy - faceSize * 0.85);
+      break;
+    case "angel":
+      ctx.fillText("😇", cx, cy - faceSize * 0.92);
+      break;
+    case "butterfly":
+      ctx.fillText("🦋", cx - faceSize * 0.6, cy - faceSize * 0.5);
+      ctx.fillText("🦋", cx + faceSize * 0.6, cy - faceSize * 0.45);
+      break;
+    default:
+      drawSticker(ctx, sticker, w, h);
+  }
+}
+
+function LiveBroadcast({
+  onClose,
+  onPublishClip,
+}: {
+  onClose: () => void;
+  onPublishClip: (payload: NewPostPayload) => Promise<void>;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -670,7 +886,14 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
   const [showFilters, setShowFilters] = useState(false);
   const [filterTab, setFilterTab] = useState<"color" | "face" | "ar">("color");
   const [activeSticker, setActiveSticker] = useState(0);
+  const [faceAnchor, setFaceAnchor] = useState<FaceAnchor | null>(null);
+  const [isRecordingClip, setIsRecordingClip] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [isPublishingClip, setIsPublishingClip] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const recordTimerRef = useRef<ReturnType<typeof setInterval>>();
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
 
   const COLOR_FILTERS = [
     { name: "Original", css: "none", emoji: "✨" },
@@ -749,7 +972,7 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
       canvas.width = canvas.offsetWidth * 2;
       canvas.height = canvas.offsetHeight * 2;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawSticker(ctx, currentSticker, canvas.width, canvas.height);
+      drawTrackedSticker(ctx, currentSticker, canvas.width, canvas.height, faceAnchor);
       animFrameRef.current = requestAnimationFrame(draw);
     };
     // Draw at slower rate for static stickers
@@ -758,7 +981,7 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
     const interval = ["hearts", "stars", "sparkles", "snow"].includes(currentSticker)
       ? setInterval(() => {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-          drawSticker(ctx, currentSticker, canvas.width, canvas.height);
+          drawTrackedSticker(ctx, currentSticker, canvas.width, canvas.height, faceAnchor);
         }, 400)
       : undefined;
 
@@ -767,7 +990,47 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       if (interval) clearInterval(interval);
     };
-  }, [activeSticker]);
+  }, [activeSticker, faceAnchor]);
+
+  useEffect(() => {
+    const FaceDetectorCtor = (window as any).FaceDetector;
+    if (!FaceDetectorCtor) {
+      setFaceAnchor(null);
+      return;
+    }
+
+    let alive = true;
+    let rafId = 0;
+    const detector = new FaceDetectorCtor({ fastMode: true, maxDetectedFaces: 1 });
+
+    const detect = async () => {
+      if (!alive) return;
+      const video = videoRef.current;
+      if (video && video.readyState >= 2) {
+        try {
+          const faces = await detector.detect(video);
+          const box = faces?.[0]?.boundingBox;
+          if (box) {
+            const scaleX = (video.clientWidth || 1) / (video.videoWidth || 1);
+            const scaleY = (video.clientHeight || 1) / (video.videoHeight || 1);
+            const x = (box.x + box.width / 2) * scaleX * 2;
+            const y = (box.y + box.height / 2) * scaleY * 2;
+            const size = Math.max(box.width * scaleX * 2, 120);
+            setFaceAnchor({ x, y, size });
+          }
+        } catch {
+          // Face detector unsupported or blocked; keep static overlays.
+        }
+      }
+      rafId = requestAnimationFrame(detect);
+    };
+
+    rafId = requestAnimationFrame(detect);
+    return () => {
+      alive = false;
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [facingMode]);
 
   const startCamera = useCallback(async (facing: "user" | "environment") => {
     try {
@@ -793,6 +1056,10 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
     return () => {
       streamRef.current?.getTracks().forEach((t) => t.stop());
       if (timerRef.current) clearInterval(timerRef.current);
+      if (recordTimerRef.current) clearInterval(recordTimerRef.current);
+      if (mediaRecorderRef.current?.state !== "inactive") {
+        mediaRecorderRef.current?.stop();
+      }
     };
   }, []);
 
@@ -837,6 +1104,73 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
+  const startClipRecording = () => {
+    if (isPublishingClip) return;
+    const stream = streamRef.current;
+    if (!stream) {
+      toast.error("Camera stream is not ready");
+      return;
+    }
+    if (!(window as any).MediaRecorder) {
+      toast.error("Recording is not supported on this device");
+      return;
+    }
+
+    const mimeCandidates = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+    const supported = mimeCandidates.find((type) => (window as any).MediaRecorder.isTypeSupported?.(type));
+
+    try {
+      chunksRef.current = [];
+      const recorder = supported
+        ? new MediaRecorder(stream, { mimeType: supported })
+        : new MediaRecorder(stream);
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunksRef.current.push(event.data);
+      };
+
+      recorder.onstop = async () => {
+        if (chunksRef.current.length === 0) return;
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "video/webm" });
+        const clipUrl = URL.createObjectURL(blob);
+        const clipFile = new File([blob], `zivo-clip-${Date.now()}.webm`, { type: blob.type || "video/webm" });
+
+        setIsPublishingClip(true);
+        try {
+          await onPublishClip({
+            type: "reel",
+            caption: "New live clip",
+            url: clipUrl,
+            file: clipFile,
+            filterCss: filterTab !== "ar" ? currentFilter.css : "none",
+          });
+          toast.success("Clip published to your feed");
+        } catch {
+          toast.error("Failed to publish clip");
+        } finally {
+          setIsPublishingClip(false);
+        }
+      };
+
+      recorder.start(500);
+      mediaRecorderRef.current = recorder;
+      setIsRecordingClip(true);
+      setRecordSeconds(0);
+      if (recordTimerRef.current) clearInterval(recordTimerRef.current);
+      recordTimerRef.current = setInterval(() => setRecordSeconds((sec) => sec + 1), 1000);
+      toast.success("Recording started");
+    } catch {
+      toast.error("Could not start recording");
+    }
+  };
+
+  const stopClipRecording = () => {
+    if (!mediaRecorderRef.current || mediaRecorderRef.current.state === "inactive") return;
+    mediaRecorderRef.current.stop();
+    setIsRecordingClip(false);
+    if (recordTimerRef.current) clearInterval(recordTimerRef.current);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -879,6 +1213,11 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
           {isLive && (
             <span className="text-white/80 text-xs font-mono bg-black/40 px-2 py-1 rounded-full">
               {formatTime(elapsed)}
+            </span>
+          )}
+          {isRecordingClip && (
+            <span className="text-white/90 text-xs font-mono bg-red-600/80 px-2 py-1 rounded-full">
+              REC {formatTime(recordSeconds)}
             </span>
           )}
         </div>
@@ -1015,6 +1354,13 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
             <button onClick={() => setShowFilters(!showFilters)} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </button>
+            <button
+              onClick={isRecordingClip ? stopClipRecording : startClipRecording}
+              disabled={isPublishingClip}
+              className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center disabled:opacity-60"
+            >
+              <Film className={cn("w-5 h-5", isRecordingClip ? "text-red-400" : "text-white")} />
+            </button>
             <button onClick={toggleMic} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
               {muted ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
             </button>
@@ -1037,6 +1383,13 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
               <button onClick={flipCamera} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
                 <SwitchCamera className="w-5 h-5 text-white" />
               </button>
+              <button
+                onClick={isRecordingClip ? stopClipRecording : startClipRecording}
+                disabled={isPublishingClip}
+                className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center disabled:opacity-60"
+              >
+                <Film className={cn("w-5 h-5", isRecordingClip ? "text-red-400" : "text-white")} />
+              </button>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={goLive}
@@ -1048,7 +1401,7 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
                 {muted ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
               </button>
             </div>
-            <span className="text-white/60 text-xs font-medium">Tap to Go Live</span>
+            <span className="text-white/60 text-xs font-medium">Tap to Go Live or record short clips</span>
           </div>
         )}
       </div>
