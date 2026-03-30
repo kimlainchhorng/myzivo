@@ -521,6 +521,71 @@ export default function ChatStories() {
               >
                 <div className={cn(
                   "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
+                  liked ? "bg-destructive/80" : "bg-white/10"
+                )}>
+                  <Heart className={cn("w-5 h-5 transition-all", liked ? "text-white fill-white" : "text-white")} />
+                </div>
+                <span className="text-white/80 text-[10px] font-medium">Like</span>
+              </button>
+
+              {/* Comments button */}
+              <button
+                onClick={() => { setPaused(true); setShowComments(true); }}
+                className="flex flex-col items-center gap-1"
+              >
+                <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center relative">
+                  <MessageCircle className="w-5 h-5 text-white" />
+                  {comments.length > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
+                      {comments.length}
+                    </span>
+                  )}
+                </div>
+                <span className="text-white/80 text-[10px] font-medium">Comment</span>
+              </button>
+
+              <button className="flex flex-col items-center gap-1">
+                <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                  <Send className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-white/80 text-[10px] font-medium">Send</span>
+              </button>
+
+              {isOwner && (
+                <>
+                  {/* Views button - owner only */}
+                  <button
+                    onClick={() => { setPaused(true); setShowViewers(true); }}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                      <Eye className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-white/80 text-[10px] font-medium">{currentStory?.viewsCount || 0}</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (!currentStory) return;
+                      deleteStory.mutate(currentStory.id);
+                      if (viewingGroup!.stories.length <= 1) {
+                        setViewingGroup(null);
+                      } else {
+                        goNext();
+                      }
+                    }}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                      <Trash2 className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-white/80 text-[10px] font-medium">Delete</span>
+                  </button>
+                </>
+              )}
+            </div>
+                <div className={cn(
+                  "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
                   liked ? "bg-red-500/80" : "bg-white/10"
                 )}>
                   <Heart className={cn("w-5 h-5 transition-all", liked ? "text-white fill-white" : "text-white")} />
