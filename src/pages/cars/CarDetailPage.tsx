@@ -91,7 +91,6 @@ export default function CarDetailPage() {
   }
 
   const images = (vehicle.images as string[]) || [];
-  const totalDays = pickupDate && returnDate ? differenceInDays(returnDate, pickupDate) : 0;
 
   const handleBookNow = () => {
     if (!user) {

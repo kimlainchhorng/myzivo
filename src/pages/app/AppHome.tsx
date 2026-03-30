@@ -15,7 +15,7 @@ import {
   UtensilsCrossed, Heart, History, Hotel, Gift, Users, Share2, Clock,
   Wallet, CreditCard, Home, Briefcase, Plus, Timer, DollarSign,
   TrendingUp, Navigation, ChevronRight, ArrowRight, Zap, Shield,
-  Globe, Crown, Flame, Calendar
+  Globe, Crown, Flame, Calendar, Activity
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
