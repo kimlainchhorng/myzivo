@@ -240,11 +240,20 @@ const AppHome = () => {
   const { data: destPrices = {}, isLoading: destPricesLoading } = useDestinationPrices(destKeys, isKH);
   const { data: hotDeals = [], isLoading: hotDealsLoading } = useHotDeals();
   const { data: allBookings = [] } = useScheduledBookingsQuery();
-  const upcomingBookings = allBookings.filter((b) => {
-    if (b.status !== "scheduled" && b.status !== "confirmed") return false;
-    const bookingDate = new Date(`${b.scheduled_date}T${b.scheduled_time}`);
+  const upcomingBookings = allBookings.filter((b: any) => {
+    if (b.status !== "scheduled" && b.status !== "confirmed" && b.status !== "pending") return false;
+    const sd = b.scheduledDate || b.scheduled_date;
+    const st = b.scheduledTime || b.scheduled_time;
+    if (!sd || !st) return false;
+    const bookingDate = new Date(`${sd}T${st}`);
     return bookingDate > new Date();
-  }).sort((a, b) => new Date(`${a.scheduled_date}T${a.scheduled_time}`).getTime() - new Date(`${b.scheduled_date}T${b.scheduled_time}`).getTime());
+  }).sort((a: any, b: any) => {
+    const ad = a.scheduledDate || a.scheduled_date;
+    const at2 = a.scheduledTime || a.scheduled_time;
+    const bd = b.scheduledDate || b.scheduled_date;
+    const bt = b.scheduledTime || b.scheduled_time;
+    return new Date(`${ad}T${at2}`).getTime() - new Date(`${bd}T${bt}`).getTime();
+  });
   const { balanceDollars } = useCustomerWallet();
   const { getDefault } = useLocalPaymentMethods();
   const defaultCard = getDefault();
@@ -517,7 +526,15 @@ const AppHome = () => {
             <div>
               <SectionHeader icon={Clock} iconColor="text-primary" title={t("home.recent_activity")} actionLabel={t("home.see_all")} onSeeAll={() => navigate("/trips")} />
               <ActivityTimeline
-                items={activityItems}
+                items={activityItems.map((a: any) => ({
+                  id: a.id,
+                  icon: Activity,
+                  iconColor: "text-primary",
+                  title: a.eventType?.replace(/_/g, " ") || "Activity",
+                  subtitle: typeof a.eventData === "object" ? JSON.stringify(a.eventData)?.slice(0, 60) : String(a.eventData || ""),
+                  timestamp: new Date(a.createdAt || a.created_at || Date.now()),
+                  status: "completed" as const,
+                }))}
                 maxHeight="280px"
                 emptyMessage="No recent activity"
               />

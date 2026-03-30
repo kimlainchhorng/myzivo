@@ -78,7 +78,7 @@ export function useP2PVehicleSearch(filters?: P2PSearchFilters) {
         .limit(50);
 
       if (filters?.category && filters.category !== "all") {
-        q = q.eq("category", filters.category);
+        q = q.eq("category", filters.category as any);
       }
       if (filters?.minPrice) {
         q = q.gte("daily_rate", filters.minPrice);
@@ -90,10 +90,10 @@ export function useP2PVehicleSearch(filters?: P2PSearchFilters) {
         q = q.ilike("make", `%${filters.make}%`);
       }
       if (filters?.transmission) {
-        q = q.eq("transmission", filters.transmission);
+        q = q.eq("transmission", filters.transmission as any);
       }
       if (filters?.fuelType) {
-        q = q.eq("fuel_type", filters.fuelType);
+        q = q.eq("fuel_type", filters.fuelType as any);
       }
       if (filters?.seats) {
         q = q.gte("seats", filters.seats);
