@@ -1121,7 +1121,11 @@ function drawTrackedSticker(
   faceAnchor: FaceAnchor | null,
 ) {
   if (!faceAnchor) {
-    drawSticker(ctx, sticker, w, h);
+    const defaultFace: FaceBox = {
+      x: w * 0.25, y: h * 0.15, width: w * 0.5, height: h * 0.5,
+      eyeLeft: { x: w * 0.38, y: h * 0.32 }, eyeRight: { x: w * 0.62, y: h * 0.32 },
+    };
+    drawFaceFilter(ctx, sticker, defaultFace, w, h, performance.now());
     return;
   }
 
@@ -1161,8 +1165,13 @@ function drawTrackedSticker(
       ctx.fillText("🦋", cx - faceSize * 0.6, cy - faceSize * 0.5);
       ctx.fillText("🦋", cx + faceSize * 0.6, cy - faceSize * 0.45);
       break;
-    default:
-      drawSticker(ctx, sticker, w, h);
+    default: {
+      const defaultFace2: FaceBox = {
+        x: w * 0.25, y: h * 0.15, width: w * 0.5, height: h * 0.5,
+        eyeLeft: { x: w * 0.38, y: h * 0.32 }, eyeRight: { x: w * 0.62, y: h * 0.32 },
+      };
+      drawFaceFilter(ctx, sticker, defaultFace2, w, h, performance.now());
+    }
   }
 }
 
@@ -1285,20 +1294,6 @@ function LiveBroadcast({
       canvas.width = canvas.offsetWidth * 2;
       canvas.height = canvas.offsetHeight * 2;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-<<<<<<< HEAD
-      drawTrackedSticker(ctx, currentSticker, canvas.width, canvas.height, faceAnchor);
-      animFrameRef.current = requestAnimationFrame(draw);
-    };
-    // Draw at slower rate for static stickers
-    draw();
-    // For animated stickers, redraw every 500ms
-    const interval = ["hearts", "stars", "sparkles", "snow"].includes(currentSticker)
-      ? setInterval(() => {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          drawTrackedSticker(ctx, currentSticker, canvas.width, canvas.height, faceAnchor);
-        }, 400)
-      : undefined;
-=======
 
       const video = videoRef.current;
       const cw = canvas.width;
@@ -1311,7 +1306,6 @@ function LiveBroadcast({
           if (faces.length > 0) {
             const f = faces[0];
             const bb = f.boundingBox;
-            // Scale from video coords to canvas coords
             const scaleX = cw / video.videoWidth;
             const scaleY = ch / video.videoHeight;
             const eyeL = f.landmarks?.find((l: any) => l.type === "eye")?.locations?.[0];
@@ -1332,7 +1326,6 @@ function LiveBroadcast({
         } catch { /* detection failed, use last known */ }
       }
 
-      // Fallback: centered face estimate if no detector or no face found
       const face: FaceBox = lastFace || {
         x: cw * 0.25, y: ch * 0.15,
         width: cw * 0.5, height: ch * 0.5,
@@ -1346,7 +1339,6 @@ function LiveBroadcast({
     };
 
     detectAndDraw();
->>>>>>> 621dab074c92e160d15b8c2a0f381fa2ef63ffc4
 
     return () => {
       running = false;
