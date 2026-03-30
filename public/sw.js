@@ -12,9 +12,9 @@ self.__WB_MANIFEST;
 // Configure Workbox
 if (workbox) {
   console.log('[SW] Workbox loaded successfully');
-  
+
   workbox.precaching.precacheAndRoute(self.__WB_MANIFEST || []);
-  
+
   // Cache Google Fonts stylesheets
   workbox.routing.registerRoute(
     /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -22,7 +22,7 @@ if (workbox) {
       cacheName: 'google-fonts-stylesheets',
     })
   );
-  
+
   // Cache Google Fonts webfonts
   workbox.routing.registerRoute(
     /^https:\/\/fonts\.gstatic\.com\/.*/i,
@@ -36,7 +36,7 @@ if (workbox) {
       ],
     })
   );
-  
+
   // Cache images
   workbox.routing.registerRoute(
     /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/i,
@@ -51,24 +51,26 @@ if (workbox) {
     })
   );
 
-  // NetworkFirst for navigation (HTML pages)
-  // Skip OAuth callback routes — must always hit the network
+  // Always fetch navigations from the network so published users don't get a stale app shell.
+  // Skip OAuth callback routes — must always hit the network.
+  const navigationHandler = workbox.precaching.createHandlerBoundToURL('/index.html');
   workbox.routing.registerRoute(
     ({ request, url }) => {
       if (request.mode !== 'navigate') return false;
-      // Never cache OAuth callback routes
       if (url.pathname.startsWith('/~oauth')) return false;
       return true;
     },
-    new workbox.strategies.NetworkFirst({
-      cacheName: 'navigation-cache',
-      networkTimeoutSeconds: 10,
-      plugins: [
-        new workbox.cacheableResponse.CacheableResponsePlugin({
-          statuses: [0, 200],
-        }),
-      ],
-    })
+    async (options) => {
+      try {
+        return await new workbox.strategies.NetworkOnly().handle(options);
+      } catch (error) {
+        console.debug('[SW] Navigation request fell back to precache', {
+          url: options.request.url,
+          error,
+        });
+        return navigationHandler(options);
+      }
+    }
   );
 
   // NetworkFirst for Supabase API calls
@@ -89,13 +91,13 @@ if (workbox) {
 
 self.addEventListener('push', (event) => {
   let data = {};
-  
+
   try {
     data = event.data?.json() || {};
   } catch (e) {
     data = { title: 'ZIVO', body: event.data?.text() || 'You have a new notification' };
   }
-  
+
   const options = {
     body: data.body || '',
     icon: '/pwa-icons/icon-192x192.png',
@@ -108,7 +110,7 @@ self.addEventListener('push', (event) => {
     actions: data.actions || [],
     silent: false,
   };
-  
+
   event.waitUntil(
     self.registration.showNotification(data.title || 'ZIVO', options)
   );
@@ -117,10 +119,10 @@ self.addEventListener('push', (event) => {
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  
+
   const data = event.notification.data;
   let urlToOpen = '/';
-  
+
   switch (data?.type) {
     case 'price_drop':
       urlToOpen = data.url || '/flights';
@@ -134,7 +136,7 @@ self.addEventListener('notificationclick', (event) => {
     default:
       urlToOpen = data?.url || '/';
   }
-  
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
@@ -170,10 +172,19 @@ self.addEventListener('activate', (event) => {
       const keepCaches = [
         'google-fonts-stylesheets',
         'google-fonts-webfonts',
+        'images-cache',
+        'api-cache',
+        'local-images',
+        'unsplash-images',
       ];
+
+      if (workbox?.core?.cacheNames?.precache) {
+        keepCaches.push(workbox.core.cacheNames.precache);
+      }
+
       return Promise.all(
         cacheNames
-          .filter((name) => !keepCaches.some((keep) => name === keep))
+          .filter((name) => !keepCaches.includes(name))
           .map((name) => caches.delete(name))
       );
     }).then(() => clients.claim())
