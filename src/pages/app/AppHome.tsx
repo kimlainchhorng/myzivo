@@ -57,7 +57,7 @@ import zivoHotelsIcon from "@/assets/zivo-hotels-icon.png";
 import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
 import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
 import zivoShoppingIcon from "@/assets/zivo-shopping.png";
-import zivoPromoBanner from "@/assets/zivo-promo-banner.png";
+
 import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
 import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
 import tabCarsBg from "@/assets/tab-cars-bg.jpg";
@@ -455,22 +455,6 @@ const AppHome = () => {
             </div>
           </div>
 
-          {/* Promo Banner — 3D Float */}
-          <div className="px-5 pb-3">
-            <motion.div
-              whileHover={{ y: -3, rotateX: 2 }}
-              whileTap={{ scale: 0.98 }}
-              className="card-3d rounded-2xl overflow-hidden"
-              style={{ transformStyle: "preserve-3d" }}
-            >
-              <img
-                src={zivoPromoBanner}
-                alt="ZIVO - All Services in One Place"
-                className="w-full rounded-2xl shadow-sm"
-                loading="lazy"
-              />
-            </motion.div>
-          </div>
 
 
           {/* 3D Section Divider */}
