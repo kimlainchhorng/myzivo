@@ -140,18 +140,224 @@ function VideosGrid() {
 }
 
 function LiveSection() {
+  const [isLive, setIsLive] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const [viewerCount, setViewerCount] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startCamera = useCallback(async (facing: "user" | "environment") => {
+    try {
+      // Stop existing stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: true,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      // Mute audio track if needed
+      stream.getAudioTracks().forEach((t) => (t.enabled = !isMuted));
+    } catch (err) {
+      toast.error("Camera access denied. Please allow camera permissions.");
+      setIsLive(false);
+    }
+  }, [isMuted]);
+
+  const goLive = async () => {
+    setIsLive(true);
+    setDuration(0);
+    setViewerCount(0);
+    await startCamera(facingMode);
+    // Start duration timer
+    timerRef.current = setInterval(() => {
+      setDuration((d) => d + 1);
+      // Simulate viewers joining
+      setViewerCount((v) => Math.min(v + Math.floor(Math.random() * 3), 999));
+    }, 1000);
+    toast.success("You're LIVE! 🔴");
+  };
+
+  const endLive = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsLive(false);
+    setDuration(0);
+    setViewerCount(0);
+    toast.info("Live ended");
+  };
+
+  const toggleMute = () => {
+    setIsMuted((m) => {
+      const newMuted = !m;
+      streamRef.current?.getAudioTracks().forEach((t) => (t.enabled = !newMuted));
+      return newMuted;
+    });
+  };
+
+  const flipCamera = async () => {
+    const newFacing = facingMode === "user" ? "environment" : "user";
+    setFacingMode(newFacing);
+    if (isLive) {
+      await startCamera(newFacing);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, "0");
+    const s = (secs % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  if (!isLive) {
+    return (
+      <div className="rounded-2xl bg-card border border-border/30 p-6 text-center space-y-4">
+        <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto relative">
+          <Radio className="w-8 h-8 text-destructive" />
+          <motion.div
+            className="absolute inset-0 rounded-full border-2 border-destructive/30"
+            animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        </div>
+        <div>
+          <p className="text-base font-bold text-foreground">Go Live</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Start a live video and connect with your followers in real-time
+          </p>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={goLive}
+          className="bg-destructive text-destructive-foreground rounded-xl px-8 py-3 text-sm font-bold shadow-lg shadow-destructive/25"
+        >
+          <Camera className="w-4 h-4 inline-block mr-2" />
+          Start Live Video
+        </motion.button>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-2xl bg-card border border-border/30 p-6 text-center space-y-3">
-      <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-        <Radio className="w-7 h-7 text-destructive" />
+    <div className="rounded-2xl overflow-hidden bg-black relative" style={{ aspectRatio: "9/16", maxHeight: "70vh" }}>
+      {/* Video feed */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
+      />
+
+      {/* Top overlay */}
+      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/60 to-transparent p-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {/* LIVE badge */}
+          <motion.div
+            animate={{ opacity: [1, 0.5, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+            className="bg-destructive text-destructive-foreground text-[11px] font-black px-2.5 py-1 rounded-lg flex items-center gap-1"
+          >
+            <div className="w-2 h-2 rounded-full bg-white" />
+            LIVE
+          </motion.div>
+          <span className="text-white/90 text-xs font-bold">{formatTime(duration)}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="bg-white/15 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1">
+            <Eye className="w-3 h-3 text-white" />
+            <span className="text-white text-[11px] font-bold">{viewerCount}</span>
+          </div>
+        </div>
       </div>
-      <div>
-        <p className="text-sm font-bold text-foreground">Go Live</p>
-        <p className="text-xs text-muted-foreground mt-1">Start a live video and connect with your followers in real-time</p>
+
+      {/* Right-side controls */}
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={flipCamera}
+          className="w-11 h-11 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center"
+        >
+          <SwitchCamera className="w-5 h-5 text-white" />
+        </motion.button>
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={toggleMute}
+          className={cn(
+            "w-11 h-11 rounded-full backdrop-blur-sm flex items-center justify-center",
+            isMuted ? "bg-destructive/60" : "bg-white/15"
+          )}
+        >
+          {isMuted ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
+        </motion.button>
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          className="w-11 h-11 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center"
+          onClick={() => toast.info("Share link copied!")}
+        >
+          <Share2 className="w-5 h-5 text-white" />
+        </motion.button>
       </div>
-      <button className="bg-destructive text-destructive-foreground rounded-xl px-6 py-2.5 text-sm font-bold shadow-md shadow-destructive/25">
-        Start Live Video
-      </button>
+
+      {/* Bottom controls */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/70 to-transparent p-4">
+        {/* Simulated comments */}
+        <div className="space-y-1.5 mb-4 max-h-[120px] overflow-hidden">
+          {viewerCount > 2 && (
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-primary/40 flex items-center justify-center text-[9px] text-white font-bold">A</div>
+              <span className="text-white/90 text-xs">Welcome! 👋</span>
+            </motion.div>
+          )}
+          {viewerCount > 10 && (
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-amber-500/40 flex items-center justify-center text-[9px] text-white font-bold">S</div>
+              <span className="text-white/90 text-xs">Looking great! 🔥</span>
+            </motion.div>
+          )}
+          {viewerCount > 25 && (
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-blue-500/40 flex items-center justify-center text-[9px] text-white font-bold">M</div>
+              <span className="text-white/90 text-xs">Where are you streaming from?</span>
+            </motion.div>
+          )}
+        </div>
+
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={endLive}
+          className="w-full bg-destructive/90 text-destructive-foreground rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2"
+        >
+          <X className="w-4 h-4" />
+          End Live
+        </motion.button>
+      </div>
     </div>
   );
 }
