@@ -3567,16 +3567,7 @@ function LiveBroadcast({
               <span className="text-white text-xs font-bold">{viewers}</span>
             </div>
           )}
-          <button onClick={() => {
-            if (aiResultOverlay) {
-              setAiResultOverlay(null);
-              setAiSelectedMode(null);
-            } else if (isLive) {
-              endLive();
-            } else {
-              onClose();
-            }
-          }} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
+          <button onClick={isLive ? endLive : onClose} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
             <X className="w-5 h-5 text-white" />
           </button>
         </div>
