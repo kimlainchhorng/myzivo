@@ -3714,33 +3714,7 @@ function LiveBroadcast({
                     </button>
                     );
                   })
-                ) : (
-                  visibleFilterIndexes.map((i) => {
-                    const f = activeFilters[i];
-                    return (
-                    <button
-                      key={f.name}
-                      onClick={() => setActiveFilter(i)}
-                      className="flex flex-col items-center gap-1"
-                    >
-                      <div
-                        className={cn(
-                          "w-16 h-16 rounded-xl overflow-hidden border-2 transition-all",
-                          activeFilter === i
-                            ? "border-white scale-105 shadow-lg shadow-white/20"
-                            : "border-transparent opacity-75"
-                        )}
-                         style={{ filter: f.css }}
-                       >
-                         <div className="w-full h-full bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500" />
-                      </div>
-                      <span className={cn(
-                        "text-[10px] font-medium leading-tight",
-                        activeFilter === i ? "text-white" : "text-white/50"
-                      )}>{f.name}</span>
-                    </button>
-                    );
-                  })
+                )
                 )}
               </div>
             </div>
