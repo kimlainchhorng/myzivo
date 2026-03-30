@@ -806,7 +806,7 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
             className="absolute left-0 right-0 bottom-0 z-20"
           >
             <div className="bg-black/70 backdrop-blur-xl pt-3 pb-6 rounded-t-3xl">
-              {/* Category tabs - horizontal scroll */}
+              {/* Category tabs */}
               <div className="flex items-center gap-1 px-4 mb-3 overflow-x-auto scrollbar-none">
                 <button
                   onClick={() => setShowFilters(false)}
@@ -814,10 +814,10 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
                 >
                   <X className="w-4 h-4 text-white/60" />
                 </button>
-                {(["color", "face"] as const).map((tab) => (
+                {(["color", "face", "ar"] as const).map((tab) => (
                   <button
                     key={tab}
-                    onClick={() => { setFilterTab(tab); setActiveFilter(0); }}
+                    onClick={() => { setFilterTab(tab); setActiveFilter(0); if (tab !== "ar") setActiveSticker(0); }}
                     className={cn(
                       "flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all",
                       filterTab === tab
@@ -825,35 +825,60 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
                         : "text-white/40"
                     )}
                   >
-                    {tab === "color" ? "🎨 Color" : "✨ Beauty"}
+                    {tab === "color" ? "🎨 Color" : tab === "face" ? "✨ Beauty" : "🎭 Effects"}
                   </button>
                 ))}
               </div>
-              {/* Filter grid - 4 columns */}
+              {/* Filter/Sticker grid */}
               <div className="grid grid-cols-4 gap-3 px-4 max-h-[35vh] overflow-y-auto scrollbar-none">
-                {activeFilters.map((f, i) => (
-                  <button
-                    key={f.name}
-                    onClick={() => setActiveFilter(i)}
-                    className="flex flex-col items-center gap-1"
-                  >
-                    <div
-                      className={cn(
-                        "w-16 h-16 rounded-xl overflow-hidden border-2 transition-all",
-                        activeFilter === i
-                          ? "border-white scale-105 shadow-lg shadow-white/20"
-                          : "border-transparent opacity-75"
-                      )}
-                      style={{ filter: f.css }}
+                {filterTab === "ar" ? (
+                  AR_STICKERS.map((s, i) => (
+                    <button
+                      key={s.name}
+                      onClick={() => setActiveSticker(i)}
+                      className="flex flex-col items-center gap-1"
                     >
-                      <div className="w-full h-full bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500" />
-                    </div>
-                    <span className={cn(
-                      "text-[10px] font-medium leading-tight",
-                      activeFilter === i ? "text-white" : "text-white/50"
-                    )}>{f.name}</span>
-                  </button>
-                ))}
+                      <div
+                        className={cn(
+                          "w-16 h-16 rounded-xl flex items-center justify-center text-2xl transition-all",
+                          activeSticker === i
+                            ? "bg-white/20 border-2 border-white scale-105 shadow-lg shadow-white/20"
+                            : "bg-white/5 border-2 border-transparent opacity-75"
+                        )}
+                      >
+                        {s.emoji}
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-medium leading-tight",
+                        activeSticker === i ? "text-white" : "text-white/50"
+                      )}>{s.name}</span>
+                    </button>
+                  ))
+                ) : (
+                  activeFilters.map((f, i) => (
+                    <button
+                      key={f.name}
+                      onClick={() => setActiveFilter(i)}
+                      className="flex flex-col items-center gap-1"
+                    >
+                      <div
+                        className={cn(
+                          "w-16 h-16 rounded-xl overflow-hidden border-2 transition-all",
+                          activeFilter === i
+                            ? "border-white scale-105 shadow-lg shadow-white/20"
+                            : "border-transparent opacity-75"
+                        )}
+                        style={{ filter: f.css }}
+                      >
+                        <div className="w-full h-full bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500" />
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-medium leading-tight",
+                        activeFilter === i ? "text-white" : "text-white/50"
+                      )}>{f.name}</span>
+                    </button>
+                  ))
+                )}
               </div>
             </div>
           </motion.div>
