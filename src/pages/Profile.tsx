@@ -578,48 +578,7 @@ const Profile = () => {
                         </button>
                       </div>
 
-                      {/* Action buttons — social style */}
-                      <div className="flex items-center gap-2 mt-2 px-2">
-                        <Button
-                          size="sm"
-                          variant={friendStatus === "none" ? "default" : friendStatus === "accepted" ? "outline" : "secondary"}
-                          className={cn(
-                            "flex-1 rounded-xl h-10 text-sm font-bold gap-2 transition-all",
-                            friendStatus === "none" && "shadow-md shadow-primary/25",
-                            friendStatus === "accepted" && "border-primary/30 text-primary"
-                          )}
-                          onClick={handleAddFriend}
-                          disabled={friendLoading}
-                        >
-                          {friendLoading ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : friendStatus === "none" ? (
-                            <><UserPlus className="w-4 h-4" /> Add Friend</>
-                          ) : friendStatus === "pending" ? (
-                            <><Loader2 className="w-4 h-4" /> Pending</>
-                          ) : (
-                            <><UserCheck className="w-4 h-4" /> Friends</>
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={isFollowing ? "outline" : "secondary"}
-                          className={cn(
-                            "flex-1 rounded-xl h-10 text-sm font-bold gap-2 transition-all",
-                            isFollowing && "border-primary/30 text-primary"
-                          )}
-                          onClick={handleFollow}
-                          disabled={followLoading}
-                        >
-                          {followLoading ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : isFollowing ? (
-                            <><UserCheck className="w-4 h-4" /> Following</>
-                          ) : (
-                            <><Users className="w-4 h-4" /> Follow</>
-                          )}
-                        </Button>
-                      </div>
+                      {/* Add Friend & Follow buttons — only shown when viewing other users' profiles */}
                     </div>
 
                     <CardContent className="pt-3 pb-6 px-6">
