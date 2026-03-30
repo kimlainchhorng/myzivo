@@ -210,40 +210,29 @@ export default function EatsLanding() {
   // ─── Place Order ─────────────────────────────────────────────────
   const handlePlaceOrder = async () => {
     if (!deliveryAddress.trim()) { toast.error("Please enter a delivery address"); return; }
-    setPlacingOrder(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { toast.error("Please sign in to place an order"); return; }
-
-      const result = await createFoodOrder({
-        customerId: user.id,
-        restaurantId: cart[0].restaurantId,
-        items: cart,
-        deliveryAddress,
-        deliveryLat: 0, // TODO: use GPS
-        deliveryLng: 0,
-        subtotal: cartTotal,
-        deliveryFee,
-        serviceFee,
-        tipAmount,
-        totalAmount: grandTotal,
-        paymentType,
-        specialInstructions: deliveryInstructions || undefined,
-        isExpress: selectedSpeed === "priority",
-        expressFee: speedExtra,
-        promoCode: promoApplied ? promoCode : undefined,
-        discountAmount: promoDiscount > 0 ? promoDiscount : undefined,
-      });
-
-      setConfirmedOrderId(result.order.id);
-      setTrackingCode(result.trackingCode);
-      notifyEats("order_placed", { orderId: result.trackingCode, restaurantName: currentRestaurant?.name });
-      setStep("confirmation");
-      toast.success("Order placed successfully!");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to place order");
-    } finally {
-      setPlacingOrder(false);
+    const result = await placeOrder({
+      restaurantId: cart[0].restaurantId,
+      items: cart,
+      deliveryAddress,
+      deliveryLat: 0,
+      deliveryLng: 0,
+      subtotal: cartTotal,
+      deliveryFee,
+      serviceFee,
+      tipAmount,
+      totalAmount: grandTotal,
+      paymentType,
+      specialInstructions: deliveryInstructions || undefined,
+      isExpress: selectedSpeed === "priority",
+      expressFee: speedExtra,
+      promoCode: promoApplied ? promoCode : undefined,
+      discountAmount: promoDiscount > 0 ? promoDiscount : undefined,
+      restaurantName: currentRestaurant?.name,
+      pickupLat: currentRestaurant?.lat ?? undefined,
+      pickupLng: currentRestaurant?.lng ?? undefined,
+    });
+    if (result) {
+      navigate(`/eats/track/${result.orderId}`);
     }
   };
 
