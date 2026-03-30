@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Grid3X3, Play, Radio, FileText, ImageIcon, Heart, MessageCircle, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
