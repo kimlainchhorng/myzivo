@@ -18,7 +18,7 @@ import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 
 // ─── Types ───────────────────────────────────────────────────────────
-type Step = "browse" | "restaurant" | "cart" | "checkout" | "confirmation";
+type Step = "browse" | "restaurant" | "cart" | "checkout";
 
 const tipOptions = [
   { id: "none", label: "No tip", pct: 0 },
