@@ -434,6 +434,11 @@ const Profile = () => {
             </div>
           ) : (
             <div className="space-y-5">
+              {/* ── Stories Row ── */}
+              <ParallaxSection index={2}>
+                <ProfileStories />
+              </ParallaxSection>
+
               {/* ── Profile Card with Cover Photo ── */}
               <ParallaxSection index={2}>
                 <motion.div
