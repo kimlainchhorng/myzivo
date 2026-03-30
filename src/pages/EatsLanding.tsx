@@ -2,8 +2,8 @@
  * EatsLanding - Food delivery hub page with full ordering flow
  * Connected to Supabase: restaurants, menu_items, food_orders
  */
-import { useState, useEffect, useMemo } from "react";
-import { Star, Clock, ArrowRight, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, Gift, PartyPopper, Navigation, RefreshCw, Flame, Award, Sparkles, MessageSquare, Filter, X, Percent, Leaf, AlertTriangle, Loader2, Send } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Star, Clock, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, Sparkles, MessageSquare, Percent, Leaf, Award, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -11,14 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useEatsNotifications } from "@/hooks/useEatsNotifications";
-import { useEatsRestaurants, useEatsMenu, createFoodOrder, type EatsCartItem, type EatsRestaurant } from "@/hooks/useEatsData";
-import { supabase } from "@/integrations/supabase/client";
+import { useEatsRestaurants, useEatsMenu, type EatsCartItem } from "@/hooks/useEatsData";
+import { useEatsOrder } from "@/hooks/useEatsOrder";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 
 // ─── Types ───────────────────────────────────────────────────────────
-type Step = "browse" | "restaurant" | "cart" | "checkout" | "confirmation";
+type Step = "browse" | "restaurant" | "cart" | "checkout";
 
 const tipOptions = [
   { id: "none", label: "No tip", pct: 0 },
@@ -59,54 +58,11 @@ function EatsStepIndicator({ currentStep }: { currentStep: string }) {
   );
 }
 
-function OrderTrackingTimeline() {
-  const [activeStep, setActiveStep] = useState(0);
-  useEffect(() => {
-    const timers = [
-      setTimeout(() => setActiveStep(1), 2000),
-      setTimeout(() => setActiveStep(2), 5000),
-      setTimeout(() => setActiveStep(3), 9000),
-    ];
-    return () => timers.forEach(clearTimeout);
-  }, []);
-
-  const trackingSteps = [
-    { label: "Order placed", icon: CheckCircle, time: "Just now" },
-    { label: "Preparing your food", icon: Flame, time: "~10 min" },
-    { label: "Driver picking up", icon: Package, time: "~20 min" },
-    { label: "On the way!", icon: Truck, time: "~25 min" },
-  ];
-
-  return (
-    <div className="space-y-2">
-      {trackingSteps.map((s, i) => {
-        const Icon = s.icon;
-        const isDone = i <= activeStep;
-        const isActive = i === activeStep;
-        return (
-          <motion.div key={s.label} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.15 }}
-            className={cn("flex items-center gap-3 p-2.5 rounded-xl", isDone ? "opacity-100" : "opacity-40")}>
-            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-              isDone ? "bg-primary/10" : "bg-muted/30")}>
-              <Icon className={cn("w-4 h-4", isDone ? "text-primary" : "text-muted-foreground", isActive && "animate-pulse")} />
-            </div>
-            <div className="flex-1">
-              <p className={cn("text-xs font-bold", isDone ? "text-foreground" : "text-muted-foreground")}>{s.label}</p>
-              <p className="text-[10px] text-muted-foreground">{s.time}</p>
-            </div>
-            {isDone && i < activeStep && <CheckCircle className="w-3.5 h-3.5 text-primary" />}
-            {isActive && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-}
 
 // ─── Main Component ──────────────────────────────────────────────────
 export default function EatsLanding() {
   const navigate = useNavigate();
-  const { notify: notifyEats } = useEatsNotifications();
+  const { placeOrder, placing: placingOrder } = useEatsOrder();
 
   // Data from Supabase
   const { data: restaurants = [], isLoading: loadingRestaurants } = useEatsRestaurants();
@@ -131,12 +87,6 @@ export default function EatsLanding() {
   const [noUtensils, setNoUtensils] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState<Record<string, string>>({});
   const [paymentType, setPaymentType] = useState<"cash" | "card" | "wallet">("card");
-
-  // Confirmation state
-  const [placingOrder, setPlacingOrder] = useState(false);
-  const [confirmedOrderId, setConfirmedOrderId] = useState<string | null>(null);
-  const [trackingCode, setTrackingCode] = useState("");
-  const [rateOrder, setRateOrder] = useState<number | null>(null);
 
   // Favorites (local)
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -206,8 +156,7 @@ export default function EatsLanding() {
 
   // ─── Navigation ──────────────────────────────────────────────────
   const handleBack = () => {
-    if (step === "confirmation") { setStep("browse"); setCart([]); setSelectedRestaurantId(null); }
-    else if (step === "checkout") setStep("cart");
+    if (step === "checkout") setStep("cart");
     else if (step === "cart") setStep(selectedRestaurantId ? "restaurant" : "browse");
     else if (step === "restaurant") { setStep("browse"); setSelectedRestaurantId(null); }
     else navigate(-1);
@@ -216,40 +165,29 @@ export default function EatsLanding() {
   // ─── Place Order ─────────────────────────────────────────────────
   const handlePlaceOrder = async () => {
     if (!deliveryAddress.trim()) { toast.error("Please enter a delivery address"); return; }
-    setPlacingOrder(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { toast.error("Please sign in to place an order"); return; }
-
-      const result = await createFoodOrder({
-        customerId: user.id,
-        restaurantId: cart[0].restaurantId,
-        items: cart,
-        deliveryAddress,
-        deliveryLat: 0, // TODO: use GPS
-        deliveryLng: 0,
-        subtotal: cartTotal,
-        deliveryFee,
-        serviceFee,
-        tipAmount,
-        totalAmount: grandTotal,
-        paymentType,
-        specialInstructions: deliveryInstructions || undefined,
-        isExpress: selectedSpeed === "priority",
-        expressFee: speedExtra,
-        promoCode: promoApplied ? promoCode : undefined,
-        discountAmount: promoDiscount > 0 ? promoDiscount : undefined,
-      });
-
-      setConfirmedOrderId(result.order.id);
-      setTrackingCode(result.trackingCode);
-      notifyEats("order_placed", { orderId: result.trackingCode, restaurantName: currentRestaurant?.name });
-      setStep("confirmation");
-      toast.success("Order placed successfully!");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to place order");
-    } finally {
-      setPlacingOrder(false);
+    const result = await placeOrder({
+      restaurantId: cart[0].restaurantId,
+      items: cart,
+      deliveryAddress,
+      deliveryLat: 0,
+      deliveryLng: 0,
+      subtotal: cartTotal,
+      deliveryFee,
+      serviceFee,
+      tipAmount,
+      totalAmount: grandTotal,
+      paymentType,
+      specialInstructions: deliveryInstructions || undefined,
+      isExpress: selectedSpeed === "priority",
+      expressFee: speedExtra,
+      promoCode: promoApplied ? promoCode : undefined,
+      discountAmount: promoDiscount > 0 ? promoDiscount : undefined,
+      restaurantName: currentRestaurant?.name,
+      pickupLat: currentRestaurant?.lat ?? undefined,
+      pickupLng: currentRestaurant?.lng ?? undefined,
+    });
+    if (result) {
+      navigate(`/eats/track/${result.orderId}`);
     }
   };
 
@@ -723,69 +661,7 @@ export default function EatsLanding() {
                 {placingOrder ? "Placing order..." : `Place Order · $${grandTotal.toFixed(2)}`}
               </Button>
             </div>
-          </motion.div>
-        )}
-
-        {/* ═══ CONFIRMATION ═══ */}
-        {step === "confirmation" && (
-          <motion.div key="confirmation" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="min-h-screen flex items-center justify-center px-4 py-8">
-            <div className="max-w-md w-full text-center space-y-6">
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}
-                className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center mx-auto shadow-2xl shadow-primary/30">
-                <PartyPopper className="w-10 h-10 text-primary-foreground" />
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-                <h1 className="text-2xl font-bold text-foreground mb-2">Order Confirmed! 🎉</h1>
-                <p className="text-muted-foreground">Your food is being prepared</p>
-                <p className="text-xs font-mono text-primary/80 mt-2 bg-primary/5 px-3 py-1.5 rounded-full inline-block">Order #{trackingCode}</p>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-                className="rounded-2xl bg-card border border-border/40 p-4 text-left">
-                <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2"><Navigation className="w-4 h-4 text-primary" /> Live Tracking</h3>
-                <OrderTrackingTimeline />
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-                className="rounded-2xl bg-card border border-border/40 p-5 text-left space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"><Navigation className="w-5 h-5 text-primary" /></div>
-                  <div><p className="text-xs text-muted-foreground">Delivering to</p><p className="text-sm font-bold text-foreground">{deliveryAddress}</p></div>
-                </div>
-                {contactlessDelivery && (
-                  <div className="flex items-center gap-2 text-xs text-primary bg-primary/5 px-3 py-1.5 rounded-lg">
-                    <CheckCircle className="w-3 h-3" /> Contactless delivery
-                  </div>
-                )}
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-emerald-500" /></div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Total charged ({paymentType})</p>
-                    <p className="text-sm font-bold text-primary">${grandTotal.toFixed(2)}</p>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Rate */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-                className="rounded-2xl bg-card border border-border/40 p-4">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">How was your experience?</p>
-                <div className="flex justify-center gap-2">
-                  {[1, 2, 3, 4, 5].map(s => (
-                    <button key={s} onClick={() => { setRateOrder(s); toast.success(`Rated ${s} stars! Thank you!`); }}
-                      className="touch-manipulation active:scale-90 transition-transform">
-                      <Star className={cn("w-8 h-8 transition-all", rateOrder && s <= rateOrder ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30")} />
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-
-              <Button variant="ghost" onClick={() => navigate("/")} className="text-sm text-muted-foreground">
-                Back to Home
-              </Button>
-            </div>
-          </motion.div>
+        </motion.div>
         )}
       </AnimatePresence>
     </div>

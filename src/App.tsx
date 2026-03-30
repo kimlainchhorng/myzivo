@@ -52,6 +52,7 @@ const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
 const RideTrackingPage = lazy(() => import("./pages/app/RideTrackingPage"));
 const RideHubPage = lazy(() => import("./pages/app/RideHubPage"));
 const EatsLanding = lazy(() => import("./pages/EatsLanding"));
+const EatsTrackingPage = lazy(() => import("./pages/EatsTrackingPage"));
 const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
 const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
 const FeedPage = lazy(() => import("./pages/FeedPage"));
@@ -394,6 +395,7 @@ const App = () => (
                 <Route path="/ride" element={<PreserveQueryRedirect to="/rides" />} />
                 <Route path="/eats" element={<ProtectedRoute><PhoneRequiredGate><EatsLanding /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/eats/restaurant/:id" element={<ProtectedRoute><EatsLanding /></ProtectedRoute>} />
+                <Route path="/eats/track/:orderId" element={<ProtectedRoute><EatsTrackingPage /></ProtectedRoute>} />
                 <Route path="/food" element={<PreserveQueryRedirect to="/eats" />} />
                 <Route path="/move" element={<PreserveQueryRedirect to="/rides" />} />
                 <Route path="/search" element={<PreserveQueryRedirect to="/flights" />} />
