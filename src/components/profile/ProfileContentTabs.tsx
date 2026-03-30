@@ -3398,7 +3398,7 @@ function LiveBroadcast({
         const compCtx = compCanvas.getContext("2d")!;
         
         // Load AI image
-        const aiImg = new Image();
+        const aiImg = document.createElement("img");
         aiImg.crossOrigin = "anonymous";
         aiImg.src = aiResultOverlay;
 
