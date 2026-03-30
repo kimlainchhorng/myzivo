@@ -3677,7 +3677,7 @@ function LiveBroadcast({
                       )}>{m.name}</span>
                     </button>
                   ))
-                ) : filterTab === "ar" ? (
+                ) : (
                   visibleFilterIndexes.map((i) => {
                     const s = AR_STICKERS[i];
                     return (
@@ -3714,7 +3714,6 @@ function LiveBroadcast({
                     </button>
                     );
                   })
-                )
                 )}
               </div>
             </div>
