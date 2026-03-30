@@ -57,10 +57,36 @@ export function useLoyaltyPoints() {
     enabled: !!user?.id,
   });
 
-  // For now, return empty transactions (the new loyalty_transactions table we created has a different schema)
-  // This will be populated once the migration types are regenerated
-  const transactions: LoyaltyTransaction[] = [];
-  const isLoadingTransactions = false;
+  // Fetch loyalty transactions from customer_wallet_transactions (loyalty-related)
+  const { data: transactions = [], isLoading: isLoadingTransactions } = useQuery({
+    queryKey: ["loyalty-transactions", user?.id],
+    queryFn: async (): Promise<LoyaltyTransaction[]> => {
+      if (!user?.id) return [];
+      // Query wallet transactions where type indicates loyalty activity
+      const { data, error } = await supabase
+        .from("customer_wallet_transactions")
+        .select("id, amount_cents, type, description, created_at, order_id")
+        .eq("user_id", user.id)
+        .in("type", ["loyalty_earn", "loyalty_redeem", "bonus", "referral_bonus", "payment"])
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) {
+        console.error("[LoyaltyPoints] Transactions fetch error:", error);
+        return [];
+      }
+      return (data || []).map((t: any) => ({
+        id: t.id,
+        user_id: user.id,
+        points_amount: Math.abs(t.amount_cents),
+        transaction_type: t.type === "loyalty_redeem" ? "redeem" : "earn",
+        reference_type: t.type,
+        reference_id: t.order_id || t.id,
+        description: t.description || t.type,
+        created_at: t.created_at,
+      }));
+    },
+    enabled: !!user?.id,
+  });
 
   // Determine tier from points
   const getTierFromPoints = (lifetimePoints: number): LoyaltyTier => {
