@@ -215,20 +215,29 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 {!composerType ? (
                   <div className="p-5 space-y-4">
                     <h3 className="text-lg font-bold text-foreground text-center">Create</h3>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       {[
                         { id: "photo" as const, label: "Photo", icon: Image, color: "text-primary" },
                         { id: "reel" as const, label: "Reel", icon: Clapperboard, color: "text-accent-foreground" },
+                        { id: "live" as const, label: "Go Live", icon: Radio, color: "text-destructive" },
                       ].map((opt) => {
                         const Icon = opt.icon;
                         return (
                           <motion.button
                             key={opt.id}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => setComposerType(opt.id)}
-                            className="flex flex-col items-center gap-2 p-5 rounded-2xl bg-muted/40 border border-border/20 hover:bg-muted/60 transition-colors"
+                            onClick={() => {
+                              if (opt.id === "live") {
+                                setShowComposer(false);
+                                setComposerType(null);
+                                toast.info("Starting Live stream...");
+                              } else {
+                                setComposerType(opt.id);
+                              }
+                            }}
+                            className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-muted/40 border border-border/20 hover:bg-muted/60 transition-colors"
                           >
-                            <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center shadow-sm">
+                            <div className={cn("w-12 h-12 rounded-full bg-background flex items-center justify-center shadow-sm", opt.id === "live" && "bg-destructive/10")}>
                               <Icon className={cn("w-6 h-6", opt.color)} />
                             </div>
                             <span className="text-sm font-semibold text-foreground">{opt.label}</span>
