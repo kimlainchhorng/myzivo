@@ -34,6 +34,7 @@ interface RideOffer {
 export default function DriverMapPage() {
   const mapState = useDriverMapState();
   const [isOnline, setIsOnline] = useState(false);
+  const { permission: gpsPermission, requestPermission: requestGps, skipPermission: skipGps } = useGpsPermission();
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [driverId, setDriverId] = useState<string | null>(null);
   const [activeOffer, setActiveOffer] = useState<RideOffer | null>(null);
