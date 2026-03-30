@@ -835,12 +835,18 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     baggageDetails: {
       carryOnIncluded,
       carryOnQuantity,
-      carryOnWeightKg,
-      carryOnWeightLb,
       checkedBagsIncluded,
       checkedBagQuantity,
-      checkedBagWeightKg,
-      checkedBagWeightLb,
+    } as {
+      carryOnIncluded: boolean;
+      carryOnQuantity: number;
+      carryOnWeightKg?: number | null;
+      carryOnWeightLb?: number | null;
+      checkedBagsIncluded: boolean;
+      checkedBagQuantity: number;
+      checkedBagWeightKg?: number | null;
+      checkedBagWeightLb?: number | null;
+      [key: string]: unknown;
     },
     segments: allSegs.map(seg => transformSegment(seg)),
     owner: firstCarrier,

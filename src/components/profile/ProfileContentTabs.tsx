@@ -1154,6 +1154,9 @@ function drawFaceFilter(
   const mouthY = y + fh * 0.72;
   const eyeL = face.eyeLeft;
   const eyeR = face.eyeRight;
+  const cy = y + fh / 2;
+  const eyeLX = eyeL.x;
+  const eyeRX = eyeR.x;
 
   ctx.save();
 
