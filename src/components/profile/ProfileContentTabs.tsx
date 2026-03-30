@@ -981,6 +981,51 @@ const AR_STICKERS = [
   { name: "Cat Makeup", emoji: "🐱", sticker: "catmakeup" },
   { name: "Lip Berry", emoji: "🫐", sticker: "lipberry" },
   { name: "Pixel Art", emoji: "🕹️", sticker: "pixelart" },
+  { name: "Mermaid", emoji: "🧜", sticker: "mermaid" },
+  { name: "Zombie", emoji: "🧟", sticker: "zombie" },
+  { name: "Robot", emoji: "🤖", sticker: "robot" },
+  { name: "Witch Hat", emoji: "🧙", sticker: "witchhat" },
+  { name: "Dragon", emoji: "🐉", sticker: "dragon" },
+  { name: "Beauty Mark", emoji: "✦", sticker: "beautymark" },
+  { name: "Bindi", emoji: "🔴", sticker: "bindi" },
+  { name: "Ear Rings", emoji: "💍", sticker: "earrings" },
+  { name: "Rainbow Tears", emoji: "🌈", sticker: "rainbowtears" },
+  { name: "Money Eyes", emoji: "🤑", sticker: "moneyeyes" },
+  { name: "Crown of Stars", emoji: "👑", sticker: "crownstars" },
+  { name: "Sakura Shower", emoji: "🌸", sticker: "sakura" },
+  { name: "Face Paint", emoji: "🎨", sticker: "facepaint" },
+  { name: "Hologram", emoji: "🌐", sticker: "hologram" },
+  { name: "Oil Paint", emoji: "🖼️", sticker: "oilpaint" },
+  { name: "Sketch", emoji: "✏️", sticker: "sketch" },
+  { name: "Disco Ball", emoji: "🪩", sticker: "discoball" },
+  { name: "Neon Glow", emoji: "💜", sticker: "neonglow" },
+  { name: "Ice Queen", emoji: "🧊", sticker: "icequeen" },
+  { name: "Fire Crown", emoji: "🔥", sticker: "firecrown" },
+  { name: "Bubble Wrap", emoji: "🫧", sticker: "bubblewrap" },
+  { name: "Kaleidoscope", emoji: "🔮", sticker: "kaleidoscope" },
+  { name: "Comic Pop", emoji: "💥", sticker: "comicpop" },
+  { name: "Lash Bar", emoji: "👁️", sticker: "lashbar" },
+  { name: "Golden Hour", emoji: "🌟", sticker: "goldenhour" },
+  { name: "Cyber Mask", emoji: "🕶️", sticker: "cybermask" },
+  { name: "Angel Halo", emoji: "😇", sticker: "angelhalo" },
+  { name: "Devil Horns", emoji: "😈", sticker: "devilhorns" },
+  { name: "Butterfly", emoji: "🦋", sticker: "butterfly" },
+  { name: "Snow Globe", emoji: "☃️", sticker: "snowglobe" },
+  { name: "Lightning", emoji: "⚡", sticker: "lightning" },
+  { name: "Glitter Tears", emoji: "💎", sticker: "glittertears" },
+  { name: "Pearl Veil", emoji: "🫧", sticker: "pearlveil" },
+  { name: "Clown Pop", emoji: "🤡", sticker: "clownpop" },
+  { name: "Pirate", emoji: "🏴‍☠️", sticker: "pirate" },
+  { name: "Astronaut", emoji: "👨‍🚀", sticker: "astronaut" },
+  { name: "Galaxy Face", emoji: "🌌", sticker: "galaxyface" },
+  { name: "Comic Lines", emoji: "🗯️", sticker: "comiclines" },
+  { name: "Butterfly Kiss", emoji: "🧚", sticker: "butterflykiss" },
+  { name: "Rose Crown", emoji: "🌹", sticker: "rosecrown" },
+  { name: "Sunbeam", emoji: "🌞", sticker: "sunbeam" },
+  { name: "Laser Eyes", emoji: "🔴", sticker: "lasereyes" },
+  { name: "Heart Spark", emoji: "💖", sticker: "heartspark" },
+  { name: "Venom", emoji: "🕷️", sticker: "venom" },
+  { name: "Royal Makeup", emoji: "👸", sticker: "royalmakeup" },
 ];
 
 interface FaceBox {
@@ -2498,6 +2543,605 @@ function drawFaceFilter(
       }
       break;
     }
+    case "mermaid": {
+      // Iridescent scales on forehead and cheeks
+      const scaleR = fw * 0.045;
+      const scalePositions = [
+        { x: cx - fw * 0.35, y: eyeY + fh * 0.05 }, { x: cx - fw * 0.25, y: eyeY - fh * 0.02 },
+        { x: cx - fw * 0.38, y: eyeY + fh * 0.15 }, { x: cx + fw * 0.35, y: eyeY + fh * 0.05 },
+        { x: cx + fw * 0.25, y: eyeY - fh * 0.02 }, { x: cx + fw * 0.38, y: eyeY + fh * 0.15 },
+        { x: cx - fw * 0.1, y: eyeY - fh * 0.28 }, { x: cx, y: eyeY - fh * 0.32 }, { x: cx + fw * 0.1, y: eyeY - fh * 0.28 },
+      ];
+      scalePositions.forEach((p, i) => {
+        const hue = (i * 36 + t * 0.05) % 360;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, scaleR, scaleR * 0.65, Math.PI / 6, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${hue}, 90%, 65%, 0.75)`;
+        ctx.fill();
+        ctx.strokeStyle = `hsla(${hue + 30}, 80%, 80%, 0.5)`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+      break;
+    }
+    case "zombie": {
+      // Green skin tint + dark eye rings
+      ctx.fillStyle = "rgba(80,160,60,0.28)";
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, fw * 0.55, fh * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      [eyeLX, eyeRX].forEach(ex => {
+        ctx.beginPath();
+        ctx.ellipse(ex, eyeY, fw * 0.12, fh * 0.07, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(30,0,0,0.55)";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(ex, eyeY, fw * 0.04, fh * 0.04, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(180,20,20,0.85)";
+        ctx.fill();
+      });
+      // Stitches
+      ctx.strokeStyle = "rgba(0,80,0,0.7)"; ctx.lineWidth = 2;
+      for (let s = 0; s < 5; s++) {
+        const sx = cx - fw * 0.1 + s * fw * 0.05;
+        ctx.beginPath(); ctx.moveTo(sx, mouthY - fh * 0.01); ctx.lineTo(sx, mouthY + fh * 0.04); ctx.stroke();
+      }
+      break;
+    }
+    case "robot": {
+      // Silver face plate + LED eyes
+      ctx.strokeStyle = "rgba(180,200,220,0.7)"; ctx.lineWidth = 3;
+      ctx.strokeRect(cx - fw * 0.42, eyeY - fh * 0.22, fw * 0.84, fh * 0.65);
+      [eyeLX, eyeRX].forEach(ex => {
+        ctx.fillStyle = `rgba(0,${180 + Math.sin(t * 0.01) * 50},${220 + Math.cos(t * 0.008) * 30},0.9)`;
+        ctx.fillRect(ex - fw * 0.08, eyeY - fh * 0.06, fw * 0.16, fh * 0.09);
+        ctx.strokeStyle = "rgba(100,200,255,0.5)"; ctx.lineWidth = 1;
+        ctx.strokeRect(ex - fw * 0.08, eyeY - fh * 0.06, fw * 0.16, fh * 0.09);
+      });
+      // Mouth grid
+      ctx.strokeStyle = "rgba(150,200,220,0.6)"; ctx.lineWidth = 1.5;
+      for (let g = 0; g < 5; g++) {
+        ctx.beginPath(); ctx.moveTo(cx - fw * 0.18 + g * fw * 0.09, mouthY - fh * 0.02);
+        ctx.lineTo(cx - fw * 0.18 + g * fw * 0.09, mouthY + fh * 0.05); ctx.stroke();
+      }
+      break;
+    }
+    case "witchhat": {
+      // Big pointed witch hat above head
+      const hatBase = eyeY - fh * 0.52;
+      const hatW = fw * 0.7;
+      ctx.beginPath();
+      ctx.moveTo(cx - hatW / 2, hatBase);
+      ctx.lineTo(cx + hatW / 2, hatBase);
+      ctx.lineTo(cx, hatBase - fh * 0.9);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(20,0,40,0.88)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(150,80,220,0.7)"; ctx.lineWidth = 2; ctx.stroke();
+      // Brim
+      ctx.beginPath();
+      ctx.ellipse(cx, hatBase, hatW * 0.62, fh * 0.07, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(30,0,55,0.9)"; ctx.fill();
+      // Stars on hat
+      const starPts = [{ x: cx - fw * 0.12, y: hatBase - fh * 0.3 }, { x: cx + fw * 0.08, y: hatBase - fh * 0.55 }];
+      starPts.forEach(sp => {
+        ctx.fillStyle = `rgba(255,220,80,${0.7 + Math.sin(t * 0.01) * 0.2})`;
+        ctx.beginPath(); ctx.arc(sp.x, sp.y, fw * 0.025, 0, Math.PI * 2); ctx.fill();
+      });
+      break;
+    }
+    case "dragon": {
+      // Dragon horns + scales + fire breath
+      [{ x: cx - fw * 0.22, dir: -1 }, { x: cx + fw * 0.22, dir: 1 }].forEach(h => {
+        ctx.beginPath();
+        ctx.moveTo(h.x, eyeY - fh * 0.35);
+        ctx.lineTo(h.x + h.dir * fw * 0.08, eyeY - fh * 0.7);
+        ctx.lineTo(h.x + h.dir * fw * 0.18, eyeY - fh * 0.32);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(180,30,30,0.88)"; ctx.fill();
+        ctx.strokeStyle = "rgba(220,120,40,0.7)"; ctx.lineWidth = 2; ctx.stroke();
+      });
+      // Scale dots
+      for (let dr = 0; dr < 12; dr++) {
+        const angle = (dr / 12) * Math.PI * 2 + t * 0.005;
+        const rx = cx + Math.cos(angle) * fw * 0.32;
+        const ry = cy + Math.sin(angle) * fh * 0.28;
+        ctx.beginPath(); ctx.ellipse(rx, ry, fw * 0.035, fw * 0.025, angle, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${180 + dr * 5},${30 + dr * 4},30,0.65)`; ctx.fill();
+      }
+      // Fire breath
+      const flames = 5;
+      for (let f = 0; f < flames; f++) {
+        ctx.beginPath();
+        ctx.moveTo(cx + (f - 2) * fw * 0.06, mouthY);
+        ctx.quadraticCurveTo(cx + (f - 2) * fw * 0.09, mouthY + fh * 0.22 + Math.sin(t * 0.02 + f) * fh * 0.06, cx + (f - 2) * fw * 0.04, mouthY + fh * 0.38);
+        ctx.strokeStyle = `rgba(255,${80 + f * 28},0,${0.75 - f * 0.05})`;
+        ctx.lineWidth = 4 - f * 0.4; ctx.stroke();
+      }
+      break;
+    }
+    case "beautymark": {
+      // Classic beauty mark mole near lip
+      ctx.beginPath();
+      ctx.arc(cx + fw * 0.18, mouthY - fh * 0.06, fw * 0.022, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(40,20,10,0.92)"; ctx.fill();
+      break;
+    }
+    case "bindi": {
+      // Forehead bindi gem
+      const bY = eyeY - fh * 0.28;
+      const pulse = 0.85 + Math.sin(t * 0.015) * 0.1;
+      ctx.beginPath(); ctx.arc(cx, bY, fw * 0.042 * pulse, 0, Math.PI * 2);
+      const bindiG = ctx.createRadialGradient(cx, bY, 0, cx, bY, fw * 0.042);
+      bindiG.addColorStop(0, "rgba(255,100,100,0.95)");
+      bindiG.addColorStop(0.5, "rgba(200,20,60,0.9)");
+      bindiG.addColorStop(1, "rgba(120,0,20,0.7)");
+      ctx.fillStyle = bindiG; ctx.fill();
+      ctx.strokeStyle = "rgba(255,180,180,0.6)"; ctx.lineWidth = 1.5; ctx.stroke();
+      break;
+    }
+    case "earrings": {
+      // Dangling gem earrings
+      [{ x: cx - fw * 0.5, y: eyeY + fh * 0.02 }, { x: cx + fw * 0.5, y: eyeY + fh * 0.02 }].forEach((ep, i) => {
+        const swing = Math.sin(t * 0.012 + i) * fw * 0.025;
+        ctx.beginPath(); ctx.arc(ep.x + swing, ep.y, fw * 0.032, 0, Math.PI * 2);
+        const ringG = ctx.createRadialGradient(ep.x + swing, ep.y, 0, ep.x + swing, ep.y, fw * 0.032);
+        ringG.addColorStop(0, "rgba(255,240,120,1)"); ringG.addColorStop(1, "rgba(200,140,20,0.8)");
+        ctx.fillStyle = ringG; ctx.fill();
+        ctx.beginPath(); ctx.arc(ep.x + swing, ep.y + fh * 0.07, fw * 0.024, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(100,200,255,0.9)"; ctx.fill();
+      });
+      break;
+    }
+    case "rainbowtears": {
+      // Rainbow tear streaks from eyes
+      const tearColors = ["rgba(255,80,80,0.55)", "rgba(255,180,40,0.55)", "rgba(80,220,80,0.55)", "rgba(60,140,255,0.55)", "rgba(200,80,255,0.55)"];
+      [eyeLX, eyeRX].forEach(ex => {
+        for (let tc = 0; tc < 5; tc++) {
+          ctx.beginPath();
+          ctx.moveTo(ex + (tc - 2) * fw * 0.022, eyeY + fh * 0.05);
+          ctx.lineTo(ex + (tc - 2) * fw * 0.022 + Math.sin(t * 0.01 + tc) * fw * 0.04, eyeY + fh * (0.25 + tc * 0.05));
+          ctx.strokeStyle = tearColors[tc]; ctx.lineWidth = 3.5; ctx.stroke();
+        }
+      });
+      break;
+    }
+    case "moneyeyes": {
+      // $ signs replacing pupils
+      [eyeLX, eyeRX].forEach(ex => {
+        ctx.beginPath(); ctx.ellipse(ex, eyeY, fw * 0.11, fh * 0.075, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(60,200,80,0.85)"; ctx.fill();
+        ctx.font = `bold ${Math.round(fw * 0.12)}px serif`;
+        ctx.fillStyle = "rgba(0,80,0,0.95)";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("$", ex, eyeY);
+      });
+      break;
+    }
+    case "crownstars": {
+      // Crown of twinkling stars above head
+      const crownY = eyeY - fh * 0.42;
+      for (let cs = 0; cs < 9; cs++) {
+        const angle = (cs / 9) * Math.PI * 2;
+        const rx = cx + Math.cos(angle) * fw * 0.38;
+        const ry = crownY + Math.sin(angle) * fh * 0.12;
+        const pulse2 = 0.7 + Math.sin(t * 0.018 + cs) * 0.3;
+        ctx.beginPath(); ctx.arc(rx, ry, fw * 0.022 * pulse2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,${200 + cs * 6},60,${pulse2 * 0.9})`; ctx.fill();
+      }
+      break;
+    }
+    case "sakura": {
+      // Falling cherry blossom petals
+      for (let sp = 0; sp < 20; sp++) {
+        const angle2 = ((sp * 137.5) % 360) * Math.PI / 180;
+        const rad = fw * 0.1 + ((sp * 31 + Math.floor(t * 0.02)) % (fw * 0.9));
+        const px3 = (cx - fw * 0.4 + ((sp * 47 + t * 0.04) % (fw * 0.8)));
+        const py3 = (eyeY - fh * 0.5 + ((sp * 59 + t * 0.06) % (fh * 1.4)));
+        ctx.save();
+        ctx.translate(px3, py3);
+        ctx.rotate(angle2 + t * 0.003);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, fw * 0.028, fw * 0.016, 0, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,${170 + (sp % 5) * 14},${180 + (sp % 3) * 12},0.7)`;
+        ctx.fill();
+        ctx.restore();
+      }
+      break;
+    }
+    case "facepaint": {
+      // Tribal / festival face paint lines
+      const lines = [
+        { x1: cx - fw * 0.46, y1: eyeY - fh * 0.08, x2: cx - fw * 0.1, y2: eyeY + fh * 0.02 },
+        { x1: cx + fw * 0.46, y1: eyeY - fh * 0.08, x2: cx + fw * 0.1, y2: eyeY + fh * 0.02 },
+        { x1: cx - fw * 0.2, y1: noseY + fh * 0.08, x2: cx + fw * 0.2, y2: noseY + fh * 0.08 },
+      ];
+      lines.forEach((ln, i) => {
+        ctx.beginPath(); ctx.moveTo(ln.x1, ln.y1); ctx.lineTo(ln.x2, ln.y2);
+        ctx.strokeStyle = `rgba(${[220, 80, 255][i]},${[80, 220, 80][i]},${[80, 255, 80][i]},0.72)`;
+        ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.stroke();
+      });
+      break;
+    }
+    case "hologram": {
+      // Holographic scan lines across face
+      const scanSpeed = (t * 0.8) % (fh * 1.2);
+      for (let sl = 0; sl < 8; sl++) {
+        const sy = eyeY - fh * 0.4 + sl * fh * 0.14 + (scanSpeed * 0.1);
+        ctx.beginPath(); ctx.moveTo(cx - fw * 0.5, sy); ctx.lineTo(cx + fw * 0.5, sy);
+        ctx.strokeStyle = `rgba(0,${200 + sl * 8},${255 - sl * 10},${0.12 + Math.sin(sl + t * 0.01) * 0.06})`;
+        ctx.lineWidth = 1.5; ctx.stroke();
+      }
+      ctx.strokeStyle = `rgba(80,255,220,${0.35 + Math.sin(t * 0.008) * 0.1})`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(cx - fw * 0.44, eyeY - fh * 0.42, fw * 0.88, fh * 0.84);
+      [eyeLX, eyeRX].forEach(ex => {
+        ctx.beginPath(); ctx.arc(ex, eyeY, fw * 0.1, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0,240,255,${0.5 + Math.sin(t * 0.01) * 0.2})`; ctx.lineWidth = 1.5; ctx.stroke();
+      });
+      break;
+    }
+    case "oilpaint": {
+      // Painterly swirl strokes on face area
+      for (let op = 0; op < 18; op++) {
+        const ox = cx + Math.cos(op * 40 * Math.PI / 180) * fw * (0.1 + (op % 4) * 0.08);
+        const oy = cy + Math.sin(op * 40 * Math.PI / 180) * fh * (0.08 + (op % 3) * 0.1);
+        ctx.beginPath();
+        ctx.ellipse(ox, oy, fw * 0.06, fw * 0.018, op * 22 * Math.PI / 180, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${(op * 19 + t * 0.02) % 360}, 60%, 60%, 0.22)`;
+        ctx.fill();
+      }
+      break;
+    }
+    case "sketch": {
+      // Comic-style sketch lines around face
+      ctx.strokeStyle = "rgba(30,20,10,0.45)"; ctx.lineWidth = 1.5; ctx.setLineDash([4, 6]);
+      ctx.beginPath(); ctx.ellipse(cx, cy, fw * 0.52, fh * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+      [eyeLX, eyeRX].forEach(ex => {
+        ctx.beginPath(); ctx.ellipse(ex, eyeY, fw * 0.13, fh * 0.07, 0, 0, Math.PI * 2); ctx.stroke();
+      });
+      ctx.beginPath(); ctx.arc(cx, noseY, fw * 0.07, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      break;
+    }
+    case "discoball": {
+      // Reflected disco light dots dancing on face
+      for (let db = 0; db < 24; db++) {
+        const angle3 = (db / 24) * Math.PI * 2 + t * 0.015;
+        const rx2 = cx + Math.cos(angle3) * fw * 0.35;
+        const ry2 = cy + Math.sin(angle3) * fh * 0.3;
+        ctx.beginPath(); ctx.arc(rx2, ry2, fw * 0.018, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${(db * 15 + t * 0.1) % 360}, 100%, 70%, 0.65)`; ctx.fill();
+      }
+      break;
+    }
+    case "neonglow": {
+      // Neon outline around face + eyes
+      const neonC = `hsla(${(t * 0.05) % 360}, 100%, 65%, 0.7)`;
+      ctx.shadowColor = neonC; ctx.shadowBlur = 18;
+      ctx.strokeStyle = neonC; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(cx, cy, fw * 0.5, fh * 0.6, 0, 0, Math.PI * 2); ctx.stroke();
+      [eyeLX, eyeRX].forEach(ex => {
+        ctx.beginPath(); ctx.ellipse(ex, eyeY, fw * 0.12, fh * 0.07, 0, 0, Math.PI * 2); ctx.stroke();
+      });
+      ctx.shadowBlur = 0;
+      break;
+    }
+    case "icequeen": {
+      // Ice/frost crystals scattered on face & hair area
+      for (let ic = 0; ic < 14; ic++) {
+        const ix = cx + (ic % 5 - 2) * fw * 0.2 + Math.sin(ic) * fw * 0.06;
+        const iy = eyeY - fh * 0.5 + ic * fh * 0.08;
+        const arms = 6;
+        for (let ia = 0; ia < arms; ia++) {
+          const ang = (ia / arms) * Math.PI * 2 + t * 0.002;
+          ctx.beginPath();
+          ctx.moveTo(ix, iy);
+          ctx.lineTo(ix + Math.cos(ang) * fw * 0.038, iy + Math.sin(ang) * fw * 0.038);
+          ctx.strokeStyle = `rgba(180,235,255,${0.55 + Math.sin(ic * 0.8) * 0.2})`;
+          ctx.lineWidth = 1.5; ctx.stroke();
+        }
+      }
+      break;
+    }
+    case "firecrown": {
+      // Flaming fire crown above head
+      const fireBase2 = eyeY - fh * 0.38;
+      for (let fc = 0; fc < 7; fc++) {
+        const fx = cx - fw * 0.3 + fc * fw * 0.1;
+        const fh2 = fh * (0.3 + Math.sin(t * 0.018 + fc * 0.8) * 0.12);
+        ctx.beginPath();
+        ctx.moveTo(fx - fw * 0.04, fireBase2);
+        ctx.quadraticCurveTo(fx, fireBase2 - fh2, fx + fw * 0.04, fireBase2);
+        const fg = ctx.createLinearGradient(fx, fireBase2, fx, fireBase2 - fh2);
+        fg.addColorStop(0, "rgba(255,60,0,0.85)");
+        fg.addColorStop(0.5, "rgba(255,160,0,0.65)");
+        fg.addColorStop(1, "rgba(255,240,80,0.0)");
+        ctx.fillStyle = fg; ctx.fill();
+      }
+      break;
+    }
+    case "bubblewrap": {
+      // Shiny bubbles floating across face
+      for (let bw = 0; bw < 16; bw++) {
+        const bx = cx + (bw % 5 - 2) * fw * 0.18 + Math.sin(bw * 1.3 + t * 0.01) * fw * 0.04;
+        const by = eyeY - fh * 0.35 + Math.floor(bw / 5) * fh * 0.28 + Math.cos(bw + t * 0.008) * fh * 0.04;
+        const br = fw * 0.045;
+        ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2);
+        const bg = ctx.createRadialGradient(bx - br * 0.3, by - br * 0.3, 0, bx, by, br);
+        bg.addColorStop(0, "rgba(255,255,255,0.7)");
+        bg.addColorStop(0.4, "rgba(180,230,255,0.3)");
+        bg.addColorStop(1, "rgba(100,180,255,0.12)");
+        ctx.fillStyle = bg; ctx.fill();
+        ctx.strokeStyle = "rgba(160,210,255,0.5)"; ctx.lineWidth = 1; ctx.stroke();
+      }
+      break;
+    }
+    case "kaleidoscope": {
+      // Mirrored geometric patterns around face center
+      const segs = 8;
+      for (let ks = 0; ks < segs; ks++) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate((ks / segs) * Math.PI * 2 + t * 0.004);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(fw * 0.28, fh * 0.08);
+        ctx.lineTo(fw * 0.22, fh * 0.22);
+        ctx.closePath();
+        ctx.fillStyle = `hsla(${(ks * 45 + t * 0.04) % 360}, 80%, 65%, 0.22)`;
+        ctx.fill();
+        ctx.restore();
+      }
+      break;
+    }
+    case "comicpop": {
+      // Comic halftone dots + BOOM text
+      for (let cp = 0; cp < 30; cp++) {
+        const cpx = cx - fw * 0.48 + (cp % 6) * fw * 0.17;
+        const cpy = eyeY - fh * 0.38 + Math.floor(cp / 6) * fh * 0.16;
+        ctx.beginPath(); ctx.arc(cpx, cpy, fw * 0.025, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0,0,0,0.12)"; ctx.fill();
+      }
+      ctx.font = `bold ${Math.round(fw * 0.22)}px Impact, sans-serif`;
+      ctx.fillStyle = "rgba(255,60,0,0.88)";
+      ctx.strokeStyle = "rgba(0,0,0,0.6)"; ctx.lineWidth = 4;
+      ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+      ctx.strokeText("POW!", cx, eyeY - fh * 0.4);
+      ctx.fillText("POW!", cx, eyeY - fh * 0.4);
+      break;
+    }
+    case "lashbar": {
+      // Bold dramatic lashes on both eyes
+      [eyeLX, eyeRX].forEach((ex, side) => {
+        const lashCount = 9;
+        for (let l = 0; l < lashCount; l++) {
+          const lx = ex + (l - 4) * fw * 0.022;
+          const angle4 = (side === 0 ? -1 : 1) * (0.3 + (Math.abs(l - 4) / 4) * 0.5);
+          ctx.beginPath();
+          ctx.moveTo(lx, eyeY - fh * 0.055);
+          ctx.lineTo(lx + Math.sin(angle4) * fw * 0.04, eyeY - fh * 0.055 - fh * 0.07);
+          ctx.strokeStyle = "rgba(10,10,10,0.88)"; ctx.lineWidth = 2.5; ctx.lineCap = "round"; ctx.stroke();
+        }
+        ctx.beginPath(); ctx.ellipse(ex, eyeY - fh * 0.035, fw * 0.12, fh * 0.022, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(10,10,10,0.7)"; ctx.fill();
+      });
+      break;
+    }
+    case "goldenhour": {
+      // Warm golden glow aura + sun flares
+      const ghG = ctx.createRadialGradient(cx, eyeY - fh * 0.1, 0, cx, eyeY - fh * 0.1, fw * 0.7);
+      ghG.addColorStop(0, "rgba(255,220,80,0.0)");
+      ghG.addColorStop(0.5, "rgba(255,160,40,0.22)");
+      ghG.addColorStop(1, "rgba(255,100,20,0.0)");
+      ctx.beginPath(); ctx.ellipse(cx, eyeY - fh * 0.1, fw * 0.7, fh * 0.7, 0, 0, Math.PI * 2);
+      ctx.fillStyle = ghG; ctx.fill();
+      // Lens flare streaks
+      for (let gf = 0; gf < 6; gf++) {
+        const gfA = (gf / 6) * Math.PI * 2 + t * 0.003;
+        ctx.beginPath();
+        ctx.moveTo(cx + fw * 0.08, eyeY - fh * 0.28);
+        ctx.lineTo(cx + Math.cos(gfA) * fw * (0.3 + gf * 0.05), eyeY - fh * 0.28 + Math.sin(gfA) * fh * 0.25);
+        ctx.strokeStyle = `rgba(255,${200 - gf * 10},40,0.18)`;
+        ctx.lineWidth = 2 + gf * 0.4; ctx.stroke();
+      }
+      break;
+    }
+    case "cybermask": {
+      ctx.strokeStyle = "rgba(0,255,220,0.8)"; ctx.lineWidth = 3;
+      ctx.strokeRect(cx - fw * 0.45, eyeY - fh * 0.2, fw * 0.9, fh * 0.48);
+      [eyeLX, eyeRX].forEach(ex => {
+        ctx.beginPath(); ctx.ellipse(ex, eyeY, fw * 0.12, fh * 0.07, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0,255,240,${0.5 + Math.sin(t * 0.01) * 0.3})`;
+        ctx.lineWidth = 2; ctx.stroke();
+      });
+      break;
+    }
+    case "angelhalo": {
+      const hy = eyeY - fh * 0.58;
+      ctx.beginPath();
+      ctx.ellipse(cx, hy, fw * 0.28, fh * 0.06, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255,230,130,${0.7 + Math.sin(t * 0.01) * 0.2})`;
+      ctx.lineWidth = 5; ctx.stroke();
+      break;
+    }
+    case "devilhorns": {
+      [{ x: cx - fw * 0.18, d: -1 }, { x: cx + fw * 0.18, d: 1 }].forEach(h => {
+        ctx.beginPath();
+        ctx.moveTo(h.x, eyeY - fh * 0.3);
+        ctx.lineTo(h.x + h.d * fw * 0.08, eyeY - fh * 0.55);
+        ctx.lineTo(h.x + h.d * fw * 0.15, eyeY - fh * 0.26);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(200,30,40,0.85)"; ctx.fill();
+      });
+      break;
+    }
+    case "butterfly": {
+      const wings = [
+        { x: cx - fw * 0.32, y: eyeY - fh * 0.12, c: "rgba(255,120,200,0.5)" },
+        { x: cx + fw * 0.32, y: eyeY - fh * 0.12, c: "rgba(120,200,255,0.5)" },
+      ];
+      wings.forEach(w => {
+        ctx.beginPath(); ctx.ellipse(w.x, w.y, fw * 0.16, fh * 0.16, 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = w.c; ctx.fill();
+      });
+      break;
+    }
+    case "snowglobe": {
+      for (let s = 0; s < 28; s++) {
+        const x = cx - fw * 0.48 + ((s * 37 + t * 0.06) % (fw * 0.96));
+        const y = eyeY - fh * 0.5 + ((s * 61 + t * 0.08) % (fh * 1.3));
+        ctx.beginPath(); ctx.arc(x, y, fw * 0.012, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(235,245,255,0.75)"; ctx.fill();
+      }
+      break;
+    }
+    case "lightning": {
+      [cx - fw * 0.2, cx + fw * 0.2].forEach(x0 => {
+        ctx.beginPath();
+        ctx.moveTo(x0, eyeY - fh * 0.45);
+        ctx.lineTo(x0 - fw * 0.06, eyeY - fh * 0.2);
+        ctx.lineTo(x0 + fw * 0.02, eyeY - fh * 0.2);
+        ctx.lineTo(x0 - fw * 0.08, eyeY + fh * 0.1);
+        ctx.strokeStyle = "rgba(255,240,120,0.85)";
+        ctx.lineWidth = 4; ctx.stroke();
+      });
+      break;
+    }
+    case "glittertears": {
+      [eyeLX, eyeRX].forEach(ex => {
+        for (let g = 0; g < 8; g++) {
+          ctx.beginPath();
+          ctx.arc(ex + (Math.random() - 0.5) * fw * 0.07, eyeY + fh * (0.08 + g * 0.045), fw * 0.012, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${(g * 35 + t * 0.05) % 360}, 90%, 72%, 0.72)`;
+          ctx.fill();
+        }
+      });
+      break;
+    }
+    case "pearlveil": {
+      for (let p = 0; p < 18; p++) {
+        const x = cx - fw * 0.45 + (p % 6) * fw * 0.18;
+        const y = eyeY - fh * 0.45 + Math.floor(p / 6) * fh * 0.26;
+        ctx.beginPath(); ctx.arc(x, y, fw * 0.03, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.fill();
+        ctx.strokeStyle = "rgba(220,230,255,0.5)"; ctx.lineWidth = 1; ctx.stroke();
+      }
+      break;
+    }
+    case "clownpop": {
+      ctx.beginPath(); ctx.arc(cx - fw * 0.2, eyeY + fh * 0.16, fw * 0.1, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,60,60,0.45)"; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + fw * 0.2, eyeY + fh * 0.16, fw * 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath(); ctx.arc(cx, noseY, fw * 0.06, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,0,0,0.85)"; ctx.fill();
+      break;
+    }
+    case "pirate": {
+      ctx.fillStyle = "rgba(0,0,0,0.85)";
+      ctx.fillRect(eyeLX - fw * 0.14, eyeY - fh * 0.08, fw * 0.22, fh * 0.15);
+      ctx.beginPath(); ctx.moveTo(eyeLX + fw * 0.08, eyeY); ctx.lineTo(eyeRX - fw * 0.18, eyeY + fh * 0.02);
+      ctx.strokeStyle = "rgba(0,0,0,0.85)"; ctx.lineWidth = 4; ctx.stroke();
+      break;
+    }
+    case "astronaut": {
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, fw * 0.58, fh * 0.72, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(220,230,240,0.8)"; ctx.lineWidth = 5; ctx.stroke();
+      ctx.fillStyle = "rgba(180,220,255,0.12)"; ctx.fill();
+      break;
+    }
+    case "galaxyface": {
+      ctx.beginPath(); ctx.ellipse(cx, cy, fw * 0.54, fh * 0.64, 0, 0, Math.PI * 2);
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, fw * 0.56);
+      g.addColorStop(0, "rgba(140,60,255,0.35)"); g.addColorStop(0.5, "rgba(40,30,120,0.28)"); g.addColorStop(1, "rgba(0,0,20,0.0)");
+      ctx.fillStyle = g; ctx.fill();
+      for (let st = 0; st < 16; st++) {
+        ctx.beginPath(); ctx.arc(cx - fw * 0.4 + (st * fw * 0.05), eyeY - fh * 0.4 + ((st * 19) % (fh * 0.8)), fw * 0.008, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.8)"; ctx.fill();
+      }
+      break;
+    }
+    case "comiclines": {
+      for (let c = 0; c < 10; c++) {
+        const a = (c / 10) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * fw * 0.25, cy + Math.sin(a) * fh * 0.25);
+        ctx.lineTo(cx + Math.cos(a) * fw * 0.7, cy + Math.sin(a) * fh * 0.75);
+        ctx.strokeStyle = "rgba(255,255,255,0.28)"; ctx.lineWidth = 2; ctx.stroke();
+      }
+      break;
+    }
+    case "butterflykiss": {
+      [eyeLX, eyeRX].forEach(ex => {
+        ctx.beginPath(); ctx.ellipse(ex - fw * 0.06, eyeY - fh * 0.02, fw * 0.06, fh * 0.03, -0.7, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,120,190,0.5)"; ctx.fill();
+        ctx.beginPath(); ctx.ellipse(ex + fw * 0.06, eyeY - fh * 0.02, fw * 0.06, fh * 0.03, 0.7, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      break;
+    }
+    case "rosecrown": {
+      for (let r = 0; r < 7; r++) {
+        const x = cx - fw * 0.32 + r * fw * 0.11;
+        const y = eyeY - fh * 0.44 + Math.sin(r) * fh * 0.03;
+        ctx.beginPath(); ctx.arc(x, y, fw * 0.05, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(230,30,80,0.72)"; ctx.fill();
+      }
+      break;
+    }
+    case "sunbeam": {
+      for (let r = 0; r < 12; r++) {
+        const a = (r / 12) * Math.PI * 2 + t * 0.003;
+        ctx.beginPath();
+        ctx.moveTo(cx, eyeY - fh * 0.2);
+        ctx.lineTo(cx + Math.cos(a) * fw * 0.75, eyeY - fh * 0.2 + Math.sin(a) * fh * 0.75);
+        ctx.strokeStyle = "rgba(255,220,90,0.14)"; ctx.lineWidth = 3; ctx.stroke();
+      }
+      break;
+    }
+    case "lasereyes": {
+      [eyeLX, eyeRX].forEach(ex => {
+        ctx.beginPath();
+        ctx.moveTo(ex, eyeY);
+        ctx.lineTo(ex + fw * 0.8, eyeY - fh * 0.1 + Math.sin(t * 0.01) * fh * 0.06);
+        ctx.strokeStyle = "rgba(255,0,0,0.68)"; ctx.lineWidth = 4; ctx.stroke();
+      });
+      break;
+    }
+    case "heartspark": {
+      for (let h = 0; h < 10; h++) {
+        const hx = cx - fw * 0.42 + (h * fw * 0.09);
+        const hy = eyeY - fh * 0.5 + ((h * 37 + t * 0.04) % (fh * 1.2));
+        drawHeart(ctx, hx, hy, fw * 0.04, "rgba(255,80,140,0.55)");
+      }
+      break;
+    }
+    case "venom": {
+      ctx.strokeStyle = "rgba(20,20,20,0.85)"; ctx.lineWidth = 4;
+      for (let v = 0; v < 6; v++) {
+        const startX = cx - fw * 0.5 + v * fw * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(startX, eyeY - fh * 0.35);
+        ctx.quadraticCurveTo(startX + fw * 0.05, cy, startX - fw * 0.03, eyeY + fh * 0.45);
+        ctx.stroke();
+      }
+      break;
+    }
+    case "royalmakeup": {
+      ctx.beginPath();
+      ctx.ellipse(cx, mouthY, fw * 0.2, fh * 0.06, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(190,20,70,0.62)"; ctx.fill();
+      [eyeLX, eyeRX].forEach(ex => {
+        ctx.beginPath(); ctx.ellipse(ex, eyeY, fw * 0.14, fh * 0.06, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(120,20,90,0.36)"; ctx.fill();
+      });
+      ctx.beginPath();
+      ctx.ellipse(cx, eyeY - fh * 0.3, fw * 0.05, fh * 0.03, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,220,100,0.75)"; ctx.fill();
+      break;
+    }
   }
   ctx.restore();
 }
@@ -2643,6 +3287,56 @@ function LiveBroadcast({
     { name: "Moss", css: "hue-rotate(58deg) saturate(1.2) brightness(0.94) contrast(1.06)", emoji: "🌱" },
     { name: "Dusty Rose", css: "hue-rotate(-18deg) saturate(1.1) brightness(1.12) contrast(0.9) sepia(0.1)", emoji: "🌸" },
     { name: "Glacier", css: "hue-rotate(32deg) saturate(0.9) brightness(1.22) contrast(0.9)", emoji: "🧊" },
+    { name: "Neon Pink", css: "hue-rotate(-40deg) saturate(2.8) contrast(1.3) brightness(1.05)", emoji: "🩷" },
+    { name: "Acid Green", css: "hue-rotate(58deg) saturate(3.0) contrast(1.35) brightness(0.95)", emoji: "🟢" },
+    { name: "Retro TV", css: "saturate(0) contrast(1.6) brightness(1.1) sepia(0.05)", emoji: "📺" },
+    { name: "Coral Reef", css: "hue-rotate(-22deg) saturate(1.8) brightness(1.1) contrast(1.04)", emoji: "🪸" },
+    { name: "Digital Cyan", css: "hue-rotate(22deg) saturate(2.2) contrast(1.18) brightness(0.97)", emoji: "🔵" },
+    { name: "Rose Film", css: "sepia(0.22) hue-rotate(-14deg) saturate(1.4) brightness(1.1) contrast(0.92)", emoji: "🌹" },
+    { name: "Night Mode", css: "brightness(0.55) contrast(1.5) saturate(0.7) hue-rotate(4deg)", emoji: "🌙" },
+    { name: "Sunshine", css: "sepia(0.18) saturate(1.8) brightness(1.22) contrast(1.0) hue-rotate(-6deg)", emoji: "☀️" },
+    { name: "Pop Art", css: "saturate(3.5) contrast(1.6) brightness(1.05) hue-rotate(0deg)", emoji: "🎨" },
+    { name: "Forest", css: "hue-rotate(54deg) saturate(1.4) brightness(0.88) contrast(1.1)", emoji: "🌲" },
+    { name: "Ruby", css: "hue-rotate(-10deg) saturate(2.2) contrast(1.25) brightness(0.95) sepia(0.1)", emoji: "❤️" },
+    { name: "Lavender Haze", css: "hue-rotate(-180deg) saturate(1.35) brightness(1.15) contrast(0.88)", emoji: "💜" },
+    { name: "Neon Orange", css: "hue-rotate(-28deg) saturate(3.2) contrast(1.38) brightness(1.02)", emoji: "🟠" },
+    { name: "Matrix", css: "hue-rotate(80deg) saturate(2.6) contrast(1.5) brightness(0.8) sepia(0.1)", emoji: "💚" },
+    { name: "Faded Film", css: "sepia(0.45) saturate(0.85) brightness(1.18) contrast(0.82)", emoji: "🎞️" },
+    { name: "Crimson", css: "hue-rotate(-6deg) saturate(2.0) contrast(1.28) brightness(0.9)", emoji: "🔴" },
+    { name: "Arctic", css: "hue-rotate(18deg) saturate(0.7) brightness(1.35) contrast(0.86)", emoji: "❄️" },
+    { name: "Velvet Night", css: "hue-rotate(-160deg) saturate(1.6) brightness(0.72) contrast(1.2)", emoji: "🌌" },
+    { name: "Butter", css: "sepia(0.28) brightness(1.2) saturate(1.3) hue-rotate(-10deg) contrast(0.9)", emoji: "🧈" },
+    { name: "Polaroid", css: "sepia(0.12) brightness(1.16) contrast(0.88) saturate(1.18)", emoji: "📷" },
+    { name: "Terracotta", css: "sepia(0.38) hue-rotate(-12deg) saturate(1.5) brightness(1.0) contrast(1.06)", emoji: "🏺" },
+    { name: "Grape", css: "hue-rotate(-195deg) saturate(1.7) brightness(0.9) contrast(1.15)", emoji: "🍇" },
+    { name: "Mint", css: "hue-rotate(62deg) saturate(1.3) brightness(1.16) contrast(0.92)", emoji: "🌿" },
+    { name: "Deep Sea", css: "hue-rotate(34deg) saturate(1.8) brightness(0.78) contrast(1.22)", emoji: "🌊" },
+    { name: "Pearl", css: "saturate(0.6) brightness(1.38) contrast(0.82) sepia(0.06)", emoji: "🤍" },
+    { name: "Blaze Orange", css: "hue-rotate(-32deg) saturate(2.5) contrast(1.32) brightness(1.0)", emoji: "🔶" },
+    { name: "Tundra", css: "saturate(0.55) brightness(1.25) contrast(0.9) hue-rotate(12deg)", emoji: "🌨️" },
+    { name: "Amber", css: "sepia(0.5) saturate(1.6) brightness(1.08) hue-rotate(-8deg)", emoji: "🟡" },
+    { name: "Cosmic", css: "hue-rotate(-145deg) saturate(2.0) brightness(0.82) contrast(1.28)", emoji: "🚀" },
+    { name: "Gold Rush", css: "sepia(0.4) saturate(2.0) brightness(1.12) contrast(1.08) hue-rotate(-14deg)", emoji: "🏆" },
+    { name: "Candy Pop", css: "hue-rotate(-18deg) saturate(2.6) brightness(1.16) contrast(1.1)", emoji: "🍬" },
+    { name: "Sky Punch", css: "hue-rotate(18deg) saturate(2.1) brightness(1.08) contrast(1.18)", emoji: "🌤️" },
+    { name: "Aqua Ice", css: "hue-rotate(34deg) saturate(1.3) brightness(1.3) contrast(0.9)", emoji: "🧊" },
+    { name: "Dark Cherry", css: "hue-rotate(-8deg) saturate(1.9) brightness(0.82) contrast(1.24)", emoji: "🍒" },
+    { name: "Sepia Dream", css: "sepia(0.55) saturate(1.2) brightness(1.14) contrast(0.88)", emoji: "🟤" },
+    { name: "Ocean Pop", css: "hue-rotate(28deg) saturate(2.0) brightness(0.95) contrast(1.16)", emoji: "🐬" },
+    { name: "Cyber Lime", css: "hue-rotate(72deg) saturate(3.1) brightness(0.9) contrast(1.34)", emoji: "🟩" },
+    { name: "Candy Blue", css: "hue-rotate(12deg) saturate(2.2) brightness(1.1) contrast(1.1)", emoji: "🔷" },
+    { name: "Rose Gold", css: "sepia(0.22) hue-rotate(-12deg) saturate(1.45) brightness(1.14) contrast(0.92)", emoji: "🪙" },
+    { name: "Dust Storm", css: "sepia(0.28) saturate(0.8) brightness(0.92) contrast(1.15)", emoji: "🌫️" },
+    { name: "Mono Punch", css: "grayscale(1) contrast(1.48) brightness(1.05)", emoji: "⚪" },
+    { name: "Mint Punch", css: "hue-rotate(60deg) saturate(1.55) brightness(1.18) contrast(0.96)", emoji: "🍃" },
+    { name: "Punch Red", css: "hue-rotate(-14deg) saturate(2.7) brightness(0.94) contrast(1.28)", emoji: "🥊" },
+    { name: "Club Night", css: "hue-rotate(-165deg) saturate(1.8) brightness(0.68) contrast(1.32)", emoji: "🌃" },
+    { name: "Snow Fade", css: "saturate(0.52) brightness(1.34) contrast(0.86) sepia(0.04)", emoji: "☁️" },
+    { name: "Jungle", css: "hue-rotate(52deg) saturate(1.7) brightness(0.9) contrast(1.14)", emoji: "🌴" },
+    { name: "Copper", css: "sepia(0.48) saturate(1.5) brightness(1.0) hue-rotate(-10deg) contrast(1.06)", emoji: "🧡" },
+    { name: "Pearl Pink", css: "hue-rotate(-14deg) saturate(1.25) brightness(1.28) contrast(0.86)", emoji: "🩰" },
+    { name: "Voltage", css: "hue-rotate(8deg) saturate(3.0) brightness(0.92) contrast(1.4)", emoji: "⚡" },
+    { name: "Silver Film", css: "grayscale(0.55) contrast(1.22) brightness(1.16) saturate(0.7)", emoji: "🥈" },
   ];
 
   const FACE_FILTERS = [
@@ -2764,6 +3458,56 @@ function LiveBroadcast({
     { name: "Crystal Skin", css: "blur(0.48px) brightness(1.34) contrast(0.72) saturate(0.94)", emoji: "🔷" },
     { name: "Peach Blur", css: "blur(0.76px) brightness(1.24) contrast(0.8) saturate(1.18) hue-rotate(-9deg)", emoji: "🍑" },
     { name: "Soft Cinema", css: "blur(0.32px) brightness(1.12) contrast(1.08) saturate(1.12) sepia(0.06)", emoji: "🎬" },
+    { name: "Airbrush", css: "blur(1.1px) brightness(1.24) contrast(0.78) saturate(1.06)", emoji: "🖌️" },
+    { name: "Porcelain", css: "blur(1.3px) brightness(1.36) contrast(0.7) saturate(0.82)", emoji: "🪷" },
+    { name: "Studio Light", css: "blur(0.38px) brightness(1.32) contrast(0.84) saturate(1.18)", emoji: "💡" },
+    { name: "Rose Matte", css: "blur(0.62px) brightness(1.2) contrast(0.86) saturate(1.28) hue-rotate(-12deg) sepia(0.08)", emoji: "🌹" },
+    { name: "Skin Silk", css: "blur(0.88px) brightness(1.22) contrast(0.76) saturate(0.98)", emoji: "🧣" },
+    { name: "Moonlit", css: "blur(0.72px) brightness(1.42) contrast(0.72) saturate(0.78) sepia(0.04)", emoji: "🌙" },
+    { name: "Dewy", css: "blur(0.42px) brightness(1.3) contrast(0.8) saturate(1.12)", emoji: "💧" },
+    { name: "Champagne", css: "blur(0.56px) brightness(1.26) contrast(0.82) saturate(1.08) sepia(0.1)", emoji: "🥂" },
+    { name: "Ethereal", css: "blur(1.4px) brightness(1.44) contrast(0.68) saturate(0.9)", emoji: "🕊️" },
+    { name: "Radiant", css: "blur(0.28px) brightness(1.36) contrast(0.86) saturate(1.24)", emoji: "⚡" },
+    { name: "Soft Focus", css: "blur(1.6px) brightness(1.22) contrast(0.74) saturate(1.02)", emoji: "🔍" },
+    { name: "Golden Skin", css: "blur(0.44px) brightness(1.22) contrast(0.88) saturate(1.36) sepia(0.14) hue-rotate(-10deg)", emoji: "✨" },
+    { name: "Velour", css: "blur(0.94px) brightness(1.18) contrast(0.8) saturate(1.04)", emoji: "🫧" },
+    { name: "Flawless", css: "blur(1.05px) brightness(1.32) contrast(0.72) saturate(0.96)", emoji: "💎" },
+    { name: "Blush Tone", css: "blur(0.52px) brightness(1.24) contrast(0.84) saturate(1.4) hue-rotate(-16deg)", emoji: "🩷" },
+    { name: "Matte Glow", css: "blur(0.66px) brightness(1.2) contrast(0.92) saturate(1.08)", emoji: "🌟" },
+    { name: "Milk Skin", css: "blur(1.15px) brightness(1.38) contrast(0.68) saturate(0.85)", emoji: "🥛" },
+    { name: "Honey Glaze", css: "blur(0.48px) brightness(1.26) contrast(0.86) saturate(1.44) sepia(0.12) hue-rotate(-8deg)", emoji: "🍯" },
+    { name: "Soft Tan", css: "blur(0.54px) brightness(1.14) contrast(0.9) saturate(1.32) sepia(0.18) hue-rotate(-14deg)", emoji: "🏖️" },
+    { name: "Ice Glow", css: "blur(0.78px) brightness(1.46) contrast(0.7) saturate(0.76)", emoji: "🧊" },
+    { name: "Sunrise Skin", css: "blur(0.36px) brightness(1.28) contrast(0.86) saturate(1.32) hue-rotate(-6deg) sepia(0.1)", emoji: "🌅" },
+    { name: "Ultra Matte", css: "blur(0.82px) brightness(1.18) contrast(0.88) saturate(0.88)", emoji: "🪞" },
+    { name: "Filter Off+", css: "blur(0.18px) brightness(1.06) contrast(1.0) saturate(1.0)", emoji: "💫" },
+    { name: "Bloom", css: "blur(1.2px) brightness(1.38) contrast(0.72) saturate(1.14)", emoji: "🌺" },
+    { name: "Caramel Skin", css: "blur(0.58px) brightness(1.14) contrast(0.9) saturate(1.38) sepia(0.22) hue-rotate(-12deg)", emoji: "🍮" },
+    { name: "TikTok Pro", css: "blur(1.0px) brightness(1.28) contrast(0.82) saturate(1.16)", emoji: "🎵" },
+    { name: "Celeb Glow", css: "blur(0.68px) brightness(1.36) contrast(0.76) saturate(1.2)", emoji: "⭐" },
+    { name: "Berry Tone", css: "blur(0.72px) brightness(1.18) contrast(0.86) saturate(1.3) hue-rotate(-24deg)", emoji: "🫐" },
+    { name: "Pure White", css: "blur(1.0px) brightness(1.52) contrast(0.64) saturate(0.72)", emoji: "🤍" },
+    { name: "Soft Glam", css: "blur(0.84px) brightness(1.26) contrast(0.8) saturate(1.22) sepia(0.06)", emoji: "💄" },
+    { name: "Velvet Blur", css: "blur(1.04px) brightness(1.22) contrast(0.78) saturate(1.0)", emoji: "🧵" },
+    { name: "Halo Skin", css: "blur(0.56px) brightness(1.34) contrast(0.76) saturate(1.06)", emoji: "😇" },
+    { name: "Cloud Skin", css: "blur(1.28px) brightness(1.4) contrast(0.66) saturate(0.84)", emoji: "☁️" },
+    { name: "Tea Rose", css: "blur(0.62px) brightness(1.2) contrast(0.84) saturate(1.26) hue-rotate(-12deg)", emoji: "🌷" },
+    { name: "HD Porcelain", css: "blur(0.9px) brightness(1.38) contrast(0.68) saturate(0.82)", emoji: "🏺" },
+    { name: "Creamy", css: "blur(0.72px) brightness(1.26) contrast(0.8) saturate(0.98) sepia(0.08)", emoji: "🍦" },
+    { name: "Ice Silk", css: "blur(0.86px) brightness(1.44) contrast(0.7) saturate(0.78)", emoji: "🧊" },
+    { name: "Warm Matte", css: "blur(0.68px) brightness(1.16) contrast(0.92) saturate(1.16) sepia(0.08)", emoji: "🔥" },
+    { name: "Rosy Glow", css: "blur(0.5px) brightness(1.26) contrast(0.84) saturate(1.36) hue-rotate(-14deg)", emoji: "🌹" },
+    { name: "Cloud Nine", css: "blur(1.42px) brightness(1.46) contrast(0.64) saturate(0.88)", emoji: "9️⃣" },
+    { name: "Silk Matte", css: "blur(0.82px) brightness(1.2) contrast(0.88) saturate(0.94)", emoji: "🪡" },
+    { name: "Studio Pro", css: "blur(0.42px) brightness(1.3) contrast(0.88) saturate(1.18)", emoji: "🎥" },
+    { name: "Nude Skin", css: "blur(0.64px) brightness(1.18) contrast(0.88) saturate(1.08) sepia(0.1)", emoji: "🤎" },
+    { name: "Baby Glow", css: "blur(1.12px) brightness(1.34) contrast(0.7) saturate(1.02)", emoji: "🍼" },
+    { name: "High Beam", css: "blur(0.34px) brightness(1.4) contrast(0.86) saturate(1.22)", emoji: "🔦" },
+    { name: "Pure Peach", css: "blur(0.66px) brightness(1.24) contrast(0.82) saturate(1.28) hue-rotate(-10deg)", emoji: "🍑" },
+    { name: "Smooth Pro+", css: "blur(1.18px) brightness(1.28) contrast(0.76) saturate(1.06)", emoji: "➕" },
+    { name: "Diamond Skin", css: "blur(0.52px) brightness(1.36) contrast(0.78) saturate(1.1)", emoji: "💠" },
+    { name: "Pearl Tone", css: "blur(0.74px) brightness(1.3) contrast(0.76) saturate(0.92)", emoji: "⚪" },
+    { name: "Ultra Idol", css: "blur(1.08px) brightness(1.38) contrast(0.7) saturate(1.0)", emoji: "🎤" },
   ];
 
   const expandedColorFilters = useMemo(
