@@ -3557,7 +3557,26 @@ function LiveBroadcast({
     setActiveFilter(next);
   };
 
-  // Face detection + AR sticker canvas overlay
+  const captureFilterThumb = () => {
+    const video = videoRef.current;
+    if (!video || video.videoWidth === 0) return;
+    const c = document.createElement("canvas");
+    c.width = 80;
+    c.height = 80;
+    const ctx2 = c.getContext("2d");
+    if (!ctx2) return;
+    const size = Math.min(video.videoWidth, video.videoHeight);
+    const sx = (video.videoWidth - size) / 2;
+    const sy = (video.videoHeight - size) / 2;
+    ctx2.drawImage(video, sx, sy, size, size, 0, 0, 80, 80);
+    setFilterThumbUrl(c.toDataURL("image/jpeg", 0.6));
+  };
+
+  const toggleFilters = () => {
+    if (!showFilters) captureFilterThumb();
+    setShowFilters(!showFilters);
+  };
+
   useEffect(() => {
     const currentSticker = AR_STICKERS[activeSticker]?.sticker;
     if (!currentSticker) {
