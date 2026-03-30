@@ -2,7 +2,7 @@
  * ChatHubPage — Unified messaging hub with category tabs:
  * Personal, Shop, Support, Ride
  */
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
