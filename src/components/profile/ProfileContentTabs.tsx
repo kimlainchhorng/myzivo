@@ -3975,6 +3975,25 @@ function LiveBroadcast({
                 </div>
               )}
               <div className="px-4 mb-2 text-[10px] text-white/45">Swipe up to see more options</div>
+              {/* AR Category tabs - TikTok style */}
+              {filterTab === "ar" && (
+                <div className="flex items-center gap-1 px-4 mb-3 overflow-x-auto scrollbar-none">
+                  {AR_CATEGORIES.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setArCategory(cat)}
+                      className={cn(
+                        "flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                        arCategory === cat
+                          ? "bg-white text-black"
+                          : "bg-white/10 text-white/60 hover:bg-white/20"
+                      )}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
               {/* Filter/Sticker grid */}
               <div className="grid grid-cols-4 gap-3 px-4 pr-5 max-h-[48vh] overflow-y-auto">
                 {filterTab === "ar" ? (
@@ -3982,23 +4001,47 @@ function LiveBroadcast({
                     const s = AR_STICKERS[i];
                     return (
                     <button
-                      key={s.name}
+                      key={`${s.name}-${i}`}
                       onClick={() => setActiveSticker(i)}
-                      className="flex flex-col items-center gap-1"
+                      className="flex flex-col items-center gap-1.5"
                     >
                       <div
                         className={cn(
-                          "w-16 h-16 rounded-xl flex items-center justify-center text-2xl transition-all",
+                          "w-[72px] h-[72px] rounded-2xl overflow-hidden relative transition-all",
                           activeSticker === i
-                            ? "bg-white/20 border-2 border-white scale-105 shadow-lg shadow-white/20"
-                            : "bg-white/5 border-2 border-transparent opacity-75"
+                            ? "ring-2 ring-white scale-105 shadow-lg shadow-white/20"
+                            : "opacity-80"
                         )}
                       >
-                        {s.emoji}
+                        {/* Camera snapshot as base */}
+                        {filterThumbUrl ? (
+                          <img src={filterThumbUrl} alt="" className="w-full h-full object-cover absolute inset-0" />
+                        ) : null}
+                        {/* Gradient overlay representing the effect */}
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            background: s.gradient,
+                            opacity: filterThumbUrl ? 0.55 : 1,
+                            mixBlendMode: filterThumbUrl ? "overlay" : "normal",
+                          }}
+                        />
+                        {/* Emoji icon in corner */}
+                        <div className="absolute bottom-1 right-1 text-sm drop-shadow-lg">
+                          {s.emoji}
+                        </div>
+                        {/* "None" special state */}
+                        {!s.sticker && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full border-2 border-white/50 flex items-center justify-center">
+                              <div className="w-0.5 h-6 bg-white/50 rotate-45" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <span className={cn(
-                        "text-[10px] font-medium leading-tight",
-                        activeSticker === i ? "text-white" : "text-white/50"
+                        "text-[10px] font-medium leading-tight text-center w-[72px] truncate",
+                        activeSticker === i ? "text-white" : "text-white/55"
                       )}>{s.name}</span>
                     </button>
                     );
