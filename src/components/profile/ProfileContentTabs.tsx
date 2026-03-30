@@ -3533,8 +3533,8 @@ function LiveBroadcast({
         </div>
       )}
 
-      {!(aiResultOverlay && aiOverlayMode === "fullscreen") && (
-        <div className="relative z-10 flex items-center justify-between p-4 pt-12">
+
+      <div className="relative z-10 flex items-center justify-between p-4 pt-12">
           <div className="flex items-center gap-2">
             {isLive && (
               <motion.div
