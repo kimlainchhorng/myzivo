@@ -410,7 +410,22 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
   const [viewers] = useState(() => Math.floor(Math.random() * 20) + 1);
   const [comments, setComments] = useState<{ id: number; user: string; text: string }[]>([]);
   const [commentInput, setCommentInput] = useState("");
+  const [activeFilter, setActiveFilter] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
+
+  const FILTERS = [
+    { name: "None", css: "none" },
+    { name: "Warm", css: "sepia(0.3) saturate(1.4) brightness(1.05)" },
+    { name: "Cool", css: "saturate(0.8) hue-rotate(15deg) brightness(1.05)" },
+    { name: "B&W", css: "grayscale(1) contrast(1.1)" },
+    { name: "Vintage", css: "sepia(0.5) contrast(0.9) brightness(1.1)" },
+    { name: "Vivid", css: "saturate(1.8) contrast(1.1)" },
+    { name: "Fade", css: "saturate(0.6) brightness(1.15) contrast(0.85)" },
+    { name: "Drama", css: "contrast(1.4) brightness(0.9) saturate(1.2)" },
+    { name: "Glow", css: "brightness(1.2) saturate(1.3) blur(0.3px)" },
+    { name: "Noir", css: "grayscale(0.8) contrast(1.3) brightness(0.9)" },
+  ];
 
   const startCamera = useCallback(async (facing: "user" | "environment") => {
     try {
