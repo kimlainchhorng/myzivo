@@ -454,6 +454,27 @@ function LiveBroadcast({ onClose }: { onClose: () => void }) {
     { name: "Frost", css: "saturate(0.5) hue-rotate(25deg) brightness(1.3) contrast(0.8)", emoji: "❄️" },
     { name: "Toxic", css: "hue-rotate(100deg) saturate(2.5) contrast(1.2) brightness(0.9)", emoji: "☢️" },
     { name: "Polaroid", css: "sepia(0.3) saturate(1.1) contrast(0.95) brightness(1.15)", emoji: "🖼️" },
+    // ── Beauty / Face Filters ──
+    { name: "Smooth", css: "blur(0.5px) brightness(1.12) contrast(0.92) saturate(1.1)", emoji: "🧴" },
+    { name: "Cute", css: "blur(0.3px) brightness(1.18) saturate(1.3) contrast(0.88) sepia(0.05)", emoji: "🥰" },
+    { name: "Baby Face", css: "blur(0.6px) brightness(1.2) contrast(0.85) saturate(1.15)", emoji: "👶" },
+    { name: "Porcelain", css: "blur(0.4px) brightness(1.22) contrast(0.82) saturate(0.9) sepia(0.08)", emoji: "🪆" },
+    { name: "Glow Up", css: "blur(0.3px) brightness(1.25) saturate(1.4) contrast(0.9)", emoji: "💎" },
+    { name: "Soft Skin", css: "blur(0.5px) brightness(1.15) contrast(0.88) saturate(1.05)", emoji: "🍑" },
+    { name: "Angelic", css: "blur(0.6px) brightness(1.3) contrast(0.8) saturate(0.85) sepia(0.1)", emoji: "😇" },
+    { name: "Doll", css: "blur(0.4px) brightness(1.18) saturate(1.5) contrast(0.9) hue-rotate(-8deg)", emoji: "🎎" },
+    { name: "Selfie", css: "blur(0.25px) brightness(1.14) contrast(0.93) saturate(1.25)", emoji: "🤳" },
+    { name: "Flawless", css: "blur(0.45px) brightness(1.2) contrast(0.86) saturate(1.1) sepia(0.03)", emoji: "💅" },
+    { name: "Fairy", css: "blur(0.5px) brightness(1.28) saturate(1.2) contrast(0.82) hue-rotate(10deg)", emoji: "🧚" },
+    { name: "Peach", css: "blur(0.3px) brightness(1.15) saturate(1.35) contrast(0.9) sepia(0.12) hue-rotate(-5deg)", emoji: "🍑" },
+    { name: "K-Beauty", css: "blur(0.4px) brightness(1.22) contrast(0.84) saturate(0.95) sepia(0.06)", emoji: "🇰🇷" },
+    { name: "Glass Skin", css: "blur(0.35px) brightness(1.3) contrast(0.78) saturate(1.0)", emoji: "🪞" },
+    { name: "Rosy", css: "blur(0.3px) brightness(1.12) saturate(1.4) contrast(0.9) hue-rotate(-12deg)", emoji: "🌸" },
+    { name: "Sun-kissed", css: "blur(0.2px) brightness(1.18) saturate(1.3) contrast(0.95) sepia(0.15)", emoji: "☀️" },
+    { name: "Dewy", css: "blur(0.5px) brightness(1.25) contrast(0.82) saturate(1.15) sepia(0.05)", emoji: "💧" },
+    { name: "Radiant", css: "blur(0.3px) brightness(1.32) contrast(0.85) saturate(1.2)", emoji: "🌟" },
+    { name: "Natural", css: "blur(0.2px) brightness(1.08) contrast(0.95) saturate(1.1)", emoji: "🌿" },
+    { name: "Princess", css: "blur(0.5px) brightness(1.2) saturate(1.45) contrast(0.85) hue-rotate(-10deg) sepia(0.08)", emoji: "👸" },
   ];
 
   const startCamera = useCallback(async (facing: "user" | "environment") => {
