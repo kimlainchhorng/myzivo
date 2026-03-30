@@ -3153,11 +3153,6 @@ function LiveBroadcast({
       setActiveSticker(next);
       return;
     }
-
-    if (activeFilters.length === 0) return;
-    const pool = visibleFilterIndexes.length ? visibleFilterIndexes : activeFilters.map((_v, idx) => idx);
-    const next = pool[Math.floor(Math.random() * pool.length)];
-    setActiveFilter(next);
   };
 
   const captureFilterThumb = () => {
