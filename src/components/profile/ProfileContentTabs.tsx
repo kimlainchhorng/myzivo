@@ -3594,7 +3594,7 @@ function LiveBroadcast({
             </button>
           </div>
         </div>
-      )
+      )}
 
       {/* Spacer + Comments overlay */}
       {isLive ? (
