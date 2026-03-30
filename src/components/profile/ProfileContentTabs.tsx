@@ -4059,9 +4059,47 @@ function LiveBroadcast({
                   ))}
                 </div>
               )}
-              {/* Filter/Sticker grid */}
+              {/* Filter/Sticker/AI grid */}
               <div className="grid grid-cols-4 gap-3 px-4 pr-5 max-h-[48vh] overflow-y-auto">
-                {filterTab === "ar" ? (
+                {filterTab === "ai" ? (
+                  AI_MODES.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => runAiFaceEdit(m.id)}
+                      disabled={aiProcessing}
+                      className="flex flex-col items-center gap-1.5"
+                    >
+                      <div
+                        className={cn(
+                          "w-[72px] h-[72px] rounded-2xl overflow-hidden relative transition-all",
+                          aiSelectedMode === m.id && aiResultOverlay
+                            ? "ring-2 ring-white scale-105 shadow-lg shadow-white/20"
+                            : aiProcessing && aiSelectedMode === m.id
+                            ? "ring-2 ring-primary animate-pulse"
+                            : "opacity-80"
+                        )}
+                        style={{ background: m.gradient }}
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center text-3xl drop-shadow-lg">
+                          {aiProcessing && aiSelectedMode === m.id ? (
+                            <div className="w-6 h-6 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            m.emoji
+                          )}
+                        </div>
+                        <div className="absolute bottom-1 left-1 right-1">
+                          <span className="text-[8px] text-white/70 font-medium bg-black/30 px-1 rounded">
+                            {m.desc}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-medium leading-tight text-center w-[72px] truncate",
+                        aiSelectedMode === m.id ? "text-white" : "text-white/55"
+                      )}>{m.name}</span>
+                    </button>
+                  ))
+                ) : filterTab === "ar" ? (
                   visibleFilterIndexes.map((i) => {
                     const s = AR_STICKERS[i];
                     return (
@@ -4079,7 +4117,6 @@ function LiveBroadcast({
                         )}
                         style={{ background: s.gradient }}
                       >
-                        {/* Large centered emoji as effect icon */}
                         {s.sticker ? (
                           <div className="absolute inset-0 flex items-center justify-center text-3xl drop-shadow-lg">
                             {s.emoji}
