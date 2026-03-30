@@ -443,7 +443,7 @@ const Profile = () => {
                         <Sparkles className="h-4 w-4 text-primary" />
                         {profile?.full_name || t("profile.set_name")}
                       </CardTitle>
-                      <CardDescription className="text-sm mt-1">{user?.email}</CardDescription>
+                      {/* Email hidden — only visible to account owner in settings */}
                       <div className="flex items-center justify-center gap-2 mt-3">
                         <Badge className="bg-primary/12 text-primary border-primary/25 font-semibold rounded-full px-3 py-1 shadow-sm">
                           <Star className="w-3 h-3 mr-1 fill-primary" /> {profile?.status || t("profile.active_member")}
