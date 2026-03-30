@@ -78,10 +78,11 @@ export function useLoyaltyPoints() {
         id: t.id,
         user_id: user.id,
         points_amount: Math.abs(t.amount_cents),
-        transaction_type: t.type === "loyalty_redeem" ? "redeem" : "earn",
+        transaction_type: t.type === "loyalty_redeem" ? "redeem" as const : "earn" as const,
         reference_type: t.type,
         reference_id: t.order_id || t.id,
         description: t.description || t.type,
+        balance_after: 0, // Not tracked per-transaction in this table
         created_at: t.created_at,
       }));
     },
