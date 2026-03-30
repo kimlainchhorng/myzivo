@@ -3617,26 +3617,6 @@ function LiveBroadcast({
                   Random
                 </button>
               </div>
-              <div className="px-4 mb-1 flex items-center justify-between text-[11px] text-white/65">
-                <span>{totalFilterCount} {filterTab === "ar" ? "effects" : "filters"}</span>
-                <span className="truncate max-w-[55%] text-right">Selected: {selectedFilterName}</span>
-              </div>
-              {filterTab !== "ar" && (
-                <div className="px-4 mb-2">
-                  <div className="flex items-center justify-between text-[10px] text-white/55 mb-1">
-                    <span>Strength</span>
-                    <span>{filterStrength}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={filterStrength}
-                    onChange={(e) => setFilterStrength(Number(e.target.value))}
-                    className="w-full accent-white"
-                  />
-                </div>
-              )}
               <div className="px-4 mb-2 text-[10px] text-white/45">Swipe up to see more options</div>
               {/* AR Category tabs - TikTok style */}
               {filterTab === "ar" && (
