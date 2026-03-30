@@ -3591,7 +3591,68 @@ function LiveBroadcast({
     setShowFilters(!showFilters);
   };
 
-  useEffect(() => {
+  const AI_MODES = [
+    { id: "beauty", name: "AI Beauty", emoji: "✨", gradient: "linear-gradient(135deg, #FFB7C5, #FFC0CB)", desc: "Auto enhance" },
+    { id: "swap_male", name: "Male Model", emoji: "🧔", gradient: "linear-gradient(135deg, #4A90D9, #357ABD)", desc: "Face swap" },
+    { id: "swap_female", name: "Female Model", emoji: "👩", gradient: "linear-gradient(135deg, #FF69B4, #FF1493)", desc: "Face swap" },
+    { id: "swap_anime", name: "Anime", emoji: "🎌", gradient: "linear-gradient(135deg, #A29BFE, #6C5CE7)", desc: "Style transfer" },
+    { id: "swap_old", name: "Age Up", emoji: "👴", gradient: "linear-gradient(135deg, #95A5A6, #7F8C8D)", desc: "Face swap" },
+    { id: "swap_young", name: "Youth", emoji: "👶", gradient: "linear-gradient(135deg, #FFEAA7, #FDCB6E)", desc: "Face swap" },
+    { id: "bg_beach", name: "Beach", emoji: "🏖️", gradient: "linear-gradient(135deg, #00CEC9, #0984E3)", desc: "Background" },
+    { id: "bg_city", name: "City Night", emoji: "🌃", gradient: "linear-gradient(135deg, #2D3436, #636E72)", desc: "Background" },
+    { id: "bg_space", name: "Space", emoji: "🚀", gradient: "linear-gradient(135deg, #0C0C2D, #4A148C)", desc: "Background" },
+    { id: "bg_nature", name: "Forest", emoji: "🌲", gradient: "linear-gradient(135deg, #00B894, #00CEC9)", desc: "Background" },
+    { id: "bg_studio", name: "Studio", emoji: "📸", gradient: "linear-gradient(135deg, #636E72, #2D3436)", desc: "Background" },
+  ];
+
+  const runAiFaceEdit = async (mode: string) => {
+    const video = videoRef.current;
+    if (!video || video.videoWidth === 0) return;
+    
+    setAiProcessing(true);
+    setAiSelectedMode(mode);
+    setAiResultOverlay(null);
+
+    try {
+      // Capture current frame
+      const c = document.createElement("canvas");
+      c.width = video.videoWidth;
+      c.height = video.videoHeight;
+      const ctx2 = c.getContext("2d");
+      if (!ctx2) throw new Error("Canvas failed");
+      ctx2.drawImage(video, 0, 0);
+      const imageBase64 = c.toDataURL("image/jpeg", 0.85);
+
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-face-edit`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ imageBase64, mode }),
+        }
+      );
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Failed" }));
+        throw new Error(err.error || `HTTP ${resp.status}`);
+      }
+
+      const data = await resp.json();
+      if (data.imageUrl) {
+        setAiResultOverlay(data.imageUrl);
+      }
+    } catch (err) {
+      console.error("AI face edit failed:", err);
+      const { toast } = await import("sonner");
+      toast.error(err instanceof Error ? err.message : "AI processing failed");
+    } finally {
+      setAiProcessing(false);
+    }
+  };
+
     const currentSticker = AR_STICKERS[activeSticker]?.sticker;
     if (!currentSticker) {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
