@@ -21,10 +21,12 @@ export function useMerchantRole() {
     enabled: !!user,
   });
 
+  const restaurant = query.data;
   return {
-    isMerchant: !!query.data,
+    isMerchant: !!restaurant,
     isLoading: query.isLoading,
-    merchantId: query.data?.id || null,
-    data: query.data,
+    merchantId: restaurant?.id || null,
+    // data includes isMerchant for backward compat with destructuring patterns
+    data: restaurant ? { ...restaurant, isMerchant: true } : { isMerchant: false },
   };
 }

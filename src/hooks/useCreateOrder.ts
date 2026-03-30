@@ -18,14 +18,7 @@ export function useCreateOrder() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createOrder = useCallback(async (params: {
-    restaurantId: string;
-    items: any[];
-    deliveryAddress: string;
-    totalAmount: number;
-    paymentType?: string;
-    [key: string]: any;
-  }): Promise<{ orderId: string } | null> => {
+  const createOrder = useCallback(async (...args: any[]): Promise<{ orderId: string } | null> => {
     if (!user) {
       setError("Please sign in to place an order");
       toast.error("Please sign in first");
@@ -34,19 +27,26 @@ export function useCreateOrder() {
     setIsLoading(true);
     setError(null);
     try {
+      const params = typeof args[0] === "object" && !Array.isArray(args[0]) ? args[0] : { items: args[0], holder: args[1] };
+      const items = params.items || [];
+      const holder = params.holder || args[1] || {};
+      
       const trackingCode = `ZE-${Date.now().toString(36).toUpperCase().slice(-6)}`;
-      const { data, error: insertError } = await supabase
+      const { data, error: insertError } = await (supabase as any)
         .from("food_orders")
         .insert({
           customer_id: user.id,
-          restaurant_id: params.restaurantId,
-          items: params.items,
-          delivery_address: params.deliveryAddress,
-          total_amount: params.totalAmount,
+          restaurant_id: params.restaurantId || items[0]?.restaurantId || null,
+          items,
+          delivery_address: params.deliveryAddress || holder?.address || "",
+          total_amount: params.totalAmount || 0,
           payment_type: params.paymentType || "card",
           tracking_code: trackingCode,
           status: "pending",
-          subtotal: params.totalAmount,
+          subtotal: params.totalAmount || 0,
+          holder_name: holder?.name || `${holder?.firstName || ""} ${holder?.lastName || ""}`.trim(),
+          holder_email: holder?.email || user.email,
+          holder_phone: holder?.phone || "",
         })
         .select("id")
         .single();

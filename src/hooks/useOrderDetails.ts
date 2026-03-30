@@ -7,13 +7,14 @@ export function useOrderDetails(orderId?: string) {
     queryKey: ["order-details", orderId],
     queryFn: async () => {
       if (!orderId) return null;
-      const { data, error } = await supabase
+      // Use any to avoid strict type checking on joined fields
+      const { data, error } = await (supabase as any)
         .from("food_orders")
         .select("*, restaurants(name, logo_url, address)")
         .eq("id", orderId)
         .single();
       if (error) throw error;
-      return data;
+      return data as any;
     },
     enabled: !!orderId,
   });
