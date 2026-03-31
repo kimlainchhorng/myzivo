@@ -567,6 +567,9 @@ const App = () => (
                 <Route path="/legal/flight-terms" element={<FlightTerms />} />
                 <Route path="/legal/social-media-policy" element={<SocialMediaPolicy />} />
                 <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
+                <Route path="/legal/data-retention" element={<DataRetentionPolicy />} />
+                <Route path="/legal/dmca" element={<DMCACopyrightPolicy />} />
+                <Route path="/legal/dispute-resolution" element={<DisputeResolution />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
 
