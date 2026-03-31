@@ -106,6 +106,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const VerifyOTP = lazy(() => import("./pages/VerifyOTP"));
 const Setup = lazy(() => import("./pages/Setup"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const Profile = lazy(() => import("./pages/Profile"));
@@ -410,6 +411,7 @@ const App = () => (
                             <Route path="/" element={<Index />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/signup" element={<Signup />} />
+                            <Route path="/unsubscribe" element={<Unsubscribe />} />
 
                 {/* App Dashboard */}
                 <Route path="/app" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
