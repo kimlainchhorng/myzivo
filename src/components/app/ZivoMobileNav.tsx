@@ -74,7 +74,7 @@ const ZivoMobileNav = () => {
                 }
               }}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 gap-1.5 transition-colors duration-200 touch-manipulation active:scale-90 relative min-w-[48px] min-h-[48px]",
+                "flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors duration-200 touch-manipulation active:scale-90 relative min-w-[44px] min-h-[44px]",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
               aria-label={t(tab.labelKey)}
