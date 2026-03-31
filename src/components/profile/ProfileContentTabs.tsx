@@ -3784,21 +3784,7 @@ function LiveBroadcast({
     { name: "Dream Skin", css: "blur(1.38px) brightness(1.42) contrast(0.62) saturate(0.9)", emoji: "💭" },
   ];
 
-  const expandedColorFilters = useMemo(
-    () => expandFilterCatalog(COLOR_FILTERS as FilterOption[], COLOR_VARIANTS, 10),
-    []
-  );
-  const expandedFaceFilters = useMemo(
-    () => expandFilterCatalog(FACE_FILTERS as FilterOption[], FACE_VARIANTS, 10),
-    []
-  );
-
-  const activeFilters = filterTab === "color" ? expandedColorFilters : expandedFaceFilters;
-  const currentFilter = activeFilters[activeFilter] || activeFilters[0];
-  const effectiveFilterCss = filterTab !== "ar"
-    ? applyFilterStrength(currentFilter?.css || "none", filterStrength)
-    : "none";
-  const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : activeFilters.length;
+  const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : AI_MODES.length;
   const selectedFilterName = filterTab === "ar"
     ? AR_STICKERS[activeSticker]?.name || "None"
     : (aiSelectedMode ? AI_MODES.find(m => m.id === aiSelectedMode)?.name : "None") || "None";
