@@ -502,7 +502,6 @@ export default function GroceryMarketplace() {
                             </>
                           );
                         })()}
-                        </div>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground/25 group-hover:text-primary/60 transition-colors shrink-0" />
                     </div>
