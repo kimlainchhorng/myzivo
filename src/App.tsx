@@ -206,6 +206,7 @@ const TransportationDisclaimer = lazy(() => import("./pages/legal/Transportation
 const CarRentalDisclaimer = lazy(() => import("./pages/legal/CarRentalDisclaimer"));
 const InsuranceDisclaimer = lazy(() => import("./pages/legal/InsuranceDisclaimer"));
 const DamagePolicy = lazy(() => import("./pages/legal/DamagePolicy"));
+const GenericLegalPage = lazy(() => import("./pages/legal/GenericLegalPage"));
 
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
