@@ -225,25 +225,25 @@ export default function StoreMapPage() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: stores = [] } = useQuery({
-    queryKey: ["store-map-pins"],
+  const { data: allStores = [] } = useQuery({
+    queryKey: ["store-map-all"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("store_profiles")
         .select("id, name, slug, category, address, phone, hours, rating, logo_url, latitude, longitude")
-        .eq("is_active", true)
-        .not("latitude", "is", null)
-        .not("longitude", "is", null);
+        .eq("is_active", true);
       if (error) throw error;
       return (data || []) as StorePin[];
     },
     staleTime: 60_000,
   });
 
+  const stores = useMemo(() => allStores.filter(s => s.latitude != null && s.longitude != null), [allStores]);
+
   const usedCategories = useMemo(() => {
-    const cats = new Set(stores.map((s) => s.category));
+    const cats = new Set(allStores.map((s) => s.category));
     return STORE_CATEGORY_OPTIONS.filter((o) => cats.has(o.value));
-  }, [stores]);
+  }, [allStores]);
 
   const filteredStores = useMemo(() => {
     let result = stores;
