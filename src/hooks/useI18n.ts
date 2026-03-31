@@ -955,6 +955,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "nav.home": "ទំព័រដើម",
     "nav.search": "ស្វែងរក",
     "nav.feed": "ផ្សព្វផ្សាយ",
+    "nav.reel": "រីល",
     "feed.no_posts": "មិនមានការបង្ហោះនៅឡើយ",
     "feed.no_posts_desc": "ហាងនឹងចែករំលែករូបភាព និងវីដេអូនៅទីនេះ",
     "nav.trips": "ដំណើរ",
