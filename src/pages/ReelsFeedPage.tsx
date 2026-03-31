@@ -694,7 +694,10 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
           <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
         </div>
       </button>
-        <button className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
+          className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
+        >
           <MoreHorizontal className="h-5 w-5" />
         </button>
       </div>
