@@ -612,6 +612,14 @@ const App = () => (
                 <Route path="/legal/anti-money-laundering" element={<AntiMoneyLaundering />} />
                 <Route path="/legal/user-conduct" element={<UserConduct />} />
                 <Route path="/legal/california-privacy" element={<CaliforniaPrivacy />} />
+                <Route path="/legal/fraud-prevention" element={<FraudPrevention />} />
+                <Route path="/legal/warranty-disclaimer" element={<WarrantyDisclaimer />} />
+                <Route path="/legal/gdpr" element={<GDPRCompliance />} />
+                <Route path="/legal/non-discrimination" element={<NonDiscrimination />} />
+                <Route path="/legal/transportation-disclaimer" element={<TransportationDisclaimer />} />
+                <Route path="/legal/car-rental-disclaimer" element={<CarRentalDisclaimer />} />
+                <Route path="/legal/insurance-disclaimer" element={<InsuranceDisclaimer />} />
+                <Route path="/legal/damage-policy" element={<DamagePolicy />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
 
