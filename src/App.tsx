@@ -188,6 +188,16 @@ const AssumptionOfRisk = lazy(() => import("./pages/legal/AssumptionOfRisk"));
 const ElectronicConsent = lazy(() => import("./pages/legal/ElectronicConsent"));
 const ForceMajeure = lazy(() => import("./pages/legal/ForceMajeure"));
 const NoGuaranteeDisclaimer = lazy(() => import("./pages/legal/NoGuaranteeDisclaimer"));
+const GoverningLaw = lazy(() => import("./pages/legal/GoverningLaw"));
+const IntellectualProperty = lazy(() => import("./pages/legal/IntellectualProperty"));
+const AccountTermination = lazy(() => import("./pages/legal/AccountTermination"));
+const ThirdPartyLinks = lazy(() => import("./pages/legal/ThirdPartyLinks"));
+const CommunicationConsent = lazy(() => import("./pages/legal/CommunicationConsent"));
+const ModificationOfTerms = lazy(() => import("./pages/legal/ModificationOfTerms"));
+const ClassActionWaiver = lazy(() => import("./pages/legal/ClassActionWaiver"));
+const AntiMoneyLaundering = lazy(() => import("./pages/legal/AntiMoneyLaundering"));
+const UserConduct = lazy(() => import("./pages/legal/UserConduct"));
+const CaliforniaPrivacy = lazy(() => import("./pages/legal/CaliforniaPrivacy"));
 
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
@@ -584,6 +594,16 @@ const App = () => (
                 <Route path="/legal/electronic-consent" element={<ElectronicConsent />} />
                 <Route path="/legal/force-majeure" element={<ForceMajeure />} />
                 <Route path="/legal/no-guarantee" element={<NoGuaranteeDisclaimer />} />
+                <Route path="/legal/governing-law" element={<GoverningLaw />} />
+                <Route path="/legal/intellectual-property" element={<IntellectualProperty />} />
+                <Route path="/legal/account-termination" element={<AccountTermination />} />
+                <Route path="/legal/third-party-links" element={<ThirdPartyLinks />} />
+                <Route path="/legal/communication-consent" element={<CommunicationConsent />} />
+                <Route path="/legal/modification-of-terms" element={<ModificationOfTerms />} />
+                <Route path="/legal/class-action-waiver" element={<ClassActionWaiver />} />
+                <Route path="/legal/anti-money-laundering" element={<AntiMoneyLaundering />} />
+                <Route path="/legal/user-conduct" element={<UserConduct />} />
+                <Route path="/legal/california-privacy" element={<CaliforniaPrivacy />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
 
