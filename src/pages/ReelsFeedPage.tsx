@@ -816,6 +816,76 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
           <p className="text-[11px] text-muted-foreground">{item.views_count.toLocaleString()} views</p>
         </div>
       )}
+
+      {/* Share Sheet */}
+      <AnimatePresence>
+        {showShareSheet && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] bg-black/50 flex items-end justify-center"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowShareSheet(false); }}
+          >
+            <motion.div
+              initial={{ y: 300 }}
+              animate={{ y: 0 }}
+              exit={{ y: 300 }}
+              className="w-full max-w-lg bg-card rounded-t-2xl pb-8"
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
+                <h3 className="text-sm font-bold text-foreground">Share to</h3>
+                <button onClick={() => setShowShareSheet(false)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                  <XIcon className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-4 gap-4 px-6 py-5">
+                {shareOptions.map((opt) => (
+                  <a
+                    key={opt.label}
+                    href={opt.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowShareSheet(false)}
+                    className="flex flex-col items-center gap-2 min-h-[48px]"
+                  >
+                    <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center text-xl">
+                      {opt.icon}
+                    </div>
+                    <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
+                  </a>
+                ))}
+                {/* Copy Link */}
+                <button
+                  onClick={handleCopyLink}
+                  className="flex flex-col items-center gap-2 min-h-[48px]"
+                >
+                  <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center text-xl">
+                    🔗
+                  </div>
+                  <span className="text-[10px] font-medium text-foreground">Copy link</span>
+                </button>
+                {/* More */}
+                <button
+                  onClick={() => {
+                    setShowShareSheet(false);
+                    if (navigator.share) {
+                      navigator.share({ title: item.author_name, text: item.caption || "", url: shareUrl }).catch(() => {});
+                    }
+                  }}
+                  className="flex flex-col items-center gap-2 min-h-[48px]"
+                >
+                  <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
+                    <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <span className="text-[10px] font-medium text-foreground">More</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
