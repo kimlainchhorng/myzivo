@@ -580,24 +580,41 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   };
 
   const handleShare = async () => {
-    const shareData = {
-      title: item.author_name,
-      text: item.caption || `Check out this post by ${item.author_name}`,
-      url: window.location.href,
-    };
+    const url = window.location.href;
+    const text = item.caption || `Check out this post by ${item.author_name}`;
+
+    // Tier 1: Native share (works on real mobile, not in iframes)
     try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(shareData.url);
-        toast.success("Link copied!");
-      } else {
-        toast.info("Sharing not supported on this device");
+      if (navigator.share && !window.frameElement) {
+        await navigator.share({ title: item.author_name, text, url });
+        return;
       }
     } catch (err: any) {
-      if (err.name !== "AbortError") {
-        toast.error("Could not share");
+      if (err.name === "AbortError") return;
+    }
+
+    // Tier 2: Clipboard API
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied to clipboard!");
+        return;
       }
+    } catch {}
+
+    // Tier 3: execCommand fallback
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      toast.success("Link copied!");
+    } catch {
+      toast.error("Could not share — try copying the URL manually");
     }
   };
 
