@@ -581,36 +581,37 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   };
 
   const handleShare = () => {
-    const url = window.location.href;
-    const text = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
-    const encodedUrl = encodeURIComponent(url);
-
-    // Try native share first
-    if (typeof navigator.share === "function") {
-      navigator.share({ title: item.author_name, text: decodeURIComponent(text), url })
-        .catch((err) => { if (err.name !== "AbortError") copyFallback(url); });
-      return;
-    }
-
-    // Fallback: open share options
-    const waUrl = `https://wa.me/?text=${text}%20${encodedUrl}`;
-    window.open(waUrl, "_blank", "noopener");
-    toast.success("Opening share...");
+    setShowShareSheet(true);
   };
 
-  const copyFallback = (url: string) => {
+  const shareUrl = window.location.href;
+  const shareText = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
+  const shareEncodedUrl = encodeURIComponent(shareUrl);
+
+  const shareOptions = [
+    { label: "WhatsApp", icon: "💬", url: `https://wa.me/?text=${shareText}%20${shareEncodedUrl}` },
+    { label: "Telegram", icon: "✈️", url: `https://t.me/share/url?url=${shareEncodedUrl}&text=${shareText}` },
+    { label: "Facebook", icon: "📘", url: `https://www.facebook.com/sharer/sharer.php?u=${shareEncodedUrl}` },
+    { label: "X", icon: "🐦", url: `https://x.com/intent/tweet?text=${shareText}&url=${shareEncodedUrl}` },
+    { label: "Email", icon: "📧", url: `mailto:?subject=${shareText}&body=${shareEncodedUrl}` },
+    { label: "SMS", icon: "💬", url: `sms:?body=${shareText}%20${shareEncodedUrl}` },
+  ];
+
+  const handleCopyLink = () => {
     try {
       const ta = document.createElement("textarea");
-      ta.value = url;
+      ta.value = shareUrl;
       ta.style.cssText = "position:fixed;opacity:0;left:-9999px";
       document.body.appendChild(ta);
       ta.focus();
       ta.select();
-      const ok = document.execCommand("copy");
+      document.execCommand("copy");
       document.body.removeChild(ta);
-      if (ok) { toast.success("Link copied!"); return; }
-    } catch {}
-    toast.info("Long-press the URL bar to copy the link");
+      toast.success("Link copied!");
+    } catch {
+      toast.info("Long-press URL bar to copy");
+    }
+    setShowShareSheet(false);
   };
 
   const handleSave = () => {
