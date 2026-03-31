@@ -866,7 +866,156 @@ function ShareSheet({
 }
 
 
-export default function FeedPage() {
+// ── Feed Search Overlay ──────────────────────────────────────────────────────
+
+function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNavigate: (path: string) => void }) {
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  // Search stores
+  const { data: storeResults = [], isLoading: storesLoading } = useQuery({
+    queryKey: ["feed-search-stores", debouncedQuery],
+    queryFn: async () => {
+      if (!debouncedQuery) return [];
+      const { data } = await supabase
+        .from("store_profiles")
+        .select("id, name, logo_url, slug, category")
+        .ilike("name", `%${debouncedQuery}%`)
+        .limit(10);
+      return data || [];
+    },
+    enabled: debouncedQuery.length >= 1,
+  });
+
+  // Search people
+  const { data: profileResults = [], isLoading: profilesLoading } = useQuery({
+    queryKey: ["feed-search-profiles", debouncedQuery],
+    queryFn: async () => {
+      if (!debouncedQuery) return [];
+      const { data } = await supabase
+        .from("public_profiles")
+        .select("id, full_name, avatar_url")
+        .ilike("full_name", `%${debouncedQuery}%`)
+        .limit(10);
+      return data || [];
+    },
+    enabled: debouncedQuery.length >= 1,
+  });
+
+  const isLoading = storesLoading || profilesLoading;
+  const hasResults = storeResults.length > 0 || profileResults.length > 0;
+  const hasQuery = debouncedQuery.length >= 1;
+
+  return (
+    <div className="fixed inset-0 z-[70] bg-background flex flex-col">
+      {/* Search header */}
+      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/50">
+        <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
+          <ArrowLeft className="w-5 h-5 text-foreground" />
+        </button>
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search shops, people..."
+            className="w-full h-10 pl-9 pr-9 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+          {query && (
+            <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <XIcon className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Results */}
+      <div className="flex-1 overflow-y-auto">
+        {!hasQuery && (
+          <div className="flex flex-col items-center justify-center h-full text-center px-8 gap-3">
+            <Search className="w-12 h-12 text-muted-foreground/30" />
+            <p className="text-sm text-muted-foreground">Search for shops, restaurants, or people</p>
+          </div>
+        )}
+
+        {hasQuery && isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        )}
+
+        {hasQuery && !isLoading && !hasResults && (
+          <div className="flex flex-col items-center justify-center py-16 gap-2">
+            <Search className="w-10 h-10 text-muted-foreground/20" />
+            <p className="text-sm text-muted-foreground">No results for "{debouncedQuery}"</p>
+          </div>
+        )}
+
+        {storeResults.length > 0 && (
+          <div className="px-4 pt-3">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Shops</p>
+            {storeResults.map((store: any) => (
+              <button
+                key={store.id}
+                type="button"
+                onClick={() => { onNavigate(`/grocery/shop/${store.slug}`); onClose(); }}
+                className="w-full flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-muted/40 transition-colors"
+              >
+                <div className="w-11 h-11 rounded-full bg-muted/30 border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
+                  {store.logo_url ? (
+                    <img src={store.logo_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <Store className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-semibold truncate">{store.name}</p>
+                  {store.category && <p className="text-[11px] text-muted-foreground">{store.category}</p>}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {profileResults.length > 0 && (
+          <div className="px-4 pt-3">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">People</p>
+            {profileResults.map((person: any) => (
+              <button
+                key={person.id}
+                type="button"
+                onClick={() => { onClose(); }}
+                className="w-full flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-muted/40 transition-colors"
+              >
+                <div className="w-11 h-11 rounded-full bg-muted/30 border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
+                  {person.avatar_url ? (
+                    <img src={person.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <UserCircle className="w-6 h-6 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-semibold truncate">{person.full_name || "User"}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
   const { t } = useI18n();
   const navigate = useNavigate();
   const [globalMuted, setGlobalMuted] = useState(true);
