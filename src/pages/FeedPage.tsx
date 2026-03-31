@@ -1014,8 +1014,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
     </div>
   );
 }
-
-
+export default function FeedPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [globalMuted, setGlobalMuted] = useState(true);
