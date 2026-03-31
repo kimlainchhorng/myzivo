@@ -176,8 +176,9 @@ const PartnerDisclosure = lazy(() => import("./pages/legal/PartnerDisclosure"));
 const DoNotSell = lazy(() => import("./pages/legal/DoNotSell"));
 const SecurityIncident = lazy(() => import("./pages/legal/SecurityIncident"));
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
+const SocialMediaPolicy = lazy(() => import("./pages/legal/SocialMediaPolicy"));
+const AcceptableUsePolicy = lazy(() => import("./pages/legal/AcceptableUsePolicy"));
 
-// Public pages
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
