@@ -1876,7 +1876,15 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
       setIsLoadingRoute(false);
     }
     setSheetExpanded(false);
-    setViewStep("route-preview");
+    // Skip route-preview, go directly to ride options (or rider-info for KM)
+    if (useKm) {
+      setRiderName(userProfile?.full_name || "");
+      const ph = userProfile?.phone || "";
+      setRiderPhone(ph.startsWith("+855") ? ph : "");
+      setViewStep("rider-info");
+    } else {
+      setViewStep("ride-options");
+    }
   };
 
   const handleConfirmSearch = () => {
