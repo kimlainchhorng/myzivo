@@ -14,6 +14,7 @@ import {
   Globe, Users, Lock, FolderPlus, MapPin, Hash, ChevronDown,
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
