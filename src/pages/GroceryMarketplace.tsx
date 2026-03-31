@@ -115,7 +115,7 @@ function FeaturedStore({ store, eta, location }: { store: StoreConfig; eta: numb
 /* ─── Store card with real location ─── */
 function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; eta: number; location?: NearbyStoreLocation }) {
   const navigate = useNavigate();
-  const status = getStoreStatus(store.hours);
+  const status = getStoreStatus(store.hours, "US");
 
   return (
     <motion.button
