@@ -198,6 +198,14 @@ const ClassActionWaiver = lazy(() => import("./pages/legal/ClassActionWaiver"));
 const AntiMoneyLaundering = lazy(() => import("./pages/legal/AntiMoneyLaundering"));
 const UserConduct = lazy(() => import("./pages/legal/UserConduct"));
 const CaliforniaPrivacy = lazy(() => import("./pages/legal/CaliforniaPrivacy"));
+const FraudPrevention = lazy(() => import("./pages/legal/FraudPrevention"));
+const WarrantyDisclaimer = lazy(() => import("./pages/legal/WarrantyDisclaimer"));
+const GDPRCompliance = lazy(() => import("./pages/legal/GDPRCompliance"));
+const NonDiscrimination = lazy(() => import("./pages/legal/NonDiscrimination"));
+const TransportationDisclaimer = lazy(() => import("./pages/legal/TransportationDisclaimer"));
+const CarRentalDisclaimer = lazy(() => import("./pages/legal/CarRentalDisclaimer"));
+const InsuranceDisclaimer = lazy(() => import("./pages/legal/InsuranceDisclaimer"));
+const DamagePolicy = lazy(() => import("./pages/legal/DamagePolicy"));
 
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
@@ -604,6 +612,14 @@ const App = () => (
                 <Route path="/legal/anti-money-laundering" element={<AntiMoneyLaundering />} />
                 <Route path="/legal/user-conduct" element={<UserConduct />} />
                 <Route path="/legal/california-privacy" element={<CaliforniaPrivacy />} />
+                <Route path="/legal/fraud-prevention" element={<FraudPrevention />} />
+                <Route path="/legal/warranty-disclaimer" element={<WarrantyDisclaimer />} />
+                <Route path="/legal/gdpr" element={<GDPRCompliance />} />
+                <Route path="/legal/non-discrimination" element={<NonDiscrimination />} />
+                <Route path="/legal/transportation-disclaimer" element={<TransportationDisclaimer />} />
+                <Route path="/legal/car-rental-disclaimer" element={<CarRentalDisclaimer />} />
+                <Route path="/legal/insurance-disclaimer" element={<InsuranceDisclaimer />} />
+                <Route path="/legal/damage-policy" element={<DamagePolicy />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
 
