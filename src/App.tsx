@@ -198,6 +198,14 @@ const ClassActionWaiver = lazy(() => import("./pages/legal/ClassActionWaiver"));
 const AntiMoneyLaundering = lazy(() => import("./pages/legal/AntiMoneyLaundering"));
 const UserConduct = lazy(() => import("./pages/legal/UserConduct"));
 const CaliforniaPrivacy = lazy(() => import("./pages/legal/CaliforniaPrivacy"));
+const FraudPrevention = lazy(() => import("./pages/legal/FraudPrevention"));
+const WarrantyDisclaimer = lazy(() => import("./pages/legal/WarrantyDisclaimer"));
+const GDPRCompliance = lazy(() => import("./pages/legal/GDPRCompliance"));
+const NonDiscrimination = lazy(() => import("./pages/legal/NonDiscrimination"));
+const TransportationDisclaimer = lazy(() => import("./pages/legal/TransportationDisclaimer"));
+const CarRentalDisclaimer = lazy(() => import("./pages/legal/CarRentalDisclaimer"));
+const InsuranceDisclaimer = lazy(() => import("./pages/legal/InsuranceDisclaimer"));
+const DamagePolicy = lazy(() => import("./pages/legal/DamagePolicy"));
 
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
