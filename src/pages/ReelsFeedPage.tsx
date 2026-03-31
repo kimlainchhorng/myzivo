@@ -95,6 +95,7 @@ export default function ReelsFeedPage() {
             views_count: post.view_count || 0,
             author_name: store?.name || "Store",
             author_avatar: store?.logo_url || null,
+            store_slug: store?.slug || null,
             created_at: post.created_at,
           });
         }
