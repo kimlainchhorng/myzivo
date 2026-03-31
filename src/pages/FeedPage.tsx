@@ -12,7 +12,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import {
   Loader2, Heart, MessageCircle, Share2, Store,
   Play, Volume2, VolumeX, RefreshCw, Send, X as XIcon, Eye,
-  Copy, Link2, ShieldCheck,
+  Copy, Link2, ShieldCheck, Search, ArrowLeft, UserCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
