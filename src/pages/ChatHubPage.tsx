@@ -241,7 +241,7 @@ export default function ChatHubPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 pt-[env(safe-area-inset-top)]">
+      <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-xl border-b border-border/30">
         <div className="px-5 pt-4 pb-3 flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
