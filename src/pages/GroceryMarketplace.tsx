@@ -51,7 +51,7 @@ function StatusDot({ status }: { status: "open" | "closing-soon" | "almost-open"
 /* ─── Featured spotlight card with real location ─── */
 function FeaturedStore({ store, eta, location }: { store: StoreConfig; eta: number; location?: NearbyStoreLocation }) {
   const navigate = useNavigate();
-  const status = getStoreStatus(store.hours);
+  const status = getStoreStatus(store.hours, "US");
 
   return (
     <motion.button
