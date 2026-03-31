@@ -42256,6 +42256,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_posts: {
+        Row: {
+          caption: string | null
+          comments_count: number | null
+          created_at: string | null
+          filter_css: string | null
+          id: string
+          is_published: boolean | null
+          likes_count: number | null
+          media_type: string
+          media_url: string
+          updated_at: string | null
+          user_id: string
+          views_count: number | null
+        }
+        Insert: {
+          caption?: string | null
+          comments_count?: number | null
+          created_at?: string | null
+          filter_css?: string | null
+          id?: string
+          is_published?: boolean | null
+          likes_count?: number | null
+          media_type?: string
+          media_url: string
+          updated_at?: string | null
+          user_id: string
+          views_count?: number | null
+        }
+        Update: {
+          caption?: string | null
+          comments_count?: number | null
+          created_at?: string | null
+          filter_css?: string | null
+          id?: string
+          is_published?: boolean | null
+          likes_count?: number | null
+          media_type?: string
+          media_url?: string
+          updated_at?: string | null
+          user_id?: string
+          views_count?: number | null
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           id: string
