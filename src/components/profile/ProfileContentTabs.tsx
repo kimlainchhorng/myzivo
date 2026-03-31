@@ -3421,7 +3421,7 @@ function LiveBroadcast({
   const [aiSelectedMode, setAiSelectedMode] = useState<string | null>(null);
   const [aiOverlayMode, setAiOverlayMode] = useState<"fullscreen" | "card">("card");
 
-<<<<<<< HEAD
+
   const COLOR_FILTERS = [
     { name: "Original", css: "none", emoji: "✨" },
     { name: "Warm", css: "sepia(0.3) saturate(1.4) brightness(1.05)", emoji: "🌅" },
