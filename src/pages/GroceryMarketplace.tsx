@@ -132,7 +132,7 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
       <div className="relative h-14 w-14 rounded-2xl bg-background border border-border/25 flex items-center justify-center p-2 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0">
         <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
         <div className="absolute -top-0.5 -right-0.5">
-          <StatusDot isOpen={status.isOpen} />
+          <StatusDot status={status.status} />
         </div>
       </div>
       <div className="flex-1 min-w-0 text-left">
