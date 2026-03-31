@@ -192,8 +192,7 @@ function SocialLinksEditor({ profile, updateProfile }: { profile: any; updatePro
     </div>
   );
 }
-
-
+export default function ProfileEditPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const phoneRequired = (location.state as any)?.phoneRequired === true;
