@@ -43,11 +43,6 @@ function isInternalAppUrl(resolvedUrl: URL, originalUrl: string): boolean {
   return resolvedUrl.origin === window.location.origin;
 }
 
-function shouldForceTopLevelNavigation(resolvedUrl: URL): boolean {
-  const host = resolvedUrl.hostname.toLowerCase();
-  return host === "facebook.com" || host.endsWith(".facebook.com");
-}
-
 function isEmbeddedContext(): boolean {
   try {
     return window.self !== window.top;
@@ -56,12 +51,17 @@ function isEmbeddedContext(): boolean {
   }
 }
 
-function tryNavigateTopLevel(url: string): boolean {
+function tryNavigateTopLevelFromIframe(url: string): boolean {
   try {
-    if (window.top && window.top !== window.self) {
-      window.top.location.assign(url);
-      return true;
-    }
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_top";
+    link.rel = "noopener noreferrer";
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return true;
   } catch (err) {
     console.warn("[openExternalUrl] top-level navigation failed:", err);
   }
@@ -87,11 +87,6 @@ export async function openExternalUrl(url: string): Promise<void> {
   }
 
   if (Capacitor.isNativePlatform()) {
-    if (shouldForceTopLevelNavigation(resolvedUrl)) {
-      window.location.assign(resolvedUrl.href);
-      return;
-    }
-
     try {
       // Keep defaults for max compatibility across iOS/Android WebViews
       await Browser.open({ url: resolvedUrl.href });
@@ -111,7 +106,7 @@ export async function openExternalUrl(url: string): Promise<void> {
     if (openedWindow) return;
   }
 
-  if (embedded && tryNavigateTopLevel(resolvedUrl.href)) {
+  if (embedded && tryNavigateTopLevelFromIframe(resolvedUrl.href)) {
     return;
   }
 
