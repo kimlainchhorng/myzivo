@@ -258,13 +258,31 @@ export default function PartnerLogin() {
                       <FormLabel className="text-white/70 text-xs font-medium">Store Account ID</FormLabel>
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={async () => {
                           const email = form.getValues("email");
                           if (!email) {
                             toast.error("Please enter your business email first");
                             return;
                           }
-                          toast.success("Store Account ID has been sent to " + email, { duration: 5000 });
+                          const loadingToast = toast.loading("Looking up your Store Account ID...");
+                          try {
+                            const { data, error } = await supabase.functions.invoke("lookup-store-id", {
+                              body: { email },
+                            });
+                            toast.dismiss(loadingToast);
+                            if (error || data?.error) {
+                              toast.error(data?.error || "Could not find a store for this email");
+                              return;
+                            }
+                            if (data?.stores?.length > 0) {
+                              const store = data.stores[0];
+                              form.setValue("store_id", store.full_id, { shouldDirty: true });
+                              toast.success(`Found: ${store.name} — Store ID auto-filled!`, { duration: 5000 });
+                            }
+                          } catch {
+                            toast.dismiss(loadingToast);
+                            toast.error("Failed to look up Store ID. Please try again.");
+                          }
                         }}
                         className="text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors"
                       >
