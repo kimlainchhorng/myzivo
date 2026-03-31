@@ -351,6 +351,40 @@ function CreatePostModal({
           />
         </div>
 
+        {/* Media type selector buttons */}
+        <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-hide">
+          {[
+            { label: "Photo", icon: ImageIcon, accept: "image/*" },
+            { label: "Video", icon: Play, accept: "video/*" },
+            { label: "Reel", icon: Film, accept: "video/*" },
+            { label: "Live", icon: Radio, accept: "" },
+          ].map((opt) => (
+            <button
+              key={opt.label}
+              onClick={() => {
+                if (opt.label === "Live") {
+                  toast.info("Live is coming soon!");
+                  return;
+                }
+                setSelectedType(opt.label as any);
+                if (fileRef.current) {
+                  fileRef.current.accept = opt.accept;
+                  fileRef.current.click();
+                }
+              }}
+              className={cn(
+                "flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold border transition-all whitespace-nowrap min-h-[40px]",
+                selectedType === opt.label
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted/30 text-muted-foreground border-border/40 hover:bg-muted/50"
+              )}
+            >
+              <opt.icon className="h-4 w-4" />
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
         {/* Media preview / picker */}
         {preview ? (
           <div className="relative mx-4 mb-4 rounded-xl overflow-hidden bg-black aspect-square">
@@ -365,6 +399,11 @@ function CreatePostModal({
             >
               <XIcon className="h-4 w-4 text-white" />
             </button>
+            {selectedType && (
+              <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white uppercase tracking-wider">
+                {selectedType}
+              </div>
+            )}
           </div>
         ) : (
           <button
@@ -374,7 +413,7 @@ function CreatePostModal({
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
               <Camera className="h-6 w-6 text-primary" />
             </div>
-            <p className="text-xs text-muted-foreground font-medium">Tap to add photo or video</p>
+            <p className="text-xs text-muted-foreground font-medium">Select a type above, then tap here</p>
           </button>
         )}
 
