@@ -666,7 +666,11 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
       <button
         type="button"
         onClick={() => {
-          if (item.author_id) navigate(`/user/${item.author_id}`);
+          if (item.source === "store" && item.store_slug) {
+            navigate(`/grocery/shop/${item.store_slug}`);
+          } else if (item.author_id) {
+            navigate(`/user/${item.author_id}`);
+          }
         }}
         className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
       >
