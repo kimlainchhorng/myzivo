@@ -173,7 +173,7 @@ export default function ReelsFeedPage() {
               </div>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">What's on your mind?</p>
+          <p className="text-sm text-muted-foreground">Share a moment...</p>
           <div className="ml-auto flex gap-2">
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
               <ImageIcon className="h-4 w-4 text-primary" />
