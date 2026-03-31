@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen, FileText, Scale, Cookie, Plane, Share2, Undo2, BookOpen, Gavel, Database, Copyright, MessageSquare, Accessibility } from "lucide-react";
+import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen, FileText, Scale, Cookie, Plane, Share2, Undo2, BookOpen, Gavel, Database, Copyright, MessageSquare, Accessibility, AlertTriangle, DollarSign, UserX, CloudLightning, Mail, Ban, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const settingsItems = [
@@ -165,6 +165,62 @@ const legalItems = [
     href: "/legal/accessibility",
     color: "bg-green-500/15",
     iconColor: "text-green-500",
+  },
+  {
+    icon: AlertTriangle,
+    label: "Limitation of Liability",
+    description: "Liability caps & disclaimers",
+    href: "/legal/limitation-of-liability",
+    color: "bg-red-500/15",
+    iconColor: "text-red-500",
+  },
+  {
+    icon: Shield,
+    label: "Indemnification",
+    description: "User indemnification terms",
+    href: "/legal/indemnification",
+    color: "bg-amber-500/15",
+    iconColor: "text-amber-500",
+  },
+  {
+    icon: UserX,
+    label: "Age Restriction (18+)",
+    description: "Must be 18+ to use ZIVO",
+    href: "/legal/age-restriction",
+    color: "bg-red-500/15",
+    iconColor: "text-red-500",
+  },
+  {
+    icon: Heart,
+    label: "Assumption of Risk",
+    description: "Risk acknowledgment & disclosure",
+    href: "/legal/assumption-of-risk",
+    color: "bg-orange-500/15",
+    iconColor: "text-orange-500",
+  },
+  {
+    icon: Mail,
+    label: "Electronic Consent",
+    description: "E-SIGN Act compliance",
+    href: "/legal/electronic-consent",
+    color: "bg-sky-500/15",
+    iconColor: "text-sky-500",
+  },
+  {
+    icon: CloudLightning,
+    label: "Force Majeure",
+    description: "Events beyond our control",
+    href: "/legal/force-majeure",
+    color: "bg-purple-500/15",
+    iconColor: "text-purple-500",
+  },
+  {
+    icon: Ban,
+    label: "No Guarantee Disclaimer",
+    description: "Price, savings & outcome disclaimers",
+    href: "/legal/no-guarantee",
+    color: "bg-amber-500/15",
+    iconColor: "text-amber-500",
   },
 ];
 
