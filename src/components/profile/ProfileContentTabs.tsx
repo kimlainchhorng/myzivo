@@ -81,6 +81,9 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   useEffect(() => {
     let alive = true;
 
+    // Reset feed when profile owner changes
+    setFeed([]);
+
     const mergeFeed = (incoming: FeedItem[]) => {
       setFeed((prev) => {
         const deduped = new Map<string, FeedItem>();
@@ -406,7 +409,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   <p className="text-white text-sm font-semibold truncate">{selectedPost.user.name}</p>
                   <p className="text-white/50 text-[10px]">{selectedPost.time} ago</p>
                 </div>
-                {(selectedPost.user.name === "You" || selectedPost.user.name === (user?.email?.split("@")[0] || "")) && (
+                {profileOwnerId === user?.id && (
                   <div className="relative">
                     <button
                       onClick={() => setShowPostMenu(!showPostMenu)}
