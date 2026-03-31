@@ -689,13 +689,69 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
             };
 
             return (
-              <ProfileShareSheetInner
-                shareOptions={shareOptions}
-                moreShareOptions={moreShareOptions}
-                onClose={() => setSharePostId(null)}
-                onCopyLink={handleCopyLink}
-                onOptionClick={handleOptionClick}
-              />
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[9999] flex items-end justify-center"
+                onClick={() => setSharePostId(null)}
+              >
+                <div className="absolute inset-0 bg-black/50" />
+                <motion.div
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                  className="relative w-full max-w-md bg-background rounded-t-2xl pb-6 pt-3 px-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto mb-2" />
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
+                    <h3 className="text-sm font-bold text-foreground">Share to</h3>
+                    <button onClick={() => setSharePostId(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                      <X className="h-5 w-5 text-muted-foreground" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-4 gap-4 px-6 py-5">
+                    {shareOptions.map((opt) => (
+                      <button key={opt.label} onClick={() => handleOptionClick(opt)} className="flex flex-col items-center gap-2 min-h-[48px]">
+                        <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: `${opt.color}15` }}>
+                          <svg viewBox="0 0 24 24" className="h-6 w-6" fill={opt.color}><path d={opt.svg} /></svg>
+                        </div>
+                        <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
+                      </button>
+                    ))}
+                    <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 min-h-[48px]">
+                      <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" /></svg>
+                      </div>
+                      <span className="text-[10px] font-medium text-foreground">Copy link</span>
+                    </button>
+                    <button onClick={() => setShowProfileMoreShare(!showProfileMoreShare)} className="flex flex-col items-center gap-2 min-h-[48px]">
+                      <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
+                        <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <span className="text-[10px] font-medium text-foreground">{showProfileMoreShare ? "Less" : "More"}</span>
+                    </button>
+                  </div>
+                  <AnimatePresence>
+                    {showProfileMoreShare && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                        <div className="grid grid-cols-4 gap-4 px-6 py-4 border-t border-border/20">
+                          {moreShareOptions.map((opt) => (
+                            <button key={opt.label} onClick={() => handleOptionClick(opt)} className="flex flex-col items-center gap-2 min-h-[48px]">
+                              <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: `${opt.color}15` }}>
+                                <svg viewBox="0 0 24 24" className="h-6 w-6" fill={opt.color}><path d={opt.svg} /></svg>
+                              </div>
+                              <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              </motion.div>
             );
           })()}
         </AnimatePresence>,
