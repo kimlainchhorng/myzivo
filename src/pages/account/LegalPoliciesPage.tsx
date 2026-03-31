@@ -427,7 +427,114 @@ const legalItems = [
   { icon: Heart, label: "Benefits & Compensation Policy", href: "/legal/benefits-policy", color: "bg-pink-500/15", iconColor: "text-pink-500" },
 
   // ═══════════════════════════════════════════
-  // SECTION 35: FINAL & CLOSING
+  // SECTION 35: ANTI-TRAFFICKING & EXPLOITATION
+  // ═══════════════════════════════════════════
+  { icon: Shield, label: "Anti-Human Trafficking Policy", href: "/legal/anti-trafficking", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Ban, label: "Forced Labor Prohibition", href: "/legal/forced-labor", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Eye, label: "Supply Chain Transparency", href: "/legal/supply-chain", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Heart, label: "Conflict Minerals Statement", href: "/legal/conflict-minerals", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 36: MEDIA & ENTERTAINMENT
+  // ═══════════════════════════════════════════
+  { icon: Camera, label: "Photography & Filming Policy", href: "/legal/photography-policy", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Podcast, label: "Podcast & Audio Content Terms", href: "/legal/podcast-terms", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: Monitor, label: "Video Streaming Terms", href: "/legal/streaming-terms", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Newspaper, label: "Press & Media Relations", href: "/legal/press-policy", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+  { icon: Copyright, label: "Music Licensing Disclaimer", href: "/legal/music-licensing", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: PenTool, label: "Trademark Usage Guidelines", href: "/legal/trademark-guidelines", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 37: MARKETPLACE INTEGRITY
+  // ═══════════════════════════════════════════
+  { icon: ShieldCheck, label: "Counterfeit Goods Policy", href: "/legal/counterfeit-policy", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Glasses, label: "Product Authenticity Guarantee", href: "/legal/authenticity", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: AlertTriangle, label: "Recall & Safety Notices", href: "/legal/recall-notices", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Scale, label: "Fair Pricing Commitment", href: "/legal/fair-pricing", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: ListChecks, label: "Quality Assurance Standards", href: "/legal/quality-assurance", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Radar, label: "Fake Review Detection Policy", href: "/legal/fake-reviews", color: "bg-red-500/15", iconColor: "text-red-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 38: EMERGENCY & CRISIS
+  // ═══════════════════════════════════════════
+  { icon: Siren, label: "Emergency Response Protocol", href: "/legal/emergency-response", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Flame, label: "Natural Disaster Response", href: "/legal/disaster-response", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Activity, label: "Crisis Communication Policy", href: "/legal/crisis-communication", color: "bg-orange-500/15", iconColor: "text-orange-500" },
+  { icon: Shield, label: "Business Continuity Plan", href: "/legal/business-continuity", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Headphones, label: "Emergency Support Escalation", href: "/legal/emergency-escalation", color: "bg-red-500/15", iconColor: "text-red-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 39: INTELLECTUAL PROPERTY EXTENDED
+  // ═══════════════════════════════════════════
+  { icon: Brain, label: "Patent Policy", href: "/legal/patent-policy", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Copyright, label: "Trade Secret Protection", href: "/legal/trade-secrets", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: PenTool, label: "Brand Guidelines & Usage", href: "/legal/brand-guidelines", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: FileCode, label: "Software License Agreement", href: "/legal/software-license", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Blocks, label: "Font & Typography Licensing", href: "/legal/font-licensing", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Camera, label: "Image & Asset Licensing", href: "/legal/image-licensing", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 40: COMPLIANCE CERTIFICATIONS
+  // ═══════════════════════════════════════════
+  { icon: BadgeCheck, label: "GDPR Data Protection Officer", href: "/legal/dpo-disclosure", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: ClipboardCheck, label: "Annual Compliance Report", href: "/legal/annual-compliance", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: FileSearch, label: "Third-Party Audit Results", href: "/legal/audit-results", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Shield, label: "Privacy Impact Assessment", href: "/legal/privacy-impact", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Scale3d, label: "Regulatory Filing Disclosure", href: "/legal/regulatory-filings", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 41: SOCIAL RESPONSIBILITY
+  // ═══════════════════════════════════════════
+  { icon: Heart, label: "Charitable Giving Policy", href: "/legal/charitable-giving", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: Users, label: "Volunteer & Pro Bono Terms", href: "/legal/volunteer-terms", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: TreePine, label: "Net Zero Commitment", href: "/legal/net-zero", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Globe, label: "UN Global Compact Adherence", href: "/legal/un-global-compact", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Gem, label: "ESG Disclosure Statement", href: "/legal/esg-disclosure", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 42: ADVANCED PRIVACY CONTROLS
+  // ═══════════════════════════════════════════
+  { icon: Lock, label: "Privacy by Design Framework", href: "/legal/privacy-by-design", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Eye, label: "Consent Management Policy", href: "/legal/consent-management", color: "bg-cyan-500/15", iconColor: "text-cyan-500" },
+  { icon: Database, label: "Data Minimization Principles", href: "/legal/data-minimization", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: UserMinus, label: "Account Deletion Guarantee", href: "/legal/deletion-guarantee", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Archive, label: "Data Subject Access Request (DSAR)", href: "/legal/dsar", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Hash, label: "Pseudonymization Policy", href: "/legal/pseudonymization", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: FileLock2, label: "End-to-End Encryption Policy", href: "/legal/e2e-encryption", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 43: FINANCIAL SERVICES REGULATION
+  // ═══════════════════════════════════════════
+  { icon: Landmark, label: "FinCEN Registration Disclosure", href: "/legal/fincen", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: DollarSign, label: "Consumer Financial Protection", href: "/legal/cfpb-compliance", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: CreditCard, label: "Electronic Fund Transfer Act", href: "/legal/efta", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Banknote, label: "Truth in Lending Disclosure", href: "/legal/tila", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Shield, label: "Dodd-Frank Compliance", href: "/legal/dodd-frank", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: PiggyBank, label: "FDIC & Deposit Disclaimer", href: "/legal/fdic-disclaimer", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 44: AUTOMOTIVE & VEHICLE
+  // ═══════════════════════════════════════════
+  { icon: Car, label: "Vehicle Inspection Standards", href: "/legal/vehicle-inspection", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Car, label: "EV Charging Terms", href: "/legal/ev-charging", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Shield, label: "Autonomous Vehicle Disclaimer", href: "/legal/autonomous-vehicle", color: "bg-purple-500/15", iconColor: "text-purple-500" },
+  { icon: AlertTriangle, label: "Roadside Assistance Terms", href: "/legal/roadside-assistance", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: MapPin, label: "Tolling & Parking Policy", href: "/legal/tolling-parking", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Flame, label: "Vehicle Recall Notification", href: "/legal/vehicle-recall", color: "bg-red-500/15", iconColor: "text-red-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 45: AVIATION REGULATORY
+  // ═══════════════════════════════════════════
+  { icon: Plane, label: "DOT Passenger Protection", href: "/legal/dot-passenger", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+  { icon: PlaneTakeoff, label: "Tarmac Delay Contingency", href: "/legal/tarmac-delay", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+  { icon: Luggage, label: "Denied Boarding Compensation", href: "/legal/denied-boarding", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: PlaneLanding, label: "EU261 Flight Compensation", href: "/legal/eu261", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Plane, label: "Montreal Convention Notice", href: "/legal/montreal-convention", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Globe, label: "Warsaw Convention Disclosure", href: "/legal/warsaw-convention", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Receipt, label: "Airline Ancillary Fee Disclosure", href: "/legal/ancillary-fees", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 46: FINAL & CLOSING
   // ═══════════════════════════════════════════
   { icon: BookOpen, label: "Compliance Center", href: "/compliance", color: "bg-teal-500/15", iconColor: "text-teal-500" },
   { icon: Fingerprint, label: "Partner Agreement", href: "/partner-agreement", color: "bg-slate-500/15", iconColor: "text-slate-500" },
