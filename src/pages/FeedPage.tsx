@@ -1022,7 +1022,7 @@ export default function FeedPage() {
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [sharePostId, setSharePostId] = useState<string | null>(null);
-
+  const [showSearch, setShowSearch] = useState(false);
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [userLikedPostIds, setUserLikedPostIds] = useState<Set<string>>(new Set());
