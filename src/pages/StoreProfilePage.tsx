@@ -185,7 +185,7 @@ export default function StoreProfilePage() {
             <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-3 z-10">
               <motion.button
                 whileTap={{ scale: 0.85 }}
-                onClick={() => navigate(-1)}
+                onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/grocery")}
                 className="h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
               >
                 <ArrowLeft className="h-4 w-4 text-foreground" />
