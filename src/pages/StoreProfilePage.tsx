@@ -398,12 +398,10 @@ export default function StoreProfilePage() {
 
             {/* Facebook button */}
             {(store as any).facebook_url && (
-              <motion.a
+              <motion.button
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
-                href={(store as any).facebook_url}
-                target="_blank"
-                rel="noopener noreferrer"
+                onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl((store as any).facebook_url))}
                 className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
                 style={{
                   transformStyle: "preserve-3d",
@@ -431,7 +429,7 @@ export default function StoreProfilePage() {
                   <p className="text-[11px] font-bold text-white drop-shadow-md">Facebook</p>
                   <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Visit page</p>
                 </div>
-              </motion.a>
+              </motion.button>
             )}
 
             {/* Instagram button */}
