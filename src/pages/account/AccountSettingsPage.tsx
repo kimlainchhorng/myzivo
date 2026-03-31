@@ -139,20 +139,34 @@ const legalItems = [
 export default function AccountSettingsPage() {
   const navigate = useNavigate();
 
-  const renderItem = (item: typeof settingsItems[0]) => (
+  const renderSettingItem = (item: typeof settingsItems[0]) => (
     <button
       key={item.label}
       onClick={() => navigate(item.href)}
-      className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/50 hover:bg-accent/50 transition-colors text-left active:scale-[0.98]"
+      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-colors text-left active:scale-[0.98]"
     >
-      <div className={`h-12 w-12 min-w-12 rounded-full ${item.color} flex items-center justify-center`}>
-        <item.icon className={`h-5 w-5 ${item.iconColor}`} />
+      <div className={`h-9 w-9 min-w-9 rounded-full ${item.color} flex items-center justify-center`}>
+        <item.icon className={`h-4 w-4 ${item.iconColor}`} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-foreground">{item.label}</p>
-        <p className="text-sm text-muted-foreground">{item.description}</p>
+        <p className="text-[13px] font-medium text-foreground">{item.label}</p>
+        <p className="text-[11px] text-muted-foreground">{item.description}</p>
       </div>
-      <ChevronRight className="h-5 w-5 text-muted-foreground/50 shrink-0" />
+      <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+    </button>
+  );
+
+  const renderLegalItem = (item: typeof legalItems[0]) => (
+    <button
+      key={item.label}
+      onClick={() => navigate(item.href)}
+      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-accent/40 transition-colors text-left active:scale-[0.98]"
+    >
+      <div className={`h-7 w-7 min-w-7 rounded-full ${item.color} flex items-center justify-center`}>
+        <item.icon className={`h-3.5 w-3.5 ${item.iconColor}`} />
+      </div>
+      <p className="flex-1 text-[12px] font-medium text-muted-foreground">{item.label}</p>
+      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />
     </button>
   );
 
@@ -174,15 +188,15 @@ export default function AccountSettingsPage() {
       </div>
 
       {/* Settings List */}
-      <div className="p-4 space-y-3">
-        {settingsItems.map(renderItem)}
+      <div className="p-3 space-y-2">
+        {settingsItems.map(renderSettingItem)}
       </div>
 
       {/* Legal Section */}
-      <div className="px-4 pb-6">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">Legal & Policies</p>
-        <div className="space-y-3">
-          {legalItems.map(renderItem)}
+      <div className="px-3 pb-6">
+        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2 px-1">Legal & Policies</p>
+        <div className="rounded-xl bg-card border border-border/30 divide-y divide-border/20">
+          {legalItems.map(renderLegalItem)}
         </div>
       </div>
     </div>
