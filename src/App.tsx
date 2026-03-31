@@ -106,6 +106,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const VerifyOTP = lazy(() => import("./pages/VerifyOTP"));
 const Setup = lazy(() => import("./pages/Setup"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const Profile = lazy(() => import("./pages/Profile"));
