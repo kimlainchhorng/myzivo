@@ -104,7 +104,7 @@ const ZivoMobileNav = () => {
               </div>
               
               <span className={cn(
-                "text-[11px] leading-none transition-all duration-200",
+                "text-[10px] leading-none transition-all duration-200",
                 isActive
                   ? "font-semibold text-primary"
                   : "font-medium text-muted-foreground"
