@@ -254,7 +254,23 @@ export default function PartnerLogin() {
                 {/* Store Account ID */}
                 <FormField control={form.control} name="store_id" render={({ field }) => (
                   <FormItem className="space-y-1">
-                    <FormLabel className="text-white/70 text-xs font-medium">Store Account ID</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-white/70 text-xs font-medium">Store Account ID</FormLabel>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const email = form.getValues("email");
+                          if (!email) {
+                            toast.error("Please enter your business email first");
+                            return;
+                          }
+                          toast.success("Store Account ID has been sent to " + email, { duration: 5000 });
+                        }}
+                        className="text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors"
+                      >
+                        Forgot ID?
+                      </button>
+                    </div>
                     <FormControl>
                       <div className="relative">
                         <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
