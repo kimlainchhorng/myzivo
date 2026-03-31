@@ -247,6 +247,7 @@ const Help = lazy(() => import("./pages/Help"));
 
 // Account pages
 const AccountSettingsPage = lazy(() => import("./pages/account/AccountSettingsPage"));
+const LegalPoliciesPage = lazy(() => import("./pages/account/LegalPoliciesPage"));
 const ProfileEditPage = lazy(() => import("./pages/account/ProfileEditPage"));
 const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
 const PreferencesPage = lazy(() => import("./pages/account/PreferencesPage"));
