@@ -21,33 +21,33 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Find stores by email directly from profiles or store_profiles
-    // First try to find user by email using filtered listUsers
-    const { data: userData, error: userError } = await supabase.auth.admin.listUsers({
-      filter: `email.eq.${email.toLowerCase()}`,
-      page: 1,
-      perPage: 1,
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
     });
-    
+
+    // Look up user by email via admin API with pagination fallback
     let userId: string | null = null;
-    
-    if (!userError && userData?.users?.length > 0) {
-      userId = userData.users[0].id;
-    } else {
-      // Fallback: search all users page by page (max 5 pages)
-      for (let page = 1; page <= 5; page++) {
-        const { data: pageData, error: pageError } = await supabase.auth.admin.listUsers({
-          page,
-          perPage: 500,
-        });
-        if (pageError || !pageData?.users?.length) break;
-        const found = pageData.users.find(
-          (u: any) => u.email?.toLowerCase() === email.toLowerCase()
-        );
-        if (found) { userId = found.id; break; }
+
+    for (let page = 1; page <= 10; page++) {
+      const { data: pageData, error: pageError } = await supabase.auth.admin.listUsers({
+        page,
+        perPage: 1000,
+      });
+      if (pageError) {
+        console.error('listUsers error:', pageError.message);
+        break;
       }
+      if (!pageData?.users?.length) break;
+      
+      const found = pageData.users.find(
+        (u: any) => u.email?.toLowerCase() === email.toLowerCase()
+      );
+      if (found) {
+        userId = found.id;
+        break;
+      }
+      // If we got fewer than perPage, we've reached the end
+      if (pageData.users.length < 1000) break;
     }
 
     if (!userId) {
@@ -57,11 +57,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Find stores owned by this user
+    console.log('Found user:', userId, 'for email:', email);
+
+    // Find stores owned by this user (service role bypasses RLS)
     const { data: stores, error: storeError } = await supabase
       .from('store_profiles')
       .select('id, name')
       .eq('owner_id', userId);
+
+    console.log('Store query result:', JSON.stringify({ stores, storeError }));
 
     if (storeError) throw storeError;
 
@@ -72,7 +76,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Return store IDs (masked partially for security — show first 4 + last 4 chars)
     const storeIds = stores.map((s: any) => ({
       name: s.name,
       id: s.id.length > 8
@@ -85,6 +88,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
+    console.error('lookup-store-id error:', err);
     return new Response(JSON.stringify({ error: err.message || 'Internal error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
