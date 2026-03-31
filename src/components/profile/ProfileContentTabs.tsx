@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Heart, MessageCircle, Eye, X, SwitchCamera, Mic, MicOff, Sparkles,
-  Share2, Play, Radio, ChevronDown, Globe, Users, Lock,
+  Share2, Play, Radio, ChevronDown, Globe, Users, Lock, Link2,
   MapPin, Image, Film, Grid3X3, Clapperboard, Camera, Trash2, Pencil, MoreVertical,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -73,6 +73,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [showLive, setShowLive] = useState(false);
   const [feed, setFeed] = useState<FeedItem[]>(demoFeed);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [sharePostId, setSharePostId] = useState<string | null>(null);
 
   const filtered = activeTab === "all" ? feed : feed.filter((i) => i.type === activeTab);
 
@@ -517,7 +518,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       <span className="text-sm">{selectedPost.views > 1000 ? `${(selectedPost.views / 1000).toFixed(1)}k` : selectedPost.views}</span>
                     </span>
                   )}
-                  <button className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors ml-auto">
+                  <button
+                    className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors ml-auto"
+                    onClick={() => setSharePostId(selectedPost.id)}
+                  >
                     <Share2 className="w-6 h-6" />
                   </button>
                 </div>
@@ -609,6 +613,62 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       {createPortal(
         <AnimatePresence>
           {showLive && <LiveBroadcast onClose={() => setShowLive(false)} onPublishClip={handleCreatePost} />}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Share Sheet */}
+      {createPortal(
+        <AnimatePresence>
+          {sharePostId && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] flex items-end justify-center"
+              onClick={() => setSharePostId(null)}
+            >
+              <div className="absolute inset-0 bg-black/50" />
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                className="relative w-full max-w-md bg-background rounded-t-2xl pb-8 pt-3 px-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-base font-semibold text-foreground mb-4 px-1">Share to</h3>
+                <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+                  {[
+                    { label: "WhatsApp", color: "bg-green-500/10", icon: <MessageCircle className="w-7 h-7 text-green-500" />, action: (url: string, cap: string) => window.open(`https://wa.me/?text=${encodeURIComponent(cap + "\n" + url)}`, "_blank") },
+                    { label: "Facebook", color: "bg-blue-500/10", icon: <Globe className="w-7 h-7 text-blue-500" />, action: (url: string) => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank") },
+                    { label: "X", color: "bg-foreground/5", icon: <Share2 className="w-7 h-7" />, action: (url: string, cap: string) => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(cap)}`, "_blank") },
+                    { label: "Email", color: "bg-muted", icon: <Heart className="w-7 h-7 text-muted-foreground" />, action: (url: string, cap: string) => window.open(`mailto:?subject=${encodeURIComponent(cap)}&body=${encodeURIComponent(url)}`, "_self") },
+                    { label: "Copy Link", color: "bg-primary/10", icon: <Link2 className="w-7 h-7 text-primary" />, action: async (url: string) => { try { await navigator.clipboard.writeText(url); } catch { /* fallback */ } toast.success("Link copied!"); } },
+                  ].map((opt) => {
+                    const shareUrl = `${window.location.origin}/profile?post=${sharePostId}`;
+                    const shareCaption = feed.find((p) => p.id === sharePostId)?.caption || "";
+                    return (
+                      <button
+                        key={opt.label}
+                        onClick={() => { opt.action(shareUrl, shareCaption); if (opt.label !== "Copy Link") setSharePostId(null); }}
+                        className="flex flex-col items-center gap-2 min-w-[64px]"
+                      >
+                        <div className={cn("w-14 h-14 rounded-full flex items-center justify-center", opt.color)}>
+                          {opt.icon}
+                        </div>
+                        <span className="text-xs text-muted-foreground font-medium">{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button onClick={() => setSharePostId(null)} className="mt-4 w-full h-11 rounded-xl bg-muted text-sm font-medium text-foreground">
+                  Cancel
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
         </AnimatePresence>,
         document.body
       )}
