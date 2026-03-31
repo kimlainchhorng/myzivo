@@ -72,6 +72,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [editCaptionValue, setEditCaptionValue] = useState("");
   const [showLive, setShowLive] = useState(false);
   const [feed, setFeed] = useState<FeedItem[]>(demoFeed);
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
 
   const filtered = activeTab === "all" ? feed : feed.filter((i) => i.type === activeTab);
 
@@ -91,18 +92,30 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
     const DEMO_IDS = new Set(["p1","p2","p3","p4","p5","p6","v1","v2","v3"]);
 
     const loadPersisted = async () => {
+      // Fetch the profile avatar
+      if (profileOwnerId) {
+        try {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("avatar_url, full_name")
+            .eq("user_id", profileOwnerId)
+            .maybeSingle();
+          if (alive && profileData?.avatar_url) {
+            setProfileAvatar(profileData.avatar_url);
+          }
+        } catch {}
+      }
+
       try {
         const localRaw = localStorage.getItem(LOCAL_POSTS_KEY);
         if (localRaw && alive) {
           const localPosts = (JSON.parse(localRaw) as FeedItem[]).filter(p => !DEMO_IDS.has(p.id));
-          // Clean up demo posts from storage
           localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(localPosts));
           if (localPosts.length > 0) {
             mergeFeed(localPosts);
           }
         }
       } catch {
-        // Ignore malformed local cache.
       }
 
       try {
@@ -121,27 +134,47 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
         if (!alive || !data) return;
 
+        // Fetch avatars for all unique user IDs
+        const userIds = [...new Set((data as UserPostRow[]).map((r) => r.user_id))];
+        let avatarMap: Record<string, { avatar_url: string | null; full_name: string | null }> = {};
+        if (userIds.length > 0) {
+          try {
+            const { data: profiles } = await supabase
+              .from("profiles")
+              .select("user_id, avatar_url, full_name")
+              .in("user_id", userIds);
+            if (profiles) {
+              for (const p of profiles as any[]) {
+                avatarMap[p.user_id] = { avatar_url: p.avatar_url, full_name: p.full_name };
+              }
+            }
+          } catch {}
+        }
+
         const remotePosts: FeedItem[] = (data as UserPostRow[])
-          .map((row) => ({
-            id: row.id,
-            type: row.media_type,
-            likes: Number(row.likes_count ?? 0),
-            comments: Number(row.comments_count ?? 0),
-            caption: row.caption || "",
-            time: row.created_at ? "recent" : "now",
-            url: row.media_url,
-            filterCss: row.filter_css || undefined,
-            views: row.media_type === "reel" ? Number(row.views_count ?? 0) : undefined,
-            user: {
-              name: row.user_id === user?.id ? (user?.email?.split("@")[0] || "You") : "Zivo User",
-              avatar: "https://i.pravatar.cc/100?img=3",
-            },
-          }))
+          .map((row) => {
+            const prof = avatarMap[row.user_id];
+            const displayName = prof?.full_name || (row.user_id === user?.id ? (user?.email?.split("@")[0] || "You") : "Zivo User");
+            return {
+              id: row.id,
+              type: row.media_type,
+              likes: Number(row.likes_count ?? 0),
+              comments: Number(row.comments_count ?? 0),
+              caption: row.caption || "",
+              time: row.created_at ? "recent" : "now",
+              url: row.media_url,
+              filterCss: row.filter_css || undefined,
+              views: row.media_type === "reel" ? Number(row.views_count ?? 0) : undefined,
+              user: {
+                name: displayName,
+                avatar: prof?.avatar_url || "",
+              },
+            };
+          })
           .filter((item) => Boolean(item.url));
 
         if (remotePosts.length > 0) mergeFeed(remotePosts);
       } catch {
-        // user_posts migration may not be applied yet; local mode still works.
       }
     };
 
@@ -194,7 +227,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       url: mediaUrl,
       filterCss: payload.filterCss,
       views: payload.type === "reel" ? 0 : undefined,
-      user: { name: authorName, avatar: "https://i.pravatar.cc/100?img=3" },
+      user: { name: authorName, avatar: profileAvatar || "" },
     };
 
     setFeed((prev) => [createdPost, ...prev]);
@@ -360,7 +393,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 <button onClick={() => { setSelectedPost(null); setShowPostMenu(false); setEditingCaption(false); }} className="text-white/80 p-1">
                   <X className="w-6 h-6" />
                 </button>
-                <img src={selectedPost.user.avatar} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/20" />
+                {selectedPost.user.avatar ? (
+                  <img src={selectedPost.user.avatar} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/20" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border-2 border-white/20 text-white text-xs font-bold">
+                    {selectedPost.user.name?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-semibold truncate">{selectedPost.user.name}</p>
                   <p className="text-white/50 text-[10px]">{selectedPost.time} ago</p>
