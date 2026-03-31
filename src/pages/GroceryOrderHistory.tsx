@@ -105,6 +105,7 @@ function OrderCard({ order, onReorder, onRate, onTrack }: {
   onRate: (orderId: string, stars: number) => void;
   onTrack: (orderId: string) => void;
 }) {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
   const StatusIcon = cfg.icon;
