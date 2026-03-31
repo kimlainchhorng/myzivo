@@ -84,7 +84,7 @@ export default function ReelsFeedPage() {
           .limit(60);
 
         if (userPosts?.length) {
-          const userIds = [...new Set(userPosts.map((p: any) => p.user_id))];
+          const userIds = [...new Set(userPosts.map((p: any) => p.user_id))] as string[];
           const { data: profiles } = await supabase
             .from("profiles")
             .select("id, first_name, last_name, avatar_url")
