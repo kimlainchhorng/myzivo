@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen } from "lucide-react";
+import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen, FileText, Scale, Cookie } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const settingsItems = [
@@ -61,8 +61,60 @@ const settingsItems = [
   },
 ];
 
+const legalItems = [
+  {
+    icon: FileText,
+    label: "Terms & Conditions",
+    description: "Our terms of service",
+    href: "/terms",
+    color: "bg-slate-500/15",
+    iconColor: "text-slate-500",
+  },
+  {
+    icon: Scale,
+    label: "Privacy Policy",
+    description: "How we handle your data",
+    href: "/privacy",
+    color: "bg-cyan-500/15",
+    iconColor: "text-cyan-500",
+  },
+  {
+    icon: Cookie,
+    label: "Cookie Policy",
+    description: "Cookie usage & preferences",
+    href: "/cookies",
+    color: "bg-amber-500/15",
+    iconColor: "text-amber-500",
+  },
+  {
+    icon: Shield,
+    label: "Partner Disclosure",
+    description: "Travel partner information",
+    href: "/partner-disclosure",
+    color: "bg-rose-500/15",
+    iconColor: "text-rose-500",
+  },
+];
+
 export default function AccountSettingsPage() {
   const navigate = useNavigate();
+
+  const renderItem = (item: typeof settingsItems[0]) => (
+    <button
+      key={item.label}
+      onClick={() => navigate(item.href)}
+      className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/50 hover:bg-accent/50 transition-colors text-left active:scale-[0.98]"
+    >
+      <div className={`h-12 w-12 min-w-12 rounded-full ${item.color} flex items-center justify-center`}>
+        <item.icon className={`h-5 w-5 ${item.iconColor}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-foreground">{item.label}</p>
+        <p className="text-sm text-muted-foreground">{item.description}</p>
+      </div>
+      <ChevronRight className="h-5 w-5 text-muted-foreground/50 shrink-0" />
+    </button>
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,22 +135,15 @@ export default function AccountSettingsPage() {
 
       {/* Settings List */}
       <div className="p-4 space-y-3">
-        {settingsItems.map((item) => (
-          <button
-            key={item.label}
-            onClick={() => navigate(item.href)}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/50 hover:bg-accent/50 transition-colors text-left active:scale-[0.98]"
-          >
-            <div className={`h-12 w-12 min-w-12 rounded-full ${item.color} flex items-center justify-center`}>
-              <item.icon className={`h-5 w-5 ${item.iconColor}`} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-foreground">{item.label}</p>
-              <p className="text-sm text-muted-foreground">{item.description}</p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground/50 shrink-0" />
-          </button>
-        ))}
+        {settingsItems.map(renderItem)}
+      </div>
+
+      {/* Legal Section */}
+      <div className="px-4 pb-6">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">Legal & Policies</p>
+        <div className="space-y-3">
+          {legalItems.map(renderItem)}
+        </div>
       </div>
     </div>
   );
