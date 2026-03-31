@@ -660,7 +660,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   return (
     <div className="bg-card">
       {/* Author header */}
-      <div className="flex items-center gap-3 px-3 py-2.5">
+      <div className="flex items-center">
       <button
         type="button"
         onClick={() => {
