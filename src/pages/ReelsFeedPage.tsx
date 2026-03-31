@@ -304,7 +304,7 @@ function CreatePostModal({
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         exit={{ y: 100 }}
-        className="w-full max-w-lg bg-card rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-auto"
+        className="w-full max-w-lg bg-card rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-auto pb-20 z-[60]"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
