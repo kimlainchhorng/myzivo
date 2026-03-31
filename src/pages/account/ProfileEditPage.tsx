@@ -384,8 +384,11 @@ export default function ProfileEditPage() {
                 }}
                 disabled={updateProfile.isPending}
               />
-            </div>
           </div>
+
+          {/* Social Links Section */}
+          <SocialLinksEditor profile={profile} updateProfile={updateProfile} />
+        </div>
         </div>
       )}
 
