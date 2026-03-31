@@ -517,6 +517,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentMedia, setCurrentMedia] = useState(0);
   const [showComments, setShowComments] = useState(false);
+  const [showShareSheet, setShowShareSheet] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
@@ -580,36 +581,37 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   };
 
   const handleShare = () => {
-    const url = window.location.href;
-    const text = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
-    const encodedUrl = encodeURIComponent(url);
-
-    // Try native share first
-    if (typeof navigator.share === "function") {
-      navigator.share({ title: item.author_name, text: decodeURIComponent(text), url })
-        .catch((err) => { if (err.name !== "AbortError") copyFallback(url); });
-      return;
-    }
-
-    // Fallback: open share options
-    const waUrl = `https://wa.me/?text=${text}%20${encodedUrl}`;
-    window.open(waUrl, "_blank", "noopener");
-    toast.success("Opening share...");
+    setShowShareSheet(true);
   };
 
-  const copyFallback = (url: string) => {
+  const shareUrl = window.location.href;
+  const shareText = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
+  const shareEncodedUrl = encodeURIComponent(shareUrl);
+
+  const shareOptions = [
+    { label: "WhatsApp", icon: "💬", url: `https://wa.me/?text=${shareText}%20${shareEncodedUrl}` },
+    { label: "Telegram", icon: "✈️", url: `https://t.me/share/url?url=${shareEncodedUrl}&text=${shareText}` },
+    { label: "Facebook", icon: "📘", url: `https://www.facebook.com/sharer/sharer.php?u=${shareEncodedUrl}` },
+    { label: "X", icon: "🐦", url: `https://x.com/intent/tweet?text=${shareText}&url=${shareEncodedUrl}` },
+    { label: "Email", icon: "📧", url: `mailto:?subject=${shareText}&body=${shareEncodedUrl}` },
+    { label: "SMS", icon: "💬", url: `sms:?body=${shareText}%20${shareEncodedUrl}` },
+  ];
+
+  const handleCopyLink = () => {
     try {
       const ta = document.createElement("textarea");
-      ta.value = url;
+      ta.value = shareUrl;
       ta.style.cssText = "position:fixed;opacity:0;left:-9999px";
       document.body.appendChild(ta);
       ta.focus();
       ta.select();
-      const ok = document.execCommand("copy");
+      document.execCommand("copy");
       document.body.removeChild(ta);
-      if (ok) { toast.success("Link copied!"); return; }
-    } catch {}
-    toast.info("Long-press the URL bar to copy the link");
+      toast.success("Link copied!");
+    } catch {
+      toast.info("Long-press URL bar to copy");
+    }
+    setShowShareSheet(false);
   };
 
   const handleSave = () => {
@@ -814,6 +816,76 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
           <p className="text-[11px] text-muted-foreground">{item.views_count.toLocaleString()} views</p>
         </div>
       )}
+
+      {/* Share Sheet */}
+      <AnimatePresence>
+        {showShareSheet && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] bg-black/50 flex items-end justify-center"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowShareSheet(false); }}
+          >
+            <motion.div
+              initial={{ y: 300 }}
+              animate={{ y: 0 }}
+              exit={{ y: 300 }}
+              className="w-full max-w-lg bg-card rounded-t-2xl pb-8"
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
+                <h3 className="text-sm font-bold text-foreground">Share to</h3>
+                <button onClick={() => setShowShareSheet(false)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                  <XIcon className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-4 gap-4 px-6 py-5">
+                {shareOptions.map((opt) => (
+                  <a
+                    key={opt.label}
+                    href={opt.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowShareSheet(false)}
+                    className="flex flex-col items-center gap-2 min-h-[48px]"
+                  >
+                    <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center text-xl">
+                      {opt.icon}
+                    </div>
+                    <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
+                  </a>
+                ))}
+                {/* Copy Link */}
+                <button
+                  onClick={handleCopyLink}
+                  className="flex flex-col items-center gap-2 min-h-[48px]"
+                >
+                  <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center text-xl">
+                    🔗
+                  </div>
+                  <span className="text-[10px] font-medium text-foreground">Copy link</span>
+                </button>
+                {/* More */}
+                <button
+                  onClick={() => {
+                    setShowShareSheet(false);
+                    if (navigator.share) {
+                      navigator.share({ title: item.author_name, text: item.caption || "", url: shareUrl }).catch(() => {});
+                    }
+                  }}
+                  className="flex flex-col items-center gap-2 min-h-[48px]"
+                >
+                  <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
+                    <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <span className="text-[10px] font-medium text-foreground">More</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
