@@ -13,6 +13,14 @@ export type UserProfile = {
   cover_url: string | null;
   cover_position: number | null;
   status: string | null;
+  social_facebook: string | null;
+  social_instagram: string | null;
+  social_tiktok: string | null;
+  social_snapchat: string | null;
+  social_x: string | null;
+  social_linkedin: string | null;
+  social_telegram: string | null;
+  social_links_visible: boolean | null;
   created_at: string;
   updated_at: string;
 };

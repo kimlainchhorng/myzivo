@@ -29020,7 +29020,9 @@ export type Database = {
           email: string | null
           email_verified: boolean | null
           full_name: string | null
+          hide_from_drivers: boolean
           id: string
+          is_private: boolean
           kyc_rejection_reason: string | null
           kyc_status: string
           kyc_verified_at: string | null
@@ -29031,6 +29033,7 @@ export type Database = {
           phone_e164: string | null
           phone_verified: boolean
           phone_verified_at: string | null
+          profile_visibility: string
           role: string | null
           selected_city_id: string | null
           selected_city_name: string | null
@@ -29038,6 +29041,14 @@ export type Database = {
           sms_consent: boolean
           sms_opted_out: boolean
           sms_opted_out_at: string | null
+          social_facebook: string | null
+          social_instagram: string | null
+          social_linkedin: string | null
+          social_links_visible: boolean | null
+          social_snapchat: string | null
+          social_telegram: string | null
+          social_tiktok: string | null
+          social_x: string | null
           status: string | null
           updated_at: string | null
           user_id: string | null
@@ -29059,7 +29070,9 @@ export type Database = {
           email?: string | null
           email_verified?: boolean | null
           full_name?: string | null
+          hide_from_drivers?: boolean
           id?: string
+          is_private?: boolean
           kyc_rejection_reason?: string | null
           kyc_status?: string
           kyc_verified_at?: string | null
@@ -29070,6 +29083,7 @@ export type Database = {
           phone_e164?: string | null
           phone_verified?: boolean
           phone_verified_at?: string | null
+          profile_visibility?: string
           role?: string | null
           selected_city_id?: string | null
           selected_city_name?: string | null
@@ -29077,6 +29091,14 @@ export type Database = {
           sms_consent?: boolean
           sms_opted_out?: boolean
           sms_opted_out_at?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_links_visible?: boolean | null
+          social_snapchat?: string | null
+          social_telegram?: string | null
+          social_tiktok?: string | null
+          social_x?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -29098,7 +29120,9 @@ export type Database = {
           email?: string | null
           email_verified?: boolean | null
           full_name?: string | null
+          hide_from_drivers?: boolean
           id?: string
+          is_private?: boolean
           kyc_rejection_reason?: string | null
           kyc_status?: string
           kyc_verified_at?: string | null
@@ -29109,6 +29133,7 @@ export type Database = {
           phone_e164?: string | null
           phone_verified?: boolean
           phone_verified_at?: string | null
+          profile_visibility?: string
           role?: string | null
           selected_city_id?: string | null
           selected_city_name?: string | null
@@ -29116,6 +29141,14 @@ export type Database = {
           sms_consent?: boolean
           sms_opted_out?: boolean
           sms_opted_out_at?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_links_visible?: boolean | null
+          social_snapchat?: string | null
+          social_telegram?: string | null
+          social_tiktok?: string | null
+          social_x?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -42220,6 +42253,51 @@ export type Database = {
           show_urgency_indicators?: boolean
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_posts: {
+        Row: {
+          caption: string | null
+          comments_count: number | null
+          created_at: string | null
+          filter_css: string | null
+          id: string
+          is_published: boolean | null
+          likes_count: number | null
+          media_type: string
+          media_url: string
+          updated_at: string | null
+          user_id: string
+          views_count: number | null
+        }
+        Insert: {
+          caption?: string | null
+          comments_count?: number | null
+          created_at?: string | null
+          filter_css?: string | null
+          id?: string
+          is_published?: boolean | null
+          likes_count?: number | null
+          media_type?: string
+          media_url: string
+          updated_at?: string | null
+          user_id: string
+          views_count?: number | null
+        }
+        Update: {
+          caption?: string | null
+          comments_count?: number | null
+          created_at?: string | null
+          filter_css?: string | null
+          id?: string
+          is_published?: boolean | null
+          likes_count?: number | null
+          media_type?: string
+          media_url?: string
+          updated_at?: string | null
+          user_id?: string
+          views_count?: number | null
         }
         Relationships: []
       }

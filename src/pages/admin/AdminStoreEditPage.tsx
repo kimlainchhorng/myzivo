@@ -14,8 +14,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import ffmpegWorkerUrl from "@ffmpeg/ffmpeg/worker?url";
-import ffmpegCoreUrl from "@ffmpeg/core?url";
-import ffmpegWasmUrl from "@ffmpeg/core/wasm?url";
+
+const FFMPEG_CDN_BASE = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm";
+const ffmpegCoreUrl = `${FFMPEG_CDN_BASE}/ffmpeg-core.js`;
+const ffmpegWasmUrl = `${FFMPEG_CDN_BASE}/ffmpeg-core.wasm`;
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import AdminLayout from "@/components/admin/AdminLayout";

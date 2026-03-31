@@ -100,10 +100,10 @@ export default function WalletPage() {
       text: `You're ${tierProgress.pointsNeeded.toLocaleString()} pts away from ${tierProgress.nextTier} tier (2x points)`,
     });
   }
-  if (stripeCards.length > 0) {
+  if (stripeCards.length === 0) {
     tips.push({
       icon: <span>💳</span>,
-      text: `Switch to ZIVO card for +3% back on travel`,
+      text: `Add a payment method for faster checkouts`,
     });
   }
   if (tips.length === 0) {

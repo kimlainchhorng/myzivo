@@ -106,6 +106,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const VerifyOTP = lazy(() => import("./pages/VerifyOTP"));
 const Setup = lazy(() => import("./pages/Setup"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const Profile = lazy(() => import("./pages/Profile"));
@@ -176,8 +177,38 @@ const PartnerDisclosure = lazy(() => import("./pages/legal/PartnerDisclosure"));
 const DoNotSell = lazy(() => import("./pages/legal/DoNotSell"));
 const SecurityIncident = lazy(() => import("./pages/legal/SecurityIncident"));
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
+const SocialMediaPolicy = lazy(() => import("./pages/legal/SocialMediaPolicy"));
+const AcceptableUsePolicy = lazy(() => import("./pages/legal/AcceptableUsePolicy"));
+const DataRetentionPolicy = lazy(() => import("./pages/legal/DataRetentionPolicy"));
+const DMCACopyrightPolicy = lazy(() => import("./pages/legal/DMCACopyrightPolicy"));
+const DisputeResolution = lazy(() => import("./pages/legal/DisputeResolution"));
+const LimitationOfLiability = lazy(() => import("./pages/legal/LimitationOfLiability"));
+const IndemnificationPolicy = lazy(() => import("./pages/legal/IndemnificationPolicy"));
+const AgeRestrictionPolicy = lazy(() => import("./pages/legal/AgeRestrictionPolicy"));
+const AssumptionOfRisk = lazy(() => import("./pages/legal/AssumptionOfRisk"));
+const ElectronicConsent = lazy(() => import("./pages/legal/ElectronicConsent"));
+const ForceMajeure = lazy(() => import("./pages/legal/ForceMajeure"));
+const NoGuaranteeDisclaimer = lazy(() => import("./pages/legal/NoGuaranteeDisclaimer"));
+const GoverningLaw = lazy(() => import("./pages/legal/GoverningLaw"));
+const IntellectualProperty = lazy(() => import("./pages/legal/IntellectualProperty"));
+const AccountTermination = lazy(() => import("./pages/legal/AccountTermination"));
+const ThirdPartyLinks = lazy(() => import("./pages/legal/ThirdPartyLinks"));
+const CommunicationConsent = lazy(() => import("./pages/legal/CommunicationConsent"));
+const ModificationOfTerms = lazy(() => import("./pages/legal/ModificationOfTerms"));
+const ClassActionWaiver = lazy(() => import("./pages/legal/ClassActionWaiver"));
+const AntiMoneyLaundering = lazy(() => import("./pages/legal/AntiMoneyLaundering"));
+const UserConduct = lazy(() => import("./pages/legal/UserConduct"));
+const CaliforniaPrivacy = lazy(() => import("./pages/legal/CaliforniaPrivacy"));
+const FraudPrevention = lazy(() => import("./pages/legal/FraudPrevention"));
+const WarrantyDisclaimer = lazy(() => import("./pages/legal/WarrantyDisclaimer"));
+const GDPRCompliance = lazy(() => import("./pages/legal/GDPRCompliance"));
+const NonDiscrimination = lazy(() => import("./pages/legal/NonDiscrimination"));
+const TransportationDisclaimer = lazy(() => import("./pages/legal/TransportationDisclaimer"));
+const CarRentalDisclaimer = lazy(() => import("./pages/legal/CarRentalDisclaimer"));
+const InsuranceDisclaimer = lazy(() => import("./pages/legal/InsuranceDisclaimer"));
+const DamagePolicy = lazy(() => import("./pages/legal/DamagePolicy"));
+const GenericLegalPage = lazy(() => import("./pages/legal/GenericLegalPage"));
 
-// Public pages
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
@@ -218,6 +249,7 @@ const Help = lazy(() => import("./pages/Help"));
 
 // Account pages
 const AccountSettingsPage = lazy(() => import("./pages/account/AccountSettingsPage"));
+const LegalPoliciesPage = lazy(() => import("./pages/account/LegalPoliciesPage"));
 const ProfileEditPage = lazy(() => import("./pages/account/ProfileEditPage"));
 const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
 const PreferencesPage = lazy(() => import("./pages/account/PreferencesPage"));
@@ -379,6 +411,7 @@ const App = () => (
                             <Route path="/" element={<Index />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/signup" element={<Signup />} />
+                            <Route path="/unsubscribe" element={<Unsubscribe />} />
 
                 {/* App Dashboard */}
                 <Route path="/app" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
@@ -525,6 +558,7 @@ const App = () => (
 
                 {/* Account sub-pages */}
                 <Route path="/account/settings" element={<ProtectedRoute><AccountSettingsPage /></ProtectedRoute>} />
+                <Route path="/account/legal" element={<LegalPoliciesPage />} />
                 <Route path="/account/profile-edit" element={<ProtectedRoute><ProfileEditPage /></ProtectedRoute>} />
                 <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacyControls /></ProtectedRoute>} />
@@ -561,7 +595,37 @@ const App = () => (
                 <Route path="/legal/security-incident" element={<SecurityIncident />} />
                 <Route path="/legal/seller-of-travel" element={<SellerOfTravel />} />
                 <Route path="/legal/flight-terms" element={<FlightTerms />} />
-                <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
+                <Route path="/legal/social-media-policy" element={<SocialMediaPolicy />} />
+                <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
+                <Route path="/legal/data-retention" element={<DataRetentionPolicy />} />
+                <Route path="/legal/dmca" element={<DMCACopyrightPolicy />} />
+                <Route path="/legal/dispute-resolution" element={<DisputeResolution />} />
+                <Route path="/legal/limitation-of-liability" element={<LimitationOfLiability />} />
+                <Route path="/legal/indemnification" element={<IndemnificationPolicy />} />
+                <Route path="/legal/age-restriction" element={<AgeRestrictionPolicy />} />
+                <Route path="/legal/assumption-of-risk" element={<AssumptionOfRisk />} />
+                <Route path="/legal/electronic-consent" element={<ElectronicConsent />} />
+                <Route path="/legal/force-majeure" element={<ForceMajeure />} />
+                <Route path="/legal/no-guarantee" element={<NoGuaranteeDisclaimer />} />
+                <Route path="/legal/governing-law" element={<GoverningLaw />} />
+                <Route path="/legal/intellectual-property" element={<IntellectualProperty />} />
+                <Route path="/legal/account-termination" element={<AccountTermination />} />
+                <Route path="/legal/third-party-links" element={<ThirdPartyLinks />} />
+                <Route path="/legal/communication-consent" element={<CommunicationConsent />} />
+                <Route path="/legal/modification-of-terms" element={<ModificationOfTerms />} />
+                <Route path="/legal/class-action-waiver" element={<ClassActionWaiver />} />
+                <Route path="/legal/anti-money-laundering" element={<AntiMoneyLaundering />} />
+                <Route path="/legal/user-conduct" element={<UserConduct />} />
+                <Route path="/legal/california-privacy" element={<CaliforniaPrivacy />} />
+                <Route path="/legal/fraud-prevention" element={<FraudPrevention />} />
+                <Route path="/legal/warranty-disclaimer" element={<WarrantyDisclaimer />} />
+                <Route path="/legal/gdpr" element={<GDPRCompliance />} />
+                <Route path="/legal/non-discrimination" element={<NonDiscrimination />} />
+                <Route path="/legal/transportation-disclaimer" element={<TransportationDisclaimer />} />
+                <Route path="/legal/car-rental-disclaimer" element={<CarRentalDisclaimer />} />
+                <Route path="/legal/insurance-disclaimer" element={<InsuranceDisclaimer />} />
+                <Route path="/legal/damage-policy" element={<DamagePolicy />} />
+                <Route path="/legal/*" element={<GenericLegalPage />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
 

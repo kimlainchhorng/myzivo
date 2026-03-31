@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Heart, MessageCircle, Eye, X, SwitchCamera, Mic, MicOff, Sparkles,
-  Share2, Play, Radio, ChevronDown, Globe, Users, Lock,
+  Share2, Play, Radio, ChevronDown, Globe, Users, Lock, Link2,
   MapPin, Image, Film, Grid3X3, Clapperboard, Camera, Trash2, Pencil, MoreVertical,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -34,79 +34,6 @@ type NewPostPayload = {
 
 type FilterGroup = "all" | "trending" | "new" | "pro";
 
-type FilterOption = {
-  name: string;
-  css: string;
-  emoji: string;
-};
-
-type VariantSpec = {
-  suffix: string;
-  extra: string;
-  emoji: string;
-};
-
-const COLOR_VARIANTS: VariantSpec[] = [
-  { suffix: "Boost", extra: "saturate(1.18) contrast(1.05)", emoji: "🚀" },
-  { suffix: "Soft", extra: "brightness(1.08) contrast(0.9) saturate(0.9)", emoji: "🫧" },
-  { suffix: "Punch", extra: "contrast(1.2) saturate(1.22)", emoji: "⚡" },
-  { suffix: "Glow", extra: "brightness(1.15) saturate(1.08)", emoji: "✨" },
-  { suffix: "Cinematic", extra: "contrast(1.1) brightness(0.94) sepia(0.08)", emoji: "🎬" },
-  { suffix: "Neon+", extra: "hue-rotate(18deg) saturate(1.35)", emoji: "🌈" },
-  { suffix: "Warm+", extra: "sepia(0.2) brightness(1.06)", emoji: "☀️" },
-  { suffix: "Cool+", extra: "hue-rotate(26deg) saturate(1.08)", emoji: "🧊" },
-  { suffix: "Deep", extra: "contrast(1.28) brightness(0.86)", emoji: "🌌" },
-];
-
-const FACE_VARIANTS: VariantSpec[] = [
-  { suffix: "Soft", extra: "blur(0.4px) brightness(1.08)", emoji: "🫧" },
-  { suffix: "Max", extra: "blur(0.9px) brightness(1.16) contrast(0.88)", emoji: "💎" },
-  { suffix: "Glam", extra: "saturate(1.2) contrast(0.9) brightness(1.14)", emoji: "👑" },
-  { suffix: "Skin", extra: "blur(0.7px) brightness(1.18) saturate(0.96)", emoji: "🧴" },
-  { suffix: "Lift", extra: "contrast(0.9) brightness(1.16)", emoji: "🪄" },
-  { suffix: "Glow", extra: "brightness(1.2) saturate(1.12)", emoji: "✨" },
-  { suffix: "K-Glow", extra: "blur(0.8px) brightness(1.22) saturate(0.92)", emoji: "🇰🇷" },
-  { suffix: "Doll", extra: "blur(1.05px) brightness(1.24) contrast(0.84)", emoji: "🎀" },
-  { suffix: "Ultra", extra: "blur(1.2px) brightness(1.28) contrast(0.8)", emoji: "💯" },
-];
-
-function expandFilterCatalog(base: FilterOption[], variants: VariantSpec[], multiplier = 10): FilterOption[] {
-  if (base.length === 0) return base;
-  const target = Math.max(base.length, base.length * multiplier);
-  const expanded: FilterOption[] = [...base];
-
-  for (const item of base) {
-    if (expanded.length >= target) break;
-    if (!item.css || item.css === "none") continue;
-    for (const variant of variants) {
-      if (expanded.length >= target) break;
-      expanded.push({
-        name: `${item.name} ${variant.suffix}`,
-        css: `${item.css} ${variant.extra}`,
-        emoji: variant.emoji,
-      });
-    }
-  }
-
-  return expanded;
-}
-
-function applyFilterStrength(css: string, strength: number): string {
-  if (!css || css === "none") return "none";
-  const t = Math.max(0, Math.min(100, strength)) / 100;
-  const blendAroundOne = (value: number) => 1 + (value - 1) * t;
-
-  return css
-    .replace(/blur\(([-\d.]+)px\)/g, (_m, n) => `blur(${Math.max(0, Number(n) * t).toFixed(2)}px)`)
-    .replace(/brightness\(([-\d.]+)\)/g, (_m, n) => `brightness(${blendAroundOne(Number(n)).toFixed(3)})`)
-    .replace(/contrast\(([-\d.]+)\)/g, (_m, n) => `contrast(${blendAroundOne(Number(n)).toFixed(3)})`)
-    .replace(/saturate\(([-\d.]+)\)/g, (_m, n) => `saturate(${blendAroundOne(Number(n)).toFixed(3)})`)
-    .replace(/sepia\(([-\d.]+)\)/g, (_m, n) => `sepia(${(Number(n) * t).toFixed(3)})`)
-    .replace(/grayscale\(([-\d.]+)\)/g, (_m, n) => `grayscale(${(Number(n) * t).toFixed(3)})`)
-    .replace(/invert\(([-\d.]+)\)/g, (_m, n) => `invert(${(Number(n) * t).toFixed(3)})`)
-    .replace(/hue-rotate\(([-\d.]+)deg\)/g, (_m, n) => `hue-rotate(${(Number(n) * t).toFixed(2)}deg)`);
-}
-
 const LOCAL_POSTS_KEY = "zivo_social_posts_v1";
 
 type UserPostRow = {
@@ -123,17 +50,7 @@ type UserPostRow = {
   is_published: boolean;
 };
 
-const demoFeed: FeedItem[] = [
-  { id: "p1", type: "photo", likes: 24, comments: 3, caption: "Beach vibes 🏖️", time: "2h", url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=400&fit=crop", user: { name: "Sarah M.", avatar: "https://i.pravatar.cc/100?img=1" } },
-  { id: "p2", type: "photo", likes: 18, comments: 1, caption: "City lights", time: "5h", url: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=400&fit=crop", user: { name: "Alex K.", avatar: "https://i.pravatar.cc/100?img=2" } },
-  { id: "v1", type: "reel", likes: 42, comments: 7, caption: "Road trip! 🚗", time: "1d", views: 1200, url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&h=600&fit=crop", user: { name: "You", avatar: "https://i.pravatar.cc/100?img=3" } },
-  { id: "p3", type: "photo", likes: 31, comments: 5, caption: "Morning coffee", time: "2d", url: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop", user: { name: "You", avatar: "https://i.pravatar.cc/100?img=3" } },
-  { id: "v2", type: "reel", likes: 89, comments: 12, caption: "Sunset vibes 🌅", time: "3d", views: 3400, url: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=600&fit=crop", user: { name: "You", avatar: "https://i.pravatar.cc/100?img=3" } },
-  { id: "p4", type: "photo", likes: 15, comments: 2, caption: "Sunset 🌅", time: "3d", url: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=400&fit=crop", user: { name: "You", avatar: "https://i.pravatar.cc/100?img=3" } },
-  { id: "v3", type: "reel", likes: 28, comments: 4, caption: "Mountain hike", time: "4d", views: 890, url: "https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=400&h=600&fit=crop", user: { name: "You", avatar: "https://i.pravatar.cc/100?img=3" } },
-  { id: "p5", type: "photo", likes: 20, comments: 3, caption: "Travel goals ✈️", time: "5d", url: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=400&fit=crop", user: { name: "You", avatar: "https://i.pravatar.cc/100?img=3" } },
-  { id: "p6", type: "photo", likes: 12, comments: 1, caption: "Paradise 🌴", time: "1w", url: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400&h=400&fit=crop", user: { name: "You", avatar: "https://i.pravatar.cc/100?img=3" } },
-];
+const demoFeed: FeedItem[] = [];
 
 type TabFilter = "all" | "photo" | "reel";
 
@@ -145,6 +62,7 @@ const TABS: { id: TabFilter; label: string; icon: typeof Grid3X3 }[] = [
 
 export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const { user } = useAuth();
+  const profileOwnerId = userId || user?.id;
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [showComposer, setShowComposer] = useState(false);
   const [composerType, setComposerType] = useState<"photo" | "reel" | null>(null);
@@ -154,6 +72,8 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [editCaptionValue, setEditCaptionValue] = useState("");
   const [showLive, setShowLive] = useState(false);
   const [feed, setFeed] = useState<FeedItem[]>(demoFeed);
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [sharePostId, setSharePostId] = useState<string | null>(null);
 
   const filtered = activeTab === "all" ? feed : feed.filter((i) => i.type === activeTab);
 
@@ -170,50 +90,92 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       });
     };
 
+    const DEMO_IDS = new Set(["p1","p2","p3","p4","p5","p6","v1","v2","v3"]);
+
     const loadPersisted = async () => {
+      // Fetch the profile avatar
+      if (profileOwnerId) {
+        try {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("avatar_url, full_name")
+            .eq("user_id", profileOwnerId)
+            .maybeSingle();
+          if (alive && profileData?.avatar_url) {
+            setProfileAvatar(profileData.avatar_url);
+          }
+        } catch {}
+      }
+
       try {
         const localRaw = localStorage.getItem(LOCAL_POSTS_KEY);
         if (localRaw && alive) {
-          const localPosts = JSON.parse(localRaw) as FeedItem[];
-          if (Array.isArray(localPosts) && localPosts.length > 0) {
+          const localPosts = (JSON.parse(localRaw) as FeedItem[]).filter(p => !DEMO_IDS.has(p.id));
+          localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(localPosts));
+          if (localPosts.length > 0) {
             mergeFeed(localPosts);
           }
         }
       } catch {
-        // Ignore malformed local cache.
       }
 
       try {
-        const { data } = await (supabase as any)
+        const query = (supabase as any)
           .from("user_posts")
           .select("id, user_id, media_type, media_url, caption, filter_css, likes_count, comments_count, views_count, created_at, is_published")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(50);
 
+        if (profileOwnerId) {
+          query.eq("user_id", profileOwnerId);
+        }
+
+        const { data } = await query;
+
         if (!alive || !data) return;
 
+        // Fetch avatars for all unique user IDs
+        const userIds = [...new Set((data as UserPostRow[]).map((r) => r.user_id))];
+        let avatarMap: Record<string, { avatar_url: string | null; full_name: string | null }> = {};
+        if (userIds.length > 0) {
+          try {
+            const { data: profiles } = await supabase
+              .from("profiles")
+              .select("user_id, avatar_url, full_name")
+              .in("user_id", userIds);
+            if (profiles) {
+              for (const p of profiles as any[]) {
+                avatarMap[p.user_id] = { avatar_url: p.avatar_url, full_name: p.full_name };
+              }
+            }
+          } catch {}
+        }
+
         const remotePosts: FeedItem[] = (data as UserPostRow[])
-          .map((row) => ({
-            id: row.id,
-            type: row.media_type,
-            likes: Number(row.likes_count ?? 0),
-            comments: Number(row.comments_count ?? 0),
-            caption: row.caption || "",
-            time: row.created_at ? "recent" : "now",
-            url: row.media_url,
-            filterCss: row.filter_css || undefined,
-            views: row.media_type === "reel" ? Number(row.views_count ?? 0) : undefined,
-            user: {
-              name: row.user_id === user?.id ? (user?.email?.split("@")[0] || "You") : "Zivo User",
-              avatar: "https://i.pravatar.cc/100?img=3",
-            },
-          }))
+          .map((row) => {
+            const prof = avatarMap[row.user_id];
+            const displayName = prof?.full_name || (row.user_id === user?.id ? (user?.email?.split("@")[0] || "You") : "Zivo User");
+            return {
+              id: row.id,
+              type: row.media_type,
+              likes: Number(row.likes_count ?? 0),
+              comments: Number(row.comments_count ?? 0),
+              caption: row.caption || "",
+              time: row.created_at ? "recent" : "now",
+              url: row.media_url,
+              filterCss: row.filter_css || undefined,
+              views: row.media_type === "reel" ? Number(row.views_count ?? 0) : undefined,
+              user: {
+                name: displayName,
+                avatar: prof?.avatar_url || "",
+              },
+            };
+          })
           .filter((item) => Boolean(item.url));
 
         if (remotePosts.length > 0) mergeFeed(remotePosts);
       } catch {
-        // user_posts migration may not be applied yet; local mode still works.
       }
     };
 
@@ -266,7 +228,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       url: mediaUrl,
       filterCss: payload.filterCss,
       views: payload.type === "reel" ? 0 : undefined,
-      user: { name: authorName, avatar: "https://i.pravatar.cc/100?img=3" },
+      user: { name: authorName, avatar: profileAvatar || "" },
     };
 
     setFeed((prev) => [createdPost, ...prev]);
@@ -375,13 +337,24 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               item.type === "reel" ? "aspect-[9/14]" : "aspect-square"
             )}
           >
-            <img
-              src={item.url}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ filter: item.filterCss || "none" }}
-              loading="lazy"
-            />
+            {item.type === "reel" ? (
+              <video
+                src={item.url}
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ filter: item.filterCss || "none" }}
+                muted
+                playsInline
+                preload="metadata"
+              />
+            ) : (
+              <img
+                src={item.url}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ filter: item.filterCss || "none" }}
+                loading="lazy"
+              />
+            )}
             {item.type === "reel" && (
               <div className="absolute top-1.5 right-1.5 z-10">
                 <Play className="w-4 h-4 text-white fill-white drop-shadow-lg" />
@@ -421,7 +394,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 <button onClick={() => { setSelectedPost(null); setShowPostMenu(false); setEditingCaption(false); }} className="text-white/80 p-1">
                   <X className="w-6 h-6" />
                 </button>
-                <img src={selectedPost.user.avatar} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/20" />
+                {selectedPost.user.avatar ? (
+                  <img src={selectedPost.user.avatar} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/20" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border-2 border-white/20 text-white text-xs font-bold">
+                    {selectedPost.user.name?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-semibold truncate">{selectedPost.user.name}</p>
                   <p className="text-white/50 text-[10px]">{selectedPost.time} ago</p>
@@ -473,12 +452,24 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
               {/* Content */}
               <div className="flex-1 flex items-center justify-center overflow-hidden">
-                <img
-                  src={selectedPost.url}
-                  alt=""
-                  className="w-full h-full object-contain"
-                  style={{ filter: selectedPost.filterCss || "none" }}
-                />
+                {selectedPost.type === "reel" ? (
+                  <video
+                    src={selectedPost.url}
+                    className="w-full h-full object-contain"
+                    style={{ filter: selectedPost.filterCss || "none" }}
+                    controls
+                    playsInline
+                    autoPlay
+                    loop
+                  />
+                ) : (
+                  <img
+                    src={selectedPost.url}
+                    alt=""
+                    className="w-full h-full object-contain"
+                    style={{ filter: selectedPost.filterCss || "none" }}
+                  />
+                )}
               </div>
 
               {/* Bottom bar */}
@@ -527,7 +518,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       <span className="text-sm">{selectedPost.views > 1000 ? `${(selectedPost.views / 1000).toFixed(1)}k` : selectedPost.views}</span>
                     </span>
                   )}
-                  <button className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors ml-auto">
+                  <button
+                    className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors ml-auto"
+                    onClick={() => setSharePostId(selectedPost.id)}
+                  >
                     <Share2 className="w-6 h-6" />
                   </button>
                 </div>
@@ -576,11 +570,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                             key={opt.id}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => {
-                              if (opt.id === "live") {
-                                setShowComposer(false);
-                                setComposerType(null);
-                                setShowLive(true);
-                              } else {
+                            if (opt.id === "live") {
+                              toast("🔴 Go Live is coming soon!", { description: "Stay tuned for live broadcasting features." });
+                              return;
+                            } else {
                                 setComposerType(opt.id);
                               }
                             }}
@@ -620,6 +613,62 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       {createPortal(
         <AnimatePresence>
           {showLive && <LiveBroadcast onClose={() => setShowLive(false)} onPublishClip={handleCreatePost} />}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Share Sheet */}
+      {createPortal(
+        <AnimatePresence>
+          {sharePostId && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] flex items-end justify-center"
+              onClick={() => setSharePostId(null)}
+            >
+              <div className="absolute inset-0 bg-black/50" />
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                className="relative w-full max-w-md bg-background rounded-t-2xl pb-8 pt-3 px-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-base font-semibold text-foreground mb-4 px-1">Share to</h3>
+                <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+                  {[
+                    { label: "WhatsApp", color: "bg-green-500/10", icon: <MessageCircle className="w-7 h-7 text-green-500" />, action: (url: string, cap: string) => window.open(`https://wa.me/?text=${encodeURIComponent(cap + "\n" + url)}`, "_blank") },
+                    { label: "Facebook", color: "bg-blue-500/10", icon: <Globe className="w-7 h-7 text-blue-500" />, action: (url: string) => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank") },
+                    { label: "X", color: "bg-foreground/5", icon: <Share2 className="w-7 h-7" />, action: (url: string, cap: string) => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(cap)}`, "_blank") },
+                    { label: "Email", color: "bg-muted", icon: <Heart className="w-7 h-7 text-muted-foreground" />, action: (url: string, cap: string) => window.open(`mailto:?subject=${encodeURIComponent(cap)}&body=${encodeURIComponent(url)}`, "_self") },
+                    { label: "Copy Link", color: "bg-primary/10", icon: <Link2 className="w-7 h-7 text-primary" />, action: async (url: string) => { try { await navigator.clipboard.writeText(url); } catch { /* fallback */ } toast.success("Link copied!"); } },
+                  ].map((opt) => {
+                    const shareUrl = `${window.location.origin}/profile?post=${sharePostId}`;
+                    const shareCaption = feed.find((p) => p.id === sharePostId)?.caption || "";
+                    return (
+                      <button
+                        key={opt.label}
+                        onClick={() => { opt.action(shareUrl, shareCaption); if (opt.label !== "Copy Link") setSharePostId(null); }}
+                        className="flex flex-col items-center gap-2 min-w-[64px]"
+                      >
+                        <div className={cn("w-14 h-14 rounded-full flex items-center justify-center", opt.color)}>
+                          {opt.icon}
+                        </div>
+                        <span className="text-xs text-muted-foreground font-medium">{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button onClick={() => setSharePostId(null)} className="mt-4 w-full h-11 rounded-xl bg-muted text-sm font-medium text-foreground">
+                  Cancel
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
         </AnimatePresence>,
         document.body
       )}
@@ -894,7 +943,27 @@ function ComposerForm({
   );
 }
 
+// AI face edit modes
+const AI_MODES = [
+  { id: "beauty", name: "AI Beauty", emoji: "✨", gradient: "linear-gradient(135deg, #FFB7C5, #FFC0CB)", desc: "Auto enhance" },
+  { id: "swap_male", name: "Male Model", emoji: "🧔", gradient: "linear-gradient(135deg, #4A90D9, #357ABD)", desc: "Face swap" },
+  { id: "swap_female", name: "Female Model", emoji: "👩", gradient: "linear-gradient(135deg, #FF69B4, #FF1493)", desc: "Face swap" },
+  { id: "swap_anime", name: "Anime", emoji: "🎌", gradient: "linear-gradient(135deg, #A29BFE, #6C5CE7)", desc: "Style transfer" },
+  { id: "swap_old", name: "Age Up", emoji: "👴", gradient: "linear-gradient(135deg, #95A5A6, #7F8C8D)", desc: "Face swap" },
+  { id: "swap_young", name: "Youth", emoji: "👶", gradient: "linear-gradient(135deg, #FFEAA7, #FDCB6E)", desc: "Face swap" },
+  { id: "bg_beach", name: "Beach", emoji: "🏖️", gradient: "linear-gradient(135deg, #00CEC9, #0984E3)", desc: "Background" },
+  { id: "bg_city", name: "City Night", emoji: "🌃", gradient: "linear-gradient(135deg, #2D3436, #636E72)", desc: "Background" },
+  { id: "bg_space", name: "Space", emoji: "🚀", gradient: "linear-gradient(135deg, #0C0C2D, #4A148C)", desc: "Background" },
+  { id: "bg_nature", name: "Forest", emoji: "🌲", gradient: "linear-gradient(135deg, #00B894, #00CEC9)", desc: "Background" },
+  { id: "bg_studio", name: "Studio", emoji: "📸", gradient: "linear-gradient(135deg, #636E72, #2D3436)", desc: "Background" },
+];
+
+// AR effect categories for TikTok-style tabs
+const AR_CATEGORIES = ["All", "Trending", "Beauty", "Fun", "Animals", "Fantasy", "Art"] as const;
+type ARCategory = typeof AR_CATEGORIES[number];
+
 // AR filter overlays - face-tracked like TikTok
+<<<<<<< HEAD
 const AR_STICKERS = [
   { name: "None", emoji: "⭕", sticker: null },
   { name: "Cat Ears", emoji: "🐱", sticker: "cat" },
@@ -1041,6 +1110,139 @@ const AR_STICKERS = [
   { name: "Demon Wings", emoji: "🦇", sticker: "demonwings" },
   { name: "Star Dust", emoji: "✨", sticker: "stardust" },
   { name: "Frost Bite", emoji: "🥶", sticker: "frostbite" },
+=======
+const AR_STICKERS: { name: string; emoji: string; sticker: string | null; gradient: string; category: ARCategory[] }[] = [
+  { name: "None", emoji: "⭕", sticker: null, gradient: "linear-gradient(135deg, #333, #555)", category: ["All"] },
+  { name: "Cat Ears", emoji: "🐱", sticker: "cat", gradient: "linear-gradient(135deg, #FFB6C1, #FF69B4)", category: ["All", "Trending", "Animals"] },
+  { name: "Dog", emoji: "🐶", sticker: "dog", gradient: "linear-gradient(135deg, #D2B48C, #8B4513)", category: ["All", "Animals", "Fun"] },
+  { name: "Bunny", emoji: "🐰", sticker: "bunny", gradient: "linear-gradient(135deg, #FFC0CB, #FFE4E1)", category: ["All", "Animals"] },
+  { name: "Crown", emoji: "👑", sticker: "crown", gradient: "linear-gradient(135deg, #FFD700, #DAA520)", category: ["All", "Trending", "Fantasy"] },
+  { name: "Hearts", emoji: "💕", sticker: "hearts", gradient: "linear-gradient(135deg, #FF6B81, #C44569)", category: ["All", "Trending", "Fun"] },
+  { name: "Stars", emoji: "⭐", sticker: "stars", gradient: "linear-gradient(135deg, #FFF3BF, #FFD700)", category: ["All", "Fun"] },
+  { name: "Glasses", emoji: "🕶️", sticker: "glasses", gradient: "linear-gradient(135deg, #2C3E50, #4CA1AF)", category: ["All", "Fun"] },
+  { name: "Blush", emoji: "😊", sticker: "blush", gradient: "linear-gradient(135deg, #FFB7B2, #FFDAC1)", category: ["All", "Beauty", "Trending"] },
+  { name: "Freckles", emoji: "🌟", sticker: "freckles", gradient: "linear-gradient(135deg, #FFEAA7, #DDA15E)", category: ["All", "Beauty"] },
+  { name: "Liner", emoji: "🖤", sticker: "liner", gradient: "linear-gradient(135deg, #2D3436, #636E72)", category: ["All", "Beauty"] },
+  { name: "Gloss", emoji: "💄", sticker: "gloss", gradient: "linear-gradient(135deg, #E84393, #FD79A8)", category: ["All", "Beauty", "Trending"] },
+  { name: "Contour", emoji: "🪄", sticker: "contour", gradient: "linear-gradient(135deg, #C68642, #8D5524)", category: ["All", "Beauty"] },
+  { name: "Anime Eyes", emoji: "👁️", sticker: "anime", gradient: "linear-gradient(135deg, #A29BFE, #6C5CE7)", category: ["All", "Fun", "Art"] },
+  { name: "Devil", emoji: "😈", sticker: "devil", gradient: "linear-gradient(135deg, #FF4757, #8B0000)", category: ["All", "Fantasy", "Fun"] },
+  { name: "Angel", emoji: "😇", sticker: "angel", gradient: "linear-gradient(135deg, #F8E8D0, #FFFDE7)", category: ["All", "Fantasy"] },
+  { name: "Flowers", emoji: "🌸", sticker: "flowers", gradient: "linear-gradient(135deg, #FF9FF3, #F368E0)", category: ["All", "Trending", "Fun"] },
+  { name: "Fire", emoji: "🔥", sticker: "fire", gradient: "linear-gradient(135deg, #FF4500, #FF8C00)", category: ["All", "Trending", "Fun"] },
+  { name: "Butterfly", emoji: "🦋", sticker: "butterfly", gradient: "linear-gradient(135deg, #A29BFE, #FD79A8)", category: ["All", "Trending", "Animals"] },
+  { name: "Rainbow", emoji: "🌈", sticker: "rainbow", gradient: "linear-gradient(135deg, #FF6B6B, #FFC048, #51CF66, #339AF0, #CC5DE8)", category: ["All", "Fun"] },
+  { name: "Sparkles", emoji: "✨", sticker: "sparkles", gradient: "linear-gradient(135deg, #FFEAA7, #FFF9C4)", category: ["All", "Trending", "Beauty"] },
+  { name: "Snow", emoji: "❄️", sticker: "snow", gradient: "linear-gradient(135deg, #D5F4E6, #E3F2FD)", category: ["All", "Fun"] },
+  { name: "Halo", emoji: "🪽", sticker: "halo", gradient: "linear-gradient(135deg, #FFF9C4, #FFE082)", category: ["All", "Fantasy"] },
+  { name: "Neon", emoji: "🪩", sticker: "neon", gradient: "linear-gradient(135deg, #00F5FF, #FF00FF)", category: ["All", "Art", "Trending"] },
+  { name: "Pixel", emoji: "🕹️", sticker: "pixel", gradient: "linear-gradient(135deg, #4ADE80, #22C55E)", category: ["All", "Art", "Fun"] },
+  { name: "Comic", emoji: "💥", sticker: "comic", gradient: "linear-gradient(135deg, #FFD93D, #FF6B6B)", category: ["All", "Art"] },
+  { name: "Mask", emoji: "🎭", sticker: "mask", gradient: "linear-gradient(135deg, #DDA0DD, #9B59B6)", category: ["All", "Fantasy"] },
+  { name: "Aura", emoji: "🔮", sticker: "aura", gradient: "linear-gradient(135deg, #667EEA, #764BA2)", category: ["All", "Fantasy", "Trending"] },
+  { name: "Laser Eyes", emoji: "🔴", sticker: "laser", gradient: "linear-gradient(135deg, #FF0000, #CC0000)", category: ["All", "Fun"] },
+  { name: "Tears", emoji: "🥹", sticker: "tears", gradient: "linear-gradient(135deg, #74B9FF, #0984E3)", category: ["All", "Fun"] },
+  { name: "Glitch", emoji: "📺", sticker: "glitch", gradient: "linear-gradient(135deg, #00CEC9, #FF00FF, #FFFF00)", category: ["All", "Art"] },
+  { name: "Scanline", emoji: "🛰️", sticker: "scanline", gradient: "linear-gradient(135deg, #2D3436, #00CEC9)", category: ["All", "Art"] },
+  { name: "Pixel Hearts", emoji: "💗", sticker: "pixelhearts", gradient: "linear-gradient(135deg, #FF6B81, #FFB8C6)", category: ["All", "Fun"] },
+  { name: "Frost", emoji: "🥶", sticker: "frost", gradient: "linear-gradient(135deg, #C9E4FF, #89CFF0)", category: ["All", "Fantasy"] },
+  { name: "Lightning", emoji: "⚡", sticker: "lightning", gradient: "linear-gradient(135deg, #FFD700, #FFA500)", category: ["All", "Fun"] },
+  { name: "Confetti", emoji: "🎉", sticker: "confetti", gradient: "linear-gradient(135deg, #FF6B6B, #FFC048, #51CF66, #CC5DE8)", category: ["All", "Fun", "Trending"] },
+  { name: "Beauty Lift", emoji: "💎", sticker: "beautylift", gradient: "linear-gradient(135deg, #E8D5F5, #F3E5F5)", category: ["All", "Beauty", "Trending"] },
+  { name: "Lip Red", emoji: "💋", sticker: "lipred", gradient: "linear-gradient(135deg, #E53E3E, #C53030)", category: ["All", "Beauty"] },
+  { name: "Lip Nude", emoji: "👄", sticker: "lipnude", gradient: "linear-gradient(135deg, #D4A07A, #C68642)", category: ["All", "Beauty"] },
+  { name: "Lip Plum", emoji: "🫦", sticker: "lipplum", gradient: "linear-gradient(135deg, #8B008B, #6B0F6B)", category: ["All", "Beauty"] },
+  { name: "Eye Shadow", emoji: "🎨", sticker: "shadow", gradient: "linear-gradient(135deg, #9B59B6, #8E44AD)", category: ["All", "Beauty"] },
+  { name: "Lashes", emoji: "🪶", sticker: "lashes", gradient: "linear-gradient(135deg, #2C3E50, #34495E)", category: ["All", "Beauty"] },
+  { name: "Brows", emoji: "🖌️", sticker: "brows", gradient: "linear-gradient(135deg, #795548, #5D4037)", category: ["All", "Beauty"] },
+  { name: "Nose Slim", emoji: "🪞", sticker: "noseslim", gradient: "linear-gradient(135deg, #FFE0B2, #FFCC80)", category: ["All", "Beauty"] },
+  { name: "Jaw Snatch", emoji: "🗿", sticker: "jawsnatch", gradient: "linear-gradient(135deg, #BCAAA4, #8D6E63)", category: ["All", "Beauty"] },
+  { name: "Highlight", emoji: "✨", sticker: "highlighter", gradient: "linear-gradient(135deg, #FFF9C4, #FFD54F)", category: ["All", "Beauty"] },
+  { name: "Teeth White", emoji: "😁", sticker: "teethwhite", gradient: "linear-gradient(135deg, #F5F5F5, #E0E0E0)", category: ["All", "Beauty"] },
+  { name: "Lip Coral", emoji: "🌺", sticker: "lipcoral", gradient: "linear-gradient(135deg, #FF7675, #D63031)", category: ["All", "Beauty"] },
+  { name: "Lip Glossy", emoji: "💄", sticker: "lipglossy", gradient: "linear-gradient(135deg, #FD79A8, #E84393)", category: ["All", "Beauty"] },
+  { name: "Wing Liner", emoji: "🪽", sticker: "linerwing", gradient: "linear-gradient(135deg, #2D3436, #000000)", category: ["All", "Beauty"] },
+  { name: "Smokey Eye", emoji: "🌫️", sticker: "smokey", gradient: "linear-gradient(135deg, #636E72, #2D3436)", category: ["All", "Beauty"] },
+  { name: "Blush Max", emoji: "🩷", sticker: "blushmax", gradient: "linear-gradient(135deg, #FF9FF3, #FECA57)", category: ["All", "Beauty"] },
+  { name: "Contour Pro", emoji: "🗽", sticker: "contourpro", gradient: "linear-gradient(135deg, #A0522D, #8B4513)", category: ["All", "Beauty"] },
+  { name: "Brow Lift", emoji: "📈", sticker: "browlift", gradient: "linear-gradient(135deg, #8D6E63, #5D4037)", category: ["All", "Beauty"] },
+  { name: "Big Eyes", emoji: "👀", sticker: "bigeyes", gradient: "linear-gradient(135deg, #74B9FF, #A29BFE)", category: ["All", "Beauty", "Fun"] },
+  { name: "V Face", emoji: "🧿", sticker: "vface", gradient: "linear-gradient(135deg, #DDD6F3, #FAACA8)", category: ["All", "Beauty"] },
+  { name: "Nose Highlight", emoji: "💫", sticker: "nosehighlight", gradient: "linear-gradient(135deg, #FFFDE7, #FFF9C4)", category: ["All", "Beauty"] },
+  { name: "Lip Tint", emoji: "💗", sticker: "liptint", gradient: "linear-gradient(135deg, #FF6B81, #FF4757)", category: ["All", "Beauty"] },
+  { name: "Glass Lips", emoji: "🪩", sticker: "glasslips", gradient: "linear-gradient(135deg, #FFC0CB, #FF1493)", category: ["All", "Beauty"] },
+  { name: "Wing Cat", emoji: "🐈", sticker: "catliner", gradient: "linear-gradient(135deg, #2D3436, #636E72)", category: ["All", "Beauty", "Animals"] },
+  { name: "Soft Blush", emoji: "🌸", sticker: "softblush", gradient: "linear-gradient(135deg, #FFEEF8, #FFD1DC)", category: ["All", "Beauty"] },
+  { name: "Contour X", emoji: "🗡️", sticker: "contourx", gradient: "linear-gradient(135deg, #795548, #4E342E)", category: ["All", "Beauty"] },
+  { name: "Dolly Eyes", emoji: "🧸", sticker: "dollyeyes", gradient: "linear-gradient(135deg, #BBDEFB, #90CAF9)", category: ["All", "Beauty", "Fun"] },
+  { name: "Cheek Hearts", emoji: "💖", sticker: "cheekhearts", gradient: "linear-gradient(135deg, #FF6B81, #FFC0CB)", category: ["All", "Beauty", "Fun"] },
+  { name: "Golden Glow", emoji: "🌟", sticker: "goldglow", gradient: "linear-gradient(135deg, #FFD700, #FFA000)", category: ["All", "Beauty", "Trending"] },
+  { name: "Sunglasses", emoji: "😎", sticker: "sunglasses", gradient: "linear-gradient(135deg, #1A1A2E, #16213E)", category: ["All", "Fun"] },
+  { name: "Diamonds", emoji: "💎", sticker: "diamonds", gradient: "linear-gradient(135deg, #B4F0FF, #64B5F6)", category: ["All", "Fantasy"] },
+  { name: "Smoke", emoji: "💨", sticker: "smoke", gradient: "linear-gradient(135deg, #B0BEC5, #78909C)", category: ["All", "Art"] },
+  { name: "Vampire", emoji: "🧛", sticker: "vampire", gradient: "linear-gradient(135deg, #8B0000, #2C003E)", category: ["All", "Fantasy", "Fun"] },
+  { name: "Alien", emoji: "👽", sticker: "alien", gradient: "linear-gradient(135deg, #69F0AE, #00E676)", category: ["All", "Fantasy", "Fun"] },
+  { name: "Panda", emoji: "🐼", sticker: "panda", gradient: "linear-gradient(135deg, #ECEFF1, #263238)", category: ["All", "Animals"] },
+  { name: "Tiger Stripes", emoji: "🐯", sticker: "tiger", gradient: "linear-gradient(135deg, #FF8F00, #E65100)", category: ["All", "Animals"] },
+  { name: "Aurora", emoji: "🌌", sticker: "aurora", gradient: "linear-gradient(135deg, #00C9FF, #92FE9D)", category: ["All", "Fantasy", "Art"] },
+  { name: "Glitter Bomb", emoji: "🪩", sticker: "glitterbomb", gradient: "linear-gradient(135deg, #F9A8D4, #C084FC, #67E8F9)", category: ["All", "Fun", "Trending"] },
+  { name: "Flower Field", emoji: "🌷", sticker: "flowerfield", gradient: "linear-gradient(135deg, #F48FB1, #CE93D8)", category: ["All", "Fun"] },
+  { name: "Star Field", emoji: "🌠", sticker: "starfield", gradient: "linear-gradient(135deg, #1A237E, #283593)", category: ["All", "Fantasy"] },
+  { name: "Face Gem", emoji: "💠", sticker: "facegem", gradient: "linear-gradient(135deg, #B388FF, #64FFDA)", category: ["All", "Beauty", "Fantasy"] },
+  { name: "Lip Spark", emoji: "🌹", sticker: "lipspark", gradient: "linear-gradient(135deg, #FF5252, #FF1744)", category: ["All", "Beauty"] },
+  { name: "Nose Ring", emoji: "💫", sticker: "nosering", gradient: "linear-gradient(135deg, #FFD700, #C0C0C0)", category: ["All", "Beauty", "Fun"] },
+  { name: "Eye Flare", emoji: "🔆", sticker: "eyeflare", gradient: "linear-gradient(135deg, #FFF176, #FFD54F)", category: ["All", "Art"] },
+  { name: "Magic Wand", emoji: "🪄", sticker: "magicwand", gradient: "linear-gradient(135deg, #CE93D8, #BA68C8)", category: ["All", "Fantasy"] },
+  { name: "Bliss Blush", emoji: "🩷", sticker: "blissblush", gradient: "linear-gradient(135deg, #FFD1DC, #FFC0CB)", category: ["All", "Beauty"] },
+  { name: "Cat Makeup", emoji: "🐱", sticker: "catmakeup", gradient: "linear-gradient(135deg, #2D3436, #FF69B4)", category: ["All", "Beauty", "Animals"] },
+  { name: "Lip Berry", emoji: "🫐", sticker: "lipberry", gradient: "linear-gradient(135deg, #6A1B9A, #4A148C)", category: ["All", "Beauty"] },
+  { name: "Pixel Art", emoji: "🕹️", sticker: "pixelart", gradient: "linear-gradient(135deg, #76FF03, #00E676)", category: ["All", "Art"] },
+  { name: "Mermaid", emoji: "🧜", sticker: "mermaid", gradient: "linear-gradient(135deg, #00BCD4, #009688)", category: ["All", "Fantasy"] },
+  { name: "Zombie", emoji: "🧟", sticker: "zombie", gradient: "linear-gradient(135deg, #558B2F, #33691E)", category: ["All", "Fantasy", "Fun"] },
+  { name: "Robot", emoji: "🤖", sticker: "robot", gradient: "linear-gradient(135deg, #90A4AE, #546E7A)", category: ["All", "Fantasy", "Art"] },
+  { name: "Witch Hat", emoji: "🧙", sticker: "witchhat", gradient: "linear-gradient(135deg, #4A148C, #1A237E)", category: ["All", "Fantasy"] },
+  { name: "Dragon", emoji: "🐉", sticker: "dragon", gradient: "linear-gradient(135deg, #FF6D00, #DD2C00)", category: ["All", "Fantasy", "Animals"] },
+  { name: "Beauty Mark", emoji: "✦", sticker: "beautymark", gradient: "linear-gradient(135deg, #3E2723, #4E342E)", category: ["All", "Beauty"] },
+  { name: "Bindi", emoji: "🔴", sticker: "bindi", gradient: "linear-gradient(135deg, #E53935, #C62828)", category: ["All", "Beauty"] },
+  { name: "Ear Rings", emoji: "💍", sticker: "earrings", gradient: "linear-gradient(135deg, #FFD700, #FFC107)", category: ["All", "Beauty", "Fun"] },
+  { name: "Rainbow Tears", emoji: "🌈", sticker: "rainbowtears", gradient: "linear-gradient(135deg, #FF6B6B, #FFC048, #51CF66, #339AF0)", category: ["All", "Fun", "Art"] },
+  { name: "Money Eyes", emoji: "🤑", sticker: "moneyeyes", gradient: "linear-gradient(135deg, #4CAF50, #2E7D32)", category: ["All", "Fun"] },
+  { name: "Crown of Stars", emoji: "👑", sticker: "crownstars", gradient: "linear-gradient(135deg, #FFF9C4, #FFD700)", category: ["All", "Fantasy"] },
+  { name: "Sakura Shower", emoji: "🌸", sticker: "sakura", gradient: "linear-gradient(135deg, #FFB7C5, #FF69B4)", category: ["All", "Fun", "Trending"] },
+  { name: "Face Paint", emoji: "🎨", sticker: "facepaint", gradient: "linear-gradient(135deg, #FF6B6B, #48DBFB, #FECA57)", category: ["All", "Art", "Fun"] },
+  { name: "Hologram", emoji: "🌐", sticker: "hologram", gradient: "linear-gradient(135deg, #00BCD4, #E040FB)", category: ["All", "Art", "Fantasy"] },
+  { name: "Oil Paint", emoji: "🖼️", sticker: "oilpaint", gradient: "linear-gradient(135deg, #8D6E63, #FF8A65)", category: ["All", "Art"] },
+  { name: "Sketch", emoji: "✏️", sticker: "sketch", gradient: "linear-gradient(135deg, #ECEFF1, #B0BEC5)", category: ["All", "Art"] },
+  { name: "Disco Ball", emoji: "🪩", sticker: "discoball", gradient: "linear-gradient(135deg, #E0E0E0, #9E9E9E, #E0E0E0)", category: ["All", "Fun", "Trending"] },
+  { name: "Neon Glow", emoji: "💜", sticker: "neonglow", gradient: "linear-gradient(135deg, #7C4DFF, #E040FB)", category: ["All", "Art", "Trending"] },
+  { name: "Ice Queen", emoji: "🧊", sticker: "icequeen", gradient: "linear-gradient(135deg, #E3F2FD, #90CAF9)", category: ["All", "Fantasy"] },
+  { name: "Fire Crown", emoji: "🔥", sticker: "firecrown", gradient: "linear-gradient(135deg, #FF6D00, #FFD600)", category: ["All", "Fantasy", "Trending"] },
+  { name: "Bubble Wrap", emoji: "🫧", sticker: "bubblewrap", gradient: "linear-gradient(135deg, #E0F7FA, #B2EBF2)", category: ["All", "Fun"] },
+  { name: "Kaleidoscope", emoji: "🔮", sticker: "kaleidoscope", gradient: "linear-gradient(135deg, #FF6B6B, #48DBFB, #FECA57, #FF9FF3)", category: ["All", "Art"] },
+  { name: "Comic Pop", emoji: "💥", sticker: "comicpop", gradient: "linear-gradient(135deg, #FFD93D, #FF6B6B)", category: ["All", "Art"] },
+  { name: "Lash Bar", emoji: "👁️", sticker: "lashbar", gradient: "linear-gradient(135deg, #2D3436, #636E72)", category: ["All", "Beauty"] },
+  { name: "Golden Hour", emoji: "🌟", sticker: "goldenhour", gradient: "linear-gradient(135deg, #FFD700, #FF8C00, #FF6347)", category: ["All", "Beauty", "Trending"] },
+  { name: "Cyber Mask", emoji: "🕶️", sticker: "cybermask", gradient: "linear-gradient(135deg, #0D47A1, #00BCD4)", category: ["All", "Fantasy", "Art"] },
+  { name: "Angel Halo", emoji: "😇", sticker: "angelhalo", gradient: "linear-gradient(135deg, #FFF9C4, #FFFDE7)", category: ["All", "Fantasy"] },
+  { name: "Devil Horns", emoji: "😈", sticker: "devilhorns", gradient: "linear-gradient(135deg, #B71C1C, #880E4F)", category: ["All", "Fantasy"] },
+  { name: "Butterfly", emoji: "🦋", sticker: "butterfly", gradient: "linear-gradient(135deg, #CE93D8, #80DEEA)", category: ["All", "Animals", "Trending"] },
+  { name: "Snow Globe", emoji: "☃️", sticker: "snowglobe", gradient: "linear-gradient(135deg, #E8EAF6, #C5CAE9)", category: ["All", "Fun"] },
+  { name: "Lightning", emoji: "⚡", sticker: "lightning", gradient: "linear-gradient(135deg, #FFC107, #FF9800)", category: ["All", "Fun"] },
+  { name: "Glitter Tears", emoji: "💎", sticker: "glittertears", gradient: "linear-gradient(135deg, #B388FF, #82B1FF)", category: ["All", "Fantasy", "Beauty"] },
+  { name: "Pearl Veil", emoji: "🫧", sticker: "pearlveil", gradient: "linear-gradient(135deg, #F3E5F5, #E8EAF6)", category: ["All", "Beauty", "Fantasy"] },
+  { name: "Clown Pop", emoji: "🤡", sticker: "clownpop", gradient: "linear-gradient(135deg, #FF5252, #FFD740, #69F0AE)", category: ["All", "Fun"] },
+  { name: "Pirate", emoji: "🏴‍☠️", sticker: "pirate", gradient: "linear-gradient(135deg, #3E2723, #212121)", category: ["All", "Fun", "Fantasy"] },
+  { name: "Astronaut", emoji: "👨‍🚀", sticker: "astronaut", gradient: "linear-gradient(135deg, #263238, #37474F)", category: ["All", "Fantasy"] },
+  { name: "Galaxy Face", emoji: "🌌", sticker: "galaxyface", gradient: "linear-gradient(135deg, #1A237E, #4A148C, #880E4F)", category: ["All", "Fantasy", "Art"] },
+  { name: "Comic Lines", emoji: "🗯️", sticker: "comiclines", gradient: "linear-gradient(135deg, #FFEB3B, #FF5722)", category: ["All", "Art"] },
+  { name: "Butterfly Kiss", emoji: "🧚", sticker: "butterflykiss", gradient: "linear-gradient(135deg, #F8BBD0, #CE93D8)", category: ["All", "Animals", "Fun"] },
+  { name: "Rose Crown", emoji: "🌹", sticker: "rosecrown", gradient: "linear-gradient(135deg, #E91E63, #880E4F)", category: ["All", "Fantasy", "Beauty"] },
+  { name: "Sunbeam", emoji: "🌞", sticker: "sunbeam", gradient: "linear-gradient(135deg, #FFF9C4, #FFD54F, #FF8F00)", category: ["All", "Fun"] },
+  { name: "Laser Eyes", emoji: "🔴", sticker: "lasereyes", gradient: "linear-gradient(135deg, #FF0000, #B71C1C)", category: ["All", "Fun"] },
+  { name: "Heart Spark", emoji: "💖", sticker: "heartspark", gradient: "linear-gradient(135deg, #FF6B81, #FF4081)", category: ["All", "Fun", "Trending"] },
+  { name: "Venom", emoji: "🕷️", sticker: "venom", gradient: "linear-gradient(135deg, #1B1B1B, #4A148C)", category: ["All", "Fantasy"] },
+  { name: "Royal Makeup", emoji: "👸", sticker: "royalmakeup", gradient: "linear-gradient(135deg, #7B1FA2, #FFD700)", category: ["All", "Beauty", "Fantasy"] },
+>>>>>>> c122a7e7c87c714d0efe473b88f1fbf52451c98e
 ];
 
 interface FaceBox {
@@ -1169,6 +1371,9 @@ function drawFaceFilter(
   const mouthY = y + fh * 0.72;
   const eyeL = face.eyeLeft;
   const eyeR = face.eyeRight;
+  const cy = y + fh / 2;
+  const eyeLX = eyeL.x;
+  const eyeRX = eyeR.x;
 
   ctx.save();
 
@@ -3310,10 +3515,10 @@ function LiveBroadcast({
   const [commentInput, setCommentInput] = useState("");
   const [activeFilter, setActiveFilter] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
-  const [filterTab, setFilterTab] = useState<"color" | "face" | "ar">("color");
+  const [filterTab, setFilterTab] = useState<"ar" | "ai">("ar");
   const [filterGroup, setFilterGroup] = useState<FilterGroup>("all");
-  const [filterStrength, setFilterStrength] = useState(100);
   const [activeSticker, setActiveSticker] = useState(0);
+  const [arCategory, setArCategory] = useState<ARCategory>("All");
   const [isRecordingClip, setIsRecordingClip] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [isPublishingClip, setIsPublishingClip] = useState(false);
@@ -3321,7 +3526,14 @@ function LiveBroadcast({
   const recordTimerRef = useRef<ReturnType<typeof setInterval>>();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
+  const compositeCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const compositeAnimRef = useRef<number>();
+  const [aiProcessing, setAiProcessing] = useState(false);
+  const [aiResultOverlay, setAiResultOverlay] = useState<string | null>(null);
+  const [aiSelectedMode, setAiSelectedMode] = useState<string | null>(null);
+  const [aiOverlayMode, setAiOverlayMode] = useState<"fullscreen" | "card">("card");
 
+<<<<<<< HEAD
   const COLOR_FILTERS = [
     { name: "Original", css: "none", emoji: "✨" },
     { name: "Warm", css: "sepia(0.3) saturate(1.4) brightness(1.05)", emoji: "🌅" },
@@ -3699,17 +3911,20 @@ function LiveBroadcast({
     ? applyFilterStrength(currentFilter?.css || "none", filterStrength)
     : "none";
   const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : activeFilters.length;
+=======
+  const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : AI_MODES.length;
+>>>>>>> c122a7e7c87c714d0efe473b88f1fbf52451c98e
   const selectedFilterName = filterTab === "ar"
     ? AR_STICKERS[activeSticker]?.name || "None"
-    : currentFilter?.name || "Original";
+    : (aiSelectedMode ? AI_MODES.find(m => m.id === aiSelectedMode)?.name : "None") || "None";
   const visibleFilterIndexes = useMemo(() => {
-    const length = filterTab === "ar" ? AR_STICKERS.length : activeFilters.length;
-    const all = Array.from({ length }, (_v, i) => i);
-    if (filterGroup === "all") return all;
-    if (filterGroup === "trending") return all.filter((i) => i % 3 === 1).slice(0, 24);
-    if (filterGroup === "new") return all.slice(Math.max(0, length - 24));
-    return all.filter((i) => i % 5 === 0 || i % 7 === 0).slice(0, 28);
-  }, [filterTab, activeFilters.length, filterGroup]);
+    if (filterTab === "ar") {
+      return AR_STICKERS.map((_, i) => i).filter(i => 
+        arCategory === "All" || AR_STICKERS[i].category.includes(arCategory)
+      );
+    }
+    return [];
+  }, [filterTab, arCategory]);
 
   const randomizeCurrentTabFilter = () => {
     if (filterTab === "ar") {
@@ -3720,14 +3935,66 @@ function LiveBroadcast({
       setActiveSticker(next);
       return;
     }
-
-    if (activeFilters.length === 0) return;
-    const pool = visibleFilterIndexes.length ? visibleFilterIndexes : activeFilters.map((_v, idx) => idx);
-    const next = pool[Math.floor(Math.random() * pool.length)];
-    setActiveFilter(next);
   };
 
-  // Face detection + AR sticker canvas overlay
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
+  };
+
+  // AI_MODES moved outside component
+
+
+  const runAiFaceEdit = async (mode: string) => {
+    const video = videoRef.current;
+    if (!video || video.videoWidth === 0) return;
+    
+    setAiProcessing(true);
+    setAiSelectedMode(mode);
+    setAiResultOverlay(null);
+
+    try {
+      // Capture current frame
+      const c = document.createElement("canvas");
+      c.width = video.videoWidth;
+      c.height = video.videoHeight;
+      const ctx2 = c.getContext("2d");
+      if (!ctx2) throw new Error("Canvas failed");
+      ctx2.drawImage(video, 0, 0);
+      const imageBase64 = c.toDataURL("image/jpeg", 0.85);
+
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-face-edit`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ imageBase64, mode }),
+        }
+      );
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Failed" }));
+        throw new Error(err.error || `HTTP ${resp.status}`);
+      }
+
+      const data = await resp.json();
+      if (data.imageUrl) {
+        setAiResultOverlay(data.imageUrl);
+        setAiOverlayMode("card");
+      }
+    } catch (err) {
+      console.error("AI face edit failed:", err);
+      const { toast } = await import("sonner");
+      toast.error(err instanceof Error ? err.message : "AI processing failed");
+    } finally {
+      setAiProcessing(false);
+    }
+  };
+
+  // No auto-shrink needed — AI result always shows as card to keep camera visible
+
   useEffect(() => {
     const currentSticker = AR_STICKERS[activeSticker]?.sticker;
     if (!currentSticker) {
@@ -3904,15 +4171,55 @@ function LiveBroadcast({
 
     try {
       chunksRef.current = [];
+
+      // If AI overlay is active, composite AI image onto a canvas and record that
+      let recordStream: MediaStream;
+      if (aiResultOverlay) {
+        const compCanvas = document.createElement("canvas");
+        compCanvas.width = 720;
+        compCanvas.height = 1280;
+        compositeCanvasRef.current = compCanvas;
+        const compCtx = compCanvas.getContext("2d")!;
+        
+        // Load AI image
+        const aiImg = document.createElement("img");
+        aiImg.crossOrigin = "anonymous";
+        aiImg.src = aiResultOverlay;
+
+        // Draw AI image on loop
+        const drawFrame = () => {
+          compCtx.drawImage(aiImg, 0, 0, compCanvas.width, compCanvas.height);
+          compositeAnimRef.current = requestAnimationFrame(drawFrame);
+        };
+        aiImg.onload = () => drawFrame();
+        // Start immediately even if image isn't loaded yet (will be black briefly)
+        if (aiImg.complete) drawFrame();
+
+        const canvasStream = compCanvas.captureStream(30);
+        // Add audio from camera
+        const audioTracks = stream.getAudioTracks();
+        audioTracks.forEach(t => canvasStream.addTrack(t));
+        recordStream = canvasStream;
+      } else {
+        recordStream = stream;
+      }
+
       const recorder = supported
-        ? new MediaRecorder(stream, { mimeType: supported })
-        : new MediaRecorder(stream);
+        ? new MediaRecorder(recordStream, { mimeType: supported })
+        : new MediaRecorder(recordStream);
 
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
 
       recorder.onstop = async () => {
+        // Stop composite loop
+        if (compositeAnimRef.current) {
+          cancelAnimationFrame(compositeAnimRef.current);
+          compositeAnimRef.current = undefined;
+        }
+        compositeCanvasRef.current = null;
+
         if (chunksRef.current.length === 0) return;
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "video/webm" });
         const clipUrl = URL.createObjectURL(blob);
@@ -3925,7 +4232,7 @@ function LiveBroadcast({
             caption: "New live clip",
             url: clipUrl,
             file: clipFile,
-            filterCss: effectiveFilterCss,
+            filterCss: "none",
           });
           toast.success("Clip published to your feed");
         } catch {
@@ -3970,7 +4277,7 @@ function LiveBroadcast({
         className="absolute inset-0 w-full h-full object-cover"
         style={{
           transform: facingMode === "user" ? "scaleX(-1)" : "none",
-          filter: effectiveFilterCss,
+          filter: "none",
         }}
       />
       {/* AR sticker canvas overlay */}
@@ -3980,42 +4287,68 @@ function LiveBroadcast({
         style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
       />
 
-      {/* Top overlay */}
-      <div className="relative z-10 flex items-center justify-between p-4 pt-12">
-        <div className="flex items-center gap-2">
-          {isLive && (
-            <motion.div
-              animate={{ opacity: [1, 0.5, 1] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-              className="flex items-center gap-1.5 bg-destructive px-3 py-1 rounded-full"
-            >
-              <div className="w-2 h-2 rounded-full bg-white" />
-              <span className="text-white text-xs font-bold">LIVE</span>
-            </motion.div>
-          )}
-          {isLive && (
-            <span className="text-white/80 text-xs font-mono bg-black/40 px-2 py-1 rounded-full">
-              {formatTime(elapsed)}
-            </span>
-          )}
-          {isRecordingClip && (
-            <span className="text-white/90 text-xs font-mono bg-red-600/80 px-2 py-1 rounded-full">
-              REC {formatTime(recordSeconds)}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {isLive && (
-            <div className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full">
-              <Eye className="w-3.5 h-3.5 text-white" />
-              <span className="text-white text-xs font-bold">{viewers}</span>
-            </div>
-          )}
-          <button onClick={isLive ? endLive : onClose} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
-            <X className="w-5 h-5 text-white" />
+      {/* AI result: always shown as mini card so camera stays visible */}
+      {aiResultOverlay && (
+        <div className="absolute bottom-32 left-3 z-[4] w-[132px] h-[184px] rounded-2xl overflow-hidden shadow-2xl border border-white/30 bg-black/20 backdrop-blur-sm">
+          <img src={aiResultOverlay} alt="AI result preview" className="w-full h-full object-cover" />
+          <button
+            onClick={() => { setAiResultOverlay(null); setAiSelectedMode(null); }}
+            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"
+          >
+            <X className="w-3.5 h-3.5 text-white" />
           </button>
+          <div className="absolute bottom-1.5 left-1.5 bg-black/55 backdrop-blur-sm rounded-full px-2 py-0.5">
+            <span className="text-white text-[10px] font-medium">🤖 AI</span>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* AI processing overlay */}
+      {aiProcessing && (
+        <div className="absolute inset-0 z-[12] bg-black/40 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+            <span className="text-white text-sm font-medium">AI processing...</span>
+          </div>
+        </div>
+      )}
+
+
+      <div className="relative z-10 flex items-center justify-between p-4 pt-12">
+          <div className="flex items-center gap-2">
+            {isLive && (
+              <motion.div
+                animate={{ opacity: [1, 0.5, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="flex items-center gap-1.5 bg-destructive px-3 py-1 rounded-full"
+              >
+                <div className="w-2 h-2 rounded-full bg-white" />
+                <span className="text-white text-xs font-bold">LIVE</span>
+              </motion.div>
+            )}
+            {isLive && (
+              <span className="text-white/80 text-xs font-mono bg-black/40 px-2 py-1 rounded-full">
+                {formatTime(elapsed)}
+              </span>
+            )}
+            {isRecordingClip && (
+              <span className="text-white/90 text-xs font-mono bg-red-600/80 px-2 py-1 rounded-full">
+                REC {formatTime(recordSeconds)}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {isLive && (
+              <div className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full">
+                <Eye className="w-3.5 h-3.5 text-white" />
+                <span className="text-white text-xs font-bold">{viewers}</span>
+              </div>
+            )}
+            <button onClick={isLive ? endLive : onClose} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
+              <X className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
 
       {/* Spacer + Comments overlay */}
       {isLive ? (
@@ -4052,7 +4385,7 @@ function LiveBroadcast({
                 >
                   <X className="w-4 h-4 text-white/60" />
                 </button>
-                {(["color", "face", "ar"] as const).map((tab) => (
+                {(["ar", "ai"] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => { setFilterTab(tab); setFilterGroup("all"); setActiveFilter(0); if (tab !== "ar") setActiveSticker(0); }}
@@ -4063,7 +4396,7 @@ function LiveBroadcast({
                         : "text-white/40"
                     )}
                   >
-                    {tab === "color" ? "🎨 Color" : tab === "face" ? "✨ Beauty" : "🎭 Effects"}
+                    {tab === "ar" ? "🎭 Effects" : "🤖 AI"}
                   </button>
                 ))}
               </div>
@@ -4094,79 +4427,100 @@ function LiveBroadcast({
                   Random
                 </button>
               </div>
-              <div className="px-4 mb-1 flex items-center justify-between text-[11px] text-white/65">
-                <span>{totalFilterCount} {filterTab === "ar" ? "effects" : "filters"}</span>
-                <span className="truncate max-w-[55%] text-right">Selected: {selectedFilterName}</span>
-              </div>
-              {filterTab !== "ar" && (
-                <div className="px-4 mb-2">
-                  <div className="flex items-center justify-between text-[10px] text-white/55 mb-1">
-                    <span>Strength</span>
-                    <span>{filterStrength}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={filterStrength}
-                    onChange={(e) => setFilterStrength(Number(e.target.value))}
-                    className="w-full accent-white"
-                  />
+              <div className="px-4 mb-2 text-[10px] text-white/45">Swipe up to see more options</div>
+              {/* AR Category tabs - TikTok style */}
+              {filterTab === "ar" && (
+                <div className="flex items-center gap-1 px-4 mb-3 overflow-x-auto scrollbar-none">
+                  {AR_CATEGORIES.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setArCategory(cat)}
+                      className={cn(
+                        "flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                        arCategory === cat
+                          ? "bg-white text-black"
+                          : "bg-white/10 text-white/60 hover:bg-white/20"
+                      )}
+                    >
+                      {cat}
+                    </button>
+                  ))}
                 </div>
               )}
-              <div className="px-4 mb-2 text-[10px] text-white/45">Swipe up to see more options</div>
-              {/* Filter/Sticker grid */}
+              {/* Filter/Sticker/AI grid */}
               <div className="grid grid-cols-4 gap-3 px-4 pr-5 max-h-[48vh] overflow-y-auto">
-                {filterTab === "ar" ? (
+                {filterTab === "ai" ? (
+                  AI_MODES.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => runAiFaceEdit(m.id)}
+                      disabled={aiProcessing}
+                      className="flex flex-col items-center gap-1.5"
+                    >
+                      <div
+                        className={cn(
+                          "w-[72px] h-[72px] rounded-2xl overflow-hidden relative transition-all",
+                          aiSelectedMode === m.id && aiResultOverlay
+                            ? "ring-2 ring-white scale-105 shadow-lg shadow-white/20"
+                            : aiProcessing && aiSelectedMode === m.id
+                            ? "ring-2 ring-primary animate-pulse"
+                            : "opacity-80"
+                        )}
+                        style={{ background: m.gradient }}
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center text-3xl drop-shadow-lg">
+                          {aiProcessing && aiSelectedMode === m.id ? (
+                            <div className="w-6 h-6 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            m.emoji
+                          )}
+                        </div>
+                        <div className="absolute bottom-1 left-1 right-1">
+                          <span className="text-[8px] text-white/70 font-medium bg-black/30 px-1 rounded">
+                            {m.desc}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-medium leading-tight text-center w-[72px] truncate",
+                        aiSelectedMode === m.id ? "text-white" : "text-white/55"
+                      )}>{m.name}</span>
+                    </button>
+                  ))
+                ) : (
                   visibleFilterIndexes.map((i) => {
                     const s = AR_STICKERS[i];
                     return (
                     <button
-                      key={s.name}
+                      key={`${s.name}-${i}`}
                       onClick={() => setActiveSticker(i)}
-                      className="flex flex-col items-center gap-1"
+                      className="flex flex-col items-center gap-1.5"
                     >
                       <div
                         className={cn(
-                          "w-16 h-16 rounded-xl flex items-center justify-center text-2xl transition-all",
+                          "w-[72px] h-[72px] rounded-2xl overflow-hidden relative transition-all",
                           activeSticker === i
-                            ? "bg-white/20 border-2 border-white scale-105 shadow-lg shadow-white/20"
-                            : "bg-white/5 border-2 border-transparent opacity-75"
+                            ? "ring-2 ring-white scale-105 shadow-lg shadow-white/20"
+                            : "opacity-80"
                         )}
+                        style={{ background: s.gradient }}
                       >
-                        {s.emoji}
+                        {s.sticker ? (
+                          <div className="absolute inset-0 flex items-center justify-center text-3xl drop-shadow-lg">
+                            {s.emoji}
+                          </div>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full border-2 border-white/60 flex items-center justify-center">
+                              <div className="w-0.5 h-6 bg-white/60 rotate-45" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <span className={cn(
-                        "text-[10px] font-medium leading-tight",
-                        activeSticker === i ? "text-white" : "text-white/50"
+                        "text-[10px] font-medium leading-tight text-center w-[72px] truncate",
+                        activeSticker === i ? "text-white" : "text-white/55"
                       )}>{s.name}</span>
-                    </button>
-                    );
-                  })
-                ) : (
-                  visibleFilterIndexes.map((i) => {
-                    const f = activeFilters[i];
-                    return (
-                    <button
-                      key={f.name}
-                      onClick={() => setActiveFilter(i)}
-                      className="flex flex-col items-center gap-1"
-                    >
-                      <div
-                        className={cn(
-                          "w-16 h-16 rounded-xl overflow-hidden border-2 transition-all",
-                          activeFilter === i
-                            ? "border-white scale-105 shadow-lg shadow-white/20"
-                            : "border-transparent opacity-75"
-                        )}
-                        style={{ filter: f.css }}
-                      >
-                        <div className="w-full h-full bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500" />
-                      </div>
-                      <span className={cn(
-                        "text-[10px] font-medium leading-tight",
-                        activeFilter === i ? "text-white" : "text-white/50"
-                      )}>{f.name}</span>
                     </button>
                     );
                   })
@@ -4188,7 +4542,7 @@ function LiveBroadcast({
               placeholder="Say something..."
               className="flex-1 bg-white/15 backdrop-blur-sm text-white text-sm rounded-full px-4 py-2.5 placeholder:text-white/50 outline-none border border-white/10"
             />
-            <button onClick={() => setShowFilters(!showFilters)} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+            <button onClick={toggleFilters} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </button>
             <button
@@ -4208,7 +4562,7 @@ function LiveBroadcast({
         ) : (
           <div className="flex flex-col items-center gap-3">
             <button
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={toggleFilters}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium mb-1",
                 showFilters ? "bg-primary text-primary-foreground" : "bg-white/15 text-white/70"

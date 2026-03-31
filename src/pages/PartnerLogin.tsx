@@ -254,7 +254,53 @@ export default function PartnerLogin() {
                 {/* Store Account ID */}
                 <FormField control={form.control} name="store_id" render={({ field }) => (
                   <FormItem className="space-y-1">
-                    <FormLabel className="text-white/70 text-xs font-medium">Store Account ID</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-white/70 text-xs font-medium">Store Account ID</FormLabel>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const email = form.getValues("email").trim();
+                          if (!email) {
+                            toast.error("Please enter your business email first");
+                            return;
+                          }
+                          const loadingToast = toast.loading("Looking up your Store Account ID...");
+                          try {
+                            const { data, error } = await supabase.functions.invoke("lookup-store-id", {
+                              body: { email },
+                            });
+
+                            if (error || data?.error) {
+                              toast.dismiss(loadingToast);
+                              toast.error(data?.error || "Could not find a store for this email");
+                              return;
+                            }
+
+                            if (data?.stores?.length > 0) {
+                              const stores = data.stores.map((store: { name: string; full_id: string }) => ({
+                                name: store.name,
+                                accountId: `CBD${store.full_id.replace(/-/g, "").slice(0, 8).toUpperCase()}`,
+                              }));
+
+                              form.setValue("store_id", stores[0].accountId, { shouldDirty: true });
+
+                              toast.dismiss(loadingToast);
+                              toast.success(`Found: ${stores[0].name} — Store ID: ${stores[0].accountId} (auto-filled below)`, { duration: 6000 });
+                              return;
+                            }
+
+                            toast.dismiss(loadingToast);
+                            toast.error("Could not find a store for this email");
+                          } catch {
+                            toast.dismiss(loadingToast);
+                            toast.error("Failed to send Store ID. Please try again.");
+                          }
+                        }}
+                        className="text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors"
+                      >
+                        Forgot ID?
+                      </button>
+                    </div>
                     <FormControl>
                       <div className="relative">
                         <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
