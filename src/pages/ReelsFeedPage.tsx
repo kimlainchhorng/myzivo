@@ -11,6 +11,7 @@ import {
   Loader2, Heart, MessageCircle, Share2, Eye, Bookmark,
   MoreHorizontal, Play, Volume2, VolumeX, Image as ImageIcon,
   Plus, Camera, X as XIcon, Send, Film, Radio,
+  Globe, Users, Lock, FolderPlus, MapPin, Hash, ChevronDown,
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
