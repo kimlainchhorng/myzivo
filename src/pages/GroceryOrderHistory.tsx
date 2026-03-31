@@ -357,7 +357,7 @@ function OrderCard({ order, onReorder, onRate, onTrack }: {
                   variant="ghost"
                   className="rounded-xl text-[11px] font-bold gap-1.5 h-9 text-muted-foreground"
                   onClick={() => {
-                    import("@/lib/openExternalUrl").then(({ openSystemUrl }) => openSystemUrl(`mailto:support@hizivo.com?subject=Order ${order.id.slice(0, 8).toUpperCase()}`));
+                    navigate(`/help?order=${order.id.slice(0, 8).toUpperCase()}&store=${encodeURIComponent(order.store)}`);
                   }}
                 >
                   <HelpCircle className="h-3 w-3" />
