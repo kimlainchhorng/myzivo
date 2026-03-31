@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, DollarSign, AlertTriangle, Ban, Scale, FileText, Clock } from "lucide-react";
+import { ArrowLeft, Shield, DollarSign, AlertTriangle, Ban, Scale, FileText, Clock, Gavel, CreditCard, Globe, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const sections = [
@@ -21,7 +21,7 @@ const sections = [
   {
     icon: Ban,
     title: "4. Exclusion of Damages",
-    content: "ZIVO shall not be liable for: (a) service interruptions, delays, or errors; (b) loss of data or unauthorized access to your account; (c) personal injury or property damage arising from your use of third-party services accessed via the platform; (d) disputes between you and third-party service providers (drivers, restaurants, airlines, hotels, car owners); (e) price fluctuations or availability changes; (f) acts or omissions of third-party payment processors; (g) any loss exceeding the liability cap stated in Section 2."
+    content: "ZIVO shall not be liable for: (a) service interruptions, delays, or errors; (b) loss of data or unauthorized access to your account; (c) personal injury or property damage arising from your use of third-party services accessed via the platform; (d) disputes between you and third-party service providers (drivers, restaurants, airlines, hotels, car owners); (e) price fluctuations or availability changes; (f) acts or omissions of third-party payment processors; (g) any loss exceeding the liability cap stated in Section 2; (h) loss of revenue, anticipated profits, business, or goodwill; (i) cost of procurement of substitute goods or services; (j) any loss arising from reliance on information provided on the platform."
   },
   {
     icon: Scale,
@@ -37,6 +37,36 @@ const sections = [
     icon: Clock,
     title: "7. Statute of Limitations",
     content: "YOU AGREE THAT ANY CAUSE OF ACTION ARISING OUT OF OR RELATED TO THE SERVICES MUST BE COMMENCED WITHIN ONE (1) YEAR AFTER THE CAUSE OF ACTION ACCRUES. OTHERWISE, SUCH CAUSE OF ACTION IS PERMANENTLY BARRED. This limitation applies to all claims regardless of the legal theory under which they are brought."
+  },
+  {
+    icon: Gavel,
+    title: "8. Basis of the Bargain",
+    content: "YOU ACKNOWLEDGE AND AGREE THAT ZIVO HAS OFFERED ITS SERVICES, SET ITS PRICES, AND ENTERED INTO THESE TERMS IN RELIANCE UPON THE WARRANTY DISCLAIMERS AND LIMITATIONS OF LIABILITY SET FORTH HEREIN. These disclaimers and limitations reflect a reasonable and fair allocation of risk between you and ZIVO, and form an essential basis of the bargain between us. ZIVO would not be able to provide the Services to you on an economically reasonable basis without these limitations."
+  },
+  {
+    icon: CreditCard,
+    title: "9. No Liability for Third-Party Charges",
+    content: "ZIVO is not liable for any charges, fees, penalties, or costs imposed by third parties, including but not limited to: airline change fees, baggage fees, resort fees, parking fees, tolls, traffic violations, damage charges from car rentals, restaurant surcharges, or any taxes imposed by governmental authorities. Any such charges are your sole responsibility, and you agree to hold ZIVO harmless from all third-party imposed costs."
+  },
+  {
+    icon: Globe,
+    title: "10. International Use Limitation",
+    content: "ZIVO makes no representations that the Services are appropriate or available for use in locations outside the United States. Users accessing the Services from other jurisdictions do so at their own risk and are responsible for compliance with local laws. ZIVO's liability in any jurisdiction shall not exceed the maximum amount permitted by that jurisdiction's laws, and where certain limitations are not permitted by local law, only those specific limitations shall not apply."
+  },
+  {
+    icon: Users,
+    title: "11. Multiple Claims & Cumulative Liability",
+    content: "The liability caps set forth in this section apply to the aggregate of all claims you may have against ZIVO, not on a per-claim basis. Multiple claims shall not expand ZIVO's total liability beyond the limits stated in Section 2. If you bring multiple claims, the total recovery across all claims combined may not exceed the maximum liability cap. Any amounts already paid or credited to you for prior claims shall reduce the remaining available liability cap."
+  },
+  {
+    icon: Shield,
+    title: "12. Essential Purpose & Severability",
+    content: "If any limitation or exclusion of liability in this section is found to be unenforceable, the remaining limitations shall continue in full force and effect. The parties agree that the limitations of liability are essential to these Terms and that in the absence of such limitations, the terms of the agreement between the parties would be substantially different. If a court determines that any limitation is unconscionable, the court shall reform the limitation to the maximum extent permissible rather than invalidating it entirely."
+  },
+  {
+    icon: AlertTriangle,
+    title: "13. Acknowledgment of Risks",
+    content: "YOU EXPRESSLY ACKNOWLEDGE THAT USE OF THE SERVICES INVOLVES RISKS, INCLUDING BUT NOT LIMITED TO: physical harm, property damage, dealing with third parties, financial loss, data breaches, and dissatisfaction with services. You voluntarily assume all such risks. You further acknowledge that ZIVO has no duty to take any action regarding which users gain access to the Services, what content you access, or how you interpret or use the content. You release ZIVO from all liability for your having acquired or not acquired content through the Services."
   },
 ];
 
@@ -58,10 +88,10 @@ export default function LimitationOfLiability() {
             <Shield className="h-3 w-3" /> Critical Legal Protection
           </span>
           <h2 className="text-2xl font-bold">Limitation of Liability</h2>
-          <p className="text-sm text-muted-foreground mt-1">Last updated: March 30, 2026</p>
+          <p className="text-sm text-muted-foreground mt-1">Last updated: March 31, 2026</p>
         </div>
         <div className="rounded-2xl bg-destructive/5 border border-destructive/20 p-4">
-          <p className="text-sm leading-relaxed font-medium">PLEASE READ THIS SECTION CAREFULLY. IT LIMITS ZIVO'S LIABILITY TO YOU AND AFFECTS YOUR LEGAL RIGHTS. BY USING ZIVO, YOU AGREE TO THESE LIMITATIONS.</p>
+          <p className="text-sm leading-relaxed font-medium">PLEASE READ THIS SECTION CAREFULLY. IT LIMITS ZIVO'S LIABILITY TO YOU AND AFFECTS YOUR LEGAL RIGHTS. BY USING ZIVO, YOU AGREE TO THESE LIMITATIONS. IF YOU DO NOT AGREE, DO NOT USE THE SERVICES.</p>
         </div>
         {sections.map((s) => {
           const Icon = s.icon;

@@ -1,40 +1,65 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Copyright, AlertTriangle, FileText, Mail, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Copyright, AlertTriangle, FileText, Mail, CheckCircle2, Shield, Ban, Scale, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const sections = [
   {
     icon: Copyright,
-    title: "1. Overview",
-    content: "ZIVO respects the intellectual property rights of others and expects our users to do the same. This policy outlines how copyright owners can report alleged infringement on our platform and how we process such claims in accordance with the Digital Millennium Copyright Act (DMCA), 17 U.S.C. § 512."
+    title: "1. Overview & Legal Basis",
+    content: "ZIVO LLC respects the intellectual property rights of others and expects all users to do the same. This policy outlines how copyright owners can report alleged infringement on our platform and how we process such claims in full compliance with the Digital Millennium Copyright Act (DMCA), 17 U.S.C. § 512. ZIVO qualifies as an online service provider under the DMCA safe harbor provisions and maintains procedures designed to expeditiously respond to valid infringement notices."
   },
   {
     icon: FileText,
-    title: "2. Filing a DMCA Notice",
-    content: "To file a copyright infringement claim, send a written notice to our designated agent containing:",
+    title: "2. Filing a DMCA Takedown Notice",
+    content: "To file a copyright infringement claim, you must send a written notice to our designated agent containing ALL of the following (incomplete notices will be returned):",
     items: [
-      "Identification of the copyrighted work you claim is being infringed",
-      "Identification of the infringing material and its location on ZIVO",
-      "Your contact information (name, address, phone, email)",
-      "A statement that you have a good faith belief the use is not authorized",
-      "A statement, under penalty of perjury, that the information is accurate and you are the copyright owner or authorized to act on their behalf",
-      "Your physical or electronic signature",
+      "A physical or electronic signature of the copyright owner or person authorized to act on their behalf",
+      "Identification of the copyrighted work(s) you claim is being infringed (include registration number if available)",
+      "Identification of the specific infringing material and its exact location on ZIVO (URL, page, or content identifier)",
+      "Your full legal name, mailing address, telephone number, and email address",
+      "A statement that you have a good faith belief that the use of the material is not authorized by the copyright owner, its agent, or the law",
+      "A statement, UNDER PENALTY OF PERJURY, that the information in the notice is accurate and that you are the copyright owner or authorized to act on behalf of the owner",
     ]
   },
   {
     icon: Mail,
-    title: "3. Designated Agent",
-    content: "DMCA notices should be sent to:\n\nZIVO LLC — DMCA Agent\nEmail: dmca@hizivo.com\nMail: ZIVO LLC, Attn: DMCA Agent, [Address on file]\n\nWe aim to acknowledge all valid notices within 2 business days."
+    title: "3. Designated DMCA Agent",
+    content: "All DMCA notices must be sent to:\n\nZIVO LLC — DMCA Designated Agent\nEmail: dmca@hizivo.com\nMail: ZIVO LLC, Attn: DMCA Agent, [Address on file with U.S. Copyright Office]\n\nWe will acknowledge receipt of all valid DMCA notices within 2 business days. Please note that DMCA notices are legal documents — knowingly submitting a false notice may subject you to liability for damages, including attorneys' fees, under 17 U.S.C. § 512(f)."
   },
   {
     icon: AlertTriangle,
-    title: "4. Counter-Notification",
-    content: "If you believe your content was removed in error, you may submit a counter-notification including: identification of the removed material, a statement under penalty of perjury that the removal was a mistake, your contact information, and consent to jurisdiction of the federal court in your district. We will forward the counter-notification to the original complainant and restore the material within 10–14 business days unless the complainant files a court action."
+    title: "4. Counter-Notification Process",
+    content: "If you believe your content was removed or disabled in error or due to misidentification, you may submit a counter-notification to our DMCA Agent containing: (a) your physical or electronic signature; (b) identification of the removed material and its location before removal; (c) a statement under penalty of perjury that you have a good faith belief the material was removed by mistake or misidentification; (d) your full name, address, telephone number, and email; and (e) a statement consenting to the jurisdiction of the Federal District Court in the district where your address is located (or, if outside the US, in Delaware). We will forward the counter-notification to the original complainant. If the complainant does not file a court action within 10–14 business days, we will restore the removed material."
+  },
+  {
+    icon: Ban,
+    title: "5. Repeat Infringer Policy",
+    content: "ZIVO maintains a strict repeat infringer policy. We will terminate, in appropriate circumstances, the accounts of users who are repeat infringers. Specifically: (a) accounts receiving 2 valid DMCA strikes within any 12-month period will receive a final warning; (b) accounts receiving 3 valid DMCA strikes will be permanently terminated; (c) terminated accounts cannot be reinstated; (d) we track DMCA notices per account and per user; (e) circumventing termination by creating new accounts is prohibited and will result in immediate re-termination. This policy is implemented regardless of whether the infringement was intentional."
+  },
+  {
+    icon: Shield,
+    title: "6. DMCA Safe Harbor",
+    content: "ZIVO relies on the safe harbor provisions of the DMCA (17 U.S.C. § 512) for user-generated content. As a condition of this safe harbor: (a) we have designated a DMCA agent registered with the U.S. Copyright Office; (b) we implement and reasonably enforce our repeat infringer policy; (c) we accommodate standard technical measures used by copyright owners to identify or protect copyrighted works; (d) we do not have actual knowledge of infringing activity; and (e) we act expeditiously to remove or disable access to infringing material upon receiving valid notices."
+  },
+  {
+    icon: Scale,
+    title: "7. User-Generated Content & Licensing",
+    content: "By uploading content to ZIVO (reviews, photos, stories, comments), you represent and warrant that: (a) you own the content or have all necessary rights and permissions; (b) the content does not infringe any third-party intellectual property rights; (c) you grant ZIVO a non-exclusive, worldwide, royalty-free, sublicensable license to use, display, modify, and distribute the content in connection with the Services; (d) you waive any moral rights to the extent permitted by law; and (e) you indemnify ZIVO against any claims of infringement related to your content."
+  },
+  {
+    icon: Copyright,
+    title: "8. ZIVO's Intellectual Property",
+    content: "All ZIVO trademarks, service marks, trade names, logos, domain names, trade dress, and copyrighted materials (including website design, text, graphics, interfaces, code, and software) are the exclusive property of ZIVO LLC. No right, title, or interest in any ZIVO intellectual property is transferred to you. Unauthorized use of ZIVO's intellectual property may result in civil and criminal penalties under applicable trademark (15 U.S.C. § 1114) and copyright (17 U.S.C. § 504) laws."
+  },
+  {
+    icon: Globe,
+    title: "9. International Copyright",
+    content: "ZIVO respects international copyright protections under the Berne Convention, the WIPO Copyright Treaty, and applicable national laws. If you are a copyright owner outside the United States, you may submit a DMCA notice following the same procedures outlined above. We will process international notices in accordance with U.S. law and applicable international treaties."
   },
   {
     icon: CheckCircle2,
-    title: "5. Repeat Infringers",
-    content: "ZIVO will terminate accounts of users who are repeat infringers. We track DMCA notices per account and may suspend or permanently ban users with multiple valid claims against them."
+    title: "10. Misrepresentation & Penalties",
+    content: "Under 17 U.S.C. § 512(f), any person who knowingly materially misrepresents that content is infringing, or that content was removed by mistake, may be liable for damages, including costs and attorneys' fees incurred by the alleged infringer, ZIVO, or the copyright owner. ZIVO reserves the right to seek damages against any party who submits a fraudulent DMCA notice or counter-notification. Filing false DMCA claims may also result in termination of your ZIVO account."
   },
 ];
 
@@ -53,13 +78,13 @@ export default function DMCACopyrightPolicy() {
       <div className="p-4 max-w-2xl mx-auto space-y-5 pb-20">
         <div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-600 text-xs font-semibold mb-3">
-            <Copyright className="h-3 w-3" /> Intellectual Property
+            <Copyright className="h-3 w-3" /> Intellectual Property Protection
           </span>
           <h2 className="text-2xl font-bold">DMCA / Copyright Policy</h2>
-          <p className="text-sm text-muted-foreground mt-1">Last updated: March 20, 2026</p>
+          <p className="text-sm text-muted-foreground mt-1">Last updated: March 31, 2026</p>
         </div>
         <div className="rounded-2xl bg-muted/30 border border-border/40 p-4">
-          <p className="text-sm leading-relaxed">This policy explains how to report copyright infringement on ZIVO and how we handle such claims under the DMCA.</p>
+          <p className="text-sm leading-relaxed">This policy explains how to report copyright infringement on ZIVO, how we handle such claims under the Digital Millennium Copyright Act, and our repeat infringer policy.</p>
         </div>
         {sections.map((s) => {
           const Icon = s.icon;
@@ -83,8 +108,8 @@ export default function DMCACopyrightPolicy() {
           );
         })}
         <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4 text-center space-y-1">
-          <p className="text-sm font-semibold">Report Infringement</p>
-          <p className="text-xs text-muted-foreground">Email <span className="text-primary font-semibold">dmca@hizivo.com</span></p>
+          <p className="text-sm font-semibold">Report Copyright Infringement</p>
+          <p className="text-xs text-muted-foreground">Email <span className="text-primary font-semibold">dmca@hizivo.com</span> with all required information</p>
         </div>
       </div>
     </div>
