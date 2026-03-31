@@ -2538,6 +2538,39 @@ export type Database = {
         }
         Relationships: []
       }
+      app_version_releases: {
+        Row: {
+          created_at: string
+          id: string
+          notifications_sent_at: string | null
+          notify_users: boolean
+          platform: string
+          release_notes: string | null
+          store_url: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notifications_sent_at?: string | null
+          notify_users?: boolean
+          platform?: string
+          release_notes?: string | null
+          store_url?: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notifications_sent_at?: string | null
+          notify_users?: boolean
+          platform?: string
+          release_notes?: string | null
+          store_url?: string
+          version?: string
+        }
+        Relationships: []
+      }
       application_events: {
         Row: {
           actor_user_id: string | null
