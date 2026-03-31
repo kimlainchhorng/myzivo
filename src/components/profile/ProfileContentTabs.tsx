@@ -320,7 +320,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 style={{ filter: item.filterCss || "none" }}
                 loading="lazy"
               />
-            )
+            )}
             {item.type === "reel" && (
               <div className="absolute top-1.5 right-1.5 z-10">
                 <Play className="w-4 h-4 text-white fill-white drop-shadow-lg" />
