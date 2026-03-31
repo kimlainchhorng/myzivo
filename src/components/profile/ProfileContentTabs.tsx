@@ -409,7 +409,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   <p className="text-white text-sm font-semibold truncate">{selectedPost.user.name}</p>
                   <p className="text-white/50 text-[10px]">{selectedPost.time} ago</p>
                 </div>
-                {(selectedPost.user.name === "You" || selectedPost.user.name === (user?.email?.split("@")[0] || "")) && (
+                {profileOwnerId === user?.id && (
                   <div className="relative">
                     <button
                       onClick={() => setShowPostMenu(!showPostMenu)}
