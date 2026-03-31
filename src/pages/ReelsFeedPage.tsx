@@ -14,6 +14,7 @@ import {
   Globe, Users, Lock, FolderPlus, MapPin, Hash, ChevronDown,
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ interface FeedItem {
   author_name: string;
   author_avatar: string | null;
   author_id?: string;
+  store_slug?: string;
   created_at: string;
 }
 
@@ -73,7 +75,7 @@ export default function ReelsFeedPage() {
         const storeIds = [...new Set(storePosts.map((p: any) => p.store_id))];
         const { data: stores } = await supabase
           .from("store_profiles")
-          .select("id, name, logo_url")
+          .select("id, name, logo_url, slug")
           .in("id", storeIds);
         const storeMap = new Map((stores || []).map((s: any) => [s.id, s]));
 
@@ -93,6 +95,7 @@ export default function ReelsFeedPage() {
             views_count: post.view_count || 0,
             author_name: store?.name || "Store",
             author_avatar: store?.logo_url || null,
+            store_slug: store?.slug || null,
             created_at: post.created_at,
           });
         }
@@ -511,6 +514,7 @@ function CreatePostModal({
 /* ── Individual Feed Card (IG/FB style) ──────────────────────────── */
 
 function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: string | null }) {
+  const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [muted, setMuted] = useState(true);
@@ -658,7 +662,18 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   return (
     <div className="bg-card">
       {/* Author header */}
-      <div className="flex items-center gap-3 px-3 py-2.5">
+      <div className="flex items-center">
+      <button
+        type="button"
+        onClick={() => {
+          if (item.source === "store" && item.store_slug) {
+            navigate(`/grocery/shop/${item.store_slug}`);
+          } else if (item.author_id) {
+            navigate(`/user/${item.author_id}`);
+          }
+        }}
+        className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
+      >
         <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
           {item.author_avatar ? (
             <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
@@ -668,10 +683,11 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
             </div>
           )}
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 text-left">
           <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
           <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
         </div>
+      </button>
         <button className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
           <MoreHorizontal className="h-5 w-5" />
         </button>
