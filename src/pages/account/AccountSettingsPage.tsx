@@ -10,7 +10,7 @@ const settingsItems = [
   { icon: Bell, label: "Notifications", description: "Preferences & alerts", href: "/account/notifications", color: "bg-sky-500/15", iconColor: "text-sky-500" },
   { icon: CreditCard, label: "Payment Methods", description: "Manage cards & wallets", href: "/account/wallet", color: "bg-purple-500/15", iconColor: "text-purple-500" },
   { icon: Gift, label: "Gift Cards", description: "Buy, send, or redeem", href: "/account/gift-cards", color: "bg-pink-500/15", iconColor: "text-pink-500" },
-  { icon: Scale, label: "Legal & Policies", description: "Terms, privacy & 400+ policies", href: "/account/legal", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Scale, label: "Legal & Policies", description: "Terms, privacy & 600+ policies", href: "/account/legal", color: "bg-slate-500/15", iconColor: "text-slate-500" },
 ];
 
 export default function AccountSettingsPage() {

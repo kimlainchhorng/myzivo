@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronRight, FileText, Scale, Cookie, Shield, Eye, Globe, Lock, Database, Plane, Undo2, XCircle, Car, Umbrella, AlertTriangle, Heart, CloudLightning, MessageSquare, Users, Landmark, UserX, Ban, Gavel, Share2, Siren, DollarSign, Brain, Copyright, Megaphone, Mail, RefreshCw, Link, Accessibility, BookOpen, Fingerprint, ShieldAlert, ShieldCheck, MapPin, Wifi, CreditCard, Baby, Clock, Headphones, Receipt, Truck, Building2, Languages, Smartphone, BadgeCheck, FileWarning, ScrollText, HandCoins, Waypoints, KeyRound, Cpu, Zap, CircleDollarSign, Monitor, BarChart3, UserCog, Mic, Camera, Activity, FileCheck, Scale3d, Radar, Flame, Sparkles, ShieldQuestion, GitBranch, ListChecks, Hash, PenTool, Podcast, Newspaper, RadioTower, BellRing, MailWarning, UserMinus, Glasses, Archive, Layers, ScanFace, Network, Server, HardDrive, CircleAlert, FileLock2, Ratio, Wrench, Gauge, TreePine, Flag, ShoppingBag, Coins, LockKeyhole, TabletSmartphone, Blocks, FileSearch, BriefcaseBusiness, ClipboardCheck, CircleX, AlarmClock, Orbit, Vault, PiggyBank, Banknote, Target, Unplug, SquareStack, PackageCheck, Gem, Crown, Handshake, FileCode, Route, Ticket, PlaneTakeoff, PlaneLanding, Luggage, Map, Compass, Anchor, Ship, Train, Bus, Bike, Utensils, Wine, Coffee, Store, Home, Tent, Mountain, Palmtree, Sunset, Waves } from "lucide-react";
+import { ArrowLeft, ChevronRight, FileText, Scale, Cookie, Shield, Eye, Globe, Lock, Database, Plane, Undo2, XCircle, Car, Umbrella, AlertTriangle, Heart, CloudLightning, MessageSquare, Users, Landmark, UserX, Ban, Gavel, Share2, Siren, DollarSign, Brain, Copyright, Megaphone, Mail, RefreshCw, Link, Accessibility, BookOpen, Fingerprint, ShieldAlert, ShieldCheck, MapPin, Wifi, CreditCard, Baby, Clock, Headphones, Receipt, Truck, Building2, Languages, Smartphone, BadgeCheck, FileWarning, ScrollText, HandCoins, Waypoints, KeyRound, Cpu, Zap, CircleDollarSign, Monitor, BarChart3, UserCog, Mic, Camera, Activity, FileCheck, Scale3d, Radar, Flame, Sparkles, ShieldQuestion, GitBranch, ListChecks, Hash, PenTool, Podcast, Newspaper, RadioTower, BellRing, MailWarning, UserMinus, Glasses, Archive, Layers, ScanFace, Network, Server, HardDrive, CircleAlert, FileLock2, Ratio, Wrench, Gauge, TreePine, Flag, ShoppingBag, Coins, LockKeyhole, TabletSmartphone, Blocks, FileSearch, BriefcaseBusiness, ClipboardCheck, CircleX, AlarmClock, Orbit, Vault, PiggyBank, Banknote, Target, Unplug, SquareStack, PackageCheck, Gem, Crown, Handshake, FileCode, Route, Ticket, PlaneTakeoff, PlaneLanding, Luggage, Map, Compass, Anchor, Ship, Train, Bus, Bike, Utensils, Wine, Coffee, Store, Home, Tent, Mountain, Palmtree, Sunset, Waves, Thermometer, Droplets, Wind, Snowflake, Sun, Moon, Cloud, Leaf, Sprout, Flower2, Apple, Grape, Carrot, Egg, Beef, Fish, Soup, Salad, IceCream2, Cake, Candy, Pizza, Sandwich, Popcorn, Beer, GlassWater, Milk, CupSoda, Citrus, Cherry, Banana } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const legalItems = [
@@ -9,10 +9,13 @@ const legalItems = [
   { icon: FileText, label: "Terms & Conditions", href: "/terms", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: Scale, label: "Privacy Policy", href: "/privacy", color: "bg-cyan-500/15", iconColor: "text-cyan-500" },
   { icon: Cookie, label: "Cookie Policy", href: "/cookies", color: "bg-amber-500/15", iconColor: "text-amber-500" },
-  { icon: Shield, label: "Partner Disclosure", href: "/partner-disclosure", color: "bg-rose-500/15", iconColor: "text-rose-500" },
+  { icon: Shield, label: "Partner Disclosure", href: "/legal/partner-disclosure", color: "bg-rose-500/15", iconColor: "text-rose-500" },
   { icon: FileCheck, label: "User Agreement", href: "/legal/user-agreement", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: Handshake, label: "Community Guidelines", href: "/legal/community-guidelines", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
   { icon: ListChecks, label: "Platform Rules", href: "/legal/platform-rules", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: ScrollText, label: "End User License Agreement (EULA)", href: "/legal/eula", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: FileText, label: "Supplemental Terms of Service", href: "/legal/supplemental-terms", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Scale, label: "Binding Agreement Acknowledgment", href: "/legal/binding-acknowledgment", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 2: PRIVACY, DATA & SURVEILLANCE
@@ -33,6 +36,14 @@ const legalItems = [
   { icon: FileLock2, label: "Data Encryption Standards", href: "/legal/encryption-standards", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: Network, label: "Third-Party Data Sharing", href: "/legal/third-party-data-sharing", color: "bg-orange-500/15", iconColor: "text-orange-500" },
   { icon: Hash, label: "Anonymization & De-Identification", href: "/legal/anonymization", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Eye, label: "Opt-Out & Opt-In Rights", href: "/legal/opt-out-rights", color: "bg-cyan-500/15", iconColor: "text-cyan-500" },
+  { icon: Database, label: "Data Breach Notification Policy", href: "/legal/data-breach-notification", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Lock, label: "Privacy Shield Framework", href: "/legal/privacy-shield", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Fingerprint, label: "Behavioral Biometrics Policy", href: "/legal/behavioral-biometrics", color: "bg-purple-500/15", iconColor: "text-purple-500" },
+  { icon: MapPin, label: "Geolocation Consent Framework", href: "/legal/geolocation-consent", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: ScanFace, label: "Liveness Detection Policy", href: "/legal/liveness-detection", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Database, label: "Data Warehousing Policy", href: "/legal/data-warehousing", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Archive, label: "Automated Data Collection Disclosure", href: "/legal/automated-data-collection", color: "bg-teal-500/15", iconColor: "text-teal-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 3: AI, ALGORITHMS & AUTOMATION
@@ -43,6 +54,15 @@ const legalItems = [
   { icon: Zap, label: "Dynamic Pricing Disclosure", href: "/legal/dynamic-pricing", color: "bg-amber-500/15", iconColor: "text-amber-500" },
   { icon: BarChart3, label: "Personalization & Recommendations", href: "/legal/personalization", color: "bg-sky-500/15", iconColor: "text-sky-500" },
   { icon: Target, label: "Behavioral Targeting Policy", href: "/legal/behavioral-targeting", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Cpu, label: "Generative AI Content Disclaimer", href: "/legal/generative-ai", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Brain, label: "AI Training Data Disclosure", href: "/legal/ai-training-data", color: "bg-purple-500/15", iconColor: "text-purple-500" },
+  { icon: Sparkles, label: "AI Hallucination Disclaimer", href: "/legal/ai-hallucination", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: BarChart3, label: "AI Bias & Fairness Statement", href: "/legal/ai-bias-fairness", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: Cpu, label: "AI Model Card Disclosure", href: "/legal/ai-model-card", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: GitBranch, label: "AI Risk Assessment Framework", href: "/legal/ai-risk-assessment", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Shield, label: "AI Safety & Alignment Policy", href: "/legal/ai-safety", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Eye, label: "AI Surveillance Prohibition", href: "/legal/ai-surveillance-ban", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Sparkles, label: "AI-Generated Price Disclaimer", href: "/legal/ai-price-disclaimer", color: "bg-amber-500/15", iconColor: "text-amber-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 4: TRAVEL & BOOKING
@@ -60,6 +80,20 @@ const legalItems = [
   { icon: Ticket, label: "Loyalty & Rewards Terms", href: "/legal/loyalty-terms", color: "bg-pink-500/15", iconColor: "text-pink-500" },
   { icon: Compass, label: "Travel Advisory Disclaimer", href: "/legal/travel-advisory", color: "bg-red-500/15", iconColor: "text-red-500" },
   { icon: Map, label: "Visa & Passport Disclaimer", href: "/legal/visa-passport", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Plane, label: "Codeshare & Interline Disclosure", href: "/legal/codeshare-disclosure", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+  { icon: Clock, label: "Schedule Change Notification Policy", href: "/legal/schedule-change", color: "bg-orange-500/15", iconColor: "text-orange-500" },
+  { icon: Globe, label: "International Travel Requirements", href: "/legal/international-travel", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Shield, label: "Travel Insurance Disclosure", href: "/legal/travel-insurance-disclosure", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: Receipt, label: "Hidden Fee Prohibition Policy", href: "/legal/hidden-fee-ban", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: Map, label: "Destination Safety Assessment", href: "/legal/destination-safety", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Ticket, label: "Frequent Flyer Point Disclosure", href: "/legal/frequent-flyer", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: PlaneLanding, label: "Overbooking Compensation Policy", href: "/legal/overbooking", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Luggage, label: "Special Assistance & Mobility", href: "/legal/special-assistance", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Compass, label: "Multi-City Booking Terms", href: "/legal/multi-city-terms", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+  { icon: Plane, label: "Group Booking Policy", href: "/legal/group-booking", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Globe, label: "Open-Jaw Ticket Policy", href: "/legal/open-jaw", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Clock, label: "Flexible Ticket Terms", href: "/legal/flexible-ticket", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: Receipt, label: "Fare Class Disclosure", href: "/legal/fare-class", color: "bg-sky-500/15", iconColor: "text-sky-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 5: MARKETPLACE & SERVICES
@@ -73,6 +107,9 @@ const legalItems = [
   { icon: Utensils, label: "Food Safety & Allergen Disclaimer", href: "/legal/food-safety", color: "bg-orange-500/15", iconColor: "text-orange-500" },
   { icon: Store, label: "Merchant Terms of Service", href: "/legal/merchant-terms", color: "bg-teal-500/15", iconColor: "text-teal-500" },
   { icon: PackageCheck, label: "Service Guarantee Terms", href: "/legal/service-guarantee", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: Headphones, label: "Response Time Commitment", href: "/legal/response-time", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+  { icon: Store, label: "Partner Onboarding Requirements", href: "/legal/partner-onboarding", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Truck, label: "Last-Mile Delivery Disclaimer", href: "/legal/last-mile", color: "bg-orange-500/15", iconColor: "text-orange-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 6: LIABILITY & PROTECTION
@@ -89,6 +126,11 @@ const legalItems = [
   { icon: Activity, label: "Health & Medical Disclaimer", href: "/legal/health-disclaimer", color: "bg-rose-500/15", iconColor: "text-rose-500" },
   { icon: Wrench, label: "Maintenance & Downtime Policy", href: "/legal/maintenance-policy", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: Gauge, label: "Performance Disclaimer", href: "/legal/performance-disclaimer", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: AlertTriangle, label: "Consequential Damages Waiver", href: "/legal/consequential-damages", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Shield, label: "Hold Harmless Agreement", href: "/legal/hold-harmless", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Ban, label: "Punitive Damages Exclusion", href: "/legal/punitive-damages", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Scale, label: "Contributory Negligence Clause", href: "/legal/contributory-negligence", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Shield, label: "Aggregate Liability Cap ($100)", href: "/legal/aggregate-liability-cap", color: "bg-red-500/15", iconColor: "text-red-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 7: DISPUTE, LEGAL & GOVERNANCE
@@ -102,6 +144,11 @@ const legalItems = [
   { icon: Ratio, label: "Entire Agreement Clause", href: "/legal/entire-agreement", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: Flag, label: "Waiver of Rights", href: "/legal/waiver-of-rights", color: "bg-amber-500/15", iconColor: "text-amber-500" },
   { icon: ClipboardCheck, label: "Regulatory Compliance", href: "/legal/regulatory-compliance", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Gavel, label: "Injunctive Relief Reservation", href: "/legal/injunctive-relief", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Scale, label: "Equitable Remedies Clause", href: "/legal/equitable-remedies", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "Forum Selection Clause", href: "/legal/forum-selection", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Flag, label: "Venue Objection Waiver", href: "/legal/venue-waiver", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: ScrollText, label: "Choice of Law Provision", href: "/legal/choice-of-law", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 8: USER POLICIES & CONDUCT
@@ -121,6 +168,13 @@ const legalItems = [
   { icon: Newspaper, label: "Content Moderation Policy", href: "/legal/content-moderation", color: "bg-orange-500/15", iconColor: "text-orange-500" },
   { icon: ShieldQuestion, label: "Misinformation Policy", href: "/legal/misinformation", color: "bg-red-500/15", iconColor: "text-red-500" },
   { icon: Podcast, label: "Influencer & Creator Policy", href: "/legal/influencer-policy", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: Ban, label: "Zero-Tolerance Abuse Policy", href: "/legal/zero-tolerance", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: UserX, label: "Impersonation Prohibition", href: "/legal/impersonation-ban", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Shield, label: "Account Sharing Prohibition", href: "/legal/account-sharing-ban", color: "bg-orange-500/15", iconColor: "text-orange-500" },
+  { icon: Lock, label: "Two-Factor Authentication Requirement", href: "/legal/2fa-requirement", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Ban, label: "Bot & Automation Prohibition", href: "/legal/bot-prohibition", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: CircleX, label: "Spam & Unsolicited Content Ban", href: "/legal/spam-ban", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Eye, label: "Platform Monitoring Disclosure", href: "/legal/platform-monitoring", color: "bg-orange-500/15", iconColor: "text-orange-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 9: SECURITY, FRAUD & FINANCIAL
@@ -137,6 +191,14 @@ const legalItems = [
   { icon: LockKeyhole, label: "Multi-Factor Authentication Policy", href: "/legal/mfa-policy", color: "bg-teal-500/15", iconColor: "text-teal-500" },
   { icon: Server, label: "Infrastructure Security Policy", href: "/legal/infra-security", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: HardDrive, label: "Backup & Disaster Recovery", href: "/legal/disaster-recovery", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: ShieldAlert, label: "Phishing & Social Engineering Policy", href: "/legal/phishing-policy", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Shield, label: "Insider Threat Prevention", href: "/legal/insider-threat", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: KeyRound, label: "API Key Security Policy", href: "/legal/api-key-security", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: CreditCard, label: "Tokenization & Card Vault Policy", href: "/legal/tokenization", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: DollarSign, label: "Sanctions Screening Policy", href: "/legal/sanctions-screening", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Vault, label: "Know Your Customer (KYC) Policy", href: "/legal/kyc-policy", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Banknote, label: "Wire Transfer Policy", href: "/legal/wire-transfer", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: ShieldCheck, label: "Payment Fraud Detection", href: "/legal/payment-fraud", color: "bg-red-500/15", iconColor: "text-red-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 10: IP, COMMUNICATIONS & TECH
@@ -153,6 +215,11 @@ const legalItems = [
   { icon: Blocks, label: "SDK & Third-Party Integration", href: "/legal/sdk-integration", color: "bg-violet-500/15", iconColor: "text-violet-500" },
   { icon: Monitor, label: "Open Source Licenses", href: "/legal/open-source", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: FileCode, label: "Embedded Content Policy", href: "/legal/embedded-content", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Mail, label: "CAN-SPAM Act Compliance", href: "/legal/can-spam", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: RadioTower, label: "TCPA Compliance Notice", href: "/legal/tcpa", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Smartphone, label: "App Store Compliance", href: "/legal/app-store-compliance", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Monitor, label: "Browser Extension Policy", href: "/legal/browser-extension", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Wifi, label: "WebSocket & Real-Time Data Policy", href: "/legal/websocket-policy", color: "bg-teal-500/15", iconColor: "text-teal-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 11: ENVIRONMENTAL & SOCIAL
@@ -168,6 +235,11 @@ const legalItems = [
   { icon: Heart, label: "Human Rights Policy", href: "/legal/human-rights", color: "bg-rose-500/15", iconColor: "text-rose-500" },
   { icon: Users, label: "Diversity & Inclusion Policy", href: "/legal/diversity-inclusion", color: "bg-violet-500/15", iconColor: "text-violet-500" },
   { icon: Sunset, label: "Community Impact Statement", href: "/legal/community-impact", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Leaf, label: "Green Data Center Commitment", href: "/legal/green-data-center", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Sprout, label: "Reforestation Pledge", href: "/legal/reforestation", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Droplets, label: "Water Conservation Policy", href: "/legal/water-conservation", color: "bg-cyan-500/15", iconColor: "text-cyan-500" },
+  { icon: Wind, label: "Renewable Energy Commitment", href: "/legal/renewable-energy", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Thermometer, label: "Climate Change Disclosure", href: "/legal/climate-disclosure", color: "bg-red-500/15", iconColor: "text-red-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 12: INTERNATIONAL COMPLIANCE
@@ -191,6 +263,41 @@ const legalItems = [
   { icon: Landmark, label: "Connecticut CTDPA Compliance", href: "/legal/ctdpa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: Landmark, label: "Texas TDPSA Compliance", href: "/legal/tdpsa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: BadgeCheck, label: "Illinois BIPA Compliance", href: "/legal/bipa", color: "bg-purple-500/15", iconColor: "text-purple-500" },
+  { icon: Globe, label: "Mexico LFPDPPP Compliance", href: "/legal/lfpdppp", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Globe, label: "Thailand PDPA Compliance", href: "/legal/thailand-pdpa", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Globe, label: "South Africa POPIA Compliance", href: "/legal/popia", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Globe, label: "New Zealand Privacy Act 2020", href: "/legal/nz-privacy", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Globe, label: "Argentina PDPL Compliance", href: "/legal/argentina-pdpl", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+  { icon: Globe, label: "Israel Privacy Protection Law", href: "/legal/israel-privacy", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Globe, label: "Philippines Data Privacy Act", href: "/legal/philippines-dpa", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Globe, label: "Turkey KVKK Compliance", href: "/legal/kvkk", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Globe, label: "Egypt Data Protection Law", href: "/legal/egypt-data", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Globe, label: "Nigeria NDPR Compliance", href: "/legal/ndpr", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Globe, label: "Kenya Data Protection Act", href: "/legal/kenya-dpa", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Globe, label: "Indonesia PDP Law", href: "/legal/indonesia-pdp", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Globe, label: "Vietnam Cybersecurity Law", href: "/legal/vietnam-cyber", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Globe, label: "Malaysia PDPA Compliance", href: "/legal/malaysia-pdpa", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Globe, label: "Colombia Data Protection", href: "/legal/colombia-data", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Globe, label: "Chile Data Protection Law", href: "/legal/chile-data", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Globe, label: "Peru Data Protection Law", href: "/legal/peru-data", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Globe, label: "Switzerland nDSG Compliance", href: "/legal/switzerland-ndsg", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Globe, label: "Norway Personal Data Act", href: "/legal/norway-pda", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Globe, label: "Saudi Arabia PDPL", href: "/legal/saudi-pdpl", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Globe, label: "Qatar Data Privacy Law", href: "/legal/qatar-privacy", color: "bg-purple-500/15", iconColor: "text-purple-500" },
+  { icon: Globe, label: "Bahrain PDPL Compliance", href: "/legal/bahrain-pdpl", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Globe, label: "Ghana Data Protection Act", href: "/legal/ghana-dpa", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Landmark, label: "Montana Consumer Data Privacy", href: "/legal/montana-cdpa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "Oregon Consumer Privacy Act", href: "/legal/oregon-cpa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "Utah Consumer Privacy Act", href: "/legal/utah-ucpa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "Iowa Consumer Data Protection", href: "/legal/iowa-cdpa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "Indiana Consumer Data Protection", href: "/legal/indiana-cdpa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "Tennessee Information Protection", href: "/legal/tennessee-tipa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "Delaware Personal Data Privacy", href: "/legal/delaware-pdpa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "New Jersey Data Privacy Act", href: "/legal/nj-dpa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "New Hampshire Privacy Act", href: "/legal/nh-privacy", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "Maryland Online Data Privacy", href: "/legal/maryland-odpa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "Minnesota Consumer Data Privacy", href: "/legal/minnesota-cdpa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "Nebraska Data Privacy Act", href: "/legal/nebraska-dpa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 13: TRANSPORT & MOBILITY SPECIFIC
@@ -206,6 +313,13 @@ const legalItems = [
   { icon: MapPin, label: "Geofencing & Zone Policy", href: "/legal/geofencing", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
   { icon: Zap, label: "Surge & Peak Pricing Policy", href: "/legal/surge-pricing", color: "bg-amber-500/15", iconColor: "text-amber-500" },
   { icon: Clock, label: "Wait Time & No-Show Policy", href: "/legal/wait-time", color: "bg-orange-500/15", iconColor: "text-orange-500" },
+  { icon: Ship, label: "Yacht Charter Terms", href: "/legal/yacht-charter", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Plane, label: "Private Jet Charter Terms", href: "/legal/private-jet", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Car, label: "Limousine Service Terms", href: "/legal/limousine-terms", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Bike, label: "E-Scooter Safety Agreement", href: "/legal/escooter-safety", color: "bg-lime-500/15", iconColor: "text-lime-500" },
+  { icon: Train, label: "High-Speed Rail Booking Terms", href: "/legal/high-speed-rail", color: "bg-orange-500/15", iconColor: "text-orange-500" },
+  { icon: Car, label: "Peer-to-Peer Car Sharing Terms", href: "/legal/p2p-car-sharing", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: MapPin, label: "Airport Parking Terms", href: "/legal/airport-parking", color: "bg-sky-500/15", iconColor: "text-sky-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 14: FOOD & DELIVERY SPECIFIC
@@ -217,6 +331,12 @@ const legalItems = [
   { icon: Activity, label: "Nutritional Information Disclaimer", href: "/legal/nutritional-info", color: "bg-green-500/15", iconColor: "text-green-500" },
   { icon: Flame, label: "Food Handling & Safety Standards", href: "/legal/food-handling", color: "bg-red-500/15", iconColor: "text-red-500" },
   { icon: Receipt, label: "Menu Pricing Accuracy", href: "/legal/menu-pricing", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: Thermometer, label: "Cold Chain & Temperature Policy", href: "/legal/cold-chain", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: AlertTriangle, label: "Allergen Cross-Contamination Warning", href: "/legal/allergen-warning", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Clock, label: "Delivery Time Guarantee Disclaimer", href: "/legal/delivery-time-disclaimer", color: "bg-orange-500/15", iconColor: "text-orange-500" },
+  { icon: Utensils, label: "Halal & Kosher Certification Disclaimer", href: "/legal/halal-kosher", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Wine, label: "Age Verification for Alcohol", href: "/legal/alcohol-age-verify", color: "bg-purple-500/15", iconColor: "text-purple-500" },
+  { icon: Store, label: "Ghost Kitchen Disclosure", href: "/legal/ghost-kitchen", color: "bg-orange-500/15", iconColor: "text-orange-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 15: ACCOMMODATION SPECIFIC
@@ -227,6 +347,12 @@ const legalItems = [
   { icon: Building2, label: "Guest Behavior Policy", href: "/legal/guest-behavior", color: "bg-orange-500/15", iconColor: "text-orange-500" },
   { icon: Shield, label: "Property Damage Protection", href: "/legal/property-damage", color: "bg-red-500/15", iconColor: "text-red-500" },
   { icon: Lock, label: "Check-In & Check-Out Policy", href: "/legal/check-in-out", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Home, label: "Homestay & Shared Space Terms", href: "/legal/homestay-terms", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Building2, label: "Hotel Star Rating Disclaimer", href: "/legal/star-rating-disclaimer", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Shield, label: "Security Deposit Policy", href: "/legal/security-deposit", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Ban, label: "Party & Event Prohibition", href: "/legal/party-ban", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Tent, label: "Glamping & Outdoor Stay Terms", href: "/legal/glamping-terms", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Palmtree, label: "Resort & Spa Terms", href: "/legal/resort-spa-terms", color: "bg-amber-500/15", iconColor: "text-amber-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 16: ADVANCED SECURITY & COMPLIANCE
@@ -243,6 +369,15 @@ const legalItems = [
   { icon: Radar, label: "Penetration Testing Policy", href: "/legal/pen-testing", color: "bg-red-500/15", iconColor: "text-red-500" },
   { icon: HardDrive, label: "Data Destruction Policy", href: "/legal/data-destruction", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: FileLock2, label: "Zero-Trust Security Framework", href: "/legal/zero-trust", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Shield, label: "SOC 1 Type I Compliance", href: "/legal/soc1", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Shield, label: "ISO 27701 Privacy Management", href: "/legal/iso27701", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Shield, label: "ISO 22301 Business Continuity", href: "/legal/iso22301", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Shield, label: "NIST Cybersecurity Framework", href: "/legal/nist-csf", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Shield, label: "CIS Controls Compliance", href: "/legal/cis-controls", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Server, label: "Endpoint Security Policy", href: "/legal/endpoint-security", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Network, label: "DDoS Protection Policy", href: "/legal/ddos-protection", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: KeyRound, label: "Certificate Management Policy", href: "/legal/cert-management", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: HardDrive, label: "Secure Development Lifecycle", href: "/legal/sdlc", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 17: ADVERTISING & MONETIZATION
@@ -253,6 +388,10 @@ const legalItems = [
   { icon: CircleDollarSign, label: "Affiliate & Referral Program Terms", href: "/legal/affiliate-terms", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
   { icon: Sparkles, label: "Sponsored Content Policy", href: "/legal/sponsored-content", color: "bg-violet-500/15", iconColor: "text-violet-500" },
   { icon: Eye, label: "Ad Transparency & Labeling", href: "/legal/ad-transparency", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Target, label: "Retargeting & Remarketing Policy", href: "/legal/retargeting", color: "bg-orange-500/15", iconColor: "text-orange-500" },
+  { icon: BarChart3, label: "Conversion Tracking Disclosure", href: "/legal/conversion-tracking", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+  { icon: Megaphone, label: "Native Advertising Guidelines", href: "/legal/native-ads", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: Eye, label: "Programmatic Advertising Policy", href: "/legal/programmatic-ads", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 18: INSURANCE & FINANCIAL PRODUCTS
@@ -263,6 +402,11 @@ const legalItems = [
   { icon: Banknote, label: "Wallet & Stored Value Terms", href: "/legal/wallet-terms", color: "bg-amber-500/15", iconColor: "text-amber-500" },
   { icon: HandCoins, label: "Gift Card Terms & Conditions", href: "/legal/gift-card-terms", color: "bg-pink-500/15", iconColor: "text-pink-500" },
   { icon: DollarSign, label: "Credit & Voucher Policy", href: "/legal/credit-voucher", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: Umbrella, label: "Baggage Insurance Disclosure", href: "/legal/baggage-insurance", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Shield, label: "Medical Emergency Coverage", href: "/legal/medical-coverage", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: CreditCard, label: "Installment Payment Terms", href: "/legal/installment-terms", color: "bg-purple-500/15", iconColor: "text-purple-500" },
+  { icon: Banknote, label: "Prepaid Card Terms", href: "/legal/prepaid-card", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: DollarSign, label: "Loyalty Points Expiration Policy", href: "/legal/points-expiration", color: "bg-pink-500/15", iconColor: "text-pink-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 19: ENTERPRISE & B2B
@@ -273,6 +417,11 @@ const legalItems = [
   { icon: FileCheck, label: "Data Processing Agreement (DPA)", href: "/legal/dpa", color: "bg-blue-500/15", iconColor: "text-blue-500" },
   { icon: Handshake, label: "Non-Disclosure Agreement (NDA)", href: "/legal/nda", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: Scale3d, label: "Master Service Agreement (MSA)", href: "/legal/msa", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: BriefcaseBusiness, label: "Reseller Agreement", href: "/legal/reseller-agreement", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Building2, label: "White-Label Service Terms", href: "/legal/white-label", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Handshake, label: "Channel Partner Agreement", href: "/legal/channel-partner", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: FileCheck, label: "Sub-Processing Agreement", href: "/legal/sub-processing", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Scale3d, label: "Statement of Work Template", href: "/legal/sow-template", color: "bg-slate-500/15", iconColor: "text-slate-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 20: META-LEGAL & COMPLIANCE
@@ -295,6 +444,8 @@ const legalItems = [
   { icon: Ratio, label: "Assignment & Transfer Clause", href: "/legal/assignment-transfer", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: Flag, label: "Whistleblower Protection", href: "/legal/whistleblower", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
   { icon: ScrollText, label: "Survival Clause", href: "/legal/survival-clause", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: FileText, label: "Version History & Changelog", href: "/legal/changelog", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Archive, label: "Legal Archive & Prior Versions", href: "/legal/archive", color: "bg-slate-500/15", iconColor: "text-slate-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 21: ANTI-HARASSMENT & SAFETY
@@ -309,6 +460,11 @@ const legalItems = [
   { icon: Baby, label: "Child Sexual Exploitation Policy", href: "/legal/csam-policy", color: "bg-red-500/15", iconColor: "text-red-500" },
   { icon: Flame, label: "Terrorism & Extremism Policy", href: "/legal/terrorism-policy", color: "bg-red-500/15", iconColor: "text-red-500" },
   { icon: Eye, label: "Dangerous Organizations Policy", href: "/legal/dangerous-orgs", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: ShieldAlert, label: "Coordinated Inauthentic Behavior", href: "/legal/inauthentic-behavior", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Ban, label: "Revenge Porn Prohibition", href: "/legal/revenge-porn-ban", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Shield, label: "Intimate Image Abuse Policy", href: "/legal/intimate-image-abuse", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: UserX, label: "Cyberbullying Response Protocol", href: "/legal/cyberbullying-response", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Siren, label: "Swatting & False Report Policy", href: "/legal/swatting-policy", color: "bg-red-500/15", iconColor: "text-red-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 22: ELECTION & POLITICAL
@@ -317,6 +473,8 @@ const legalItems = [
   { icon: Flag, label: "Election Integrity Policy", href: "/legal/election-integrity", color: "bg-blue-500/15", iconColor: "text-blue-500" },
   { icon: ShieldQuestion, label: "Deepfake & Synthetic Media Policy", href: "/legal/deepfake-policy", color: "bg-violet-500/15", iconColor: "text-violet-500" },
   { icon: Newspaper, label: "News Integrity Policy", href: "/legal/news-integrity", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+  { icon: Flag, label: "Government Official Account Policy", href: "/legal/government-accounts", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Landmark, label: "Lobbying Disclosure", href: "/legal/lobbying-disclosure", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 23: HEALTH & WELLNESS
@@ -327,6 +485,9 @@ const legalItems = [
   { icon: Ban, label: "Controlled Substances Policy", href: "/legal/controlled-substances", color: "bg-red-500/15", iconColor: "text-red-500" },
   { icon: ShieldCheck, label: "COVID-19 Policy", href: "/legal/covid-policy", color: "bg-blue-500/15", iconColor: "text-blue-500" },
   { icon: Activity, label: "Fitness & Activity Waiver", href: "/legal/fitness-waiver", color: "bg-orange-500/15", iconColor: "text-orange-500" },
+  { icon: Heart, label: "Mental Health Resources Disclaimer", href: "/legal/mental-health", color: "bg-rose-500/15", iconColor: "text-rose-500" },
+  { icon: Activity, label: "Dietary Supplement Disclaimer", href: "/legal/dietary-supplement", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: CircleAlert, label: "Medical Device Disclaimer", href: "/legal/medical-device", color: "bg-red-500/15", iconColor: "text-red-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 24: GAMBLING, CONTESTS & PROMOTIONS
@@ -337,6 +498,10 @@ const legalItems = [
   { icon: Crown, label: "VIP & Premium Tier Terms", href: "/legal/vip-terms", color: "bg-amber-500/15", iconColor: "text-amber-500" },
   { icon: Gem, label: "Subscription Auto-Renewal Terms", href: "/legal/auto-renewal", color: "bg-purple-500/15", iconColor: "text-purple-500" },
   { icon: HandCoins, label: "Cashback & Rewards Policy", href: "/legal/cashback-policy", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: Sparkles, label: "Flash Sale & Limited Offer Terms", href: "/legal/flash-sale", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: Ticket, label: "Coupon & Discount Code Policy", href: "/legal/coupon-policy", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Crown, label: "Early Access Program Terms", href: "/legal/early-access", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Gem, label: "Price Match Guarantee Policy", href: "/legal/price-match", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 25: REAL ESTATE & PROPERTY
@@ -345,6 +510,8 @@ const legalItems = [
   { icon: Building2, label: "Short-Term Rental Regulations", href: "/legal/short-term-rental", color: "bg-teal-500/15", iconColor: "text-teal-500" },
   { icon: Map, label: "Zoning & Occupancy Compliance", href: "/legal/zoning-compliance", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: Lock, label: "Tenant & Landlord Disclosure", href: "/legal/tenant-landlord", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Home, label: "Fair Housing Act Compliance", href: "/legal/fair-housing", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: Building2, label: "Property Inspection Disclaimer", href: "/legal/property-inspection", color: "bg-amber-500/15", iconColor: "text-amber-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 26: ACCESSIBILITY & DISABILITY
@@ -354,6 +521,9 @@ const legalItems = [
   { icon: Accessibility, label: "European Accessibility Act", href: "/legal/eaa", color: "bg-blue-500/15", iconColor: "text-blue-500" },
   { icon: Glasses, label: "Screen Reader Compatibility", href: "/legal/screen-reader", color: "bg-teal-500/15", iconColor: "text-teal-500" },
   { icon: Languages, label: "Sign Language Interpretation", href: "/legal/sign-language", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Accessibility, label: "Cognitive Accessibility Policy", href: "/legal/cognitive-accessibility", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Accessibility, label: "Color Contrast Compliance", href: "/legal/color-contrast", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Accessibility, label: "Keyboard Navigation Compliance", href: "/legal/keyboard-nav", color: "bg-green-500/15", iconColor: "text-green-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 27: CRYPTO, WEB3 & BLOCKCHAIN
@@ -363,6 +533,10 @@ const legalItems = [
   { icon: Vault, label: "Digital Wallet Security", href: "/legal/digital-wallet-security", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: Hash, label: "NFT & Digital Asset Terms", href: "/legal/nft-terms", color: "bg-purple-500/15", iconColor: "text-purple-500" },
   { icon: Network, label: "DeFi Disclaimer", href: "/legal/defi-disclaimer", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Coins, label: "Stablecoin Payment Policy", href: "/legal/stablecoin", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Blocks, label: "Smart Contract Disclaimer", href: "/legal/smart-contract", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Hash, label: "DAO Governance Disclosure", href: "/legal/dao-governance", color: "bg-purple-500/15", iconColor: "text-purple-500" },
+  { icon: Network, label: "Web3 Identity Verification", href: "/legal/web3-identity", color: "bg-teal-500/15", iconColor: "text-teal-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 28: IOT, HARDWARE & DEVICES
@@ -371,6 +545,8 @@ const legalItems = [
   { icon: Wifi, label: "IoT Data Collection Policy", href: "/legal/iot-data", color: "bg-teal-500/15", iconColor: "text-teal-500" },
   { icon: Monitor, label: "Smart Display & TV Terms", href: "/legal/smart-display", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: Car, label: "Connected Vehicle Data Policy", href: "/legal/connected-vehicle", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Smartphone, label: "Smart Home Device Policy", href: "/legal/smart-home", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Wifi, label: "Bluetooth & NFC Data Policy", href: "/legal/bluetooth-nfc", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 29: EDUCATION & RESEARCH
@@ -379,6 +555,8 @@ const legalItems = [
   { icon: FileSearch, label: "Research Data Usage Policy", href: "/legal/research-data", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: Brain, label: "Academic Partnership Terms", href: "/legal/academic-terms", color: "bg-violet-500/15", iconColor: "text-violet-500" },
   { icon: Database, label: "FERPA Compliance Notice", href: "/legal/ferpa", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: BookOpen, label: "Student Data Protection", href: "/legal/student-data", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+  { icon: Brain, label: "IRB Research Ethics", href: "/legal/irb-ethics", color: "bg-violet-500/15", iconColor: "text-violet-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 30: TELECOMMUNICATIONS
@@ -388,6 +566,8 @@ const legalItems = [
   { icon: Mic, label: "Call Recording Disclosure", href: "/legal/call-recording", color: "bg-orange-500/15", iconColor: "text-orange-500" },
   { icon: Mail, label: "Transactional Email Policy", href: "/legal/transactional-email", color: "bg-sky-500/15", iconColor: "text-sky-500" },
   { icon: BellRing, label: "SMS & MMS Terms", href: "/legal/sms-terms", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: RadioTower, label: "Emergency Calling Limitations", href: "/legal/emergency-calling", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: MessageSquare, label: "Chatbot Interaction Disclosure", href: "/legal/chatbot-disclosure", color: "bg-violet-500/15", iconColor: "text-violet-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 31: GOVERNMENT & PUBLIC SECTOR
@@ -396,6 +576,9 @@ const legalItems = [
   { icon: Shield, label: "ITAR Compliance", href: "/legal/itar", color: "bg-red-500/15", iconColor: "text-red-500" },
   { icon: Flag, label: "FOIA Response Policy", href: "/legal/foia", color: "bg-blue-500/15", iconColor: "text-blue-500" },
   { icon: BadgeCheck, label: "Section 508 Compliance", href: "/legal/section-508", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Landmark, label: "CJIS Security Policy", href: "/legal/cjis", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Shield, label: "EAR Export Control", href: "/legal/ear-export", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Flag, label: "OFAC Compliance Notice", href: "/legal/ofac", color: "bg-red-500/15", iconColor: "text-red-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 32: DISPUTE PREVENTION & RESOLUTION
@@ -406,6 +589,9 @@ const legalItems = [
   { icon: Users, label: "Multi-Party Dispute Resolution", href: "/legal/multi-party-dispute", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: Globe, label: "Cross-Border Dispute Policy", href: "/legal/cross-border-dispute", color: "bg-blue-500/15", iconColor: "text-blue-500" },
   { icon: DollarSign, label: "Fee-Shifting & Cost Allocation", href: "/legal/fee-shifting", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: MessageSquare, label: "Online Dispute Resolution (ODR)", href: "/legal/odr", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Gavel, label: "Mandatory Pre-Suit Notice", href: "/legal/pre-suit-notice", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Scale, label: "Escalation Procedure", href: "/legal/escalation-procedure", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 33: ANTI-COMPETITIVE & TRADE
@@ -415,6 +601,8 @@ const legalItems = [
   { icon: ShieldAlert, label: "Price-Fixing Prohibition", href: "/legal/price-fixing", color: "bg-red-500/15", iconColor: "text-red-500" },
   { icon: Scale3d, label: "Market Dominance Disclosure", href: "/legal/market-dominance", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: ListChecks, label: "Non-Compete Clause", href: "/legal/non-compete", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Ban, label: "Bid-Rigging Prohibition", href: "/legal/bid-rigging", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Handshake, label: "Most Favored Nation Clause", href: "/legal/mfn-clause", color: "bg-teal-500/15", iconColor: "text-teal-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 34: LABOR & EMPLOYMENT
@@ -425,6 +613,11 @@ const legalItems = [
   { icon: Clock, label: "Working Hours & Breaks Policy", href: "/legal/working-hours", color: "bg-sky-500/15", iconColor: "text-sky-500" },
   { icon: Shield, label: "Worker Safety Standards", href: "/legal/worker-safety", color: "bg-red-500/15", iconColor: "text-red-500" },
   { icon: Heart, label: "Benefits & Compensation Policy", href: "/legal/benefits-policy", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: Users, label: "Gig Economy Worker Rights", href: "/legal/gig-rights", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Shield, label: "Workplace Anti-Retaliation", href: "/legal/anti-retaliation", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: DollarSign, label: "Tip Transparency Policy", href: "/legal/tip-transparency", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Clock, label: "Background Check Disclosure", href: "/legal/background-check", color: "bg-orange-500/15", iconColor: "text-orange-500" },
+  { icon: Heart, label: "Equal Pay Commitment", href: "/legal/equal-pay", color: "bg-pink-500/15", iconColor: "text-pink-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 35: ANTI-TRAFFICKING & EXPLOITATION
@@ -433,6 +626,8 @@ const legalItems = [
   { icon: Ban, label: "Forced Labor Prohibition", href: "/legal/forced-labor", color: "bg-red-500/15", iconColor: "text-red-500" },
   { icon: Eye, label: "Supply Chain Transparency", href: "/legal/supply-chain", color: "bg-teal-500/15", iconColor: "text-teal-500" },
   { icon: Heart, label: "Conflict Minerals Statement", href: "/legal/conflict-minerals", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Shield, label: "Child Labor Prohibition", href: "/legal/child-labor-ban", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Eye, label: "Ethical Sourcing Policy", href: "/legal/ethical-sourcing", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 36: MEDIA & ENTERTAINMENT
@@ -443,6 +638,10 @@ const legalItems = [
   { icon: Newspaper, label: "Press & Media Relations", href: "/legal/press-policy", color: "bg-sky-500/15", iconColor: "text-sky-500" },
   { icon: Copyright, label: "Music Licensing Disclaimer", href: "/legal/music-licensing", color: "bg-violet-500/15", iconColor: "text-violet-500" },
   { icon: PenTool, label: "Trademark Usage Guidelines", href: "/legal/trademark-guidelines", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Camera, label: "Live Streaming Terms of Use", href: "/legal/live-streaming", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: Copyright, label: "Fair Use & Commentary Policy", href: "/legal/fair-use", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Monitor, label: "Digital Millennium Copyright Takedown", href: "/legal/dmca-takedown", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: PenTool, label: "Creative Commons Usage", href: "/legal/creative-commons", color: "bg-violet-500/15", iconColor: "text-violet-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 37: MARKETPLACE INTEGRITY
@@ -453,6 +652,9 @@ const legalItems = [
   { icon: Scale, label: "Fair Pricing Commitment", href: "/legal/fair-pricing", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
   { icon: ListChecks, label: "Quality Assurance Standards", href: "/legal/quality-assurance", color: "bg-teal-500/15", iconColor: "text-teal-500" },
   { icon: Radar, label: "Fake Review Detection Policy", href: "/legal/fake-reviews", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: ShieldCheck, label: "Seller Verification Process", href: "/legal/seller-verification", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: ListChecks, label: "Product Listing Standards", href: "/legal/listing-standards", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Scale, label: "Anti-Price Gouging Policy", href: "/legal/anti-price-gouging", color: "bg-red-500/15", iconColor: "text-red-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 38: EMERGENCY & CRISIS
@@ -462,6 +664,9 @@ const legalItems = [
   { icon: Activity, label: "Crisis Communication Policy", href: "/legal/crisis-communication", color: "bg-orange-500/15", iconColor: "text-orange-500" },
   { icon: Shield, label: "Business Continuity Plan", href: "/legal/business-continuity", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: Headphones, label: "Emergency Support Escalation", href: "/legal/emergency-escalation", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Siren, label: "Pandemic Response Playbook", href: "/legal/pandemic-playbook", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Shield, label: "Cyber Incident Response Plan", href: "/legal/cyber-incident", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Flame, label: "War & Conflict Zone Policy", href: "/legal/conflict-zone", color: "bg-red-500/15", iconColor: "text-red-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 39: INTELLECTUAL PROPERTY EXTENDED
@@ -472,6 +677,10 @@ const legalItems = [
   { icon: FileCode, label: "Software License Agreement", href: "/legal/software-license", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: Blocks, label: "Font & Typography Licensing", href: "/legal/font-licensing", color: "bg-violet-500/15", iconColor: "text-violet-500" },
   { icon: Camera, label: "Image & Asset Licensing", href: "/legal/image-licensing", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: Brain, label: "Trade Dress Protection", href: "/legal/trade-dress", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Copyright, label: "Domain Name Dispute Policy", href: "/legal/domain-dispute", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: FileCode, label: "Source Code Escrow Agreement", href: "/legal/source-escrow", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: PenTool, label: "Design Patent Notice", href: "/legal/design-patent", color: "bg-violet-500/15", iconColor: "text-violet-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 40: COMPLIANCE CERTIFICATIONS
@@ -481,6 +690,9 @@ const legalItems = [
   { icon: FileSearch, label: "Third-Party Audit Results", href: "/legal/audit-results", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: Shield, label: "Privacy Impact Assessment", href: "/legal/privacy-impact", color: "bg-blue-500/15", iconColor: "text-blue-500" },
   { icon: Scale3d, label: "Regulatory Filing Disclosure", href: "/legal/regulatory-filings", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: BadgeCheck, label: "Data Protection Impact Assessment", href: "/legal/dpia", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: ClipboardCheck, label: "Compliance Training Disclosure", href: "/legal/compliance-training", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: FileSearch, label: "Internal Audit Framework", href: "/legal/internal-audit", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 41: SOCIAL RESPONSIBILITY
@@ -490,6 +702,9 @@ const legalItems = [
   { icon: TreePine, label: "Net Zero Commitment", href: "/legal/net-zero", color: "bg-green-500/15", iconColor: "text-green-500" },
   { icon: Globe, label: "UN Global Compact Adherence", href: "/legal/un-global-compact", color: "bg-blue-500/15", iconColor: "text-blue-500" },
   { icon: Gem, label: "ESG Disclosure Statement", href: "/legal/esg-disclosure", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: Heart, label: "Corporate Social Responsibility", href: "/legal/csr", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: Globe, label: "UN Sustainable Development Goals", href: "/legal/un-sdg", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Users, label: "Stakeholder Engagement Policy", href: "/legal/stakeholder-engagement", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 42: ADVANCED PRIVACY CONTROLS
@@ -501,6 +716,11 @@ const legalItems = [
   { icon: Archive, label: "Data Subject Access Request (DSAR)", href: "/legal/dsar", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: Hash, label: "Pseudonymization Policy", href: "/legal/pseudonymization", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: FileLock2, label: "End-to-End Encryption Policy", href: "/legal/e2e-encryption", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Lock, label: "Privacy by Default Policy", href: "/legal/privacy-by-default", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Eye, label: "Consent Withdrawal Process", href: "/legal/consent-withdrawal", color: "bg-cyan-500/15", iconColor: "text-cyan-500" },
+  { icon: Database, label: "Purpose Limitation Principle", href: "/legal/purpose-limitation", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: UserMinus, label: "Data Rectification Rights", href: "/legal/data-rectification", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Archive, label: "Storage Limitation Policy", href: "/legal/storage-limitation", color: "bg-slate-500/15", iconColor: "text-slate-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 43: FINANCIAL SERVICES REGULATION
@@ -511,6 +731,12 @@ const legalItems = [
   { icon: Banknote, label: "Truth in Lending Disclosure", href: "/legal/tila", color: "bg-amber-500/15", iconColor: "text-amber-500" },
   { icon: Shield, label: "Dodd-Frank Compliance", href: "/legal/dodd-frank", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: PiggyBank, label: "FDIC & Deposit Disclaimer", href: "/legal/fdic-disclaimer", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Landmark, label: "MiFID II Compliance", href: "/legal/mifid-ii", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: DollarSign, label: "PSD2 Strong Customer Auth", href: "/legal/psd2-sca", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: CreditCard, label: "Fair Credit Reporting Act", href: "/legal/fcra", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Banknote, label: "Money Transmission License", href: "/legal/money-transmission", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Shield, label: "Basel III Disclosure", href: "/legal/basel-iii", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: DollarSign, label: "Reg E Compliance Notice", href: "/legal/reg-e", color: "bg-blue-500/15", iconColor: "text-blue-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 44: AUTOMOTIVE & VEHICLE
@@ -521,6 +747,10 @@ const legalItems = [
   { icon: AlertTriangle, label: "Roadside Assistance Terms", href: "/legal/roadside-assistance", color: "bg-amber-500/15", iconColor: "text-amber-500" },
   { icon: MapPin, label: "Tolling & Parking Policy", href: "/legal/tolling-parking", color: "bg-slate-500/15", iconColor: "text-slate-500" },
   { icon: Flame, label: "Vehicle Recall Notification", href: "/legal/vehicle-recall", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Car, label: "Fleet Management Terms", href: "/legal/fleet-management", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Shield, label: "Telematics Data Policy", href: "/legal/telematics", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: MapPin, label: "Mileage & Usage Tracking", href: "/legal/mileage-tracking", color: "bg-orange-500/15", iconColor: "text-orange-500" },
+  { icon: Car, label: "Dashcam & In-Vehicle Recording", href: "/legal/dashcam-policy", color: "bg-violet-500/15", iconColor: "text-violet-500" },
 
   // ═══════════════════════════════════════════
   // SECTION 45: AVIATION REGULATORY
@@ -532,12 +762,65 @@ const legalItems = [
   { icon: Plane, label: "Montreal Convention Notice", href: "/legal/montreal-convention", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: Globe, label: "Warsaw Convention Disclosure", href: "/legal/warsaw-convention", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
   { icon: Receipt, label: "Airline Ancillary Fee Disclosure", href: "/legal/ancillary-fees", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Plane, label: "IATA Conditions of Carriage", href: "/legal/iata-conditions", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+  { icon: PlaneTakeoff, label: "FAA Consumer Protection", href: "/legal/faa-consumer", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+  { icon: Globe, label: "Open Skies Agreement Disclosure", href: "/legal/open-skies", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Luggage, label: "Dangerous Goods in Baggage", href: "/legal/dangerous-goods", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Plane, label: "Unaccompanied Minor Policy", href: "/legal/unaccompanied-minor", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: PlaneLanding, label: "Airport Security Compliance", href: "/legal/airport-security", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Receipt, label: "Fuel Surcharge Disclosure", href: "/legal/fuel-surcharge", color: "bg-amber-500/15", iconColor: "text-amber-500" },
 
   // ═══════════════════════════════════════════
-  // SECTION 46: FINAL & CLOSING
+  // SECTION 46: DATA GOVERNANCE & MANAGEMENT
   // ═══════════════════════════════════════════
-  { icon: BookOpen, label: "Compliance Center", href: "/compliance", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Database, label: "Data Governance Framework", href: "/legal/data-governance", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: BarChart3, label: "Data Quality Standards", href: "/legal/data-quality", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: Layers, label: "Data Classification Policy", href: "/legal/data-classification", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Archive, label: "Data Lifecycle Management", href: "/legal/data-lifecycle", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Network, label: "Data Lineage & Provenance", href: "/legal/data-lineage", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Server, label: "Data Residency Requirements", href: "/legal/data-residency", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Database, label: "Data Sovereignty Policy", href: "/legal/data-sovereignty", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: HardDrive, label: "Database Security Policy", href: "/legal/database-security", color: "bg-red-500/15", iconColor: "text-red-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 47: PLATFORM ECONOMICS
+  // ═══════════════════════════════════════════
+  { icon: DollarSign, label: "Commission Structure Disclosure", href: "/legal/commission-structure", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Receipt, label: "Service Fee Breakdown", href: "/legal/service-fee-breakdown", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+  { icon: CircleDollarSign, label: "Revenue Sharing Policy", href: "/legal/revenue-sharing", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Banknote, label: "Payment Processing Terms", href: "/legal/payment-processing", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: HandCoins, label: "Escrow & Holdback Policy", href: "/legal/escrow-policy", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+  { icon: DollarSign, label: "Dynamic Commission Disclosure", href: "/legal/dynamic-commission", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Receipt, label: "Invoice & Billing Policy", href: "/legal/invoice-billing", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 48: BIOMETRIC & IDENTITY
+  // ═══════════════════════════════════════════
+  { icon: ScanFace, label: "Document Verification Policy", href: "/legal/document-verification", color: "bg-purple-500/15", iconColor: "text-purple-500" },
+  { icon: Fingerprint, label: "Digital Identity Framework", href: "/legal/digital-identity", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: ScanFace, label: "Age Estimation Technology", href: "/legal/age-estimation", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Fingerprint, label: "Voiceprint & Speaker ID Policy", href: "/legal/voiceprint", color: "bg-purple-500/15", iconColor: "text-purple-500" },
+  { icon: ScanFace, label: "Iris & Retinal Scan Policy", href: "/legal/iris-scan", color: "bg-red-500/15", iconColor: "text-red-500" },
+  { icon: Fingerprint, label: "Gait Recognition Disclosure", href: "/legal/gait-recognition", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 49: CONTENT & CREATOR ECONOMY
+  // ═══════════════════════════════════════════
+  { icon: PenTool, label: "Creator Monetization Terms", href: "/legal/creator-monetization", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: Copyright, label: "Content Ownership & Licensing", href: "/legal/content-ownership", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Podcast, label: "Tipping & Donations Policy", href: "/legal/tipping-donations", color: "bg-amber-500/15", iconColor: "text-amber-500" },
+  { icon: Camera, label: "Livestream Commerce Terms", href: "/legal/livestream-commerce", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: Share2, label: "Social Commerce Policy", href: "/legal/social-commerce", color: "bg-violet-500/15", iconColor: "text-violet-500" },
+  { icon: Newspaper, label: "Newsletter & Publication Terms", href: "/legal/newsletter-terms", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+
+  // ═══════════════════════════════════════════
+  // SECTION 50: FINAL & CLOSING
+  // ═══════════════════════════════════════════
+  { icon: BookOpen, label: "Compliance Center", href: "/legal/compliance-center", color: "bg-teal-500/15", iconColor: "text-teal-500" },
   { icon: Fingerprint, label: "Partner Agreement", href: "/partner-agreement", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: FileText, label: "Legal Notices Index", href: "/legal/notices-index", color: "bg-slate-500/15", iconColor: "text-slate-500" },
+  { icon: Scale, label: "Complete Legal Framework", href: "/legal/complete-framework", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
+  { icon: Shield, label: "ZIVO Corporate Governance", href: "/legal/corporate-governance", color: "bg-slate-500/15", iconColor: "text-slate-500" },
 ];
 
 export default function LegalPoliciesPage() {
@@ -561,7 +844,7 @@ export default function LegalPoliciesPage() {
         <div className="rounded-xl bg-card border border-border/30 divide-y divide-border/20">
           {legalItems.map((item) => (
             <button
-              key={item.label}
+              key={item.label + item.href}
               onClick={() => navigate(item.href)}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-accent/40 transition-colors text-left active:scale-[0.98]"
             >
