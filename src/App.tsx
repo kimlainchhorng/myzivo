@@ -594,6 +594,16 @@ const App = () => (
                 <Route path="/legal/electronic-consent" element={<ElectronicConsent />} />
                 <Route path="/legal/force-majeure" element={<ForceMajeure />} />
                 <Route path="/legal/no-guarantee" element={<NoGuaranteeDisclaimer />} />
+                <Route path="/legal/governing-law" element={<GoverningLaw />} />
+                <Route path="/legal/intellectual-property" element={<IntellectualProperty />} />
+                <Route path="/legal/account-termination" element={<AccountTermination />} />
+                <Route path="/legal/third-party-links" element={<ThirdPartyLinks />} />
+                <Route path="/legal/communication-consent" element={<CommunicationConsent />} />
+                <Route path="/legal/modification-of-terms" element={<ModificationOfTerms />} />
+                <Route path="/legal/class-action-waiver" element={<ClassActionWaiver />} />
+                <Route path="/legal/anti-money-laundering" element={<AntiMoneyLaundering />} />
+                <Route path="/legal/user-conduct" element={<UserConduct />} />
+                <Route path="/legal/california-privacy" element={<CaliforniaPrivacy />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
 
