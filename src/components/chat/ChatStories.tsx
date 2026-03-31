@@ -65,10 +65,10 @@ export default function ChatStories() {
       const userIds = [...new Set((data as any[]).map((s: any) => s.user_id))];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url")
-        .in("id", userIds);
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", userIds);
 
-      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
       const groups = new Map<string, StoryGroup>();
       for (const s of data as any[]) {
