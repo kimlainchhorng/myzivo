@@ -25,7 +25,7 @@ const DEV_ORIGIN_PATTERN = /^http:\/\/localhost:\d+$/;
 const STANDARD_HEADERS = "authorization, x-client-info, apikey, content-type, stripe-signature, x-rate-limit-action, x-session-id, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version";
 
 export function isAllowedOrigin(origin: string | null): boolean {
-  if (!origin) return false;
+  if (!origin) return true; // Allow native app requests (Capacitor) with no origin
   if (ALLOWED_ORIGINS.has(origin)) return true;
   if (DEV_ORIGIN_PATTERN.test(origin)) return true;
   return false;
@@ -33,7 +33,8 @@ export function isAllowedOrigin(origin: string | null): boolean {
 
 export function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") || "";
-  const allowedOrigin = isAllowedOrigin(origin) ? origin : "";
+  // Native apps (Capacitor) send no origin — allow with wildcard
+  const allowedOrigin = !origin ? "*" : isAllowedOrigin(origin) ? origin : "";
 
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
