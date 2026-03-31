@@ -325,7 +325,7 @@ export default function StoreProfilePage() {
               <motion.a
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
-                href={`tel:${store.phone.replace(/\s+/g, "")}`}
+                href={`tel:${store.phone.startsWith("+") ? store.phone.replace(/\s+/g, "") : `+855${store.phone.replace(/\s+/g, "")}`}`}
                 className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
                 style={{
                   transformStyle: "preserve-3d",
