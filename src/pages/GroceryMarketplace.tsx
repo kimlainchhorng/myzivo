@@ -467,36 +467,41 @@ export default function GroceryMarketplace() {
                       </div>
                       <div className="flex-1 min-w-0 pt-5">
                         {(() => {
-                          const status = ds.hours ? getStoreStatus(ds.hours) : { status: "open" as const, label: "Open" };
+                          const status = ds.hours ? getStoreStatus(ds.hours) : { status: "open" as const, label: "Open", formattedHours: undefined };
                           const dotColor = status.status === "open" ? "bg-emerald-500" : status.status === "closing-soon" ? "bg-amber-500" : status.status === "almost-open" ? "bg-amber-500" : "bg-red-500";
                           const pingColor = status.status === "open" ? "bg-emerald-400" : status.status === "closing-soon" ? "bg-amber-400" : status.status === "almost-open" ? "bg-amber-400" : "bg-red-400";
                           const textColor = status.status === "open" ? "text-emerald-600" : status.status === "closing-soon" ? "text-amber-600" : status.status === "almost-open" ? "text-amber-600" : "text-red-500";
+                          const shouldPing = status.status !== "closed";
                           return (
-                            <div className="flex items-center gap-2">
-                              <span className="relative flex h-2 w-2">
-                                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${pingColor} opacity-75`} />
-                                <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor}`} />
-                              </span>
-                              <span className={`text-[10px] font-medium ${textColor}`}>{status.label}</span>
-                            </div>
+                            <>
+                              <div className="flex items-center gap-2">
+                                <span className="relative flex h-2 w-2">
+                                  {shouldPing && <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${pingColor} opacity-75`} />}
+                                  <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor}`} />
+                                </span>
+                                <span className={`text-[10px] font-medium ${textColor}`}>{status.label}</span>
+                              </div>
+                              <p className="text-sm font-bold text-foreground truncate">{ds.name}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {ds.delivery_min != null && ds.delivery_min > 0 && (
+                                  <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                    <Clock className="h-2.5 w-2.5" /> {ds.delivery_min}m
+                                  </span>
+                                )}
+                                {ds.rating != null && ds.rating > 0 && (
+                                  <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                    <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {ds.rating}
+                                  </span>
+                                )}
+                                {('formattedHours' in status && status.formattedHours) ? (
+                                  <span className="text-[10px] text-muted-foreground">{status.formattedHours}</span>
+                                ) : ds.hours ? (
+                                  <span className="text-[10px] text-muted-foreground">{ds.hours}</span>
+                                ) : null}
+                              </div>
+                            </>
                           );
                         })()}
-                        <p className="text-sm font-bold text-foreground truncate">{ds.name}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          {ds.delivery_min && (
-                            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                              <Clock className="h-2.5 w-2.5" /> {ds.delivery_min}m
-                            </span>
-                          )}
-                          {ds.rating != null && ds.rating > 0 && (
-                            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                              <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {ds.rating}
-                            </span>
-                          )}
-                          {ds.hours && (
-                            <span className="text-[10px] text-muted-foreground">{ds.hours}</span>
-                          )}
-                        </div>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground/25 group-hover:text-primary/60 transition-colors shrink-0" />
                     </div>
