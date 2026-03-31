@@ -1964,7 +1964,7 @@ export default function AdminStoreEditPage() {
         </div>
         )}
 
-        {(isAdmin || activeTab === "profile") && (<>
+        {false && (<>
         {/* ── Gallery Images ── */}
         <Card>
           <CardHeader className="pb-3">
