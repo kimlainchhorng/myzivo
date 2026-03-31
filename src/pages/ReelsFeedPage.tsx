@@ -517,6 +517,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentMedia, setCurrentMedia] = useState(0);
   const [showComments, setShowComments] = useState(false);
+  const [showShareSheet, setShowShareSheet] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
