@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, Fragment } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
@@ -8,7 +8,7 @@ import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
   Shield, Star, ChevronRight, UserPlus, UserCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
-  Settings,
+  Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -21,7 +21,7 @@ import { useAffiliateAttribution } from "@/hooks/useAffiliateAttribution";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -324,6 +324,18 @@ const Profile = () => {
     { icon: Wallet, label: t("profile.wallet"), href: "/wallet", description: t("profile.wallet_desc"), color: "from-emerald-500/15 to-emerald-600/10", iconColor: "text-emerald-500" },
     { icon: Sparkles, label: t("profile.loyalty"), href: "/account/loyalty", description: t("profile.loyalty_desc"), color: "from-amber-500/15 to-amber-600/10", iconColor: "text-amber-500" },
     { icon: MapPin, label: t("profile.saved_addresses"), href: "/account/addresses", description: t("profile.addresses_desc"), color: "from-rose-500/15 to-rose-600/10", iconColor: "text-rose-500" },
+    { icon: Handshake, label: "Become Partner", href: "#partner", description: "Join ZIVO as partner", color: "from-violet-500/15 to-violet-600/10", iconColor: "text-violet-500" },
+  ];
+
+  const [showPartnerSheet, setShowPartnerSheet] = useState(false);
+
+  const partnerOptions = [
+    { icon: Car, label: "Become a Driver", description: "Earn money driving with ZIVO", href: "/partner-with-zivo?type=driver", color: "from-blue-500 to-blue-600" },
+    { icon: UtensilsCrossed, label: "Become a Restaurant Partner", description: "List your restaurant on ZIVO", href: "/partner-with-zivo?type=restaurant", color: "from-orange-500 to-amber-500" },
+    { icon: Store, label: "Become a Shop Partner", description: "Sell products through ZIVO", href: "/partner-with-zivo?type=store", color: "from-emerald-500 to-green-500" },
+    { icon: Wrench, label: "Become an Auto Repair Partner", description: "Offer repair services on ZIVO", href: "/partner-with-zivo?type=auto-repair", color: "from-slate-500 to-slate-600" },
+    { icon: Building2, label: "Become a Hotel Partner", description: "List your property on ZIVO", href: "/partner-with-zivo?type=hotel", color: "from-purple-500 to-purple-600" },
+    { icon: Truck, label: "Become a Delivery Partner", description: "Deliver food & packages", href: "/partner-with-zivo?type=delivery", color: "from-rose-500 to-pink-500" },
   ];
 
   const currentLang = LANGS.find(l => l.code === currentLanguage) || LANGS[0];
@@ -692,33 +704,39 @@ const Profile = () => {
               <ParallaxSection index={4}>
                 <h3 className="font-display font-bold text-base mb-3">{t("profile.quick_access")}</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {quickLinks.map((link, i) => (
-                    <motion.div
-                      key={link.label}
-                      initial={{ opacity: 0, y: 30, rotateX: 12 }}
-                      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.04, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                      whileHover={{ scale: 1.04, y: -4, rotateY: 3 }}
-                      whileTap={{ scale: 0.96 }}
-                      style={{ perspective: "800px", transformStyle: "preserve-3d" }}
-                    >
-                      <Link to={link.href}>
-                        <GlassCard3D className="shadow-lg hover:shadow-2xl hover:shadow-primary/[0.06] transition-shadow duration-500 group">
-                          <div className="p-3.5 flex items-center gap-3">
-                            <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${link.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shrink-0 shadow-inner`}>
-                              <link.icon className={`w-5 h-5 ${link.iconColor}`} />
+                  {quickLinks.map((link, i) => {
+                    const isPartner = link.href === "#partner";
+                    const Wrapper = isPartner ? Fragment : ({ children }: { children: React.ReactNode }) => <Link to={link.href}>{children}</Link>;
+                    return (
+                      <motion.div
+                        key={link.label}
+                        initial={{ opacity: 0, y: 30, rotateX: 12 }}
+                        whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.04, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                        whileHover={{ scale: 1.04, y: -4, rotateY: 3 }}
+                        whileTap={{ scale: 0.96 }}
+                        style={{ perspective: "800px", transformStyle: "preserve-3d" }}
+                        onClick={isPartner ? () => setShowPartnerSheet(true) : undefined}
+                        className={isPartner ? "cursor-pointer" : ""}
+                      >
+                        <Wrapper>
+                          <GlassCard3D className="shadow-lg hover:shadow-2xl hover:shadow-primary/[0.06] transition-shadow duration-500 group">
+                            <div className="p-3.5 flex items-center gap-3">
+                              <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${link.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shrink-0 shadow-inner`}>
+                                <link.icon className={`w-5 h-5 ${link.iconColor}`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-[13px] truncate">{link.label}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{link.description}</p>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300 shrink-0" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-[13px] truncate">{link.label}</p>
-                              <p className="text-[10px] text-muted-foreground truncate">{link.description}</p>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300 shrink-0" />
-                          </div>
-                        </GlassCard3D>
-                      </Link>
-                    </motion.div>
-                  ))}
+                          </GlassCard3D>
+                        </Wrapper>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </ParallaxSection>
 
@@ -837,6 +855,59 @@ const Profile = () => {
         </>,
         document.body
       )}
+
+      {/* ── Become Partner Bottom Sheet ── */}
+      <AnimatePresence>
+        {showPartnerSheet && createPortal(
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowPartnerSheet(false)}
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 z-[61] bg-background rounded-t-3xl max-h-[85vh] overflow-y-auto"
+            >
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
+              </div>
+              <div className="px-5 pb-2">
+                <h2 className="text-lg font-bold">Become a ZIVO Partner</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Choose how you'd like to partner with us</p>
+              </div>
+              <div className="px-4 pb-8 space-y-2">
+                {partnerOptions.map((opt) => (
+                  <motion.button
+                    key={opt.label}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => {
+                      setShowPartnerSheet(false);
+                      navigate(opt.href);
+                    }}
+                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/40 hover:bg-accent/50 transition-colors text-left"
+                  >
+                    <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${opt.color} flex items-center justify-center shrink-0 shadow-lg`}>
+                      <opt.icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[13px]">{opt.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{opt.description}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          </>,
+          document.body
+        )}
+      </AnimatePresence>
     </div>
   );
 };
