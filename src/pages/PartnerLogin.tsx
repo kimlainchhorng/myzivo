@@ -284,29 +284,8 @@ export default function PartnerLogin() {
 
                               form.setValue("store_id", stores[0].accountId, { shouldDirty: true });
 
-                              const emailResponse = await supabase.functions.invoke("send-transactional-email", {
-                                body: {
-                                  recipientEmail: email,
-                                  templateName: "partner-store-id-recovery",
-                                  idempotencyKey: `partner-store-id-${email.toLowerCase()}-${stores[0].accountId}`,
-                                  templateData: {
-                                    businessEmail: email,
-                                    stores,
-                                    loginUrl: `${window.location.origin}/partner-login`,
-                                    supportUrl: `${window.location.origin}/help`,
-                                  },
-                                },
-                              });
-
                               toast.dismiss(loadingToast);
-
-                              if (emailResponse.error || emailResponse.data?.error) {
-                                toast.success(`Found: ${stores[0].name} — Store ID auto-filled.`);
-                                toast.error("We found your Store ID, but the recovery email could not be sent.");
-                                return;
-                              }
-
-                              toast.success(`Store ID sent to ${email} and auto-filled below!`, { duration: 5000 });
+                              toast.success(`Found: ${stores[0].name} — Store ID: ${stores[0].accountId} (auto-filled below)`, { duration: 6000 });
                               return;
                             }
 
