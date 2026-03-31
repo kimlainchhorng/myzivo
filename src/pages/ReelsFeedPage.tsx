@@ -12,6 +12,8 @@ import {
   MoreHorizontal, Play, Volume2, VolumeX, Image as ImageIcon,
   Plus, Camera, X as XIcon, Send, Film, Radio,
   Globe, Users, Lock, FolderPlus, MapPin, Hash, ChevronDown,
+  Flag, Bell, BellOff, Link2, EyeOff, AlertTriangle, ShieldAlert,
+  UserX, Ban, Skull, HelpCircle, ChevronLeft,
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
