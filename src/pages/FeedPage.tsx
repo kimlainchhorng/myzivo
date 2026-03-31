@@ -895,16 +895,19 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
     enabled: debouncedQuery.length >= 1,
   });
 
-  // Search people
+  // Search people — split words so "chhorng kim" matches "kimlain Chhorng"
   const { data: profileResults = [], isLoading: profilesLoading } = useQuery({
     queryKey: ["feed-search-profiles", debouncedQuery],
     queryFn: async () => {
       if (!debouncedQuery) return [];
-      const { data } = await supabase
+      const words = debouncedQuery.split(/\s+/).filter(Boolean);
+      let q = supabase
         .from("public_profiles")
-        .select("id, full_name, avatar_url")
-        .ilike("full_name", `%${debouncedQuery}%`)
-        .limit(10);
+        .select("id, full_name, avatar_url");
+      for (const word of words) {
+        q = q.ilike("full_name", `%${word}%`);
+      }
+      const { data } = await q.limit(10);
       return data || [];
     },
     enabled: debouncedQuery.length >= 1,
