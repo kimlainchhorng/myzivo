@@ -442,42 +442,28 @@ const Profile = () => {
               </motion.div>
             </div>
           ) : (
-            <div className="space-y-5">
-              {/* ── ZIVO+ Upgrade (above stories) ── */}
+            <div className="space-y-4">
+              {/* ── ZIVO+ Upgrade (compact) ── */}
               {!isPlus && (
                 <ParallaxSection index={1.9}>
                   <Link to="/zivo-plus">
-                    <motion.div
-                      whileHover={{ scale: 1.03, y: -3, rotateX: 2 }}
-                      whileTap={{ scale: 0.97 }}
-                      style={{ perspective: "800px" }}
-                    >
-                      <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-amber-500/15 group">
+                    <motion.div whileTap={{ scale: 0.97 }}>
+                      <div className="relative rounded-2xl overflow-hidden shadow-lg shadow-amber-500/10 group">
                         <div className="absolute inset-0 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-amber-400/15 backdrop-blur-2xl" />
                         <div className="absolute inset-0 bg-card/50" />
-                        <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-amber-500/15" />
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/10 to-transparent"
-                          animate={{ x: ["-100%", "200%"] }}
-                          transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
-                        />
-                        <div className="relative z-10 p-4">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <motion.div
-                                animate={{ rotateY: [0, 360] }}
-                                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-xl shadow-amber-500/30"
-                                style={{ transformStyle: "preserve-3d" }}
-                              >
-                                <Crown className="w-6 h-6 text-white" />
-                              </motion.div>
+                        <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-amber-500/15" />
+                        <div className="relative z-10 px-3.5 py-2.5">
+                          <div className="flex items-center justify-between gap-2.5">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/25">
+                                <Crown className="w-4 h-4 text-white" />
+                              </div>
                               <div>
-                                <p className="font-bold text-sm">{t("profile.upgrade_plus")}</p>
-                                <p className="text-xs text-muted-foreground">{t("profile.upgrade_desc")}</p>
+                                <p className="font-bold text-[12px]">{t("profile.upgrade_plus")}</p>
+                                <p className="text-[10px] text-muted-foreground">{t("profile.upgrade_desc")}</p>
                               </div>
                             </div>
-                            <ChevronRight className="w-5 h-5 text-amber-500/60 group-hover:text-amber-500 group-hover:translate-x-1 transition-all" />
+                            <ChevronRight className="w-4 h-4 text-amber-500/50 shrink-0" />
                           </div>
                         </div>
                       </div>
