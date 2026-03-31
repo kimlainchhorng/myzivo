@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen, FileText, Scale, Cookie, Plane, Share2, ShoppingBag, Undo2, BookOpen, Gavel } from "lucide-react";
+import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen, FileText, Scale, Cookie, Plane, Share2, Undo2, BookOpen, Gavel, Database, Copyright, MessageSquare, Accessibility } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const settingsItems = [
@@ -133,6 +133,38 @@ const legalItems = [
     href: "/compliance",
     color: "bg-teal-500/15",
     iconColor: "text-teal-500",
+  },
+  {
+    icon: Database,
+    label: "Data Retention",
+    description: "How long we store your data",
+    href: "/legal/data-retention",
+    color: "bg-blue-500/15",
+    iconColor: "text-blue-500",
+  },
+  {
+    icon: Copyright,
+    label: "DMCA / Copyright",
+    description: "Copyright takedown & claims",
+    href: "/legal/dmca",
+    color: "bg-red-500/15",
+    iconColor: "text-red-500",
+  },
+  {
+    icon: MessageSquare,
+    label: "Dispute Resolution",
+    description: "Arbitration & legal disputes",
+    href: "/legal/dispute-resolution",
+    color: "bg-indigo-500/15",
+    iconColor: "text-indigo-500",
+  },
+  {
+    icon: Accessibility,
+    label: "Accessibility",
+    description: "ADA compliance statement",
+    href: "/legal/accessibility",
+    color: "bg-green-500/15",
+    iconColor: "text-green-500",
   },
 ];
 
