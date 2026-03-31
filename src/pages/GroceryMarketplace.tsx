@@ -34,13 +34,16 @@ const cardVariant = {
 };
 
 /* ─── Live status dot ─── */
-function StatusDot({ isOpen }: { isOpen: boolean }) {
+function StatusDot({ status }: { status: "open" | "closing-soon" | "almost-open" | "closed"; isOpen?: boolean }) {
+  const dotColor = status === "open" ? "bg-emerald-500" : status === "closing-soon" || status === "almost-open" ? "bg-amber-500" : "bg-red-500";
+  const pingColor = status === "open" ? "bg-emerald-400" : status === "closing-soon" || status === "almost-open" ? "bg-amber-400" : "bg-red-400";
+  const shouldPing = status !== "closed";
   return (
     <span className="relative flex h-2 w-2">
-      {isOpen && (
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+      {shouldPing && (
+        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${pingColor} opacity-75`} />
       )}
-      <span className={`relative inline-flex rounded-full h-2 w-2 ${isOpen ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
+      <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor}`} />
     </span>
   );
 }
