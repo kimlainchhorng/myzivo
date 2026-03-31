@@ -40,7 +40,7 @@ export default function DriverMapHeader({ isOnline, onToggleOnline, voiceEnabled
     <motion.div
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="absolute top-0 left-0 right-0 z-[1500] px-2 pt-2 pointer-events-auto"
+      className="absolute top-0 left-0 right-0 z-[1500] px-2 pt-2 pointer-events-auto safe-area-top"
     >
       <div className="flex items-center justify-between">
         <motion.div whileTap={{ scale: 0.9 }}>

@@ -120,7 +120,7 @@ const Promotions = () => {
       <div className="absolute bottom-0 left-0 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-to-tr from-primary/12 to-teal-500/8 rounded-full blur-3xl" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
+      <header className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
         <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center gap-3 sm:gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-xl touch-manipulation active:scale-95" aria-label="Go back">
             <ChevronLeft className="h-5 w-5" />

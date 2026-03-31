@@ -119,7 +119,7 @@ export default function EatsOrdersPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
+      <div className="sticky top-0 safe-area-top z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
         <div className="px-4 py-3 flex items-center gap-3 safe-area-top">
           <motion.button whileTap={{ scale: 0.88 }} onClick={() => navigate("/eats")}
             className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation">

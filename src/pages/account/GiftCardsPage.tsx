@@ -145,7 +145,7 @@ export default function GiftCardsPage() {
       <SEOHead title="Gift Cards — ZIVO" description="Buy, send, and redeem ZIVO gift cards" />
 
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <div className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-6 py-4">
           <button
             onClick={() => navigate(-1)}

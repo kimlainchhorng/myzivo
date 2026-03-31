@@ -89,7 +89,7 @@ export default function TravelOrderDetailPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+      <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-sm border-b">
         <div className="container px-4 py-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" asChild aria-label="Back to trips">

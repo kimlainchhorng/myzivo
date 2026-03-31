@@ -100,7 +100,7 @@ export default function PartnerWithZivo() {
   return (
     <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 px-4 py-3">
+      <header className="sticky top-0 safe-area-top z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center gap-3">
           <Button
             variant="ghost"

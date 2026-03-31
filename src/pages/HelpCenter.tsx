@@ -103,7 +103,7 @@ const HelpCenter = () => {
       <div className="absolute bottom-0 left-0 w-[180px] h-[180px] bg-gradient-to-tr from-violet-500/10 to-purple-500/6 rounded-full blur-3xl" />
 
       {/* Header - Mobile optimized */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-white/10 px-3 py-2.5">
+      <header className="sticky top-0 safe-area-top z-50 bg-card/80 backdrop-blur-xl border-b border-white/10 px-3 py-2.5">
         <div className="flex items-center gap-2.5">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-9 w-9 rounded-xl hover:bg-white/10 active:scale-95 transition-transform" aria-label="Go back">
             <ChevronLeft className="h-4 h-4" />

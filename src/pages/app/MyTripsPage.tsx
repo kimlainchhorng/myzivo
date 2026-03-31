@@ -177,7 +177,7 @@ export default function MyTripsPage() {
       <div className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
 
         {/* ── Sticky 3D Header ── */}
-        <div className="sticky top-0 z-40">
+        <div className="sticky top-0 safe-area-top z-40">
           <div className="relative">
             <div className="absolute inset-0 bg-background/70 backdrop-blur-2xl" />
             <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border/30 to-transparent" />
