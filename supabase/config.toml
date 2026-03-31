@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.duffel-flights]
 verify_jwt = false
+
+[functions.lookup-store-id]
+verify_jwt = false
