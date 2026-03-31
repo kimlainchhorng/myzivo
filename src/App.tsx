@@ -111,6 +111,7 @@ const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const Profile = lazy(() => import("./pages/Profile"));
+const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 
 // Customer Loyalty
