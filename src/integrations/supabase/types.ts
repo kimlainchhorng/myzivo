@@ -29046,6 +29046,7 @@ export type Database = {
           social_linkedin: string | null
           social_links_visible: boolean | null
           social_snapchat: string | null
+          social_telegram: string | null
           social_tiktok: string | null
           social_x: string | null
           status: string | null
@@ -29095,6 +29096,7 @@ export type Database = {
           social_linkedin?: string | null
           social_links_visible?: boolean | null
           social_snapchat?: string | null
+          social_telegram?: string | null
           social_tiktok?: string | null
           social_x?: string | null
           status?: string | null
@@ -29144,6 +29146,7 @@ export type Database = {
           social_linkedin?: string | null
           social_links_visible?: boolean | null
           social_snapchat?: string | null
+          social_telegram?: string | null
           social_tiktok?: string | null
           social_x?: string | null
           status?: string | null
