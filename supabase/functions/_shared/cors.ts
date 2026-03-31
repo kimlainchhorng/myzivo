@@ -33,7 +33,8 @@ export function isAllowedOrigin(origin: string | null): boolean {
 
 export function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") || "";
-  const allowedOrigin = isAllowedOrigin(origin) ? origin : "";
+  // Native apps (Capacitor) send no origin — allow with wildcard
+  const allowedOrigin = !origin ? "*" : isAllowedOrigin(origin) ? origin : "";
 
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
