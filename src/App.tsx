@@ -247,6 +247,7 @@ const Help = lazy(() => import("./pages/Help"));
 
 // Account pages
 const AccountSettingsPage = lazy(() => import("./pages/account/AccountSettingsPage"));
+const LegalPoliciesPage = lazy(() => import("./pages/account/LegalPoliciesPage"));
 const ProfileEditPage = lazy(() => import("./pages/account/ProfileEditPage"));
 const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
 const PreferencesPage = lazy(() => import("./pages/account/PreferencesPage"));
@@ -554,6 +555,7 @@ const App = () => (
 
                 {/* Account sub-pages */}
                 <Route path="/account/settings" element={<ProtectedRoute><AccountSettingsPage /></ProtectedRoute>} />
+                <Route path="/account/legal" element={<ProtectedRoute><LegalPoliciesPage /></ProtectedRoute>} />
                 <Route path="/account/profile-edit" element={<ProtectedRoute><ProfileEditPage /></ProtectedRoute>} />
                 <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacyControls /></ProtectedRoute>} />
