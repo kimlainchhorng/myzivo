@@ -23,15 +23,34 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find user by email
-    const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
-    if (userError) throw userError;
+    // Find stores by email directly from profiles or store_profiles
+    // First try to find user by email using filtered listUsers
+    const { data: userData, error: userError } = await supabase.auth.admin.listUsers({
+      filter: `email.eq.${email.toLowerCase()}`,
+      page: 1,
+      perPage: 1,
+    });
+    
+    let userId: string | null = null;
+    
+    if (!userError && userData?.users?.length > 0) {
+      userId = userData.users[0].id;
+    } else {
+      // Fallback: search all users page by page (max 5 pages)
+      for (let page = 1; page <= 5; page++) {
+        const { data: pageData, error: pageError } = await supabase.auth.admin.listUsers({
+          page,
+          perPage: 500,
+        });
+        if (pageError || !pageData?.users?.length) break;
+        const found = pageData.users.find(
+          (u: any) => u.email?.toLowerCase() === email.toLowerCase()
+        );
+        if (found) { userId = found.id; break; }
+      }
+    }
 
-    const user = userData.users.find(
-      (u: any) => u.email?.toLowerCase() === email.toLowerCase()
-    );
-
-    if (!user) {
+    if (!userId) {
       return new Response(JSON.stringify({ error: 'No account found with this email' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
