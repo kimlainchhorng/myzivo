@@ -259,7 +259,7 @@ export default function PartnerLogin() {
                       <button
                         type="button"
                         onClick={async () => {
-                          const email = form.getValues("email");
+                          const email = form.getValues("email").trim();
                           if (!email) {
                             toast.error("Please enter your business email first");
                             return;
@@ -269,19 +269,52 @@ export default function PartnerLogin() {
                             const { data, error } = await supabase.functions.invoke("lookup-store-id", {
                               body: { email },
                             });
-                            toast.dismiss(loadingToast);
+
                             if (error || data?.error) {
+                              toast.dismiss(loadingToast);
                               toast.error(data?.error || "Could not find a store for this email");
                               return;
                             }
+
                             if (data?.stores?.length > 0) {
-                              const store = data.stores[0];
-                              form.setValue("store_id", store.full_id, { shouldDirty: true });
-                              toast.success(`Found: ${store.name} — Store ID auto-filled!`, { duration: 5000 });
+                              const stores = data.stores.map((store: { name: string; full_id: string }) => ({
+                                name: store.name,
+                                accountId: `CBD${store.full_id.replace(/-/g, "").slice(0, 8).toUpperCase()}`,
+                              }));
+
+                              form.setValue("store_id", stores[0].accountId, { shouldDirty: true });
+
+                              const emailResponse = await supabase.functions.invoke("send-transactional-email", {
+                                body: {
+                                  recipientEmail: email,
+                                  templateName: "partner-store-id-recovery",
+                                  idempotencyKey: `partner-store-id-${email.toLowerCase()}-${stores[0].accountId}`,
+                                  templateData: {
+                                    businessEmail: email,
+                                    stores,
+                                    loginUrl: `${window.location.origin}/partner-login`,
+                                    supportUrl: `${window.location.origin}/help`,
+                                  },
+                                },
+                              });
+
+                              toast.dismiss(loadingToast);
+
+                              if (emailResponse.error || emailResponse.data?.error) {
+                                toast.success(`Found: ${stores[0].name} — Store ID auto-filled.`);
+                                toast.error("We found your Store ID, but the recovery email could not be sent.");
+                                return;
+                              }
+
+                              toast.success(`Store ID sent to ${email} and auto-filled below!`, { duration: 5000 });
+                              return;
                             }
+
+                            toast.dismiss(loadingToast);
+                            toast.error("Could not find a store for this email");
                           } catch {
                             toast.dismiss(loadingToast);
-                            toast.error("Failed to look up Store ID. Please try again.");
+                            toast.error("Failed to send Store ID. Please try again.");
                           }
                         }}
                         className="text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors"
