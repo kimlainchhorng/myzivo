@@ -2,7 +2,7 @@
  * ChatHubPage — Unified messaging hub with category tabs:
  * Personal, Shop, Support, Ride
  */
-import { useState, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -154,6 +154,48 @@ export default function ChatHubPage() {
     ? chatList.filter((c: any) => c.name?.toLowerCase().includes(search.toLowerCase()))
     : chatList;
 
+  // Search profiles when on personal tab with a search term
+  const [profileResults, setProfileResults] = useState<any[]>([]);
+  const [searchingProfiles, setSearchingProfiles] = useState(false);
+
+  useEffect(() => {
+    if (active !== "personal" || search.trim().length < 2) {
+      setProfileResults([]);
+      return;
+    }
+    let alive = true;
+    const timeout = setTimeout(async () => {
+      setSearchingProfiles(true);
+      try {
+        const term = `%${search.trim()}%`;
+        const { data } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, avatar_url, email")
+          .or(`full_name.ilike.${term},email.ilike.${term}`)
+          .neq("user_id", user!.id)
+          .limit(15);
+        if (alive && data) {
+          setProfileResults(
+            data.map((p: any) => ({
+              id: p.user_id,
+              name: p.full_name || p.email || "User",
+              avatar: p.avatar_url,
+              lastMessage: "Tap to chat",
+              lastTime: new Date().toISOString(),
+              unread: 0,
+            }))
+          );
+        }
+      } catch { /* ignore */ }
+      finally { if (alive) setSearchingProfiles(false); }
+    }, 350);
+    return () => { alive = false; clearTimeout(timeout); };
+  }, [search, active, user]);
+
+  const displayList = active === "personal" && search.trim().length >= 2
+    ? profileResults
+    : filtered;
+
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
@@ -237,17 +279,28 @@ export default function ChatHubPage() {
           transition={{ duration: 0.15 }}
           className="px-5 pt-3"
         >
-          {filtered.length === 0 ? (
+          {searchingProfiles && active === "personal" ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
+              <p className="text-sm text-muted-foreground">Searching users...</p>
+            </div>
+          ) : displayList.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                 <currentCategory.icon className="w-7 h-7 text-muted-foreground/50" />
               </div>
-              <p className="text-base font-semibold text-foreground mb-1">{currentCategory.emptyTitle}</p>
-              <p className="text-sm text-muted-foreground max-w-[240px]">{currentCategory.emptyDesc}</p>
+              <p className="text-base font-semibold text-foreground mb-1">
+                {active === "personal" && search.trim().length >= 2 ? "No users found" : currentCategory.emptyTitle}
+              </p>
+              <p className="text-sm text-muted-foreground max-w-[240px]">
+                {active === "personal" && search.trim().length >= 2
+                  ? `No results for "${search}"`
+                  : currentCategory.emptyDesc}
+              </p>
             </div>
           ) : (
             <div className="space-y-1">
-              {filtered.map((chat: any) => (
+              {displayList.map((chat: any) => (
                 <button
                   key={chat.id}
                   className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/60 active:scale-[0.98] transition-all text-left"
