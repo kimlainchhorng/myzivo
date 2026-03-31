@@ -303,6 +303,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "nav.home": "Home",
     "nav.search": "Search",
     "nav.feed": "Feed",
+    "nav.reel": "Reel",
     "feed.no_posts": "No posts yet",
     "feed.no_posts_desc": "Stores will share pictures and videos here",
     "nav.trips": "Trips",
