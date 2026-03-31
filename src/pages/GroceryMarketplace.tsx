@@ -145,11 +145,13 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
               {store.promo}
             </span>
           )}
-          {location?.open_now === true && (
-            <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[8px] font-bold">
-              Open
-            </span>
-          )}
+          <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
+            status.status === "open" ? "bg-emerald-500/10 text-emerald-500" :
+            status.status === "closed" ? "bg-red-500/10 text-red-500" :
+            "bg-amber-500/10 text-amber-500"
+          }`}>
+            {status.label}
+          </span>
         </div>
         {location && (
           <p className="text-[10px] text-muted-foreground truncate mt-0.5 flex items-center gap-1">
