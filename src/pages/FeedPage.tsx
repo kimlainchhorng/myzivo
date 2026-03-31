@@ -993,7 +993,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
               <button
                 key={person.id}
                 type="button"
-                onClick={() => { onNavigate(`/profile/${person.id}`); onClose(); }}
+                onClick={() => { onNavigate(`/profile`); onClose(); }}
                 className="w-full flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-muted/40 transition-colors"
               >
                 <div className="w-11 h-11 rounded-full bg-muted/30 border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
