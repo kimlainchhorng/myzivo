@@ -1144,6 +1144,21 @@ export default function FeedPage() {
 
   return (
     <div className="fixed inset-0 bg-black">
+      {/* Search button */}
+      <button
+        type="button"
+        onClick={() => setShowSearch(true)}
+        className="absolute top-3 right-4 z-50 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+        style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
+      >
+        <Search className="w-5 h-5 text-white" />
+      </button>
+
+      {/* Search overlay */}
+      {showSearch && (
+        <FeedSearchOverlay onClose={() => setShowSearch(false)} onNavigate={navigate} />
+      )}
+
       {/* Snap-scroll reel container */}
       <div
         className="w-full h-full overflow-y-scroll snap-y snap-mandatory"
