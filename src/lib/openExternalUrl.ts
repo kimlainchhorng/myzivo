@@ -43,6 +43,11 @@ function isInternalAppUrl(resolvedUrl: URL, originalUrl: string): boolean {
   return resolvedUrl.origin === window.location.origin;
 }
 
+function shouldForceTopLevelNavigation(resolvedUrl: URL): boolean {
+  const host = resolvedUrl.hostname.toLowerCase();
+  return host === "facebook.com" || host.endsWith(".facebook.com");
+}
+
 export async function openExternalUrl(url: string): Promise<void> {
   const normalizedUrl = normalizeUrl(url);
   if (!normalizedUrl || normalizedUrl === "#") return;
