@@ -525,6 +525,10 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   const [showComments, setShowComments] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [showPostMenu, setShowPostMenu] = useState(false);
+  const [showReportSheet, setShowReportSheet] = useState(false);
+  const [reportStep, setReportStep] = useState<"categories" | "submitted">("categories");
+  const [notificationsOn, setNotificationsOn] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
