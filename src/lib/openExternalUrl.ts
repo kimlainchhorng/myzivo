@@ -72,14 +72,8 @@ export async function openExternalUrl(url: string): Promise<void> {
     }
   }
 
-  const link = document.createElement("a");
-  link.href = resolvedUrl.href;
-  link.target = "_blank";
-  link.rel = "noopener noreferrer";
-  link.style.display = "none";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  // Safari/WebView can block new-tab cross-origin opens via COOP; use top-level navigation.
+  window.location.assign(resolvedUrl.href);
 }
 
 /** For mailto:, tel:, sms: links */
