@@ -657,18 +657,16 @@ const Profile = () => {
                         return socials.length > 0 ? (
                           <div className="flex items-center justify-center gap-3 mt-4">
                             {socials.map((social) => (
-                              <motion.a
+                              <motion.button
                                 key={social.name}
                                 whileTap={{ scale: 0.85 }}
                                 whileHover={{ scale: 1.1, y: -2 }}
-                                href={(profile as any)[social.key]}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl((profile as any)[social.key]))}
                                 title={social.name}
                                 className={`w-10 h-10 rounded-full ${social.color} flex items-center justify-center shadow-md hover:shadow-lg transition-shadow`}
                               >
                                 {social.icon}
-                              </motion.a>
+                              </motion.button>
                             ))}
                           </div>
                         ) : null;
