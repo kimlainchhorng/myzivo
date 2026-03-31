@@ -518,7 +518,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       <span className="text-sm">{selectedPost.views > 1000 ? `${(selectedPost.views / 1000).toFixed(1)}k` : selectedPost.views}</span>
                     </span>
                   )}
-                  <button className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors ml-auto">
+                  <button
+                    className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors ml-auto"
+                    onClick={() => setSharePostId(selectedPost.id)}
+                  >
                     <Share2 className="w-6 h-6" />
                   </button>
                 </div>
