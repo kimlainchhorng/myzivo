@@ -850,8 +850,8 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
                     onClick={() => setShowShareSheet(false)}
                     className="flex flex-col items-center gap-2 min-h-[48px]"
                   >
-                    <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center text-xl">
-                      {opt.icon}
+                    <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: `${opt.color}15` }}>
+                      <svg viewBox="0 0 24 24" className="h-6 w-6" fill={opt.color}><path d={opt.svg} /></svg>
                     </div>
                     <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
                   </a>
