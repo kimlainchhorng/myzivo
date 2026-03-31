@@ -60,7 +60,7 @@ const ZivoMobileNav = () => {
       {/* iOS-style frosted glass background */}
       <div className="absolute inset-0 bg-card/90 backdrop-blur-2xl border-t border-border/30" />
 
-      <div className="relative flex items-stretch justify-around h-[76px] max-w-lg mx-auto">
+      <div className="relative flex items-stretch justify-around h-[56px] max-w-lg mx-auto">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           
