@@ -453,7 +453,7 @@ export default function StoreMapPage() {
                 All ({allStores.length})
               </motion.button>
               {usedCategories.map((cat) => {
-                const count = stores.filter((s) => s.category === cat.value).length;
+                const count = allStores.filter((s) => s.category === cat.value).length;
                 const isActive = activeCategory === cat.value;
                 return (
                   <motion.button
