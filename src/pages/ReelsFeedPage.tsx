@@ -32,6 +32,7 @@ interface FeedItem {
   author_name: string;
   author_avatar: string | null;
   author_id?: string;
+  store_slug?: string;
   created_at: string;
 }
 
