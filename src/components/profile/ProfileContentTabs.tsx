@@ -73,6 +73,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [showLive, setShowLive] = useState(false);
   const [feed, setFeed] = useState<FeedItem[]>(demoFeed);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [sharePostId, setSharePostId] = useState<string | null>(null);
 
   const filtered = activeTab === "all" ? feed : feed.filter((i) => i.type === activeTab);
 
