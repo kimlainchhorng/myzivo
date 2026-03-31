@@ -1568,20 +1568,18 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
     setPromoError(null);
     const code = promoInput.trim().toUpperCase();
 
-    // Hard-coded FREE promo: 100% off, restricted to specific email
+    // FREE promo: 100% off, USA rides only
     if (code === "FREE") {
-      const userEmail = user?.email?.toLowerCase() || "";
-      if (userEmail === "chhorngkimlain1@gmail.com") {
-        setAppliedPromo({ code: "FREE", description: "100% discount — Free ride!" });
-        setPromoDiscount(currentPrice);
-        toast.success("FREE promo applied — enjoy your free ride!");
-        setPromoValidating(false);
-        return;
-      } else {
-        setPromoError("This promo code is not available for your account");
+      if (useKm) {
+        setPromoError("This promo code is only available for rides in the USA");
         setPromoValidating(false);
         return;
       }
+      setAppliedPromo({ code: "FREE", description: "100% discount — Free ride!" });
+      setPromoDiscount(currentPrice);
+      toast.success("FREE promo applied — enjoy your free ride!");
+      setPromoValidating(false);
+      return;
     }
 
     try {
