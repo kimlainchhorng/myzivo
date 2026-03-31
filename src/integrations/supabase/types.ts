@@ -29021,6 +29021,7 @@ export type Database = {
           email_verified: boolean | null
           full_name: string | null
           id: string
+          is_private: boolean
           kyc_rejection_reason: string | null
           kyc_status: string
           kyc_verified_at: string | null
@@ -29060,6 +29061,7 @@ export type Database = {
           email_verified?: boolean | null
           full_name?: string | null
           id?: string
+          is_private?: boolean
           kyc_rejection_reason?: string | null
           kyc_status?: string
           kyc_verified_at?: string | null
@@ -29099,6 +29101,7 @@ export type Database = {
           email_verified?: boolean | null
           full_name?: string | null
           id?: string
+          is_private?: boolean
           kyc_rejection_reason?: string | null
           kyc_status?: string
           kyc_verified_at?: string | null

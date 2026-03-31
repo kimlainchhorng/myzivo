@@ -6,9 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   User, Camera, ArrowLeft, Mail, Phone, Loader2, Save, Sparkles,
-  AlertCircle, CheckCircle2,
+  AlertCircle, CheckCircle2, Lock, Unlock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -311,6 +312,40 @@ export default function ProfileEditPage() {
               </Button>
             </form>
           </Form>
+
+          {/* Profile Privacy Toggle */}
+          <div className="rounded-2xl border border-border/40 bg-card p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {(profile as any)?.is_private ? (
+                  <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                    <Lock className="h-5 w-5 text-destructive" />
+                  </div>
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Unlock className="h-5 w-5 text-primary" />
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm font-semibold">{(profile as any)?.is_private ? "Profile Locked" : "Profile Public"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(profile as any)?.is_private
+                      ? "Only you can see your profile"
+                      : "Anyone can view your profile"}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={!!(profile as any)?.is_private}
+                onCheckedChange={async (checked) => {
+                  try {
+                    await updateProfile.mutateAsync({ is_private: checked } as any);
+                  } catch {}
+                }}
+                disabled={updateProfile.isPending}
+              />
+            </div>
+          </div>
         </div>
       )}
 
