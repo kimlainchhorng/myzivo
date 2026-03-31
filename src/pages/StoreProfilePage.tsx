@@ -185,7 +185,7 @@ export default function StoreProfilePage() {
             <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-3 z-10">
               <motion.button
                 whileTap={{ scale: 0.85 }}
-                onClick={() => navigate(-1)}
+                onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/grocery")}
                 className="h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
               >
                 <ArrowLeft className="h-4 w-4 text-foreground" />
@@ -325,7 +325,7 @@ export default function StoreProfilePage() {
               <motion.a
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
-                href={`tel:${store.phone.replace(/\s+/g, "")}`}
+                href={`tel:${store.phone.startsWith("+") ? store.phone.replace(/\s+/g, "") : `+855${store.phone.replace(/\s+/g, "")}`}`}
                 className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
                 style={{
                   transformStyle: "preserve-3d",
@@ -357,7 +357,7 @@ export default function StoreProfilePage() {
                 </div>
                 <div className="relative z-[3] flex flex-col items-start min-w-0">
                   <p className="text-[11px] font-bold text-white drop-shadow-md">{t("store.call_store") || "Call Store"}</p>
-                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">{store.phone}</p>
+                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">{store.phone.startsWith("+") ? store.phone : `+855 ${store.phone}`}</p>
                 </div>
               </motion.a>
             )}
