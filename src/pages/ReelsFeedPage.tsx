@@ -11,6 +11,7 @@ import {
   Loader2, Heart, MessageCircle, Share2, Eye, Bookmark,
   MoreHorizontal, Play, Volume2, VolumeX, Image as ImageIcon,
   Plus, Camera, X as XIcon, Send, Film, Radio,
+  Globe, Users, Lock, FolderPlus, MapPin, Hash, ChevronDown,
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -242,6 +243,9 @@ function CreatePostModal({
   const [preview, setPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
   const [selectedType, setSelectedType] = useState<"Photo" | "Video" | "Reel" | "Live" | null>(null);
+  const [visibility, setVisibility] = useState<"everyone" | "friends" | "onlyme">("everyone");
+  const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
+  const [album, setAlbum] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -338,6 +342,87 @@ function CreatePostModal({
             )}
           </div>
           <p className="text-sm font-semibold text-foreground">{userProfile?.name || "You"}</p>
+        </div>
+
+        {/* Privacy & extras row */}
+        <div className="px-4 pb-2 flex items-center gap-2 flex-wrap">
+          {/* Visibility dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowVisibilityMenu(!showVisibilityMenu)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border/30 text-xs font-medium text-foreground min-h-[36px]"
+            >
+              {visibility === "everyone" && <Globe className="h-3.5 w-3.5 text-primary" />}
+              {visibility === "friends" && <Users className="h-3.5 w-3.5 text-primary" />}
+              {visibility === "onlyme" && <Lock className="h-3.5 w-3.5 text-primary" />}
+              <span>{visibility === "everyone" ? "Everyone" : visibility === "friends" ? "Friends" : "Only me"}</span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            </button>
+            <AnimatePresence>
+              {showVisibilityMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="absolute top-full left-0 mt-1 w-40 bg-card border border-border/40 rounded-xl shadow-lg z-10 overflow-hidden"
+                >
+                  {([
+                    { value: "everyone" as const, label: "Everyone", icon: Globe },
+                    { value: "friends" as const, label: "Friends", icon: Users },
+                    { value: "onlyme" as const, label: "Only me", icon: Lock },
+                  ]).map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setVisibility(opt.value); setShowVisibilityMenu(false); }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium transition-colors",
+                        visibility === opt.value ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/40"
+                      )}
+                    >
+                      <opt.icon className="h-4 w-4" />
+                      {opt.label}
+                      {visibility === opt.value && <span className="ml-auto text-primary">✓</span>}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Album button */}
+          <button
+            onClick={() => {
+              const name = prompt("Album name:");
+              if (name?.trim()) setAlbum(name.trim());
+            }}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
+              album
+                ? "bg-primary/10 text-primary border-primary/30"
+                : "bg-muted/40 text-muted-foreground border-border/30 hover:bg-muted/50"
+            )}
+          >
+            <FolderPlus className="h-3.5 w-3.5" />
+            {album || "Album"}
+          </button>
+
+          {/* Location tag */}
+          <button
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border/30 text-xs font-medium text-muted-foreground min-h-[36px] hover:bg-muted/50"
+            onClick={() => toast.info("Location tagging coming soon!")}
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            Location
+          </button>
+
+          {/* Tag people */}
+          <button
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border/30 text-xs font-medium text-muted-foreground min-h-[36px] hover:bg-muted/50"
+            onClick={() => toast.info("Tag people coming soon!")}
+          >
+            <Hash className="h-3.5 w-3.5" />
+            Tag
+          </button>
         </div>
 
         {/* Caption */}
