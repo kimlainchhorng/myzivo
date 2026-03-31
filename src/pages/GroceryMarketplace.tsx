@@ -34,13 +34,16 @@ const cardVariant = {
 };
 
 /* ─── Live status dot ─── */
-function StatusDot({ isOpen }: { isOpen: boolean }) {
+function StatusDot({ status }: { status: "open" | "closing-soon" | "almost-open" | "closed"; isOpen?: boolean }) {
+  const dotColor = status === "open" ? "bg-emerald-500" : status === "closing-soon" || status === "almost-open" ? "bg-amber-500" : "bg-red-500";
+  const pingColor = status === "open" ? "bg-emerald-400" : status === "closing-soon" || status === "almost-open" ? "bg-amber-400" : "bg-red-400";
+  const shouldPing = status !== "closed";
   return (
     <span className="relative flex h-2 w-2">
-      {isOpen && (
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+      {shouldPing && (
+        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${pingColor} opacity-75`} />
       )}
-      <span className={`relative inline-flex rounded-full h-2 w-2 ${isOpen ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
+      <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor}`} />
     </span>
   );
 }
@@ -68,8 +71,8 @@ function FeaturedStore({ store, eta, location }: { store: StoreConfig; eta: numb
         </div>
         <div className="flex-1 min-w-0 text-left">
           <div className="flex items-center gap-2 mb-1">
-            <StatusDot isOpen={status.isOpen} />
-            <span className={`text-[11px] font-semibold ${status.isOpen ? "text-emerald-500" : "text-muted-foreground/50"}`}>
+            <StatusDot status={status.status} />
+            <span className={`text-[11px] font-semibold ${status.status === "open" ? "text-emerald-500" : status.status === "closed" ? "text-red-500" : "text-amber-500"}`}>
               {status.label}
             </span>
             {store.promo && (
@@ -129,7 +132,7 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
       <div className="relative h-14 w-14 rounded-2xl bg-background border border-border/25 flex items-center justify-center p-2 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0">
         <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
         <div className="absolute -top-0.5 -right-0.5">
-          <StatusDot isOpen={status.isOpen} />
+          <StatusDot status={status.status} />
         </div>
       </div>
       <div className="flex-1 min-w-0 text-left">
@@ -142,11 +145,13 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
               {store.promo}
             </span>
           )}
-          {location?.open_now === true && (
-            <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[8px] font-bold">
-              Open
-            </span>
-          )}
+          <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
+            status.status === "open" ? "bg-emerald-500/10 text-emerald-500" :
+            status.status === "closed" ? "bg-red-500/10 text-red-500" :
+            "bg-amber-500/10 text-amber-500"
+          }`}>
+            {status.label}
+          </span>
         </div>
         {location && (
           <p className="text-[10px] text-muted-foreground truncate mt-0.5 flex items-center gap-1">
@@ -461,13 +466,21 @@ export default function GroceryMarketplace() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0 pt-5">
-                        <div className="flex items-center gap-2">
-                          <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                          </span>
-                          <span className="text-[10px] font-medium text-emerald-600">Open</span>
-                        </div>
+                        {(() => {
+                          const status = ds.hours ? getStoreStatus(ds.hours) : { status: "open" as const, label: "Open" };
+                          const dotColor = status.status === "open" ? "bg-emerald-500" : status.status === "closing-soon" ? "bg-amber-500" : status.status === "almost-open" ? "bg-amber-500" : "bg-red-500";
+                          const pingColor = status.status === "open" ? "bg-emerald-400" : status.status === "closing-soon" ? "bg-amber-400" : status.status === "almost-open" ? "bg-amber-400" : "bg-red-400";
+                          const textColor = status.status === "open" ? "text-emerald-600" : status.status === "closing-soon" ? "text-amber-600" : status.status === "almost-open" ? "text-amber-600" : "text-red-500";
+                          return (
+                            <div className="flex items-center gap-2">
+                              <span className="relative flex h-2 w-2">
+                                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${pingColor} opacity-75`} />
+                                <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor}`} />
+                              </span>
+                              <span className={`text-[10px] font-medium ${textColor}`}>{status.label}</span>
+                            </div>
+                          );
+                        })()}
                         <p className="text-sm font-bold text-foreground truncate">{ds.name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           {ds.delivery_min && (
