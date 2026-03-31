@@ -352,8 +352,30 @@ function CreatePostModal({
           />
         </div>
 
-        {/* Media type selector buttons */}
-        <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-hide">
+        {/* Media preview */}
+        {preview ? (
+          <div className="relative mx-4 mb-3 rounded-xl overflow-hidden bg-black aspect-square">
+            {mediaType === "video" ? (
+              <video src={preview} className="h-full w-full object-cover" controls muted />
+            ) : (
+              <img src={preview} alt="" className="h-full w-full object-cover" />
+            )}
+            <button
+              onClick={() => { setFile(null); setPreview(null); }}
+              className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center"
+            >
+              <XIcon className="h-4 w-4 text-white" />
+            </button>
+            {selectedType && (
+              <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white uppercase tracking-wider">
+                {selectedType}
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {/* Media type selector — bottom toolbar */}
+        <div className="px-4 py-3 border-t border-border/30 flex items-center gap-3">
           {[
             { label: "Photo", icon: ImageIcon, accept: "image/*" },
             { label: "Video", icon: Play, accept: "video/*" },
@@ -373,40 +395,21 @@ function CreatePostModal({
                   fileRef.current.click();
                 }
               }}
-              className={cn(
-                "flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold border transition-all whitespace-nowrap min-h-[40px]",
-                selectedType === opt.label
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-muted/30 text-muted-foreground border-border/40 hover:bg-muted/50"
-              )}
+              className="flex flex-col items-center gap-1 min-w-[48px] min-h-[48px] justify-center"
             >
-              <opt.icon className="h-4 w-4" />
-              {opt.label}
+              <opt.icon className={cn(
+                "h-5 w-5 transition-colors",
+                selectedType === opt.label ? "text-primary" : "text-muted-foreground"
+              )} />
+              <span className={cn(
+                "text-[10px] font-medium transition-colors",
+                selectedType === opt.label ? "text-primary" : "text-muted-foreground"
+              )}>
+                {opt.label}
+              </span>
             </button>
           ))}
         </div>
-
-        {/* Media preview / picker */}
-        {preview ? (
-          <div className="relative mx-4 mb-4 rounded-xl overflow-hidden bg-black aspect-square">
-            {mediaType === "video" ? (
-              <video src={preview} className="h-full w-full object-cover" controls muted />
-            ) : (
-              <img src={preview} alt="" className="h-full w-full object-cover" />
-            )}
-            <button
-              onClick={() => { setFile(null); setPreview(null); }}
-              className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center"
-            >
-              <XIcon className="h-4 w-4 text-white" />
-            </button>
-            {selectedType && (
-              <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white uppercase tracking-wider">
-                {selectedType}
-              </div>
-            )}
-          </div>
-        ) : null}
 
         <input
           ref={fileRef}
