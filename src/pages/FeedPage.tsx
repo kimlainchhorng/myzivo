@@ -13,7 +13,9 @@ import {
   Loader2, Heart, MessageCircle, Share2, Store,
   Play, Volume2, VolumeX, RefreshCw, Send, X as XIcon, Eye,
   Copy, Link2, ShieldCheck, Search, ArrowLeft, UserCircle,
+  MoreHorizontal,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
