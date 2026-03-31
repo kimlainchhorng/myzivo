@@ -393,46 +393,42 @@ const Profile = () => {
             )}
           </motion.div>
 
-          {/* ── Language Selector (3D floating pill) ── */}
+          {/* ── Language Selector (compact pill) ── */}
           <ParallaxSection index={0}>
-            <div className="relative mb-4">
+            <div className="relative mb-3">
               <motion.button
                 ref={langTriggerRef}
-                whileHover={{ scale: 1.05, y: -2, rotateX: 3 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowLangPicker(prev => !prev)}
-                className="relative z-20 flex min-h-12 items-center gap-2 px-5 py-3 rounded-2xl bg-primary text-primary-foreground text-xs font-bold shadow-xl shadow-primary/30 touch-manipulation transition-all"
+                className="relative z-20 flex min-h-[36px] items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground text-[11px] font-bold shadow-lg shadow-primary/25 touch-manipulation transition-all"
                 style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
               >
-                <Globe className="w-4 h-4" />
-                <img src={getFlagUrl(currentLang.cc)} alt="" className="w-5 h-3.5 rounded-[3px] object-cover shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <Globe className="w-3.5 h-3.5" />
+                <img src={getFlagUrl(currentLang.cc)} alt="" className="w-4 h-3 rounded-[2px] object-cover shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 <span>{currentLang.label}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${showLangPicker ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${showLangPicker ? "rotate-180" : ""}`} />
               </motion.button>
             </div>
           </ParallaxSection>
 
-          {/* ── Country Selector (3D photo cards with depth) ── */}
+          {/* ── Country Selector (compact cards) ── */}
           <ParallaxSection index={1}>
-            <div className="flex items-center justify-center gap-3 mb-5">
+            <div className="flex items-center justify-center gap-2 mb-4">
               {countries.map((c) => (
                 <motion.button
                   key={c.code}
-                  whileHover={{ scale: 1.06, rotateY: 5, z: 20 }}
                   whileTap={{ scale: 0.94 }}
                   onClick={() => setCountry(c.code)}
-                  className={`relative flex items-center gap-2 px-5 py-4 rounded-3xl text-sm font-bold transition-all touch-manipulation overflow-hidden min-w-[150px] justify-center ${
+                  className={`relative flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-[12px] font-bold transition-all touch-manipulation overflow-hidden min-w-[120px] justify-center ${
                     country === c.code
-                      ? "ring-2 ring-primary shadow-2xl shadow-primary/25"
+                      ? "ring-2 ring-primary shadow-xl shadow-primary/20"
                       : "ring-1 ring-border/30 opacity-65 hover:opacity-100"
                   }`}
-                  style={{ perspective: "1000px", transformStyle: "preserve-3d" }}
                 >
                   <img src={CITY_BG[c.code]} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                   <div className={`absolute inset-0 transition-colors duration-500 ${country === c.code ? "bg-primary/55" : "bg-foreground/40"}`} />
-                  {/* Depth shadow overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
-                  <img src={getFlagUrl(c.code.toLowerCase())} alt={c.name} className="w-6 h-4 rounded-[3px] object-cover shadow-md border border-white/40 shrink-0 relative z-10" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  <img src={getFlagUrl(c.code.toLowerCase())} alt={c.name} className="w-5 h-3.5 rounded-[2px] object-cover shadow-md border border-white/40 shrink-0 relative z-10" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   <span className="relative z-10 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">{c.name}</span>
                 </motion.button>
               ))}
@@ -446,42 +442,28 @@ const Profile = () => {
               </motion.div>
             </div>
           ) : (
-            <div className="space-y-5">
-              {/* ── ZIVO+ Upgrade (above stories) ── */}
+            <div className="space-y-4">
+              {/* ── ZIVO+ Upgrade (compact) ── */}
               {!isPlus && (
                 <ParallaxSection index={1.9}>
                   <Link to="/zivo-plus">
-                    <motion.div
-                      whileHover={{ scale: 1.03, y: -3, rotateX: 2 }}
-                      whileTap={{ scale: 0.97 }}
-                      style={{ perspective: "800px" }}
-                    >
-                      <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-amber-500/15 group">
+                    <motion.div whileTap={{ scale: 0.97 }}>
+                      <div className="relative rounded-2xl overflow-hidden shadow-lg shadow-amber-500/10 group">
                         <div className="absolute inset-0 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-amber-400/15 backdrop-blur-2xl" />
                         <div className="absolute inset-0 bg-card/50" />
-                        <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-amber-500/15" />
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/10 to-transparent"
-                          animate={{ x: ["-100%", "200%"] }}
-                          transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
-                        />
-                        <div className="relative z-10 p-4">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <motion.div
-                                animate={{ rotateY: [0, 360] }}
-                                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-xl shadow-amber-500/30"
-                                style={{ transformStyle: "preserve-3d" }}
-                              >
-                                <Crown className="w-6 h-6 text-white" />
-                              </motion.div>
+                        <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-amber-500/15" />
+                        <div className="relative z-10 px-3.5 py-2.5">
+                          <div className="flex items-center justify-between gap-2.5">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/25">
+                                <Crown className="w-4 h-4 text-white" />
+                              </div>
                               <div>
-                                <p className="font-bold text-sm">{t("profile.upgrade_plus")}</p>
-                                <p className="text-xs text-muted-foreground">{t("profile.upgrade_desc")}</p>
+                                <p className="font-bold text-[12px]">{t("profile.upgrade_plus")}</p>
+                                <p className="text-[10px] text-muted-foreground">{t("profile.upgrade_desc")}</p>
                               </div>
                             </div>
-                            <ChevronRight className="w-5 h-5 text-amber-500/60 group-hover:text-amber-500 group-hover:translate-x-1 transition-all" />
+                            <ChevronRight className="w-4 h-4 text-amber-500/50 shrink-0" />
                           </div>
                         </div>
                       </div>
