@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     const { data: stores, error: storeError } = await supabase
       .from('store_profiles')
       .select('id, name')
-      .eq('owner_id', user.id);
+      .eq('owner_id', userId);
 
     if (storeError) throw storeError;
 
