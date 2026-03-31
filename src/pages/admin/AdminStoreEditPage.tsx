@@ -1964,7 +1964,7 @@ export default function AdminStoreEditPage() {
         </div>
         )}
 
-        {(isAdmin || activeTab === "profile") && (<>
+        {false && (<>
         {/* ── Gallery Images ── */}
         <Card>
           <CardHeader className="pb-3">
@@ -2255,12 +2255,168 @@ export default function AdminStoreEditPage() {
               ) : (
                 <TabsTrigger value="payment" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> {t("admin.store.payment")}</TabsTrigger>
               )}
+              <TabsTrigger value="settings" className="gap-1.5"><Building2 className="h-3.5 w-3.5" /> Settings</TabsTrigger>
             </TabsList>
           )}
 
 
-          <TabsContent value="profile">
-            {/* Profile tab — cover, logo, posts, gallery (store info moved to Settings) */}
+          <TabsContent value="profile" className="space-y-4">
+            {/* ── Gallery Images ── */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Image className="h-4 w-4" /> Gallery Images
+                  <Badge variant="secondary" className="text-[10px]">{galleryImages.length}/10</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {galleryImages.map((url, i) => {
+                    const isRepos = repositioningGalleryIdx === i;
+                    const pos = galleryPositions[url] ?? 50;
+                    return (
+                    <div
+                      key={i}
+                      className={cn("relative group aspect-video rounded-xl overflow-hidden border border-border bg-muted", isRepos && "cursor-grab active:cursor-grabbing ring-2 ring-primary")}
+                      onMouseDown={isRepos ? (e) => { e.preventDefault(); setGalleryDragStartY(e.clientY); setGalleryDragStartPos(pos); } : undefined}
+                      onMouseMove={isRepos && galleryDragStartY !== null ? (e) => {
+                        const deltaY = e.clientY - galleryDragStartY;
+                        const newPos = Math.max(0, Math.min(100, galleryDragStartPos - (deltaY / 120) * 100));
+                        setGalleryPositions(prev => ({ ...prev, [url]: Math.round(newPos) }));
+                      } : undefined}
+                      onMouseUp={isRepos ? () => setGalleryDragStartY(null) : undefined}
+                      onMouseLeave={isRepos ? () => setGalleryDragStartY(null) : undefined}
+                      onTouchStart={isRepos ? (e) => { setGalleryDragStartY(e.touches[0].clientY); setGalleryDragStartPos(pos); } : undefined}
+                      onTouchMove={isRepos ? (e) => {
+                        if (galleryDragStartY === null) return;
+                        const deltaY = e.touches[0].clientY - galleryDragStartY;
+                        const newPos = Math.max(0, Math.min(100, galleryDragStartPos - (deltaY / 120) * 100));
+                        setGalleryPositions(prev => ({ ...prev, [url]: Math.round(newPos) }));
+                      } : undefined}
+                      onTouchEnd={isRepos ? () => setGalleryDragStartY(null) : undefined}
+                    >
+                      <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover select-none" draggable={false} style={{ objectPosition: `center ${pos}%` }} />
+                      {isRepos && (
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none">
+                          <div className="bg-background/90 backdrop-blur-sm rounded-md px-2 py-1 text-[10px] font-medium text-foreground shadow flex items-center gap-1">
+                            <Move className="h-3 w-3" /> Drag up/down
+                          </div>
+                        </div>
+                      )}
+                      {isRepos ? (
+                        <div className="absolute top-1.5 right-1.5 flex gap-1">
+                          <button
+                            onClick={async () => {
+                              setRepositioningGalleryIdx(null);
+                              const { error } = await supabase.from("store_profiles").update({ gallery_positions: galleryPositions } as any).eq("id", storeId!);
+                              if (error) toast.error(error.message);
+                              else toast.success("Position saved");
+                            }}
+                            className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg"
+                          >
+                            <Check className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setRepositioningGalleryIdx(null);
+                              setGalleryPositions(prev => ({ ...prev, [url]: galleryDragStartPos }));
+                            }}
+                            className="h-6 w-6 rounded-full bg-muted text-foreground flex items-center justify-center shadow-lg border border-border"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => { setRepositioningGalleryIdx(i); setGalleryDragStartPos(pos); }}
+                            className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm text-foreground flex items-center justify-center shadow-lg border border-border"
+                          >
+                            <Move className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={() => removeGalleryImage(i)}
+                            className="h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    );
+                  })}
+                  {galleryImages.length < 10 && (
+                    <button
+                      onClick={() => galleryInputRef.current?.click()}
+                      disabled={uploadingGallery}
+                      className="aspect-video rounded-xl border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1.5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                    >
+                      {uploadingGallery ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <>
+                          <Plus className="h-5 w-5" />
+                          <span className="text-[10px] font-medium">Add Photo</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) uploadGalleryImage(f);
+                    e.target.value = "";
+                  }}
+                />
+                <p className="text-[11px] text-muted-foreground mt-2">These images appear as a scrolling banner on your store page.</p>
+              </CardContent>
+            </Card>
+
+            {/* ── Feed Posts ── */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Camera className="h-4 w-4" /> Feed Posts
+                  <Badge variant="secondary" className="text-[10px]">{posts.length}</Badge>
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">Create posts like Facebook & TikTok — photos, videos, and reels for your store</p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setPostMediaMode("image"); setPostDialog(true); }}
+                    className="group relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/30 p-6 transition-all duration-200 hover:border-primary/50 hover:bg-primary/5 hover:shadow-md active:scale-[0.98]"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 transition-colors group-hover:bg-emerald-500/20">
+                      <ImagePlus className="h-6 w-6" />
+                    </div>
+                    <div className="text-center">
+                      <span className="block text-sm font-semibold text-foreground">📷 Photo Post</span>
+                      <span className="block text-[11px] text-muted-foreground mt-0.5">JPG, PNG, WebP</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPostMediaMode("video"); setPostDialog(true); }}
+                    className="group relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/30 p-6 transition-all duration-200 hover:border-primary/50 hover:bg-primary/5 hover:shadow-md active:scale-[0.98]"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 transition-colors group-hover:bg-blue-500/20">
+                      <Video className="h-6 w-6" />
+                    </div>
+                    <div className="text-center">
+                      <span className="block text-sm font-semibold text-foreground">🎬 Video Post</span>
+                      <span className="block text-[11px] text-muted-foreground mt-0.5">MP4, MOV, WebM</span>
+                    </div>
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Settings Tab — Store Information */}
