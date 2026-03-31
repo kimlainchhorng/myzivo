@@ -412,12 +412,24 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
               {/* Content */}
               <div className="flex-1 flex items-center justify-center overflow-hidden">
-                <img
-                  src={selectedPost.url}
-                  alt=""
-                  className="w-full h-full object-contain"
-                  style={{ filter: selectedPost.filterCss || "none" }}
-                />
+                {selectedPost.type === "reel" ? (
+                  <video
+                    src={selectedPost.url}
+                    className="w-full h-full object-contain"
+                    style={{ filter: selectedPost.filterCss || "none" }}
+                    controls
+                    playsInline
+                    autoPlay
+                    loop
+                  />
+                ) : (
+                  <img
+                    src={selectedPost.url}
+                    alt=""
+                    className="w-full h-full object-contain"
+                    style={{ filter: selectedPost.filterCss || "none" }}
+                  />
+                )}
               </div>
 
               {/* Bottom bar */}
