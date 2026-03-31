@@ -59,6 +59,7 @@ const EatsDriverDeliveryPage = lazy(() => import("./pages/EatsDriverDeliveryPage
 const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
 const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
 const FeedPage = lazy(() => import("./pages/FeedPage"));
+const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
 const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
 const GroceryStorePage = lazy(() => import("./pages/GroceryStorePage"));
 const StoreProfilePage = lazy(() => import("./pages/StoreProfilePage"));
@@ -446,6 +447,7 @@ const App = () => (
                 <Route path="/delivery" element={<DeliveryPage />} />
                 <Route path="/grocery" element={<GroceryMarketplace />} />
                 <Route path="/feed" element={<FeedPage />} />
+                <Route path="/reels" element={<ReelsFeedPage />} />
                 <Route path="/chat" element={<ChatHubPage />} />
                 <Route path="/store-map" element={<StoreMapPage />} />
                 <Route path="/grocery/store/:slug" element={<GroceryStorePage />} />
