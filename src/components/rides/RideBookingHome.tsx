@@ -1624,8 +1624,8 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
       setViewStep("home");
     }
     else if (viewStep === "route-preview") setViewStep("search");
-    else if (viewStep === "rider-info") setViewStep("route-preview");
-    else if (viewStep === "ride-options") setViewStep(useKm ? "rider-info" : "route-preview");
+    else if (viewStep === "rider-info") setViewStep("search");
+    else if (viewStep === "ride-options") setViewStep(useKm ? "rider-info" : "search");
     else if (viewStep === "confirm-ride") setViewStep("ride-options");
     else if (
       viewStep === "driver-assigned" ||
@@ -1876,7 +1876,15 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
       setIsLoadingRoute(false);
     }
     setSheetExpanded(false);
-    setViewStep("route-preview");
+    // Skip route-preview, go directly to ride options (or rider-info for KM)
+    if (useKm) {
+      setRiderName(userProfile?.full_name || "");
+      const ph = userProfile?.phone || "";
+      setRiderPhone(ph.startsWith("+855") ? ph : "");
+      setViewStep("rider-info");
+    } else {
+      setViewStep("ride-options");
+    }
   };
 
   const handleConfirmSearch = () => {
