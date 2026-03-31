@@ -516,6 +516,10 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   const [muted, setMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentMedia, setCurrentMedia] = useState(0);
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
+  const [localLikes, setLocalLikes] = useState(item.likes_count);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -557,6 +561,73 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
     }
   }, []);
 
+  const handleLike = async () => {
+    if (!currentUserId) {
+      toast.error("Please sign in to like posts");
+      return;
+    }
+    const newLiked = !liked;
+    setLiked(newLiked);
+    setLocalLikes((prev) => prev + (newLiked ? 1 : -1));
+    // Persist like to DB
+    if (item.source === "store") {
+      if (newLiked) {
+        await supabase.from("store_post_likes").insert({ post_id: item.id, user_id: currentUserId }).then(() => {});
+      } else {
+        await supabase.from("store_post_likes").delete().eq("post_id", item.id).eq("user_id", currentUserId);
+      }
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: item.author_name,
+      text: item.caption || `Check out this post by ${item.author_name}`,
+      url: window.location.href,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareData.url);
+        toast.success("Link copied!");
+      } else {
+        toast.info("Sharing not supported on this device");
+      }
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        toast.error("Could not share");
+      }
+    }
+  };
+
+  const handleSave = () => {
+    if (!currentUserId) {
+      toast.error("Please sign in to bookmark posts");
+      return;
+    }
+    setSaved(!saved);
+    toast.success(saved ? "Removed from saved" : "Saved!");
+  };
+
+  const handleComment = () => {
+    if (!currentUserId) {
+      toast.error("Please sign in to comment");
+      return;
+    }
+    setShowComments(!showComments);
+  };
+
+  const submitComment = () => {
+    if (!commentText.trim()) return;
+    setComments((prev) => [
+      ...prev,
+      { id: Date.now().toString(), text: commentText.trim(), author: "You", time: "just now" },
+    ]);
+    setCommentText("");
+    toast.success("Comment added!");
+  };
+
   const mediaUrl = item.media_urls[currentMedia] || item.media_urls[0];
 
   return (
@@ -576,7 +647,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
           <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
           <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
         </div>
-        <button className="p-1.5 text-muted-foreground hover:text-foreground">
+        <button className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
           <MoreHorizontal className="h-5 w-5" />
         </button>
       </div>
@@ -602,9 +673,9 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
             )}
             <button
               onClick={() => setMuted(!muted)}
-              className="absolute bottom-3 right-3 h-7 w-7 rounded-full bg-black/50 flex items-center justify-center"
+              className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
             >
-              {muted ? <VolumeX className="h-3.5 w-3.5 text-white" /> : <Volume2 className="h-3.5 w-3.5 text-white" />}
+              {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
             </button>
           </>
         ) : (
@@ -632,23 +703,27 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
 
       {/* Action buttons */}
       <div className="flex items-center px-3 py-2">
-        <div className="flex items-center gap-4 flex-1">
-          <button onClick={() => setLiked(!liked)} className="group">
-            <Heart className={cn("h-6 w-6 transition-all", liked ? "text-red-500 fill-red-500 scale-110" : "text-foreground group-active:scale-125")} />
+        <div className="flex items-center gap-3 flex-1">
+          <button onClick={handleLike} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <Heart className={cn("h-6 w-6 transition-all", liked ? "text-red-500 fill-red-500 scale-110" : "text-foreground active:scale-125")} />
           </button>
-          <button className="text-foreground"><MessageCircle className="h-6 w-6" /></button>
-          <button className="text-foreground"><Share2 className="h-6 w-6" /></button>
+          <button onClick={handleComment} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
+            <MessageCircle className="h-6 w-6" />
+          </button>
+          <button onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
+            <Share2 className="h-6 w-6" />
+          </button>
         </div>
-        <button onClick={() => setSaved(!saved)}>
+        <button onClick={handleSave} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
           <Bookmark className={cn("h-6 w-6 transition-all", saved ? "text-foreground fill-foreground" : "text-foreground")} />
         </button>
       </div>
 
       {/* Likes */}
-      {(item.likes_count > 0 || liked) && (
+      {localLikes > 0 && (
         <div className="px-3 pb-1">
           <p className="text-[13px] font-semibold text-foreground">
-            {(item.likes_count + (liked ? 1 : 0)).toLocaleString()} likes
+            {localLikes.toLocaleString()} likes
           </p>
         </div>
       )}
@@ -663,12 +738,63 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
         </div>
       )}
 
-      {/* Comments */}
-      {item.comments_count > 0 && (
-        <button className="px-3 pb-2">
-          <p className="text-[12px] text-muted-foreground">View all {item.comments_count} comments</p>
+      {/* Comments count */}
+      {(item.comments_count > 0 || comments.length > 0) && (
+        <button onClick={handleComment} className="px-3 pb-2">
+          <p className="text-[12px] text-muted-foreground">
+            View all {item.comments_count + comments.length} comments
+          </p>
         </button>
       )}
+
+      {/* Comments section */}
+      <AnimatePresence>
+        {showComments && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            {/* Existing local comments */}
+            {comments.length > 0 && (
+              <div className="px-3 pb-2 space-y-2">
+                {comments.map((c) => (
+                  <div key={c.id} className="flex items-start gap-2">
+                    <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground shrink-0 mt-0.5">
+                      {c.author[0]}
+                    </div>
+                    <div>
+                      <p className="text-[12px] text-foreground">
+                        <span className="font-semibold mr-1">{c.author}</span>
+                        {c.text}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">{c.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Comment input */}
+            <div className="flex items-center gap-2 px-3 py-2 border-t border-border/20">
+              <input
+                type="text"
+                placeholder="Add a comment..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && submitComment()}
+                className="flex-1 text-[13px] bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-h-[44px]"
+              />
+              {commentText.trim() && (
+                <button onClick={submitComment} className="text-primary font-semibold text-[13px] min-h-[44px] min-w-[44px] flex items-center justify-center">
+                  <Send className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Views */}
       {item.media_type === "video" && item.views_count > 0 && (
