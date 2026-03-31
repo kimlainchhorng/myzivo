@@ -75,7 +75,7 @@ export default function ReelsFeedPage() {
         const storeIds = [...new Set(storePosts.map((p: any) => p.store_id))];
         const { data: stores } = await supabase
           .from("store_profiles")
-          .select("id, name, logo_url")
+          .select("id, name, logo_url, slug")
           .in("id", storeIds);
         const storeMap = new Map((stores || []).map((s: any) => [s.id, s]));
 
