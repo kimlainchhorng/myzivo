@@ -182,7 +182,7 @@ export default function StoreProfilePage() {
             <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none z-[1]" />
 
             {/* Nav buttons */}
-            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-3 z-10">
+            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 z-10" style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 52px)" }}>
               <motion.button
                 whileTap={{ scale: 0.85 }}
                 onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/grocery")}
