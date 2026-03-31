@@ -985,7 +985,6 @@ const AR_CATEGORIES = ["All", "Trending", "Beauty", "Fun", "Animals", "Fantasy",
 type ARCategory = typeof AR_CATEGORIES[number];
 
 // AR filter overlays - face-tracked like TikTok
-<<<<<<< HEAD
 const AR_STICKERS = [
   { name: "None", emoji: "⭕", sticker: null },
   { name: "Cat Ears", emoji: "🐱", sticker: "cat" },
