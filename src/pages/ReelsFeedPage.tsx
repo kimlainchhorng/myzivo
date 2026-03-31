@@ -527,7 +527,8 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showPostMenu, setShowPostMenu] = useState(false);
   const [showReportSheet, setShowReportSheet] = useState(false);
-  const [reportStep, setReportStep] = useState<"categories" | "submitted">("categories");
+  const [reportStep, setReportStep] = useState<"categories" | "sub" | "submitted">("categories");
+  const [reportCategory, setReportCategory] = useState("");
   const [notificationsOn, setNotificationsOn] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
@@ -975,7 +976,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
               </div>
               <div className="px-2">
                 <button
-                  onClick={() => { setShowPostMenu(false); setShowReportSheet(true); setReportStep("categories"); }}
+                  onClick={() => { setShowPostMenu(false); setShowReportSheet(true); setReportStep("categories"); setReportCategory(""); }}
                   className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
                 >
                   <Flag className="h-5 w-5 text-destructive" />
@@ -1037,7 +1038,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
                   <p className="px-6 pb-4 text-xs text-muted-foreground">Why are you reporting this post? Your report is anonymous.</p>
                   <div className="overflow-y-auto px-2 flex-1">
                     {[
-                      { icon: AlertTriangle, label: "Spam", desc: "Misleading or repetitive content" },
+                      { icon: AlertTriangle, label: "Spam" , desc: "Misleading or repetitive content" },
                       { icon: ShieldAlert, label: "Scam or fraud", desc: "Trying to steal money or personal info" },
                       { icon: UserX, label: "Fake account", desc: "Pretending to be someone else" },
                       { icon: Ban, label: "Harassment or bullying", desc: "Targeting or intimidating someone" },
@@ -1049,7 +1050,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
                     ].map((r) => (
                       <button
                         key={r.label}
-                        onClick={() => setReportStep("submitted")}
+                        onClick={() => { setReportCategory(r.label); setReportStep("sub"); }}
                         className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
                       >
                         <r.icon className="h-5 w-5 text-muted-foreground shrink-0" />
@@ -1057,6 +1058,41 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
                           <p className="text-sm font-medium text-foreground">{r.label}</p>
                           <p className="text-[11px] text-muted-foreground">{r.desc}</p>
                         </div>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : reportStep === "sub" ? (
+                <>
+                  <div className="flex items-center px-4 pb-3">
+                    <button onClick={() => setReportStep("categories")} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                      <ChevronLeft className="h-5 w-5 text-foreground" />
+                    </button>
+                    <h3 className="flex-1 text-center text-base font-bold text-foreground pr-11">{reportCategory}</h3>
+                  </div>
+                  <p className="px-6 pb-4 text-xs text-muted-foreground">Select the option that best describes the issue.</p>
+                  <div className="overflow-y-auto px-2 flex-1">
+                    {((): { label: string }[] => {
+                      const subMap: Record<string, string[]> = {
+                        "Spam": ["Promotional content", "Repetitive posts", "Bot activity", "Clickbait", "Misleading information"],
+                        "Scam or fraud": ["Phishing attempt", "Financial scam", "Fake giveaway", "Identity theft", "Cryptocurrency scam", "Impersonating a business"],
+                        "Fake account": ["Impersonating me", "Impersonating someone I know", "Impersonating a celebrity", "Impersonating a business or brand", "Bot or fake engagement"],
+                        "Harassment or bullying": ["Threatening language", "Unwanted contact", "Intimidation", "Stalking behavior", "Revealing private info (doxxing)", "Encouraging self-harm"],
+                        "Violence or dangerous acts": ["Graphic violence", "Threatening harm", "Glorifying violence", "Dangerous challenges", "Animal cruelty", "Terrorist content"],
+                        "Nudity or sexual content": ["Nudity", "Sexual activity", "Sexual exploitation", "Non-consensual imagery", "Content involving minors"],
+                        "Hate speech": ["Racism", "Religious discrimination", "Sexism or misogyny", "Homophobia or transphobia", "Disability discrimination", "Xenophobia"],
+                        "Intellectual property": ["Copyright infringement", "Trademark violation", "Stolen content", "Unauthorized use of my work"],
+                        "Something else": ["Misinformation", "Self-injury or suicide", "Drug sales", "Unauthorized sales", "Privacy violation", "Other"],
+                      };
+                      return (subMap[reportCategory] || ["Other"]).map((s) => ({ label: s }));
+                    })().map((sub) => (
+                      <button
+                        key={sub.label}
+                        onClick={() => setReportStep("submitted")}
+                        className="flex items-center justify-between w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
+                      >
+                        <span className="text-sm font-medium text-foreground">{sub.label}</span>
                         <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
                       </button>
                     ))}
