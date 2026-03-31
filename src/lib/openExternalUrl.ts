@@ -87,6 +87,11 @@ export async function openExternalUrl(url: string): Promise<void> {
   }
 
   if (Capacitor.isNativePlatform()) {
+    if (shouldForceTopLevelNavigation(resolvedUrl)) {
+      window.location.assign(resolvedUrl.href);
+      return;
+    }
+
     try {
       // Keep defaults for max compatibility across iOS/Android WebViews
       await Browser.open({ url: resolvedUrl.href });
@@ -100,9 +105,8 @@ export async function openExternalUrl(url: string): Promise<void> {
 
   const embedded = isEmbeddedContext();
 
-  // In embedded contexts (e.g. preview iframe), or for domains like Facebook,
-  // prefer a new tab to avoid COOP/frame navigation blocks.
-  if (embedded || shouldForceTopLevelNavigation(resolvedUrl)) {
+  // In embedded contexts (e.g. preview iframe), try opening a new tab first.
+  if (embedded) {
     const openedWindow = window.open(resolvedUrl.href, "_blank", "noopener,noreferrer");
     if (openedWindow) return;
   }
