@@ -976,7 +976,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
               </div>
               <div className="px-2">
                 <button
-                  onClick={() => { setShowPostMenu(false); setShowReportSheet(true); setReportStep("categories"); }}
+                  onClick={() => { setShowPostMenu(false); setShowReportSheet(true); setReportStep("categories"); setReportCategory(""); }}
                   className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
                 >
                   <Flag className="h-5 w-5 text-destructive" />
