@@ -4374,7 +4374,7 @@ function LiveBroadcast({
                             ? "ring-2 ring-white scale-105 shadow-lg shadow-white/20"
                             : "opacity-80"
                         )}
-                        style={{ background: s.gradient }}
+                        style={{ background: (s as any).gradient || "linear-gradient(135deg, #333, #555)" }}
                       >
                         {s.sticker ? (
                           <div className="absolute inset-0 flex items-center justify-center text-3xl drop-shadow-lg">
