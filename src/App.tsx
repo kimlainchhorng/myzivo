@@ -411,6 +411,7 @@ const App = () => (
                             <Route path="/" element={<Index />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/signup" element={<Signup />} />
+                            <Route path="/unsubscribe" element={<Unsubscribe />} />
 
                 {/* App Dashboard */}
                 <Route path="/app" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
