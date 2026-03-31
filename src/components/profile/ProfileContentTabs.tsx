@@ -3799,9 +3799,6 @@ function LiveBroadcast({
     ? applyFilterStrength(currentFilter?.css || "none", filterStrength)
     : "none";
   const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : activeFilters.length;
-=======
-  const totalFilterCount = filterTab === "ar" ? AR_STICKERS.length : AI_MODES.length;
->>>>>>> c122a7e7c87c714d0efe473b88f1fbf52451c98e
   const selectedFilterName = filterTab === "ar"
     ? AR_STICKERS[activeSticker]?.name || "None"
     : (aiSelectedMode ? AI_MODES.find(m => m.id === aiSelectedMode)?.name : "None") || "None";
