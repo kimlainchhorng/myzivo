@@ -56,7 +56,6 @@ serve(async (req) => {
       .update({
         status: "cancelled",
         cancelled_at: new Date().toISOString(),
-        cancellation_reason: "Auto-cancelled: payment not completed within 1 hour",
       } as any)
       .in("id", ids);
 

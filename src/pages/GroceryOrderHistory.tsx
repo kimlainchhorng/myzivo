@@ -417,7 +417,6 @@ export default function GroceryOrderHistory() {
           .update({
             status: "cancelled",
             cancelled_at: new Date().toISOString(),
-            cancellation_reason: "Auto-cancelled: payment not completed within 1 hour",
           } as any)
           .eq("id", order.id);
 
