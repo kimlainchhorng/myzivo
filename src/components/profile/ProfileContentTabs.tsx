@@ -227,7 +227,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       url: mediaUrl,
       filterCss: payload.filterCss,
       views: payload.type === "reel" ? 0 : undefined,
-      user: { name: authorName, avatar: "https://i.pravatar.cc/100?img=3" },
+      user: { name: authorName, avatar: profileAvatar || "" },
     };
 
     setFeed((prev) => [createdPost, ...prev]);
