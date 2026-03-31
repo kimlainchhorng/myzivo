@@ -71,8 +71,8 @@ function FeaturedStore({ store, eta, location }: { store: StoreConfig; eta: numb
         </div>
         <div className="flex-1 min-w-0 text-left">
           <div className="flex items-center gap-2 mb-1">
-            <StatusDot isOpen={status.isOpen} />
-            <span className={`text-[11px] font-semibold ${status.isOpen ? "text-emerald-500" : "text-muted-foreground/50"}`}>
+            <StatusDot status={status.status} />
+            <span className={`text-[11px] font-semibold ${status.status === "open" ? "text-emerald-500" : status.status === "closed" ? "text-red-500" : "text-amber-500"}`}>
               {status.label}
             </span>
             {store.promo && (
