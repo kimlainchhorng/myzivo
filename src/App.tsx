@@ -176,8 +176,9 @@ const PartnerDisclosure = lazy(() => import("./pages/legal/PartnerDisclosure"));
 const DoNotSell = lazy(() => import("./pages/legal/DoNotSell"));
 const SecurityIncident = lazy(() => import("./pages/legal/SecurityIncident"));
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
+const SocialMediaPolicy = lazy(() => import("./pages/legal/SocialMediaPolicy"));
+const AcceptableUsePolicy = lazy(() => import("./pages/legal/AcceptableUsePolicy"));
 
-// Public pages
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
@@ -561,7 +562,8 @@ const App = () => (
                 <Route path="/legal/security-incident" element={<SecurityIncident />} />
                 <Route path="/legal/seller-of-travel" element={<SellerOfTravel />} />
                 <Route path="/legal/flight-terms" element={<FlightTerms />} />
-                <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
+                <Route path="/legal/social-media-policy" element={<SocialMediaPolicy />} />
+                <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
 

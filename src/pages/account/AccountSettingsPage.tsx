@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen, FileText, Scale, Cookie } from "lucide-react";
+import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen, FileText, Scale, Cookie, Plane, Share2, ShoppingBag, Undo2, BookOpen, Gavel } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const settingsItems = [
@@ -93,6 +93,46 @@ const legalItems = [
     href: "/partner-disclosure",
     color: "bg-rose-500/15",
     iconColor: "text-rose-500",
+  },
+  {
+    icon: Plane,
+    label: "Flight Booking Terms",
+    description: "Air travel rules & policies",
+    href: "/legal/flight-terms",
+    color: "bg-sky-500/15",
+    iconColor: "text-sky-500",
+  },
+  {
+    icon: Undo2,
+    label: "Refund Policy",
+    description: "Cancellations & refunds",
+    href: "/refunds",
+    color: "bg-emerald-500/15",
+    iconColor: "text-emerald-500",
+  },
+  {
+    icon: Share2,
+    label: "Social Media Policy",
+    description: "Community & content guidelines",
+    href: "/legal/social-media-policy",
+    color: "bg-violet-500/15",
+    iconColor: "text-violet-500",
+  },
+  {
+    icon: Gavel,
+    label: "Acceptable Use Policy",
+    description: "Platform usage rules",
+    href: "/legal/acceptable-use",
+    color: "bg-orange-500/15",
+    iconColor: "text-orange-500",
+  },
+  {
+    icon: BookOpen,
+    label: "Compliance Center",
+    description: "Licenses & regulations",
+    href: "/compliance",
+    color: "bg-teal-500/15",
+    iconColor: "text-teal-500",
   },
 ];
 
