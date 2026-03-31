@@ -2255,6 +2255,7 @@ export default function AdminStoreEditPage() {
               ) : (
                 <TabsTrigger value="payment" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> {t("admin.store.payment")}</TabsTrigger>
               )}
+              <TabsTrigger value="settings" className="gap-1.5"><Building2 className="h-3.5 w-3.5" /> Settings</TabsTrigger>
             </TabsList>
           )}
 
