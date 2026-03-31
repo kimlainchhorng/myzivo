@@ -19,6 +19,7 @@ export type UserProfile = {
   social_snapchat: string | null;
   social_x: string | null;
   social_linkedin: string | null;
+  social_telegram: string | null;
   social_links_visible: boolean | null;
   created_at: string;
   updated_at: string;
