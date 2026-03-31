@@ -181,6 +181,13 @@ const AcceptableUsePolicy = lazy(() => import("./pages/legal/AcceptableUsePolicy
 const DataRetentionPolicy = lazy(() => import("./pages/legal/DataRetentionPolicy"));
 const DMCACopyrightPolicy = lazy(() => import("./pages/legal/DMCACopyrightPolicy"));
 const DisputeResolution = lazy(() => import("./pages/legal/DisputeResolution"));
+const LimitationOfLiability = lazy(() => import("./pages/legal/LimitationOfLiability"));
+const IndemnificationPolicy = lazy(() => import("./pages/legal/IndemnificationPolicy"));
+const AgeRestrictionPolicy = lazy(() => import("./pages/legal/AgeRestrictionPolicy"));
+const AssumptionOfRisk = lazy(() => import("./pages/legal/AssumptionOfRisk"));
+const ElectronicConsent = lazy(() => import("./pages/legal/ElectronicConsent"));
+const ForceMajeure = lazy(() => import("./pages/legal/ForceMajeure"));
+const NoGuaranteeDisclaimer = lazy(() => import("./pages/legal/NoGuaranteeDisclaimer"));
 
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
