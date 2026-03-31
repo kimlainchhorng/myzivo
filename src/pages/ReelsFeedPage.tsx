@@ -10,7 +10,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import {
   Loader2, Heart, MessageCircle, Share2, Eye, Bookmark,
   MoreHorizontal, Play, Volume2, VolumeX, Image as ImageIcon,
-  Plus, Camera, X as XIcon, Send,
+  Plus, Camera, X as XIcon, Send, Film, Radio,
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
