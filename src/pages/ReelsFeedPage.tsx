@@ -907,7 +907,12 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
                           onClick={(e) => {
                             e.preventDefault();
                             setShowShareSheet(false);
-                            import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(opt.url));
+                            if (opt.url === "__copy__") {
+                              handleCopyLink();
+                              toast.success((opt as any).copyMessage || "Link copied!");
+                            } else {
+                              import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(opt.url));
+                            }
                           }}
                           className="flex flex-col items-center gap-2 min-h-[48px]"
                         >
