@@ -450,7 +450,7 @@ export default function StoreMapPage() {
                     : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
                 }`}
               >
-                All ({stores.length})
+                All ({allStores.length})
               </motion.button>
               {usedCategories.map((cat) => {
                 const count = stores.filter((s) => s.category === cat.value).length;
