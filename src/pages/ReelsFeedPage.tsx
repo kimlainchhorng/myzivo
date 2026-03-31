@@ -854,19 +854,20 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
 
               <div className="grid grid-cols-4 gap-4 px-6 py-5">
                 {shareOptions.map((opt) => (
-                  <a
+                  <button
                     key={opt.label}
-                    href={opt.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setShowShareSheet(false)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowShareSheet(false);
+                      import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(opt.url));
+                    }}
                     className="flex flex-col items-center gap-2 min-h-[48px]"
                   >
                     <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: `${opt.color}15` }}>
                       <svg viewBox="0 0 24 24" className="h-6 w-6" fill={opt.color}><path d={opt.svg} /></svg>
                     </div>
                     <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
-                  </a>
+                  </button>
                 ))}
                 {/* Copy Link */}
                 <button
@@ -901,19 +902,20 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
                   >
                     <div className="grid grid-cols-4 gap-4 px-6 py-4 border-t border-border/20">
                       {moreShareOptions.map((opt) => (
-                        <a
+                        <button
                           key={opt.label}
-                          href={opt.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => setShowShareSheet(false)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setShowShareSheet(false);
+                            import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(opt.url));
+                          }}
                           className="flex flex-col items-center gap-2 min-h-[48px]"
                         >
                           <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: `${opt.color}15` }}>
                             <svg viewBox="0 0 24 24" className="h-6 w-6" fill={opt.color}><path d={opt.svg} /></svg>
                           </div>
                           <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
-                        </a>
+                        </button>
                       ))}
                     </div>
                   </motion.div>
