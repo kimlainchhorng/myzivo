@@ -243,6 +243,9 @@ function CreatePostModal({
   const [preview, setPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
   const [selectedType, setSelectedType] = useState<"Photo" | "Video" | "Reel" | "Live" | null>(null);
+  const [visibility, setVisibility] = useState<"everyone" | "friends" | "onlyme">("everyone");
+  const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
+  const [album, setAlbum] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
