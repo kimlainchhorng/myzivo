@@ -81,6 +81,9 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   useEffect(() => {
     let alive = true;
 
+    // Reset feed when profile owner changes
+    setFeed([]);
+
     const mergeFeed = (incoming: FeedItem[]) => {
       setFeed((prev) => {
         const deduped = new Map<string, FeedItem>();
