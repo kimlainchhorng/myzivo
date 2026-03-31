@@ -48,6 +48,27 @@ function shouldForceTopLevelNavigation(resolvedUrl: URL): boolean {
   return host === "facebook.com" || host.endsWith(".facebook.com");
 }
 
+function isEmbeddedContext(): boolean {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
+function tryNavigateTopLevel(url: string): boolean {
+  try {
+    if (window.top && window.top !== window.self) {
+      window.top.location.assign(url);
+      return true;
+    }
+  } catch (err) {
+    console.warn("[openExternalUrl] top-level navigation failed:", err);
+  }
+
+  return false;
+}
+
 export async function openExternalUrl(url: string): Promise<void> {
   const normalizedUrl = normalizeUrl(url);
   if (!normalizedUrl || normalizedUrl === "#") return;
@@ -77,7 +98,20 @@ export async function openExternalUrl(url: string): Promise<void> {
     }
   }
 
-  // Safari/WebView can block new-tab cross-origin opens via COOP; use top-level navigation.
+  const embedded = isEmbeddedContext();
+
+  // In embedded contexts (e.g. preview iframe), or for domains like Facebook,
+  // prefer a new tab to avoid COOP/frame navigation blocks.
+  if (embedded || shouldForceTopLevelNavigation(resolvedUrl)) {
+    const openedWindow = window.open(resolvedUrl.href, "_blank", "noopener,noreferrer");
+    if (openedWindow) return;
+  }
+
+  if (embedded && tryNavigateTopLevel(resolvedUrl.href)) {
+    return;
+  }
+
+  // Last fallback: same-tab navigation.
   window.location.assign(resolvedUrl.href);
 }
 
