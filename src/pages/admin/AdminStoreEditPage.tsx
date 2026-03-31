@@ -484,7 +484,7 @@ export default function AdminStoreEditPage() {
 
   const saveProfile = useMutation({
     mutationFn: async () => {
-      const { rating, ...profileData } = form;
+      const { rating, booking_days, booking_start_time, booking_end_time, booking_duration, booking_note, ...profileData } = form;
       const { error } = await supabase
         .from("store_profiles")
         .update(profileData as any)
