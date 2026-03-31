@@ -357,7 +357,7 @@ export default function StoreProfilePage() {
                 </div>
                 <div className="relative z-[3] flex flex-col items-start min-w-0">
                   <p className="text-[11px] font-bold text-white drop-shadow-md">{t("store.call_store") || "Call Store"}</p>
-                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">{store.phone}</p>
+                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">{store.phone.startsWith("+") ? store.phone : `+855 ${store.phone}`}</p>
                 </div>
               </motion.a>
             )}
