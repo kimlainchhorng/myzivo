@@ -2540,8 +2540,46 @@ export default function AdminStoreEditPage() {
                     })()}
                   </div>
                   <div className="space-y-2">
-                    <Label>{t("admin.store.hours")}</Label>
-                    <Input value={form.hours} onChange={e => updateField("hours", e.target.value)} />
+                    <Label>Open Hour</Label>
+                    <select
+                      value={form.hours?.split(" - ")[0] || ""}
+                      onChange={e => {
+                        const close = form.hours?.split(" - ")[1] || "";
+                        updateField("hours", close ? `${e.target.value} - ${close}` : e.target.value);
+                      }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring overflow-y-auto"
+                    >
+                      <option value="">Select</option>
+                      {Array.from({ length: 48 }, (_, i) => {
+                        const h = Math.floor(i / 2);
+                        const m = i % 2 === 0 ? "00" : "30";
+                        const ampm = h < 12 ? "AM" : "PM";
+                        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                        const label = `${h12}:${m} ${ampm}`;
+                        return <option key={i} value={label}>{label}</option>;
+                      })}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Close Hour</Label>
+                    <select
+                      value={form.hours?.split(" - ")[1] || ""}
+                      onChange={e => {
+                        const open = form.hours?.split(" - ")[0] || "";
+                        updateField("hours", open ? `${open} - ${e.target.value}` : `- ${e.target.value}`);
+                      }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring overflow-y-auto"
+                    >
+                      <option value="">Select</option>
+                      {Array.from({ length: 48 }, (_, i) => {
+                        const h = Math.floor(i / 2);
+                        const m = i % 2 === 0 ? "00" : "30";
+                        const ampm = h < 12 ? "AM" : "PM";
+                        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                        const label = `${h12}:${m} ${ampm}`;
+                        return <option key={i} value={label}>{label}</option>;
+                      })}
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <Label>{t("admin.store.delivery_min")}</Label>
