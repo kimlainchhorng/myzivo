@@ -49,7 +49,7 @@ const PhoneRequiredGate = ({ children }: PhoneRequiredGateProps) => {
   if (!hasPhone) {
     return (
       <Navigate
-        to="/profile"
+        to="/setup"
         state={{ from: location, phoneRequired: true }}
         replace
       />

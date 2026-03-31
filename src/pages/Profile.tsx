@@ -472,6 +472,25 @@ const Profile = () => {
                 </ParallaxSection>
               )}
 
+              {/* ── Phone Required Card ── */}
+              {!profile?.phone?.trim() && (
+                <ParallaxSection index={1.5}>
+                  <div
+                    className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+                    onClick={() => navigate("/setup")}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                      <Phone className="w-5 h-5 text-destructive" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-foreground">Phone number required</p>
+                      <p className="text-xs text-muted-foreground">Add your phone number to access rides, flights & more</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-destructive/50 shrink-0" />
+                  </div>
+                </ParallaxSection>
+              )}
+
               {/* ── Stories Row ── */}
               <ParallaxSection index={2}>
                 <ProfileStories />
