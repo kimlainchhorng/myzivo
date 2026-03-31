@@ -505,20 +505,33 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   <p className="text-white/90 text-sm">{selectedPost.caption}</p>
                 )}
                 <div className="flex items-center gap-5">
-                  <button className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors">
-                    <Heart className="w-6 h-6" />
-                    <span className="text-sm font-medium">{selectedPost.likes}</span>
+                  <button
+                    className="flex items-center gap-1.5 transition-colors"
+                    onClick={() => {
+                      const postId = selectedPost.id;
+                      const isLiked = likedPosts.has(postId);
+                      setLikedPosts((prev) => {
+                        const next = new Set(prev);
+                        if (isLiked) next.delete(postId); else next.add(postId);
+                        return next;
+                      });
+                      setFeed((prev) => prev.map((p) => p.id === postId ? { ...p, likes: p.likes + (isLiked ? -1 : 1) } : p));
+                      setSelectedPost((prev) => prev ? { ...prev, likes: prev.likes + (isLiked ? -1 : 1) } : prev);
+                      // Update DB
+                      supabase.from("user_posts").update({ likes_count: selectedPost.likes + (isLiked ? -1 : 1) }).eq("id", postId).then(() => {});
+                    }}
+                  >
+                    <Heart className={cn("w-6 h-6", likedPosts.has(selectedPost.id) ? "fill-red-500 text-red-500" : "text-white/70 hover:text-white")} />
+                    <span className="text-sm font-medium text-white/90">{selectedPost.likes}</span>
                   </button>
                   <button className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors">
                     <MessageCircle className="w-6 h-6" />
                     <span className="text-sm font-medium">{selectedPost.comments}</span>
                   </button>
-                  {selectedPost.views && (
-                    <span className="flex items-center gap-1.5 text-white/50">
-                      <Eye className="w-5 h-5" />
-                      <span className="text-sm">{selectedPost.views > 1000 ? `${(selectedPost.views / 1000).toFixed(1)}k` : selectedPost.views}</span>
-                    </span>
-                  )}
+                  <span className="flex items-center gap-1.5 text-white/50">
+                    <Eye className="w-5 h-5" />
+                    <span className="text-sm">{(selectedPost.views || 0) > 1000 ? `${((selectedPost.views || 0) / 1000).toFixed(1)}k` : selectedPost.views || 0}</span>
+                  </span>
                   <button
                     className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors ml-auto"
                     onClick={() => setSharePostId(selectedPost.id)}
