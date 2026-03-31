@@ -577,6 +577,13 @@ const App = () => (
                 <Route path="/legal/data-retention" element={<DataRetentionPolicy />} />
                 <Route path="/legal/dmca" element={<DMCACopyrightPolicy />} />
                 <Route path="/legal/dispute-resolution" element={<DisputeResolution />} />
+                <Route path="/legal/limitation-of-liability" element={<LimitationOfLiability />} />
+                <Route path="/legal/indemnification" element={<IndemnificationPolicy />} />
+                <Route path="/legal/age-restriction" element={<AgeRestrictionPolicy />} />
+                <Route path="/legal/assumption-of-risk" element={<AssumptionOfRisk />} />
+                <Route path="/legal/electronic-consent" element={<ElectronicConsent />} />
+                <Route path="/legal/force-majeure" element={<ForceMajeure />} />
+                <Route path="/legal/no-guarantee" element={<NoGuaranteeDisclaimer />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
 
