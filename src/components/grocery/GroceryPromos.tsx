@@ -15,7 +15,7 @@ export default function GroceryPromos() {
   const { country } = useCountry();
   const marketStores = useMemo(() => getStoresForMarket(country), [country]);
 
-  const openStores = marketStores.filter((s) => getStoreStatus(s.hours).isOpen);
+  const openStores = marketStores.filter((s) => getStoreStatus(s.hours, country).isOpen);
 
   if (openStores.length === 0) return null;
 
