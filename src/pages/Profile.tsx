@@ -8,7 +8,7 @@ import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
   Shield, Star, ChevronRight, UserPlus, UserCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
-  Settings,
+  Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
