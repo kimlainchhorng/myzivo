@@ -56,7 +56,7 @@ export default function FavoritesPage() {
       <SEOHead title="Favorites — ZIVO" description="View and manage your favorite places" />
 
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b">
+      <div className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-xl border-b">
         <div className="flex items-center justify-between px-6 py-4 max-w-2xl mx-auto">
           <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
             <ArrowLeft className="w-5 h-5" />

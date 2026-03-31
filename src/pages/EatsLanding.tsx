@@ -343,7 +343,7 @@ export default function EatsLanding() {
         {/* ═══ RESTAURANT DETAIL ═══ */}
         {step === "restaurant" && currentRestaurant && (
           <motion.div key="restaurant" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="min-h-screen pb-32">
-            <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
+            <div className="sticky top-0 safe-area-top z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
               <div className="px-4 py-3 flex items-center gap-3 safe-area-top">
                 <motion.button whileTap={{ scale: 0.88 }} onClick={handleBack} className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation">
                   <ArrowLeft className="w-5 h-5 text-foreground" />
@@ -460,7 +460,7 @@ export default function EatsLanding() {
         {/* ═══ CART ═══ */}
         {step === "cart" && (
           <motion.div key="cart" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="min-h-screen pb-32">
-            <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
+            <div className="sticky top-0 safe-area-top z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
               <div className="px-4 py-3 flex items-center gap-3 safe-area-top">
                 <motion.button whileTap={{ scale: 0.88 }} onClick={handleBack} className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation">
                   <ArrowLeft className="w-5 h-5 text-foreground" />
@@ -548,7 +548,7 @@ export default function EatsLanding() {
         {/* ═══ CHECKOUT ═══ */}
         {step === "checkout" && (
           <motion.div key="checkout" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="min-h-screen pb-32">
-            <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
+            <div className="sticky top-0 safe-area-top z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
               <div className="px-4 py-3 flex items-center gap-3 safe-area-top">
                 <motion.button whileTap={{ scale: 0.88 }} onClick={handleBack} className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation">
                   <ArrowLeft className="w-5 h-5 text-foreground" />

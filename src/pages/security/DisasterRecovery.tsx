@@ -13,7 +13,7 @@ import { COMPANY_INFO } from "@/config/legalContent";
 export default function DisasterRecovery() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b">
+      <header className="sticky top-0 safe-area-top z-50 bg-background/95 backdrop-blur-md border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Link to="/security">
