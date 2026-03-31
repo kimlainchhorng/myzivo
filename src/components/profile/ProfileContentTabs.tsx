@@ -303,13 +303,24 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               item.type === "reel" ? "aspect-[9/14]" : "aspect-square"
             )}
           >
-            <img
-              src={item.url}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ filter: item.filterCss || "none" }}
-              loading="lazy"
-            />
+            {item.type === "reel" ? (
+              <video
+                src={item.url}
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ filter: item.filterCss || "none" }}
+                muted
+                playsInline
+                preload="metadata"
+              />
+            ) : (
+              <img
+                src={item.url}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ filter: item.filterCss || "none" }}
+                loading="lazy"
+              />
+            )}
             {item.type === "reel" && (
               <div className="absolute top-1.5 right-1.5 z-10">
                 <Play className="w-4 h-4 text-white fill-white drop-shadow-lg" />
@@ -401,12 +412,24 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
               {/* Content */}
               <div className="flex-1 flex items-center justify-center overflow-hidden">
-                <img
-                  src={selectedPost.url}
-                  alt=""
-                  className="w-full h-full object-contain"
-                  style={{ filter: selectedPost.filterCss || "none" }}
-                />
+                {selectedPost.type === "reel" ? (
+                  <video
+                    src={selectedPost.url}
+                    className="w-full h-full object-contain"
+                    style={{ filter: selectedPost.filterCss || "none" }}
+                    controls
+                    playsInline
+                    autoPlay
+                    loop
+                  />
+                ) : (
+                  <img
+                    src={selectedPost.url}
+                    alt=""
+                    className="w-full h-full object-contain"
+                    style={{ filter: selectedPost.filterCss || "none" }}
+                  />
+                )}
               </div>
 
               {/* Bottom bar */}
