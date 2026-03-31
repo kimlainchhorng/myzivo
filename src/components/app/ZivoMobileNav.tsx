@@ -60,7 +60,7 @@ const ZivoMobileNav = () => {
       {/* iOS-style frosted glass background */}
       <div className="absolute inset-0 bg-card/90 backdrop-blur-2xl border-t border-border/30" />
 
-      <div className="relative flex items-stretch justify-around h-[76px] max-w-lg mx-auto">
+      <div className="relative flex items-stretch justify-around h-[56px] max-w-lg mx-auto">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           
@@ -74,7 +74,7 @@ const ZivoMobileNav = () => {
                 }
               }}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 gap-1.5 transition-colors duration-200 touch-manipulation active:scale-90 relative min-w-[48px] min-h-[48px]",
+                "flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors duration-200 touch-manipulation active:scale-90 relative min-w-[44px] min-h-[44px]",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
               aria-label={t(tab.labelKey)}
@@ -83,7 +83,7 @@ const ZivoMobileNav = () => {
               <div className="relative flex items-center justify-center">
                 <tab.icon
                   className={cn(
-                    "relative z-10 transition-all duration-200 w-7 h-7",
+                    "relative z-10 transition-all duration-200 w-[22px] h-[22px]",
                     isActive ? "text-primary" : "text-muted-foreground"
                   )}
                   strokeWidth={isActive ? 2.2 : 1.4}
@@ -104,7 +104,7 @@ const ZivoMobileNav = () => {
               </div>
               
               <span className={cn(
-                "text-[11px] leading-none transition-all duration-200",
+                "text-[10px] leading-none transition-all duration-200",
                 isActive
                   ? "font-semibold text-primary"
                   : "font-medium text-muted-foreground"
