@@ -29041,6 +29041,13 @@ export type Database = {
           sms_consent: boolean
           sms_opted_out: boolean
           sms_opted_out_at: string | null
+          social_facebook: string | null
+          social_instagram: string | null
+          social_linkedin: string | null
+          social_links_visible: boolean | null
+          social_snapchat: string | null
+          social_tiktok: string | null
+          social_x: string | null
           status: string | null
           updated_at: string | null
           user_id: string | null
@@ -29083,6 +29090,13 @@ export type Database = {
           sms_consent?: boolean
           sms_opted_out?: boolean
           sms_opted_out_at?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_links_visible?: boolean | null
+          social_snapchat?: string | null
+          social_tiktok?: string | null
+          social_x?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -29125,6 +29139,13 @@ export type Database = {
           sms_consent?: boolean
           sms_opted_out?: boolean
           sms_opted_out_at?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_links_visible?: boolean | null
+          social_snapchat?: string | null
+          social_tiktok?: string | null
+          social_x?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
