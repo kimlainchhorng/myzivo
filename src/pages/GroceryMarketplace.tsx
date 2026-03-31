@@ -488,7 +488,7 @@ export default function GroceryMarketplace() {
                               <Clock className="h-2.5 w-2.5" /> {ds.delivery_min}m
                             </span>
                           )}
-                          {ds.rating && (
+                          {ds.rating != null && ds.rating > 0 && (
                             <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
                               <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {ds.rating}
                             </span>
