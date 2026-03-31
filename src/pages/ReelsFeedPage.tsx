@@ -406,17 +406,7 @@ function CreatePostModal({
               </div>
             )}
           </div>
-        ) : (
-          <button
-            onClick={() => fileRef.current?.click()}
-            className="mx-4 mb-4 w-[calc(100%-2rem)] aspect-video rounded-xl border-2 border-dashed border-border/40 flex flex-col items-center justify-center gap-2 bg-muted/20 hover:bg-muted/40 transition-colors"
-          >
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Camera className="h-6 w-6 text-primary" />
-            </div>
-            <p className="text-xs text-muted-foreground font-medium">Select a type above, then tap here</p>
-          </button>
-        )}
+        ) : null}
 
         <input
           ref={fileRef}
