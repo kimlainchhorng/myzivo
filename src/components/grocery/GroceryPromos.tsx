@@ -43,7 +43,7 @@ export default function GroceryPromos() {
                   <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
                 </div>
                 {(() => {
-                  const st = getStoreStatus(store.hours);
+                  const st = getStoreStatus(store.hours, country);
                   const bgColor = st.status === "open" ? "bg-emerald-500/10 border-emerald-500/15 text-emerald-500" : st.status === "closed" ? "bg-red-500/10 border-red-500/15 text-red-500" : "bg-amber-500/10 border-amber-500/15 text-amber-500";
                   return (
                     <span className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${bgColor}`}>

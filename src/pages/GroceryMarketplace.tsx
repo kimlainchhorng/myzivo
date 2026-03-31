@@ -296,7 +296,7 @@ export default function GroceryMarketplace() {
   // Featured store = closest open store
   const featuredStore = useMemo(() => {
     if (filter.trim() || category !== "all") return null;
-    return filteredStores.filter((s) => getStoreStatus(s.hours).isOpen)[0] || null;
+    return filteredStores.filter((s) => getStoreStatus(s.hours, country).isOpen)[0] || null;
   }, [filter, category, filteredStores]);
 
   const nonFeaturedStores = useMemo(() => {
