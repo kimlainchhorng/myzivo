@@ -12,6 +12,8 @@ import {
   MoreHorizontal, Play, Volume2, VolumeX, Image as ImageIcon,
   Plus, Camera, X as XIcon, Send, Film, Radio,
   Globe, Users, Lock, FolderPlus, MapPin, Hash, ChevronDown,
+  Flag, Bell, BellOff, Link2, EyeOff, AlertTriangle, ShieldAlert,
+  UserX, Ban, Skull, HelpCircle, ChevronLeft,
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -523,6 +525,10 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   const [showComments, setShowComments] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [showPostMenu, setShowPostMenu] = useState(false);
+  const [showReportSheet, setShowReportSheet] = useState(false);
+  const [reportStep, setReportStep] = useState<"categories" | "submitted">("categories");
+  const [notificationsOn, setNotificationsOn] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
@@ -688,7 +694,10 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
           <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
         </div>
       </button>
-        <button className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
+          className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
+        >
           <MoreHorizontal className="h-5 w-5" />
         </button>
       </div>
@@ -942,6 +951,134 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
                   </motion.div>
                 )}
               </AnimatePresence>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Post Options Menu */}
+      <AnimatePresence>
+        {showPostMenu && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40"
+            onClick={() => setShowPostMenu(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden"
+            >
+              <div className="flex justify-center py-3">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+              </div>
+              <div className="px-2">
+                <button
+                  onClick={() => { setShowPostMenu(false); setShowReportSheet(true); setReportStep("categories"); }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                >
+                  <Flag className="h-5 w-5 text-destructive" />
+                  <span className="text-sm font-medium text-destructive">Report</span>
+                </button>
+                <button
+                  onClick={() => { setNotificationsOn(!notificationsOn); setShowPostMenu(false); toast.success(notificationsOn ? "Notifications turned off" : "Notifications turned on for this post"); }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                >
+                  {notificationsOn ? <BellOff className="h-5 w-5 text-foreground" /> : <Bell className="h-5 w-5 text-foreground" />}
+                  <span className="text-sm font-medium text-foreground">{notificationsOn ? "Turn off notifications" : "Turn on notifications"}</span>
+                </button>
+                <button
+                  onClick={() => { setShowPostMenu(false); handleCopyLink(); }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                >
+                  <Link2 className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Copy link</span>
+                </button>
+                <button
+                  onClick={() => { setShowPostMenu(false); toast.success("You won't see posts like this anymore"); }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                >
+                  <EyeOff className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Not interested</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Report Sheet */}
+      <AnimatePresence>
+        {showReportSheet && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[210] flex items-end justify-center bg-black/40"
+            onClick={() => setShowReportSheet(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden max-h-[80vh] flex flex-col"
+            >
+              <div className="flex justify-center py-3">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+              </div>
+
+              {reportStep === "categories" ? (
+                <>
+                  <div className="flex items-center px-4 pb-3">
+                    <button onClick={() => setShowReportSheet(false)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                      <ChevronLeft className="h-5 w-5 text-foreground" />
+                    </button>
+                    <h3 className="flex-1 text-center text-base font-bold text-foreground pr-11">Report</h3>
+                  </div>
+                  <p className="px-6 pb-4 text-xs text-muted-foreground">Why are you reporting this post? Your report is anonymous.</p>
+                  <div className="overflow-y-auto px-2 flex-1">
+                    {[
+                      { icon: AlertTriangle, label: "Spam", desc: "Misleading or repetitive content" },
+                      { icon: ShieldAlert, label: "Scam or fraud", desc: "Trying to steal money or personal info" },
+                      { icon: UserX, label: "Fake account", desc: "Pretending to be someone else" },
+                      { icon: Ban, label: "Harassment or bullying", desc: "Targeting or intimidating someone" },
+                      { icon: Skull, label: "Violence or dangerous acts", desc: "Threatening or promoting violence" },
+                      { icon: EyeOff, label: "Nudity or sexual content", desc: "Inappropriate images or language" },
+                      { icon: Flag, label: "Hate speech", desc: "Attacking a group or individual" },
+                      { icon: ShieldAlert, label: "Intellectual property", desc: "Using content without permission" },
+                      { icon: HelpCircle, label: "Something else", desc: "Other issue not listed above" },
+                    ].map((r) => (
+                      <button
+                        key={r.label}
+                        onClick={() => setReportStep("submitted")}
+                        className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
+                      >
+                        <r.icon className="h-5 w-5 text-muted-foreground shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground">{r.label}</p>
+                          <p className="text-[11px] text-muted-foreground">{r.desc}</p>
+                        </div>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 px-6 gap-4">
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Flag className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">Thanks for reporting</h3>
+                  <p className="text-sm text-muted-foreground text-center max-w-[260px]">
+                    We'll review this post and take action if it violates our community guidelines.
+                  </p>
+                  <button
+                    onClick={() => setShowReportSheet(false)}
+                    className="mt-4 px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm min-h-[48px]"
+                  >
+                    Done
+                  </button>
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}

@@ -47685,16 +47685,28 @@ export type Database = {
           total_amount: number
         }[]
       }
-      calculate_quote: {
-        Args: {
-          p_distance_miles: number
-          p_duration_minutes: number
-          p_service_type: string
-          p_surge_multiplier?: number
-          p_vehicle_type?: string
-        }
-        Returns: Json
-      }
+      calculate_quote:
+        | {
+            Args: {
+              p_distance_miles: number
+              p_duration_minutes: number
+              p_service_type: string
+              p_surge_multiplier?: number
+              p_vehicle_type?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_country?: string
+              p_distance_miles: number
+              p_duration_minutes: number
+              p_service_type: string
+              p_surge_multiplier?: number
+              p_vehicle_type?: string
+            }
+            Returns: Json
+          }
       can_customer_view_driver: {
         Args: { _driver_id: string }
         Returns: boolean
