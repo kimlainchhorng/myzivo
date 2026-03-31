@@ -703,34 +703,32 @@ const Profile = () => {
               {/* ── Quick Access Links (3D floating glass tiles) ── */}
               <ParallaxSection index={4}>
                 <h3 className="font-display font-bold text-base mb-3">{t("profile.quick_access")}</h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   {quickLinks.map((link, i) => {
                     const isPartner = link.href === "#partner";
                     const Wrapper = isPartner ? Fragment : ({ children }: { children: React.ReactNode }) => <Link to={link.href}>{children}</Link>;
                     return (
                       <motion.div
                         key={link.label}
-                        initial={{ opacity: 0, y: 30, rotateX: 12 }}
-                        whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ delay: i * 0.04, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                        whileHover={{ scale: 1.04, y: -4, rotateY: 3 }}
-                        whileTap={{ scale: 0.96 }}
-                        style={{ perspective: "800px", transformStyle: "preserve-3d" }}
+                        transition={{ delay: i * 0.03, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                        whileTap={{ scale: 0.97 }}
                         onClick={isPartner ? () => setShowPartnerSheet(true) : undefined}
                         className={isPartner ? "cursor-pointer" : ""}
                       >
                         <Wrapper>
-                          <GlassCard3D className="shadow-lg hover:shadow-2xl hover:shadow-primary/[0.06] transition-shadow duration-500 group">
-                            <div className="p-3.5 flex items-center gap-3">
-                              <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${link.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shrink-0 shadow-inner`}>
-                                <link.icon className={`w-5 h-5 ${link.iconColor}`} />
+                          <GlassCard3D className="shadow-sm hover:shadow-md transition-shadow duration-300 group">
+                            <div className="px-3 py-2.5 flex items-center gap-2.5">
+                              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${link.color} flex items-center justify-center shrink-0`}>
+                                <link.icon className={`w-4 h-4 ${link.iconColor}`} />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-[13px] truncate">{link.label}</p>
-                                <p className="text-[10px] text-muted-foreground truncate">{link.description}</p>
+                                <p className="font-medium text-[12px] leading-tight truncate">{link.label}</p>
+                                <p className="text-[10px] text-muted-foreground/70 truncate leading-tight">{link.description}</p>
                               </div>
-                              <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300 shrink-0" />
+                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
                             </div>
                           </GlassCard3D>
                         </Wrapper>
