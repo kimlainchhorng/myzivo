@@ -188,6 +188,16 @@ const AssumptionOfRisk = lazy(() => import("./pages/legal/AssumptionOfRisk"));
 const ElectronicConsent = lazy(() => import("./pages/legal/ElectronicConsent"));
 const ForceMajeure = lazy(() => import("./pages/legal/ForceMajeure"));
 const NoGuaranteeDisclaimer = lazy(() => import("./pages/legal/NoGuaranteeDisclaimer"));
+const GoverningLaw = lazy(() => import("./pages/legal/GoverningLaw"));
+const IntellectualProperty = lazy(() => import("./pages/legal/IntellectualProperty"));
+const AccountTermination = lazy(() => import("./pages/legal/AccountTermination"));
+const ThirdPartyLinks = lazy(() => import("./pages/legal/ThirdPartyLinks"));
+const CommunicationConsent = lazy(() => import("./pages/legal/CommunicationConsent"));
+const ModificationOfTerms = lazy(() => import("./pages/legal/ModificationOfTerms"));
+const ClassActionWaiver = lazy(() => import("./pages/legal/ClassActionWaiver"));
+const AntiMoneyLaundering = lazy(() => import("./pages/legal/AntiMoneyLaundering"));
+const UserConduct = lazy(() => import("./pages/legal/UserConduct"));
+const CaliforniaPrivacy = lazy(() => import("./pages/legal/CaliforniaPrivacy"));
 
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
