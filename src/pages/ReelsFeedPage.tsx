@@ -661,6 +661,13 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
     <div className="bg-card">
       {/* Author header */}
       <div className="flex items-center gap-3 px-3 py-2.5">
+      <button
+        type="button"
+        onClick={() => {
+          if (item.author_id) navigate(`/user/${item.author_id}`);
+        }}
+        className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
+      >
         <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
           {item.author_avatar ? (
             <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
@@ -670,10 +677,11 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
             </div>
           )}
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 text-left">
           <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
           <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
         </div>
+      </button>
         <button className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
           <MoreHorizontal className="h-5 w-5" />
         </button>
