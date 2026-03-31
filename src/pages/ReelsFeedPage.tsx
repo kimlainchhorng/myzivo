@@ -44,10 +44,10 @@ export default function ReelsFeedPage() {
       const uid = data.user?.id || null;
       setUserId(uid);
       if (uid) {
-        supabase.from("profiles").select("first_name, last_name, avatar_url").eq("id", uid).maybeSingle()
+        supabase.from("profiles").select("full_name, avatar_url").eq("id", uid).maybeSingle()
           .then(({ data: p }) => {
             if (p) setUserProfile({
-              name: `${(p as any).first_name || ""} ${(p as any).last_name || ""}`.trim() || "You",
+              name: (p as any).full_name || "You",
               avatar: (p as any).avatar_url || null,
             });
           });
