@@ -55,6 +55,23 @@ const ProfileStories = () => {
 
         if (!alive || !data) return;
 
+        // Collect unique user IDs and fetch their profiles
+        const userIds = [...new Set((data as any[]).map((r: any) => r.user_id))];
+        let profileMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
+        if (userIds.length > 0) {
+          try {
+            const { data: profiles } = await supabase
+              .from("profiles")
+              .select("user_id, full_name, avatar_url")
+              .in("user_id", userIds);
+            if (profiles) {
+              for (const p of profiles as any[]) {
+                profileMap[p.user_id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+              }
+            }
+          } catch {}
+        }
+
         // Group by user_id
         const groupMap = new Map<string, StoryGroup>();
         for (const row of data as any[]) {
@@ -68,10 +85,14 @@ const ProfileStories = () => {
             viewed: false,
           };
           if (!groupMap.has(row.user_id)) {
+            const prof = profileMap[row.user_id];
+            const displayName = row.user_id === user?.id
+              ? (profile?.full_name || prof?.full_name || "You")
+              : (prof?.full_name || "User");
             groupMap.set(row.user_id, {
               user_id: row.user_id,
-              user_name: row.user_id === user?.id ? (profile?.full_name || "You") : "User",
-              user_avatar: null,
+              user_name: displayName,
+              user_avatar: prof?.avatar_url || null,
               stories: [],
               hasUnviewed: true,
             });
