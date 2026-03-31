@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   User, Camera, ArrowLeft, Mail, Phone, Loader2, Save, Sparkles,
-  AlertCircle, CheckCircle2, Lock, Unlock,
+  AlertCircle, CheckCircle2, Lock, Unlock, Users, Eye, EyeOff, Car,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
