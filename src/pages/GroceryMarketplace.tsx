@@ -461,13 +461,21 @@ export default function GroceryMarketplace() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0 pt-5">
-                        <div className="flex items-center gap-2">
-                          <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                          </span>
-                          <span className="text-[10px] font-medium text-emerald-600">Open</span>
-                        </div>
+                        {(() => {
+                          const status = ds.hours ? getStoreStatus(ds.hours) : { status: "open" as const, label: "Open" };
+                          const dotColor = status.status === "open" ? "bg-emerald-500" : status.status === "closing-soon" ? "bg-amber-500" : status.status === "almost-open" ? "bg-amber-500" : "bg-red-500";
+                          const pingColor = status.status === "open" ? "bg-emerald-400" : status.status === "closing-soon" ? "bg-amber-400" : status.status === "almost-open" ? "bg-amber-400" : "bg-red-400";
+                          const textColor = status.status === "open" ? "text-emerald-600" : status.status === "closing-soon" ? "text-amber-600" : status.status === "almost-open" ? "text-amber-600" : "text-red-500";
+                          return (
+                            <div className="flex items-center gap-2">
+                              <span className="relative flex h-2 w-2">
+                                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${pingColor} opacity-75`} />
+                                <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor}`} />
+                              </span>
+                              <span className={`text-[10px] font-medium ${textColor}`}>{status.label}</span>
+                            </div>
+                          );
+                        })()}
                         <p className="text-sm font-bold text-foreground truncate">{ds.name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           {ds.delivery_min && (
