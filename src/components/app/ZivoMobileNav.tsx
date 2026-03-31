@@ -83,7 +83,7 @@ const ZivoMobileNav = () => {
               <div className="relative flex items-center justify-center">
                 <tab.icon
                   className={cn(
-                    "relative z-10 transition-all duration-200 w-7 h-7",
+                    "relative z-10 transition-all duration-200 w-[22px] h-[22px]",
                     isActive ? "text-primary" : "text-muted-foreground"
                   )}
                   strokeWidth={isActive ? 2.2 : 1.4}
