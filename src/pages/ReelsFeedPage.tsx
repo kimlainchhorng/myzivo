@@ -579,43 +579,37 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
     }
   };
 
-  const handleShare = async () => {
+  const handleShare = () => {
     const url = window.location.href;
-    const text = item.caption || `Check out this post by ${item.author_name}`;
+    const text = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
+    const encodedUrl = encodeURIComponent(url);
 
-    // Tier 1: Native share (works on real mobile, not in iframes)
-    try {
-      if (navigator.share && !window.frameElement) {
-        await navigator.share({ title: item.author_name, text, url });
-        return;
-      }
-    } catch (err: any) {
-      if (err.name === "AbortError") return;
+    // Try native share first
+    if (typeof navigator.share === "function") {
+      navigator.share({ title: item.author_name, text: decodeURIComponent(text), url })
+        .catch((err) => { if (err.name !== "AbortError") copyFallback(url); });
+      return;
     }
 
-    // Tier 2: Clipboard API
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url);
-        toast.success("Link copied to clipboard!");
-        return;
-      }
-    } catch {}
+    // Fallback: open share options
+    const waUrl = `https://wa.me/?text=${text}%20${encodedUrl}`;
+    window.open(waUrl, "_blank", "noopener");
+    toast.success("Opening share...");
+  };
 
-    // Tier 3: execCommand fallback
+  const copyFallback = (url: string) => {
     try {
       const ta = document.createElement("textarea");
       ta.value = url;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
+      ta.style.cssText = "position:fixed;opacity:0;left:-9999px";
       document.body.appendChild(ta);
+      ta.focus();
       ta.select();
-      document.execCommand("copy");
+      const ok = document.execCommand("copy");
       document.body.removeChild(ta);
-      toast.success("Link copied!");
-    } catch {
-      toast.error("Could not share — try copying the URL manually");
-    }
+      if (ok) { toast.success("Link copied!"); return; }
+    } catch {}
+    toast.info("Long-press the URL bar to copy the link");
   };
 
   const handleSave = () => {
