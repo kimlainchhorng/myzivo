@@ -3791,7 +3791,7 @@ function LiveBroadcast({
   const visibleFilterIndexes = useMemo(() => {
     if (filterTab === "ar") {
       return AR_STICKERS.map((_, i) => i).filter(i => 
-        arCategory === "All" || AR_STICKERS[i].category.includes(arCategory)
+        arCategory === "All" || (AR_STICKERS[i] as any).category?.includes(arCategory)
       );
     }
     return [];
