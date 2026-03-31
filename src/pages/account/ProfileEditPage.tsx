@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   User, Camera, ArrowLeft, Mail, Phone, Loader2, Save, Sparkles,
-  AlertCircle, CheckCircle2, Lock, Unlock,
+  AlertCircle, CheckCircle2, Lock, Unlock, Users, Eye, EyeOff, Car,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -313,33 +313,72 @@ export default function ProfileEditPage() {
             </form>
           </Form>
 
-          {/* Profile Privacy Toggle */}
-          <div className="rounded-2xl border border-border/40 bg-card p-4 space-y-2">
-            <div className="flex items-center justify-between">
+          {/* Profile Privacy Controls */}
+          <div className="rounded-2xl border border-border/40 bg-card p-4 space-y-4">
+            <h3 className="text-sm font-bold flex items-center gap-2">
+              <Eye className="h-4 w-4 text-primary" /> Profile Visibility
+            </h3>
+
+            {/* Visibility Options */}
+            <div className="space-y-2">
+              {([
+                { value: "public", label: "Public", desc: "Anyone can view your profile", icon: Unlock, color: "text-primary", bg: "bg-primary/10", border: "border-primary/30" },
+                { value: "friends_only", label: "Friends Only", desc: "Only friends can see your profile", icon: Users, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+                { value: "private", label: "Private", desc: "Nobody can see your profile", icon: Lock, color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/30" },
+              ] as const).map((opt) => {
+                const current = (profile as any)?.profile_visibility || "public";
+                const isActive = current === opt.value;
+                const Icon = opt.icon;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    disabled={updateProfile.isPending}
+                    onClick={async () => {
+                      if (isActive) return;
+                      try {
+                        await updateProfile.mutateAsync({ profile_visibility: opt.value } as any);
+                      } catch {}
+                    }}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                      isActive
+                        ? `${opt.bg} ${opt.border} border`
+                        : "border-border/30 hover:bg-muted/30"
+                    }`}
+                  >
+                    <div className={`h-9 w-9 rounded-full ${opt.bg} flex items-center justify-center shrink-0`}>
+                      <Icon className={`h-4 w-4 ${opt.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold ${isActive ? "text-foreground" : "text-muted-foreground"}`}>{opt.label}</p>
+                      <p className="text-[11px] text-muted-foreground">{opt.desc}</p>
+                    </div>
+                    {isActive && (
+                      <div className={`h-5 w-5 rounded-full ${opt.bg} flex items-center justify-center`}>
+                        <CheckCircle2 className={`h-4 w-4 ${opt.color}`} />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Hide from Drivers/Shops */}
+            <div className="flex items-center justify-between pt-2 border-t border-border/30">
               <div className="flex items-center gap-3">
-                {(profile as any)?.is_private ? (
-                  <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                    <Lock className="h-5 w-5 text-destructive" />
-                  </div>
-                ) : (
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Unlock className="h-5 w-5 text-primary" />
-                  </div>
-                )}
+                <div className="h-9 w-9 rounded-full bg-muted/20 flex items-center justify-center">
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                </div>
                 <div>
-                  <p className="text-sm font-semibold">{(profile as any)?.is_private ? "Profile Locked" : "Profile Public"}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {(profile as any)?.is_private
-                      ? "Only you can see your profile"
-                      : "Anyone can view your profile"}
-                  </p>
+                  <p className="text-sm font-semibold">Hide from Drivers & Shops</p>
+                  <p className="text-[11px] text-muted-foreground">Drivers and shops can't view your profile</p>
                 </div>
               </div>
               <Switch
-                checked={!!(profile as any)?.is_private}
+                checked={!!(profile as any)?.hide_from_drivers}
                 onCheckedChange={async (checked) => {
                   try {
-                    await updateProfile.mutateAsync({ is_private: checked } as any);
+                    await updateProfile.mutateAsync({ hide_from_drivers: checked } as any);
                   } catch {}
                 }}
                 disabled={updateProfile.isPending}

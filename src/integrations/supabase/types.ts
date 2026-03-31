@@ -29020,6 +29020,7 @@ export type Database = {
           email: string | null
           email_verified: boolean | null
           full_name: string | null
+          hide_from_drivers: boolean
           id: string
           is_private: boolean
           kyc_rejection_reason: string | null
@@ -29032,6 +29033,7 @@ export type Database = {
           phone_e164: string | null
           phone_verified: boolean
           phone_verified_at: string | null
+          profile_visibility: string
           role: string | null
           selected_city_id: string | null
           selected_city_name: string | null
@@ -29060,6 +29062,7 @@ export type Database = {
           email?: string | null
           email_verified?: boolean | null
           full_name?: string | null
+          hide_from_drivers?: boolean
           id?: string
           is_private?: boolean
           kyc_rejection_reason?: string | null
@@ -29072,6 +29075,7 @@ export type Database = {
           phone_e164?: string | null
           phone_verified?: boolean
           phone_verified_at?: string | null
+          profile_visibility?: string
           role?: string | null
           selected_city_id?: string | null
           selected_city_name?: string | null
@@ -29100,6 +29104,7 @@ export type Database = {
           email?: string | null
           email_verified?: boolean | null
           full_name?: string | null
+          hide_from_drivers?: boolean
           id?: string
           is_private?: boolean
           kyc_rejection_reason?: string | null
@@ -29112,6 +29117,7 @@ export type Database = {
           phone_e164?: string | null
           phone_verified?: boolean
           phone_verified_at?: string | null
+          profile_visibility?: string
           role?: string | null
           selected_city_id?: string | null
           selected_city_name?: string | null
