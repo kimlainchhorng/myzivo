@@ -3728,30 +3728,55 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
               )}
             </div>
 
-            {/* Payment Section — fills remaining space */}
+            {/* Payment Section — skip if free ride */}
             <div className="shrink-0 pb-6">
-              <RidePaymentSection
-                price={(() => {
-                  const base = appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice;
-                  const cardFee = selectedCambodiaPayment === "card" && (currentVehicle as any).cardFeePct > 0
-                    ? base * ((currentVehicle as any).cardFeePct / 100) : 0;
-                  return base + cardFee;
-                })()}
-                vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}
-                isSubmitting={isSubmitting}
-                onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
-                onAuthorizeWithNewCard={() => handleRequestRide()}
-                clientSecret={clientSecret}
-                onPaymentSuccess={handlePaymentSuccess}
-                paymentFailed={paymentStep === "failed"}
-                onClearError={() => setPaymentStep("idle")}
-                isCambodia={useKm}
-                cashAllowed={cashAllowed}
-                onCashConfirm={handleCashRide}
-                onAbaConfirm={handleAbaRide}
-                onBackToMethods={() => { setClientSecret(null); setPaymentStep("idle"); }}
-                onPaymentMethodChange={(m) => setSelectedCambodiaPayment(m)}
-              />
+              {(() => {
+                const base = appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice;
+                const cardFee = selectedCambodiaPayment === "card" && (currentVehicle as any).cardFeePct > 0
+                  ? base * ((currentVehicle as any).cardFeePct / 100) : 0;
+                const finalPrice = base + cardFee;
+
+                if (finalPrice <= 0) {
+                  return (
+                    <div className="space-y-3">
+                      <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-4 text-center space-y-1">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                          <CheckCircle2 className="w-6 h-6 text-primary" />
+                        </div>
+                        <p className="text-sm font-bold text-foreground">No payment needed</p>
+                        <p className="text-xs text-muted-foreground">This ride is completely free with your promo code!</p>
+                      </div>
+                      <Button
+                        className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-primary/20"
+                        disabled={isSubmitting}
+                        onClick={() => handleRequestRide()}
+                      >
+                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : `Book Free ${getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}`}
+                      </Button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <RidePaymentSection
+                    price={finalPrice}
+                    vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}
+                    isSubmitting={isSubmitting}
+                    onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
+                    onAuthorizeWithNewCard={() => handleRequestRide()}
+                    clientSecret={clientSecret}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    paymentFailed={paymentStep === "failed"}
+                    onClearError={() => setPaymentStep("idle")}
+                    isCambodia={useKm}
+                    cashAllowed={cashAllowed}
+                    onCashConfirm={handleCashRide}
+                    onAbaConfirm={handleAbaRide}
+                    onBackToMethods={() => { setClientSecret(null); setPaymentStep("idle"); }}
+                    onPaymentMethodChange={(m) => setSelectedCambodiaPayment(m)}
+                  />
+                );
+              })()}
             </div>
           </div>
         </div>
