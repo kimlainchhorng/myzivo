@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Heart, MessageCircle, Eye, X, SwitchCamera, Mic, MicOff, Sparkles,
-  Share2, Play, Radio, ChevronDown, Globe, Users, Lock,
+  Share2, Play, Radio, ChevronDown, Globe, Users, Lock, Link2,
   MapPin, Image, Film, Grid3X3, Clapperboard, Camera, Trash2, Pencil, MoreVertical,
 } from "lucide-react";
 import { toast } from "sonner";
