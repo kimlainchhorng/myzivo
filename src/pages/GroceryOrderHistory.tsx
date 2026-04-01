@@ -670,6 +670,6 @@ export default function GroceryOrderHistory() {
       </div>
 
       <ZivoMobileNav />
-    </div>
+    </PullToRefresh>
   );
 }
