@@ -288,15 +288,14 @@ const Login = () => {
         ))}
       </div>
 
-      <div className="w-full max-w-md relative z-10 px-4" style={{ perspective: "1200px" }}>
+      <div className="w-full max-w-md relative z-10 px-4" style={isTouchDevice ? undefined : { perspective: "1200px" }}>
         <motion.div
           ref={cardRef}
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            rotateX, rotateY,
-            transformStyle: "preserve-3d" as const,
+            ...(isTouchDevice ? {} : { rotateX, rotateY, transformStyle: "preserve-3d" as const }),
             boxShadow: "0 25px 60px -15px rgba(0,0,0,0.5), 0 10px 25px -10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)",
           }}
           onMouseMove={handleMouseMove}
