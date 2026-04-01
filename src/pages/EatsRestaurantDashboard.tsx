@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 
 // ─── Types ───────────────────────────────────────────────────
