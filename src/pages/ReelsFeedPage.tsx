@@ -374,7 +374,7 @@ export default function ReelsFeedPage() {
             >
               <div className="divide-y divide-border/20">
                 {items.slice(fullscreenIndex).map((item, idx) => (
-                  <FeedCard key={item.id} item={item} currentUserId={userId} />
+                  <FeedCard key={item.id} item={item} currentUserId={userId} autoPlayVideo={idx === 0 && item.media_type === 'video'} />
                 ))}
               </div>
             </div>
