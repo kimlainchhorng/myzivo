@@ -92,8 +92,13 @@ export default function EatsOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<FoodOrder | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "delivered" | "cancelled">("all");
 
+  const queryClient = useQueryClient();
   const restaurantIds = [...new Set(orders.map(o => o.restaurant_id))];
   const { data: restaurants = {} } = useRestaurantNames(restaurantIds);
+
+  const handlePullRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["eats-order-history"] });
+  }, [queryClient]);
 
   const activeStatuses = ["pending", "confirmed", "preparing", "ready", "picked_up", "out_for_delivery"];
   const filtered = orders.filter(o => {
