@@ -40,10 +40,10 @@ export default function TravelTripsPage() {
    // Mobile and desktop use the same trips view
 
   return (
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-background pb-20"
     >
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-sm border-b">
