@@ -649,6 +649,6 @@ export default function MembershipPage() {
       </main>
       
       <Footer />
-    </div>
+    </PullToRefresh>
   );
 }
