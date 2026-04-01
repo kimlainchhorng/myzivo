@@ -710,6 +710,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const [liked, setLiked] = useState(false);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
   const [showCaption, setShowCaption] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showComments, setShowComments] = useState(false);
