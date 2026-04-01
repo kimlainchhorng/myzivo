@@ -181,6 +181,13 @@ const Profile = () => {
         .eq("following_id", user.id);
       setFollowerCount(flc || 0);
 
+      // Following count (people this user follows)
+      const { count: fgc } = await supabase
+        .from("followers" as any)
+        .select("*", { count: "exact", head: true })
+        .eq("follower_id", user.id);
+      setFollowingCount(fgc || 0);
+
       // Check own friendship status (for own profile it stays "none" — used when viewing others)
       // Check if currently following self (shouldn't happen but keeps state correct)
     };
