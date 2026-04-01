@@ -551,6 +551,136 @@ export default function ProfileEditPage() {
                 disabled={updateProfile.isPending}
               />
           </div>
+          </div>
+
+          {/* Interaction Controls */}
+          <div className="rounded-2xl border border-border/40 bg-card p-4 space-y-4">
+            <h3 className="text-sm font-bold flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-primary" /> Interaction Controls
+            </h3>
+            <p className="text-[11px] text-muted-foreground -mt-2">Control who can interact with your posts and profile.</p>
+
+            {/* Comment Control */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" /> Who can comment
+              </p>
+              <div className="space-y-1.5">
+                {([
+                  { value: "everyone", label: "Everyone", desc: "Anyone can comment on your posts", icon: Globe, color: "text-primary", bg: "bg-primary/10", border: "border-primary/30" },
+                  { value: "friends", label: "Friends Only", desc: "Only friends can comment", icon: Users, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+                  { value: "off", label: "Off", desc: "No one can comment on your posts", icon: Lock, color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/30" },
+                ] as const).map((opt) => {
+                  const current = (profile as any)?.comment_control || "everyone";
+                  const isActive = current === opt.value;
+                  const Icon = opt.icon;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      disabled={updateProfile.isPending}
+                      onClick={async () => {
+                        if (isActive) return;
+                        try { await updateProfile.mutateAsync({ comment_control: opt.value } as any); } catch {}
+                      }}
+                      className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all text-left ${
+                        isActive ? `${opt.bg} ${opt.border} border` : "border-border/30 hover:bg-muted/30"
+                      }`}
+                    >
+                      <div className={`h-8 w-8 rounded-full ${opt.bg} flex items-center justify-center shrink-0`}>
+                        <Icon className={`h-3.5 w-3.5 ${opt.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-[13px] font-semibold ${isActive ? "text-foreground" : "text-muted-foreground"}`}>{opt.label}</p>
+                        <p className="text-[10px] text-muted-foreground">{opt.desc}</p>
+                      </div>
+                      {isActive && <CheckCircle2 className={`h-4 w-4 ${opt.color} shrink-0`} />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Like Control */}
+            <div className="flex items-center justify-between pt-2 border-t border-border/30">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-pink-500/10 flex items-center justify-center">
+                  <Heart className="h-3.5 w-3.5 text-pink-500" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold">Hide like counts</p>
+                  <p className="text-[10px] text-muted-foreground">Others won't see like counts on your posts</p>
+                </div>
+              </div>
+              <Switch
+                checked={!!(profile as any)?.hide_like_counts}
+                onCheckedChange={async (checked) => {
+                  try { await updateProfile.mutateAsync({ hide_like_counts: checked } as any); } catch {}
+                }}
+                disabled={updateProfile.isPending}
+              />
+            </div>
+
+            {/* Mentions Control */}
+            <div className="flex items-center justify-between pt-2 border-t border-border/30">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-sky-500/10 flex items-center justify-center">
+                  <AtSign className="h-3.5 w-3.5 text-sky-500" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold">Allow mentions</p>
+                  <p className="text-[10px] text-muted-foreground">Let others mention you in posts & comments</p>
+                </div>
+              </div>
+              <Switch
+                checked={(profile as any)?.allow_mentions !== false}
+                onCheckedChange={async (checked) => {
+                  try { await updateProfile.mutateAsync({ allow_mentions: checked } as any); } catch {}
+                }}
+                disabled={updateProfile.isPending}
+              />
+            </div>
+
+            {/* Sharing Control */}
+            <div className="flex items-center justify-between pt-2 border-t border-border/30">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                  <Share2 className="h-3.5 w-3.5 text-indigo-500" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold">Allow sharing</p>
+                  <p className="text-[10px] text-muted-foreground">Let others share your posts</p>
+                </div>
+              </div>
+              <Switch
+                checked={(profile as any)?.allow_sharing !== false}
+                onCheckedChange={async (checked) => {
+                  try { await updateProfile.mutateAsync({ allow_sharing: checked } as any); } catch {}
+                }}
+                disabled={updateProfile.isPending}
+              />
+            </div>
+
+            {/* Friend Requests */}
+            <div className="flex items-center justify-between pt-2 border-t border-border/30">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <UserPlus className="h-3.5 w-3.5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold">Allow friend requests</p>
+                  <p className="text-[10px] text-muted-foreground">Let others send you friend requests</p>
+                </div>
+              </div>
+              <Switch
+                checked={(profile as any)?.allow_friend_requests !== false}
+                onCheckedChange={async (checked) => {
+                  try { await updateProfile.mutateAsync({ allow_friend_requests: checked } as any); } catch {}
+                }}
+                disabled={updateProfile.isPending}
+              />
+            </div>
+          </div>
 
           {/* Social Links Section */}
           <SocialLinksEditor profile={profile} updateProfile={updateProfile} />
