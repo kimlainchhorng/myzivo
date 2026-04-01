@@ -468,6 +468,16 @@ export default function ChatHubPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Inline Shop Chat */}
+      {openShopChat && (
+        <StoreLiveChat
+          storeId={openShopChat.storeId}
+          storeName={openShopChat.name}
+          storeLogo={openShopChat.logo}
+          open={true}
+          onClose={() => setOpenShopChat(null)}
+        />
+      )}
     </div>
   );
 }
