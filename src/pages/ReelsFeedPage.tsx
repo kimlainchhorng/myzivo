@@ -953,7 +953,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       {/* Bottom overlay - Author + Caption */}
       <div
         className="absolute left-0 right-16 bottom-0 px-4"
-        style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 4.5rem), 5.5rem)' }}
+        style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 2rem)' }}
       >
         {/* Author info */}
         <button
