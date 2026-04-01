@@ -54,7 +54,7 @@ export default function ChatHubPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("store_chats")
-        .select("id, store_id, created_at, store_profiles!store_chats_store_id_fkey(name, logo_url)")
+        .select("id, store_id, created_at, store_profiles!store_chats_store_id_fkey(name, logo_url, slug)")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
 
@@ -80,6 +80,7 @@ export default function ChatHubPage() {
           return {
             id: chat.id,
             storeId: chat.store_id,
+            storeSlug: chat.store_profiles?.slug,
             name: chat.store_profiles?.name || "Store",
             avatar: chat.store_profiles?.logo_url,
             lastMessage: lastMsg?.content || "No messages yet",
@@ -357,7 +358,8 @@ export default function ChatHubPage() {
                         return;
                       }
                       if (active === "shop") {
-                        navigate(`/store/${chat.storeId || chat.id}`);
+                        const slug = chat.storeSlug || chat.storeId || chat.id;
+                        navigate(`/grocery/shop/${slug}?chat=open`);
                       } else if (active === "personal") {
                         navigate(`/chat/${chat.id}`);
                       } else if (active === "support") {
