@@ -531,6 +531,8 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   const [reportStep, setReportStep] = useState<"categories" | "sub" | "submitted">("categories");
   const [reportCategory, setReportCategory] = useState("");
   const [notificationsOn, setNotificationsOn] = useState(false);
+  const [commentSetting, setCommentSetting] = useState<"everyone" | "friends" | "off">("everyone");
+  const [showCommentSettings, setShowCommentSettings] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
