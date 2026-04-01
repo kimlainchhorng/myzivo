@@ -353,6 +353,14 @@ export default function ChatHubPage() {
                     onClick={() => {
                       if (swipedId === chat.id) {
                         setSwipedId(null);
+                        return;
+                      }
+                      if (active === "shop") {
+                        navigate(`/store/${chat.storeId || chat.id}`);
+                      } else if (active === "personal") {
+                        navigate(`/chat/${chat.id}`);
+                      } else if (active === "support") {
+                        navigate(`/support`);
                       }
                     }}
                     onContextMenu={(e) => {
