@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { toast } from "sonner";
-import { useGroceryCart } from "@/hooks/useGroceryCart";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 interface OrderItem {
   productId: string;
