@@ -29043,9 +29043,13 @@ export type Database = {
           affiliate_captured_at: string | null
           affiliate_code: string | null
           affiliate_partner_name: string | null
+          allow_friend_requests: boolean
+          allow_mentions: boolean
+          allow_sharing: boolean
           avatar_url: string | null
           background_check_reason: string | null
           background_check_status: string
+          comment_control: string
           cover_position: number | null
           cover_url: string | null
           created_at: string | null
@@ -29054,6 +29058,7 @@ export type Database = {
           email_verified: boolean | null
           full_name: string | null
           hide_from_drivers: boolean
+          hide_like_counts: boolean
           id: string
           is_private: boolean
           kyc_rejection_reason: string | null
@@ -29093,9 +29098,13 @@ export type Database = {
           affiliate_captured_at?: string | null
           affiliate_code?: string | null
           affiliate_partner_name?: string | null
+          allow_friend_requests?: boolean
+          allow_mentions?: boolean
+          allow_sharing?: boolean
           avatar_url?: string | null
           background_check_reason?: string | null
           background_check_status?: string
+          comment_control?: string
           cover_position?: number | null
           cover_url?: string | null
           created_at?: string | null
@@ -29104,6 +29113,7 @@ export type Database = {
           email_verified?: boolean | null
           full_name?: string | null
           hide_from_drivers?: boolean
+          hide_like_counts?: boolean
           id?: string
           is_private?: boolean
           kyc_rejection_reason?: string | null
@@ -29143,9 +29153,13 @@ export type Database = {
           affiliate_captured_at?: string | null
           affiliate_code?: string | null
           affiliate_partner_name?: string | null
+          allow_friend_requests?: boolean
+          allow_mentions?: boolean
+          allow_sharing?: boolean
           avatar_url?: string | null
           background_check_reason?: string | null
           background_check_status?: string
+          comment_control?: string
           cover_position?: number | null
           cover_url?: string | null
           created_at?: string | null
@@ -29154,6 +29168,7 @@ export type Database = {
           email_verified?: boolean | null
           full_name?: string | null
           hide_from_drivers?: boolean
+          hide_like_counts?: boolean
           id?: string
           is_private?: boolean
           kyc_rejection_reason?: string | null
