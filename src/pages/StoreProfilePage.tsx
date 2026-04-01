@@ -63,12 +63,13 @@ function BokehDot({ delay, size, x, y, color }: { delay: number; size: number; x
 
 export default function StoreProfilePage() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const cart = useGroceryCart();
   const [showCart, setShowCart] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
-  const [chatOpen, setChatOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(searchParams.get("chat") === "open");
   // Track selected size per product: productId -> variant index
   const [selectedSizes, setSelectedSizes] = useState<Record<string, number>>({});
   const { t, currentLanguage } = useI18n();
