@@ -1010,6 +1010,17 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
                   <EyeOff className="h-5 w-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Not interested</span>
                 </button>
+
+                {/* Owner-only: Comment settings */}
+                {isOwner && (
+                  <button
+                    onClick={() => { setShowPostMenu(false); setShowCommentSettings(true); }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                  >
+                    <Settings2 className="h-5 w-5 text-foreground" />
+                    <span className="text-sm font-medium text-foreground">Comment settings</span>
+                  </button>
+                )}
               </div>
             </motion.div>
           </motion.div>
