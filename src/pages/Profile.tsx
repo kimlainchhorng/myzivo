@@ -934,7 +934,7 @@ const Profile = () => {
           if (socialModal.tab === "following") setFollowingCount(fg);
         }}
       />
-    </div>
+    </PullToRefresh>
   );
 };
 
