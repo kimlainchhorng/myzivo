@@ -354,7 +354,37 @@ export default function ReelsFeedPage() {
         )}
       </AnimatePresence>
 
-      {/* Fullscreen Scrollable Post Viewer */}
+      {/* Fullscreen Video Player */}
+      <AnimatePresence>
+        {fullscreenVideoUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+            onClick={() => setFullscreenVideoUrl(null)}
+          >
+            <button
+              onClick={(e) => { e.stopPropagation(); setFullscreenVideoUrl(null); }}
+              className="absolute top-0 left-4 z-10 h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+              style={{ marginTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.75rem)' }}
+            >
+              <XIcon className="h-5 w-5 text-white" />
+            </button>
+            <video
+              ref={fullscreenVideoRef}
+              src={fullscreenVideoUrl}
+              autoPlay
+              controls
+              playsInline
+              className="max-h-full max-w-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Fullscreen Scrollable Post Viewer (images) */}
       <AnimatePresence>
         {fullscreenIndex !== null && (
           <motion.div
@@ -363,7 +393,6 @@ export default function ReelsFeedPage() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-background flex flex-col"
           >
-            {/* Header */}
             <div className="sticky top-0 z-10 flex items-center gap-3 px-3 py-2 bg-background/95 backdrop-blur-xl border-b border-border/30" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.5rem)' }}>
               <button
                 onClick={() => setFullscreenIndex(null)}
@@ -373,8 +402,6 @@ export default function ReelsFeedPage() {
               </button>
               <h2 className="text-base font-semibold text-foreground">Posts</h2>
             </div>
-
-            {/* Scrollable posts */}
             <div
               ref={fullscreenScrollRef}
               className="flex-1 overflow-y-auto pb-20"
@@ -382,7 +409,7 @@ export default function ReelsFeedPage() {
             >
               <div className="divide-y divide-border/20">
                 {items.slice(fullscreenIndex).map((item, idx) => (
-                  <FeedCard key={item.id} item={item} currentUserId={userId} autoPlayVideo={idx === 0 && item.media_type === 'video'} />
+                  <FeedCard key={item.id} item={item} currentUserId={userId} />
                 ))}
               </div>
             </div>
