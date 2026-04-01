@@ -24,8 +24,13 @@ export default function TravelTripsPage() {
   const { user, isLoading: authLoading } = useAuth();
   const [filter, setFilter] = useState<TripFilter>("upcoming");
    const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   
   const { data: trips, isLoading } = useMyTrips(filter);
+
+  const handlePullRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["my-trips"] });
+  }, [queryClient]);
 
   // Redirect to login if not authenticated
   if (!authLoading && !user) {
