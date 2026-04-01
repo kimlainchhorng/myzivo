@@ -858,7 +858,13 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
             </button>
           </>
         ) : (
-          <img src={mediaUrl} alt={item.caption || ""} className="h-full w-full object-cover" loading="lazy" />
+          <img
+            src={mediaUrl}
+            alt={item.caption || ""}
+            className="h-full w-full object-cover cursor-pointer"
+            loading="lazy"
+            onClick={() => setShowFullscreen(true)}
+          />
         )}
 
         {/* Multi-image indicator */}
