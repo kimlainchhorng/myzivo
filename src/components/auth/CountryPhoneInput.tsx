@@ -332,7 +332,7 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
         <button
           type="button"
           onClick={() => setIsOpen((open) => !open)}
-          className="flex shrink-0 items-center gap-2 rounded-l-xl border border-border bg-muted/50 px-3 py-2 text-sm text-foreground backdrop-blur-sm transition-all touch-manipulation active:scale-[0.97] hover:bg-muted"
+          className="flex shrink-0 items-center gap-2 rounded-l-xl border border-border bg-muted/50 px-3 py-2 text-sm text-foreground transition-all touch-manipulation active:scale-[0.97] hover:bg-muted"
         >
           <FlagImg src={selectedCountry.flag} alt={selectedCountry.name} size={24} />
           <span className="text-xs font-semibold tracking-tight text-foreground/70">{selectedCountry.dial}</span>
