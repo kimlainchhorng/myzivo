@@ -48355,6 +48355,13 @@ export type Database = {
           ip_address: unknown
         }[]
       }
+      get_follower_count: { Args: { target_user_id: string }; Returns: number }
+      get_following_count: { Args: { target_user_id: string }; Returns: number }
+      get_friend_count: { Args: { target_user_id: string }; Returns: number }
+      get_friendship_status: {
+        Args: { target_user_id: string }
+        Returns: string
+      }
       get_job_otp_plain: {
         Args: { p_enc_key: string; p_job_id: string }
         Returns: {
@@ -48718,6 +48725,7 @@ export type Database = {
         Returns: boolean
       }
       is_driver: { Args: { p_user_id?: string }; Returns: boolean }
+      is_following: { Args: { target_user_id: string }; Returns: boolean }
       is_hotel_owner: { Args: { _hotel_id: string }; Returns: boolean }
       is_rental_car_owner: { Args: { _car_id: string }; Returns: boolean }
       is_restaurant_member: {
