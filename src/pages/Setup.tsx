@@ -179,10 +179,12 @@ export default function Setup() {
                   <FormItem>
                     <FormLabel className="text-white/70 text-sm">Phone Number</FormLabel>
                     <FormControl>
-                      <CountryPhoneInput
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
+                      <div>
+                        <CountryPhoneInput
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
