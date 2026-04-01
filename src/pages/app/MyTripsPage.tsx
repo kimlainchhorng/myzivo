@@ -147,11 +147,15 @@ export default function MyTripsPage() {
   const [serviceFilter, setServiceFilter] = useState<ServiceType | "all">("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const { data: trips, isLoading } = useUnifiedTrips({
+  const { data: trips, isLoading, refetch } = useUnifiedTrips({
     services: serviceFilter === "all" ? undefined : [serviceFilter],
     status: statusFilter as any,
     limit: 50,
   });
+
+  const handlePullRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
