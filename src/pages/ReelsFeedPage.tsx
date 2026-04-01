@@ -13,7 +13,8 @@ import {
   Plus, Camera, X as XIcon, Send, Film, Radio,
   Globe, Users, Lock, FolderPlus, MapPin, Hash, ChevronDown,
   Flag, Bell, BellOff, Link2, EyeOff, AlertTriangle, ShieldAlert,
-  UserX, Ban, Skull, HelpCircle, ChevronLeft,
+  UserX, Ban, Skull, HelpCircle, ChevronLeft, MessageSquareOff,
+  MessageSquare, UserCheck, Settings2,
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -530,11 +531,15 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   const [reportStep, setReportStep] = useState<"categories" | "sub" | "submitted">("categories");
   const [reportCategory, setReportCategory] = useState("");
   const [notificationsOn, setNotificationsOn] = useState(false);
+  const [commentSetting, setCommentSetting] = useState<"everyone" | "friends" | "off">("everyone");
+  const [showCommentSettings, setShowCommentSettings] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const isOwner = currentUserId && item.author_id === currentUserId;
 
   const timeAgo = (() => {
     try {
@@ -647,6 +652,10 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   };
 
   const handleComment = () => {
+    if (commentSetting === "off") {
+      toast.error("Comments are turned off for this post");
+      return;
+    }
     if (!currentUserId) {
       toast.error("Please sign in to comment");
       return;
@@ -789,14 +798,19 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
         </div>
       )}
 
-      {/* Comments count */}
-      {(item.comments_count > 0 || comments.length > 0) && (
+      {/* Comments count or off indicator */}
+      {commentSetting === "off" ? (
+        <div className="px-3 pb-2 flex items-center gap-1.5">
+          <MessageSquareOff className="h-3.5 w-3.5 text-muted-foreground/60" />
+          <p className="text-[12px] text-muted-foreground/60">Comments are turned off</p>
+        </div>
+      ) : (item.comments_count > 0 || comments.length > 0) ? (
         <button onClick={handleComment} className="px-3 pb-2">
           <p className="text-[12px] text-muted-foreground">
             View all {item.comments_count + comments.length} comments
           </p>
         </button>
-      )}
+      ) : null}
 
       {/* Comments section */}
       <AnimatePresence>
@@ -1003,6 +1017,17 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
                   <EyeOff className="h-5 w-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Not interested</span>
                 </button>
+
+                {/* Owner-only: Comment settings */}
+                {isOwner && (
+                  <button
+                    onClick={() => { setShowPostMenu(false); setShowCommentSettings(true); }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                  >
+                    <Settings2 className="h-5 w-5 text-foreground" />
+                    <span className="text-sm font-medium text-foreground">Comment settings</span>
+                  </button>
+                )}
               </div>
             </motion.div>
           </motion.div>
@@ -1115,6 +1140,68 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
                   </button>
                 </div>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Comment Settings Sheet (Owner only) */}
+      <AnimatePresence>
+        {showCommentSettings && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[220] flex items-end justify-center bg-black/40"
+            onClick={() => setShowCommentSettings(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden"
+            >
+              <div className="flex justify-center py-3">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+              </div>
+              <div className="flex items-center px-4 pb-3">
+                <button onClick={() => setShowCommentSettings(false)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                  <ChevronLeft className="h-5 w-5 text-foreground" />
+                </button>
+                <h3 className="flex-1 text-center text-base font-bold text-foreground pr-11">Comment Settings</h3>
+              </div>
+              <p className="px-6 pb-4 text-xs text-muted-foreground">Choose who can comment on this post.</p>
+              <div className="px-2 space-y-1">
+                {([
+                  { value: "everyone" as const, icon: Globe, label: "Everyone", desc: "Anyone can comment on this post" },
+                  { value: "friends" as const, icon: UserCheck, label: "Friends only", desc: "Only your friends can comment" },
+                  { value: "off" as const, icon: MessageSquareOff, label: "Turn off comments", desc: "No one can comment on this post" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => {
+                      setCommentSetting(opt.value);
+                      setShowCommentSettings(false);
+                      if (opt.value === "off") setShowComments(false);
+                      toast.success(
+                        opt.value === "everyone" ? "Comments open for everyone" :
+                        opt.value === "friends" ? "Only friends can comment now" :
+                        "Comments turned off"
+                      );
+                    }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                  >
+                    <opt.icon className={cn("h-5 w-5", commentSetting === opt.value ? "text-primary" : "text-foreground")} />
+                    <div className="flex-1 text-left">
+                      <span className={cn("text-sm font-medium", commentSetting === opt.value ? "text-primary" : "text-foreground")}>{opt.label}</span>
+                      <p className="text-[11px] text-muted-foreground">{opt.desc}</p>
+                    </div>
+                    {commentSetting === opt.value && (
+                      <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                        <svg className="h-3 w-3 text-primary-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </motion.div>
           </motion.div>
         )}
