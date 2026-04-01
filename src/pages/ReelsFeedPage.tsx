@@ -51,6 +51,8 @@ export default function ReelsFeedPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
+  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
+  const fullscreenScrollRef = useRef<HTMLDivElement>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -323,8 +325,8 @@ export default function ReelsFeedPage() {
         </div>
       ) : (
         <div className="divide-y divide-border/20">
-          {items.map((item) => (
-            <FeedCard key={item.id} item={item} currentUserId={userId} />
+          {items.map((item, idx) => (
+            <FeedCard key={item.id} item={item} currentUserId={userId} onOpenFullscreen={() => setFullscreenIndex(idx)} />
           ))}
         </div>
       )}
@@ -341,6 +343,42 @@ export default function ReelsFeedPage() {
               queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
             }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Fullscreen Scrollable Post Viewer */}
+      <AnimatePresence>
+        {fullscreenIndex !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-background flex flex-col"
+          >
+            {/* Header */}
+            <div className="sticky top-0 z-10 flex items-center gap-3 px-3 py-2 bg-background/95 backdrop-blur-xl border-b border-border/30" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.5rem)' }}>
+              <button
+                onClick={() => setFullscreenIndex(null)}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <ChevronLeft className="h-5 w-5 text-foreground" />
+              </button>
+              <h2 className="text-base font-semibold text-foreground">Posts</h2>
+            </div>
+
+            {/* Scrollable posts */}
+            <div
+              ref={fullscreenScrollRef}
+              className="flex-1 overflow-y-auto pb-20"
+              style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 5rem), 5rem)' }}
+            >
+              <div className="divide-y divide-border/20">
+                {items.slice(fullscreenIndex).map((item, idx) => (
+                  <FeedCard key={item.id} item={item} currentUserId={userId} />
+                ))}
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -634,7 +672,7 @@ function CreatePostModal({
 
 /* ── Individual Feed Card (IG/FB style) ──────────────────────────── */
 
-function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: string | null }) {
+function FeedCard({ item, currentUserId, onOpenFullscreen }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void }) {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -652,7 +690,6 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   const [commentSetting, setCommentSetting] = useState<"everyone" | "friends" | "off">(item.comment_control || "everyone");
   const [showCommentSettings, setShowCommentSettings] = useState(false);
   const [commentText, setCommentText] = useState("");
-  const [showFullscreen, setShowFullscreen] = useState(false);
   const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -857,7 +894,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
               {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); setShowFullscreen(true); }}
+              onClick={(e) => { e.stopPropagation(); onOpenFullscreen?.(); }}
               className="absolute bottom-3 left-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
             >
               <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -871,7 +908,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
             alt={item.caption || ""}
             className="h-full w-full object-cover cursor-pointer"
             loading="lazy"
-            onClick={() => setShowFullscreen(true)}
+            onClick={() => onOpenFullscreen?.()}
           />
         )}
 
@@ -1344,91 +1381,6 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
         )}
       </AnimatePresence>
 
-      {/* Fullscreen Media Viewer */}
-      <AnimatePresence>
-        {showFullscreen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black flex flex-col"
-            onClick={() => setShowFullscreen(false)}
-          >
-            {/* Close button */}
-            <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.75rem)' }}>
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowFullscreen(false); }}
-                className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
-              >
-                <XIcon className="h-5 w-5 text-white" />
-              </button>
-              <span className="text-white/70 text-xs font-medium">
-                {item.media_urls.length > 1 ? `${currentMedia + 1} / ${item.media_urls.length}` : ''}
-              </span>
-              <div className="w-10" />
-            </div>
-
-            {/* Media content */}
-            <div className="flex-1 flex items-center justify-center min-h-0" onClick={(e) => e.stopPropagation()}>
-              {item.media_type === "video" ? (
-                <video
-                  src={item.media_urls[currentMedia] || item.media_urls[0]}
-                  controls
-                  autoPlay
-                  playsInline
-                  className="max-h-full max-w-full object-contain"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              ) : (
-                <img
-                  src={item.media_urls[currentMedia] || item.media_urls[0]}
-                  alt={item.caption || ""}
-                  className="max-h-full max-w-full object-contain select-none"
-                  draggable={false}
-                />
-              )}
-            </div>
-
-            {/* Multi-image nav dots */}
-            {item.media_urls.length > 1 && (
-              <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-2 pb-8" style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1.5rem), 2rem)' }}>
-                {item.media_urls.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={(e) => { e.stopPropagation(); setCurrentMedia(i); }}
-                    className={cn(
-                      "h-2 rounded-full transition-all",
-                      i === currentMedia ? "w-6 bg-primary" : "w-2 bg-white/50"
-                    )}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Swipe areas for multi-image */}
-            {item.media_urls.length > 1 && (
-              <>
-                {currentMedia > 0 && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentMedia(currentMedia - 1); }}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-32 w-16 flex items-center justify-center"
-                  >
-                    <ChevronLeft className="h-8 w-8 text-white/70" />
-                  </button>
-                )}
-                {currentMedia < item.media_urls.length - 1 && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setCurrentMedia(currentMedia + 1); }}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 h-32 w-16 flex items-center justify-center rotate-180"
-                  >
-                    <ChevronLeft className="h-8 w-8 text-white/70" />
-                  </button>
-                )}
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
