@@ -17,6 +17,7 @@ export default function DriverEarningsPage() {
   const navigate = useNavigate();
   const { stats, isLoading, refetch } = useDriverDashboardData();
   const [activeTab, setActiveTab] = useState<"today" | "week">("today");
+  const handlePullRefresh = useCallback(async () => { await refetch(); }, [refetch]);
 
   const todayTotal = stats.todayEarnings;
   const weekTotal = stats.weekEarnings;
