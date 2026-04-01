@@ -879,25 +879,20 @@ function FeedCard({ item, currentUserId, onOpenFullscreen }: { item: FeedItem; c
               loop
               playsInline
               preload="metadata"
-              onClick={togglePlay}
-              className="h-full w-full object-cover"
+              onClick={() => onOpenFullscreen?.()}
+              className="h-full w-full object-cover cursor-pointer"
             />
             {!isPlaying && (
-              <button onClick={togglePlay} className="absolute inset-0 flex items-center justify-center bg-black/10">
+              <button onClick={() => onOpenFullscreen?.()} className="absolute inset-0 flex items-center justify-center bg-black/10">
                 <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
               </button>
             )}
             <button
-              onClick={() => setMuted(!muted)}
+              onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
               className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
             >
               {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
             </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onOpenFullscreen?.(); }}
-              className="absolute bottom-3 left-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
-            >
-              <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
               </svg>
             </button>
