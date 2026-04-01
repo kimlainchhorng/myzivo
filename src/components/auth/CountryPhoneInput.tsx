@@ -344,7 +344,6 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
         </button>
 
         <input
-          
           type="tel"
           inputMode="numeric"
           autoCapitalize="off"
@@ -355,6 +354,13 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
           autoComplete="off"
           value={localNumber}
           onChange={(e) => handleNumberChange(e.target.value)}
+          onInput={(e) => {
+            // Catch browser autofill / iOS paste that may bypass React onChange
+            const target = e.target as HTMLInputElement;
+            if (target.value !== localNumber) {
+              handleNumberChange(target.value);
+            }
+          }}
           onBlur={onBlur}
           className="w-full rounded-r-xl border border-border border-l-0 bg-muted/50 py-2 pl-2 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all"
           style={{ WebkitAppearance: "none" }}
