@@ -358,31 +358,43 @@ export default function ReelsFeedPage() {
       <AnimatePresence>
         {fullscreenVideoUrl && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
             className="fixed inset-0 z-[100] bg-black flex flex-col"
           >
-            {/* Close button row - above the video */}
-            <div className="flex items-center px-4 shrink-0" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.75rem)', paddingBottom: '0.5rem' }}>
+            {/* Top bar */}
+            <div
+              className="flex items-center justify-between px-4 shrink-0"
+              style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.75rem)', paddingBottom: '0.75rem' }}
+            >
               <button
                 onClick={() => setFullscreenVideoUrl(null)}
-                className="h-10 w-10 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center"
+                className="h-9 w-9 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xl flex items-center justify-center transition-colors"
               >
-                <XIcon className="h-5 w-5 text-white" />
+                <ChevronLeft className="h-5 w-5 text-white" />
               </button>
+              <span className="text-white/70 text-xs font-medium tracking-wide uppercase">Now Playing</span>
+              <div className="w-9" />
             </div>
-            {/* Video - fills remaining space */}
-            <div className="flex-1 flex items-center justify-center min-h-0">
-              <video
-                ref={fullscreenVideoRef}
-                src={fullscreenVideoUrl}
-                autoPlay
-                controls
-                playsInline
-                className="max-h-full max-w-full object-contain"
-              />
+
+            {/* Video container */}
+            <div className="flex-1 flex items-center justify-center min-h-0 px-2">
+              <div className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl shadow-white/5">
+                <video
+                  ref={fullscreenVideoRef}
+                  src={fullscreenVideoUrl}
+                  autoPlay
+                  controls
+                  playsInline
+                  className="w-full h-auto object-contain"
+                />
+              </div>
             </div>
+
+            {/* Bottom safe area spacer */}
+            <div className="shrink-0" style={{ height: 'max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1.5rem)' }} />
           </motion.div>
         )}
       </AnimatePresence>
