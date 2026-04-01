@@ -28,7 +28,10 @@ const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50),
   lastName: z.string().min(1, "Last name is required").max(50),
   email: z.string().email("Please enter a valid email address"),
-  phone: z.string().min(7, "Please enter a valid phone number").max(20).regex(/^[+]?[\d\s\-().]+$/, "Invalid phone number format"),
+  phone: z.string().trim().refine((value) => {
+    const digits = value.replace(/\D/g, "");
+    return digits.length >= 7 && digits.length <= 15;
+  }, "Please enter a valid phone number"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
   agreeToTerms: z.literal(true, { errorMap: () => ({ message: "You must agree to the Terms of Service" }) }),
