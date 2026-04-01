@@ -1,34 +1,39 @@
 /**
  * PublicProfilePage — View another user's public profile
- * Shows avatar, name, posts (photos/reels)
+ * Shows avatar, name, posts, follow/friend actions
  */
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3 } from "lucide-react";
+import { ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX, Heart, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export default function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedPost, setSelectedPost] = useState<any>(null);
+
+  const isOwnProfile = user?.id === userId;
 
   // Fetch profile
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["public-profile", userId],
     queryFn: async () => {
       if (!userId) return null;
-      // Try public_profiles view first
       const { data } = await supabase
         .from("public_profiles")
         .select("id, full_name, avatar_url")
         .eq("id", userId)
         .single();
       if (data) return data;
-      // Fallback to profiles
       const { data: p2 } = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url")
@@ -55,8 +60,127 @@ export default function PublicProfilePage() {
     enabled: !!userId,
   });
 
+  // Fetch counts via RPC
+  const { data: followerCount = 0 } = useQuery({
+    queryKey: ["follower-count", userId],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_follower_count", { target_user_id: userId! });
+      return data || 0;
+    },
+    enabled: !!userId,
+  });
+
+  const { data: followingCount = 0 } = useQuery({
+    queryKey: ["following-count", userId],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_following_count", { target_user_id: userId! });
+      return data || 0;
+    },
+    enabled: !!userId,
+  });
+
+  const { data: friendCount = 0 } = useQuery({
+    queryKey: ["friend-count", userId],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_friend_count", { target_user_id: userId! });
+      return data || 0;
+    },
+    enabled: !!userId,
+  });
+
+  // Check if current user follows this profile
+  const { data: isFollowing = false } = useQuery({
+    queryKey: ["is-following", userId],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("is_following", { target_user_id: userId! });
+      return data || false;
+    },
+    enabled: !!userId && !!user && !isOwnProfile,
+  });
+
+  // Check friendship status
+  const { data: friendshipStatus = "none" } = useQuery({
+    queryKey: ["friendship-status", userId],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_friendship_status", { target_user_id: userId! });
+      return (data as string) || "none";
+    },
+    enabled: !!userId && !!user && !isOwnProfile,
+  });
+
+  // Follow / Unfollow
+  const followMutation = useMutation({
+    mutationFn: async () => {
+      if (isFollowing) {
+        await supabase.from("followers").delete()
+          .eq("follower_id", user!.id)
+          .eq("following_id", userId!);
+      } else {
+        await supabase.from("followers").insert({
+          follower_id: user!.id,
+          following_id: userId!,
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["is-following", userId] });
+      queryClient.invalidateQueries({ queryKey: ["follower-count", userId] });
+      toast.success(isFollowing ? "Unfollowed" : "Following!");
+    },
+    onError: () => toast.error("Something went wrong"),
+  });
+
+  // Add Friend / Cancel Request
+  const friendMutation = useMutation({
+    mutationFn: async (action: "add" | "cancel" | "accept" | "unfriend") => {
+      if (action === "add") {
+        await supabase.from("friendships").insert({
+          user_id: user!.id,
+          friend_id: userId!,
+          status: "pending",
+        });
+      } else if (action === "cancel" || action === "unfriend") {
+        await supabase.from("friendships").delete()
+          .or(`and(user_id.eq.${user!.id},friend_id.eq.${userId!}),and(user_id.eq.${userId!},friend_id.eq.${user!.id})`);
+      } else if (action === "accept") {
+        await supabase.from("friendships")
+          .update({ status: "accepted", accepted_at: new Date().toISOString() })
+          .eq("user_id", userId!)
+          .eq("friend_id", user!.id);
+      }
+    },
+    onSuccess: (_, action) => {
+      queryClient.invalidateQueries({ queryKey: ["friendship-status", userId] });
+      queryClient.invalidateQueries({ queryKey: ["friend-count", userId] });
+      const msgs: Record<string, string> = {
+        add: "Friend request sent!",
+        cancel: "Request cancelled",
+        accept: "Friend added!",
+        unfriend: "Unfriended",
+      };
+      toast.success(msgs[action]);
+    },
+    onError: () => toast.error("Something went wrong"),
+  });
+
   const isLoading = profileLoading || postsLoading;
   const initials = (profile?.full_name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+
+  // Friend button config
+  const getFriendButton = () => {
+    switch (friendshipStatus) {
+      case "friends":
+        return { label: "Friends", icon: UserCheck, variant: "active" as const, action: "unfriend" as const };
+      case "request_sent":
+        return { label: "Requested", icon: UserX, variant: "pending" as const, action: "cancel" as const };
+      case "request_received":
+        return { label: "Accept", icon: UserPlus, variant: "accept" as const, action: "accept" as const };
+      default:
+        return { label: "Add Friend", icon: UserPlus, variant: "default" as const, action: "add" as const };
+    }
+  };
+
+  const friendBtn = getFriendButton();
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -80,18 +204,90 @@ export default function PublicProfilePage() {
       ) : (
         <>
           {/* Profile header */}
-          <div className="flex flex-col items-center pt-8 pb-6 px-4">
+          <div className="flex flex-col items-center pt-8 pb-4 px-4">
             <Avatar className="h-24 w-24 border-4 border-primary/20">
               <AvatarImage src={profile.avatar_url || undefined} />
               <AvatarFallback className="text-2xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
             </Avatar>
             <h2 className="text-xl font-bold text-foreground mt-4">{profile.full_name}</h2>
-            <div className="flex gap-8 mt-4">
+
+            {/* Stats row */}
+            <div className="flex gap-6 mt-4">
               <div className="text-center">
                 <p className="text-lg font-bold text-foreground">{posts.length}</p>
-                <p className="text-xs text-muted-foreground">Posts</p>
+                <p className="text-[11px] text-muted-foreground">Posts</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-foreground">{followerCount}</p>
+                <p className="text-[11px] text-muted-foreground">Followers</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-foreground">{followingCount}</p>
+                <p className="text-[11px] text-muted-foreground">Following</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-foreground">{friendCount}</p>
+                <p className="text-[11px] text-muted-foreground">Friends</p>
               </div>
             </div>
+
+            {/* Action buttons */}
+            {!isOwnProfile && user && (
+              <div className="flex gap-3 mt-5 w-full max-w-xs">
+                {/* Follow button */}
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => followMutation.mutate()}
+                  disabled={followMutation.isPending}
+                  className={`flex-1 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    isFollowing
+                      ? "bg-muted text-foreground border border-border"
+                      : "bg-primary text-primary-foreground"
+                  }`}
+                >
+                  <Heart className={`h-4 w-4 ${isFollowing ? "fill-primary text-primary" : ""}`} />
+                  {isFollowing ? "Following" : "Follow"}
+                </motion.button>
+
+                {/* Friend button */}
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => friendMutation.mutate(friendBtn.action)}
+                  disabled={friendMutation.isPending}
+                  className={`flex-1 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    friendshipStatus === "friends"
+                      ? "bg-primary/10 text-primary border border-primary/30"
+                      : friendshipStatus === "request_sent"
+                      ? "bg-muted text-muted-foreground border border-border"
+                      : friendshipStatus === "request_received"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground border border-border"
+                  }`}
+                >
+                  <friendBtn.icon className="h-4 w-4" />
+                  {friendBtn.label}
+                </motion.button>
+
+                {/* Message button */}
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate(`/chat`)}
+                  className="h-11 w-11 rounded-xl bg-muted border border-border flex items-center justify-center flex-shrink-0"
+                >
+                  <MessageCircle className="h-4 w-4 text-foreground" />
+                </motion.button>
+              </div>
+            )}
+
+            {isOwnProfile && (
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate("/account/profile-edit")}
+                className="mt-5 h-11 px-8 rounded-xl bg-muted text-foreground text-sm font-semibold border border-border"
+              >
+                Edit Profile
+              </motion.button>
+            )}
           </div>
 
           {/* Posts grid */}
