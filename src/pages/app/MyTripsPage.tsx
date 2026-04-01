@@ -2,10 +2,10 @@
  * My Trips Page — 3D/4D Spatial UI
  */
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
+import {
   ArrowLeft, ChevronRight,
   Plane, Car, UtensilsCrossed, Package, MapPin, BedDouble, Compass,
   CarFront, CarTaxiFront, Building2, CreditCard, type LucideIcon
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUnifiedTrips, type UnifiedTrip, type ServiceType } from "@/hooks/useUnifiedTrips";
 import { getServiceMeta } from "@/hooks/useZivoWallet";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
