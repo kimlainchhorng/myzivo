@@ -2,7 +2,7 @@
  * Account Promos Page
  * Shows available coupons, expiration dates, and usage rules
  */
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ArrowLeft, Tag, Clock, Gift, Copy, Check, ChevronRight, Sparkles, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPromoWallet } from "@/hooks/useMarketing";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 import { supabase } from "@/integrations/supabase/client";
 import { format, isBefore, addDays, isAfter } from "date-fns";
 import { toast } from "sonner";
@@ -33,8 +34,16 @@ export default function PromosPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: walletPromos, isLoading: walletLoading } = useUserPromoWallet(user?.id);
+
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["public-promo-codes"] }),
+      queryClient.invalidateQueries({ queryKey: ["user-promo-wallet"] }),
+    ]);
+  }, [queryClient]);
 
   const { data: publicPromos, isLoading: publicLoading } = useQuery({
     queryKey: ["public-promo-codes"],
@@ -104,7 +113,7 @@ export default function PromosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background text-foreground pb-24">
       <SEOHead title="My Promos — ZIVO" description="Your available promo codes and coupons" />
 
       {/* Header */}
@@ -271,7 +280,7 @@ export default function PromosPage() {
           </ul>
         </motion.div>
       </div>
-    </div>
+    </PullToRefresh>
   );
 }
 
