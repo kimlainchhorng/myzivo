@@ -652,6 +652,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   const [commentSetting, setCommentSetting] = useState<"everyone" | "friends" | "off">(item.comment_control || "everyone");
   const [showCommentSettings, setShowCommentSettings] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [showFullscreen, setShowFullscreen] = useState(false);
   const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
   const videoRef = useRef<HTMLVideoElement>(null);
