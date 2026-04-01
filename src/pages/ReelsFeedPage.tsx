@@ -122,7 +122,7 @@ export default function ReelsFeedPage() {
           const userIds = [...new Set(userPosts.map((p: any) => p.user_id))] as string[];
           const { data: profiles } = await supabase
             .from("profiles")
-            .select("id, first_name, last_name, avatar_url")
+            .select("id, first_name, last_name, avatar_url, comment_control, hide_like_counts, allow_sharing, allow_mentions")
             .in("id", userIds);
           const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
