@@ -358,22 +358,37 @@ export default function ReelsFeedPage() {
       <AnimatePresence>
         {fullscreenVideoUrl && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center"
-            onClick={() => setFullscreenVideoUrl(null)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] bg-black"
           >
+            {/* Full-screen reel video */}
             <video
               ref={fullscreenVideoRef}
               src={fullscreenVideoUrl}
               autoPlay
-              controls
+              loop
               playsInline
-              className="max-h-full max-w-full object-contain rounded-xl"
-              onClick={(e) => e.stopPropagation()}
+              className="h-full w-full object-cover"
+              onClick={() => {
+                if (fullscreenVideoRef.current?.paused) {
+                  fullscreenVideoRef.current.play().catch(() => {});
+                } else {
+                  fullscreenVideoRef.current?.pause();
+                }
+              }}
             />
+
+            {/* Close button */}
+            <button
+              onClick={() => setFullscreenVideoUrl(null)}
+              className="absolute top-0 right-4 h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+              style={{ marginTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 1rem)' }}
+            >
+              <XIcon className="h-5 w-5 text-white" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
