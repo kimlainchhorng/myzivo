@@ -328,7 +328,13 @@ export default function ReelsFeedPage() {
       ) : (
         <div className="divide-y divide-border/20">
           {items.map((item, idx) => (
-            <FeedCard key={item.id} item={item} currentUserId={userId} onOpenFullscreen={() => setFullscreenIndex(idx)} />
+            <FeedCard key={item.id} item={item} currentUserId={userId} onOpenFullscreen={() => {
+              if (item.media_type === 'video') {
+                setFullscreenVideoUrl(item.media_urls[0]);
+              } else {
+                setFullscreenIndex(idx);
+              }
+            }} />
           ))}
         </div>
       )}
