@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTripItineraries, useCreateTrip, useDeleteTrip, TripItinerary } from "@/hooks/useTripItineraries";
 import { useFlightBookings, getTicketingStatusInfo } from "@/hooks/useFlightBooking";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 import { format } from "date-fns";
 
 const statusColors: Record<string, string> = {
@@ -24,8 +25,8 @@ const statusColors: Record<string, string> = {
 };
 
 export default function TripsListPage() {
-  const { data: trips = [], isLoading } = useTripItineraries();
-  const { data: flightBookings = [], isLoading: bookingsLoading } = useFlightBookings();
+  const { data: trips = [], isLoading, refetch: refetchTrips } = useTripItineraries();
+  const { data: flightBookings = [], isLoading: bookingsLoading, refetch: refetchBookings } = useFlightBookings();
   const createTrip = useCreateTrip();
   const deleteTrip = useDeleteTrip();
   const navigate = useNavigate();
@@ -33,6 +34,10 @@ export default function TripsListPage() {
   const [newDestination, setNewDestination] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("bookings");
+
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([refetchTrips(), refetchBookings()]);
+  }, [refetchTrips, refetchBookings]);
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
