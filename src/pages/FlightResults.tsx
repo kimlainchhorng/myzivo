@@ -1403,11 +1403,11 @@ const FlightResults = () => {
           description={`Compare flight deals from ${origin} to ${destination}.`}
         />
         <AppLayout hideHeader hideNav>
-          <div className="min-h-[100dvh] bg-background">
+          <PullToRefresh onRefresh={handlePullRefresh} className="min-h-[100dvh] bg-background">
             <div className="pb-4">
               {resultsContent}
             </div>
-          </div>
+          </PullToRefresh>
         </AppLayout>
       </>
     );
