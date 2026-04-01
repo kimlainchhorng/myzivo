@@ -216,7 +216,18 @@ const Login = () => {
 
     if (error) {
       setIsLoading(false);
-      toast.error(error.message || "Failed to create account");
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("already registered") || msg.includes("already been registered") || msg.includes("user already registered")) {
+        toast.error("This email is already registered. Please sign in instead.");
+      } else if (msg.includes("password") && (msg.includes("short") || msg.includes("weak") || msg.includes("length"))) {
+        toast.error("Password is too weak. Please use at least 6 characters.");
+      } else if (msg.includes("valid email") || msg.includes("invalid email")) {
+        toast.error("Please enter a valid email address.");
+      } else if (msg.includes("too many requests") || msg.includes("rate limit")) {
+        toast.error("Too many attempts. Please wait a moment and try again.");
+      } else {
+        toast.error(error.message || "Failed to create account. Please try again.");
+      }
       return;
     }
 
