@@ -341,13 +341,15 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
 
         <input
           type="tel"
+          inputMode="tel"
           name={name}
           placeholder={selectedCountry.placeholder}
           autoComplete="tel-national"
           value={localNumber}
           onChange={(e) => handleNumberChange(e.target.value)}
           onBlur={onBlur}
-          className="w-full rounded-r-xl border border-border border-l-0 bg-muted/50 py-2 pl-2 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all backdrop-blur-sm"
+          className="w-full rounded-r-xl border border-border border-l-0 bg-muted/50 py-2 pl-2 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          style={{ WebkitAppearance: "none" }}
         />
       </div>
 
