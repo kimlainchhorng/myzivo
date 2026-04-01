@@ -7,7 +7,8 @@ import { z } from "zod";
 import {
   User, Camera, ArrowLeft, Mail, Phone, Loader2, Save, Sparkles,
   AlertCircle, CheckCircle2, Lock, Unlock, Users, Eye, EyeOff, Car,
-  Link2, Trash2, ExternalLink,
+  Link2, Trash2, ExternalLink, MessageSquare, Heart, Share2, AtSign,
+  UserPlus, Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
