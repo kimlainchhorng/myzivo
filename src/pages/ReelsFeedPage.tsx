@@ -699,6 +699,193 @@ function CreatePostModal({
   );
 }
 
+/* ── Reel Slide (TikTok-style fullscreen video) ─────────────────── */
+
+function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUserId: string | null; onClose: () => void }) {
+  const navigate = useNavigate();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const [liked, setLiked] = useState(false);
+  const [localLikes, setLocalLikes] = useState(item.likes_count);
+  const [showCaption, setShowCaption] = useState(false);
+
+  const mediaUrl = item.media_urls[0];
+
+  // Auto-play when visible via IntersectionObserver
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          videoRef.current?.play().catch(() => {});
+          setIsPlaying(true);
+        } else {
+          videoRef.current?.pause();
+          setIsPlaying(false);
+        }
+      },
+      { threshold: 0.7 }
+    );
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const handleLike = () => {
+    setLiked(!liked);
+    setLocalLikes((prev) => liked ? prev - 1 : prev + 1);
+  };
+
+  const timeAgo = (() => {
+    try {
+      return formatDistanceToNow(new Date(item.created_at), { addSuffix: true });
+    } catch {
+      return "";
+    }
+  })();
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative h-screen w-full snap-start snap-always flex-shrink-0"
+    >
+      {/* Video */}
+      <video
+        ref={videoRef}
+        src={mediaUrl}
+        muted={muted}
+        loop
+        playsInline
+        preload="metadata"
+        onClick={togglePlay}
+        className="h-full w-full object-cover"
+      />
+
+      {/* Pause indicator */}
+      <AnimatePresence>
+        {!isPlaying && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          >
+            <div className="h-20 w-20 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+              <Play className="h-10 w-10 text-white fill-white ml-1" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Close button - top left */}
+      <button
+        onClick={onClose}
+        className="absolute top-0 left-4 h-10 w-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+        style={{ marginTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 1rem)' }}
+      >
+        <ChevronLeft className="h-5 w-5 text-white" />
+      </button>
+
+      {/* Right side action buttons */}
+      <div
+        className="absolute right-3 flex flex-col items-center gap-5"
+        style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 7rem)' }}
+      >
+        {/* Mute */}
+        <button onClick={() => setMuted(!muted)} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+          <div className="h-10 w-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+            {muted ? <VolumeX className="h-5 w-5 text-white" /> : <Volume2 className="h-5 w-5 text-white" />}
+          </div>
+        </button>
+
+        {/* Like */}
+        <button onClick={handleLike} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+          <Heart className={cn("h-7 w-7 drop-shadow-lg transition-all", liked ? "text-red-500 fill-red-500 scale-110" : "text-white")} />
+          {localLikes > 0 && <span className="text-white text-[11px] font-semibold drop-shadow">{localLikes}</span>}
+        </button>
+
+        {/* Comment */}
+        <button className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+          <MessageCircle className="h-7 w-7 text-white drop-shadow-lg" />
+          {item.comments_count > 0 && <span className="text-white text-[11px] font-semibold drop-shadow">{item.comments_count}</span>}
+        </button>
+
+        {/* Views */}
+        <div className="flex flex-col items-center gap-1">
+          <Eye className="h-6 w-6 text-white/70 drop-shadow-lg" />
+          {item.views_count > 0 && <span className="text-white/70 text-[11px] font-semibold drop-shadow">{item.views_count}</span>}
+        </div>
+
+        {/* Share */}
+        <button className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+          <Share2 className="h-7 w-7 text-white drop-shadow-lg" />
+          <span className="text-white text-[10px] font-medium drop-shadow">Share</span>
+        </button>
+      </div>
+
+      {/* Bottom overlay - Author + Caption */}
+      <div
+        className="absolute left-0 right-16 bottom-0 px-4"
+        style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 4.5rem), 5.5rem)' }}
+      >
+        {/* Author info */}
+        <button
+          onClick={() => {
+            onClose();
+            if (item.source === "store" && item.store_slug) {
+              navigate(`/grocery/shop/${item.store_slug}`);
+            } else if (item.author_id) {
+              navigate(`/user/${item.author_id}`);
+            }
+          }}
+          className="flex items-center gap-2.5 mb-2"
+        >
+          <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-white/40 shrink-0">
+            {item.author_avatar ? (
+              <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full bg-white/20 flex items-center justify-center text-white text-sm font-bold">
+                {item.author_name[0]}
+              </div>
+            )}
+          </div>
+          <div className="text-left">
+            <p className="text-white text-sm font-bold drop-shadow-lg">{item.author_name}</p>
+            <p className="text-white/60 text-[10px] drop-shadow">{timeAgo}</p>
+          </div>
+        </button>
+
+        {/* Caption */}
+        {item.caption && (
+          <div onClick={() => setShowCaption(!showCaption)}>
+            <p className={cn(
+              "text-white text-[13px] leading-snug drop-shadow-lg",
+              !showCaption && "line-clamp-2"
+            )}>
+              {item.caption}
+            </p>
+            {item.caption.length > 80 && !showCaption && (
+              <span className="text-white/60 text-xs">more</span>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── Individual Feed Card (IG/FB style) ──────────────────────────── */
 
 function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean }) {
