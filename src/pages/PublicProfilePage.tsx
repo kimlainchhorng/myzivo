@@ -483,6 +483,6 @@ export default function PublicProfilePage() {
       </AlertDialog>
 
       <ZivoMobileNav />
-    </div>
+    </PullToRefresh>
   );
 }
