@@ -119,6 +119,10 @@ const FlightResults = () => {
     enabled: !!origin && !!destination && !!departureDate,
   });
 
+  const handlePullRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
   // Travelpayouts cached prices (runs in parallel, non-blocking)
   const { data: tpPrices = [] } = useTravelpayoutsPrices({
     origin,
