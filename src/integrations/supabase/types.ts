@@ -45883,6 +45883,21 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_relay_tokens_safe: {
+        Row: {
+          created_at: string | null
+          relay_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          relay_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          relay_id?: string | null
+        }
+        Relationships: []
+      }
       car_rentals_masked: {
         Row: {
           car_id: string | null
@@ -46425,6 +46440,53 @@ export type Database = {
             columns: ["region_id"]
             isOneToOne: false
             referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flight_passengers_safe: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          email: string | null
+          family_name: string | null
+          given_name: string | null
+          id: string | null
+          passenger_index: number | null
+          phone_number: string | null
+          ticket_number: string | null
+          title: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          family_name?: string | null
+          given_name?: string | null
+          id?: string | null
+          passenger_index?: number | null
+          phone_number?: string | null
+          ticket_number?: string | null
+          title?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          family_name?: string | null
+          given_name?: string | null
+          id?: string | null
+          passenger_index?: number | null
+          phone_number?: string | null
+          ticket_number?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_passengers_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "flight_bookings"
             referencedColumns: ["id"]
           },
         ]
