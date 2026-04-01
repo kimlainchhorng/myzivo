@@ -375,6 +375,6 @@ export default function EatsOrdersPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </PullToRefresh>
   );
 }

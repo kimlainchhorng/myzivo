@@ -352,7 +352,7 @@ export default function FlightBookingsPage() {
 
       <BookingDetailsModal bookingId={selectedId} onClose={() => setSelectedId(null)} />
       <Footer />
-    </div>
+    </PullToRefresh>
   );
 }
 

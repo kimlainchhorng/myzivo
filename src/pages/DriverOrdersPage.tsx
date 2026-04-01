@@ -186,6 +186,6 @@ export default function DriverOrdersPage() {
           </AnimatePresence>
         )}
       </div>
-    </div>
+    </PullToRefresh>
   );
 }
