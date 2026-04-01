@@ -374,7 +374,7 @@ export default function ReelsFeedPage() {
             >
               <div className="divide-y divide-border/20">
                 {items.slice(fullscreenIndex).map((item, idx) => (
-                  <FeedCard key={item.id} item={item} currentUserId={userId} />
+                  <FeedCard key={item.id} item={item} currentUserId={userId} autoPlayVideo={idx === 0 && item.media_type === 'video'} />
                 ))}
               </div>
             </div>
@@ -672,7 +672,7 @@ function CreatePostModal({
 
 /* ── Individual Feed Card (IG/FB style) ──────────────────────────── */
 
-function FeedCard({ item, currentUserId, onOpenFullscreen }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void }) {
+function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean }) {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -705,9 +705,17 @@ function FeedCard({ item, currentUserId, onOpenFullscreen }: { item: FeedItem; c
     }
   })();
 
-  // Auto-play videos when visible
+  // Auto-play videos when visible or when autoPlayVideo is set
   useEffect(() => {
-    if (item.media_type !== "video" || !containerRef.current) return;
+    if (item.media_type !== "video") return;
+    if (autoPlayVideo) {
+      setTimeout(() => {
+        videoRef.current?.play().catch(() => {});
+        setIsPlaying(true);
+      }, 100);
+      return;
+    }
+    if (!containerRef.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -722,7 +730,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen }: { item: FeedItem; c
     );
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [item.media_type]);
+  }, [item.media_type, autoPlayVideo]);
 
   const togglePlay = useCallback(() => {
     if (!videoRef.current) return;
