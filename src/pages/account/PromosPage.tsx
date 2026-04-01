@@ -2,7 +2,7 @@
  * Account Promos Page
  * Shows available coupons, expiration dates, and usage rules
  */
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ArrowLeft, Tag, Clock, Gift, Copy, Check, ChevronRight, Sparkles, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
