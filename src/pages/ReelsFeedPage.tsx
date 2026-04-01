@@ -539,6 +539,8 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const isOwner = currentUserId && item.author_id === currentUserId;
+
   const timeAgo = (() => {
     try {
       return formatDistanceToNow(new Date(item.created_at), { addSuffix: true });
