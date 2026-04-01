@@ -360,8 +360,11 @@ export default function ChatHubPage() {
                         return;
                       }
                       if (active === "shop") {
-                        const slug = chat.storeSlug || chat.storeId || chat.id;
-                        navigate(`/grocery/shop/${slug}?chat=open`);
+                        setOpenShopChat({
+                          storeId: chat.storeId,
+                          name: chat.name,
+                          logo: chat.avatar,
+                        });
                       } else if (active === "personal") {
                         navigate(`/chat/${chat.id}`);
                       } else if (active === "support") {
