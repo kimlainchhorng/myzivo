@@ -29,6 +29,7 @@ export type UserProfile = {
   allow_sharing: boolean | null;
   allow_friend_requests: boolean | null;
   hide_from_drivers: boolean | null;
+  profile_visibility: string | null;
   created_at: string;
   updated_at: string;
 };
