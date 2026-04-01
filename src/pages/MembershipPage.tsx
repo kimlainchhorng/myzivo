@@ -41,6 +41,7 @@ import SEOHead from "@/components/SEOHead";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 import { format } from "date-fns";
 import { useMembershipSavings } from "@/hooks/useMembershipSavings";
 import { Link } from "react-router-dom";
