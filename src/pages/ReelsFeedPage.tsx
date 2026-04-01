@@ -353,9 +353,9 @@ export default function ReelsFeedPage() {
         )}
       </AnimatePresence>
 
-      {/* Fullscreen Video Player */}
+      {/* TikTok/Reels-style Fullscreen Video Viewer */}
       <AnimatePresence>
-        {fullscreenVideoUrl && (
+        {reelsStartIndex !== null && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -363,31 +363,17 @@ export default function ReelsFeedPage() {
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[100] bg-black"
           >
-            {/* Full-screen reel video */}
-            <video
-              ref={fullscreenVideoRef}
-              src={fullscreenVideoUrl}
-              autoPlay
-              loop
-              playsInline
-              className="h-full w-full object-cover"
-              onClick={() => {
-                if (fullscreenVideoRef.current?.paused) {
-                  fullscreenVideoRef.current.play().catch(() => {});
-                } else {
-                  fullscreenVideoRef.current?.pause();
-                }
-              }}
-            />
-
-            {/* Close button */}
-            <button
-              onClick={() => setFullscreenVideoUrl(null)}
-              className="absolute top-0 right-4 h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
-              style={{ marginTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 1rem)' }}
-            >
-              <XIcon className="h-5 w-5 text-white" />
-            </button>
+            {/* Snap-scroll container */}
+            <div className="h-full w-full overflow-y-scroll snap-y snap-mandatory">
+              {items.filter((it) => it.media_type === 'video').map((item) => (
+                <ReelSlide
+                  key={item.id}
+                  item={item}
+                  currentUserId={userId}
+                  onClose={() => setReelsStartIndex(null)}
+                />
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
