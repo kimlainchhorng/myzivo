@@ -46,6 +46,7 @@ interface FeedItem {
 }
 
 export default function ReelsFeedPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
