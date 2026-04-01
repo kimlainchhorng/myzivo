@@ -650,6 +650,10 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   };
 
   const handleComment = () => {
+    if (commentSetting === "off") {
+      toast.error("Comments are turned off for this post");
+      return;
+    }
     if (!currentUserId) {
       toast.error("Please sign in to comment");
       return;
