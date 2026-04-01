@@ -110,6 +110,7 @@ export default function DriverOrdersPage() {
   const navigate = useNavigate();
   const { notify: notifyEats } = useEatsNotifications();
   const { available, assigned, isLoading, acceptOrder, refetch } = useDriverShoppingOrders();
+  const handlePullRefresh = useCallback(async () => { await refetch(); }, [refetch]);
   const [tab, setTab] = useState<"available" | "my">("available");
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
 
