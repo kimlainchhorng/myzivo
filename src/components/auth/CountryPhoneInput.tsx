@@ -192,7 +192,9 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
 
   const handleCountrySelect = (country: CountryCode) => {
     setSelectedCountry(country);
-    onChange(buildPhoneE164(country.dial, localNumber));
+    const e164 = buildPhoneE164(country.dial, localNumber);
+    lastEmittedRef.current = e164;
+    onChange(e164);
     closeDropdown();
   };
 
