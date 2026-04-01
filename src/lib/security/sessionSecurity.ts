@@ -1,28 +1,46 @@
 /**
  * Session Security - Idle timeout & max session age enforcement
- * 30-minute idle timeout, 24-hour max session age
+ * 
+ * When "Remember me" is ON:  7-day max session, no idle timeout
+ * When "Remember me" is OFF: 30-minute idle timeout, 24-hour max session
  */
 
-const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-const MAX_SESSION_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+const REMEMBER_ME_KEY = "zivo_remember_me";
 const SESSION_START_KEY = "zivo_session_start";
 const LAST_ACTIVITY_KEY = "zivo_last_activity";
+
+// Short session (Remember me OFF)
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000;        // 30 minutes
+const MAX_SESSION_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// Long session (Remember me ON)
+const MAX_SESSION_AGE_REMEMBERED_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 function now(): number {
   return Date.now();
 }
 
+function isRemembered(): boolean {
+  return localStorage.getItem(REMEMBER_ME_KEY) === "true";
+}
+
 export function setupActivityTracking(onExpire: () => void): () => void {
+  const remembered = isRemembered();
+
+  // Use localStorage for remembered sessions (survives tab close),
+  // sessionStorage for non-remembered (clears on tab close = auto logout)
+  const storage = remembered ? localStorage : sessionStorage;
+
   // Record session start if not already set
-  if (!sessionStorage.getItem(SESSION_START_KEY)) {
-    sessionStorage.setItem(SESSION_START_KEY, String(now()));
+  if (!storage.getItem(SESSION_START_KEY)) {
+    storage.setItem(SESSION_START_KEY, String(now()));
   }
-  sessionStorage.setItem(LAST_ACTIVITY_KEY, String(now()));
+  storage.setItem(LAST_ACTIVITY_KEY, String(now()));
 
   // Track user activity
   const activityEvents = ["mousedown", "keydown", "touchstart", "scroll"];
   const updateActivity = () => {
-    sessionStorage.setItem(LAST_ACTIVITY_KEY, String(now()));
+    storage.setItem(LAST_ACTIVITY_KEY, String(now()));
   };
 
   activityEvents.forEach((event) =>
@@ -31,19 +49,21 @@ export function setupActivityTracking(onExpire: () => void): () => void {
 
   // Check session validity every 60 seconds
   const interval = setInterval(() => {
-    const sessionStart = Number(sessionStorage.getItem(SESSION_START_KEY) || now());
-    const lastActivity = Number(sessionStorage.getItem(LAST_ACTIVITY_KEY) || now());
+    const sessionStart = Number(storage.getItem(SESSION_START_KEY) || now());
+    const lastActivity = Number(storage.getItem(LAST_ACTIVITY_KEY) || now());
     const currentTime = now();
 
-    // Check max session age (24 hours)
-    if (currentTime - sessionStart > MAX_SESSION_AGE_MS) {
-      console.warn("[SessionSecurity] Max session age exceeded (24h)");
+    const maxAge = remembered ? MAX_SESSION_AGE_REMEMBERED_MS : MAX_SESSION_AGE_MS;
+
+    // Check max session age
+    if (currentTime - sessionStart > maxAge) {
+      console.warn(`[SessionSecurity] Max session age exceeded (${remembered ? '7d' : '24h'})`);
       onExpire();
       return;
     }
 
-    // Check idle timeout (30 minutes)
-    if (currentTime - lastActivity > IDLE_TIMEOUT_MS) {
+    // Check idle timeout — only for non-remembered sessions
+    if (!remembered && currentTime - lastActivity > IDLE_TIMEOUT_MS) {
       console.warn("[SessionSecurity] Idle timeout exceeded (30min)");
       onExpire();
       return;
@@ -59,6 +79,9 @@ export function setupActivityTracking(onExpire: () => void): () => void {
 }
 
 export function clearSessionArtifacts(): void {
+  // Clear from both storages
   sessionStorage.removeItem(SESSION_START_KEY);
   sessionStorage.removeItem(LAST_ACTIVITY_KEY);
+  localStorage.removeItem(SESSION_START_KEY);
+  localStorage.removeItem(LAST_ACTIVITY_KEY);
 }
