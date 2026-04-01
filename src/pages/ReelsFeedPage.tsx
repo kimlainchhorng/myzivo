@@ -417,7 +417,7 @@ export default function ReelsFeedPage() {
       </AnimatePresence>
 
       <ZivoMobileNav />
-    </div>
+    </PullToRefresh>
   );
 }
 
