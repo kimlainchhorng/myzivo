@@ -118,6 +118,8 @@ const Login = () => {
   // Signup form
   const signupForm = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -440,7 +442,26 @@ const Login = () => {
                     <FormLabel className="text-white/70 text-xs font-medium">{t("auth.phone")}</FormLabel>
                     <FormControl>
                       <div>
-                        <CountryPhoneInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
+                        <CountryPhoneInput
+                          value={field.value}
+                          onChange={(value) => {
+                            signupForm.setValue("phone", value, {
+                              shouldDirty: true,
+                              shouldTouch: true,
+                              shouldValidate: true,
+                            });
+
+                            const digits = normalizePhoneDigits(value);
+                            if (digits.length >= 7 && digits.length <= 15) {
+                              signupForm.clearErrors("phone");
+                            }
+                          }}
+                          onBlur={() => {
+                            field.onBlur();
+                            void signupForm.trigger("phone");
+                          }}
+                          name={field.name}
+                        />
                       </div>
                     </FormControl>
                     <FormMessage className="text-red-400 text-xs" />
