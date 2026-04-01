@@ -13,6 +13,7 @@ export type UserProfile = {
   cover_url: string | null;
   cover_position: number | null;
   status: string | null;
+  // Social links
   social_facebook: string | null;
   social_instagram: string | null;
   social_tiktok: string | null;
@@ -21,6 +22,14 @@ export type UserProfile = {
   social_linkedin: string | null;
   social_telegram: string | null;
   social_links_visible: boolean | null;
+  // Interaction controls
+  comment_control: string | null;
+  hide_like_counts: boolean | null;
+  allow_mentions: boolean | null;
+  allow_sharing: boolean | null;
+  allow_friend_requests: boolean | null;
+  hide_from_drivers: boolean | null;
+  profile_visibility: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -51,7 +60,7 @@ export const useUpdateUserProfile = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (updates: Partial<Pick<UserProfile, "full_name" | "phone" | "avatar_url" | "cover_url" | "cover_position">>) => {
+    mutationFn: async (updates: Partial<Pick<UserProfile, "full_name" | "phone" | "avatar_url" | "cover_url" | "cover_position" | "comment_control" | "hide_like_counts" | "allow_mentions" | "allow_sharing" | "allow_friend_requests" | "hide_from_drivers" | "profile_visibility" | "social_facebook" | "social_instagram" | "social_tiktok" | "social_snapchat" | "social_x" | "social_linkedin" | "social_telegram" | "social_links_visible">>) => {
       if (!user?.id) throw new Error("Not authenticated");
 
       const { data: existing, error: existingError } = await supabase
