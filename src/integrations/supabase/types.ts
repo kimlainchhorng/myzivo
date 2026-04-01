@@ -48491,6 +48491,13 @@ export type Database = {
         }
         Returns: Json
       }
+      get_profile_protected_fields: {
+        Args: { profile_id: string }
+        Returns: {
+          admin_role: string
+          role: string
+        }[]
+      }
       get_referral_device_groups: {
         Args: { hours?: number; min_count?: number }
         Returns: {
