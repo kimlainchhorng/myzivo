@@ -242,19 +242,20 @@ const Login = () => {
     setIsLogin(!isLogin);
   };
 
-  // 3D tilt effect
+  // 3D tilt effect — disabled on touch devices to prevent iOS input tap issues
+  const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
   const cardRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [4, -4]), { stiffness: 200, damping: 30 });
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-4, 4]), { stiffness: 200, damping: 30 });
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], isTouchDevice ? [0, 0] : [4, -4]), { stiffness: 200, damping: 30 });
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], isTouchDevice ? [0, 0] : [-4, 4]), { stiffness: 200, damping: 30 });
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!cardRef.current) return;
+    if (isTouchDevice || !cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
     mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, isTouchDevice]);
 
   const handleMouseLeave = useCallback(() => {
     mouseX.set(0);
@@ -287,15 +288,14 @@ const Login = () => {
         ))}
       </div>
 
-      <div className="w-full max-w-md relative z-10 px-4" style={{ perspective: "1200px" }}>
+      <div className="w-full max-w-md relative z-10 px-4" style={isTouchDevice ? undefined : { perspective: "1200px" }}>
         <motion.div
           ref={cardRef}
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            rotateX, rotateY,
-            transformStyle: "preserve-3d" as const,
+            ...(isTouchDevice ? {} : { rotateX, rotateY, transformStyle: "preserve-3d" as const }),
             boxShadow: "0 25px 60px -15px rgba(0,0,0,0.5), 0 10px 25px -10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)",
           }}
           onMouseMove={handleMouseMove}
