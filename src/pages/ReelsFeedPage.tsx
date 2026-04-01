@@ -197,9 +197,7 @@ export default function ReelsFeedPage() {
   }, [queryClient]);
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background">
-      {/* Inner scrollable content */}
-      <div className="pb-20">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center justify-between" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 0.625rem)' }}>
         <h1 className="text-lg font-bold text-foreground">Feed</h1>
