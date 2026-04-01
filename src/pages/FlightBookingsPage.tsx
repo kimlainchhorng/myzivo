@@ -63,6 +63,7 @@ function formatCurrency(amount: number, currency: string = "USD") {
 export default function FlightBookingsPage() {
   const { data: bookings, isLoading, error, refetch } = useFlightBookings();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const handlePullRefresh = useCallback(async () => { await refetch(); }, [refetch]);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortNewest, setSortNewest] = useState(true);
