@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isYesterday } from "date-fns";
 import ChatStories from "@/components/chat/ChatStories";
 import { toast } from "sonner";
+import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 
 type ChatCategory = "personal" | "shop" | "support" | "ride";
 
@@ -46,6 +47,7 @@ export default function ChatHubPage() {
   const queryClient = useQueryClient();
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; category: ChatCategory } | null>(null);
   const [swipedId, setSwipedId] = useState<string | null>(null);
+  const [openShopChat, setOpenShopChat] = useState<{ storeId: string; name: string; logo?: string | null } | null>(null);
 
   // Fetch store chats for "shop" tab
   const { data: shopChats = [] } = useQuery({
@@ -358,8 +360,11 @@ export default function ChatHubPage() {
                         return;
                       }
                       if (active === "shop") {
-                        const slug = chat.storeSlug || chat.storeId || chat.id;
-                        navigate(`/grocery/shop/${slug}?chat=open`);
+                        setOpenShopChat({
+                          storeId: chat.storeId,
+                          name: chat.name,
+                          logo: chat.avatar,
+                        });
                       } else if (active === "personal") {
                         navigate(`/chat/${chat.id}`);
                       } else if (active === "support") {
@@ -463,6 +468,16 @@ export default function ChatHubPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Inline Shop Chat */}
+      {openShopChat && (
+        <StoreLiveChat
+          storeId={openShopChat.storeId}
+          storeName={openShopChat.name}
+          storeLogo={openShopChat.logo}
+          open={true}
+          onClose={() => setOpenShopChat(null)}
+        />
+      )}
     </div>
   );
 }
