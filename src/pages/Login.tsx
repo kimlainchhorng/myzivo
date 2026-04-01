@@ -36,7 +36,11 @@ const signupSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   phone: z.string().trim().refine((value) => {
     const digits = normalizePhoneDigits(value);
-    return digits.length >= 7 && digits.length <= 15;
+    const valid = digits.length >= 7 && digits.length <= 15;
+    if (!valid) {
+      console.warn("[Signup] Phone validation failed:", { raw: value, digits, length: digits.length });
+    }
+    return valid;
   }, "Please enter a valid phone number"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
