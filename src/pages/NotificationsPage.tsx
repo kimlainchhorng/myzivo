@@ -52,8 +52,13 @@ const NotificationsPage = () => {
     unreadCount, 
     isLoading, 
     markAsRead, 
-    markAllAsRead 
+    markAllAsRead,
+    fetchNotifications,
   } = useNotifications(100);
+
+  const handlePullRefresh = useCallback(async () => {
+    await fetchNotifications();
+  }, [fetchNotifications]);
 
   const filteredNotifications = useMemo(() => {
     if (activeTab === 'all') return notifications;
