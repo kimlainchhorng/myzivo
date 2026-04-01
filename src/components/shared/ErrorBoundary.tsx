@@ -28,6 +28,23 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[ErrorBoundary] Caught error:", error, errorInfo);
+
+    // Auto-reload once on chunk/module loading failures (stale deploy)
+    const isChunkError =
+      error.message?.includes("Importing a module script failed") ||
+      error.message?.includes("Failed to fetch dynamically imported module") ||
+      error.message?.includes("Loading chunk") ||
+      error.message?.includes("Loading CSS chunk");
+
+    if (isChunkError) {
+      const reloadKey = "eb_chunk_reload";
+      if (!sessionStorage.getItem(reloadKey)) {
+        sessionStorage.setItem(reloadKey, "1");
+        window.location.reload();
+        return;
+      }
+      sessionStorage.removeItem(reloadKey);
+    }
   }
 
   handleRetry = () => {
