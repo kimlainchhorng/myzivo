@@ -776,12 +776,16 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
           <button onClick={handleLike} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <Heart className={cn("h-6 w-6 transition-all", liked ? "text-red-500 fill-red-500 scale-110" : "text-foreground active:scale-125")} />
           </button>
-          <button onClick={handleComment} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
-            <MessageCircle className="h-6 w-6" />
-          </button>
-          <button onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
-            <Share2 className="h-6 w-6" />
-          </button>
+          {commentSetting !== "off" && (
+            <button onClick={handleComment} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
+              <MessageCircle className="h-6 w-6" />
+            </button>
+          )}
+          {item.allow_sharing !== false && (
+            <button onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
+              <Share2 className="h-6 w-6" />
+            </button>
+          )}
         </div>
         <button onClick={handleSave} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
           <Bookmark className={cn("h-6 w-6 transition-all", saved ? "text-foreground fill-foreground" : "text-foreground")} />
