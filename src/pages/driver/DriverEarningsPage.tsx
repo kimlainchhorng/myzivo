@@ -2,8 +2,9 @@
  * DriverEarningsPage - Full earnings dashboard with today/week breakdown
  * Ported from Zivo Driver Connect
  */
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ArrowLeft, Calendar, RefreshCw, Package, Truck, Gift } from "lucide-react";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useNavigate } from "react-router-dom";
 import { useDriverDashboardData } from "@/hooks/useDriverDashboardData";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ export default function DriverEarningsPage() {
   const navigate = useNavigate();
   const { stats, isLoading, refetch } = useDriverDashboardData();
   const [activeTab, setActiveTab] = useState<"today" | "week">("today");
+  const handlePullRefresh = useCallback(async () => { await refetch(); }, [refetch]);
 
   const todayTotal = stats.todayEarnings;
   const weekTotal = stats.weekEarnings;
@@ -23,7 +25,7 @@ export default function DriverEarningsPage() {
   const weekCount = stats.weekDeliveries;
 
   return (
-    <div className="min-h-[100dvh] bg-background pb-24 overscroll-none">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-[100dvh] bg-background pb-24 overscroll-none">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border px-4 py-3 pt-[calc(env(safe-area-inset-top)+4px)]">
         <div className="flex items-center justify-between">
@@ -175,6 +177,6 @@ export default function DriverEarningsPage() {
       </main>
 
       <DriverBottomNav />
-    </div>
+    </PullToRefresh>
   );
 }

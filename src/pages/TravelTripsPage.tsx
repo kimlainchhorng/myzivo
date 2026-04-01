@@ -3,10 +3,12 @@
   * Unified view of all travel bookings with tabs
   * Premium mobile experience with living timeline
   */
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Plane, Loader2 } from "lucide-react";
+import PullToRefresh from "@/components/shared/PullToRefresh";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,8 +24,13 @@ export default function TravelTripsPage() {
   const { user, isLoading: authLoading } = useAuth();
   const [filter, setFilter] = useState<TripFilter>("upcoming");
    const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   
   const { data: trips, isLoading } = useMyTrips(filter);
+
+  const handlePullRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["my-trips"] });
+  }, [queryClient]);
 
   // Redirect to login if not authenticated
   if (!authLoading && !user) {
@@ -33,10 +40,10 @@ export default function TravelTripsPage() {
    // Mobile and desktop use the same trips view
 
   return (
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-background pb-20"
     >
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-sm border-b">
@@ -119,5 +126,6 @@ export default function TravelTripsPage() {
 
       <MobileBottomNav />
     </motion.div>
+    </PullToRefresh>
   );
 }
