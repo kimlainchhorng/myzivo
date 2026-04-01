@@ -346,6 +346,42 @@ export default function ReelsFeedPage() {
         )}
       </AnimatePresence>
 
+      {/* Fullscreen Scrollable Post Viewer */}
+      <AnimatePresence>
+        {fullscreenIndex !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-background flex flex-col"
+          >
+            {/* Header */}
+            <div className="sticky top-0 z-10 flex items-center gap-3 px-3 py-2 bg-background/95 backdrop-blur-xl border-b border-border/30" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.5rem)' }}>
+              <button
+                onClick={() => setFullscreenIndex(null)}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <ChevronLeft className="h-5 w-5 text-foreground" />
+              </button>
+              <h2 className="text-base font-semibold text-foreground">Posts</h2>
+            </div>
+
+            {/* Scrollable posts */}
+            <div
+              ref={fullscreenScrollRef}
+              className="flex-1 overflow-y-auto pb-20"
+              style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 5rem), 5rem)' }}
+            >
+              <div className="divide-y divide-border/20">
+                {items.slice(fullscreenIndex).map((item, idx) => (
+                  <FeedCard key={item.id} item={item} currentUserId={userId} />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <ZivoMobileNav />
     </div>
   );
