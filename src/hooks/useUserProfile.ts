@@ -13,6 +13,7 @@ export type UserProfile = {
   cover_url: string | null;
   cover_position: number | null;
   status: string | null;
+  // Social links
   social_facebook: string | null;
   social_instagram: string | null;
   social_tiktok: string | null;
@@ -21,6 +22,13 @@ export type UserProfile = {
   social_linkedin: string | null;
   social_telegram: string | null;
   social_links_visible: boolean | null;
+  // Interaction controls
+  comment_control: string | null;
+  hide_like_counts: boolean | null;
+  allow_mentions: boolean | null;
+  allow_sharing: boolean | null;
+  allow_friend_requests: boolean | null;
+  hide_from_drivers: boolean | null;
   created_at: string;
   updated_at: string;
 };
