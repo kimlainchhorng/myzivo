@@ -203,7 +203,9 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
       .replace(/[^\d\s\-]/g, "");
 
     setLocalNumber(cleaned);
-    onChange(buildPhoneE164(selectedCountry.dial, cleaned));
+    const e164 = buildPhoneE164(selectedCountry.dial, cleaned);
+    lastEmittedRef.current = e164;
+    onChange(e164);
   };
 
   const filtered = search
