@@ -685,7 +685,6 @@ export default function ProfileEditPage() {
           {/* Social Links Section */}
           <SocialLinksEditor profile={profile} updateProfile={updateProfile} />
         </div>
-        </div>
       )}
 
       {/* Phone Verification Dialog */}
