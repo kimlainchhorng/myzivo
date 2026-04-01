@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { toast } from "sonner";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 interface OrderItem {
   productId: string;
@@ -522,7 +523,7 @@ export default function GroceryOrderHistory() {
   }, [orders]);
 
   return (
-    <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
+    <PullToRefresh onRefresh={fetchOrders} className="min-h-screen bg-background pb-24 relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-primary/6 blur-[60px]" />
       </div>
@@ -669,6 +670,6 @@ export default function GroceryOrderHistory() {
       </div>
 
       <ZivoMobileNav />
-    </div>
+    </PullToRefresh>
   );
 }

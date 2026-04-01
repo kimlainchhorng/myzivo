@@ -1,7 +1,7 @@
 /**
  * EatsRestaurantDashboard - Restaurant owner dashboard for managing menu & orders
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 // ─── Types ───────────────────────────────────────────────────
 interface MenuItem {
@@ -138,6 +139,11 @@ export default function EatsRestaurantDashboard() {
     setRefreshing(false);
   }
 
+  const handlePullRefresh = useCallback(async () => {
+    if (!restaurant?.id) return;
+    await Promise.all([loadMenu(restaurant.id), loadOrders(restaurant.id)]);
+  }, [restaurant?.id]);
+
   // ─── Order Actions ─────────────────────────────────────────
   async function updateOrderStatus(orderId: string, newStatus: string) {
     const { error } = await supabase
@@ -243,7 +249,7 @@ export default function EatsRestaurantDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/95 backdrop-blur-md border-b border-border/40">
         <div className="flex items-center gap-3 px-4 py-3">
@@ -405,7 +411,7 @@ export default function EatsRestaurantDashboard() {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </PullToRefresh>
   );
 }
 
