@@ -111,15 +111,18 @@ export default function PublicProfilePage() {
   // Follow / Unfollow
   const followMutation = useMutation({
     mutationFn: async () => {
+      if (!user || !userId || user.id === userId) throw new Error("Invalid");
       if (isFollowing) {
-        await supabase.from("followers").delete()
-          .eq("follower_id", user!.id)
-          .eq("following_id", userId!);
+        const { error } = await supabase.from("followers").delete()
+          .eq("follower_id", user.id)
+          .eq("following_id", userId);
+        if (error) throw error;
       } else {
-        await supabase.from("followers").insert({
-          follower_id: user!.id,
-          following_id: userId!,
+        const { error } = await supabase.from("followers").insert({
+          follower_id: user.id,
+          following_id: userId,
         });
+        if (error) throw error;
       }
     },
     onSuccess: () => {
@@ -127,26 +130,30 @@ export default function PublicProfilePage() {
       queryClient.invalidateQueries({ queryKey: ["follower-count", userId] });
       toast.success(isFollowing ? "Unfollowed" : "Following!");
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: (err: any) => toast.error(err?.message || "Something went wrong"),
   });
 
   // Add Friend / Cancel Request
   const friendMutation = useMutation({
     mutationFn: async (action: "add" | "cancel" | "accept" | "unfriend") => {
+      if (!user || !userId || user.id === userId) throw new Error("Invalid");
       if (action === "add") {
-        await supabase.from("friendships").insert({
-          user_id: user!.id,
-          friend_id: userId!,
+        const { error } = await supabase.from("friendships").insert({
+          user_id: user.id,
+          friend_id: userId,
           status: "pending",
         });
+        if (error) throw error;
       } else if (action === "cancel" || action === "unfriend") {
-        await supabase.from("friendships").delete()
-          .or(`and(user_id.eq.${user!.id},friend_id.eq.${userId!}),and(user_id.eq.${userId!},friend_id.eq.${user!.id})`);
+        const { error } = await supabase.from("friendships").delete()
+          .or(`and(user_id.eq.${user.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${user.id})`);
+        if (error) throw error;
       } else if (action === "accept") {
-        await supabase.from("friendships")
+        const { error } = await supabase.from("friendships")
           .update({ status: "accepted", accepted_at: new Date().toISOString() })
-          .eq("user_id", userId!)
-          .eq("friend_id", user!.id);
+          .eq("user_id", userId)
+          .eq("friend_id", user.id);
+        if (error) throw error;
       }
     },
     onSuccess: (_, action) => {
@@ -160,7 +167,7 @@ export default function PublicProfilePage() {
       };
       toast.success(msgs[action]);
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: (err: any) => toast.error(err?.message || "Something went wrong"),
   });
 
   const isLoading = profileLoading || postsLoading;
