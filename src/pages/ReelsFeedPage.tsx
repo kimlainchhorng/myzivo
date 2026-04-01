@@ -192,16 +192,95 @@ export default function ReelsFeedPage() {
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center justify-between">
         <h1 className="text-lg font-bold text-foreground">Feed</h1>
-        {userId && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+            onClick={() => setShowSearch(true)}
+            className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/50 transition-colors"
           >
-            <Plus className="h-3.5 w-3.5" />
-            Post
+            <Search className="h-4.5 w-4.5 text-foreground" />
           </button>
-        )}
+          {userId && (
+            <button
+              onClick={() => setShowCreate(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Post
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Search overlay */}
+      <AnimatePresence>
+        {showSearch && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-background flex flex-col"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30">
+              <button onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <ChevronLeft className="h-5 w-5 text-foreground" />
+              </button>
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  ref={searchInputRef}
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Search people..."
+                  className="w-full pl-9 pr-8 py-2.5 rounded-full bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                {searchQuery && (
+                  <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <XIcon className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {searchLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                </div>
+              ) : !searchQuery.trim() ? (
+                <div className="flex flex-col items-center justify-center h-32 text-muted-foreground/50">
+                  <Search className="h-8 w-8 mb-2" />
+                  <p className="text-sm">Search for people by name</p>
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-32 text-muted-foreground/50">
+                  <p className="text-sm">No results found</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border/20">
+                  {searchResults.map((p: any) => (
+                    <button
+                      key={p.id}
+                      onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); navigate(`/user/${p.id}`); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
+                    >
+                      <Avatar className="h-11 w-11 border-2 border-border/30">
+                        <AvatarImage src={p.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs font-bold bg-muted text-muted-foreground">
+                          {(p.full_name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-left min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{p.full_name || "Unknown"}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Create post prompt (logged in) */}
       {userId && (
