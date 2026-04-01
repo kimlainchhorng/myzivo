@@ -142,9 +142,15 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
   const rootRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
+  // Sync external value prop → internal localNumber (only on external changes)
+  const lastEmittedRef = useRef<string>("");
+
   useEffect(() => {
+    // Skip if this value was emitted by us (avoid loop)
+    if (value === lastEmittedRef.current) return;
+
     if (!value) {
-      if (localNumber) setLocalNumber("");
+      setLocalNumber("");
       return;
     }
 
@@ -153,16 +159,10 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
 
     if (match) {
       const incomingLocalNumber = value.slice(match.dial.length).trim();
-
-      if (selectedCountry.code !== match.code || selectedCountry.dial !== match.dial) {
-        setSelectedCountry(match);
-      }
-
-      if (!localNumber || normalizePhoneDigits(localNumber) !== normalizePhoneDigits(incomingLocalNumber)) {
-        setLocalNumber(incomingLocalNumber);
-      }
+      setSelectedCountry(match);
+      setLocalNumber(incomingLocalNumber);
     }
-  }, [value, localNumber, selectedCountry.code, selectedCountry.dial]);
+  }, [value]);
 
   useEffect(() => {
     if (!isOpen) return;
