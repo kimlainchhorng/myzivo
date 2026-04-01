@@ -46853,6 +46853,74 @@ export type Database = {
           },
         ]
       }
+      pos_integrations_safe: {
+        Row: {
+          created_at: string | null
+          external_merchant_id: string | null
+          id: string | null
+          last_sync_at: string | null
+          provider: string | null
+          restaurant_id: string | null
+          status: string | null
+          sync_error: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          external_merchant_id?: string | null
+          id?: string | null
+          last_sync_at?: string | null
+          provider?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          sync_error?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          external_merchant_id?: string | null
+          id?: string | null
+          last_sync_at?: string | null
+          provider?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          sync_error?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_integrations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_integrations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_integrations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_integrations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_active_airports: {
         Row: {
           city_id: string | null
