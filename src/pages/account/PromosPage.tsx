@@ -113,7 +113,7 @@ export default function PromosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background text-foreground pb-24">
       <SEOHead title="My Promos — ZIVO" description="Your available promo codes and coupons" />
 
       {/* Header */}
