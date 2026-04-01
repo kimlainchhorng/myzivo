@@ -420,6 +420,34 @@ export default function PublicProfilePage() {
         </>
       )}
 
+      {/* Confirmation dialog for cancel/unfriend */}
+      <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction?.action === "cancel" ? "Cancel Friend Request?" : "Unfriend?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction?.label}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, keep it</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmAction) {
+                  friendMutation.mutate(confirmAction.action);
+                }
+                setConfirmAction(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {confirmAction?.action === "cancel" ? "Yes, cancel request" : "Yes, unfriend"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <ZivoMobileNav />
     </div>
   );
