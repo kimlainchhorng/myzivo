@@ -286,7 +286,15 @@ export default function PublicProfilePage() {
                 {/* Friend button */}
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => friendMutation.mutate(friendBtn.action)}
+                  onClick={() => {
+                    if (friendBtn.action === "cancel") {
+                      setConfirmAction({ action: "cancel", label: "Are you sure you want to cancel this friend request?" });
+                    } else if (friendBtn.action === "unfriend") {
+                      setConfirmAction({ action: "unfriend", label: `Are you sure you want to unfriend ${profile?.full_name || "this user"}?` });
+                    } else {
+                      friendMutation.mutate(friendBtn.action);
+                    }
+                  }}
                   disabled={friendMutation.isPending}
                   className={`flex-1 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     friendshipStatus === "friends"
