@@ -134,7 +134,10 @@ interface CountryPhoneInputProps {
   name?: string;
 }
 
-export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhoneInputProps) {
+export const CountryPhoneInput = forwardRef<HTMLInputElement, CountryPhoneInputProps>(function CountryPhoneInput(
+  { value, onChange, onBlur, name },
+  ref,
+) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<CountryCode>(COUNTRY_CODES[0]);
@@ -340,11 +343,15 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
         </button>
 
         <input
+          ref={ref}
           type="tel"
-          inputMode="tel"
+          inputMode="numeric"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
           name={name}
           placeholder={selectedCountry.placeholder}
-          autoComplete="tel-national"
+          autoComplete="off"
           value={localNumber}
           onChange={(e) => handleNumberChange(e.target.value)}
           onBlur={onBlur}
@@ -360,4 +367,4 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
       {typeof document !== "undefined" ? createPortal(dropdownContent, document.body) : null}
     </div>
   );
-}
+});
