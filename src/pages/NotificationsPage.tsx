@@ -441,7 +441,7 @@ const NotificationsPage = () => {
       </div>
 
       <MobileBottomNav />
-    </div>
+    </PullToRefresh>
   );
 };
 
