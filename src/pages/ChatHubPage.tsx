@@ -54,7 +54,7 @@ export default function ChatHubPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("store_chats")
-        .select("id, store_id, created_at, restaurants!store_chats_store_id_fkey(name, logo_url)")
+        .select("id, store_id, created_at, store_profiles!store_chats_store_id_fkey(name, logo_url)")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
 
