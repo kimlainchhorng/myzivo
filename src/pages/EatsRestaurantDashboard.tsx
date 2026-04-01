@@ -127,17 +127,10 @@ export default function EatsRestaurantDashboard() {
     setMenuItems((data as any[] || []).map(d => ({ ...d, is_available: d.is_available ?? true })));
   }
 
-  async function loadOrders(restaurantId: string) {
-    setRefreshing(true);
-    const { data } = await supabase
-      .from("food_orders")
-      .select("*")
-      .eq("restaurant_id", restaurantId)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    setOrders((data as any[] || []).map(d => ({ ...d, items: d.items || [] })));
-    setRefreshing(false);
-  }
+  const handlePullRefresh = useCallback(async () => {
+    if (!restaurant?.id) return;
+    await Promise.all([loadMenu(restaurant.id), loadOrders(restaurant.id)]);
+  }, [restaurant?.id]);
 
   // ─── Order Actions ─────────────────────────────────────────
   async function updateOrderStatus(orderId: string, newStatus: string) {
