@@ -672,7 +672,7 @@ function CreatePostModal({
 
 /* ── Individual Feed Card (IG/FB style) ──────────────────────────── */
 
-function FeedCard({ item, currentUserId, onOpenFullscreen }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void }) {
+function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean }) {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
