@@ -636,18 +636,18 @@ const Profile = () => {
 
                       {/* Friend, Follower & Following stats — Facebook/TikTok style */}
                       <div className="flex items-center justify-center gap-0 mt-4 mb-1">
-                        <button className="flex-1 text-center py-1 group" onClick={() => toast.info(`${friendCount} friends`)}>
+                        <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "friends" })}>
                           <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{friendCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Friends</p>
                         </button>
                         <div className="w-px h-9 bg-border/40" />
-                        <button className="flex-1 text-center py-1 group" onClick={() => toast.info(`${followerCount} followers`)}>
+                        <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "followers" })}>
                           <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{followerCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Followers</p>
                         </button>
                         <div className="w-px h-9 bg-border/40" />
-                        <button className="flex-1 text-center py-1 group" onClick={() => toast.info("Following list")}>
-                          <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">0</p>
+                        <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "following" })}>
+                          <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{followingCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Following</p>
                         </button>
                       </div>
