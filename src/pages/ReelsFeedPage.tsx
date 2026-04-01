@@ -361,24 +361,28 @@ export default function ReelsFeedPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+            className="fixed inset-0 z-[100] bg-black flex flex-col"
           >
-            {/* Close button - highest z-index, no elements behind it */}
-            <button
-              onClick={() => setFullscreenVideoUrl(null)}
-              className="absolute z-[110] top-0 left-4 h-10 w-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center"
-              style={{ marginTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 1rem)' }}
-            >
-              <XIcon className="h-5 w-5 text-white" />
-            </button>
-            <video
-              ref={fullscreenVideoRef}
-              src={fullscreenVideoUrl}
-              autoPlay
-              controls
-              playsInline
-              className="max-h-full max-w-full object-contain"
-            />
+            {/* Close button row - above the video */}
+            <div className="flex items-center px-4 shrink-0" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.75rem)', paddingBottom: '0.5rem' }}>
+              <button
+                onClick={() => setFullscreenVideoUrl(null)}
+                className="h-10 w-10 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center"
+              >
+                <XIcon className="h-5 w-5 text-white" />
+              </button>
+            </div>
+            {/* Video - fills remaining space */}
+            <div className="flex-1 flex items-center justify-center min-h-0">
+              <video
+                ref={fullscreenVideoRef}
+                src={fullscreenVideoUrl}
+                autoPlay
+                controls
+                playsInline
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
