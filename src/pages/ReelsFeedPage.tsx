@@ -37,6 +37,11 @@ interface FeedItem {
   author_id?: string;
   store_slug?: string;
   created_at: string;
+  // Interaction controls from profile
+  comment_control?: "everyone" | "friends" | "off";
+  hide_like_counts?: boolean;
+  allow_sharing?: boolean;
+  allow_mentions?: boolean;
 }
 
 export default function ReelsFeedPage() {
