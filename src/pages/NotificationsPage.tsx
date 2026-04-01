@@ -132,7 +132,7 @@ const NotificationsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
       <SEOHead title="Notifications – ZIVO" description="View your travel alerts, order updates, and promotional offers." noIndex={true} />
 
       {/* ── 3D Background with parallax depth ── */}
