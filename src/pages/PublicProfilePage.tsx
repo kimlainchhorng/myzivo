@@ -162,6 +162,34 @@ export default function PublicProfilePage() {
           status: "pending",
         });
         if (error) throw error;
+
+        // Send push notification to the recipient
+        const senderProfile = await supabase
+          .from("profiles")
+          .select("full_name, avatar_url")
+          .eq("user_id", user.id)
+          .single();
+        const senderName = senderProfile.data?.full_name || "Someone";
+        const senderAvatar = senderProfile.data?.avatar_url;
+
+        try {
+          await supabase.functions.invoke("send-push-notification", {
+            body: {
+              user_id: userId,
+              notification_type: "friend_request_received",
+              title: `${senderName} · Following`,
+              body: `${senderName} sent you a friend request`,
+              data: {
+                type: "friend_request",
+                sender_id: user.id,
+                avatar_url: senderAvatar,
+                action_url: `/user/${user.id}`,
+              },
+            },
+          });
+        } catch (pushErr) {
+          console.warn("[FriendRequest] Push notification failed:", pushErr);
+        }
       } else if (action === "cancel" || action === "unfriend") {
         const { error } = await supabase.from("friendships").delete()
           .or(`and(user_id.eq.${user.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${user.id})`);
