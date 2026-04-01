@@ -25,7 +25,7 @@ export default function DriverEarningsPage() {
   const weekCount = stats.weekDeliveries;
 
   return (
-    <div className="min-h-[100dvh] bg-background pb-24 overscroll-none">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-[100dvh] bg-background pb-24 overscroll-none">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border px-4 py-3 pt-[calc(env(safe-area-inset-top)+4px)]">
         <div className="flex items-center justify-between">
