@@ -917,6 +917,16 @@ const Profile = () => {
           document.body
         )}
       </AnimatePresence>
+      <SocialListModal
+        open={socialModal.open}
+        onClose={() => setSocialModal({ ...socialModal, open: false })}
+        initialTab={socialModal.tab}
+        onCountsChange={(f, fl, fg) => {
+          if (socialModal.tab === "friends") setFriendCount(f);
+          if (socialModal.tab === "followers") setFollowerCount(fl);
+          if (socialModal.tab === "following") setFollowingCount(fg);
+        }}
+      />
     </div>
   );
 };
