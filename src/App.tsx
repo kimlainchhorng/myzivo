@@ -33,6 +33,7 @@ import { categorizeError } from "@/lib/supabaseErrors";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
 import { useBrand } from "@/hooks/useBrand";
 import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
+import { lazyRetry } from "@/lib/lazyRetry";
 
 // Eager load critical pages
 import Login from "./pages/Login";
@@ -105,8 +106,8 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
-const VerifyOTP = lazy(() => import("./pages/VerifyOTP"));
-const Setup = lazy(() => import("./pages/Setup"));
+const VerifyOTP = lazy(() => lazyRetry(() => import("./pages/VerifyOTP")));
+const Setup = lazy(() => lazyRetry(() => import("./pages/Setup")));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 

@@ -53,20 +53,36 @@ export default function Setup() {
 
     try {
       const fullName = [pendingData.first_name, pendingData.last_name].filter(Boolean).join(" ");
+      const profileUpdate = {
+        full_name: fullName,
+        phone: pendingData.phone,
+        phone_e164: pendingData.phone,
+        phone_verified: true,
+        phone_verified_at: new Date().toISOString(),
+        setup_complete: true,
+      };
 
-      const { error } = await supabase
+      const { data: updatedRows, error: updateError } = await supabase
         .from("profiles")
-        .update({
-          full_name: fullName,
-          phone: pendingData.phone,
-          phone_e164: pendingData.phone,
-          phone_verified: true,
-          phone_verified_at: new Date().toISOString(),
-          setup_complete: true,
-        })
-        .eq("user_id", user.id);
+        .update(profileUpdate)
+        .or(`user_id.eq.${user.id},id.eq.${user.id}`)
+        .select("id")
+        .limit(1);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      if (!updatedRows || updatedRows.length === 0) {
+        const { error: insertError } = await supabase
+          .from("profiles")
+          .insert({
+            id: user.id,
+            user_id: user.id,
+            email: user.email ?? null,
+            ...profileUpdate,
+          });
+
+        if (insertError) throw insertError;
+      }
 
       toast.success("Account setup complete!");
       navigate("/", { replace: true });
