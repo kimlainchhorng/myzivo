@@ -793,7 +793,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
       </div>
 
       {/* Likes */}
-      {localLikes > 0 && (
+      {localLikes > 0 && !item.hide_like_counts && (
         <div className="px-3 pb-1">
           <p className="text-[13px] font-semibold text-foreground">
             {localLikes.toLocaleString()} likes
