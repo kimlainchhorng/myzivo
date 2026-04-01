@@ -94,6 +94,7 @@ export default function MembershipPage() {
   const createCheckout = useCreateMembershipCheckout();
   const cancelMembership = useCancelMembership();
   const openPortal = useOpenCustomerPortal();
+  const handlePullRefresh = useCallback(async () => { await refetch(); }, [refetch]);
 
   // Handle success/cancel from Stripe redirect
   useEffect(() => {
