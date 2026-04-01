@@ -15,11 +15,15 @@ import { toast } from "sonner";
 import { User, ArrowRight, Loader2 } from "lucide-react";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
+import { normalizePhoneDigits, normalizePhoneE164 } from "@/lib/phone";
 
 const setupSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required").max(50),
   last_name: z.string().trim().min(1, "Last name is required").max(50),
-  phone: z.string().trim().min(5, "Phone number is required").max(20),
+  phone: z.string().trim().refine((value) => {
+    const digits = normalizePhoneDigits(value);
+    return digits.length >= 7 && digits.length <= 15;
+  }, "Please enter a valid phone number"),
 });
 
 type SetupValues = z.infer<typeof setupSchema>;
@@ -52,11 +56,12 @@ export default function Setup() {
     setSaving(true);
 
     try {
+      const normalizedPhone = normalizePhoneE164(pendingData.phone);
       const fullName = [pendingData.first_name, pendingData.last_name].filter(Boolean).join(" ");
       const profileUpdate = {
         full_name: fullName,
-        phone: pendingData.phone,
-        phone_e164: pendingData.phone,
+        phone: normalizedPhone,
+        phone_e164: normalizedPhone,
         phone_verified: true,
         phone_verified_at: new Date().toISOString(),
         setup_complete: true,

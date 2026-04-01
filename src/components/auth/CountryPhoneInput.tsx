@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { buildPhoneE164, normalizePhoneDigits } from "@/lib/phone";
 
 interface CountryCode {
   code: string;
@@ -142,15 +143,26 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (value && !localNumber) {
-      const sorted = [...COUNTRY_CODES].sort((a, b) => b.dial.length - a.dial.length);
-      const match = sorted.find((country) => value.startsWith(country.dial));
-      if (match) {
+    if (!value) {
+      if (localNumber) setLocalNumber("");
+      return;
+    }
+
+    const sorted = [...COUNTRY_CODES].sort((a, b) => b.dial.length - a.dial.length);
+    const match = sorted.find((country) => value.startsWith(country.dial));
+
+    if (match) {
+      const incomingLocalNumber = value.slice(match.dial.length).trim();
+
+      if (selectedCountry.code !== match.code || selectedCountry.dial !== match.dial) {
         setSelectedCountry(match);
-        setLocalNumber(value.slice(match.dial.length).trim());
+      }
+
+      if (!localNumber || normalizePhoneDigits(localNumber) !== normalizePhoneDigits(incomingLocalNumber)) {
+        setLocalNumber(incomingLocalNumber);
       }
     }
-  }, [value, localNumber]);
+  }, [value, localNumber, selectedCountry.code, selectedCountry.dial]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -180,14 +192,18 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
 
   const handleCountrySelect = (country: CountryCode) => {
     setSelectedCountry(country);
-    onChange(`${country.dial}${localNumber}`);
+    onChange(buildPhoneE164(country.dial, localNumber));
     closeDropdown();
   };
 
   const handleNumberChange = (num: string) => {
-    const cleaned = num.replace(/[^\d\s\-]/g, "");
+    const cleaned = num
+      .normalize("NFKD")
+      .replace(/[０-９]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 65248))
+      .replace(/[^\d\s\-]/g, "");
+
     setLocalNumber(cleaned);
-    onChange(`${selectedCountry.dial}${cleaned}`);
+    onChange(buildPhoneE164(selectedCountry.dial, cleaned));
   };
 
   const filtered = search
