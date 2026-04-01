@@ -98,7 +98,7 @@ function SocialLinksEditor({ profile, updateProfile }: { profile: any; updatePro
           <Switch
             checked={linksVisible}
             onCheckedChange={async (checked) => {
-              try { await updateProfile.mutateAsync({ social_links_visible: checked } as any); } catch {}
+              try { await updateProfile.mutateAsync({ social_links_visible: checked }); } catch {}
             }}
             disabled={updateProfile.isPending}
           />
@@ -493,7 +493,7 @@ export default function ProfileEditPage() {
                 { value: "friends_only", label: "Friends Only", desc: "Only friends can see your profile", icon: Users, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30" },
                 { value: "private", label: "Private", desc: "Nobody can see your profile", icon: Lock, color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/30" },
               ] as const).map((opt) => {
-                const current = (profile as any)?.profile_visibility || "public";
+                const current = profile?.profile_visibility || "public";
                 const isActive = current === opt.value;
                 const Icon = opt.icon;
                 return (
@@ -504,7 +504,7 @@ export default function ProfileEditPage() {
                     onClick={async () => {
                       if (isActive) return;
                       try {
-                        await updateProfile.mutateAsync({ profile_visibility: opt.value } as any);
+                        await updateProfile.mutateAsync({ profile_visibility: opt.value });
                       } catch {}
                     }}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
@@ -542,10 +542,10 @@ export default function ProfileEditPage() {
                 </div>
               </div>
               <Switch
-                checked={!!(profile as any)?.hide_from_drivers}
+                checked={!!profile?.hide_from_drivers}
                 onCheckedChange={async (checked) => {
                   try {
-                    await updateProfile.mutateAsync({ hide_from_drivers: checked } as any);
+                    await updateProfile.mutateAsync({ hide_from_drivers: checked });
                   } catch {}
                 }}
                 disabled={updateProfile.isPending}
@@ -571,7 +571,7 @@ export default function ProfileEditPage() {
                   { value: "friends", label: "Friends Only", desc: "Only friends can comment", icon: Users, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30" },
                   { value: "off", label: "Off", desc: "No one can comment on your posts", icon: Lock, color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/30" },
                 ] as const).map((opt) => {
-                  const current = (profile as any)?.comment_control || "everyone";
+                  const current = profile?.comment_control || "everyone";
                   const isActive = current === opt.value;
                   const Icon = opt.icon;
                   return (
@@ -581,7 +581,7 @@ export default function ProfileEditPage() {
                       disabled={updateProfile.isPending}
                       onClick={async () => {
                         if (isActive) return;
-                        try { await updateProfile.mutateAsync({ comment_control: opt.value } as any); } catch {}
+                        try { await updateProfile.mutateAsync({ comment_control: opt.value }); } catch {}
                       }}
                       className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all text-left ${
                         isActive ? `${opt.bg} ${opt.border} border` : "border-border/30 hover:bg-muted/30"
@@ -613,9 +613,9 @@ export default function ProfileEditPage() {
                 </div>
               </div>
               <Switch
-                checked={!!(profile as any)?.hide_like_counts}
+                checked={!!profile?.hide_like_counts}
                 onCheckedChange={async (checked) => {
-                  try { await updateProfile.mutateAsync({ hide_like_counts: checked } as any); } catch {}
+                  try { await updateProfile.mutateAsync({ hide_like_counts: checked }); } catch {}
                 }}
                 disabled={updateProfile.isPending}
               />
@@ -633,9 +633,9 @@ export default function ProfileEditPage() {
                 </div>
               </div>
               <Switch
-                checked={(profile as any)?.allow_mentions !== false}
+                checked={profile?.allow_mentions !== false}
                 onCheckedChange={async (checked) => {
-                  try { await updateProfile.mutateAsync({ allow_mentions: checked } as any); } catch {}
+                  try { await updateProfile.mutateAsync({ allow_mentions: checked }); } catch {}
                 }}
                 disabled={updateProfile.isPending}
               />
@@ -653,9 +653,9 @@ export default function ProfileEditPage() {
                 </div>
               </div>
               <Switch
-                checked={(profile as any)?.allow_sharing !== false}
+                checked={profile?.allow_sharing !== false}
                 onCheckedChange={async (checked) => {
-                  try { await updateProfile.mutateAsync({ allow_sharing: checked } as any); } catch {}
+                  try { await updateProfile.mutateAsync({ allow_sharing: checked }); } catch {}
                 }}
                 disabled={updateProfile.isPending}
               />
@@ -673,9 +673,9 @@ export default function ProfileEditPage() {
                 </div>
               </div>
               <Switch
-                checked={(profile as any)?.allow_friend_requests !== false}
+                checked={profile?.allow_friend_requests !== false}
                 onCheckedChange={async (checked) => {
-                  try { await updateProfile.mutateAsync({ allow_friend_requests: checked } as any); } catch {}
+                  try { await updateProfile.mutateAsync({ allow_friend_requests: checked }); } catch {}
                 }}
                 disabled={updateProfile.isPending}
               />
