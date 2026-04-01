@@ -358,7 +358,8 @@ export default function ChatHubPage() {
                         return;
                       }
                       if (active === "shop") {
-                        navigate(`/store/${chat.storeId || chat.id}`);
+                        const slug = chat.storeSlug || chat.storeId || chat.id;
+                        navigate(`/grocery/shop/${slug}?chat=open`);
                       } else if (active === "personal") {
                         navigate(`/chat/${chat.id}`);
                       } else if (active === "support") {
