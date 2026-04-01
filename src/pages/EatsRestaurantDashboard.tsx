@@ -1,7 +1,7 @@
 /**
  * EatsRestaurantDashboard - Restaurant owner dashboard for managing menu & orders
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
