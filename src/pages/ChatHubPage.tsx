@@ -79,6 +79,7 @@ export default function ChatHubPage() {
 
           return {
             id: chat.id,
+            storeId: chat.store_id,
             name: chat.store_profiles?.name || "Store",
             avatar: chat.store_profiles?.logo_url,
             lastMessage: lastMsg?.content || "No messages yet",
