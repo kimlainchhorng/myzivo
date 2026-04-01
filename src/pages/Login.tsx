@@ -412,7 +412,9 @@ const Login = () => {
                   <FormItem className="space-y-0.5">
                     <FormLabel className="text-white/70 text-xs font-medium">{t("auth.phone")}</FormLabel>
                     <FormControl>
-                      <CountryPhoneInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
+                      <div>
+                        <CountryPhoneInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
+                      </div>
                     </FormControl>
                     <FormMessage className="text-red-400 text-xs" />
                   </FormItem>
