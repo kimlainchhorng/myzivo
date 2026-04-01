@@ -636,7 +636,7 @@ function CreatePostModal({
 
 /* ── Individual Feed Card (IG/FB style) ──────────────────────────── */
 
-function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: string | null }) {
+function FeedCard({ item, currentUserId, onOpenFullscreen }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void }) {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
