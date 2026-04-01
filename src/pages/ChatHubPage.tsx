@@ -488,6 +488,6 @@ export default function ChatHubPage() {
           onClose={() => setOpenShopChat(null)}
         />
       )}
-    </div>
+    </PullToRefresh>
   );
 }
