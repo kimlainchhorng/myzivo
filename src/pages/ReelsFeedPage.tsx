@@ -866,8 +866,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
       {/* Right side action buttons */}
       <div
-        className="absolute right-3 flex flex-col items-center gap-5"
-        style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 7rem)' }}
+        className="absolute right-3 flex flex-col items-center gap-4"
+        style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1.5rem), 2.5rem)' }}
       >
         {/* Mute */}
         <button onClick={() => setMuted(!muted)} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
@@ -908,31 +908,46 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           <span className="text-white text-[10px] font-medium drop-shadow">Share</span>
         </button>
 
-        {/* Author avatar (bottom of sidebar like TikTok) */}
-        <button
-          onClick={() => {
-            onClose();
-            if (item.source === "store" && item.store_slug) {
-              navigate(`/grocery/shop/${item.store_slug}`);
-            } else if (item.author_id) {
-              navigate(`/user/${item.author_id}`);
-            }
-          }}
-          className="relative"
-        >
-          <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-white shrink-0">
-            {item.author_avatar ? (
-              <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full bg-white/20 flex items-center justify-center text-white text-sm font-bold">
-                {item.author_name[0]}
-              </div>
-            )}
-          </div>
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
-            <Plus className="h-2.5 w-2.5 text-primary-foreground" />
-          </div>
-        </button>
+        {/* Author avatar with Follow button */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              onClose();
+              if (item.source === "store" && item.store_slug) {
+                navigate(`/grocery/shop/${item.store_slug}`);
+              } else if (item.author_id) {
+                navigate(`/user/${item.author_id}`);
+              }
+            }}
+          >
+            <div className="h-11 w-11 rounded-full overflow-hidden border-2 border-white shrink-0">
+              {item.author_avatar ? (
+                <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full bg-white/20 flex items-center justify-center text-white text-sm font-bold">
+                  {item.author_name[0]}
+                </div>
+              )}
+            </div>
+          </button>
+          {/* Follow button */}
+          {currentUserId && item.author_id !== currentUserId && (
+            <button
+              onClick={() => {
+                setIsFollowing(!isFollowing);
+                toast.success(isFollowing ? `Unfollowed ${item.author_name}` : `Following ${item.author_name}`);
+              }}
+              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full flex items-center justify-center shadow-lg"
+              style={{ backgroundColor: isFollowing ? 'hsl(var(--muted))' : 'hsl(var(--primary))' }}
+            >
+              {isFollowing ? (
+                <UserCheck className="h-2.5 w-2.5 text-primary-foreground" />
+              ) : (
+                <Plus className="h-3 w-3 text-primary-foreground" />
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Bottom overlay - Author + Caption */}
