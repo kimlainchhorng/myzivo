@@ -858,7 +858,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen }: { item: FeedItem; c
               {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); setShowFullscreen(true); }}
+              onClick={(e) => { e.stopPropagation(); onOpenFullscreen?.(); }}
               className="absolute bottom-3 left-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
             >
               <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
