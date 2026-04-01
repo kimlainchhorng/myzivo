@@ -46749,6 +46749,45 @@ export type Database = {
         }
         Relationships: []
       }
+      job_otps_safe: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          job_id: string | null
+          otp_last4: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          job_id?: string | null
+          otp_last4?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          job_id?: string | null
+          otp_last4?: string | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_otps_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "admin_active_jobs"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "job_otps_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loyalty_members_masked: {
         Row: {
           created_at: string | null
