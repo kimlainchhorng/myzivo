@@ -126,5 +126,6 @@ export default function TravelTripsPage() {
 
       <MobileBottomNav />
     </motion.div>
+    </PullToRefresh>
   );
 }

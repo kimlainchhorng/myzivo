@@ -177,6 +177,6 @@ export default function DriverEarningsPage() {
       </main>
 
       <DriverBottomNav />
-    </div>
+    </PullToRefresh>
   );
 }
