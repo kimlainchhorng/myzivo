@@ -17,6 +17,7 @@ import {
   BannerSkeleton,
   LogosSkeleton,
 } from "@/components/shared/SectionSkeleton";
+import { lazyRetry } from "@/lib/lazyRetry";
 
 // Above-fold components (eager loaded for fast LCP)
 import NavBar from "@/components/home/NavBar";
@@ -25,22 +26,22 @@ import HeroSearchCard from "@/components/home/HeroSearchCard";
 import ServicesShowcase from "@/components/home/ServicesShowcase";
 import StatsSection from "@/components/home/StatsSection";
 
-// Below-fold components (lazy loaded for performance)
-const DestinationShowcase = lazy(() => import("@/components/home/DestinationShowcase"));
-const PopularRoutesSection = lazy(() => import("@/components/home/PopularRoutesSection"));
-const FeaturedCarsSection = lazy(() => import("@/components/home/FeaturedCarsSection"));
-const FeaturedHotelsSection = lazy(() => import("@/components/home/FeaturedHotelsSection"));
-const FeaturedEatsSection = lazy(() => import("@/components/home/FeaturedEatsSection"));
-const HowItWorksSection = lazy(() => import("@/components/home/HowItWorksSection"));
-const TestimonialsSection = lazy(() => import("@/components/home/TestimonialsSection"));
-const PartnerLogosSection = lazy(() => import("@/components/home/PartnerLogosSection"));
-const DownloadAppSection = lazy(() => import("@/components/home/DownloadAppSection"));
-const NewsletterSection = lazy(() => import("@/components/home/NewsletterSection"));
-const VideoAdsSection = lazy(() => import("@/components/home/VideoAdsSection"));
-const ServiceFlowBanner = lazy(() => import("@/components/home/ServiceFlowBanner"));
+// Below-fold components (lazy loaded with retry for chunk resilience)
+const DestinationShowcase = lazy(() => lazyRetry(() => import("@/components/home/DestinationShowcase")));
+const PopularRoutesSection = lazy(() => lazyRetry(() => import("@/components/home/PopularRoutesSection")));
+const FeaturedCarsSection = lazy(() => lazyRetry(() => import("@/components/home/FeaturedCarsSection")));
+const FeaturedHotelsSection = lazy(() => lazyRetry(() => import("@/components/home/FeaturedHotelsSection")));
+const FeaturedEatsSection = lazy(() => lazyRetry(() => import("@/components/home/FeaturedEatsSection")));
+const HowItWorksSection = lazy(() => lazyRetry(() => import("@/components/home/HowItWorksSection")));
+const TestimonialsSection = lazy(() => lazyRetry(() => import("@/components/home/TestimonialsSection")));
+const PartnerLogosSection = lazy(() => lazyRetry(() => import("@/components/home/PartnerLogosSection")));
+const DownloadAppSection = lazy(() => lazyRetry(() => import("@/components/home/DownloadAppSection")));
+const NewsletterSection = lazy(() => lazyRetry(() => import("@/components/home/NewsletterSection")));
+const VideoAdsSection = lazy(() => lazyRetry(() => import("@/components/home/VideoAdsSection")));
+const ServiceFlowBanner = lazy(() => lazyRetry(() => import("@/components/home/ServiceFlowBanner")));
 
 // Mobile app home
-const AppHome = lazy(() => import("@/pages/app/AppHome"));
+const AppHome = lazy(() => lazyRetry(() => import("@/pages/app/AppHome")));
 
 // Desktop version - Premium layout with lazy-loaded below-fold sections
 const DesktopHomePage = () => {
