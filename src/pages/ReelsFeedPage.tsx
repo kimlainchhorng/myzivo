@@ -52,7 +52,9 @@ export default function ReelsFeedPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
+  const [fullscreenVideoUrl, setFullscreenVideoUrl] = useState<string | null>(null);
   const fullscreenScrollRef = useRef<HTMLDivElement>(null);
+  const fullscreenVideoRef = useRef<HTMLVideoElement>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
