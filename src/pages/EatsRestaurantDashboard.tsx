@@ -399,7 +399,7 @@ export default function EatsRestaurantDashboard() {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </PullToRefresh>
   );
 }
 
