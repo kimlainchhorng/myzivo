@@ -2,7 +2,7 @@
  * Setup Page — Collects first name, last name, and phone after signup.
  * Requires phone verification via Twilio Verify before completing.
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,11 +38,27 @@ export default function Setup() {
   const form = useForm<SetupValues>({
     resolver: zodResolver(setupSchema),
     defaultValues: {
-      first_name: user?.user_metadata?.full_name?.split(" ")[0] || "",
-      last_name: user?.user_metadata?.full_name?.split(" ").slice(1).join(" ") || "",
+      first_name: "",
+      last_name: "",
       phone: "",
     },
   });
+
+  // Pre-fill form from user metadata when user becomes available
+  useEffect(() => {
+    if (!user) return;
+    const meta = user.user_metadata || {};
+    const fullName = meta.full_name || "";
+    const firstName = fullName.split(" ")[0] || "";
+    const lastName = fullName.split(" ").slice(1).join(" ") || "";
+    const phone = meta.phone || "";
+
+    const current = form.getValues();
+    // Only set if fields are still empty (don't override user edits)
+    if (!current.first_name && firstName) form.setValue("first_name", firstName);
+    if (!current.last_name && lastName) form.setValue("last_name", lastName);
+    if (!current.phone && phone) form.setValue("phone", phone);
+  }, [user, form]);
 
   const onSubmit = async (data: SetupValues) => {
     if (!user) return;
