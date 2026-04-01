@@ -149,6 +149,13 @@ export default function PublicProfilePage() {
     mutationFn: async (action: "add" | "cancel" | "accept" | "unfriend") => {
       if (!user || !userId || user.id === userId) throw new Error("Invalid");
       if (action === "add") {
+        // Auto-follow when adding friend
+        if (!isFollowing) {
+          await supabase.from("followers").insert({
+            follower_id: user.id,
+            following_id: userId,
+          }).throwOnError();
+        }
         const { error } = await supabase.from("friendships").insert({
           user_id: user.id,
           friend_id: userId,
@@ -160,6 +167,13 @@ export default function PublicProfilePage() {
           .or(`and(user_id.eq.${user.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${user.id})`);
         if (error) throw error;
       } else if (action === "accept") {
+        // Auto-follow when accepting friend request
+        if (!isFollowing) {
+          await supabase.from("followers").insert({
+            follower_id: user.id,
+            following_id: userId,
+          }).throwOnError();
+        }
         const { error } = await supabase.from("friendships")
           .update({ status: "accepted", accepted_at: new Date().toISOString() })
           .eq("user_id", userId)
@@ -170,6 +184,8 @@ export default function PublicProfilePage() {
     onSuccess: (_, action) => {
       queryClient.invalidateQueries({ queryKey: ["friendship-status", userId] });
       queryClient.invalidateQueries({ queryKey: ["friend-count", userId] });
+      queryClient.invalidateQueries({ queryKey: ["is-following", userId] });
+      queryClient.invalidateQueries({ queryKey: ["follower-count", userId] });
       const msgs: Record<string, string> = {
         add: "Friend request sent!",
         cancel: "Request cancelled",
