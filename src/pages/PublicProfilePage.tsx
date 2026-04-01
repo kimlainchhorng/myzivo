@@ -30,6 +30,7 @@ export default function PublicProfilePage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [confirmAction, setConfirmAction] = useState<null | { action: "cancel" | "unfriend"; label: string }>(null);
 
   const isOwnProfile = user?.id === userId;
 
