@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { openExternalUrl } from "@/lib/openExternalUrl";
 import ProfileContentTabs from "@/components/profile/ProfileContentTabs";
 import ProfileStories from "@/components/profile/ProfileStories";
+import SocialListModal from "@/components/profile/SocialListModal";
 
 const LANGS = [
   { code: "en", label: "English", cc: "us" },
