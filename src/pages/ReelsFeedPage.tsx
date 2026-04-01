@@ -329,7 +329,7 @@ export default function ReelsFeedPage() {
           {items.map((item, idx) => (
             <FeedCard key={item.id} item={item} currentUserId={userId} onOpenFullscreen={() => {
               if (item.media_type === 'video') {
-                setFullscreenVideoUrl(item.media_urls[0]);
+                setReelsStartIndex(idx);
               } else {
                 setFullscreenIndex(idx);
               }
