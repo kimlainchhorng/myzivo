@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { openExternalUrl } from "@/lib/openExternalUrl";
 import ProfileContentTabs from "@/components/profile/ProfileContentTabs";
 import ProfileStories from "@/components/profile/ProfileStories";
+import SocialListModal from "@/components/profile/SocialListModal";
 
 const LANGS = [
   { code: "en", label: "English", cc: "us" },
@@ -158,6 +159,8 @@ const Profile = () => {
   const [followLoading, setFollowLoading] = useState(false);
   const [friendCount, setFriendCount] = useState(0);
   const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [socialModal, setSocialModal] = useState<{ open: boolean; tab: "friends" | "followers" | "following" }>({ open: false, tab: "friends" });
 
   // Load real friendship status, friend count & follower count
   useEffect(() => {
@@ -177,6 +180,13 @@ const Profile = () => {
         .select("*", { count: "exact", head: true })
         .eq("following_id", user.id);
       setFollowerCount(flc || 0);
+
+      // Following count (people this user follows)
+      const { count: fgc } = await supabase
+        .from("followers" as any)
+        .select("*", { count: "exact", head: true })
+        .eq("follower_id", user.id);
+      setFollowingCount(fgc || 0);
 
       // Check own friendship status (for own profile it stays "none" — used when viewing others)
       // Check if currently following self (shouldn't happen but keeps state correct)
@@ -626,18 +636,18 @@ const Profile = () => {
 
                       {/* Friend, Follower & Following stats — Facebook/TikTok style */}
                       <div className="flex items-center justify-center gap-0 mt-4 mb-1">
-                        <button className="flex-1 text-center py-1 group" onClick={() => toast.info(`${friendCount} friends`)}>
+                        <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "friends" })}>
                           <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{friendCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Friends</p>
                         </button>
                         <div className="w-px h-9 bg-border/40" />
-                        <button className="flex-1 text-center py-1 group" onClick={() => toast.info(`${followerCount} followers`)}>
+                        <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "followers" })}>
                           <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{followerCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Followers</p>
                         </button>
                         <div className="w-px h-9 bg-border/40" />
-                        <button className="flex-1 text-center py-1 group" onClick={() => toast.info("Following list")}>
-                          <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">0</p>
+                        <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "following" })}>
+                          <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{followingCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Following</p>
                         </button>
                       </div>
@@ -907,6 +917,16 @@ const Profile = () => {
           document.body
         )}
       </AnimatePresence>
+      <SocialListModal
+        open={socialModal.open}
+        onClose={() => setSocialModal({ ...socialModal, open: false })}
+        initialTab={socialModal.tab}
+        onCountsChange={(f, fl, fg) => {
+          if (socialModal.tab === "friends") setFriendCount(f);
+          if (socialModal.tab === "followers") setFollowerCount(fl);
+          if (socialModal.tab === "following") setFollowingCount(fg);
+        }}
+      />
     </div>
   );
 };
