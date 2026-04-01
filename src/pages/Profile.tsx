@@ -29,6 +29,7 @@ import { openExternalUrl } from "@/lib/openExternalUrl";
 import ProfileContentTabs from "@/components/profile/ProfileContentTabs";
 import ProfileStories from "@/components/profile/ProfileStories";
 import SocialListModal from "@/components/profile/SocialListModal";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 const LANGS = [
   { code: "en", label: "English", cc: "us" },
