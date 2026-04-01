@@ -128,6 +128,7 @@ const GlassCard3D = ({ children, className = "", glow = false }: { children: Rea
 
 const Profile = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const { t, currentLanguage, changeLanguage } = useI18n();
   const { country, setCountry, countries } = useCountry();
