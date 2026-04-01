@@ -231,6 +231,14 @@ export default function ChatHubPage() {
     setSwipedId(null);
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-shop"] }),
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-ride"] }),
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-support"] }),
+    ]);
+  }, [queryClient]);
+
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
@@ -244,13 +252,6 @@ export default function ChatHubPage() {
     );
   }
 
-  const handlePullRefresh = useCallback(async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["chat-hub-shop"] }),
-      queryClient.invalidateQueries({ queryKey: ["chat-hub-ride"] }),
-      queryClient.invalidateQueries({ queryKey: ["chat-hub-support"] }),
-    ]);
-  }, [queryClient]);
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-24">
