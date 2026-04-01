@@ -3,7 +3,7 @@
  * Premium booking management with filters, status tabs, cancellation, and detail modal
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   Plane, ArrowLeft, Clock, CheckCircle, AlertCircle, XCircle,
@@ -26,6 +26,7 @@ import { useFlightBookings, useFlightBooking, useRequestFlightRefund, canRequest
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 type FilterTab = "all" | "upcoming" | "issued" | "processing" | "cancelled";
 
@@ -62,6 +63,7 @@ function formatCurrency(amount: number, currency: string = "USD") {
 export default function FlightBookingsPage() {
   const { data: bookings, isLoading, error, refetch } = useFlightBookings();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const handlePullRefresh = useCallback(async () => { await refetch(); }, [refetch]);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortNewest, setSortNewest] = useState(true);
@@ -106,7 +108,7 @@ export default function FlightBookingsPage() {
   }, [bookings, activeTab, searchQuery, sortNewest]);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background relative overflow-hidden">
       <SEOHead title="My Flight Bookings – ZIVO" description="View and manage your flight bookings." />
 
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -350,7 +352,7 @@ export default function FlightBookingsPage() {
 
       <BookingDetailsModal bookingId={selectedId} onClose={() => setSelectedId(null)} />
       <Footer />
-    </div>
+    </PullToRefresh>
   );
 }
 

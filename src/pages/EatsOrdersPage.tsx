@@ -1,9 +1,10 @@
 /**
  * EatsOrdersPage — Customer order history with reorder + receipt view
  */
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Clock, CheckCircle, Package, Truck, Star,
@@ -91,8 +92,13 @@ export default function EatsOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<FoodOrder | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "delivered" | "cancelled">("all");
 
+  const queryClient = useQueryClient();
   const restaurantIds = [...new Set(orders.map(o => o.restaurant_id))];
   const { data: restaurants = {} } = useRestaurantNames(restaurantIds);
+
+  const handlePullRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["eats-order-history"] });
+  }, [queryClient]);
 
   const activeStatuses = ["pending", "confirmed", "preparing", "ready", "picked_up", "out_for_delivery"];
   const filtered = orders.filter(o => {
@@ -117,7 +123,7 @@ export default function EatsOrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
         <div className="px-4 py-3 flex items-center gap-3 safe-area-top">
@@ -369,6 +375,6 @@ export default function EatsOrdersPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </PullToRefresh>
   );
 }
