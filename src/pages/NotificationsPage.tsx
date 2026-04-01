@@ -15,6 +15,8 @@ import MobileBottomNav from '@/components/shared/MobileBottomNav';
 import { useI18n } from '@/hooks/useI18n';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import PullToRefresh from '@/components/shared/PullToRefresh';
+import { useCallback } from 'react';
 
 type NotificationCategory = 'all' | 'orders' | 'promos' | 'support' | 'delays';
 
@@ -50,8 +52,13 @@ const NotificationsPage = () => {
     unreadCount, 
     isLoading, 
     markAsRead, 
-    markAllAsRead 
+    markAllAsRead,
+    fetchNotifications,
   } = useNotifications(100);
+
+  const handlePullRefresh = useCallback(async () => {
+    await fetchNotifications();
+  }, [fetchNotifications]);
 
   const filteredNotifications = useMemo(() => {
     if (activeTab === 'all') return notifications;
@@ -125,7 +132,7 @@ const NotificationsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
       <SEOHead title="Notifications – ZIVO" description="View your travel alerts, order updates, and promotional offers." noIndex={true} />
 
       {/* ── 3D Background with parallax depth ── */}
@@ -434,7 +441,7 @@ const NotificationsPage = () => {
       </div>
 
       <MobileBottomNav />
-    </div>
+    </PullToRefresh>
   );
 };
 

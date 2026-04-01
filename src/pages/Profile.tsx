@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, Fragment } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
@@ -29,6 +30,7 @@ import { openExternalUrl } from "@/lib/openExternalUrl";
 import ProfileContentTabs from "@/components/profile/ProfileContentTabs";
 import ProfileStories from "@/components/profile/ProfileStories";
 import SocialListModal from "@/components/profile/SocialListModal";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 const LANGS = [
   { code: "en", label: "English", cc: "us" },
@@ -126,6 +128,7 @@ const GlassCard3D = ({ children, className = "", glow = false }: { children: Rea
 
 const Profile = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const { t, currentLanguage, changeLanguage } = useI18n();
   const { country, setCountry, countries } = useCountry();
@@ -350,8 +353,12 @@ const Profile = () => {
 
   const currentLang = LANGS.find(l => l.code === currentLanguage) || LANGS[0];
 
+  const handlePullRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+  }, [queryClient]);
+
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
       <SEOHead title="Profile Settings – ZIVO" description="Manage your ZIVO account, profile, and travel preferences." noIndex={true} />
 
       {/* ── Deep 3D Background with multiple parallax layers ── */}
@@ -927,7 +934,7 @@ const Profile = () => {
           if (socialModal.tab === "following") setFollowingCount(fg);
         }}
       />
-    </div>
+    </PullToRefresh>
   );
 };
 

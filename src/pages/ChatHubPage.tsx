@@ -14,6 +14,8 @@ import { format, isToday, isYesterday } from "date-fns";
 import ChatStories from "@/components/chat/ChatStories";
 import { toast } from "sonner";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
+import PullToRefresh from "@/components/shared/PullToRefresh";
+import { useCallback } from "react";
 
 type ChatCategory = "personal" | "shop" | "support" | "ride";
 
@@ -229,6 +231,14 @@ export default function ChatHubPage() {
     setSwipedId(null);
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-shop"] }),
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-ride"] }),
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-support"] }),
+    ]);
+  }, [queryClient]);
+
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
@@ -242,8 +252,9 @@ export default function ChatHubPage() {
     );
   }
 
+
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-xl border-b border-border/30">
         <div className="px-5 pt-4 pb-3 flex items-center gap-3">
@@ -478,6 +489,6 @@ export default function ChatHubPage() {
           onClose={() => setOpenShopChat(null)}
         />
       )}
-    </div>
+    </PullToRefresh>
   );
 }
