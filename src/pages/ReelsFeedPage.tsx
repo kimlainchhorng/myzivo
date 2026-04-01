@@ -377,8 +377,7 @@ export default function ReelsFeedPage() {
             {/* Floating back button - bottom left, away from native controls */}
             <button
               onClick={() => setFullscreenVideoUrl(null)}
-              className="absolute bottom-0 left-4 h-11 w-11 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-xl flex items-center justify-center transition-colors"
-              style={{ marginBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1.5rem), 2rem)' }}
+              className="absolute bottom-1/4 left-4 h-11 w-11 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-xl flex items-center justify-center transition-colors z-[110]"
             >
               <ChevronLeft className="h-5 w-5 text-white" />
             </button>
