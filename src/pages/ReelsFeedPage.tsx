@@ -705,9 +705,17 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     }
   })();
 
-  // Auto-play videos when visible
+  // Auto-play videos when visible or when autoPlayVideo is set
   useEffect(() => {
-    if (item.media_type !== "video" || !containerRef.current) return;
+    if (item.media_type !== "video") return;
+    if (autoPlayVideo) {
+      setTimeout(() => {
+        videoRef.current?.play().catch(() => {});
+        setIsPlaying(true);
+      }, 100);
+      return;
+    }
+    if (!containerRef.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -722,7 +730,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     );
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [item.media_type]);
+  }, [item.media_type, autoPlayVideo]);
 
   const togglePlay = useCallback(() => {
     if (!videoRef.current) return;
