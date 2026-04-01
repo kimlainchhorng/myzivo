@@ -123,7 +123,7 @@ export default function EatsOrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
         <div className="px-4 py-3 flex items-center gap-3 safe-area-top">

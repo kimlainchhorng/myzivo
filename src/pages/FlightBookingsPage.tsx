@@ -108,7 +108,7 @@ export default function FlightBookingsPage() {
   }, [bookings, activeTab, searchQuery, sortNewest]);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background relative overflow-hidden">
       <SEOHead title="My Flight Bookings – ZIVO" description="View and manage your flight bookings." />
 
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
