@@ -364,13 +364,6 @@ export default function ReelsFeedPage() {
             className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
             onClick={() => setFullscreenVideoUrl(null)}
           >
-            <button
-              onClick={(e) => { e.stopPropagation(); setFullscreenVideoUrl(null); }}
-              className="absolute top-0 left-4 z-10 h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
-              style={{ marginTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.75rem)' }}
-            >
-              <XIcon className="h-5 w-5 text-white" />
-            </button>
             <video
               ref={fullscreenVideoRef}
               src={fullscreenVideoUrl}
