@@ -26,6 +26,7 @@ import { useFlightBookings, useFlightBooking, useRequestFlightRefund, canRequest
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 type FilterTab = "all" | "upcoming" | "issued" | "processing" | "cancelled";
 
