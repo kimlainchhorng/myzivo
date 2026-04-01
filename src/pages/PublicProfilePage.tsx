@@ -23,6 +23,8 @@ import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import PullToRefresh from "@/components/shared/PullToRefresh";
+import { useCallback } from "react";
 
 export default function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -244,8 +246,12 @@ export default function PublicProfilePage() {
 
   const friendBtn = getFriendButton();
 
+  const handlePullRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["public-profile", userId] });
+  }, [queryClient, userId]);
+
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
@@ -477,6 +483,6 @@ export default function PublicProfilePage() {
       </AlertDialog>
 
       <ZivoMobileNav />
-    </div>
+    </PullToRefresh>
   );
 }
