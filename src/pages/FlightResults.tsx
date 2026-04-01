@@ -40,6 +40,7 @@ import { groupByOutbound, groupByReturn, getLegDurationMinutes } from "@/lib/fli
 import { getAllInPrice } from "@/utils/flightPricing";
 import { buildKiwiDeepLink, TRAVELPAYOUTS_DIRECT_LINKS } from "@/config/affiliateLinks";
 import { openExternalUrl } from "@/lib/openExternalUrl";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
@@ -117,6 +118,10 @@ const FlightResults = () => {
     cabinClass,
     enabled: !!origin && !!destination && !!departureDate,
   });
+
+  const handlePullRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
   // Travelpayouts cached prices (runs in parallel, non-blocking)
   const { data: tpPrices = [] } = useTravelpayoutsPrices({
@@ -1398,11 +1403,11 @@ const FlightResults = () => {
           description={`Compare flight deals from ${origin} to ${destination}.`}
         />
         <AppLayout hideHeader hideNav>
-          <div className="min-h-[100dvh] bg-background">
+          <PullToRefresh onRefresh={handlePullRefresh} className="min-h-[100dvh] bg-background">
             <div className="pb-4">
               {resultsContent}
             </div>
-          </div>
+          </PullToRefresh>
         </AppLayout>
       </>
     );
