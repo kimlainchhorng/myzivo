@@ -23,6 +23,8 @@ import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import PullToRefresh from "@/components/shared/PullToRefresh";
+import { useCallback } from "react";
 
 export default function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
