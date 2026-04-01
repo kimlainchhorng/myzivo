@@ -353,8 +353,12 @@ const Profile = () => {
 
   const currentLang = LANGS.find(l => l.code === currentLanguage) || LANGS[0];
 
+  const handlePullRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+  }, [queryClient]);
+
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
       <SEOHead title="Profile Settings – ZIVO" description="Manage your ZIVO account, profile, and travel preferences." noIndex={true} />
 
       {/* ── Deep 3D Background with multiple parallax layers ── */}
