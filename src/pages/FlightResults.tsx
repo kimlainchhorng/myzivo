@@ -40,6 +40,7 @@ import { groupByOutbound, groupByReturn, getLegDurationMinutes } from "@/lib/fli
 import { getAllInPrice } from "@/utils/flightPricing";
 import { buildKiwiDeepLink, TRAVELPAYOUTS_DIRECT_LINKS } from "@/config/affiliateLinks";
 import { openExternalUrl } from "@/lib/openExternalUrl";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
