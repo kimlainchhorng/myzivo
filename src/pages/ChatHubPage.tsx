@@ -79,8 +79,8 @@ export default function ChatHubPage() {
 
           return {
             id: chat.id,
-            name: chat.restaurants?.name || "Store",
-            avatar: chat.restaurants?.logo_url,
+            name: chat.store_profiles?.name || "Store",
+            avatar: chat.store_profiles?.logo_url,
             lastMessage: lastMsg?.content || "No messages yet",
             lastTime: lastMsg?.created_at || chat.created_at,
             unread: count || 0,
