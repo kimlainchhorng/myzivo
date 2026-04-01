@@ -2,10 +2,10 @@
  * My Trips Page — 3D/4D Spatial UI
  */
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
+import {
   ArrowLeft, ChevronRight,
   Plane, Car, UtensilsCrossed, Package, MapPin, BedDouble, Compass,
   CarFront, CarTaxiFront, Building2, CreditCard, type LucideIcon
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUnifiedTrips, type UnifiedTrip, type ServiceType } from "@/hooks/useUnifiedTrips";
 import { getServiceMeta } from "@/hooks/useZivoWallet";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -146,11 +147,15 @@ export default function MyTripsPage() {
   const [serviceFilter, setServiceFilter] = useState<ServiceType | "all">("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const { data: trips, isLoading } = useUnifiedTrips({
+  const { data: trips, isLoading, refetch } = useUnifiedTrips({
     services: serviceFilter === "all" ? undefined : [serviceFilter],
     status: statusFilter as any,
     limit: 50,
   });
+
+  const handlePullRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
@@ -174,154 +179,155 @@ export default function MyTripsPage() {
       </div>
 
       {/* ── Scrollable Content ── */}
-      <div className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
-
-        {/* ── Sticky 3D Header ── */}
-        <div className="sticky top-0 safe-area-top z-40">
-          <div className="relative">
-            <div className="absolute inset-0 bg-background/70 backdrop-blur-2xl" />
-            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border/30 to-transparent" />
-            <div className="relative z-10 px-4 py-3 safe-area-top">
-              <div className="flex items-center gap-3">
-                <motion.div whileHover={{ scale: 1.1, rotateY: 10 }} whileTap={{ scale: 0.88 }}>
-                  <Link
-                    to="/app"
-                    className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 flex items-center justify-center touch-manipulation shadow-lg shadow-primary/[0.05] hover:bg-card/80 transition-all"
-                    aria-label="Go back"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </Link>
-                </motion.div>
-                <div>
-                  <h1 className="text-lg font-bold">My Trips</h1>
-                  <p className="text-[10px] text-muted-foreground">All your bookings in one place</p>
+      <PullToRefresh onRefresh={handlePullRefresh} className="relative z-10 h-screen">
+        <div className="pb-24 scroll-smooth min-h-full" style={{ scrollbarWidth: "none" }}>
+          {/* ── Sticky 3D Header ── */}
+          <div className="sticky top-0 safe-area-top z-40">
+            <div className="relative">
+              <div className="absolute inset-0 bg-background/70 backdrop-blur-2xl" />
+              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border/30 to-transparent" />
+              <div className="relative z-10 px-4 py-3 safe-area-top">
+                <div className="flex items-center gap-3">
+                  <motion.div whileHover={{ scale: 1.1, rotateY: 10 }} whileTap={{ scale: 0.88 }}>
+                    <Link
+                      to="/app"
+                      className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 flex items-center justify-center touch-manipulation shadow-lg shadow-primary/[0.05] hover:bg-card/80 transition-all"
+                      aria-label="Go back"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </Link>
+                  </motion.div>
+                  <div>
+                    <h1 className="text-lg font-bold">My Trips</h1>
+                    <p className="text-[10px] text-muted-foreground">All your bookings in one place</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ── Filters ── */}
-        <div className="px-4 pt-4 space-y-3 max-w-lg mx-auto">
-          {/* Service Filter — Clean Pill Chips (matching reference) */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div className="relative rounded-2xl shadow-lg shadow-primary/[0.04]">
-              <div className="absolute inset-0 bg-card/65 backdrop-blur-2xl rounded-2xl" />
-              <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/[0.06] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]" />
-              <div className="relative z-10 flex flex-wrap items-center gap-2 p-3">
-                {serviceFilters.map((filter) => (
-                  <motion.button
-                    key={filter.id}
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => setServiceFilter(filter.id)}
-                    className={cn(
-                      "shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-[11px] font-bold transition-all duration-300 touch-manipulation",
-                      serviceFilter === filter.id
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                        : "bg-transparent border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
-                    )}
-                  >
-                    {filter.icon && <filter.icon className="w-3.5 h-3.5" />}
-                    {filter.label}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Status Filter — 3D Glass Tab Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 15, rotateX: 5 }}
-            animate={{ opacity: 1, y: 0, rotateX: 0 }}
-            transition={{ duration: 0.4, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-            style={{ perspective: '800px' }}
-          >
-            <GlassCard3D className="shadow-lg shadow-primary/[0.04]">
-              <div className="flex gap-0.5 p-1.5">
-                {statusFilters.map((filter) => (
-                  <motion.button
-                    key={filter.id}
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.92 }}
-                    onClick={() => setStatusFilter(filter.id)}
-                    className={cn(
-                      "flex-1 text-[11px] font-bold py-2.5 rounded-xl transition-all duration-300 touch-manipulation",
-                      statusFilter === filter.id
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                        : "text-muted-foreground hover:text-foreground hover:bg-card/50"
-                    )}
-                  >
-                    {filter.label}
-                  </motion.button>
-                ))}
-              </div>
-            </GlassCard3D>
-          </motion.div>
-
-          {/* ── Trips List ── */}
-          <div className="pt-1">
-            {isLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.1 }}
-                  >
-                    <div className="relative rounded-2xl overflow-hidden">
-                      <div className="absolute inset-0 bg-card/50 backdrop-blur-xl" />
-                      <div className="relative h-28 animate-pulse" />
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : trips && trips.length > 0 ? (
-              <div className="space-y-3">
-                {trips.map((trip, i) => (
-                  <TripCard key={trip.id} trip={trip} index={i} />
-                ))}
-              </div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 30, rotateX: 8 }}
-                animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                style={{ perspective: '800px' }}
-              >
-                <GlassCard3D className="shadow-xl">
-                  <div className="p-10 text-center">
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 200 }}
-                      className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4 shadow-inner border border-primary/10"
+          {/* ── Filters ── */}
+          <div className="px-4 pt-4 space-y-3 max-w-lg mx-auto">
+            {/* Service Filter — Clean Pill Chips (matching reference) */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="relative rounded-2xl shadow-lg shadow-primary/[0.04]">
+                <div className="absolute inset-0 bg-card/65 backdrop-blur-2xl rounded-2xl" />
+                <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/[0.06] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]" />
+                <div className="relative z-10 flex flex-wrap items-center gap-2 p-3">
+                  {serviceFilters.map((filter) => (
+                    <motion.button
+                      key={filter.id}
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => setServiceFilter(filter.id)}
+                      className={cn(
+                        "shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-[11px] font-bold transition-all duration-300 touch-manipulation",
+                        serviceFilter === filter.id
+                          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                          : "bg-transparent border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
+                      )}
                     >
-                      <Compass className="w-9 h-9 text-primary/30" />
+                      {filter.icon && <filter.icon className="w-3.5 h-3.5" />}
+                      {filter.label}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Status Filter — 3D Glass Tab Bar */}
+            <motion.div
+              initial={{ opacity: 0, y: 15, rotateX: 5 }}
+              animate={{ opacity: 1, y: 0, rotateX: 0 }}
+              transition={{ duration: 0.4, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+              style={{ perspective: '800px' }}
+            >
+              <GlassCard3D className="shadow-lg shadow-primary/[0.04]">
+                <div className="flex gap-0.5 p-1.5">
+                  {statusFilters.map((filter) => (
+                    <motion.button
+                      key={filter.id}
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.92 }}
+                      onClick={() => setStatusFilter(filter.id)}
+                      className={cn(
+                        "flex-1 text-[11px] font-bold py-2.5 rounded-xl transition-all duration-300 touch-manipulation",
+                        statusFilter === filter.id
+                          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                          : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+                      )}
+                    >
+                      {filter.label}
+                    </motion.button>
+                  ))}
+                </div>
+              </GlassCard3D>
+            </motion.div>
+
+            {/* ── Trips List ── */}
+            <div className="pt-1">
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <div className="relative rounded-2xl overflow-hidden">
+                        <div className="absolute inset-0 bg-card/50 backdrop-blur-xl" />
+                        <div className="relative h-28 animate-pulse" />
+                      </div>
                     </motion.div>
-                    <h3 className="font-bold text-lg mb-1">No trips found</h3>
-                    <p className="text-sm text-muted-foreground mb-5 max-w-[260px] mx-auto">
-                      {statusFilter !== "all" 
-                        ? `No ${statusFilter} trips in ${serviceFilter === "all" ? "any service" : serviceFilter}`
-                        : "Start booking to see your trips here"}
-                    </p>
-                    <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.96 }}>
-                      <Button asChild className="rounded-2xl h-12 font-bold text-base shadow-xl shadow-primary/25 bg-gradient-to-r from-primary to-primary/85 border border-primary/20 px-8">
-                        <Link to="/app">Explore Services</Link>
-                      </Button>
-                    </motion.div>
-                  </div>
-                </GlassCard3D>
-              </motion.div>
-            )}
+                  ))}
+                </div>
+              ) : trips && trips.length > 0 ? (
+                <div className="space-y-3">
+                  {trips.map((trip, i) => (
+                    <TripCard key={trip.id} trip={trip} index={i} />
+                  ))}
+                </div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 30, rotateX: 8 }}
+                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ perspective: '800px' }}
+                >
+                  <GlassCard3D className="shadow-xl">
+                    <div className="p-10 text-center">
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 200 }}
+                        className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4 shadow-inner border border-primary/10"
+                      >
+                        <Compass className="w-9 h-9 text-primary/30" />
+                      </motion.div>
+                      <h3 className="font-bold text-lg mb-1">No trips found</h3>
+                      <p className="text-sm text-muted-foreground mb-5 max-w-[260px] mx-auto">
+                        {statusFilter !== "all" 
+                          ? `No ${statusFilter} trips in ${serviceFilter === "all" ? "any service" : serviceFilter}`
+                          : "Start booking to see your trips here"}
+                      </p>
+                      <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.96 }}>
+                        <Button asChild className="rounded-2xl h-12 font-bold text-base shadow-xl shadow-primary/25 bg-gradient-to-r from-primary to-primary/85 border border-primary/20 px-8">
+                          <Link to="/app">Explore Services</Link>
+                        </Button>
+                      </motion.div>
+                    </div>
+                  </GlassCard3D>
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </PullToRefresh>
 
       <MobileBottomNav />
     </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTripItineraries, useCreateTrip, useDeleteTrip, TripItinerary } from "@/hooks/useTripItineraries";
 import { useFlightBookings, getTicketingStatusInfo } from "@/hooks/useFlightBooking";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 import { format } from "date-fns";
 
 const statusColors: Record<string, string> = {
@@ -24,8 +25,8 @@ const statusColors: Record<string, string> = {
 };
 
 export default function TripsListPage() {
-  const { data: trips = [], isLoading } = useTripItineraries();
-  const { data: flightBookings = [], isLoading: bookingsLoading } = useFlightBookings();
+  const { data: trips = [], isLoading, refetch: refetchTrips } = useTripItineraries();
+  const { data: flightBookings = [], isLoading: bookingsLoading, refetch: refetchBookings } = useFlightBookings();
   const createTrip = useCreateTrip();
   const deleteTrip = useDeleteTrip();
   const navigate = useNavigate();
@@ -33,6 +34,10 @@ export default function TripsListPage() {
   const [newDestination, setNewDestination] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("bookings");
+
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([refetchTrips(), refetchBookings()]);
+  }, [refetchTrips, refetchBookings]);
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
@@ -47,7 +52,7 @@ export default function TripsListPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -134,7 +139,7 @@ export default function TripsListPage() {
                   const status = getTicketingStatusInfo(booking.ticketing_status);
                   return (
                     <motion.div key={booking.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                      <Card 
+                      <Card
                         className="cursor-pointer hover:border-primary/40 transition-all touch-manipulation"
                         onClick={() => navigate(`/flights/confirmation/${booking.id}?success=true`)}
                       >
@@ -155,7 +160,7 @@ export default function TripsListPage() {
                               </div>
                             </div>
                             <div className="text-right shrink-0">
-                              <Badge variant="outline" className={cn("text-xs mb-1", 
+                              <Badge variant="outline" className={cn("text-xs mb-1",
                                 status.color === 'green' && "border-emerald-500/30 text-emerald-600",
                                 status.color === 'yellow' && "border-amber-500/30 text-amber-600",
                                 status.color === 'blue' && "border-primary/30 text-primary",
@@ -205,45 +210,45 @@ export default function TripsListPage() {
 
           {/* Trip Itineraries Tab */}
           <TabsContent value="itineraries">
-        {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse h-40" />
-            ))}
-          </div>
-        ) : trips.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                <Plane className="w-8 h-8 text-muted-foreground" />
+            {isLoading ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="animate-pulse h-40" />
+                ))}
               </div>
-              <h3 className="text-lg font-semibold mb-2">No trips yet</h3>
-              <p className="text-sm text-muted-foreground mb-4 max-w-sm">
-                Create your first trip to start organizing flights, hotels, and activities in one place.
-              </p>
-              <Button onClick={() => setDialogOpen(true)} className="gap-2">
-                <Plus className="w-4 h-4" /> Create Your First Trip
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            <AnimatePresence mode="popLayout">
-              {trips.map((trip) => (
-                <TripCard
-                  key={trip.id}
-                  trip={trip}
-                  onOpen={() => navigate(`/trip/${trip.id}`)}
-                  onDelete={() => deleteTrip.mutate(trip.id)}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
+            ) : trips.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                    <Plane className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">No trips yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+                    Create your first trip to start organizing flights, hotels, and activities in one place.
+                  </p>
+                  <Button onClick={() => setDialogOpen(true)} className="gap-2">
+                    <Plus className="w-4 h-4" /> Create Your First Trip
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                <AnimatePresence mode="popLayout">
+                  {trips.map((trip) => (
+                    <TripCard
+                      key={trip.id}
+                      trip={trip}
+                      onOpen={() => navigate(`/trip/${trip.id}`)}
+                      onDelete={() => deleteTrip.mutate(trip.id)}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </PullToRefresh>
   );
 }
 
