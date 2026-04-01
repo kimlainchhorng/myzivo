@@ -244,8 +244,16 @@ export default function ChatHubPage() {
     );
   }
 
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-shop"] }),
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-ride"] }),
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-support"] }),
+    ]);
+  }, [queryClient]);
+
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-xl border-b border-border/30">
         <div className="px-5 pt-4 pb-3 flex items-center gap-3">
