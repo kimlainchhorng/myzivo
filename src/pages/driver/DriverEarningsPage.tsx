@@ -2,8 +2,9 @@
  * DriverEarningsPage - Full earnings dashboard with today/week breakdown
  * Ported from Zivo Driver Connect
  */
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ArrowLeft, Calendar, RefreshCw, Package, Truck, Gift } from "lucide-react";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useNavigate } from "react-router-dom";
 import { useDriverDashboardData } from "@/hooks/useDriverDashboardData";
 import { Button } from "@/components/ui/button";

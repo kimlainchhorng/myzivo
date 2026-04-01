@@ -3,10 +3,12 @@
   * Unified view of all travel bookings with tabs
   * Premium mobile experience with living timeline
   */
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Plane, Loader2 } from "lucide-react";
+import PullToRefresh from "@/components/shared/PullToRefresh";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
