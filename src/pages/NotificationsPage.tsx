@@ -15,6 +15,8 @@ import MobileBottomNav from '@/components/shared/MobileBottomNav';
 import { useI18n } from '@/hooks/useI18n';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import PullToRefresh from '@/components/shared/PullToRefresh';
+import { useCallback } from 'react';
 
 type NotificationCategory = 'all' | 'orders' | 'promos' | 'support' | 'delays';
 
