@@ -37,6 +37,11 @@ interface FeedItem {
   author_id?: string;
   store_slug?: string;
   created_at: string;
+  // Interaction controls from profile
+  comment_control?: "everyone" | "friends" | "off";
+  hide_like_counts?: boolean;
+  allow_sharing?: boolean;
+  allow_mentions?: boolean;
 }
 
 export default function ReelsFeedPage() {
@@ -117,7 +122,7 @@ export default function ReelsFeedPage() {
           const userIds = [...new Set(userPosts.map((p: any) => p.user_id))] as string[];
           const { data: profiles } = await supabase
             .from("profiles")
-            .select("id, first_name, last_name, avatar_url")
+            .select("id, first_name, last_name, avatar_url, comment_control, hide_like_counts, allow_sharing, allow_mentions")
             .in("id", userIds);
           const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
@@ -138,6 +143,10 @@ export default function ReelsFeedPage() {
               author_avatar: profile?.avatar_url || null,
               author_id: post.user_id,
               created_at: post.created_at,
+              comment_control: profile?.comment_control || "everyone",
+              hide_like_counts: profile?.hide_like_counts || false,
+              allow_sharing: profile?.allow_sharing !== false,
+              allow_mentions: profile?.allow_mentions !== false,
             });
           }
         }
@@ -531,7 +540,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
   const [reportStep, setReportStep] = useState<"categories" | "sub" | "submitted">("categories");
   const [reportCategory, setReportCategory] = useState("");
   const [notificationsOn, setNotificationsOn] = useState(false);
-  const [commentSetting, setCommentSetting] = useState<"everyone" | "friends" | "off">("everyone");
+  const [commentSetting, setCommentSetting] = useState<"everyone" | "friends" | "off">(item.comment_control || "everyone");
   const [showCommentSettings, setShowCommentSettings] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
@@ -767,12 +776,16 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
           <button onClick={handleLike} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <Heart className={cn("h-6 w-6 transition-all", liked ? "text-red-500 fill-red-500 scale-110" : "text-foreground active:scale-125")} />
           </button>
-          <button onClick={handleComment} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
-            <MessageCircle className="h-6 w-6" />
-          </button>
-          <button onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
-            <Share2 className="h-6 w-6" />
-          </button>
+          {commentSetting !== "off" && (
+            <button onClick={handleComment} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
+              <MessageCircle className="h-6 w-6" />
+            </button>
+          )}
+          {item.allow_sharing !== false && (
+            <button onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
+              <Share2 className="h-6 w-6" />
+            </button>
+          )}
         </div>
         <button onClick={handleSave} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
           <Bookmark className={cn("h-6 w-6 transition-all", saved ? "text-foreground fill-foreground" : "text-foreground")} />
@@ -780,7 +793,7 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
       </div>
 
       {/* Likes */}
-      {localLikes > 0 && (
+      {localLikes > 0 && !item.hide_like_counts && (
         <div className="px-3 pb-1">
           <p className="text-[13px] font-semibold text-foreground">
             {localLikes.toLocaleString()} likes
