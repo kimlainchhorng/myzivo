@@ -872,7 +872,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen }: { item: FeedItem; c
             alt={item.caption || ""}
             className="h-full w-full object-cover cursor-pointer"
             loading="lazy"
-            onClick={() => setShowFullscreen(true)}
+            onClick={() => onOpenFullscreen?.()}
           />
         )}
 
