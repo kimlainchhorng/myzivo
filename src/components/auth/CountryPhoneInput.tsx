@@ -340,7 +340,7 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
         </button>
 
         <input
-          ref={ref}
+          
           type="tel"
           inputMode="numeric"
           autoCapitalize="off"
