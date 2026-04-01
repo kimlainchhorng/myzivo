@@ -325,8 +325,8 @@ export default function ReelsFeedPage() {
         </div>
       ) : (
         <div className="divide-y divide-border/20">
-          {items.map((item) => (
-            <FeedCard key={item.id} item={item} currentUserId={userId} />
+          {items.map((item, idx) => (
+            <FeedCard key={item.id} item={item} currentUserId={userId} onOpenFullscreen={() => setFullscreenIndex(idx)} />
           ))}
         </div>
       )}
