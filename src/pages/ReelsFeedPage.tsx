@@ -798,14 +798,19 @@ function FeedCard({ item, currentUserId }: { item: FeedItem; currentUserId: stri
         </div>
       )}
 
-      {/* Comments count */}
-      {(item.comments_count > 0 || comments.length > 0) && (
+      {/* Comments count or off indicator */}
+      {commentSetting === "off" ? (
+        <div className="px-3 pb-2 flex items-center gap-1.5">
+          <MessageSquareOff className="h-3.5 w-3.5 text-muted-foreground/60" />
+          <p className="text-[12px] text-muted-foreground/60">Comments are turned off</p>
+        </div>
+      ) : (item.comments_count > 0 || comments.length > 0) ? (
         <button onClick={handleComment} className="px-3 pb-2">
           <p className="text-[12px] text-muted-foreground">
             View all {item.comments_count + comments.length} comments
           </p>
         </button>
-      )}
+      ) : null}
 
       {/* Comments section */}
       <AnimatePresence>
