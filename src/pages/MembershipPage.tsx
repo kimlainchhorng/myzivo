@@ -166,7 +166,7 @@ export default function MembershipPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background">
       <SEOHead 
         title="ZIVO+ Membership" 
         description="Join ZIVO+ for free delivery, reduced fees, and priority support" 
