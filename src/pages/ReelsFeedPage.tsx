@@ -879,11 +879,11 @@ function FeedCard({ item, currentUserId, onOpenFullscreen }: { item: FeedItem; c
               loop
               playsInline
               preload="metadata"
-              onClick={() => onOpenFullscreen?.()}
+              onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
               className="h-full w-full object-cover cursor-pointer"
             />
             {!isPlaying && (
-              <button onClick={() => onOpenFullscreen?.()} className="absolute inset-0 flex items-center justify-center bg-black/10">
+              <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
                 <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
               </button>
             )}
