@@ -73,6 +73,28 @@ export default function ReelsFeedPage() {
     });
   }, []);
 
+  // User search with debounce
+  const handleSearchChange = (q: string) => {
+    setSearchQuery(q);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (!q.trim()) { setSearchResults([]); return; }
+    setSearchLoading(true);
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const words = q.trim().toLowerCase().split(/\s+/);
+        let query = supabase.from("profiles").select("id, full_name, avatar_url").limit(20);
+        words.forEach((w) => { query = query.ilike("full_name", `%${w}%`); });
+        const { data } = await query;
+        setSearchResults(data || []);
+      } catch { setSearchResults([]); }
+      setSearchLoading(false);
+    }, 300);
+  };
+
+  useEffect(() => {
+    if (showSearch) searchInputRef.current?.focus();
+  }, [showSearch]);
+
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["reels-feed-grid"],
     queryFn: async () => {
