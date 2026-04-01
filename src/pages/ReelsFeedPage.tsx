@@ -143,6 +143,10 @@ export default function ReelsFeedPage() {
               author_avatar: profile?.avatar_url || null,
               author_id: post.user_id,
               created_at: post.created_at,
+              comment_control: profile?.comment_control || "everyone",
+              hide_like_counts: profile?.hide_like_counts || false,
+              allow_sharing: profile?.allow_sharing !== false,
+              allow_mentions: profile?.allow_mentions !== false,
             });
           }
         }
