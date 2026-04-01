@@ -8,6 +8,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX, Heart, MessageCircle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -20,6 +30,7 @@ export default function PublicProfilePage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [confirmAction, setConfirmAction] = useState<null | { action: "cancel" | "unfriend"; label: string }>(null);
 
   const isOwnProfile = user?.id === userId;
 
@@ -138,6 +149,13 @@ export default function PublicProfilePage() {
     mutationFn: async (action: "add" | "cancel" | "accept" | "unfriend") => {
       if (!user || !userId || user.id === userId) throw new Error("Invalid");
       if (action === "add") {
+        // Auto-follow when adding friend
+        if (!isFollowing) {
+          await supabase.from("followers").insert({
+            follower_id: user.id,
+            following_id: userId,
+          }).throwOnError();
+        }
         const { error } = await supabase.from("friendships").insert({
           user_id: user.id,
           friend_id: userId,
@@ -149,6 +167,13 @@ export default function PublicProfilePage() {
           .or(`and(user_id.eq.${user.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${user.id})`);
         if (error) throw error;
       } else if (action === "accept") {
+        // Auto-follow when accepting friend request
+        if (!isFollowing) {
+          await supabase.from("followers").insert({
+            follower_id: user.id,
+            following_id: userId,
+          }).throwOnError();
+        }
         const { error } = await supabase.from("friendships")
           .update({ status: "accepted", accepted_at: new Date().toISOString() })
           .eq("user_id", userId)
@@ -159,6 +184,8 @@ export default function PublicProfilePage() {
     onSuccess: (_, action) => {
       queryClient.invalidateQueries({ queryKey: ["friendship-status", userId] });
       queryClient.invalidateQueries({ queryKey: ["friend-count", userId] });
+      queryClient.invalidateQueries({ queryKey: ["is-following", userId] });
+      queryClient.invalidateQueries({ queryKey: ["follower-count", userId] });
       const msgs: Record<string, string> = {
         add: "Friend request sent!",
         cancel: "Request cancelled",
@@ -259,7 +286,15 @@ export default function PublicProfilePage() {
                 {/* Friend button */}
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => friendMutation.mutate(friendBtn.action)}
+                  onClick={() => {
+                    if (friendBtn.action === "cancel") {
+                      setConfirmAction({ action: "cancel", label: "Are you sure you want to cancel this friend request?" });
+                    } else if (friendBtn.action === "unfriend") {
+                      setConfirmAction({ action: "unfriend", label: `Are you sure you want to unfriend ${profile?.full_name || "this user"}?` });
+                    } else {
+                      friendMutation.mutate(friendBtn.action);
+                    }
+                  }}
                   disabled={friendMutation.isPending}
                   className={`flex-1 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     friendshipStatus === "friends"
@@ -384,6 +419,34 @@ export default function PublicProfilePage() {
           )}
         </>
       )}
+
+      {/* Confirmation dialog for cancel/unfriend */}
+      <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction?.action === "cancel" ? "Cancel Friend Request?" : "Unfriend?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction?.label}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, keep it</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmAction) {
+                  friendMutation.mutate(confirmAction.action);
+                }
+                setConfirmAction(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {confirmAction?.action === "cancel" ? "Yes, cancel request" : "Yes, unfriend"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ZivoMobileNav />
     </div>
