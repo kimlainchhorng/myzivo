@@ -362,39 +362,26 @@ export default function ReelsFeedPage() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="fixed inset-0 z-[100] bg-black flex flex-col"
+            className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center"
           >
-            {/* Top bar */}
-            <div
-              className="flex items-center justify-between px-4 shrink-0"
-              style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.75rem)', paddingBottom: '0.75rem' }}
+            {/* Video with native controls */}
+            <video
+              ref={fullscreenVideoRef}
+              src={fullscreenVideoUrl}
+              autoPlay
+              controls
+              playsInline
+              className="max-h-full max-w-full object-contain rounded-xl"
+            />
+
+            {/* Floating back button - bottom left, away from native controls */}
+            <button
+              onClick={() => setFullscreenVideoUrl(null)}
+              className="absolute bottom-0 left-4 h-11 w-11 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-xl flex items-center justify-center transition-colors"
+              style={{ marginBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1.5rem), 2rem)' }}
             >
-              <button
-                onClick={() => setFullscreenVideoUrl(null)}
-                className="h-9 w-9 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xl flex items-center justify-center transition-colors"
-              >
-                <ChevronLeft className="h-5 w-5 text-white" />
-              </button>
-              <span className="text-white/70 text-xs font-medium tracking-wide uppercase">Now Playing</span>
-              <div className="w-9" />
-            </div>
-
-            {/* Video container */}
-            <div className="flex-1 flex items-center justify-center min-h-0 px-2">
-              <div className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl shadow-white/5">
-                <video
-                  ref={fullscreenVideoRef}
-                  src={fullscreenVideoUrl}
-                  autoPlay
-                  controls
-                  playsInline
-                  className="w-full h-auto object-contain"
-                />
-              </div>
-            </div>
-
-            {/* Bottom safe area spacer */}
-            <div className="shrink-0" style={{ height: 'max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1.5rem)' }} />
+              <ChevronLeft className="h-5 w-5 text-white" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
