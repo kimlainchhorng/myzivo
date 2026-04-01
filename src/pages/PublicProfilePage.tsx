@@ -268,13 +268,33 @@ export default function PublicProfilePage() {
                   {friendBtn.label}
                 </motion.button>
 
-                {/* Message button */}
+                {/* Message button — friends only */}
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate(`/chat`)}
-                  className="h-11 w-11 rounded-xl bg-muted border border-border flex items-center justify-center flex-shrink-0"
+                  onClick={() => {
+                    if (friendshipStatus === "friends") {
+                      navigate(`/chat`);
+                    } else if (friendshipStatus === "request_sent") {
+                      toast("Friend request pending", {
+                        description: `Waiting for ${profile?.full_name || "this user"} to accept your friend request before you can chat.`,
+                      });
+                    } else if (friendshipStatus === "request_received") {
+                      toast("Accept friend request first", {
+                        description: "Accept their friend request to start chatting.",
+                      });
+                    } else {
+                      toast("Add as friend to chat", {
+                        description: "You need to be friends to send messages. Send a friend request first!",
+                      });
+                    }
+                  }}
+                  className={`h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
+                    friendshipStatus === "friends"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted border border-border text-muted-foreground opacity-60"
+                  }`}
                 >
-                  <MessageCircle className="h-4 w-4 text-foreground" />
+                  <MessageCircle className="h-4 w-4" />
                 </motion.button>
               </div>
             )}
