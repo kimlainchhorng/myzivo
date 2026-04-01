@@ -134,10 +134,7 @@ interface CountryPhoneInputProps {
   name?: string;
 }
 
-export const CountryPhoneInput = forwardRef<HTMLInputElement, CountryPhoneInputProps>(function CountryPhoneInput(
-  { value, onChange, onBlur, name },
-  ref,
-) {
+export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhoneInputProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<CountryCode>(COUNTRY_CODES[0]);
