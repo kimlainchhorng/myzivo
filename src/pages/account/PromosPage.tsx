@@ -280,7 +280,7 @@ export default function PromosPage() {
           </ul>
         </motion.div>
       </div>
-    </div>
+    </PullToRefresh>
   );
 }
 
