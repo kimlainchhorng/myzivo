@@ -185,35 +185,6 @@ const Login = () => {
 
   const onSignupSubmit = async (data: SignupFormData) => {
     setIsLoading(true);
-    
-    // Check if email is on allowlist before attempting signup
-    try {
-      const { data: allowlistResponse, error: allowlistError } = await supabase.functions.invoke(
-        "check-signup-allowlist",
-        { body: { email: data.email } }
-      );
-
-      if (allowlistError) {
-        setIsLoading(false);
-        toast.error("Unable to verify email authorization. Please try again.");
-        return;
-      }
-
-      if (!allowlistResponse?.allowed) {
-        setIsLoading(false);
-        if (allowlistResponse?.existingUser) {
-          toast.info("An account with this email already exists. Please sign in instead.");
-          setIsLogin(true); // Switch to login mode
-        } else {
-          toast.error(allowlistResponse?.message || "This email is not authorized to sign up.");
-        }
-        return;
-      }
-    } catch (err) {
-      setIsLoading(false);
-      toast.error("Unable to verify email authorization. Please try again.");
-      return;
-    }
 
     const fullName = `${data.firstName} ${data.lastName}`.trim();
     const { error } = await signUp(data.email, data.password, fullName, data.phone);
