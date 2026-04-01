@@ -34,8 +34,16 @@ export default function PromosPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: walletPromos, isLoading: walletLoading } = useUserPromoWallet(user?.id);
+
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["public-promo-codes"] }),
+      queryClient.invalidateQueries({ queryKey: ["user-promo-wallet"] }),
+    ]);
+  }, [queryClient]);
 
   const { data: publicPromos, isLoading: publicLoading } = useQuery({
     queryKey: ["public-promo-codes"],
