@@ -184,7 +184,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       </div>
 
       {/* Input */}
-      <div className="sticky bottom-0 bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0.5rem)' }}>
+      <div className="mt-auto bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0.5rem)' }}>
         <input
           ref={inputRef}
           value={input}
