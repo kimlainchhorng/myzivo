@@ -137,13 +137,23 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (!user?.id) return;
     const load = async () => {
       setLoading(true);
-      const { data } = await (supabase as any)
-        .from("direct_messages")
-        .select("*")
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
-        .order("created_at", { ascending: true })
-        .limit(100);
-      setMessages(data || []);
+      const [msgRes, callRes] = await Promise.all([
+        (supabase as any)
+          .from("direct_messages")
+          .select("*")
+          .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
+          .order("created_at", { ascending: true })
+          .limit(100),
+        (supabase as any)
+          .from("call_history")
+          .select("*")
+          .or(`and(caller_id.eq.${user.id},callee_id.eq.${recipientId}),and(caller_id.eq.${recipientId},callee_id.eq.${user.id})`)
+          .order("created_at", { ascending: true })
+          .limit(50),
+      ]);
+      const data = msgRes.data || [];
+      setMessages(data);
+      setCallEvents((callRes.data || []).map((c: any) => ({ ...c, _isCallEvent: true as const })));
       setLoading(false);
       scrollToBottom();
 
