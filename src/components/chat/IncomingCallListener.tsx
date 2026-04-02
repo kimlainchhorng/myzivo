@@ -15,6 +15,12 @@ import CallScreen from "./CallScreen";
 function createRingtone() {
   try {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+    // Resume suspended AudioContext (browser autoplay policy)
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+
     const gainNode = ctx.createGain();
     gainNode.gain.value = 0.3;
     gainNode.connect(ctx.destination);
@@ -26,6 +32,10 @@ function createRingtone() {
     const playTone = (freq: number, duration: number): Promise<void> => {
       return new Promise((resolve) => {
         if (stopped) { resolve(); return; }
+        // Re-check context state before each tone
+        if (ctx.state === "suspended") {
+          ctx.resume().catch(() => {});
+        }
         const osc = ctx.createOscillator();
         currentOsc = osc;
         osc.type = "sine";
@@ -42,6 +52,8 @@ function createRingtone() {
     };
 
     const ringLoop = async () => {
+      // Small initial delay to allow context resume
+      await new Promise(r => { timeout = setTimeout(r, 100); });
       while (!stopped) {
         await playTone(440, 400);
         if (stopped) break;
