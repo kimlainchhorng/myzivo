@@ -33,7 +33,8 @@ export default function TravelerDashboard() {
   const { bookings, isLoading: bookingsLoading } = useBookingHistory();
 
   if (!isLoading && !user) {
-    return <Navigate to="/login" replace />;
+    const redirectTarget = `${location.pathname}${location.search ?? ""}`;
+    return <Navigate to={withRedirectParam("/login", redirectTarget)} replace />;
   }
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Traveler";

@@ -29,7 +29,8 @@ export default function UserSupportTicketsPage() {
 
   // Redirect to login if not authenticated
   if (!authLoading && !user) {
-    return <Navigate to="/login" replace />;
+    const redirectTarget = `${location.pathname}${location.search ?? ""}`;
+    return <Navigate to={withRedirectParam("/login", redirectTarget)} replace />;
   }
 
   const filteredTickets = tickets?.filter(ticket => {
