@@ -38,7 +38,7 @@ import { ResultsFAQ } from "@/components/results/ResultsFAQ";
 import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import { groupByOutbound, groupByReturn, getLegDurationMinutes } from "@/lib/flightLegGrouping";
 import { getAllInPrice } from "@/utils/flightPricing";
-import { buildKiwiDeepLink, TRAVELPAYOUTS_DIRECT_LINKS } from "@/config/affiliateLinks";
+import { TRAVELPAYOUTS_DIRECT_LINKS } from "@/config/affiliateLinks";
 import { openExternalUrl } from "@/lib/openExternalUrl";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 
