@@ -142,7 +142,7 @@ export default function ChatMessageBubble({
   const isDisappearing = !!expiresAt;
 
   return (
-    <div className={`flex ${isMe ? "justify-end" : "justify-start"} relative`}>
+    <div className={`flex ${isMe ? "justify-end" : "justify-start"} relative px-1`}>
       <motion.div
         drag="x"
         dragConstraints={{ left: isMe ? -80 : 0, right: isMe ? 0 : 80 }}
@@ -154,20 +154,20 @@ export default function ChatMessageBubble({
         onPointerCancel={handlePointerUp}
         onPointerMove={handlePointerMove}
         onClick={handleTap}
-        className={`max-w-[75%] select-none touch-pan-y ${isOptimistic ? "opacity-60" : ""}`}
-        whileTap={{ scale: 0.98 }}
+        className={`max-w-[78%] select-none touch-pan-y ${isOptimistic ? "opacity-60" : ""}`}
+        whileTap={{ scale: 0.97 }}
       >
         {/* Pin indicator */}
         {isPinned && (
           <div className={`flex items-center gap-1 mb-0.5 text-[9px] text-primary ${isMe ? "justify-end" : "justify-start"}`}>
             <Pin className="w-2.5 h-2.5" />
-            <span>Pinned</span>
+            <span className="font-medium">Pinned</span>
           </div>
         )}
 
         {/* Video */}
         {videoUrl && (
-          <div className={`rounded-2xl overflow-hidden mb-1 ${isMe ? "rounded-br-md" : "rounded-bl-md"}`}>
+          <div className={`rounded-2xl overflow-hidden mb-1 shadow-sm ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
             <video
               src={videoUrl}
               className="max-w-full max-h-60 rounded-2xl"
@@ -180,7 +180,7 @@ export default function ChatMessageBubble({
 
         {/* Image */}
         {imageUrl && !videoUrl && (
-          <div className={`rounded-2xl overflow-hidden mb-1 ${isMe ? "rounded-br-md" : "rounded-bl-md"}`}>
+          <div className={`rounded-2xl overflow-hidden mb-1 shadow-sm ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
             <img src={imageUrl} alt="" className="max-w-full max-h-60 object-cover rounded-2xl" loading="lazy" />
           </div>
         )}
@@ -188,24 +188,24 @@ export default function ChatMessageBubble({
         {/* Message body */}
         {message && (
           <div
-            className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${
+            className={`px-3.5 py-2.5 text-[14px] leading-relaxed shadow-sm ${
               isMe
-                ? "bg-primary text-primary-foreground rounded-br-md"
-                : "bg-muted text-foreground rounded-bl-md"
+                ? "bg-primary text-primary-foreground rounded-2xl rounded-br-[6px]"
+                : "bg-muted text-foreground rounded-2xl rounded-bl-[6px]"
             }`}
           >
             <p className="whitespace-pre-wrap break-words">{message}</p>
-            <div className="flex items-center gap-1 justify-end mt-0.5">
-              {isDisappearing && <Timer className={`h-2.5 w-2.5 ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/50"}`} />}
-              <span className={`text-[9px] ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+            <div className="flex items-center gap-1 justify-end mt-1 -mb-0.5">
+              {isDisappearing && <Timer className={`h-2.5 w-2.5 ${isMe ? "text-primary-foreground/40" : "text-muted-foreground/40"}`} />}
+              <span className={`text-[10px] font-medium ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/60"}`}>
                 {time}
               </span>
               {isMe && !isOptimistic && (
                 isRead
-                  ? <CheckCheck className="h-3 w-3 text-blue-400" />
+                  ? <CheckCheck className="h-3.5 w-3.5 text-blue-400" />
                   : isDelivered
-                  ? <CheckCheck className="h-3 w-3 text-primary-foreground/40" />
-                  : <Check className="h-3 w-3 text-primary-foreground/40" />
+                  ? <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/35" />
+                  : <Check className="h-3.5 w-3.5 text-primary-foreground/35" />
               )}
             </div>
           </div>
@@ -218,12 +218,12 @@ export default function ChatMessageBubble({
               <button
                 key={r.emoji}
                 onClick={(e) => { e.stopPropagation(); toggleReaction(r.emoji); }}
-                className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-colors ${
-                  r.hasMyReaction ? "border-primary/40 bg-primary/10" : "border-border bg-background"
+                className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs border shadow-sm transition-all active:scale-90 ${
+                  r.hasMyReaction ? "border-primary/30 bg-primary/10" : "border-border/40 bg-background"
                 }`}
               >
-                <span>{r.emoji}</span>
-                {r.count > 1 && <span className="text-[10px] text-muted-foreground">{r.count}</span>}
+                <span className="text-[13px]">{r.emoji}</span>
+                {r.count > 1 && <span className="text-[10px] font-medium text-muted-foreground">{r.count}</span>}
               </button>
             ))}
           </div>
