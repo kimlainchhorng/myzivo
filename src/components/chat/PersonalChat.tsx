@@ -149,7 +149,31 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <p className="text-sm font-bold text-foreground truncate">{recipientName}</p>
           <p className="text-[10px] text-muted-foreground">Personal chat</p>
         </div>
+        <button
+          onClick={() => setActiveCall("voice")}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+        >
+          <Phone className="h-5 w-5 text-primary" />
+        </button>
+        <button
+          onClick={() => setActiveCall("video")}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+        >
+          <Video className="h-5 w-5 text-primary" />
+        </button>
       </div>
+
+      {/* Call Screen */}
+      <AnimatePresence>
+        {activeCall && (
+          <CallScreen
+            recipientName={recipientName}
+            recipientAvatar={recipientAvatar}
+            callType={activeCall}
+            onEnd={() => setActiveCall(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
