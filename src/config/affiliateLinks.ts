@@ -83,7 +83,6 @@ export const TRAVELPAYOUTS_DIRECT_LINKS = {
     primary: 'https://searadar.tpo.li/iAbLlX9i',
     backup: 'https://aviasales.tpo.li/aayXqoez',
     subId: 'zivo_flights',
-    subId: 'zivo_flights',
   },
   
   // HOTELS (Hotellook + Hotels.tpo.li)
