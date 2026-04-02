@@ -270,6 +270,29 @@ const Login = () => {
   const onSignupSubmit = async (data: SignupFormData) => {
     setIsLoading(true);
 
+    // Rate limit check
+    const { allowed, retryAfter } = await checkRateLimit("auth:signup");
+    if (!allowed) {
+      setIsLoading(false);
+      toast.error(`Too many attempts. Try again in ${formatLockout(retryAfter)}.`);
+      return;
+    }
+
+    // Check password against known breaches (non-blocking — won't prevent signup on network error)
+    try {
+      const breach = await checkPasswordBreach(data.password);
+      if (breach.breached) {
+        setIsLoading(false);
+        toast.error(
+          `This password was found in ${breach.count.toLocaleString()} data breaches. Please choose a different password.`,
+          { duration: 8000 }
+        );
+        return;
+      }
+    } catch {
+      // Silently continue if breach check fails
+    }
+
     const fullName = `${data.firstName} ${data.lastName}`.trim();
     const { error } = await signUp(data.email, data.password, fullName, data.phone);
 
