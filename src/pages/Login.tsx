@@ -185,6 +185,11 @@ const Login = () => {
       if (!user.email_confirmed_at) {
         setIsLoading(false);
         toast.error("Please verify your email before signing in.");
+        try {
+          await supabase.functions.invoke("send-otp-email", { body: { email: data.email, userId: user.id } });
+          toast.info("Verification code sent to your email.");
+        } catch {}
+        navigate("/verify-otp", { state: { email: data.email, userId: user.id } });
         return;
       }
 
