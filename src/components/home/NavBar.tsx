@@ -34,6 +34,7 @@ import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
 import tabCarsBg from "@/assets/tab-cars-bg.jpg";
 import tabRidesBg from "@/assets/tab-rides-bg.jpg";
 import tabEatsBg from "@/assets/tab-eats-bg.jpg";
+import { withRedirectParam } from "@/lib/authRedirect";
 
 const serviceNavItems = [
   { label: "Flights", href: "/flights", icon: Plane, cssVar: "var(--flights)", bg: tabFlightsBg },
