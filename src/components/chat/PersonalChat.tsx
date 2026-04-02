@@ -684,6 +684,32 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           />
         )}
       </AnimatePresence>
+
+      {/* Personalization */}
+      <ChatPersonalization
+        open={showPersonalization}
+        onClose={() => setShowPersonalization(false)}
+        chatPartnerId={recipientId}
+        chatPartnerName={recipientName}
+        onApply={(s) => setChatStyle(s)}
+      />
+
+      {/* Mini Apps */}
+      <ChatMiniApps
+        open={showMiniApps}
+        onClose={() => setShowMiniApps(false)}
+        chatPartnerId={recipientId}
+        chatPartnerName={recipientName}
+      />
+
+      {/* Security */}
+      <ChatSecurity
+        open={showSecurity}
+        onClose={() => setShowSecurity(false)}
+        chatPartnerId={recipientId}
+        chatPartnerName={recipientName}
+        onBlock={onClose}
+      />
     </motion.div>
   );
 }
