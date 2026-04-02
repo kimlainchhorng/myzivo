@@ -53,7 +53,7 @@ export default function ChatMessageBubble({
           if (r.user_id === user?.id) acc[r.emoji].hasMyReaction = true;
           return acc;
         }, {} as Record<string, { count: number; hasMyReaction: boolean }>);
-        setReactions(Object.entries(grouped).map(([emoji, v]) => ({ emoji, ...v })));
+        setReactions(Object.entries(grouped).map(([emoji, v]) => ({ emoji, count: (v as any).count, hasMyReaction: (v as any).hasMyReaction })));
       }
     };
     load();
