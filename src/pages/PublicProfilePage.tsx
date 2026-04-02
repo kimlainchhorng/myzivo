@@ -44,7 +44,7 @@ export default function PublicProfilePage() {
       if (!userId) return null;
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, profile_visibility")
+        .select("id, full_name, avatar_url, profile_visibility, is_verified")
         .eq("id", userId)
         .single();
       return data;
