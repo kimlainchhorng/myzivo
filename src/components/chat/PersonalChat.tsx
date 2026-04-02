@@ -354,6 +354,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
+    updateDraft(e.target.value);
     setTyping(!!e.target.value.trim());
   };
 
