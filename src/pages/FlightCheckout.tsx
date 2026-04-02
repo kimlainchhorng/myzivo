@@ -4,7 +4,8 @@
  */
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { ArrowLeft, Loader2, AlertTriangle, Lock, Info, Shield, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
@@ -75,12 +76,14 @@ const FlightCheckout = () => {
     if (!offer || !passengers) navigate("/flights", { replace: true });
   }, [offer, passengers, navigate]);
 
+  const location = useLocation();
   useEffect(() => {
     if (!authLoading && !user) {
       toast({ title: "Login Required", description: "Please sign in to book a flight.", variant: "destructive" });
-      navigate("/login?redirect=/flights/checkout", { replace: true });
+      const redirectTarget = `${location.pathname}${location.search ?? ""}${location.hash ?? ""}`;
+      navigate(withRedirectParam("/login", redirectTarget), { replace: true });
     }
-  }, [user, authLoading, navigate, toast]);
+  }, [user, authLoading, navigate, toast, location]);
 
   // Create payment intent when terms are accepted
   const createPaymentIntent = useCallback(async () => {

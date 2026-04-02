@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isYesterday } from "date-fns";
@@ -245,7 +246,7 @@ export default function ChatHubPage() {
         <MessageCircle className="w-12 h-12 text-muted-foreground/40 mb-4" />
         <p className="text-lg font-semibold text-foreground mb-1">Sign in to chat</p>
         <p className="text-sm text-muted-foreground mb-4">Log in to see your conversations</p>
-        <button onClick={() => navigate("/login")} className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-semibold">
+        <button onClick={() => navigate(withRedirectParam("/login", "/chat"))} className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-semibold">
           Sign In
         </button>
       </div>
