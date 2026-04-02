@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { setupActivityTracking, clearSessionArtifacts } from "@/lib/security/sessionSecurity";
@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const initializedRef = useRef(false);
 
   const checkAdminRole = async (userId: string) => {
     try {
@@ -47,41 +48,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        // IMPORTANT: Never await inside onAuthStateChange — it can deadlock
-        // the Supabase auth client and block subsequent events.
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Fire-and-forget admin check to avoid blocking the callback
-          checkAdminRole(session.user.id).then((adminStatus) => {
-            setIsAdmin(adminStatus);
-            setIsLoading(false);
-          }).catch(() => {
-            setIsAdmin(false);
-            setIsLoading(false);
-          });
-        } else {
-          setIsAdmin(false);
-          setIsLoading(false);
-        }
-      }
-    );
-
-    // THEN check for existing session
+    // 1. Restore session from storage FIRST — this prevents the race condition
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         const adminStatus = await checkAdminRole(session.user.id);
         setIsAdmin(adminStatus);
       }
+
+      // Only mark as ready AFTER getSession completes
+      initializedRef.current = true;
       setIsLoading(false);
     });
+
+    // 2. Listen for subsequent auth changes (sign in, sign out, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        // Ignore events that fire before getSession has finished
+        if (!initializedRef.current) return;
+
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          checkAdminRole(session.user.id).then((adminStatus) => {
+            setIsAdmin(adminStatus);
+          }).catch(() => {
+            setIsAdmin(false);
+          });
+        } else {
+          setIsAdmin(false);
+        }
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, []);
@@ -116,7 +117,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { error: err as Error };
     }
   };
-
 
   const signOut = useCallback(async () => {
     clearSessionArtifacts();
