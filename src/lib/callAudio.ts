@@ -1,25 +1,176 @@
+/**
+ * callAudio — Modern 2026-style call ringtones
+ * Incoming: Melodic chime with harmonics (think: premium phone ringtone)
+ * Outgoing: Soft pulsing tone with warm harmonics
+ */
+
 type StopTone = () => void;
 
-const SAMPLE_RATE = 22050;
-const INCOMING_RINGTONE_SRC = createToneDataUrl([
-  { frequency: 440, durationMs: 200 },
-  { frequency: 480, durationMs: 200 },
-  { frequency: 440, durationMs: 200 },
-  { frequency: 480, durationMs: 200 },
-  { frequency: null, durationMs: 200 },
-  { frequency: 440, durationMs: 200 },
-  { frequency: 480, durationMs: 200 },
-  { frequency: 440, durationMs: 200 },
-  { frequency: 480, durationMs: 200 },
-  { frequency: null, durationMs: 2000 },
-]);
+const SAMPLE_RATE = 44100;
 
-const OUTGOING_RINGBACK_SRC = createToneDataUrl([
-  { frequency: 440, durationMs: 800 },
-  { frequency: null, durationMs: 400 },
-  { frequency: 440, durationMs: 800 },
-  { frequency: null, durationMs: 2800 },
-]);
+// ── Helpers ──────────────────────────────────────────────────
+
+function clampSample(value: number) {
+  return Math.max(-1, Math.min(1, value));
+}
+
+function encodeWav(samples: Int16Array, sampleRate: number) {
+  const dataLength = samples.length * 2;
+  const buffer = new ArrayBuffer(44 + dataLength);
+  const view = new DataView(buffer);
+
+  const writeStr = (off: number, s: string) => {
+    for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i));
+  };
+
+  writeStr(0, "RIFF");
+  view.setUint32(4, 36 + dataLength, true);
+  writeStr(8, "WAVE");
+  writeStr(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, "data");
+  view.setUint32(40, dataLength, true);
+
+  for (let i = 0; i < samples.length; i++) {
+    view.setInt16(44 + i * 2, samples[i], true);
+  }
+  return new Uint8Array(buffer);
+}
+
+function bytesToBase64(bytes: Uint8Array) {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+// ── Tone Synthesis ──────────────────────────────────────────
+
+interface NoteSpec {
+  freq: number;       // Hz (0 = silence)
+  dur: number;        // seconds
+  gain?: number;      // 0-1
+  harmonics?: number; // number of overtones
+}
+
+function synthesize(notes: NoteSpec[], sampleRate: number): Int16Array {
+  const totalSamples = notes.reduce((s, n) => s + Math.floor(n.dur * sampleRate), 0);
+  const pcm = new Int16Array(totalSamples);
+  let offset = 0;
+
+  for (const note of notes) {
+    const len = Math.floor(note.dur * sampleRate);
+    const g = note.gain ?? 0.35;
+    const hCount = note.harmonics ?? 3;
+    const attackSamples = Math.floor(sampleRate * 0.008);
+    const releaseSamples = Math.floor(sampleRate * 0.04);
+
+    for (let i = 0; i < len; i++) {
+      // Smooth envelope
+      const attack = Math.min(1, i / attackSamples);
+      const release = Math.min(1, (len - i) / releaseSamples);
+      const env = attack * release;
+
+      let sample = 0;
+      if (note.freq > 0) {
+        const t = i / sampleRate;
+        // Fundamental + harmonics with decreasing amplitude
+        for (let h = 1; h <= hCount; h++) {
+          const harmGain = 1 / (h * h); // Rapid falloff for warm tone
+          sample += Math.sin(2 * Math.PI * note.freq * h * t) * harmGain;
+        }
+        // Normalize
+        let normFactor = 0;
+        for (let h = 1; h <= hCount; h++) normFactor += 1 / (h * h);
+        sample = (sample / normFactor) * g * env;
+      }
+
+      pcm[offset + i] = Math.floor(clampSample(sample) * 32767);
+    }
+    offset += len;
+  }
+  return pcm;
+}
+
+function toDataUrl(pcm: Int16Array): string {
+  const wav = encodeWav(pcm, SAMPLE_RATE);
+  return `data:audio/wav;base64,${bytesToBase64(wav)}`;
+}
+
+// ── Incoming Ringtone ────────────────────────────────────────
+// Modern melodic chime: ascending triad pattern, bright and musical
+// Pattern: C5-E5-G5 (arpeggio) × 2 + pause
+
+function createIncomingRingtone(): string {
+  const notes: NoteSpec[] = [
+    // First phrase — ascending arpeggio
+    { freq: 523.25, dur: 0.12, gain: 0.3, harmonics: 4 },  // C5
+    { freq: 0, dur: 0.04 },
+    { freq: 659.25, dur: 0.12, gain: 0.35, harmonics: 4 }, // E5
+    { freq: 0, dur: 0.04 },
+    { freq: 783.99, dur: 0.18, gain: 0.38, harmonics: 4 }, // G5
+    { freq: 0, dur: 0.08 },
+    // Resolve up
+    { freq: 1046.5, dur: 0.25, gain: 0.32, harmonics: 3 }, // C6
+    { freq: 0, dur: 0.15 },
+
+    // Second phrase — descending variation
+    { freq: 783.99, dur: 0.12, gain: 0.3, harmonics: 4 },  // G5
+    { freq: 0, dur: 0.04 },
+    { freq: 880.0, dur: 0.12, gain: 0.35, harmonics: 4 },  // A5
+    { freq: 0, dur: 0.04 },
+    { freq: 1046.5, dur: 0.18, gain: 0.38, harmonics: 4 }, // C6
+    { freq: 0, dur: 0.06 },
+    { freq: 1174.66, dur: 0.3, gain: 0.3, harmonics: 3 },  // D6
+    { freq: 0, dur: 0.12 },
+
+    // Third phrase — resolution
+    { freq: 1046.5, dur: 0.15, gain: 0.28, harmonics: 4 }, // C6
+    { freq: 0, dur: 0.05 },
+    { freq: 1318.51, dur: 0.35, gain: 0.32, harmonics: 3 },// E6 (ring out)
+
+    // Long silence before loop
+    { freq: 0, dur: 1.8 },
+  ];
+
+  return toDataUrl(synthesize(notes, SAMPLE_RATE));
+}
+
+// ── Outgoing Ringback ────────────────────────────────────────
+// Warm, modern pulse — two gentle tones with soft harmonics
+
+function createOutgoingRingback(): string {
+  const notes: NoteSpec[] = [
+    { freq: 392.0, dur: 0.6, gain: 0.22, harmonics: 2 },  // G4 — warm fundamental
+    { freq: 0, dur: 0.15 },
+    { freq: 440.0, dur: 0.5, gain: 0.18, harmonics: 2 },  // A4 — slight rise
+    { freq: 0, dur: 2.5 },                                  // Long pause
+  ];
+
+  return toDataUrl(synthesize(notes, SAMPLE_RATE));
+}
+
+// ── Lazy-generated audio sources ─────────────────────────────
+
+let _incomingSrc: string | null = null;
+let _outgoingSrc: string | null = null;
+
+function getIncomingSrc() {
+  if (!_incomingSrc) _incomingSrc = createIncomingRingtone();
+  return _incomingSrc;
+}
+
+function getOutgoingSrc() {
+  if (!_outgoingSrc) _outgoingSrc = createOutgoingRingback();
+  return _outgoingSrc;
+}
+
+// ── Audio Element Management ─────────────────────────────────
 
 let incomingAudio: HTMLAudioElement | null = null;
 let outgoingAudio: HTMLAudioElement | null = null;
@@ -28,78 +179,6 @@ let incomingArmed = false;
 let outgoingArmed = false;
 let incomingRequested = false;
 let outgoingRequested = false;
-
-interface ToneSegment {
-  frequency: number | null;
-  durationMs: number;
-}
-
-function clampSample(value: number) {
-  return Math.max(-1, Math.min(1, value));
-}
-
-function createToneDataUrl(segments: ToneSegment[]) {
-  const totalSamples = segments.reduce((sum, segment) => sum + Math.floor((segment.durationMs / 1000) * SAMPLE_RATE), 0);
-  const pcm = new Int16Array(totalSamples);
-
-  let offset = 0;
-  for (const segment of segments) {
-    const segmentSamples = Math.floor((segment.durationMs / 1000) * SAMPLE_RATE);
-    for (let i = 0; i < segmentSamples; i += 1) {
-      const attack = Math.min(1, i / (SAMPLE_RATE * 0.01));
-      const release = Math.min(1, (segmentSamples - i) / (SAMPLE_RATE * 0.01));
-      const envelope = Math.min(attack, release);
-      const sample = segment.frequency
-        ? Math.sin((2 * Math.PI * segment.frequency * i) / SAMPLE_RATE) * 0.45 * envelope
-        : 0;
-      pcm[offset + i] = Math.floor(clampSample(sample) * 32767);
-    }
-    offset += segmentSamples;
-  }
-
-  const wavBytes = encodeWav(pcm, SAMPLE_RATE);
-  return `data:audio/wav;base64,${bytesToBase64(wavBytes)}`;
-}
-
-function encodeWav(samples: Int16Array, sampleRate: number) {
-  const dataLength = samples.length * 2;
-  const buffer = new ArrayBuffer(44 + dataLength);
-  const view = new DataView(buffer);
-
-  writeString(view, 0, "RIFF");
-  view.setUint32(4, 36 + dataLength, true);
-  writeString(view, 8, "WAVE");
-  writeString(view, 12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeString(view, 36, "data");
-  view.setUint32(40, dataLength, true);
-
-  for (let i = 0; i < samples.length; i += 1) {
-    view.setInt16(44 + i * 2, samples[i], true);
-  }
-
-  return new Uint8Array(buffer);
-}
-
-function writeString(view: DataView, offset: number, value: string) {
-  for (let i = 0; i < value.length; i += 1) {
-    view.setUint8(offset + i, value.charCodeAt(i));
-  }
-}
-
-function bytesToBase64(bytes: Uint8Array) {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += 1) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
 
 function createLoopingAudio(src: string) {
   const audio = new Audio(src);
@@ -111,12 +190,12 @@ function createLoopingAudio(src: string) {
 }
 
 function getIncomingAudio() {
-  if (!incomingAudio) incomingAudio = createLoopingAudio(INCOMING_RINGTONE_SRC);
+  if (!incomingAudio) incomingAudio = createLoopingAudio(getIncomingSrc());
   return incomingAudio;
 }
 
 function getOutgoingAudio() {
-  if (!outgoingAudio) outgoingAudio = createLoopingAudio(OUTGOING_RINGBACK_SRC);
+  if (!outgoingAudio) outgoingAudio = createLoopingAudio(getOutgoingSrc());
   return outgoingAudio;
 }
 
@@ -169,9 +248,7 @@ export function registerCallAudioUnlock() {
   if (typeof window === "undefined") return () => {};
   if (primeRegistered) return () => {};
 
-  const unlock = () => {
-    void primeCallAudio();
-  };
+  const unlock = () => { void primeCallAudio(); };
 
   primeRegistered = true;
   window.addEventListener("pointerdown", unlock, { capture: true, passive: true });
