@@ -8,6 +8,7 @@ import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } fro
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { safeInternalPath } from "@/lib/urlSafety";
 
 export interface NotificationData {
   title: string;
@@ -215,7 +216,7 @@ export const usePushNotifications = () => {
         case "trip_started":
         case "trip_completed":
         case "driver_status":
-          window.location.href = data.trip_id ? `/rides/tracking/${data.trip_id}` : `/rides`;
+          window.location.href = safeInternalPath('/rides/tracking', data.trip_id, '/rides');
           break;
         case "trip_cancelled":
           window.location.href = `/rides`;
@@ -232,7 +233,7 @@ export const usePushNotifications = () => {
         case "flight_departed":
         case "flight_landed":
         case "itinerary_update":
-          window.location.href = data.booking_id ? `/bookings/${data.booking_id}` : `/bookings`;
+          window.location.href = safeInternalPath('/bookings', data.booking_id, '/bookings');
           break;
         case "price_drop":
           window.location.href = `/flights`;
@@ -254,10 +255,10 @@ export const usePushNotifications = () => {
         case "order_cancelled":
         case "new_order_restaurant":
         case "new_delivery_driver":
-          window.location.href = data.order_id ? `/eats/${data.order_id}` : `/eats`;
+          window.location.href = safeInternalPath('/eats', data.order_id, '/eats');
           break;
         case "pickup_reminder":
-          window.location.href = `/p2p/bookings/${data.rental_id}`;
+          window.location.href = safeInternalPath('/p2p/bookings', data.rental_id, '/p2p');
           break;
 
         // Promos

@@ -19,6 +19,7 @@ import { useI18n } from "@/hooks/useI18n";
 import storeRideBg from "@/assets/store-ride-bg.jpg";
 import storeCallBg from "@/assets/store-call-bg.jpg";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
+import { isAllowedSocialUrl } from "@/lib/urlSafety";
 
 /**
  * Extract the correct language part from dual-format text like "Khmer/English".
@@ -398,7 +399,7 @@ export default function StoreProfilePage() {
             </motion.button>
 
             {/* Facebook button */}
-            {(store as any).facebook_url && (
+            {(store as any).facebook_url && isAllowedSocialUrl((store as any).facebook_url) && (
               <motion.button
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
@@ -434,7 +435,7 @@ export default function StoreProfilePage() {
             )}
 
             {/* Instagram button */}
-            {(store as any).instagram_url && (
+            {(store as any).instagram_url && isAllowedSocialUrl((store as any).instagram_url) && (
               <motion.a
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
@@ -472,7 +473,7 @@ export default function StoreProfilePage() {
             )}
 
             {/* Telegram button */}
-            {(store as any).telegram_url && (
+            {(store as any).telegram_url && isAllowedSocialUrl((store as any).telegram_url) && (
               <motion.a
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
@@ -510,7 +511,7 @@ export default function StoreProfilePage() {
             )}
 
             {/* TikTok button */}
-            {(store as any).tiktok_url && (
+            {(store as any).tiktok_url && isAllowedSocialUrl((store as any).tiktok_url) && (
               <motion.a
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}

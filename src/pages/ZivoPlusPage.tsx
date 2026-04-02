@@ -221,6 +221,10 @@ export default function ZivoPlusPage() {
       });
       if (error) throw error;
       if (data?.url) {
+        const { isAllowedCheckoutUrl } = await import("@/lib/urlSafety");
+        if (!isAllowedCheckoutUrl(data.url)) {
+          throw new Error("Invalid checkout URL");
+        }
         window.location.href = data.url;
       } else {
         throw new Error("No checkout URL returned");
@@ -238,6 +242,10 @@ export default function ZivoPlusPage() {
       const { data, error } = await supabase.functions.invoke("zivo-plus-portal");
       if (error) throw error;
       if (data?.url) {
+        const { isAllowedCheckoutUrl } = await import("@/lib/urlSafety");
+        if (!isAllowedCheckoutUrl(data.url)) {
+          throw new Error("Invalid portal URL");
+        }
         window.location.href = data.url;
       }
     } catch (err: any) {

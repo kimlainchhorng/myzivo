@@ -8,6 +8,7 @@ import { X, Send, MessageCircle, Loader2, Trash2, ChevronLeft, User, MapPin, QrC
 import { supabase } from "@/integrations/supabase/client";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
+import { isAllowedPaymentUrl } from "@/lib/urlSafety";
 
 interface StoreLiveChatProps {
   storeId: string;
@@ -88,6 +89,8 @@ function RichMessageCard({ payload, isOwn }: { payload: RichPayload; isOwn: bool
   }
 
   if (payload.type === "payment_qr") {
+    const isSafePaymentUrl = payload.paymentUrl && isAllowedPaymentUrl(payload.paymentUrl);
+    
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-1.5">
@@ -96,19 +99,27 @@ function RichMessageCard({ payload, isOwn }: { payload: RichPayload; isOwn: bool
         </div>
         {payload.note && <p className="text-[11px]">{payload.note}</p>}
         {payload.amount && <p className="text-[12px] font-bold">{payload.amount}</p>}
-        <div className="bg-white rounded-lg p-2 inline-block">
-          <QRCodeSVG value={payload.paymentUrl} size={120} />
-        </div>
-        <a
-          href={payload.paymentUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`block text-[11px] font-medium underline ${
-            isOwn ? "text-primary-foreground/80" : "text-primary"
-          }`}
-        >
-          Open Payment Link →
-        </a>
+        {isSafePaymentUrl ? (
+          <>
+            <div className="bg-white rounded-lg p-2 inline-block">
+              <QRCodeSVG value={payload.paymentUrl} size={120} />
+            </div>
+            <a
+              href={payload.paymentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`block text-[11px] font-medium underline ${
+                isOwn ? "text-primary-foreground/80" : "text-primary"
+              }`}
+            >
+              Open Payment Link →
+            </a>
+          </>
+        ) : (
+          <p className="text-[11px] text-destructive">
+            ⚠ Payment link blocked for security — unrecognized domain.
+          </p>
+        )}
       </div>
     );
   }
