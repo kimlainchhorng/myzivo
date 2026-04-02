@@ -52,6 +52,7 @@ export default function ChatHubPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; category: ChatCategory } | null>(null);
   const [swipedId, setSwipedId] = useState<string | null>(null);
   const [openShopChat, setOpenShopChat] = useState<{ storeId: string; name: string; logo?: string | null } | null>(null);
+  const [openPersonalChat, setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
 
   // Fetch store chats for "shop" tab
   const { data: shopChats = [] } = useQuery({
