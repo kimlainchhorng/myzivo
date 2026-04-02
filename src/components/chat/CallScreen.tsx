@@ -8,56 +8,13 @@ import { motion } from "framer-motion";
 import { useWebRTC, CallRole } from "@/hooks/useWebRTC";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-
-/** Creates a ringback tone for the caller (single gentle beep pattern) */
-function createRingbackTone() {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const gainNode = ctx.createGain();
-    gainNode.gain.value = 0.15;
-    gainNode.connect(ctx.destination);
-    let stopped = false;
-    let currentOsc: OscillatorNode | null = null;
-    let timeout: ReturnType<typeof setTimeout>;
-
-    const playTone = (freq: number, dur: number): Promise<void> =>
-      new Promise((resolve) => {
-        if (stopped) { resolve(); return; }
-        const osc = ctx.createOscillator();
-        currentOsc = osc;
-        osc.type = "sine";
-        osc.frequency.value = freq;
-        osc.connect(gainNode);
-        osc.start();
-        timeout = setTimeout(() => { osc.stop(); osc.disconnect(); currentOsc = null; resolve(); }, dur);
-      });
-
-    const loop = async () => {
-      while (!stopped) {
-        await playTone(440, 1000);
-        if (stopped) break;
-        await new Promise(r => { timeout = setTimeout(r, 3000); });
-      }
-    };
-    loop();
-
-    return () => {
-      stopped = true;
-      clearTimeout(timeout);
-      try { currentOsc?.stop(); } catch {}
-      try { ctx.close(); } catch {}
-    };
-  } catch {
-    return () => {};
-  }
-}
+import { playOutgoingRingback } from "@/lib/callAudio";
 
 interface CallScreenProps {
   recipientName: string;
   recipientAvatar?: string | null;
   callType: "voice" | "video";
   recipientId: string;
-  /** If provided, we're answering an existing call */
   existingCallId?: string;
   onEnd: () => void;
 }
@@ -77,15 +34,26 @@ export default function CallScreen({
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
 
   const role: CallRole = existingCallId ? "callee" : "caller";
   const initials = (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   const handleRemoteStream = useCallback((stream: MediaStream) => {
-    if (remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject = stream;
+    if (callType === "video") {
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = stream;
+        void remoteVideoRef.current.play().catch(() => {});
+      }
+      return;
     }
-  }, []);
+
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.srcObject = stream;
+      remoteAudioRef.current.muted = false;
+      void remoteAudioRef.current.play().catch(() => {});
+    }
+  }, [callType]);
 
   const handleEnded = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -101,7 +69,6 @@ export default function CallScreen({
     onEnded: handleEnded,
   });
 
-  // Create call signal record (caller only)
   useEffect(() => {
     if (existingCallId || !user?.id || callId) return;
     const create = async () => {
@@ -115,7 +82,6 @@ export default function CallScreen({
     create();
   }, [user?.id, recipientId, callType, existingCallId, callId]);
 
-  // Start WebRTC once we have a callId
   useEffect(() => {
     if (!callId) return;
     const init = async () => {
@@ -125,16 +91,14 @@ export default function CallScreen({
       }
     };
     init();
-  }, [callId]);
+  }, [callId, callType, webrtc]);
 
-  // Play ringback tone for caller while ringing
   useEffect(() => {
-    if (role !== "caller" || webrtc.callState !== "ringing") return;
-    const stopRingback = createRingbackTone();
+    if (role !== "caller" || webrtc.callState !== "ringing" || !callId) return;
+    const stopRingback = playOutgoingRingback();
     return () => { stopRingback(); };
-  }, [role, webrtc.callState]);
+  }, [role, webrtc.callState, callId]);
 
-  // Caller: listen for decline/end before WebRTC connects
   useEffect(() => {
     if (role !== "caller" || !callId) return;
     const channel = supabase
@@ -152,9 +116,8 @@ export default function CallScreen({
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [role, callId]);
+  }, [role, callId, webrtc]);
 
-  // Timer when connected
   useEffect(() => {
     if (webrtc.callState === "connected") {
       timerRef.current = setInterval(() => setDuration((d) => d + 1), 1000);
@@ -180,7 +143,6 @@ export default function CallScreen({
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2rem)",
       }}
     >
-      {/* Top section - avatar & status */}
       <div className="flex flex-col items-center gap-3 mt-8">
         <Avatar className="h-24 w-24 border-4 border-primary/20">
           <AvatarImage src={recipientAvatar || undefined} />
@@ -208,17 +170,16 @@ export default function CallScreen({
         )}
       </div>
 
-      {/* Video area */}
+      <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+
       {callType === "video" && (
         <div className="flex-1 w-full max-w-sm mx-auto my-6 relative">
-          {/* Remote video (full) */}
           <video
             ref={remoteVideoRef}
             autoPlay
             playsInline
             className="w-full h-full rounded-2xl bg-muted/30 border border-border/20 object-cover"
           />
-          {/* Local video (picture-in-picture) */}
           {!webrtc.isCameraOff && (
             <video
               ref={localVideoRef}
@@ -233,7 +194,6 @@ export default function CallScreen({
 
       {callType === "voice" && <div className="flex-1" />}
 
-      {/* Controls */}
       <div className="flex items-center justify-center gap-5 pb-6">
         <button
           onClick={webrtc.toggleMute}

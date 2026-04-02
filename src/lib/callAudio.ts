@@ -39,13 +39,13 @@ function warmCallAudioContext(ctx: AudioContext) {
   };
 }
 
-export function primeCallAudio() {
+export async function primeCallAudio() {
   const ctx = getCallAudioContext();
   if (!ctx) return;
 
   try {
     if (ctx.state !== "running") {
-      void ctx.resume().catch(() => {});
+      await ctx.resume();
     }
 
     warmCallAudioContext(ctx);
@@ -56,8 +56,8 @@ export function registerCallAudioUnlock() {
   if (typeof window === "undefined") return () => {};
   if (unlockCleanup) return unlockCleanup;
 
-  const unlock = () => {
-    primeCallAudio();
+  const unlock = async () => {
+    await primeCallAudio();
 
     if (getCallAudioContext()?.state === "running") {
       unlockCleanup?.();
@@ -77,7 +77,7 @@ export function registerCallAudioUnlock() {
   window.addEventListener("touchend", unlock, { passive: true });
   window.addEventListener("keydown", unlock);
 
-  unlock();
+  void unlock();
 
   return cleanup;
 }
@@ -86,15 +86,13 @@ function playTonePattern(steps: ToneStep[], volume: number): StopTone {
   const ctx = getCallAudioContext();
   if (!ctx) return () => {};
 
-  primeCallAudio();
-
   const gainNode = ctx.createGain();
   gainNode.gain.value = volume;
   gainNode.connect(ctx.destination);
 
   let stopped = false;
   let currentOsc: OscillatorNode | null = null;
-  let timeout: ReturnType<typeof setTimeout> | null = null;
+  let timeout: ReturnType<typeof window.setTimeout> | null = null;
 
   const playStep = (step: ToneStep) =>
     new Promise<void>((resolve) => {
@@ -127,7 +125,22 @@ function playTonePattern(steps: ToneStep[], volume: number): StopTone {
       }, step.duration);
     });
 
+  const waitForAudio = async () => {
+    while (!stopped) {
+      await primeCallAudio();
+      if (ctx.state === "running") return true;
+      await new Promise<void>((resolve) => {
+        timeout = window.setTimeout(resolve, 250);
+      });
+    }
+
+    return false;
+  };
+
   const loop = async () => {
+    const ready = await waitForAudio();
+    if (!ready || stopped) return;
+
     while (!stopped) {
       for (const step of steps) {
         await playStep(step);
