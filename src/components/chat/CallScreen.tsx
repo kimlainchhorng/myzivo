@@ -228,30 +228,39 @@ export default function CallScreen({
       </div>
 
       {/* Caller info */}
-      <div className="flex flex-col items-center gap-4 mt-10 px-6">
+      <div className="flex flex-col items-center gap-5 mt-12 px-6">
         <div className="relative">
           {callState === "ringing" && (
-            <motion.div
-              className="absolute inset-0 rounded-full border-2 border-primary/30"
-              animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
+            <>
+              <motion.div
+                className="absolute -inset-3 rounded-full border-2 border-primary/20"
+                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <motion.div
+                className="absolute -inset-6 rounded-full border border-primary/10"
+                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
+              />
+            </>
           )}
-          <Avatar className="h-24 w-24 border-[3px] border-primary/15 shadow-lg">
+          <Avatar className="h-28 w-28 border-[3px] border-primary/10 shadow-xl">
             <AvatarImage src={recipientAvatar || undefined} />
-            <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
+            <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
           </Avatar>
         </div>
         <div className="text-center">
-          <h2 className="text-xl font-bold text-foreground">{recipientName}</h2>
-          <p className="text-sm text-muted-foreground mt-1">{statusText}</p>
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">{recipientName}</h2>
+          <p className={`text-sm mt-1.5 font-medium ${callState === "connected" ? "text-primary tabular-nums" : "text-muted-foreground"}`}>
+            {statusText}
+          </p>
         </div>
         {callState === "ringing" && (
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             {[0, 1, 2].map((i) => (
-              <motion.div key={i} className="h-1.5 w-1.5 rounded-full bg-primary"
-                animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.2, 0.8] }}
-                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+              <motion.div key={i} className="h-2 w-2 rounded-full bg-primary"
+                animate={{ opacity: [0.2, 1, 0.2], scale: [0.7, 1.2, 0.7] }}
+                transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.25 }}
               />
             ))}
           </div>
