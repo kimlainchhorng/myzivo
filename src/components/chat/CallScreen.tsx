@@ -97,9 +97,9 @@ export default function CallScreen({
     onEnded: handleEnded,
   });
 
-  // Hooks for enhancements — connected to live PeerConnection
-  const qualityStats = useCallQuality(peerConnection.current);
-  const screenShare = useScreenShare(peerConnection.current);
+  // Hooks for enhancements — connected to live PeerConnection ref
+  const qualityStats = useCallQuality(peerConnection);
+  const screenShare = useScreenShare(peerConnection);
   const recording = useCallRecording({
     callHistoryId: callHistoryId || undefined,
     userId: user?.id || "",
