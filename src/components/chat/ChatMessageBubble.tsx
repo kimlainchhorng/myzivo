@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥", "👏", "🎉", "💯", "🤔", "😍", "💀"];
+const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "👏", "🎉", "💯", "😍"];
 
 interface ChatMessageBubbleProps {
   id: string;
@@ -242,20 +242,20 @@ export default function ChatMessageBubble({
               onClick={() => { setShowActions(false); setShowReactions(false); }}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.85, y: 8 }}
+              initial={{ opacity: 0, scale: 0.8, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.85, y: 8 }}
-              transition={{ type: "spring", damping: 22, stiffness: 400 }}
-              className={`absolute z-50 bottom-full mb-2 flex flex-col gap-1.5 ${isMe ? "right-0 items-end" : "left-0 items-start"}`}
+              exit={{ opacity: 0, scale: 0.8, y: 12 }}
+              transition={{ type: "spring", damping: 20, stiffness: 380 }}
+              className={`absolute z-50 bottom-full mb-2.5 flex flex-col gap-2 ${isMe ? "right-0 items-end" : "left-0 items-start"}`}
             >
-              {/* Emoji picker */}
+              {/* Emoji reactions row */}
               {showReactions && (
-                <div className="flex items-center gap-1 bg-background/95 backdrop-blur-xl shadow-xl shadow-black/10 border border-border/40 rounded-2xl px-2.5 py-2">
+                <div className="bg-background/98 backdrop-blur-2xl shadow-2xl shadow-black/12 border border-border/30 rounded-[20px] px-1.5 py-1.5 flex items-center">
                   {REACTION_EMOJIS.map((emoji) => (
                     <button
                       key={emoji}
                       onClick={(e) => { e.stopPropagation(); toggleReaction(emoji); }}
-                      className="h-9 w-9 flex items-center justify-center rounded-xl hover:bg-muted/80 transition-all text-xl hover:scale-[1.3] active:scale-90"
+                      className="h-[38px] w-[38px] flex items-center justify-center rounded-xl hover:bg-muted/60 transition-all text-[22px] hover:scale-[1.35] active:scale-90 duration-150"
                     >
                       {emoji}
                     </button>
@@ -263,14 +263,20 @@ export default function ChatMessageBubble({
                 </div>
               )}
 
-              {/* Action bar */}
-              <div className={`flex items-center bg-background/95 backdrop-blur-xl shadow-xl shadow-black/10 border border-border/40 rounded-2xl overflow-hidden divide-x divide-border/30`}>
+              {/* Action buttons */}
+              <div className="bg-background/98 backdrop-blur-2xl shadow-2xl shadow-black/12 border border-border/30 rounded-[18px] flex items-stretch overflow-hidden">
                 <ActionBtn icon={Reply} label="Reply" onClick={() => { onReply(id, message, isMe); setShowActions(false); setShowReactions(false); }} />
+                <div className="w-px bg-border/20 my-2" />
                 <ActionBtn icon={Copy} label="Copy" onClick={handleCopy} />
+                <div className="w-px bg-border/20 my-2" />
                 <ActionBtn icon={Forward} label="Forward" onClick={handleForward} />
+                <div className="w-px bg-border/20 my-2" />
                 <ActionBtn icon={Pin} label={isPinned ? "Unpin" : "Pin"} onClick={handlePin} active={isPinned} />
                 {isMe && (
-                  <ActionBtn icon={Trash2} label="Delete" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); }} destructive />
+                  <>
+                    <div className="w-px bg-border/20 my-2" />
+                    <ActionBtn icon={Trash2} label="Delete" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); }} destructive />
+                  </>
                 )}
               </div>
             </motion.div>
@@ -287,16 +293,16 @@ function ActionBtn({ icon: Icon, label, onClick, destructive, active }: {
   return (
     <button
       onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className={`flex flex-col items-center gap-0.5 px-3.5 py-2 text-[10px] font-semibold transition-colors ${
+      className={`flex flex-col items-center justify-center gap-1 min-w-[56px] px-3 py-2.5 transition-colors active:scale-95 ${
         destructive
-          ? "hover:bg-destructive/5 text-destructive"
+          ? "hover:bg-red-50 dark:hover:bg-red-500/5 text-red-500"
           : active
           ? "bg-primary/5 text-primary"
-          : "hover:bg-muted/50 text-foreground/80"
+          : "hover:bg-muted/40 text-foreground/70"
       }`}
     >
-      <Icon className="h-4 w-4" />
-      <span>{label}</span>
+      <Icon className="h-[18px] w-[18px]" />
+      <span className="text-[10px] font-semibold leading-none">{label}</span>
     </button>
   );
 }
