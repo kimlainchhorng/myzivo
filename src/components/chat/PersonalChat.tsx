@@ -485,7 +485,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 <Shield className="w-4 h-4 text-muted-foreground" /> Privacy
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Pinned messages bar */}
