@@ -1,13 +1,15 @@
 /**
  * ChatHubPage — Unified messaging hub with category tabs:
- * Personal, Shop, Support, Ride
+ * Personal, Shop, Support, Ride + Group chats
  */
 import { useState, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X, Bell } from "lucide-react";
+import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X, Bell, Users, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
+import GroupChat from "@/components/chat/GroupChat";
+import CreateGroupModal from "@/components/chat/CreateGroupModal";
 import { withRedirectParam } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -53,6 +55,8 @@ export default function ChatHubPage() {
   const [swipedId, setSwipedId] = useState<string | null>(null);
   const [openShopChat, setOpenShopChat] = useState<{ storeId: string; name: string; logo?: string | null } | null>(null);
   const [openPersonalChat, setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
+  const [openGroupChat, setOpenGroupChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
 
   // Fetch store chats for "shop" tab
   const { data: shopChats = [] } = useQuery({
@@ -211,13 +215,68 @@ export default function ChatHubPage() {
     },
   });
 
+  // Fetch group chats
+  const { data: groupChats = [] } = useQuery({
+    queryKey: ["chat-hub-groups", user?.id],
+    enabled: !!user && active === "personal",
+    queryFn: async () => {
+      const { data: memberships } = await (supabase as any)
+        .from("chat_group_members")
+        .select("group_id")
+        .eq("user_id", user!.id);
+
+      if (!memberships?.length) return [];
+
+      const groupIds = memberships.map((m: any) => m.group_id);
+      const { data: groups } = await (supabase as any)
+        .from("chat_groups")
+        .select("id, name, avatar_url, created_at")
+        .in("id", groupIds);
+
+      if (!groups) return [];
+
+      const enriched = await Promise.all(
+        groups.map(async (g: any) => {
+          const { data: lastMsg } = await (supabase as any)
+            .from("group_messages")
+            .select("message, created_at, sender_id")
+            .eq("group_id", g.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const { data: memberCount } = await (supabase as any)
+            .from("chat_group_members")
+            .select("id", { count: "exact", head: true })
+            .eq("group_id", g.id);
+
+          return {
+            id: g.id,
+            name: g.name,
+            avatar: g.avatar_url,
+            lastMessage: lastMsg?.message || "Group created",
+            lastTime: lastMsg?.created_at || g.created_at,
+            unread: 0,
+            isGroup: true,
+          };
+        })
+      );
+      return enriched;
+    },
+  });
+
   const currentCategory = categories.find((c) => c.id === active)!;
+
+  // Merge personal chats + group chats for the personal tab
+  const mergedPersonalList = active === "personal"
+    ? [...personalChats, ...groupChats].sort((a: any, b: any) => new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime())
+    : [];
 
   const chatList =
     active === "shop" ? shopChats :
     active === "ride" ? rideChats :
     active === "support" ? supportChats :
-    personalChats;
+    mergedPersonalList;
 
   const filtered = search
     ? chatList.filter((c: any) => c.name?.toLowerCase().includes(search.toLowerCase()))
@@ -327,13 +386,25 @@ export default function ChatHubPage() {
             </button>
             <h1 className="text-2xl font-bold text-foreground">Chat</h1>
           </div>
-          <button
-            onClick={() => navigate('/notifications')}
-            className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
-            aria-label="Notifications"
-          >
-            <Bell className="w-5 h-5 text-muted-foreground" />
-          </button>
+          <div className="flex items-center gap-1">
+            {active === "personal" && (
+              <button
+                onClick={() => setShowCreateGroup(true)}
+                className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                aria-label="New group"
+              >
+                <Users className="w-5 h-5 text-muted-foreground" />
+                <Plus className="w-2.5 h-2.5 text-primary absolute bottom-1 right-1" />
+              </button>
+            )}
+            <button
+              onClick={() => navigate('/notifications')}
+              className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+              aria-label="Notifications"
+            >
+              <Bell className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </div>
         </div>
 
         {/* Search */}
@@ -446,7 +517,11 @@ export default function ChatHubPage() {
                           logo: chat.avatar,
                         });
                       } else if (active === "personal") {
-                        setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
+                        if ((chat as any).isGroup) {
+                          setOpenGroupChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
+                        } else {
+                          setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
+                        }
                       } else if (active === "support") {
                         navigate(`/support`);
                       }
@@ -468,17 +543,17 @@ export default function ChatHubPage() {
                     }}
                     style={{ x: 0 }}
                   >
-                    <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${(chat as any).isGroup ? 'bg-primary/10' : 'bg-muted'}`}>
                       {chat.avatar ? (
                         <img src={chat.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (chat as any).isGroup ? (
+                        <Users className="w-5 h-5 text-primary" />
+                      ) : active === "personal" ? (
+                        <span className="text-sm font-bold text-muted-foreground">
+                          {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                        </span>
                       ) : (
-                        active === "personal" ? (
-                          <span className="text-sm font-bold text-muted-foreground">
-                            {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
-                          </span>
-                        ) : (
-                          <currentCategory.icon className="w-5 h-5 text-muted-foreground" />
-                        )
+                        <currentCategory.icon className="w-5 h-5 text-muted-foreground" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -575,6 +650,26 @@ export default function ChatHubPage() {
           />
         )}
       </AnimatePresence>
+      {/* Inline Group Chat */}
+      <AnimatePresence>
+        {openGroupChat && (
+          <GroupChat
+            groupId={openGroupChat.id}
+            groupName={openGroupChat.name}
+            groupAvatar={openGroupChat.avatar}
+            onClose={() => setOpenGroupChat(null)}
+          />
+        )}
+      </AnimatePresence>
+      {/* Create Group Modal */}
+      <CreateGroupModal
+        open={showCreateGroup}
+        onClose={() => setShowCreateGroup(false)}
+        onCreated={(group) => {
+          setOpenGroupChat({ id: group.id, name: group.name, avatar: group.avatar });
+          queryClient.invalidateQueries({ queryKey: ["chat-hub-groups"] });
+        }}
+      />
     </PullToRefresh>
   );
 }

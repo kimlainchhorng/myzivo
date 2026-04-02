@@ -6486,6 +6486,62 @@ export type Database = {
           },
         ]
       }
+      chat_group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chat_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_groups: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_members: {
         Row: {
           chat_id: string
@@ -9921,8 +9977,11 @@ export type Database = {
           image_url: string | null
           is_read: boolean
           message: string
+          message_type: string
           receiver_id: string
+          reply_to_id: string | null
           sender_id: string
+          voice_url: string | null
         }
         Insert: {
           created_at?: string
@@ -9930,8 +9989,11 @@ export type Database = {
           image_url?: string | null
           is_read?: boolean
           message: string
+          message_type?: string
           receiver_id: string
+          reply_to_id?: string | null
           sender_id: string
+          voice_url?: string | null
         }
         Update: {
           created_at?: string
@@ -9939,10 +10001,21 @@ export type Database = {
           image_url?: string | null
           is_read?: boolean
           message?: string
+          message_type?: string
           receiver_id?: string
+          reply_to_id?: string | null
           sender_id?: string
+          voice_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "direct_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dispatch_ai_logs: {
         Row: {
@@ -18599,6 +18672,57 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      group_messages: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          image_url: string | null
+          message: string
+          message_type: string
+          reply_to_id: string | null
+          sender_id: string
+          voice_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          image_url?: string | null
+          message?: string
+          message_type?: string
+          reply_to_id?: string | null
+          sender_id: string
+          voice_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          image_url?: string | null
+          message?: string
+          message_type?: string
+          reply_to_id?: string | null
+          sender_id?: string
+          voice_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chat_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "group_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       group_order_items: {
         Row: {
