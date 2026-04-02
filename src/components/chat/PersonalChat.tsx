@@ -5,12 +5,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Phone, Video } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Phone, Video, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
 import CallScreen from "./CallScreen";
 import { primeCallAudio } from "@/lib/callAudio";
+import ChatMessageBubble from "./ChatMessageBubble";
+import { toast } from "sonner";
 
 interface PersonalChatProps {
   recipientId: string;
