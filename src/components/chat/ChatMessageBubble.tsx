@@ -29,7 +29,7 @@ interface ChatMessageBubbleProps {
 }
 
 export default function ChatMessageBubble({
-  id, message, time, isMe, isRead, imageUrl, videoUrl, isPinned, expiresAt,
+  id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt,
   onReply, onDelete, onForward, onPin,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
