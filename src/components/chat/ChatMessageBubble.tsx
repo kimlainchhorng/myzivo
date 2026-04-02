@@ -251,47 +251,54 @@ export default function ChatMessageBubble({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/10"
+              className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
               onClick={() => { setShowActions(false); setShowReactions(false); }}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 12 }}
+              initial={{ opacity: 0, scale: 0.85, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 12 }}
-              transition={{ type: "spring", damping: 20, stiffness: 380 }}
-              className={`absolute z-50 bottom-full mb-2.5 flex flex-col gap-2 ${isMe ? "right-0 items-end" : "left-0 items-start"}`}
+              exit={{ opacity: 0, scale: 0.85, y: 10 }}
+              transition={{ type: "spring", damping: 22, stiffness: 400 }}
+              className={`absolute z-50 bottom-full mb-3 flex flex-col gap-2.5 ${isMe ? "right-0 items-end" : "left-0 items-start"}`}
             >
               {/* Emoji reactions row */}
               {showReactions && (
-                <div className="bg-background/98 backdrop-blur-2xl shadow-2xl shadow-black/12 border border-border/30 rounded-[20px] px-1.5 py-1.5 flex items-center max-w-[calc(100vw-32px)]">
-                  {REACTION_EMOJIS.map((emoji) => (
-                    <button
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 }}
+                  className="bg-background shadow-xl shadow-black/8 border border-border/20 rounded-full px-2 py-1.5 flex items-center gap-0.5 max-w-[calc(100vw-32px)]"
+                >
+                  {REACTION_EMOJIS.map((emoji, i) => (
+                    <motion.button
                       key={emoji}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.03 * i, type: "spring", stiffness: 500 }}
                       onClick={(e) => { e.stopPropagation(); toggleReaction(emoji); }}
-                      className="h-[38px] w-[38px] flex items-center justify-center rounded-xl hover:bg-muted/60 transition-all text-[22px] hover:scale-[1.35] active:scale-90 duration-150"
+                      className="h-[36px] w-[36px] flex items-center justify-center rounded-full hover:bg-muted/50 transition-all text-[21px] hover:scale-125 active:scale-90 duration-150"
                     >
                       {emoji}
-                    </button>
+                    </motion.button>
                   ))}
-                </div>
+                </motion.div>
               )}
 
-              {/* Action buttons */}
-              <div className="bg-background/98 backdrop-blur-2xl shadow-2xl shadow-black/12 border border-border/30 rounded-[18px] flex items-stretch overflow-hidden">
+              {/* Action buttons — clean list style */}
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 }}
+                className="bg-background shadow-xl shadow-black/8 border border-border/20 rounded-2xl overflow-hidden min-w-[180px]"
+              >
                 <ActionBtn icon={Reply} label="Reply" onClick={() => { onReply(id, message, isMe); setShowActions(false); setShowReactions(false); }} />
-                <div className="w-px bg-border/20 my-2" />
                 <ActionBtn icon={Copy} label="Copy" onClick={handleCopy} />
-                <div className="w-px bg-border/20 my-2" />
                 <ActionBtn icon={Forward} label="Forward" onClick={handleForward} />
-                <div className="w-px bg-border/20 my-2" />
                 <ActionBtn icon={Pin} label={isPinned ? "Unpin" : "Pin"} onClick={handlePin} active={isPinned} />
                 {isMe && (
-                  <>
-                    <div className="w-px bg-border/20 my-2" />
-                    <ActionBtn icon={Trash2} label="Delete" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); }} destructive />
-                  </>
+                  <ActionBtn icon={Trash2} label="Delete" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); }} destructive />
                 )}
-              </div>
+              </motion.div>
             </motion.div>
           </>
         )}
@@ -334,16 +341,16 @@ function ActionBtn({ icon: Icon, label, onClick, destructive, active }: {
   return (
     <button
       onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className={`flex flex-col items-center justify-center gap-1 min-w-[56px] px-3 py-2.5 transition-colors active:scale-95 ${
+      className={`flex items-center gap-3 w-full px-4 py-3 text-left transition-colors active:scale-[0.98] ${
         destructive
           ? "hover:bg-red-50 dark:hover:bg-red-500/5 text-red-500"
           : active
           ? "bg-primary/5 text-primary"
-          : "hover:bg-muted/40 text-foreground/70"
+          : "hover:bg-muted/40 text-foreground"
       }`}
     >
-      <Icon className="h-[18px] w-[18px]" />
-      <span className="text-[10px] font-semibold leading-none">{label}</span>
+      <Icon className="h-[18px] w-[18px] shrink-0 opacity-70" />
+      <span className="text-[13px] font-medium">{label}</span>
     </button>
   );
 }
