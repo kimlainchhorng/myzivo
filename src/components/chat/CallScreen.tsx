@@ -39,7 +39,6 @@ export default function CallScreen({
   const [callHistoryId, setCallHistoryId] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
   const [isSpeaker, setIsSpeaker] = useState(false);
-  const [showRecordConsent, setShowRecordConsent] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
