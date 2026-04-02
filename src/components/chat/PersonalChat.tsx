@@ -429,6 +429,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <button onClick={() => { void handleStartCall("voice"); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <Phone className="h-5 w-5 text-primary" />
           </button>
+        </div>
 
         {/* Pinned messages bar */}
         {pinnedMessages.length > 0 && (
