@@ -28,12 +28,43 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
+    const normalizedEmail = email.toLowerCase();
+
+    const resolveUserId = async () => {
+      const { data: profileMatch, error: profileLookupError } = await supabase
+        .from("profiles")
+        .select("user_id, id")
+        .eq("email", normalizedEmail)
+        .limit(1)
+        .maybeSingle();
+
+      if (profileLookupError) {
+        console.error("Failed to look up profile for OTP verification:", profileLookupError);
+      }
+
+      const profileUserId = profileMatch?.user_id ?? profileMatch?.id;
+      if (profileUserId) {
+        return profileUserId;
+      }
+
+      const { data: userList, error: usersError } = await supabase.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000,
+      });
+
+      if (usersError) {
+        console.error("Failed to look up auth user for OTP verification:", usersError);
+        return null;
+      }
+
+      return userList.users.find((user) => user.email?.toLowerCase() === normalizedEmail)?.id ?? null;
+    };
 
     // Find the most recent valid OTP for this email
     const { data: otpRecord, error: fetchError } = await supabase
       .from("otp_codes")
       .select("*")
-      .eq("email", email.toLowerCase())
+      .eq("email", normalizedEmail)
       .is("verified_at", null)
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false })
@@ -93,30 +124,43 @@ const handler = async (req: Request): Promise<Response> => {
       .update({ verified_at: new Date().toISOString() })
       .eq("id", otpRecord.id);
 
+    const resolvedUserId = otpRecord.user_id ?? await resolveUserId();
+
+    if (resolvedUserId && !otpRecord.user_id) {
+      const { error: otpUpdateError } = await supabase
+        .from("otp_codes")
+        .update({ user_id: resolvedUserId })
+        .eq("id", otpRecord.id);
+
+      if (otpUpdateError) {
+        console.error("Failed to backfill OTP user_id:", otpUpdateError);
+      }
+    }
+
     // If we have a user_id, update their email confirmation status
-    if (otpRecord.user_id) {
+    if (resolvedUserId) {
       // Update auth.users email_confirmed_at
       const { error: updateError } = await supabase.auth.admin.updateUserById(
-        otpRecord.user_id,
+        resolvedUserId,
         { email_confirm: true }
       );
 
       if (updateError) {
         console.error("Failed to confirm email in auth:", updateError);
       } else {
-        console.log("Email confirmed in auth for user:", otpRecord.user_id);
+        console.log("Email confirmed in auth for user:", resolvedUserId);
       }
 
       // Also update profiles.email_verified flag
       const { error: profileError } = await supabase
         .from("profiles")
         .update({ email_verified: true })
-        .eq("user_id", otpRecord.user_id);
+        .or(`user_id.eq.${resolvedUserId},id.eq.${resolvedUserId}`);
 
       if (profileError) {
         console.error("Failed to update profile email_verified:", profileError);
       } else {
-        console.log("Profile email_verified updated for user:", otpRecord.user_id);
+        console.log("Profile email_verified updated for user:", resolvedUserId);
       }
     }
 
@@ -124,7 +168,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({ 
         success: true, 
         message: "Email verified successfully",
-        userId: otpRecord.user_id
+        userId: resolvedUserId
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );

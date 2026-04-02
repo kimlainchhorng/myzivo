@@ -47,6 +47,37 @@ const VerifyOTP = () => {
     setResendCooldown(60);
   }, []);
 
+  const redirectAfterVerification = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const activeUser = session?.user;
+
+    if (!activeUser) {
+      if (email) {
+        localStorage.setItem("zivo_saved_email", email);
+      }
+      navigate("/login?mode=login", { replace: true });
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("setup_complete")
+      .or(`user_id.eq.${activeUser.id},id.eq.${activeUser.id}`)
+      .maybeSingle();
+
+    const { data: isAdminUser } = await supabase.rpc("check_user_role", {
+      _user_id: activeUser.id,
+      _role: "admin",
+    });
+
+    if (isAdminUser) {
+      navigate("/admin/analytics", { replace: true });
+      return;
+    }
+
+    navigate(profile?.setup_complete ? "/" : "/setup", { replace: true });
+  }, [email, navigate]);
+
   const maskedEmail = email
     ? email.replace(/^(.{1,2})(.*)(@.*)$/, (_, start, middle, end) => 
         start + "*".repeat(Math.min(middle.length, 5)) + end
@@ -79,13 +110,13 @@ const VerifyOTP = () => {
       }
 
       toast.success("Email verified successfully!");
-      navigate("/setup", { replace: true });
+      await redirectAfterVerification();
     } catch (err) {
       console.error("Verification error:", err);
       toast.error("Something went wrong. Please try again.");
       setIsVerifying(false);
     }
-  }, [email, navigate]);
+  }, [email, navigate, redirectAfterVerification]);
 
   useEffect(() => {
     if (code.length === 6) {
