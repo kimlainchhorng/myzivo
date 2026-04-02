@@ -1,32 +1,14 @@
 /**
- * Setup Page — Collects profile picture, cover photo, first name, last name, and phone after signup.
- * Requires phone verification via Twilio Verify before completing.
+ * Setup Page — Profile picture & cover photo upload after signup.
+ * Name and phone are already collected during registration.
  */
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { User, ArrowRight, ArrowLeft, Loader2, Camera, ImagePlus } from "lucide-react";
-import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
-import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
-import { normalizePhoneDigits, normalizePhoneE164 } from "@/lib/phone";
-
-const setupSchema = z.object({
-  first_name: z.string().trim().min(1, "First name is required").max(50),
-  last_name: z.string().trim().min(1, "Last name is required").max(50),
-  phone: z.string().trim().refine((value) => {
-    const digits = normalizePhoneDigits(value);
-    return digits.length >= 7 && digits.length <= 15;
-  }, "Please enter a valid phone number"),
-});
-
-type SetupValues = z.infer<typeof setupSchema>;
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -35,8 +17,6 @@ export default function Setup() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
-  const [showVerifyDialog, setShowVerifyDialog] = useState(false);
-  const [pendingData, setPendingData] = useState<SetupValues | null>(null);
   const [checking, setChecking] = useState(true);
 
   // Image state
@@ -44,22 +24,11 @@ export default function Setup() {
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [uploadingCover, setUploadingCover] = useState(false);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<SetupValues>({
-    resolver: zodResolver(setupSchema),
-    defaultValues: {
-      first_name: "",
-      last_name: "",
-      phone: "",
-    },
-  });
-
-  // Fetch existing profile data — redirect if already set up, otherwise pre-fill
+  // Check if already set up
   useEffect(() => {
     if (!user) {
       setChecking(false);
@@ -70,7 +39,7 @@ export default function Setup() {
       try {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("full_name, phone, setup_complete, avatar_url, cover_url")
+          .select("setup_complete, avatar_url, cover_url")
           .or(`user_id.eq.${user.id},id.eq.${user.id}`)
           .maybeSingle();
 
@@ -79,17 +48,6 @@ export default function Setup() {
           navigate("/", { replace: true });
           return;
         }
-
-        // Pre-fill from profile or user metadata
-        const meta = user.user_metadata || {};
-        const fullName = profile?.full_name || meta.full_name || "";
-        const firstName = fullName.split(" ")[0] || "";
-        const lastName = fullName.split(" ").slice(1).join(" ") || "";
-        const phone = profile?.phone || meta.phone || "";
-
-        if (firstName) form.setValue("first_name", firstName, { shouldValidate: true });
-        if (lastName) form.setValue("last_name", lastName, { shouldValidate: true });
-        if (phone) form.setValue("phone", phone, { shouldValidate: true });
 
         if (profile?.avatar_url) setAvatarPreview(profile.avatar_url);
         if (profile?.cover_url) setCoverPreview(profile.cover_url);
@@ -101,7 +59,6 @@ export default function Setup() {
     };
 
     loadProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate]);
 
   const handleImageSelect = (
@@ -144,45 +101,32 @@ export default function Setup() {
     return publicUrl;
   };
 
-  const onSubmit = async (data: SetupValues) => {
+  const handleContinue = async () => {
     if (!user) return;
-    setPendingData(data);
-    setShowVerifyDialog(true);
-  };
-
-  const handlePhoneVerified = async () => {
-    if (!user || !pendingData) return;
     setSaving(true);
 
     try {
-      const normalizedPhone = normalizePhoneE164(pendingData.phone);
-      const fullName = [pendingData.first_name, pendingData.last_name].filter(Boolean).join(" ");
-
       // Upload images if selected
       let avatarUrl: string | undefined;
       let coverUrl: string | undefined;
 
       if (avatarFile) {
-        setUploadingAvatar(true);
         avatarUrl = await uploadImage(avatarFile, "avatars", user.id);
-        setUploadingAvatar(false);
       }
 
       if (coverFile) {
-        setUploadingCover(true);
         coverUrl = await uploadImage(coverFile, "covers", user.id);
-        setUploadingCover(false);
       }
 
+      const meta = user.user_metadata || {};
+      const fullName = meta.full_name || "";
+
       const profileUpdate: Record<string, unknown> = {
-        full_name: fullName,
-        phone: normalizedPhone,
-        phone_e164: normalizedPhone,
-        phone_verified: true,
-        phone_verified_at: new Date().toISOString(),
         setup_complete: true,
         user_id: user.id,
         email: user.email ?? null,
+        full_name: fullName || null,
+        phone: meta.phone || null,
       };
 
       if (avatarUrl) profileUpdate.avatar_url = avatarUrl;
@@ -221,8 +165,6 @@ export default function Setup() {
       toast.error(err?.message || "Failed to save. Please try again.");
     } finally {
       setSaving(false);
-      setUploadingAvatar(false);
-      setUploadingCover(false);
     }
   };
 
@@ -270,11 +212,6 @@ export default function Setup() {
               className="hidden"
               onChange={(e) => handleImageSelect(e, "cover")}
             />
-            {uploadingCover && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                <Loader2 className="w-6 h-6 animate-spin text-white" />
-              </div>
-            )}
           </div>
 
           {/* Avatar — overlapping the cover */}
@@ -312,17 +249,11 @@ export default function Setup() {
                 className="hidden"
                 onChange={(e) => handleImageSelect(e, "avatar")}
               />
-              {uploadingAvatar && (
-                <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/50">
-                  <Loader2 className="w-5 h-5 animate-spin text-white" />
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Form content */}
+          {/* Content */}
           <div className="px-6 pb-6 pt-3 sm:px-8 sm:pb-8">
-            {/* Header */}
             <div className="mb-5">
               <button
                 type="button"
@@ -333,106 +264,37 @@ export default function Setup() {
                 Back
               </button>
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-white tracking-tight">Complete Your Profile</h1>
-                <p className="text-white/50 text-sm mt-1">Just a few details to get started</p>
+                <h1 className="text-2xl font-bold text-white tracking-tight">Add Your Photos</h1>
+                <p className="text-white/50 text-sm mt-1">Personalize your profile with a photo and cover</p>
               </div>
             </div>
 
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                {/* First Name */}
-                <FormField
-                  control={form.control}
-                  name="first_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white/70 text-sm">First Name</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                          <input
-                            {...field}
-                            placeholder="First name"
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <Button
+              onClick={handleContinue}
+              disabled={saving}
+              className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm mt-2 touch-manipulation active:scale-[0.98] transition-all"
+            >
+              {saving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  Continue
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
 
-                {/* Last Name */}
-                <FormField
-                  control={form.control}
-                  name="last_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white/70 text-sm">Last Name</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                          <input
-                            {...field}
-                            placeholder="Last name"
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Phone Number */}
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white/70 text-sm">Phone Number</FormLabel>
-                      <FormControl>
-                        <div>
-                          <CountryPhoneInput
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type="submit"
-                  disabled={saving}
-                  className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm mt-2 touch-manipulation active:scale-[0.98] transition-all"
-                >
-                  {saving ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      Continue
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </>
-                  )}
-                </Button>
-              </form>
-            </Form>
+            <button
+              type="button"
+              onClick={handleContinue}
+              disabled={saving}
+              className="w-full text-center text-white/40 hover:text-white/60 text-sm mt-3 transition-colors"
+            >
+              Skip for now
+            </button>
           </div>
         </div>
       </div>
-
-      {/* Phone Verification Dialog */}
-      {pendingData && (
-        <PhoneVerificationDialog
-          open={showVerifyDialog}
-          onOpenChange={setShowVerifyDialog}
-          phoneNumber={pendingData.phone}
-          onVerified={handlePhoneVerified}
-        />
-      )}
     </div>
   );
 }
