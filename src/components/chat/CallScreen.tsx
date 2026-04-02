@@ -168,25 +168,6 @@ export default function CallScreen({
     return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
   };
 
-  const handleRecordToggle = () => {
-    if (recording.isRecording) {
-      recording.stopRecording();
-    } else {
-      setShowRecordConsent(true);
-    }
-  };
-
-  const confirmRecording = () => {
-    setShowRecordConsent(false);
-    const ls = localStream.current;
-    const rs = remoteStreamRef.current;
-    if (ls && rs) {
-      recording.startRecording(ls, rs);
-    } else {
-      toast.error("Cannot record — streams not available");
-    }
-  };
-
   const statusText =
     callState === "ringing"
       ? role === "caller"
