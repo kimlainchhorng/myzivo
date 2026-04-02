@@ -54,7 +54,7 @@ export default function CallEventBubble({
     : isOutgoing ? PhoneOutgoing : PhoneIncoming;
 
   return (
-    <div className="flex justify-center my-1.5">
+    <div className="flex justify-end my-1.5">
       <div
         onClick={onCallback}
         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/40 border border-border/20 cursor-pointer hover:bg-muted/60 active:scale-[0.97] transition-all select-none"
