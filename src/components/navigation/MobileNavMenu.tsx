@@ -236,7 +236,7 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
             </Button>
           ) : (
             <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={() => handleNavigate("/login")}>
+              <Button variant="outline" className="flex-1" onClick={() => handleNavigate(withRedirectParam("/login", location.pathname === "/" ? null : `${location.pathname}${location.search ?? ""}`))}>
                 Log in
               </Button>
               <Button variant="hero" className="flex-1" onClick={() => handleNavigate("/signup")}>
