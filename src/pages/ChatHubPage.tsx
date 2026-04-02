@@ -15,6 +15,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import ChatStories from "@/components/chat/ChatStories";
 import { toast } from "sonner";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
+import PersonalChat from "@/components/chat/PersonalChat";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useCallback } from "react";
 
@@ -51,6 +52,7 @@ export default function ChatHubPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; category: ChatCategory } | null>(null);
   const [swipedId, setSwipedId] = useState<string | null>(null);
   const [openShopChat, setOpenShopChat] = useState<{ storeId: string; name: string; logo?: string | null } | null>(null);
+  const [openPersonalChat, setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
 
   // Fetch store chats for "shop" tab
   const { data: shopChats = [] } = useQuery({
@@ -378,7 +380,7 @@ export default function ChatHubPage() {
                           logo: chat.avatar,
                         });
                       } else if (active === "personal") {
-                        navigate(`/chat/${chat.id}`);
+                        setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
                       } else if (active === "support") {
                         navigate(`/support`);
                       }
@@ -490,6 +492,17 @@ export default function ChatHubPage() {
           onClose={() => setOpenShopChat(null)}
         />
       )}
+      {/* Inline Personal Chat */}
+      <AnimatePresence>
+        {openPersonalChat && (
+          <PersonalChat
+            recipientId={openPersonalChat.id}
+            recipientName={openPersonalChat.name}
+            recipientAvatar={openPersonalChat.avatar}
+            onClose={() => setOpenPersonalChat(null)}
+          />
+        )}
+      </AnimatePresence>
     </PullToRefresh>
   );
 }
