@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥", "👏", "🎉", "💯", "🤔", "😍", "💀"];
 
 interface ChatMessageBubbleProps {
   id: string;
