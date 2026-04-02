@@ -118,7 +118,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const handleSend = async () => {
     if (!input.trim() || !user?.id || sending) return;
     const text = input.trim();
+    const replyMeta = replyTo ? { reply_to_id: replyTo.id, reply_to_text: replyTo.message, reply_to_is_me: replyTo.isMe } : null;
     setInput("");
+    setReplyTo(null);
     setSending(true);
     try {
       await (supabase as any).from("direct_messages").insert({
@@ -130,6 +132,21 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setSending(false);
     inputRef.current?.focus();
   };
+
+  const handleReply = useCallback((id: string, message: string, isMe: boolean) => {
+    setReplyTo({ id, message, isMe });
+    inputRef.current?.focus();
+  }, []);
+
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      await (supabase as any).from("direct_messages").delete().eq("id", id).eq("sender_id", user?.id);
+      setMessages((prev) => prev.filter((m) => m.id !== id));
+      toast.success("Message deleted");
+    } catch {
+      toast.error("Failed to delete");
+    }
+  }, [user?.id]);
 
   const initials = (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
