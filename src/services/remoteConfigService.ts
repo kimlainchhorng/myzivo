@@ -82,7 +82,7 @@ class RemoteConfigService {
       const { data: settings, error: settingsError } = await supabase
         .from('app_settings')
         .select('*')
-        .eq('tenant_id', null); // Global settings
+        .is('tenant_id', null); // Global settings
 
       if (settingsError) throw settingsError;
 

@@ -45898,6 +45898,45 @@ export type Database = {
         }
         Relationships: []
       }
+      call_sessions_safe: {
+        Row: {
+          created_at: string | null
+          customer_user_id: string | null
+          driver_user_id: string | null
+          expires_at: string | null
+          id: string | null
+          merchant_user_id: string | null
+          order_id: string | null
+          status: string | null
+          twilio_proxy_number: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_user_id?: string | null
+          driver_user_id?: string | null
+          expires_at?: string | null
+          id?: string | null
+          merchant_user_id?: string | null
+          order_id?: string | null
+          status?: string | null
+          twilio_proxy_number?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_user_id?: string | null
+          driver_user_id?: string | null
+          expires_at?: string | null
+          id?: string | null
+          merchant_user_id?: string | null
+          order_id?: string | null
+          status?: string | null
+          twilio_proxy_number?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       car_rentals_masked: {
         Row: {
           car_id: string | null
