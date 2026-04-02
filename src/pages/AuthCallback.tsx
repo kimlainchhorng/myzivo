@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useExchangeAuthToken } from "@/hooks/useCrossAppAuth";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
 
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -13,6 +14,7 @@ const AuthCallback = () => {
   const { exchangeToken, isExchanging, error } = useExchangeAuthToken();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const redirectTo = getSafeRedirectTarget(searchParams.get("redirect"));
 
   // Parse hash fragment for OAuth errors (Supabase returns errors in hash, not query)
   const getHashParams = () => {
@@ -74,7 +76,10 @@ const AuthCallback = () => {
             // Even if profile creation fails, don't block the user.
             // Redirect to setup so they can complete their profile.
             setStatus("success");
-            setTimeout(() => navigate("/setup", { replace: true }), 200);
+            setTimeout(() => navigate(withRedirectParam("/setup", redirectTo), {
+              replace: true,
+              state: { redirectTo },
+            }), 200);
             return;
           }
         } else {
@@ -113,7 +118,10 @@ const AuthCallback = () => {
           if (!otpError && otpResponse?.success) {
             setStatus("success");
             setTimeout(() => {
-              navigate("/verify-otp", { state: { email: user.email, userId: user.id }, replace: true });
+              navigate(withRedirectParam("/verify-otp", redirectTo), {
+                state: { email: user.email, userId: user.id, redirectTo },
+                replace: true,
+              });
             }, 200);
             return;
           }
@@ -123,14 +131,17 @@ const AuthCallback = () => {
         
         // OTP failed — still redirect, don't show error
         setStatus("success");
-        setTimeout(() => navigate("/login", { replace: true }), 200);
+        setTimeout(() => navigate(withRedirectParam("/login", redirectTo), { replace: true }), 200);
         return;
       }
 
       // If setup is not complete, redirect to setup page
       if (!resolvedProfile.setup_complete) {
         setStatus("success");
-        setTimeout(() => navigate("/setup", { replace: true }), 200);
+        setTimeout(() => navigate(withRedirectParam("/setup", redirectTo), {
+          replace: true,
+          state: { redirectTo },
+        }), 200);
         return;
       }
 
@@ -140,12 +151,12 @@ const AuthCallback = () => {
         _role: "admin",
       });
       setStatus("success");
-      setTimeout(() => navigate(isAdminUser ? "/admin/analytics" : "/", { replace: true }), 200);
+      setTimeout(() => navigate(isAdminUser ? "/admin/analytics" : redirectTo, { replace: true }), 200);
     } catch (err) {
       console.error("Error checking setup status:", err);
       // User IS authenticated — never show an error. Redirect to home.
       setStatus("success");
-      setTimeout(() => navigate("/", { replace: true }), 200);
+      setTimeout(() => navigate(redirectTo, { replace: true }), 200);
     }
   };
 
