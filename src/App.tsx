@@ -741,6 +741,7 @@ const App = () => (
           {/* LiveChatWidget removed */}
           <SpatialCursor />
           <BrandThemeApplicator />
+          <IncomingCallListener />
         </ZivoPlusProvider>
         </RemoteConfigProvider>
         </AuthProvider>
