@@ -101,8 +101,12 @@ export default function Setup() {
     return publicUrl;
   };
 
-  const handleContinue = async () => {
-    if (!user) return;
+  const handleContinue = async (skipPhotos = false) => {
+    if (!user) {
+      toast.error("Please sign in to continue.");
+      navigate("/login", { replace: true });
+      return;
+    }
     setSaving(true);
 
     try {
@@ -270,7 +274,7 @@ export default function Setup() {
             </div>
 
             <Button
-              onClick={handleContinue}
+              onClick={() => handleContinue()}
               disabled={saving}
               className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm mt-2 touch-manipulation active:scale-[0.98] transition-all"
             >
@@ -286,7 +290,7 @@ export default function Setup() {
 
             <button
               type="button"
-              onClick={handleContinue}
+              onClick={() => handleContinue(true)}
               disabled={saving}
               className="w-full text-center text-white/40 hover:text-white/60 text-sm mt-3 transition-colors"
             >
