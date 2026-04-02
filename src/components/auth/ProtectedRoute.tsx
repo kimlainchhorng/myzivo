@@ -24,7 +24,9 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
   }
 
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const redirectTarget = `${location.pathname}${location.search ?? ""}${location.hash ?? ""}`;
+    const loginUrl = withRedirectParam("/login", redirectTarget);
+    return <Navigate to={loginUrl} state={{ from: location }} replace />;
   }
 
   if (requireAdmin && !isAdmin) {
