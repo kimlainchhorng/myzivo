@@ -28,6 +28,7 @@ import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
 import { SkipToContent } from "./components/shared/SkipToContent";
 import RoutePrefetcher from "./components/shared/RoutePrefetcher";
 import { GlobalViewportMeta } from "@/components/shared/GlobalViewportMeta";
+import IncomingCallListener from "@/components/chat/IncomingCallListener";
 import { Loader2 } from "lucide-react";
 import { categorizeError } from "@/lib/supabaseErrors";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
@@ -741,6 +742,7 @@ const App = () => (
           {/* LiveChatWidget removed */}
           <SpatialCursor />
           <BrandThemeApplicator />
+          <IncomingCallListener />
         </ZivoPlusProvider>
         </RemoteConfigProvider>
         </AuthProvider>
