@@ -212,26 +212,42 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           messages.map((msg) => {
             const isMe = msg.sender_id === user?.id;
             return (
-              <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[75%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${
-                    isMe
-                      ? "bg-primary text-primary-foreground rounded-br-md"
-                      : "bg-muted text-foreground rounded-bl-md"
-                  }`}
-                >
-                  <p>{msg.message}</p>
-                  <p className={`text-[9px] mt-0.5 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-                    {formatMsgTime(msg.created_at)}
-                  </p>
-                </div>
-              </div>
+              <ChatMessageBubble
+                key={msg.id}
+                id={msg.id}
+                message={msg.message}
+                time={formatMsgTime(msg.created_at)}
+                isMe={isMe}
+                onReply={handleReply}
+                onDelete={handleDelete}
+              />
             );
           })
         )}
       </div>
 
-      <div className="mt-auto bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+      {/* Reply preview bar */}
+      <AnimatePresence>
+        {replyTo && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="bg-muted/50 border-t border-border/30 px-4 py-2 flex items-center gap-2 overflow-hidden"
+          >
+            <div className="w-1 h-8 rounded-full bg-primary shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-semibold text-primary">{replyTo.isMe ? "You" : recipientName}</p>
+              <p className="text-xs text-muted-foreground truncate">{replyTo.message}</p>
+            </div>
+            <button onClick={() => setReplyTo(null)} className="h-7 w-7 rounded-full flex items-center justify-center">
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
         <input
           ref={inputRef}
           value={input}
