@@ -498,6 +498,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                     time={formatMsgTime(msg.created_at)}
                     isMe={isMe}
                     isRead={msg.is_read}
+                    isDelivered={!!msg.delivered_at}
                     imageUrl={msg.image_url}
                     videoUrl={msg.video_url}
                     isPinned={msg.is_pinned}
