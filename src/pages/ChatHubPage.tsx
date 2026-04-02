@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X } from "lucide-react";
+import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -260,14 +260,23 @@ export default function ChatHubPage() {
     <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-xl border-b border-border/30">
-        <div className="px-5 pt-4 pb-3 flex items-center gap-3">
+        <div className="px-5 pt-4 pb-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+            >
+              <ArrowLeft className="w-5 h-5 text-foreground" />
+            </button>
+            <h1 className="text-2xl font-bold text-foreground">Chat</h1>
+          </div>
           <button
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+            onClick={() => navigate('/notifications')}
+            className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+            aria-label="Notifications"
           >
-            <ArrowLeft className="w-5 h-5 text-foreground" />
+            <Bell className="w-5 h-5 text-muted-foreground" />
           </button>
-          <h1 className="text-2xl font-bold text-foreground">Chat</h1>
         </div>
 
         {/* Search */}
