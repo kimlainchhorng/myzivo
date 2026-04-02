@@ -167,24 +167,46 @@ function playTonePattern(steps: ToneStep[], volume: number): StopTone {
   };
 }
 
+/**
+ * Classic telephone ring — two-tone "BRRING" repeated with pauses.
+ * Mimics the North American standard ring cadence:
+ * two short bursts (~0.4s each) separated by a tiny gap,
+ * then a longer silence before the next ring.
+ */
 export function playIncomingRingtone() {
   return playTonePattern(
     [
-      { frequency: 440, duration: 400 },
-      { frequency: null, duration: 100 },
-      { frequency: 480, duration: 400 },
-      { frequency: null, duration: 1500 },
+      // Ring burst 1 (two harmonics simulated via alternation)
+      { frequency: 440, duration: 200 },
+      { frequency: 480, duration: 200 },
+      { frequency: 440, duration: 200 },
+      { frequency: 480, duration: 200 },
+      // Brief gap between bursts
+      { frequency: null, duration: 200 },
+      // Ring burst 2
+      { frequency: 440, duration: 200 },
+      { frequency: 480, duration: 200 },
+      { frequency: 440, duration: 200 },
+      { frequency: 480, duration: 200 },
+      // Long pause before next ring cycle
+      { frequency: null, duration: 2000 },
     ],
-    0.3,
+    0.35,
   );
 }
 
+/**
+ * Caller ringback — standard single-tone "ring…ring" pattern
+ * heard while waiting for the other party to pick up.
+ */
 export function playOutgoingRingback() {
   return playTonePattern(
     [
-      { frequency: 440, duration: 1000 },
-      { frequency: null, duration: 3000 },
+      { frequency: 440, duration: 800 },
+      { frequency: null, duration: 400 },
+      { frequency: 440, duration: 800 },
+      { frequency: null, duration: 2800 },
     ],
-    0.15,
+    0.18,
   );
 }
