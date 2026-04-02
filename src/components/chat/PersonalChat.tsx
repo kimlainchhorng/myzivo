@@ -547,77 +547,100 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <div className="flex items-center justify-center h-40">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
           </div>
-        ) : messages.length === 0 ? (
+        ) : messages.length === 0 && callEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
             <p className="text-sm">No messages yet</p>
             <p className="text-xs mt-1">Say hello to {recipientName}!</p>
           </div>
         ) : (
-          messages.map((msg) => {
-            const isMe = msg.sender_id === user?.id;
-            const repliedMsg = msg.reply_to_id ? messages.find((m) => m.id === msg.reply_to_id) : null;
-            const isHighlighted = highlightedMsgId === msg.id;
+          (() => {
+            // Merge messages and call events into a single timeline sorted by created_at
+            const timeline: TimelineItem[] = [
+              ...messages,
+              ...callEvents,
+            ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
-            return (
-              <div
-                key={msg.id}
-                ref={(el) => { if (el) messageRefs.current.set(msg.id, el); }}
-                className={`transition-colors duration-500 rounded-xl ${isHighlighted ? "bg-primary/10" : ""}`}
-              >
-                {/* Reply quote */}
-                {repliedMsg && (
-                  <div
-                    className={`mx-1 mb-0.5 px-2.5 py-1.5 rounded-lg border-l-2 border-primary/50 text-[10px] cursor-pointer ${
-                      isMe ? "ml-auto max-w-[75%] bg-primary/10 text-foreground" : "max-w-[75%] bg-muted/60 text-muted-foreground"
-                    }`}
-                    onClick={() => scrollToMessage(repliedMsg.id)}
-                  >
-                    <span className="font-semibold">{repliedMsg.sender_id === user?.id ? "You" : recipientName}</span>
-                    <p className="truncate">{repliedMsg.message || "📷 Media"}</p>
-                  </div>
-                )}
-
-                {/* Location message */}
-                {msg.message_type === "location" && msg.location_lat != null && msg.location_lng != null ? (
-                  <LocationShareBubble
-                    lat={msg.location_lat}
-                    lng={msg.location_lng}
-                    label={msg.location_label || undefined}
-                    isMe={isMe}
-                    time={formatMsgTime(msg.created_at)}
+            return timeline.map((item) => {
+              if (isCallEvent(item)) {
+                return (
+                  <CallEventBubble
+                    key={`call-${item.id}`}
+                    callType={item.call_type as "voice" | "video"}
+                    status={item.status}
+                    isOutgoing={item.caller_id === user?.id}
+                    durationSeconds={item.duration_seconds}
+                    createdAt={item.created_at}
+                    onCallback={() => handleStartCall(item.call_type as "voice" | "video")}
                   />
-                ) : msg.message_type === "voice" && msg.voice_url ? (
-                  <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[80%] min-w-[220px] px-3 py-2.5 rounded-2xl shadow-sm ${
-                      isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
-                    } ${msg.id.startsWith("opt-") ? "opacity-60" : ""}`}>
-                      <VoiceMessagePlayer url={msg.voice_url} isMe={isMe} />
-                      <span className={`text-[9px] block text-right mt-1 ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>
-                        {formatMsgTime(msg.created_at)}
-                      </span>
+                );
+              }
+
+              const msg = item as Message;
+              const isMe = msg.sender_id === user?.id;
+              const repliedMsg = msg.reply_to_id ? messages.find((m) => m.id === msg.reply_to_id) : null;
+              const isHighlighted = highlightedMsgId === msg.id;
+
+              return (
+                <div
+                  key={msg.id}
+                  ref={(el) => { if (el) messageRefs.current.set(msg.id, el); }}
+                  className={`transition-colors duration-500 rounded-xl ${isHighlighted ? "bg-primary/10" : ""}`}
+                >
+                  {/* Reply quote */}
+                  {repliedMsg && (
+                    <div
+                      className={`mx-1 mb-0.5 px-2.5 py-1.5 rounded-lg border-l-2 border-primary/50 text-[10px] cursor-pointer ${
+                        isMe ? "ml-auto max-w-[75%] bg-primary/10 text-foreground" : "max-w-[75%] bg-muted/60 text-muted-foreground"
+                      }`}
+                      onClick={() => scrollToMessage(repliedMsg.id)}
+                    >
+                      <span className="font-semibold">{repliedMsg.sender_id === user?.id ? "You" : recipientName}</span>
+                      <p className="truncate">{repliedMsg.message || "📷 Media"}</p>
                     </div>
-                  </div>
-                ) : (
-                  <ChatMessageBubble
-                    id={msg.id}
-                    message={msg.message}
-                    time={formatMsgTime(msg.created_at)}
-                    isMe={isMe}
-                    isRead={msg.is_read}
-                    isDelivered={!!msg.delivered_at}
-                    imageUrl={msg.image_url}
-                    videoUrl={msg.video_url}
-                    isPinned={msg.is_pinned}
-                    expiresAt={msg.expires_at}
-                    onReply={handleReply}
-                    onDelete={handleDelete}
-                    onForward={handleForward}
-                    onPin={handlePin}
-                  />
-                )}
-              </div>
-            );
-          })
+                  )}
+
+                  {/* Location message */}
+                  {msg.message_type === "location" && msg.location_lat != null && msg.location_lng != null ? (
+                    <LocationShareBubble
+                      lat={msg.location_lat}
+                      lng={msg.location_lng}
+                      label={msg.location_label || undefined}
+                      isMe={isMe}
+                      time={formatMsgTime(msg.created_at)}
+                    />
+                  ) : msg.message_type === "voice" && msg.voice_url ? (
+                    <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-[80%] min-w-[220px] px-3 py-2.5 rounded-2xl shadow-sm ${
+                        isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
+                      } ${msg.id.startsWith("opt-") ? "opacity-60" : ""}`}>
+                        <VoiceMessagePlayer url={msg.voice_url} isMe={isMe} />
+                        <span className={`text-[9px] block text-right mt-1 ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>
+                          {formatMsgTime(msg.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <ChatMessageBubble
+                      id={msg.id}
+                      message={msg.message}
+                      time={formatMsgTime(msg.created_at)}
+                      isMe={isMe}
+                      isRead={msg.is_read}
+                      isDelivered={!!msg.delivered_at}
+                      imageUrl={msg.image_url}
+                      videoUrl={msg.video_url}
+                      isPinned={msg.is_pinned}
+                      expiresAt={msg.expires_at}
+                      onReply={handleReply}
+                      onDelete={handleDelete}
+                      onForward={handleForward}
+                      onPin={handlePin}
+                    />
+                  )}
+                </div>
+              );
+            });
+          })()
         )}
 
         {/* Typing indicator */}
