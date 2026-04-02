@@ -1,194 +1,181 @@
 type StopTone = () => void;
 
-interface ToneStep {
+const SAMPLE_RATE = 22050;
+const INCOMING_RINGTONE_SRC = createToneDataUrl([
+  { frequency: 440, durationMs: 200 },
+  { frequency: 480, durationMs: 200 },
+  { frequency: 440, durationMs: 200 },
+  { frequency: 480, durationMs: 200 },
+  { frequency: null, durationMs: 200 },
+  { frequency: 440, durationMs: 200 },
+  { frequency: 480, durationMs: 200 },
+  { frequency: 440, durationMs: 200 },
+  { frequency: 480, durationMs: 200 },
+  { frequency: null, durationMs: 2000 },
+]);
+
+const OUTGOING_RINGBACK_SRC = createToneDataUrl([
+  { frequency: 440, durationMs: 800 },
+  { frequency: null, durationMs: 400 },
+  { frequency: 440, durationMs: 800 },
+  { frequency: null, durationMs: 2800 },
+]);
+
+let incomingAudio: HTMLAudioElement | null = null;
+let outgoingAudio: HTMLAudioElement | null = null;
+let primeRegistered = false;
+
+interface ToneSegment {
   frequency: number | null;
-  duration: number;
+  durationMs: number;
 }
 
-let audioContext: AudioContext | null = null;
+function clampSample(value: number) {
+  return Math.max(-1, Math.min(1, value));
+}
 
-function getCallAudioContext(): AudioContext | null {
-  if (typeof window === "undefined") return null;
+function createToneDataUrl(segments: ToneSegment[]) {
+  const totalSamples = segments.reduce((sum, segment) => sum + Math.floor((segment.durationMs / 1000) * SAMPLE_RATE), 0);
+  const pcm = new Int16Array(totalSamples);
 
-  // If the old context was closed, discard it
-  if (audioContext && audioContext.state === "closed") {
-    audioContext = null;
+  let offset = 0;
+  for (const segment of segments) {
+    const segmentSamples = Math.floor((segment.durationMs / 1000) * SAMPLE_RATE);
+    for (let i = 0; i < segmentSamples; i += 1) {
+      const attack = Math.min(1, i / (SAMPLE_RATE * 0.01));
+      const release = Math.min(1, (segmentSamples - i) / (SAMPLE_RATE * 0.01));
+      const envelope = Math.min(attack, release);
+      const sample = segment.frequency
+        ? Math.sin((2 * Math.PI * segment.frequency * i) / SAMPLE_RATE) * 0.45 * envelope
+        : 0;
+      pcm[offset + i] = Math.floor(clampSample(sample) * 32767);
+    }
+    offset += segmentSamples;
   }
 
-  if (audioContext) return audioContext;
+  const wavBytes = encodeWav(pcm, SAMPLE_RATE);
+  return `data:audio/wav;base64,${bytesToBase64(wavBytes)}`;
+}
 
-  const AudioCtor = window.AudioContext || (window as any).webkitAudioContext;
-  if (!AudioCtor) return null;
+function encodeWav(samples: Int16Array, sampleRate: number) {
+  const dataLength = samples.length * 2;
+  const buffer = new ArrayBuffer(44 + dataLength);
+  const view = new DataView(buffer);
 
-  audioContext = new AudioCtor();
-  return audioContext;
+  writeString(view, 0, "RIFF");
+  view.setUint32(4, 36 + dataLength, true);
+  writeString(view, 8, "WAVE");
+  writeString(view, 12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(view, 36, "data");
+  view.setUint32(40, dataLength, true);
+
+  for (let i = 0; i < samples.length; i += 1) {
+    view.setInt16(44 + i * 2, samples[i], true);
+  }
+
+  return new Uint8Array(buffer);
+}
+
+function writeString(view: DataView, offset: number, value: string) {
+  for (let i = 0; i < value.length; i += 1) {
+    view.setUint8(offset + i, value.charCodeAt(i));
+  }
+}
+
+function bytesToBase64(bytes: Uint8Array) {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 1) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+function createLoopingAudio(src: string) {
+  const audio = new Audio(src);
+  audio.loop = true;
+  audio.preload = "auto";
+  audio.playsInline = true;
+  audio.setAttribute("playsinline", "true");
+  audio.setAttribute("webkit-playsinline", "true");
+  return audio;
+}
+
+function getIncomingAudio() {
+  if (!incomingAudio) incomingAudio = createLoopingAudio(INCOMING_RINGTONE_SRC);
+  return incomingAudio;
+}
+
+function getOutgoingAudio() {
+  if (!outgoingAudio) outgoingAudio = createLoopingAudio(OUTGOING_RINGBACK_SRC);
+  return outgoingAudio;
+}
+
+async function primeAudioElement(audio: HTMLAudioElement) {
+  try {
+    audio.muted = true;
+    audio.currentTime = 0;
+    await audio.play();
+    audio.pause();
+    audio.currentTime = 0;
+    audio.muted = false;
+  } catch {}
 }
 
 export async function primeCallAudio() {
-  const ctx = getCallAudioContext();
-  if (!ctx) return;
-
-  try {
-    if (ctx.state === "suspended" || ctx.state === "interrupted" as any) {
-      await ctx.resume();
-    }
-
-    // Play a tiny silent buffer to fully unlock on iOS
-    const source = ctx.createBufferSource();
-    const gain = ctx.createGain();
-    source.buffer = ctx.createBuffer(1, 1, 22050);
-    gain.gain.value = 0.0001;
-    source.connect(gain);
-    gain.connect(ctx.destination);
-    source.start(0);
-    source.onended = () => {
-      try { source.disconnect(); } catch {}
-      try { gain.disconnect(); } catch {}
-    };
-  } catch {}
+  await Promise.all([
+    primeAudioElement(getIncomingAudio()),
+    primeAudioElement(getOutgoingAudio()),
+  ]);
 }
 
 export function registerCallAudioUnlock() {
   if (typeof window === "undefined") return () => {};
+  if (primeRegistered) return () => {};
 
   const unlock = () => { void primeCallAudio(); };
 
-  // Use capture phase so we catch gestures before anything else
-  window.addEventListener("pointerup", unlock, { capture: true, passive: true });
-  window.addEventListener("touchend", unlock, { capture: true, passive: true });
+  primeRegistered = true;
+  window.addEventListener("pointerdown", unlock, { capture: true, passive: true });
+  window.addEventListener("touchstart", unlock, { capture: true, passive: true });
   window.addEventListener("click", unlock, { capture: true, passive: true });
   window.addEventListener("keydown", unlock, { capture: true, passive: true });
 
-  // Try immediately (works if page already had interaction)
-  unlock();
+  return () => {};
+}
 
+async function startLoop(audio: HTMLAudioElement) {
+  try {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.muted = false;
+    await audio.play();
+  } catch (error) {
+    console.warn("[callAudio] Audio element playback failed", error);
+  }
+}
+
+function stopLoop(audio: HTMLAudioElement): StopTone {
   return () => {
-    window.removeEventListener("pointerup", unlock, { capture: true } as any);
-    window.removeEventListener("touchend", unlock, { capture: true } as any);
-    window.removeEventListener("click", unlock, { capture: true } as any);
-    window.removeEventListener("keydown", unlock, { capture: true } as any);
+    audio.pause();
+    audio.currentTime = 0;
   };
 }
 
-function playTonePattern(steps: ToneStep[], volume: number): StopTone {
-  const ctx = getCallAudioContext();
-  if (!ctx) {
-    console.warn("[callAudio] No AudioContext available");
-    return () => {};
-  }
-
-  // Ensure context is running
-  if (ctx.state !== "running") {
-    void ctx.resume().catch(() => {});
-  }
-
-  const gainNode = ctx.createGain();
-  gainNode.gain.value = volume;
-  gainNode.connect(ctx.destination);
-
-  let stopped = false;
-  let currentOsc: OscillatorNode | null = null;
-  let timeout: number | null = null;
-
-  const wait = (ms: number) =>
-    new Promise<void>((resolve) => {
-      if (stopped) { resolve(); return; }
-      timeout = window.setTimeout(resolve, ms);
-    });
-
-  const playStep = (step: ToneStep) =>
-    new Promise<void>((resolve) => {
-      if (stopped) { resolve(); return; }
-
-      if (step.frequency === null) {
-        timeout = window.setTimeout(resolve, step.duration);
-        return;
-      }
-
-      // Re-check context state before each tone
-      if (ctx.state !== "running") {
-        void ctx.resume().catch(() => {});
-      }
-
-      const osc = ctx.createOscillator();
-      currentOsc = osc;
-      osc.type = "sine";
-      osc.frequency.value = step.frequency;
-      osc.connect(gainNode);
-      osc.start();
-
-      timeout = window.setTimeout(() => {
-        try { osc.stop(); } catch {}
-        try { osc.disconnect(); } catch {}
-        if (currentOsc === osc) currentOsc = null;
-        resolve();
-      }, step.duration);
-    });
-
-  const loop = async () => {
-    // Wait up to 3s for audio context to become running
-    for (let i = 0; i < 12 && !stopped; i++) {
-      if (ctx.state === "running") break;
-      void ctx.resume().catch(() => {});
-      await wait(250);
-    }
-
-    if (stopped || ctx.state !== "running") {
-      console.warn("[callAudio] AudioContext never reached running state:", ctx.state);
-      return;
-    }
-
-    while (!stopped) {
-      for (const step of steps) {
-        await playStep(step);
-        if (stopped) return;
-      }
-    }
-  };
-
-  void loop();
-
-  return () => {
-    stopped = true;
-    if (timeout) clearTimeout(timeout);
-    try { currentOsc?.stop(); } catch {}
-    try { currentOsc?.disconnect(); } catch {}
-    try { gainNode.disconnect(); } catch {}
-  };
-}
-
-/**
- * Classic telephone ring — two-tone "BRRING" repeated with pauses.
- */
 export function playIncomingRingtone(): StopTone {
-  return playTonePattern(
-    [
-      { frequency: 440, duration: 200 },
-      { frequency: 480, duration: 200 },
-      { frequency: 440, duration: 200 },
-      { frequency: 480, duration: 200 },
-      { frequency: null, duration: 200 },
-      { frequency: 440, duration: 200 },
-      { frequency: 480, duration: 200 },
-      { frequency: 440, duration: 200 },
-      { frequency: 480, duration: 200 },
-      { frequency: null, duration: 2000 },
-    ],
-    0.35,
-  );
+  const audio = getIncomingAudio();
+  void startLoop(audio);
+  return stopLoop(audio);
 }
 
-/**
- * Caller ringback — standard single-tone "ring…ring" pattern.
- */
 export function playOutgoingRingback(): StopTone {
-  return playTonePattern(
-    [
-      { frequency: 440, duration: 800 },
-      { frequency: null, duration: 400 },
-      { frequency: 440, duration: 800 },
-      { frequency: null, duration: 2800 },
-    ],
-    0.18,
-  );
+  const audio = getOutgoingAudio();
+  void startLoop(audio);
+  return stopLoop(audio);
 }
