@@ -23452,6 +23452,30 @@ export type Database = {
           },
         ]
       }
+      message_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           body: string
@@ -29183,6 +29207,7 @@ export type Database = {
           kyc_status: string
           kyc_verified_at: string | null
           last_admin_login: string | null
+          last_seen: string | null
           loyalty_tier_id: string | null
           payout_hold: boolean
           phone: string | null
@@ -29239,6 +29264,7 @@ export type Database = {
           kyc_status?: string
           kyc_verified_at?: string | null
           last_admin_login?: string | null
+          last_seen?: string | null
           loyalty_tier_id?: string | null
           payout_hold?: boolean
           phone?: string | null
@@ -29295,6 +29321,7 @@ export type Database = {
           kyc_status?: string
           kyc_verified_at?: string | null
           last_admin_login?: string | null
+          last_seen?: string | null
           loyalty_tier_id?: string | null
           payout_hold?: boolean
           phone?: string | null
