@@ -628,6 +628,12 @@ const Profile = () => {
                       <CardTitle className="flex items-center justify-center gap-2 text-xl font-bold">
                         <Sparkles className="h-4 w-4 text-primary" />
                         {profile?.full_name || t("profile.set_name")}
+                        {profile?.is_verified && (
+                          <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" fill="hsl(var(--primary))" />
+                            <path d="M8 12.5L10.5 15L16 9.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
                       </CardTitle>
                       {/* Email hidden — only visible to account owner in settings */}
                       <div className="flex items-center justify-center gap-2 mt-3">
