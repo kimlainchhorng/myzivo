@@ -135,6 +135,7 @@ const Profile = () => {
   const { user, signOut, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
+  const { unreadCount: notifUnreadCount } = useNotifications(20);
   const affiliateAttribution = useAffiliateAttribution();
   const { isPlus, plan } = useZivoPlus();
   const updateProfile = useUpdateUserProfile();
