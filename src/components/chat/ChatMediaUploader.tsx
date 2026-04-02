@@ -191,5 +191,3 @@ export function ChatMediaUploader({ recipientId, onMediaSent, renderTrigger }: C
     </>
   );
 }
-
-export { ChatMediaUploader };
