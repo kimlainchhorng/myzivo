@@ -35,6 +35,7 @@ export default function ChatMessageBubble({
   const { user } = useAuth();
   const [showActions, setShowActions] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>([]);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
