@@ -1,38 +1,47 @@
 
+# Communication Workflow Upgrade Plan
 
-## Fix: Duplicate Blue Check Icons in Fare Carousel
+## Phase 1: Database Schema (Migration)
+Create tables for:
+- **call_history** — Log all calls with duration, type, participants, recording URL
+- **voicemails** — Store voicemail recordings with transcription
+- **chat_media** — Track uploaded files/images/videos in chat threads
+- **group_calls** — Multi-party call sessions with participant list
+- **call_recordings** — Store recordings with consent tracking
 
-### Root Cause Analysis
+## Phase 2: Chat Media & File Sharing
+- Upload images, videos, documents, voice notes in chat
+- File preview cards with download links
+- Upload progress indicator
+- Voice note recording with waveform playback
+- Integration with Supabase Storage bucket
 
-After auditing the code, the check icon is rendered in exactly one place (line 480-496) and is gated by `isSelected = variant.id === selectedFareId`. The logic is correct. The duplicate check is caused by one of two things:
+## Phase 3: Call History & Voicemail
+- Call log page showing missed/incoming/outgoing calls
+- Duration tracking in WebRTC hook
+- Voicemail recording when call is declined/missed
+- Voicemail playback with duration display
 
-1. **AnimatePresence exit overlap**: Each card has its own `<AnimatePresence>` wrapping the check. When switching selection, the old card's check plays an exit animation (spring with stiffness 500, damping 22 — can take ~300ms+) while the new card's check plays an enter animation. During this window, two checks are visible simultaneously.
+## Phase 4: Live Chat-to-Call Handoff
+- "Call" button inside PersonalChat that initiates WebRTC call
+- Seamless transition from text to voice/video
+- Call state shown inline in chat thread
+- Return to chat after call ends
 
-2. **Possible duplicate variant IDs in the array**: The `mergeFareVariants` dedup has two passes (content-key then ID) but edge cases in the recovery/stored/live merge could still produce duplicates if `buildFareVariantKey` produces different keys for variants that share the same `id`.
+## Phase 5: Call Enhancements
+- **Call quality indicator**: Monitor RTCPeerConnection stats (bitrate, packet loss, jitter)
+- **Picture-in-picture**: Floating mini video during navigation
+- **Screen sharing**: Add screen track to WebRTC connection
+- **Call recording**: MediaRecorder on combined streams with consent UI
 
-### Plan
+## Phase 6: Group Video/Voice Calls
+- Multi-party mesh topology (up to 4 participants)
+- Participant grid layout with speaker detection
+- Group call invite system via chat
 
-#### 1. Eliminate AnimatePresence exit overlap on check icon (`FareVariantsCard.tsx`)
-- Remove `AnimatePresence` around the check icon entirely
-- Use a simple conditional render: `{isSelected && <div>...</div>}` — no exit animation
-- This guarantees zero frames where two checks coexist
-- Keep the enter animation if desired via a simple `motion.div` with `initial`/`animate` but no `exit`
-
-#### 2. Final dedup safety in the render loop (`FareVariantsCard.tsx`)
-- Before mapping `filteredVariants`, add a final dedup by `variant.id`:
-  ```
-  const uniqueVariants = filteredVariants.filter(
-    (v, i, arr) => arr.findIndex(x => x.id === v.id) === i
-  );
-  ```
-- Map over `uniqueVariants` instead of `filteredVariants`
-- Use `key={`fare-${variant.id}`}` (drop the index suffix since IDs are now guaranteed unique)
-
-#### 3. Also remove AnimatePresence from the shine and glow bar
-- The shine effect (line 413-427) and glow bar (line 430-444) also use AnimatePresence with exit animations
-- These can also briefly show on two cards during transitions
-- Replace with simple conditional renders gated only by `isSelected`
-
-#### Files
-- `src/components/flight/review/FareVariantsCard.tsx` — all changes are here
-
+## Implementation Order
+1. Migration (all tables at once)
+2. Chat media sharing + chat-to-call handoff (core workflow)
+3. Call history + voicemail
+4. Call quality + PiP + screen sharing + recording
+5. Group calls (most complex)

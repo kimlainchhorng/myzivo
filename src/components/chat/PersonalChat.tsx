@@ -6,7 +6,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Phone, X, Mic, Square, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Phone, X, Mic, Square, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield, Video, History, FileText } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
@@ -23,6 +23,8 @@ import StickerKeyboard from "./StickerKeyboard";
 import ChatPersonalization, { getWallpaperClass } from "./ChatPersonalization";
 import ChatMiniApps from "./ChatMiniApps";
 import ChatSecurity from "./ChatSecurity";
+import CallHistoryPage from "./CallHistoryPage";
+import { ChatMediaUploader } from "./ChatMediaUploader";
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
@@ -81,6 +83,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showPersonalization, setShowPersonalization] = useState(false);
   const [showMiniApps, setShowMiniApps] = useState(false);
   const [showSecurity, setShowSecurity] = useState(false);
+  const [showCallHistory, setShowCallHistory] = useState(false);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -417,6 +420,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <button onClick={() => setShowSearch(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <Search className="h-4.5 w-4.5 text-muted-foreground" />
           </button>
+          <button onClick={() => setShowCallHistory(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <History className="h-4.5 w-4.5 text-muted-foreground" />
+          </button>
+          <button onClick={() => { void handleStartCall("video"); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <Video className="h-4.5 w-4.5 text-muted-foreground" />
+          </button>
           <button onClick={() => { void handleStartCall("voice"); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <Phone className="h-5 w-5 text-primary" />
           </button>
@@ -723,6 +732,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         chatPartnerName={recipientName}
         onBlock={onClose}
       />
+
+      {/* Call History */}
+      <AnimatePresence>
+        {showCallHistory && (
+          <CallHistoryPage
+            onClose={() => setShowCallHistory(false)}
+            onCallUser={(userId, type) => {
+              setShowCallHistory(false);
+              handleStartCall(type);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
