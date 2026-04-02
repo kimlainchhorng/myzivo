@@ -9,6 +9,49 @@ import { useWebRTC, CallRole } from "@/hooks/useWebRTC";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+/** Creates a ringback tone for the caller (single gentle beep pattern) */
+function createRingbackTone() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = 0.15;
+    gainNode.connect(ctx.destination);
+    let stopped = false;
+    let currentOsc: OscillatorNode | null = null;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const playTone = (freq: number, dur: number): Promise<void> =>
+      new Promise((resolve) => {
+        if (stopped) { resolve(); return; }
+        const osc = ctx.createOscillator();
+        currentOsc = osc;
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        osc.connect(gainNode);
+        osc.start();
+        timeout = setTimeout(() => { osc.stop(); osc.disconnect(); currentOsc = null; resolve(); }, dur);
+      });
+
+    const loop = async () => {
+      while (!stopped) {
+        await playTone(440, 1000);
+        if (stopped) break;
+        await new Promise(r => { timeout = setTimeout(r, 3000); });
+      }
+    };
+    loop();
+
+    return () => {
+      stopped = true;
+      clearTimeout(timeout);
+      try { currentOsc?.stop(); } catch {}
+      try { ctx.close(); } catch {}
+    };
+  } catch {
+    return () => {};
+  }
+}
+
 interface CallScreenProps {
   recipientName: string;
   recipientAvatar?: string | null;
@@ -83,6 +126,33 @@ export default function CallScreen({
     };
     init();
   }, [callId]);
+
+  // Play ringback tone for caller while ringing
+  useEffect(() => {
+    if (role !== "caller" || webrtc.callState !== "ringing") return;
+    const stopRingback = createRingbackTone();
+    return () => { stopRingback(); };
+  }, [role, webrtc.callState]);
+
+  // Caller: listen for decline/end before WebRTC connects
+  useEffect(() => {
+    if (role !== "caller" || !callId) return;
+    const channel = supabase
+      .channel(`caller-watch-${callId}`)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "call_signals",
+        filter: `id=eq.${callId}`,
+      }, (payload: any) => {
+        const data = payload.new;
+        if (data.status === "declined" || data.status === "ended") {
+          webrtc.endCall();
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [role, callId]);
 
   // Timer when connected
   useEffect(() => {
