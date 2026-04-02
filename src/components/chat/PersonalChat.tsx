@@ -27,6 +27,7 @@ import ChatMiniApps from "./ChatMiniApps";
 import ChatSecurity from "./ChatSecurity";
 import CallHistoryPage from "./CallHistoryPage";
 import { ChatMediaUploader } from "./ChatMediaUploader";
+import CallEventBubble from "./CallEventBubble";
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
