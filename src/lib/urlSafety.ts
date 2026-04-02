@@ -1,10 +1,11 @@
 /**
- * URL Safety — domain allowlisting for outbound redirects
+ * URL Safety — domain allowlisting, link validation, and path sanitization
  * 
- * Prevents open-redirect attacks where an attacker crafts a link like:
- *   hizovo.com/out?partner=fake&name=Your+Bank&url=https://phishing.com
- * 
- * Only known partner domains and our own domain are allowed.
+ * Prevents:
+ * - Open redirect attacks via crafted partner links
+ * - Path traversal via injected IDs in push notifications
+ * - Phishing via unvalidated social/payment URLs from DB
+ * - Protocol injection (javascript:, data:, vbscript:)
  */
 
 /** 
@@ -52,28 +53,138 @@ const ALLOWED_PARTNER_DOMAINS: string[] = [
   'myzivo.lovable.app',
 ];
 
+/** Domains allowed for Stripe checkout redirects */
+const ALLOWED_CHECKOUT_DOMAINS: string[] = [
+  'checkout.stripe.com',
+  'pay.stripe.com',
+  'billing.stripe.com',
+];
+
+/** Domains allowed for social media links from DB */
+const ALLOWED_SOCIAL_DOMAINS: string[] = [
+  'instagram.com',
+  'facebook.com',
+  'fb.com',
+  'telegram.org',
+  't.me',
+  'telegram.me',
+  'tiktok.com',
+  'twitter.com',
+  'x.com',
+  'youtube.com',
+  'linkedin.com',
+  'wa.me',
+  'whatsapp.com',
+];
+
+/** Domains allowed for payment links in chat */
+const ALLOWED_PAYMENT_DOMAINS: string[] = [
+  'checkout.stripe.com',
+  'pay.stripe.com',
+  'checkout.payway.com.kh',
+  'bakong.nbc.gov.kh',
+  'paypal.com',
+  'paypal.me',
+];
+
 /**
- * Check if a URL points to an allowed partner domain.
- * Returns false for javascript:, data:, or unknown domains.
+ * Check if a URL uses a safe protocol (http/https only).
+ * Blocks javascript:, data:, vbscript:, etc.
  */
-export function isAllowedPartnerUrl(url: string): boolean {
+export function isSafeProtocol(url: string): boolean {
+  const trimmed = url.trim().toLowerCase();
+  // Block dangerous protocols
+  if (
+    trimmed.startsWith('javascript:') ||
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('vbscript:') ||
+    trimmed.startsWith('blob:')
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Validate a URL against an allowed domain list.
+ */
+function isAllowedDomain(url: string, allowedDomains: string[]): boolean {
   try {
     const parsed = new URL(url);
-    
-    // Only allow http/https
     if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
       return false;
     }
-    
     const hostname = parsed.hostname.toLowerCase();
-    
-    return ALLOWED_PARTNER_DOMAINS.some(domain => {
-      // Exact match or subdomain match (e.g. www.booking.com matches booking.com)
-      return hostname === domain || hostname.endsWith(`.${domain}`);
-    });
+    return allowedDomains.some(domain => 
+      hostname === domain || hostname.endsWith(`.${domain}`)
+    );
   } catch {
     return false;
   }
+}
+
+/**
+ * Check if a URL points to an allowed partner domain.
+ */
+export function isAllowedPartnerUrl(url: string): boolean {
+  return isAllowedDomain(url, ALLOWED_PARTNER_DOMAINS);
+}
+
+/**
+ * Check if a URL is a valid Stripe checkout URL.
+ * Used to validate server-returned checkout URLs before redirecting.
+ */
+export function isAllowedCheckoutUrl(url: string): boolean {
+  return isAllowedDomain(url, ALLOWED_CHECKOUT_DOMAINS);
+}
+
+/**
+ * Check if a URL is a valid social media link.
+ * Used to validate DB-stored social URLs before rendering as <a href>.
+ */
+export function isAllowedSocialUrl(url: string): boolean {
+  return isAllowedDomain(url, ALLOWED_SOCIAL_DOMAINS);
+}
+
+/**
+ * Check if a URL is a valid payment link for chat.
+ * Used to validate payment URLs before rendering QR codes or links.
+ */
+export function isAllowedPaymentUrl(url: string): boolean {
+  return isAllowedDomain(url, ALLOWED_PAYMENT_DOMAINS);
+}
+
+/**
+ * Sanitize a dynamic path segment (e.g. IDs from push notifications).
+ * Only allows UUID-like strings and simple alphanumeric IDs.
+ * Prevents path traversal (../../admin) and injection.
+ */
+export function sanitizePathSegment(value: string | undefined | null): string | null {
+  if (!value) return null;
+  
+  const trimmed = value.trim();
+  
+  // Only allow: alphanumeric, hyphens, underscores (covers UUIDs and simple IDs)
+  // Block: ../ ./ / \ and any special chars
+  if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+    console.warn('[urlSafety] Blocked suspicious path segment:', trimmed);
+    return null;
+  }
+  
+  // Max 128 chars for an ID
+  if (trimmed.length > 128) return null;
+  
+  return trimmed;
+}
+
+/**
+ * Build a safe internal navigation path from a base path and an ID.
+ * Returns the fallback path if the ID is invalid.
+ */
+export function safeInternalPath(basePath: string, id: string | undefined | null, fallback: string): string {
+  const safeId = sanitizePathSegment(id);
+  if (!safeId) return fallback;
+  return `${basePath}/${safeId}`;
 }
 
 /**
@@ -81,13 +192,35 @@ export function isAllowedPartnerUrl(url: string): boolean {
  * Prevents social engineering (e.g. name="Your Bank - Login Required")
  */
 export function sanitizePartnerName(name: string): string {
-  // Strip HTML-like characters, limit length, remove suspicious patterns
   const cleaned = name
-    .replace(/[<>"'`]/g, '')   // Remove potential injection chars
-    .replace(/\s+/g, ' ')      // Normalize whitespace
+    .replace(/[<>"'`]/g, '')
+    .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 50);             // Max 50 chars
+    .slice(0, 50);
   
-  // If empty after cleaning, return generic
   return cleaned || 'Partner';
+}
+
+/**
+ * Validate a URL from an external/untrusted source before rendering.
+ * Returns the URL if safe, or null if blocked.
+ */
+export function validateExternalUrl(url: string | null | undefined, allowedDomains?: string[]): string | null {
+  if (!url) return null;
+  
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  
+  if (!isSafeProtocol(trimmed)) {
+    console.warn('[urlSafety] Blocked unsafe protocol:', trimmed.slice(0, 30));
+    return null;
+  }
+  
+  // If domain allowlist provided, validate against it
+  if (allowedDomains && !isAllowedDomain(trimmed, allowedDomains)) {
+    console.warn('[urlSafety] Blocked URL not in allowlist:', trimmed.slice(0, 60));
+    return null;
+  }
+  
+  return trimmed;
 }
