@@ -127,6 +127,33 @@ export default function CallScreen({
     init();
   }, [callId]);
 
+  // Play ringback tone for caller while ringing
+  useEffect(() => {
+    if (role !== "caller" || webrtc.callState !== "ringing") return;
+    const stopRingback = createRingbackTone();
+    return () => { stopRingback(); };
+  }, [role, webrtc.callState]);
+
+  // Caller: listen for decline/end before WebRTC connects
+  useEffect(() => {
+    if (role !== "caller" || !callId) return;
+    const channel = supabase
+      .channel(`caller-watch-${callId}`)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "call_signals",
+        filter: `id=eq.${callId}`,
+      }, (payload: any) => {
+        const data = payload.new;
+        if (data.status === "declined" || data.status === "ended") {
+          webrtc.endCall();
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [role, callId]);
+
   // Timer when connected
   useEffect(() => {
     if (webrtc.callState === "connected") {
