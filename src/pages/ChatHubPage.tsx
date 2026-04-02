@@ -492,6 +492,17 @@ export default function ChatHubPage() {
           onClose={() => setOpenShopChat(null)}
         />
       )}
+      {/* Inline Personal Chat */}
+      <AnimatePresence>
+        {openPersonalChat && (
+          <PersonalChat
+            recipientId={openPersonalChat.id}
+            recipientName={openPersonalChat.name}
+            recipientAvatar={openPersonalChat.avatar}
+            onClose={() => setOpenPersonalChat(null)}
+          />
+        )}
+      </AnimatePresence>
     </PullToRefresh>
   );
 }
