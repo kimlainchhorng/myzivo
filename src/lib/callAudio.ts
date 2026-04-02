@@ -24,6 +24,8 @@ const OUTGOING_RINGBACK_SRC = createToneDataUrl([
 let incomingAudio: HTMLAudioElement | null = null;
 let outgoingAudio: HTMLAudioElement | null = null;
 let primeRegistered = false;
+let incomingArmed = false;
+let outgoingArmed = false;
 
 interface ToneSegment {
   frequency: number | null;
@@ -101,7 +103,6 @@ function createLoopingAudio(src: string) {
   const audio = new Audio(src);
   audio.loop = true;
   audio.preload = "auto";
-  audio.playsInline = true;
   audio.setAttribute("playsinline", "true");
   audio.setAttribute("webkit-playsinline", "true");
   return audio;
@@ -117,29 +118,42 @@ function getOutgoingAudio() {
   return outgoingAudio;
 }
 
-async function primeAudioElement(audio: HTMLAudioElement) {
+async function armAudioElement(audio: HTMLAudioElement) {
+  audio.pause();
+  audio.currentTime = 0;
+  audio.muted = true;
+  await audio.play();
+}
+
+async function primeIncomingAudio() {
   try {
-    audio.muted = true;
-    audio.currentTime = 0;
-    await audio.play();
-    audio.pause();
-    audio.currentTime = 0;
-    audio.muted = false;
-  } catch {}
+    await armAudioElement(getIncomingAudio());
+    incomingArmed = true;
+  } catch {
+    incomingArmed = false;
+  }
+}
+
+async function primeOutgoingAudio() {
+  try {
+    await armAudioElement(getOutgoingAudio());
+    outgoingArmed = true;
+  } catch {
+    outgoingArmed = false;
+  }
 }
 
 export async function primeCallAudio() {
-  await Promise.all([
-    primeAudioElement(getIncomingAudio()),
-    primeAudioElement(getOutgoingAudio()),
-  ]);
+  await Promise.all([primeIncomingAudio(), primeOutgoingAudio()]);
 }
 
 export function registerCallAudioUnlock() {
   if (typeof window === "undefined") return () => {};
   if (primeRegistered) return () => {};
 
-  const unlock = () => { void primeCallAudio(); };
+  const unlock = () => {
+    void primeCallAudio();
+  };
 
   primeRegistered = true;
   window.addEventListener("pointerdown", unlock, { capture: true, passive: true });
@@ -150,32 +164,41 @@ export function registerCallAudioUnlock() {
   return () => {};
 }
 
-async function startLoop(audio: HTMLAudioElement) {
-  try {
-    audio.pause();
-    audio.currentTime = 0;
-    audio.muted = false;
-    await audio.play();
-  } catch (error) {
-    console.warn("[callAudio] Audio element playback failed", error);
-  }
+function disarmAudio(audio: HTMLAudioElement) {
+  audio.pause();
+  audio.currentTime = 0;
+  audio.muted = true;
 }
 
-function stopLoop(audio: HTMLAudioElement): StopTone {
+function stopLoop(audio: HTMLAudioElement, setArmed: (armed: boolean) => void): StopTone {
   return () => {
-    audio.pause();
-    audio.currentTime = 0;
+    disarmAudio(audio);
+    setArmed(false);
   };
 }
 
 export function playIncomingRingtone(): StopTone {
   const audio = getIncomingAudio();
-  void startLoop(audio);
-  return stopLoop(audio);
+
+  if (!incomingArmed) {
+    console.warn("[callAudio] Incoming ringtone not armed yet");
+    void primeIncomingAudio();
+    return stopLoop(audio, (armed) => { incomingArmed = armed; });
+  }
+
+  audio.muted = false;
+  return stopLoop(audio, (armed) => { incomingArmed = armed; });
 }
 
 export function playOutgoingRingback(): StopTone {
   const audio = getOutgoingAudio();
-  void startLoop(audio);
-  return stopLoop(audio);
+
+  if (!outgoingArmed) {
+    console.warn("[callAudio] Outgoing ringback not armed yet");
+    void primeOutgoingAudio();
+    return stopLoop(audio, (armed) => { outgoingArmed = armed; });
+  }
+
+  audio.muted = false;
+  return stopLoop(audio, (armed) => { outgoingArmed = armed; });
 }
