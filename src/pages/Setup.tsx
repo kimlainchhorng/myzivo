@@ -3,21 +3,27 @@
  * Name and phone are already collected during registration.
  */
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { User, ArrowRight, ArrowLeft, Loader2, Camera, ImagePlus } from "lucide-react";
+import { getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function Setup() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { user, isLoading: authLoading } = useAuth();
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(true);
+  const redirectTo = getSafeRedirectTarget(
+    searchParams.get("redirect") ?? (location.state as { redirectTo?: string } | null)?.redirectTo,
+  );
 
   // Image state
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -36,7 +42,7 @@ export default function Setup() {
 
       if (!user) {
         if (isActive) setChecking(false);
-        navigate("/login", { replace: true });
+        navigate(withRedirectParam("/login", redirectTo), { replace: true });
         return;
       }
 
@@ -50,7 +56,7 @@ export default function Setup() {
         if (!isActive) return;
 
         if (profile?.setup_complete) {
-          navigate("/", { replace: true });
+          navigate(redirectTo, { replace: true });
           return;
         }
 
@@ -124,7 +130,7 @@ export default function Setup() {
     redirectTo: string;
   }) => {
     if (!user) {
-      navigate("/login", { replace: true });
+      navigate(withRedirectParam("/login", redirectTo), { replace: true });
       return;
     }
 
@@ -194,11 +200,11 @@ export default function Setup() {
   };
 
   const handleContinue = async () => {
-    await persistSetup({ includeUploads: true, redirectTo: "/" });
+    await persistSetup({ includeUploads: true, redirectTo });
   };
 
   const handleSkip = async () => {
-    await persistSetup({ includeUploads: false, redirectTo: "/profile" });
+    await persistSetup({ includeUploads: false, redirectTo: redirectTo === "/" ? "/profile" : redirectTo });
   };
 
   if (authLoading || checking) {

@@ -15,6 +15,7 @@ import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
 import { useI18n } from "@/hooks/useI18n";
 import { cn } from "@/lib/utils";
+import { getRedirectFromLocation, getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
 import InlineLegalSheet, { useLegalSheet } from "@/components/checkout/InlineLegalSheet";
 
 // Login schema
@@ -103,8 +104,10 @@ const Login = () => {
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/";
+  const redirectFromState = getRedirectFromLocation(
+    (location.state as { from?: { hash?: string; pathname?: string; search?: string } } | null)?.from,
+  );
+  const redirectTo = getSafeRedirectTarget(searchParams.get("redirect") ?? redirectFromState);
 
   // Login form
   const loginForm = useForm<LoginFormData>({
@@ -183,7 +186,9 @@ const Login = () => {
         setIsLoading(false);
         // Only navigate to verify-otp if the code was actually sent
         if (otpSent) {
-          navigate("/verify-otp", { state: { email: data.email } });
+          navigate(withRedirectParam("/verify-otp", redirectTo), {
+            state: { email: data.email, redirectTo },
+          });
         }
       } else if (msg.includes("too many requests") || msg.includes("rate limit")) {
         setIsLoading(false);
@@ -209,7 +214,9 @@ const Login = () => {
           await supabase.functions.invoke("send-otp-email", { body: { email: data.email, userId: user.id } });
           toast.info("Verification code sent to your email.");
         } catch {}
-        navigate("/verify-otp", { state: { email: data.email, userId: user.id } });
+        navigate(withRedirectParam("/verify-otp", redirectTo), {
+          state: { email: data.email, userId: user.id, redirectTo },
+        });
         return;
       }
 
@@ -231,13 +238,16 @@ const Login = () => {
       if (isAdminUser) {
         navigate("/admin/analytics", { replace: true });
       } else if (!profile?.setup_complete) {
-        navigate("/setup", { replace: true });
+        navigate(withRedirectParam("/setup", redirectTo), {
+          replace: true,
+          state: { redirectTo },
+        });
       } else {
-        navigate("/", { replace: true });
+        navigate(redirectTo, { replace: true });
       }
     } else {
       setIsLoading(false);
-      navigate(from, { replace: true });
+      navigate(redirectTo, { replace: true });
     }
   };
 
@@ -292,7 +302,9 @@ const Login = () => {
 
     setIsLoading(false);
     toast.success("Verification code sent to your email!");
-    navigate("/verify-otp", { state: { email: data.email, userId } });
+    navigate(withRedirectParam("/verify-otp", redirectTo), {
+      state: { email: data.email, userId, redirectTo },
+    });
   };
 
 

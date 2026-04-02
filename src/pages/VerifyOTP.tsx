@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowRight, RefreshCw, Mail, ArrowLeft, Home } from "lucide-react";
 import { motion } from "framer-motion";
+import { getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
 
 const VerifyOTP = () => {
   const [code, setCode] = useState("");
@@ -15,9 +16,12 @@ const VerifyOTP = () => {
   const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const navState = location.state as { email?: string; redirectTo?: string; userId?: string } | null;
   
-  const navEmail = (location.state as { email?: string })?.email;
-  const navUserId = (location.state as { userId?: string })?.userId;
+  const navEmail = navState?.email;
+  const navUserId = navState?.userId;
+  const redirectTo = getSafeRedirectTarget(searchParams.get("redirect") ?? navState?.redirectTo);
 
   const [email, setEmail] = useState<string | undefined>(navEmail);
   const userId = navUserId;
@@ -29,7 +33,7 @@ const VerifyOTP = () => {
       if (data.user?.email) {
         setEmail(data.user.email);
       } else {
-        navigate("/login?mode=signup", { replace: true });
+        navigate(withRedirectParam("/login?mode=signup", redirectTo), { replace: true });
       }
     };
 
@@ -55,7 +59,7 @@ const VerifyOTP = () => {
       if (email) {
         localStorage.setItem("zivo_saved_email", email);
       }
-      navigate("/login?mode=login", { replace: true });
+      navigate(withRedirectParam("/login?mode=login", redirectTo), { replace: true });
       return;
     }
 
@@ -75,8 +79,16 @@ const VerifyOTP = () => {
       return;
     }
 
-    navigate(profile?.setup_complete ? "/" : "/setup", { replace: true });
-  }, [email, navigate]);
+    if (!profile?.setup_complete) {
+      navigate(withRedirectParam("/setup", redirectTo), {
+        replace: true,
+        state: { redirectTo },
+      });
+      return;
+    }
+
+    navigate(redirectTo, { replace: true });
+  }, [email, navigate, redirectTo]);
 
   const maskedEmail = email
     ? email.replace(/^(.{1,2})(.*)(@.*)$/, (_, start, middle, end) => 
@@ -155,7 +167,7 @@ const VerifyOTP = () => {
   };
 
   const handleBack = () => {
-    navigate("/login?mode=signup");
+    navigate(withRedirectParam("/login?mode=signup", redirectTo));
   };
 
   const handleGoHome = async () => {
