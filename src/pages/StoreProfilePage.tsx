@@ -19,6 +19,7 @@ import { useI18n } from "@/hooks/useI18n";
 import storeRideBg from "@/assets/store-ride-bg.jpg";
 import storeCallBg from "@/assets/store-call-bg.jpg";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
+import { isAllowedSocialUrl } from "@/lib/urlSafety";
 
 /**
  * Extract the correct language part from dual-format text like "Khmer/English".
