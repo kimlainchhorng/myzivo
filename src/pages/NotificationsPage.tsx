@@ -1,14 +1,13 @@
 /**
  * Notifications Page — 3D/4D Spatial UI
  */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import SEOHead from '@/components/SEOHead';
 import { useNavigate } from 'react-router-dom';
-import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft } from 'lucide-react';
+import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft, UserPlus, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNotifications } from '@/hooks/useNotifications';
 import NotificationItem from '@/components/notifications/NotificationItem';
 import MobileBottomNav from '@/components/shared/MobileBottomNav';
@@ -16,9 +15,22 @@ import { useI18n } from '@/hooks/useI18n';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import PullToRefresh from '@/components/shared/PullToRefresh';
-import { useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from 'sonner';
+import { formatDistanceToNow } from 'date-fns';
 
-type NotificationCategory = 'all' | 'orders' | 'promos' | 'support' | 'delays';
+type NotificationCategory = 'all' | 'social' | 'orders' | 'promos' | 'support' | 'delays';
+
+interface FriendRequest {
+  id: string;
+  user_id: string;
+  created_at: string;
+  profile?: {
+    full_name: string | null;
+    avatar_url: string | null;
+  };
+}
 
 /* ── Bokeh Particle ── */
 const BokehParticle = ({ delay, size, x, y, color }: { delay: number; size: number; x: string; y: string; color: string }) => (
@@ -41,11 +53,59 @@ const GlassCard3D = ({ children, className = "", glow = false }: { children: Rea
   </div>
 );
 
+/* ── Friend Request Card ── */
+const FriendRequestCard = ({ request, onAccept, onDecline }: { request: FriendRequest; onAccept: () => void; onDecline: () => void }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, x: -100, scale: 0.95 }}
+    transition={{ duration: 0.3 }}
+  >
+    <div className="relative rounded-2xl overflow-hidden shadow-md ring-1 ring-border/20">
+      <div className="absolute inset-0 bg-card/70 backdrop-blur-2xl" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.03] via-transparent to-primary/[0.01]" />
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 via-blue-400 to-blue-300 rounded-l-2xl" />
+      <div className="relative z-10 p-4 flex items-center gap-3">
+        <Avatar className="w-11 h-11 border-2 border-blue-500/20 shadow-md">
+          <AvatarImage src={request.profile?.avatar_url || ''} />
+          <AvatarFallback className="bg-blue-500/10 text-blue-600 font-bold text-sm">
+            {(request.profile?.full_name || '?')[0]?.toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-sm truncate">{request.profile?.full_name || 'Unknown User'}</p>
+          <p className="text-[10px] text-muted-foreground">
+            Sent you a friend request · {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <motion.button
+            whileTap={{ scale: 0.85 }}
+            onClick={onAccept}
+            className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/25 touch-manipulation"
+          >
+            <Check className="w-4 h-4" />
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.85 }}
+            onClick={onDecline}
+            className="w-9 h-9 rounded-xl bg-muted text-muted-foreground flex items-center justify-center shadow-sm touch-manipulation hover:bg-destructive/10 hover:text-destructive transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </motion.button>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+);
+
 const NotificationsPage = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<NotificationCategory>('all');
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [loadingFR, setLoadingFR] = useState(false);
   
   const { 
     notifications, 
@@ -56,12 +116,83 @@ const NotificationsPage = () => {
     fetchNotifications,
   } = useNotifications(100);
 
+  // Fetch pending friend requests
+  const fetchFriendRequests = useCallback(async () => {
+    if (!user) return;
+    setLoadingFR(true);
+    try {
+      const { data, error } = await (supabase as any)
+        .from('friendships')
+        .select('id, user_id, created_at')
+        .eq('friend_id', user.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+
+      // Fetch profiles for each request
+      if (data?.length) {
+        const userIds = data.map((r: any) => r.user_id);
+        const { data: profiles } = await (supabase as any)
+          .from('profiles')
+          .select('user_id, full_name, avatar_url')
+          .in('user_id', userIds);
+
+        const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+        setFriendRequests(data.map((r: any) => ({
+          ...r,
+          profile: profileMap.get(r.user_id) || null,
+        })));
+      } else {
+        setFriendRequests([]);
+      }
+    } catch (err) {
+      console.error('Error fetching friend requests:', err);
+    } finally {
+      setLoadingFR(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchFriendRequests();
+  }, [fetchFriendRequests]);
+
+  const handleAcceptFriend = async (request: FriendRequest) => {
+    try {
+      const { error } = await (supabase as any)
+        .from('friendships')
+        .update({ status: 'accepted', accepted_at: new Date().toISOString() })
+        .eq('id', request.id);
+      if (error) throw error;
+      setFriendRequests(prev => prev.filter(r => r.id !== request.id));
+      toast.success(`You are now friends with ${request.profile?.full_name || 'this user'}!`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to accept request');
+    }
+  };
+
+  const handleDeclineFriend = async (request: FriendRequest) => {
+    try {
+      const { error } = await (supabase as any)
+        .from('friendships')
+        .update({ status: 'declined' })
+        .eq('id', request.id);
+      if (error) throw error;
+      setFriendRequests(prev => prev.filter(r => r.id !== request.id));
+      toast('Friend request declined');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to decline request');
+    }
+  };
+
   const handlePullRefresh = useCallback(async () => {
-    await fetchNotifications();
-  }, [fetchNotifications]);
+    await Promise.all([fetchNotifications(), fetchFriendRequests()]);
+  }, [fetchNotifications, fetchFriendRequests]);
 
   const filteredNotifications = useMemo(() => {
-    if (activeTab === 'all') return notifications;
+    if (activeTab === 'all' || activeTab === 'social') return notifications;
     return notifications.filter(n => {
       switch (activeTab) {
         case 'orders': return n.category === 'transactional';
@@ -74,7 +205,7 @@ const NotificationsPage = () => {
   }, [notifications, activeTab]);
 
   const categoryCounts = useMemo(() => {
-    const counts = { all: 0, orders: 0, promos: 0, support: 0, delays: 0 };
+    const counts = { all: 0, social: friendRequests.length, orders: 0, promos: 0, support: 0, delays: 0 };
     notifications.forEach(n => {
       if (!n.is_read) {
         counts.all++;
@@ -84,8 +215,9 @@ const NotificationsPage = () => {
         if (n.template?.toLowerCase().includes('delay') || n.title?.toLowerCase().includes('delay')) counts.delays++;
       }
     });
+    counts.all += friendRequests.length;
     return counts;
-  }, [notifications]);
+  }, [notifications, friendRequests]);
 
   const handleNotificationClick = (notification: any) => {
     if (!notification.is_read) markAsRead([notification.id]);
@@ -98,6 +230,7 @@ const NotificationsPage = () => {
   const getEmptyMessage = (tab: NotificationCategory) => {
     const msgs: Record<NotificationCategory, string> = {
       all: "No notifications yet. You'll see updates here.",
+      social: "No friend requests or social activity.",
       orders: "No order updates yet.",
       promos: "No promotions right now.",
       support: "No support messages.",
@@ -108,7 +241,7 @@ const NotificationsPage = () => {
 
   const getEmptyIcon = (tab: NotificationCategory) => {
     const icons: Record<NotificationCategory, typeof Bell> = {
-      all: Bell, orders: Package, promos: Gift, support: Headphones, delays: Clock,
+      all: Bell, social: UserPlus, orders: Package, promos: Gift, support: Headphones, delays: Clock,
     };
     const Icon = icons[tab];
     return (
@@ -125,6 +258,7 @@ const NotificationsPage = () => {
 
   const tabs: { value: NotificationCategory; label: string; icon: typeof Bell }[] = [
     { value: 'all', label: t('notif.all'), icon: Bell },
+    { value: 'social', label: 'Social', icon: UserPlus },
     { value: 'orders', label: t('notif.orders'), icon: Package },
     { value: 'promos', label: t('notif.promos'), icon: Gift },
     { value: 'support', label: t('notif.support'), icon: Headphones },
