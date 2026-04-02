@@ -1,10 +1,10 @@
 /**
  * ChatMediaUploader — Enhanced file/media sharing with documents, progress tracking
  */
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Image, FileText, Film, Mic, X, Upload, Loader2, File } from "lucide-react";
+import { Image, FileText, Film, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -19,6 +19,7 @@ interface ChatMediaUploaderProps {
     fileType?: string;
     fileSize?: number;
   }) => void;
+  renderTrigger?: (openFilePicker: () => void) => ReactNode;
 }
 
 const FILE_LIMITS = {
@@ -45,12 +46,16 @@ function getFileIcon(type: string) {
   return <FileText className="w-5 h-5 text-orange-500" />;
 }
 
-export default function ChatMediaUploader({ recipientId, onMediaSent }: ChatMediaUploaderProps) {
+export default function ChatMediaUploader({ recipientId, onMediaSent, renderTrigger }: ChatMediaUploaderProps) {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [preview, setPreview] = useState<{ url: string; name: string; size: number; type: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const openFilePicker = useCallback(() => {
+    fileRef.current?.click();
+  }, []);
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -80,7 +85,6 @@ export default function ChatMediaUploader({ recipientId, onMediaSent }: ChatMedi
       const ext = file.name.split(".").pop() || "bin";
       const path = `${user.id}/${Date.now()}.${ext}`;
 
-      // Simulate progress for UX
       const progressInterval = setInterval(() => {
         setProgress((p) => Math.min(p + 15, 85));
       }, 200);
@@ -96,7 +100,6 @@ export default function ChatMediaUploader({ recipientId, onMediaSent }: ChatMedi
       setProgress(100);
       const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
 
-      // Also track in chat_media table
       await (supabase as any).from("chat_media").insert({
         sender_id: user.id,
         chat_partner_id: recipientId,
@@ -147,6 +150,8 @@ export default function ChatMediaUploader({ recipientId, onMediaSent }: ChatMedi
         className="hidden"
         onChange={handleFileSelect}
       />
+
+      {renderTrigger?.(openFilePicker)}
 
       {/* Upload progress overlay */}
       <AnimatePresence>

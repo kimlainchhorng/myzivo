@@ -22,7 +22,7 @@ interface CallScreenProps {
   recipientId: string;
   existingCallId?: string;
   onEnd: () => void;
-  onMinimize?: () => void;
+  onMinimize?: (data: { remoteStream: MediaStream | null; duration: number; isMuted: boolean }) => void;
 }
 
 export default function CallScreen({
@@ -97,9 +97,9 @@ export default function CallScreen({
     onEnded: handleEnded,
   });
 
-  // Hooks for enhancements — connected to live PeerConnection
-  const qualityStats = useCallQuality(peerConnection.current);
-  const screenShare = useScreenShare(peerConnection.current);
+  // Hooks for enhancements — connected to live PeerConnection ref
+  const qualityStats = useCallQuality(peerConnection);
+  const screenShare = useScreenShare(peerConnection);
   const recording = useCallRecording({
     callHistoryId: callHistoryId || undefined,
     userId: user?.id || "",
@@ -223,7 +223,7 @@ export default function CallScreen({
             </motion.div>
           )}
           {onMinimize && (
-            <button onClick={onMinimize} className="h-9 w-9 rounded-full bg-muted/50 flex items-center justify-center">
+            <button onClick={() => onMinimize({ remoteStream: remoteStreamRef.current, duration, isMuted })} className="h-9 w-9 rounded-full bg-muted/50 flex items-center justify-center">
               <Minimize2 className="h-4 w-4 text-foreground" />
             </button>
           )}
