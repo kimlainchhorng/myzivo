@@ -45,9 +45,7 @@ import { useI18n } from "@/hooks/useI18n";
 import { supabase } from "@/integrations/supabase/client";
 import { checkPasswordBreach } from "@/lib/security/passwordStrength";
 import { formatDistanceToNow } from "date-fns";
-
-// Sessions loaded from backend — no hardcoded data
-const activeSessions: { id: string; device: string; location: string; lastActive: Date; current?: boolean }[] = [];
+import LoginHistorySection from "@/components/auth/LoginHistorySection";
 
 export default function AccountSecurity() {
   const navigate = useNavigate();
