@@ -74,6 +74,9 @@ const ResetPassword = () => {
 
       if (error) throw error;
 
+      // Sign out all other sessions to invalidate any stolen sessions
+      await supabase.auth.signOut({ scope: 'others' });
+
       setIsSuccess(true);
       toast.success("Password updated successfully!");
       
