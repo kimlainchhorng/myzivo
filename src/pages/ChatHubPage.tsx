@@ -472,7 +472,13 @@ export default function ChatHubPage() {
                       {chat.avatar ? (
                         <img src={chat.avatar} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <currentCategory.icon className="w-5 h-5 text-muted-foreground" />
+                        active === "personal" ? (
+                          <span className="text-sm font-bold text-muted-foreground">
+                            {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                          </span>
+                        ) : (
+                          <currentCategory.icon className="w-5 h-5 text-muted-foreground" />
+                        )
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
