@@ -20,9 +20,13 @@ import ChatAttachMenu from "./ChatAttachMenu";
 import ChatNotificationSettings from "./ChatNotificationSettings";
 import ChatMediaGallery from "./ChatMediaGallery";
 import StickerKeyboard from "./StickerKeyboard";
+import ChatPersonalization, { getWallpaperClass } from "./ChatPersonalization";
+import ChatMiniApps from "./ChatMiniApps";
+import ChatSecurity from "./ChatSecurity";
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { useChatDraft } from "@/hooks/useChatDraft";
 
 interface PersonalChatProps {
   recipientId: string;
