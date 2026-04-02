@@ -283,6 +283,7 @@ export default function PublicProfilePage() {
             {visibility === "private" ? <Lock className="h-3.5 w-3.5" /> : <Users className="h-3.5 w-3.5" />}
           </div>
         )}
+        </div>
       </div>
 
       {isLoading ? (
