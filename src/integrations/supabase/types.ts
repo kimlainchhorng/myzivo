@@ -20196,7 +20196,6 @@ export type Database = {
           otp_enc: string | null
           otp_hash: string
           otp_last4: string
-          otp_plain: string | null
           verified_at: string | null
         }
         Insert: {
@@ -20208,7 +20207,6 @@ export type Database = {
           otp_enc?: string | null
           otp_hash: string
           otp_last4: string
-          otp_plain?: string | null
           verified_at?: string | null
         }
         Update: {
@@ -20220,7 +20218,6 @@ export type Database = {
           otp_enc?: string | null
           otp_hash?: string
           otp_last4?: string
-          otp_plain?: string | null
           verified_at?: string | null
         }
         Relationships: [
