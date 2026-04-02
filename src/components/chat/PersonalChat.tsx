@@ -182,6 +182,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
     const msgType = voiceUrl ? "voice" : videoUrl ? "video" : imageUrl ? "image" : locationLat != null ? "location" : "text";
     setInput("");
+    clearDraft();
     const currentReply = replyTo;
     setReplyTo(null);
     setSending(true);
