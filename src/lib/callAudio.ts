@@ -92,7 +92,7 @@ function playTonePattern(steps: ToneStep[], volume: number): StopTone {
 
   let stopped = false;
   let currentOsc: OscillatorNode | null = null;
-  let timeout: ReturnType<typeof window.setTimeout> | null = null;
+  let timeout: number | null = null;
 
   const playStep = (step: ToneStep) =>
     new Promise<void>((resolve) => {
