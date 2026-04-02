@@ -40,6 +40,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [activeCall, setActiveCall] = useState<"voice" | "video" | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
