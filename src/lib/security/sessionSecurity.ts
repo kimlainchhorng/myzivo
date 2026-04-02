@@ -1,7 +1,7 @@
 /**
  * Session Security - Idle timeout & max session age enforcement
  * 
- * When "Remember me" is ON:  7-day max session, no idle timeout
+ * When "Remember me" is ON:  30-day max session, no idle timeout (trusted devices)
  * When "Remember me" is OFF: 30-minute idle timeout, 24-hour max session
  */
 
@@ -13,8 +13,8 @@ const LAST_ACTIVITY_KEY = "zivo_last_activity";
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;        // 30 minutes
 const MAX_SESSION_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-// Long session (Remember me ON)
-const MAX_SESSION_AGE_REMEMBERED_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+// Long session (Remember me ON) — trusted device, stay signed in
+const MAX_SESSION_AGE_REMEMBERED_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 function now(): number {
   return Date.now();
