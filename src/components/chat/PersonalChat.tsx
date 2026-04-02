@@ -647,82 +647,94 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       {/* Input area */}
       {!voice.isRecording && (
-        <div className="bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
-          {/* Attach menu */}
-          <div className="relative">
-            <button
-              onClick={() => setShowAttachMenu(!showAttachMenu)}
-              disabled={uploadingMedia}
-              className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors shrink-0 ${
-                showAttachMenu ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"
-              }`}
-            >
-              {uploadingMedia ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
-            </button>
-            <ChatAttachMenu
-              open={showAttachMenu}
-              onClose={() => setShowAttachMenu(false)}
-              onImageSelect={() => fileInputRef.current?.click()}
-              onVideoSelect={() => videoInputRef.current?.click()}
-              onLocationShare={handleLocationShare}
-              onToggleDisappearing={() => {
-                setDisappearingMode(!disappearingMode);
-                toast.success(disappearingMode ? "Disappearing messages OFF" : "Disappearing messages ON — messages auto-delete after 24h");
+        <div className="bg-background/95 backdrop-blur-sm border-t border-border/15 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+          <div className="flex items-end gap-1.5">
+            {/* Attach */}
+            <div className="relative shrink-0">
+              <button
+                onClick={() => setShowAttachMenu(!showAttachMenu)}
+                disabled={uploadingMedia}
+                className={`h-10 w-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                  showAttachMenu ? "bg-primary text-primary-foreground rotate-45" : "text-muted-foreground hover:bg-muted/60"
+                }`}
+              >
+                {uploadingMedia ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Plus className="h-5 w-5" />}
+              </button>
+              <ChatAttachMenu
+                open={showAttachMenu}
+                onClose={() => setShowAttachMenu(false)}
+                onImageSelect={() => fileInputRef.current?.click()}
+                onVideoSelect={() => videoInputRef.current?.click()}
+                onLocationShare={handleLocationShare}
+                onToggleDisappearing={() => {
+                  setDisappearingMode(!disappearingMode);
+                  toast.success(disappearingMode ? "Disappearing messages OFF" : "Disappearing messages ON — messages auto-delete after 24h");
+                }}
+                disappearingEnabled={disappearingMode}
+              />
+            </div>
+
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+            <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
+
+            {/* Document upload */}
+            <ChatMediaUploader
+              recipientId={recipientId}
+              onMediaSent={(opts) => {
+                if (opts.imageUrl) handleSend({ imageUrl: opts.imageUrl });
+                else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
+                else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
               }}
-              disappearingEnabled={disappearingMode}
+              renderTrigger={(openFilePicker) => (
+                <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted/60 transition-colors shrink-0">
+                  <FileText className="h-[18px] w-[18px]" />
+                </button>
+              )}
             />
-          </div>
 
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-          <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
+            {/* Input field */}
+            <div className="flex-1 relative">
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                placeholder={disappearingMode ? "Disappearing message..." : "Message..."}
+                className={`w-full h-10 pl-4 pr-20 rounded-full border text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all ${
+                  disappearingMode ? "bg-amber-500/5 border-amber-500/20" : "bg-muted/40 border-border/20"
+                }`}
+              />
+              {/* Inline icons inside input */}
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                <button
+                  onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
+                  className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+                    showStickerKeyboard ? "text-primary" : "text-muted-foreground/60 hover:text-muted-foreground"
+                  }`}
+                >
+                  <Smile className="h-[18px] w-[18px]" />
+                </button>
+              </div>
+            </div>
 
-          {/* Document upload button */}
-          <ChatMediaUploader
-            recipientId={recipientId}
-            onMediaSent={(opts) => {
-              if (opts.imageUrl) handleSend({ imageUrl: opts.imageUrl });
-              else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
-              else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
-            }}
-            renderTrigger={(openFilePicker) => (
-              <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0">
-                <FileText className="h-5 w-5" />
+            {/* Send or Mic button — contextual */}
+            {input.trim() ? (
+              <button
+                onClick={() => handleSend()}
+                disabled={sending}
+                className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </button>
+            ) : (
+              <button
+                onClick={voice.startRecording}
+                className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors shrink-0"
+              >
+                <Mic className="h-[18px] w-[18px]" />
               </button>
             )}
-          />
-
-          {/* Mic button */}
-          <button onClick={voice.startRecording} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0">
-            <Mic className="h-5 w-5" />
-          </button>
-
-          {/* Sticker button */}
-          <button
-            onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
-            className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors shrink-0 ${
-              showStickerKeyboard ? "text-primary" : "text-muted-foreground hover:text-primary"
-            }`}
-          >
-            <Smile className="h-5 w-5" />
-          </button>
-
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder={disappearingMode ? "Disappearing message..." : "Type a message..."}
-            className={`flex-1 h-10 px-4 rounded-full border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-              disappearingMode ? "bg-amber-500/5 border-amber-500/30" : "bg-muted/50 border-border/30"
-            }`}
-          />
-          <button
-            onClick={() => handleSend()}
-            disabled={(!input.trim() && !uploadingMedia) || sending}
-            className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0"
-          >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </button>
+          </div>
         </div>
       )}
 
