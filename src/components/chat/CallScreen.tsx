@@ -343,43 +343,6 @@ export default function CallScreen({
         </div>
       </div>
 
-      {/* Recording consent modal */}
-      <AnimatePresence>
-        {showRecordConsent && (
-          <motion.div
-            className="absolute inset-0 z-[65] bg-background/80 backdrop-blur-md flex items-center justify-center p-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-background border border-border/30 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
-            >
-              <h3 className="text-base font-bold text-foreground mb-2">Record this call?</h3>
-              <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-                Both parties will be notified. Recordings are saved securely and can be deleted anytime.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowRecordConsent(false)}
-                  className="flex-1 h-11 rounded-2xl bg-muted text-foreground text-sm font-medium active:scale-95 transition-transform"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmRecording}
-                  className="flex-1 h-11 rounded-2xl bg-primary text-primary-foreground text-sm font-medium active:scale-95 transition-transform shadow-sm"
-                >
-                  Start Recording
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }
