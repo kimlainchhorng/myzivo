@@ -5,6 +5,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { ArrowLeft, Loader2, AlertTriangle, Lock, Info, Shield, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
