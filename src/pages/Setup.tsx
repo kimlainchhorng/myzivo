@@ -294,7 +294,7 @@ export default function Setup() {
 
             <button
               type="button"
-              onClick={() => handleContinue(true)}
+              onClick={handleSkip}
               disabled={saving}
               className="w-full text-center text-white/40 hover:text-white/60 text-sm mt-3 transition-colors"
             >
