@@ -74,6 +74,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [activeCall, setActiveCall] = useState<"voice" | "video" | null>(null);
   const [pipMode, setPipMode] = useState(false);
   const [pipData, setPipData] = useState<{ remoteStream: MediaStream | null; duration: number; isMuted: boolean } | null>(null);
+  const [replyTo, setReplyTo] = useState<{ id: string; message: string; isMe: boolean } | null>(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
