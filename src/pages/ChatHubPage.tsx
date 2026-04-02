@@ -543,17 +543,17 @@ export default function ChatHubPage() {
                     }}
                     style={{ x: 0 }}
                   >
-                    <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${(chat as any).isGroup ? 'bg-primary/10' : 'bg-muted'}`}>
                       {chat.avatar ? (
                         <img src={chat.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (chat as any).isGroup ? (
+                        <Users className="w-5 h-5 text-primary" />
+                      ) : active === "personal" ? (
+                        <span className="text-sm font-bold text-muted-foreground">
+                          {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                        </span>
                       ) : (
-                        active === "personal" ? (
-                          <span className="text-sm font-bold text-muted-foreground">
-                            {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
-                          </span>
-                        ) : (
-                          <currentCategory.icon className="w-5 h-5 text-muted-foreground" />
-                        )
+                        <currentCategory.icon className="w-5 h-5 text-muted-foreground" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
