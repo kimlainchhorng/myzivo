@@ -6,7 +6,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Phone, X, Mic, Square, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield, Video, History, FileText, MoreVertical } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Phone, X, Mic, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield, Video, History, FileText, MoreVertical } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -559,11 +559,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   />
                 ) : msg.message_type === "voice" && msg.voice_url ? (
                   <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[75%] px-3 py-2.5 rounded-2xl ${
+                    <div className={`max-w-[80%] min-w-[220px] px-3 py-2.5 rounded-2xl shadow-sm ${
                       isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
                     } ${msg.id.startsWith("opt-") ? "opacity-60" : ""}`}>
                       <VoiceMessagePlayer url={msg.voice_url} isMe={isMe} />
-                      <span className={`text-[9px] block text-right mt-0.5 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                      <span className={`text-[9px] block text-right mt-1 ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>
                         {formatMsgTime(msg.created_at)}
                       </span>
                     </div>
@@ -631,15 +631,49 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="bg-destructive/5 border-t border-destructive/20 px-4 py-3 flex items-center gap-3"
+            className="bg-destructive/5 border-t border-destructive/20 px-3 py-2.5 flex items-center gap-3"
           >
-            <motion.div className="w-3 h-3 rounded-full bg-destructive" animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 1 }} />
-            <span className="text-sm font-medium text-foreground flex-1">
-              Recording... {Math.floor(voice.duration / 60)}:{(voice.duration % 60).toString().padStart(2, "0")}
+            <motion.div
+              className="w-3 h-3 rounded-full bg-destructive shrink-0"
+              animate={{ scale: [1, 1.4, 1], opacity: [1, 0.5, 1] }}
+              transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+            />
+
+            {/* Live waveform visualization */}
+            <div className="flex-1 flex items-center gap-[2px] h-7 overflow-hidden">
+              {Array.from({ length: 24 }, (_, i) => (
+                <motion.div
+                  key={i}
+                  className="flex-1 rounded-full bg-destructive/60"
+                  style={{ minHeight: 3 }}
+                  animate={{
+                    height: ["20%", `${30 + Math.random() * 70}%`, "20%"],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 0.4 + Math.random() * 0.4,
+                    delay: i * 0.03,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
+            </div>
+
+            <span className="text-xs font-mono font-semibold text-destructive tabular-nums shrink-0">
+              {Math.floor(voice.duration / 60)}:{(voice.duration % 60).toString().padStart(2, "0")}
             </span>
-            <button onClick={voice.cancelRecording} className="text-xs text-muted-foreground px-3 py-1 rounded-full bg-muted">Cancel</button>
-            <button onClick={voice.stopRecording} className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-              <Square className="w-3.5 h-3.5" />
+
+            <button
+              onClick={voice.cancelRecording}
+              className="text-[11px] text-muted-foreground px-3 py-1.5 rounded-full bg-muted hover:bg-muted/80 transition-colors font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={voice.stopRecording}
+              className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center active:scale-90 transition-transform shadow-sm"
+            >
+              <Send className="w-4 h-4" />
             </button>
           </motion.div>
         )}
