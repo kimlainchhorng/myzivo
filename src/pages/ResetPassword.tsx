@@ -4,6 +4,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
+import { checkPasswordBreach } from "@/lib/security/passwordStrength";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,6 +68,22 @@ const ResetPassword = () => {
 
   const onSubmit = async (data: ResetPasswordForm) => {
     setIsLoading(true);
+
+    // Check password against known breaches before resetting
+    try {
+      const breach = await checkPasswordBreach(data.password);
+      if (breach.breached) {
+        setIsLoading(false);
+        toast.error(
+          `This password was found in ${breach.count.toLocaleString()} data breaches. Please choose a different password.`,
+          { duration: 8000 }
+        );
+        return;
+      }
+    } catch {
+      // Continue if check fails
+    }
+
     try {
       const { error } = await supabase.auth.updateUser({
         password: data.password,
