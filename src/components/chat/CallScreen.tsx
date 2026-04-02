@@ -76,7 +76,7 @@ export default function CallScreen({
   useEffect(() => {
     if (!callId) return;
     const init = async () => {
-      const localStream = await webrtc.start();
+      const localStream = await webrtc.start(callId);
       if (localStream && localVideoRef.current && callType === "video") {
         localVideoRef.current.srcObject = localStream;
       }

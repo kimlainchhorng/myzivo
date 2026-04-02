@@ -35,6 +35,8 @@ export function useWebRTC({
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [callState, setCallState] = useState<"ringing" | "connected" | "ended">("ringing");
+  const addedCandidatesCount = useRef<number>(0);
+  const startedRef = useRef(false);
 
   const cleanup = useCallback(() => {
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
@@ -42,10 +44,14 @@ export function useWebRTC({
     pcRef.current?.close();
     pcRef.current = null;
     setCallState("ended");
+    startedRef.current = false;
   }, []);
 
   // Initialize peer connection and media
-  const start = useCallback(async () => {
+  const start = useCallback(async (activeCallId: string) => {
+    if (startedRef.current || !activeCallId) return null;
+    startedRef.current = true;
+
     try {
       const constraints: MediaStreamConstraints = {
         audio: true,
@@ -65,25 +71,26 @@ export function useWebRTC({
         if (e.streams[0]) onRemoteStream(e.streams[0]);
       };
 
-      // ICE candidate handling — store in DB for the other peer
+      // ICE candidate handling
       pc.onicecandidate = async (e) => {
         if (!e.candidate) return;
         const field = role === "caller" ? "caller_ice_candidates" : "callee_ice_candidates";
-        // Append candidate via raw SQL to avoid race conditions
         await (supabase as any).rpc("append_ice_candidate", {
-          p_call_id: callId,
+          p_call_id: activeCallId,
           p_field: field,
           p_candidate: e.candidate.toJSON(),
-        }).catch(() => {
-          // Fallback: just update (may lose candidates in race)
-          // This is acceptable for most 1-on-1 calls
+        }).catch((err: any) => {
+          console.warn("ICE candidate append failed:", err);
         });
       };
 
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "connected") {
           setCallState("connected");
-          (supabase as any).from("call_signals").update({ status: "answered", started_at: new Date().toISOString() }).eq("id", callId);
+          (supabase as any).from("call_signals")
+            .update({ status: "answered", started_at: new Date().toISOString() })
+            .eq("id", activeCallId)
+            .then(() => {});
         }
         if (["disconnected", "failed", "closed"].includes(pc.connectionState)) {
           cleanup();
@@ -94,7 +101,10 @@ export function useWebRTC({
       if (role === "caller") {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        await (supabase as any).from("call_signals").update({ offer: offer }).eq("id", callId);
+        // Store serialized SDP
+        await (supabase as any).from("call_signals")
+          .update({ offer: { type: offer.type, sdp: offer.sdp } })
+          .eq("id", activeCallId);
       }
 
       return localStream;
@@ -104,9 +114,9 @@ export function useWebRTC({
       onEnded();
       return null;
     }
-  }, [callId, role, callType, onRemoteStream, onEnded, cleanup]);
+  }, [role, callType, onRemoteStream, onEnded, cleanup]);
 
-  // Handle incoming signaling updates
+  // Handle incoming signaling updates via Realtime
   useEffect(() => {
     if (!callId) return;
 
@@ -122,13 +132,15 @@ export function useWebRTC({
         const pc = pcRef.current;
         if (!pc) return;
 
-        // Callee receives offer → create answer
+        // Callee receives offer → set remote description and create answer
         if (role === "callee" && data.offer && !pc.remoteDescription) {
           try {
             await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            await (supabase as any).from("call_signals").update({ answer: answer }).eq("id", callId);
+            await (supabase as any).from("call_signals")
+              .update({ answer: { type: answer.type, sdp: answer.sdp } })
+              .eq("id", callId);
           } catch (e) {
             console.error("Error handling offer:", e);
           }
@@ -143,17 +155,21 @@ export function useWebRTC({
           }
         }
 
-        // Process ICE candidates from the other peer
+        // Process only NEW ICE candidates from the other peer
         const remoteCandidates = role === "caller" ? data.callee_ice_candidates : data.caller_ice_candidates;
         if (remoteCandidates?.length && pc.remoteDescription) {
-          for (const c of remoteCandidates) {
+          const newCandidates = remoteCandidates.slice(addedCandidatesCount.current);
+          for (const c of newCandidates) {
             try {
               await pc.addIceCandidate(new RTCIceCandidate(c));
-            } catch { /* duplicate candidate */ }
+              addedCandidatesCount.current++;
+            } catch {
+              // duplicate or invalid candidate, skip
+            }
           }
         }
 
-        // Call ended/declined
+        // Call ended/declined by other party
         if (data.status === "ended" || data.status === "declined") {
           cleanup();
           onEnded();
@@ -179,7 +195,9 @@ export function useWebRTC({
   }, []);
 
   const endCall = useCallback(async () => {
-    await (supabase as any).from("call_signals").update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", callId);
+    await (supabase as any).from("call_signals")
+      .update({ status: "ended", ended_at: new Date().toISOString() })
+      .eq("id", callId);
     cleanup();
     onEnded();
   }, [callId, cleanup, onEnded]);
