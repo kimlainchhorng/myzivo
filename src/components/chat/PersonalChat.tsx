@@ -169,6 +169,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <CallScreen
             recipientName={recipientName}
             recipientAvatar={recipientAvatar}
+            recipientId={recipientId}
             callType={activeCall}
             onEnd={() => setActiveCall(null)}
           />
