@@ -207,7 +207,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         const ext = "webm";
         const path = `${user?.id}/${Date.now()}.${ext}`;
         const { error } = await supabase.storage
-          .from("chat_uploads")
+          .from("chat-media-files")
           .upload(path, voice.audioBlob!, { contentType: "audio/webm" });
 
         if (error) {
