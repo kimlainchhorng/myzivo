@@ -1,14 +1,70 @@
 /**
  * IncomingCallListener — Global listener for incoming WebRTC calls
  * Shows a banner when another user calls, allowing accept/decline
+ * Plays a ringtone sound while ringing
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Phone, PhoneOff, Video } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import CallScreen from "./CallScreen";
+
+/** Creates a repeating ringtone using Web Audio API */
+function createRingtone() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = 0.3;
+    gainNode.connect(ctx.destination);
+
+    let stopped = false;
+    let currentOsc: OscillatorNode | null = null;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const playTone = (freq: number, duration: number): Promise<void> => {
+      return new Promise((resolve) => {
+        if (stopped) { resolve(); return; }
+        const osc = ctx.createOscillator();
+        currentOsc = osc;
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        osc.connect(gainNode);
+        osc.start();
+        timeout = setTimeout(() => {
+          osc.stop();
+          osc.disconnect();
+          currentOsc = null;
+          resolve();
+        }, duration);
+      });
+    };
+
+    const ringLoop = async () => {
+      while (!stopped) {
+        await playTone(440, 400);
+        if (stopped) break;
+        await new Promise(r => { timeout = setTimeout(r, 100); });
+        if (stopped) break;
+        await playTone(480, 400);
+        if (stopped) break;
+        await new Promise(r => { timeout = setTimeout(r, 1500); });
+      }
+    };
+
+    ringLoop();
+
+    return () => {
+      stopped = true;
+      clearTimeout(timeout);
+      try { currentOsc?.stop(); } catch {}
+      try { ctx.close(); } catch {}
+    };
+  } catch {
+    return () => {};
+  }
+}
 
 interface IncomingCall {
   id: string;
