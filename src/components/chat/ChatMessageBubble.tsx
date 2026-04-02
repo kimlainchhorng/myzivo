@@ -242,19 +242,20 @@ export default function ChatMessageBubble({
               onClick={() => { setShowActions(false); setShowReactions(false); }}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 10 }}
+              initial={{ opacity: 0, scale: 0.85, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 10 }}
-              className={`absolute z-50 bottom-full mb-2 flex flex-col gap-2 ${isMe ? "right-0" : "left-0"}`}
+              exit={{ opacity: 0, scale: 0.85, y: 8 }}
+              transition={{ type: "spring", damping: 22, stiffness: 400 }}
+              className={`absolute z-50 bottom-full mb-2 flex flex-col gap-1.5 ${isMe ? "right-0 items-end" : "left-0 items-start"}`}
             >
               {/* Emoji picker */}
               {showReactions && (
-                <div className="flex items-center gap-0.5 bg-background shadow-lg border border-border rounded-full px-2 py-1.5">
+                <div className="flex items-center gap-1 bg-background/95 backdrop-blur-xl shadow-xl shadow-black/10 border border-border/40 rounded-2xl px-2.5 py-2">
                   {REACTION_EMOJIS.map((emoji) => (
                     <button
                       key={emoji}
                       onClick={(e) => { e.stopPropagation(); toggleReaction(emoji); }}
-                      className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors text-lg hover:scale-125 active:scale-95"
+                      className="h-9 w-9 flex items-center justify-center rounded-xl hover:bg-muted/80 transition-all text-xl hover:scale-[1.3] active:scale-90"
                     >
                       {emoji}
                     </button>
@@ -263,7 +264,7 @@ export default function ChatMessageBubble({
               )}
 
               {/* Action bar */}
-              <div className="flex flex-wrap items-center gap-0.5 bg-background shadow-lg border border-border rounded-2xl px-1.5 py-1">
+              <div className={`flex items-center bg-background/95 backdrop-blur-xl shadow-xl shadow-black/10 border border-border/40 rounded-2xl overflow-hidden divide-x divide-border/30`}>
                 <ActionBtn icon={Reply} label="Reply" onClick={() => { onReply(id, message, isMe); setShowActions(false); setShowReactions(false); }} />
                 <ActionBtn icon={Copy} label="Copy" onClick={handleCopy} />
                 <ActionBtn icon={Forward} label="Forward" onClick={handleForward} />
