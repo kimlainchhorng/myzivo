@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
 import CallScreen from "./CallScreen";
+import CallPiP from "./CallPiP";
 import { primeCallAudio } from "@/lib/callAudio";
 import ChatMessageBubble from "./ChatMessageBubble";
 import VoiceMessagePlayer from "./VoiceMessagePlayer";
@@ -71,6 +72,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [activeCall, setActiveCall] = useState<"voice" | "video" | null>(null);
+  const [pipMode, setPipMode] = useState(false);
+  const [pipData, setPipData] = useState<{ remoteStream: MediaStream | null; duration: number; isMuted: boolean } | null>(null);
   const [replyTo, setReplyTo] = useState<{ id: string; message: string; isMe: boolean } | null>(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -468,8 +471,30 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       {/* Call overlay */}
       <AnimatePresence>
-        {activeCall && (
-          <CallScreen recipientName={recipientName} recipientAvatar={recipientAvatar} recipientId={recipientId} callType={activeCall} onEnd={() => setActiveCall(null)} />
+        {activeCall && !pipMode && (
+          <CallScreen
+            recipientName={recipientName}
+            recipientAvatar={recipientAvatar}
+            recipientId={recipientId}
+            callType={activeCall}
+            onEnd={() => { setActiveCall(null); setPipMode(false); setPipData(null); }}
+            onMinimize={() => setPipMode(true)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Picture-in-Picture floating call */}
+      <AnimatePresence>
+        {activeCall && pipMode && (
+          <CallPiP
+            remoteStream={pipData?.remoteStream || null}
+            recipientName={recipientName}
+            isMuted={pipData?.isMuted || false}
+            duration={pipData?.duration || 0}
+            onExpand={() => setPipMode(false)}
+            onEndCall={() => { setActiveCall(null); setPipMode(false); setPipData(null); }}
+            onToggleMute={() => {}}
+          />
         )}
       </AnimatePresence>
 
@@ -636,6 +661,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
           <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
+
+          {/* Enhanced media uploader for documents */}
+          <ChatMediaUploader
+            recipientId={recipientId}
+            onMediaSent={(opts) => {
+              if (opts.imageUrl) handleSend({ imageUrl: opts.imageUrl });
+              else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
+              else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
+            }}
+          />
 
           {/* Mic button */}
           <button onClick={voice.startRecording} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0">

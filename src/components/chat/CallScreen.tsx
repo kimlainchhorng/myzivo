@@ -87,7 +87,7 @@ export default function CallScreen({
 
   const {
     start, endCall, toggleMute, toggleCamera,
-    isMuted, isCameraOff, callState, localStream,
+    isMuted, isCameraOff, callState, localStream, peerConnection,
   } = useWebRTC({
     callId: callId || "",
     role,
@@ -97,10 +97,9 @@ export default function CallScreen({
     onEnded: handleEnded,
   });
 
-  // Hooks for enhancements
-  const pcRef = (start as any).__pcRef; // We'll use the ref from parent
-  const qualityStats = useCallQuality(null); // Will connect when PC available
-  const screenShare = useScreenShare(null);
+  // Hooks for enhancements — connected to live PeerConnection
+  const qualityStats = useCallQuality(peerConnection.current);
+  const screenShare = useScreenShare(peerConnection.current);
   const recording = useCallRecording({
     callHistoryId: callHistoryId || undefined,
     userId: user?.id || "",
