@@ -270,18 +270,20 @@ export default function PublicProfilePage() {
   };
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 safe-area-top">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-          <ArrowLeft className="h-5 w-5 text-foreground" />
-        </button>
-        <h1 className="text-lg font-bold text-foreground truncate">{profile?.full_name || "Profile"}</h1>
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
+        <div className="px-4 py-2.5 flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+            <ArrowLeft className="h-5 w-5 text-foreground" />
+          </button>
+          <h1 className="text-lg font-bold text-foreground truncate">{profile?.full_name || "Profile"}</h1>
         {profile && visibility !== "public" && (
           <div className="ml-auto flex items-center gap-1 text-muted-foreground">
             {visibility === "private" ? <Lock className="h-3.5 w-3.5" /> : <Users className="h-3.5 w-3.5" />}
           </div>
         )}
+        </div>
       </div>
 
       {isLoading ? (
