@@ -223,7 +223,7 @@ export default function CallScreen({
             </motion.div>
           )}
           {onMinimize && (
-            <button onClick={onMinimize} className="h-9 w-9 rounded-full bg-muted/50 flex items-center justify-center">
+            <button onClick={() => onMinimize({ remoteStream: remoteStreamRef.current, duration, isMuted })} className="h-9 w-9 rounded-full bg-muted/50 flex items-center justify-center">
               <Minimize2 className="h-4 w-4 text-foreground" />
             </button>
           )}
