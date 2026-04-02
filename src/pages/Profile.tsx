@@ -31,6 +31,7 @@ import ProfileContentTabs from "@/components/profile/ProfileContentTabs";
 import ProfileStories from "@/components/profile/ProfileStories";
 import SocialListModal from "@/components/profile/SocialListModal";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const LANGS = [
   { code: "en", label: "English", cc: "us" },
@@ -135,6 +136,7 @@ const Profile = () => {
   const { user, signOut, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
+  const { unreadCount: notifUnreadCount } = useNotifications(20);
   const affiliateAttribution = useAffiliateAttribution();
   const { isPlus, plan } = useZivoPlus();
   const updateProfile = useUpdateUserProfile();
@@ -433,8 +435,15 @@ const Profile = () => {
                 className="relative z-20 flex min-h-[36px] items-center gap-1.5 px-3.5 py-2 rounded-xl bg-card/70 backdrop-blur-xl border border-border/30 text-[11px] font-bold shadow-lg shadow-primary/[0.05] touch-manipulation transition-all hover:bg-card/90"
                 style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
               >
-                <Bell className="w-3.5 h-3.5 text-destructive" />
-                <span>Notifications</span>
+                <span className="relative">
+                  <Bell className="w-3.5 h-3.5 text-destructive" />
+                  {notifUnreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground px-1 shadow-md shadow-destructive/30">
+                      {notifUnreadCount > 99 ? '99+' : notifUnreadCount}
+                    </span>
+                  )}
+                </span>
+                <span className="ml-1">Notifications</span>
                 <ChevronRight className="w-3 h-3 text-muted-foreground" />
               </motion.button>
             </div>
