@@ -1,21 +1,18 @@
 /**
- * useChatPresence — Handles typing indicators and online status via Supabase Realtime Presence
+ * useChatPresence — Typing indicators + online status via Supabase Realtime Presence
  */
-import { useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PresenceState {
   isTyping: boolean;
   isOnline: boolean;
-  lastSeen?: string;
 }
 
 export function useChatPresence(userId: string | undefined, recipientId: string) {
   const channelRef = useRef<any>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Track recipient's presence
-  const [state, setState] = __useState<PresenceState>({ isTyping: false, isOnline: false });
+  const [state, setState] = useState<PresenceState>({ isTyping: false, isOnline: false });
 
   useEffect(() => {
     if (!userId) return;
@@ -42,9 +39,11 @@ export function useChatPresence(userId: string | undefined, recipientId: string)
       });
 
     // Update last_seen periodically
-    const interval = setInterval(() => {
+    const updateLastSeen = () => {
       (supabase as any).from("profiles").update({ last_seen: new Date().toISOString() }).eq("user_id", userId);
-    }, 60000);
+    };
+    updateLastSeen();
+    const interval = setInterval(updateLastSeen, 60000);
 
     return () => {
       clearInterval(interval);
@@ -56,7 +55,6 @@ export function useChatPresence(userId: string | undefined, recipientId: string)
     if (!channelRef.current) return;
     channelRef.current.track({ online: true, typing });
     
-    // Auto-clear typing after 3 seconds
     if (typing) {
       if (typingTimeout.current) clearTimeout(typingTimeout.current);
       typingTimeout.current = setTimeout(() => {
@@ -67,6 +65,3 @@ export function useChatPresence(userId: string | undefined, recipientId: string)
 
   return { ...state, setTyping };
 }
-
-// Need to import useState
-import { useState as __useState } from "react";
