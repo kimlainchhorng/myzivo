@@ -6,7 +6,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Phone, X, Mic, Square, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield, Video, History, FileText } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Phone, X, Mic, Square, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield, Video, History, FileText, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
