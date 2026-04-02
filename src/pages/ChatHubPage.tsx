@@ -292,6 +292,7 @@ export default function ChatHubPage() {
 
   const handlePullRefresh = useCallback(async () => {
     await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }),
       queryClient.invalidateQueries({ queryKey: ["chat-hub-shop"] }),
       queryClient.invalidateQueries({ queryKey: ["chat-hub-ride"] }),
       queryClient.invalidateQueries({ queryKey: ["chat-hub-support"] }),
