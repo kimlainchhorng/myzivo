@@ -246,10 +246,9 @@ const Login = () => {
 
       if (otpError || !otpResponse?.success) {
         console.error("Failed to send OTP:", otpError || otpResponse?.error);
-        // Fall back to old verification email flow
+        // Fall back to toast message
         setIsLoading(false);
         toast.success("Account created! Please check your email to verify.");
-        navigate("/verify-email");
         return;
       }
     } catch (err) {
