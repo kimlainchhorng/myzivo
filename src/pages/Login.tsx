@@ -146,8 +146,16 @@ const Login = () => {
   }, [isLogin, loginForm, signupForm]);
 
   const onLoginSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
+   setIsLoading(true);
     
+    // Client-side rate limit check
+    const { allowed, retryAfter } = await checkRateLimit("auth:login");
+    if (!allowed) {
+      setIsLoading(false);
+      toast.error(`Too many attempts. Try again in ${formatLockout(retryAfter)}.`);
+      return;
+    }
+
     // Save or clear remembered email
     if (rememberMe) {
       localStorage.setItem("zivo_remember_me", "true");
