@@ -22,20 +22,35 @@ const menuItems = [
   { id: "disappearing", label: "24h Mode", icon: Timer, color: "bg-amber-500" },
 ] as const;
 
-const AttachPanel = forwardRef<HTMLDivElement, ChatAttachMenuProps & { style?: React.CSSProperties }>(
-  function AttachPanel({ open, onClose, onImageSelect, onVideoSelect, onLocationShare, onToggleDisappearing, disappearingEnabled, ...rest }, ref) {
-    const handleAction = (id: string) => {
-      switch (id) {
-        case "image": onImageSelect(); break;
-        case "video": onVideoSelect(); break;
-        case "location": onLocationShare(); break;
-        case "disappearing": onToggleDisappearing(); break;
-      }
-      onClose();
-    };
+export default function ChatAttachMenu({
+  open, onClose, onImageSelect, onVideoSelect, onLocationShare, onToggleDisappearing, disappearingEnabled,
+}: ChatAttachMenuProps) {
+  if (!open) return null;
 
-    return (
-      <div ref={ref} {...rest}>
+  const handleAction = (id: string) => {
+    switch (id) {
+      case "image": onImageSelect(); break;
+      case "video": onVideoSelect(); break;
+      case "location": onLocationShare(); break;
+      case "disappearing": onToggleDisappearing(); break;
+    }
+    onClose();
+  };
+
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-40"
+        onClick={onClose}
+      />
+      <motion.div
+        key="attach-panel"
+        initial={{ y: 16, opacity: 0, scale: 0.92 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 16, opacity: 0, scale: 0.92 }}
+        transition={{ type: "spring", damping: 24, stiffness: 400 }}
+        className="absolute bottom-full mb-2.5 left-0 z-50 bg-background border border-border/30 rounded-2xl shadow-2xl p-4"
+      >
         <div className="flex gap-5">
           {menuItems.map((item) => (
             <button
@@ -57,37 +72,7 @@ const AttachPanel = forwardRef<HTMLDivElement, ChatAttachMenuProps & { style?: R
             </button>
           ))}
         </div>
-      </div>
-    );
-  }
-);
-
-const MotionAttachPanel = motion.create(AttachPanel);
-
-export default function ChatAttachMenu(props: ChatAttachMenuProps) {
-  if (!props.open) return null;
-
-  return (
-    <AnimatePresence>
-      {props.open && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40"
-            onClick={props.onClose}
-          />
-          <MotionAttachPanel
-            {...props}
-            initial={{ y: 16, opacity: 0, scale: 0.92 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 16, opacity: 0, scale: 0.92 }}
-            transition={{ type: "spring", damping: 24, stiffness: 400 }}
-            className="absolute bottom-full mb-2.5 left-0 z-50 bg-background border border-border/30 rounded-2xl shadow-2xl p-4"
-          />
-        </>
-      )}
-    </AnimatePresence>
+      </motion.div>
+    </>
   );
 }
