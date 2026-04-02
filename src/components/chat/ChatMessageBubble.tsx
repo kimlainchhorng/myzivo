@@ -202,7 +202,9 @@ export default function ChatMessageBubble({
               </span>
               {isMe && !isOptimistic && (
                 isRead
-                  ? <CheckCheck className="h-3 w-3 text-primary-foreground/60" />
+                  ? <CheckCheck className="h-3 w-3 text-blue-400" />
+                  : isDelivered
+                  ? <CheckCheck className="h-3 w-3 text-primary-foreground/40" />
                   : <Check className="h-3 w-3 text-primary-foreground/40" />
               )}
             </div>
