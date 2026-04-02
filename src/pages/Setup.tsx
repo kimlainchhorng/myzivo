@@ -152,9 +152,19 @@ export default function Setup() {
       <div className="w-full max-w-md">
         <div className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl p-6 sm:p-8">
           {/* Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Complete Your Profile</h1>
-            <p className="text-white/50 text-sm mt-1">Just a few details to get started</p>
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-1 text-white/50 hover:text-white text-sm mb-4 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-white tracking-tight">Complete Your Profile</h1>
+              <p className="text-white/50 text-sm mt-1">Just a few details to get started</p>
+            </div>
           </div>
 
           <Form {...form}>
