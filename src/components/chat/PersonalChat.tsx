@@ -478,7 +478,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             recipientId={recipientId}
             callType={activeCall}
             onEnd={() => { setActiveCall(null); setPipMode(false); setPipData(null); }}
-            onMinimize={() => setPipMode(true)}
+            onMinimize={(data) => {
+              setPipData(data);
+              setPipMode(true);
+            }}
           />
         )}
       </AnimatePresence>
