@@ -654,7 +654,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       variant="outline"
                       className="w-full rounded-xl"
                       onClick={() => {
-                        navigate("/login");
+                        navigate(withRedirectParam("/login", location.pathname === "/" ? null : `${location.pathname}${location.search ?? ""}`));
                         setIsMobileMenuOpen(false);
                       }}
                     >
