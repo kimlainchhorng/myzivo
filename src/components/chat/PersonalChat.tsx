@@ -471,8 +471,30 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       {/* Call overlay */}
       <AnimatePresence>
-        {activeCall && (
-          <CallScreen recipientName={recipientName} recipientAvatar={recipientAvatar} recipientId={recipientId} callType={activeCall} onEnd={() => setActiveCall(null)} />
+        {activeCall && !pipMode && (
+          <CallScreen
+            recipientName={recipientName}
+            recipientAvatar={recipientAvatar}
+            recipientId={recipientId}
+            callType={activeCall}
+            onEnd={() => { setActiveCall(null); setPipMode(false); setPipData(null); }}
+            onMinimize={() => setPipMode(true)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Picture-in-Picture floating call */}
+      <AnimatePresence>
+        {activeCall && pipMode && (
+          <CallPiP
+            remoteStream={pipData?.remoteStream || null}
+            recipientName={recipientName}
+            isMuted={pipData?.isMuted || false}
+            duration={pipData?.duration || 0}
+            onExpand={() => setPipMode(false)}
+            onEndCall={() => { setActiveCall(null); setPipMode(false); setPipData(null); }}
+            onToggleMute={() => {}}
+          />
         )}
       </AnimatePresence>
 
