@@ -29103,6 +29103,7 @@ export type Database = {
           hide_like_counts: boolean
           id: string
           is_private: boolean
+          is_verified: boolean
           kyc_rejection_reason: string | null
           kyc_status: string
           kyc_verified_at: string | null
@@ -29158,6 +29159,7 @@ export type Database = {
           hide_like_counts?: boolean
           id?: string
           is_private?: boolean
+          is_verified?: boolean
           kyc_rejection_reason?: string | null
           kyc_status?: string
           kyc_verified_at?: string | null
@@ -29213,6 +29215,7 @@ export type Database = {
           hide_like_counts?: boolean
           id?: string
           is_private?: boolean
+          is_verified?: boolean
           kyc_rejection_reason?: string | null
           kyc_status?: string
           kyc_verified_at?: string | null
