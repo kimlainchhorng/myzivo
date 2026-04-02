@@ -22,7 +22,7 @@ interface CallScreenProps {
   recipientId: string;
   existingCallId?: string;
   onEnd: () => void;
-  onMinimize?: () => void;
+  onMinimize?: (data: { remoteStream: MediaStream | null; duration: number; isMuted: boolean }) => void;
 }
 
 export default function CallScreen({
