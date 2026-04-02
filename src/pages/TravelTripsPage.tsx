@@ -4,7 +4,8 @@
   * Premium mobile experience with living timeline
   */
 import { useState, useCallback } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Plane, Loader2 } from "lucide-react";
 import PullToRefresh from "@/components/shared/PullToRefresh";
@@ -21,6 +22,7 @@ import { TripCard } from "@/components/travel/TripCard";
  // MobileTripsPremium removed - use standard trips view on mobile
 
 export default function TravelTripsPage() {
+  const location = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const [filter, setFilter] = useState<TripFilter>("upcoming");
    const isMobile = useIsMobile();
@@ -34,7 +36,8 @@ export default function TravelTripsPage() {
 
   // Redirect to login if not authenticated
   if (!authLoading && !user) {
-    return <Navigate to="/login" replace />;
+    const redirectTarget = `${location.pathname}${location.search ?? ""}`;
+    return <Navigate to={withRedirectParam("/login", redirectTarget)} replace />;
   }
  
    // Mobile and desktop use the same trips view

@@ -10,6 +10,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
+import { withRedirectParam } from "@/lib/authRedirect";
 
 interface PhoneRequiredGateProps {
   children: React.ReactNode;
@@ -47,10 +48,11 @@ const PhoneRequiredGate = ({ children }: PhoneRequiredGateProps) => {
 
   // No phone — redirect to profile
   if (!hasPhone) {
+    const redirectTarget = `${location.pathname}${location.search ?? ""}${location.hash ?? ""}`;
     return (
       <Navigate
-        to="/setup"
-        state={{ from: location, phoneRequired: true }}
+        to={withRedirectParam("/setup", redirectTarget)}
+        state={{ from: location, phoneRequired: true, redirectTo: redirectTarget }}
         replace
       />
     );
