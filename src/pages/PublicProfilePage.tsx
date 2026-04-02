@@ -301,7 +301,15 @@ export default function PublicProfilePage() {
               <AvatarImage src={profile.avatar_url || undefined} />
               <AvatarFallback className="text-2xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
             </Avatar>
-            <h2 className="text-xl font-bold text-foreground mt-4">{profile.full_name}</h2>
+            <div className="flex items-center gap-1.5 mt-4">
+              <h2 className="text-xl font-bold text-foreground">{profile.full_name}</h2>
+              {profile.is_verified && (
+                <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" fill="hsl(var(--primary))" />
+                  <path d="M8 12.5L10.5 15L16 9.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </div>
 
             {/* Stats row — hide counts if locked */}
             {!isLocked ? (
