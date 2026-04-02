@@ -247,6 +247,7 @@ const Login = () => {
         _role: "admin",
       });
 
+      clearAuthLockout("login");
       setIsLoading(false);
       toast.success("Welcome back!");
 
