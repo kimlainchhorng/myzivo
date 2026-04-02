@@ -137,7 +137,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 px-3 py-2 flex items-center gap-3">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
+        <div className="px-3 py-2 flex items-center gap-3">
         <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </button>
