@@ -92,7 +92,10 @@ export default function AccountSecurity() {
       const { error } = await supabase.auth.updateUser({ password: passwordForm.new });
       if (error) throw error;
 
-      toast.success("Password updated successfully");
+      // Invalidate all other sessions after password change
+      await supabase.auth.signOut({ scope: 'others' });
+
+      toast.success("Password updated. All other sessions have been signed out.");
       setPasswordForm({ current: "", new: "", confirm: "" });
     } catch (error: any) {
       toast.error(error.message || "Failed to update password");
