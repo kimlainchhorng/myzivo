@@ -97,7 +97,7 @@ const FlightLoyaltyProgram = () => {
           <div className="text-center mt-8">
             <Button
               className="bg-gradient-to-r from-sky-500 to-blue-500 text-primary-foreground font-semibold"
-              onClick={() => navigate("/login")}
+              onClick={() => navigate(withRedirectParam("/login", "/flights"))}
             >
               <Gift className="w-4 h-4 mr-2" />
               Join SkyMiles Free

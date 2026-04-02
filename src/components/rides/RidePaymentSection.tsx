@@ -591,7 +591,7 @@ export default function RidePaymentSection({
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
         toast.error("Session expired. Please sign in again.");
-        navigate("/login");
+        navigate(withRedirectParam("/login", window.location.pathname + window.location.search));
         return;
       }
       const expiresAt = sessionData.session.expires_at;
