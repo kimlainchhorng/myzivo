@@ -155,24 +155,30 @@ const Login = () => {
     const { error } = await signIn(data.email, data.password);
 
     if (error) {
-      setIsLoading(false);
       const msg = (error.message || "").toLowerCase();
       if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
+        setIsLoading(false);
         toast.error("Incorrect email or password. Please try again.");
       } else if (msg.includes("email not confirmed")) {
-        toast.error("Please verify your email before signing in.");
-        // Resend OTP and redirect to verification
+        // Send OTP and redirect to verification page
+        toast.info("Sending verification code...");
         try {
           await supabase.functions.invoke("send-otp-email", { body: { email: data.email } });
-          toast.info("Verification code sent to your email.");
-        } catch {}
+          toast.success("Verification code sent to your email!");
+        } catch (err) {
+          console.error("Failed to send OTP:", err);
+          toast.error("Failed to send verification code. Please try again.");
+        }
+        setIsLoading(false);
         navigate("/verify-otp", { state: { email: data.email } });
-
       } else if (msg.includes("too many requests") || msg.includes("rate limit")) {
+        setIsLoading(false);
         toast.error("Too many attempts. Please wait a moment and try again.");
       } else if (msg.includes("user not found")) {
+        setIsLoading(false);
         toast.error("No account found with this email. Please sign up first.");
       } else {
+        setIsLoading(false);
         toast.error(error.message || "Failed to sign in. Please try again.");
       }
       return;
