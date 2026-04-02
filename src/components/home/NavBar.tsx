@@ -505,7 +505,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate("/login")}
+                        onClick={() => navigate(withRedirectParam("/login", location.pathname === "/" ? null : `${location.pathname}${location.search ?? ""}`))}
                         className={cn(
                           "rounded-full font-semibold text-[13px] px-5 h-9 transition-all duration-300",
                           scrolled || !isHomePage
