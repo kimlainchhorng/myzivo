@@ -258,7 +258,12 @@ export default function AdminUsersPage() {
                                 {(user.full_name || user.email || "?").charAt(0).toUpperCase()}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-medium text-foreground truncate">{user.full_name || "—"}</p>
+                                <div className="flex items-center gap-1">
+                                  <p className="font-medium text-foreground truncate">{user.full_name || "—"}</p>
+                                  {user.is_verified && (
+                                    <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
+                                  )}
+                                </div>
                                 {user.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
                               </div>
                             </div>
