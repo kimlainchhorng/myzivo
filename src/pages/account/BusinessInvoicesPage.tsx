@@ -3,7 +3,8 @@
  * View and download invoices for business account members
  */
 import { useState, useMemo } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import {
   ArrowLeft,
   FileText,

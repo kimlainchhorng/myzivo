@@ -4,7 +4,8 @@
   * Premium mobile experience with living timeline
   */
 import { useState, useCallback } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Plane, Loader2 } from "lucide-react";
 import PullToRefresh from "@/components/shared/PullToRefresh";

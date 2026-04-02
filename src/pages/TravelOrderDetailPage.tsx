@@ -3,7 +3,8 @@
  * Shows full details of a travel order with actions
  */
 import { useState } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, Link, Navigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { format } from "date-fns";
 import {
   ArrowLeft,

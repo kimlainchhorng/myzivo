@@ -4,7 +4,8 @@
  */
 
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { ArrowLeft, MessageSquare, Plus, Loader2, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

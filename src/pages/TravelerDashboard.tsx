@@ -3,7 +3,8 @@
  * Premium 2026-era traveler profile with glassmorphism
  */
 import { useState } from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate, Link, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { useAuth } from "@/contexts/AuthContext";
 import { TripTimeline, AIConciergeTrigger } from "@/components/profile";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
