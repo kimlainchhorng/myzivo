@@ -101,7 +101,11 @@ export default function Setup() {
     return publicUrl;
   };
 
-  const handleContinue = async (skipPhotos = false) => {
+  const handleSkip = () => {
+    navigate("/", { replace: true });
+  };
+
+  const handleContinue = async () => {
     if (!user) {
       toast.error("Please sign in to continue.");
       navigate("/login", { replace: true });
@@ -290,7 +294,7 @@ export default function Setup() {
 
             <button
               type="button"
-              onClick={() => handleContinue(true)}
+              onClick={handleSkip}
               disabled={saving}
               className="w-full text-center text-white/40 hover:text-white/60 text-sm mt-3 transition-colors"
             >
