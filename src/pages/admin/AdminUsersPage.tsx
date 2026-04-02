@@ -417,6 +417,33 @@ export default function AdminUsersPage() {
                   )}
                 </div>
               </div>
+
+              {/* Verify action */}
+              <div className="pt-2 border-t border-border">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Account Verification</p>
+                <Button
+                  variant={selectedUser.is_verified ? "outline" : "default"}
+                  size="sm"
+                  className="gap-2"
+                  disabled={verifyMutation.isPending}
+                  onClick={() => verifyMutation.mutate({ userId: selectedUser.id || selectedUser.user_id, verified: !selectedUser.is_verified })}
+                >
+                  {selectedUser.is_verified ? (
+                    <>
+                      <ShieldCheck className="w-4 h-4 text-primary" />
+                      Verified — Remove Badge
+                    </>
+                  ) : (
+                    <>
+                      <BadgeCheck className="w-4 h-4" />
+                      Verify Account
+                    </>
+                  )}
+                </Button>
+                {selectedUser.is_verified && (
+                  <p className="text-[10px] text-muted-foreground mt-1.5">This account has been verified by an admin.</p>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
