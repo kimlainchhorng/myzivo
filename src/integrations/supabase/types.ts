@@ -6725,6 +6725,72 @@ export type Database = {
           },
         ]
       }
+      chat_settings: {
+        Row: {
+          chat_partner_id: string
+          created_at: string
+          dnd_end: string | null
+          dnd_start: string | null
+          id: string
+          is_muted: boolean | null
+          mute_until: string | null
+          notification_tone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_partner_id: string
+          created_at?: string
+          dnd_end?: string | null
+          dnd_start?: string | null
+          id?: string
+          is_muted?: boolean | null
+          mute_until?: string | null
+          notification_tone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_partner_id?: string
+          created_at?: string
+          dnd_end?: string | null
+          dnd_start?: string | null
+          id?: string
+          is_muted?: boolean | null
+          mute_until?: string | null
+          notification_tone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chat_sticker_packs: {
+        Row: {
+          created_at: string
+          emoji_prefix: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          stickers: Json
+        }
+        Insert: {
+          created_at?: string
+          emoji_prefix?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          stickers?: Json
+        }
+        Update: {
+          created_at?: string
+          emoji_prefix?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          stickers?: Json
+        }
+        Relationships: []
+      }
       checklist_templates: {
         Row: {
           checklist_type: string
@@ -9973,6 +10039,7 @@ export type Database = {
       direct_messages: {
         Row: {
           created_at: string
+          delivered_at: string | null
           expires_at: string | null
           id: string
           image_url: string | null
@@ -9991,6 +10058,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          delivered_at?: string | null
           expires_at?: string | null
           id?: string
           image_url?: string | null
@@ -10009,6 +10077,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          delivered_at?: string | null
           expires_at?: string | null
           id?: string
           image_url?: string | null
