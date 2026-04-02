@@ -2,7 +2,7 @@
  * ChatAttachMenu — Bottom sheet for attachment options: image, video, location, disappearing
  */
 import { motion, AnimatePresence } from "framer-motion";
-import { ImagePlus, Video, MapPin, Timer, X } from "lucide-react";
+import { ImagePlus, Video, MapPin, Timer } from "lucide-react";
 
 interface ChatAttachMenuProps {
   open: boolean;
@@ -15,10 +15,10 @@ interface ChatAttachMenuProps {
 }
 
 const menuItems = [
-  { id: "image", label: "Photo", icon: ImagePlus, color: "bg-green-500" },
-  { id: "video", label: "Video / GIF", icon: Video, color: "bg-purple-500" },
+  { id: "image", label: "Photo", icon: ImagePlus, color: "bg-emerald-500" },
+  { id: "video", label: "Video", icon: Video, color: "bg-violet-500" },
   { id: "location", label: "Location", icon: MapPin, color: "bg-blue-500" },
-  { id: "disappearing", label: "Disappearing", icon: Timer, color: "bg-amber-500" },
+  { id: "disappearing", label: "24h Mode", icon: Timer, color: "bg-amber-500" },
 ] as const;
 
 export default function ChatAttachMenu({
@@ -48,26 +48,29 @@ export default function ChatAttachMenu({
             onClick={onClose}
           />
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 20, opacity: 0 }}
-            className="absolute bottom-full mb-2 left-0 z-50 bg-background border border-border/40 rounded-2xl shadow-xl p-3 min-w-[200px]"
+            initial={{ y: 16, opacity: 0, scale: 0.92 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 16, opacity: 0, scale: 0.92 }}
+            transition={{ type: "spring", damping: 24, stiffness: 400 }}
+            className="absolute bottom-full mb-2.5 left-0 z-50 bg-background border border-border/30 rounded-2xl shadow-2xl p-4"
           >
-            <div className="grid grid-cols-4 gap-3">
+            <div className="flex gap-5">
               {menuItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handleAction(item.id)}
-                  className="flex flex-col items-center gap-1.5 py-2 rounded-xl hover:bg-muted/60 transition-colors"
+                  className="flex flex-col items-center gap-2 group"
                 >
-                  <div className={`w-10 h-10 rounded-full ${item.color} flex items-center justify-center ${
+                  <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center shadow-sm group-active:scale-90 transition-transform ${
                     item.id === "disappearing" && disappearingEnabled ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
                   }`}>
                     <item.icon className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-[10px] font-medium text-foreground">{item.label}</span>
+                  <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap">
+                    {item.label}
+                  </span>
                   {item.id === "disappearing" && disappearingEnabled && (
-                    <span className="text-[8px] text-primary font-bold">ON</span>
+                    <span className="text-[8px] text-primary font-bold -mt-1">ON</span>
                   )}
                 </button>
               ))}
