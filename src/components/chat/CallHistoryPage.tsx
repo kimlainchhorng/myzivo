@@ -76,6 +76,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
   const [playingVm, setPlayingVm] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [profiles, setProfiles] = useState<Record<string, ProfileInfo>>({});
 
   useEffect(() => {
     if (!user?.id) return;
@@ -95,12 +96,54 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
           .order("created_at", { ascending: false })
           .limit(20),
       ]);
-      setCalls(callsRes.data || []);
-      setVoicemails(vmRes.data || []);
+      const callsData: CallRecord[] = callsRes.data || [];
+      const vmData: VoicemailRecord[] = vmRes.data || [];
+      setCalls(callsData);
+      setVoicemails(vmData);
+
+      // Collect unique user IDs to fetch profiles
+      const userIds = new Set<string>();
+      callsData.forEach((c) => {
+        if (c.caller_id !== user.id) userIds.add(c.caller_id);
+        if (c.callee_id !== user.id) userIds.add(c.callee_id);
+      });
+      vmData.forEach((v) => { if (v.caller_id !== user.id) userIds.add(v.caller_id); });
+
+      if (userIds.size > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .in("id", Array.from(userIds));
+        if (profilesData) {
+          const map: Record<string, ProfileInfo> = {};
+          profilesData.forEach((p) => {
+            map[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+          });
+          setProfiles(map);
+        }
+      }
+
       setLoading(false);
     };
     load();
   }, [user?.id]);
+
+  const getDisplayName = (userId: string) => {
+    return profiles[userId]?.full_name || userId.slice(0, 8) + "...";
+  };
+
+  const getInitials = (userId: string) => {
+    const name = profiles[userId]?.full_name;
+    if (name) {
+      const parts = name.trim().split(/\s+/);
+      return parts.length > 1
+        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+        : name.slice(0, 2).toUpperCase();
+    }
+    return userId.slice(0, 2).toUpperCase();
+  };
+
+  const getAvatarUrl = (userId: string) => profiles[userId]?.avatar_url || null;
 
   const deleteVoicemail = async (id: string) => {
     setVoicemails((prev) => prev.filter((v) => v.id !== id));
