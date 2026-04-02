@@ -139,6 +139,14 @@ export default function Setup() {
     }
   };
 
+  if (checking) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-[#0a1628] to-[#0d2137]">
+        <Loader2 className="w-6 h-6 animate-spin text-white/50" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-b from-[#0a1628] to-[#0d2137] px-4">
       <div className="w-full max-w-md">
