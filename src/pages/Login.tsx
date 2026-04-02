@@ -16,6 +16,8 @@ import SEOHead from "@/components/SEOHead";
 import { useI18n } from "@/hooks/useI18n";
 import { cn } from "@/lib/utils";
 import { getRedirectFromLocation, getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
+import { checkRateLimit, recordAuthFailure, clearAuthLockout, formatLockout } from "@/lib/security/rateLimiter";
+import { checkPasswordBreach } from "@/lib/security/passwordStrength";
 import InlineLegalSheet, { useLegalSheet } from "@/components/checkout/InlineLegalSheet";
 
 // Login schema
