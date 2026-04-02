@@ -99,10 +99,6 @@ export default function CallScreen({
   // Hooks for enhancements — connected to live PeerConnection ref
   const qualityStats = useCallQuality(peerConnection);
   const screenShare = useScreenShare(peerConnection);
-  const recording = useCallRecording({
-    callHistoryId: callHistoryId || undefined,
-    userId: user?.id || "",
-  });
 
   // Create call signal
   useEffect(() => {
