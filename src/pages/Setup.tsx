@@ -101,8 +101,12 @@ export default function Setup() {
     return publicUrl;
   };
 
-  const handleContinue = async () => {
-    if (!user) return;
+  const handleContinue = async (skipPhotos = false) => {
+    if (!user) {
+      toast.error("Please sign in to continue.");
+      navigate("/login", { replace: true });
+      return;
+    }
     setSaving(true);
 
     try {
