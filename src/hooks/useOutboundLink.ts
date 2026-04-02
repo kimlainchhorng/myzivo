@@ -227,12 +227,6 @@ export const EXTRAS_LINKS = {
     url: 'https://compensair.tpo.li/npsp8pm0',
     product: 'compensation',
   },
-  kiwiFlights: {
-    id: 'kiwi',
-    name: 'Kiwi.com',
-    url: 'https://kiwi.tpo.li/86fSRBiW',
-    product: 'flights',
-  },
   hotelsTpo: {
     id: 'hotels-tpo',
     name: 'Hotels',

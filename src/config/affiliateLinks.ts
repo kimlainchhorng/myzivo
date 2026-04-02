@@ -177,20 +177,6 @@ export const FLIGHT_PARTNERS: AffiliatePartner[] = [
     isActive: true,
     priority: 90,
   },
-  {
-    id: 'kiwi',
-    name: 'Kiwi.com',
-    network: 'travelpayouts',
-    baseUrl: 'https://www.kiwi.com',
-    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.flights.kiwi,
-    subId: 'zivo_flights_kiwi',
-    commissionRate: '3-5%',
-    features: ['Virtual interlining', 'Nomad search', 'Kiwi Guarantee', 'Multi-city'],
-    logo: 'KW',
-    isActive: true,
-    priority: 85,
-    supportedRegions: ['US', 'GB', 'EN', 'FI', 'IT', 'DA', 'DE', 'FR', 'ES', 'BR', 'PL', 'NL', 'CS', 'CZ'],
-  },
 ];
 
 export const CAR_PARTNERS: AffiliatePartner[] = [

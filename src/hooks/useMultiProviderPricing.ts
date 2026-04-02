@@ -50,7 +50,7 @@ const CAR_PARTNERS = [
 
 /**
  * Multi-provider pricing — returns empty until real partner APIs are integrated
- * TODO: Integrate TravelPayouts, Kiwi.com, or other meta-search APIs
+ * TODO: Integrate TravelPayouts or other meta-search APIs
  */
 export function useMultiProviderPricing(
   basePrice: number,

@@ -1105,7 +1105,7 @@ const FlightResults = () => {
                           );
                         })}
 
-                        {/* Kiwi.com — affiliate partner link */}
+                        {/* Aviasales — affiliate partner link (always visible) */}
                         {/* Aviasales — affiliate partner link (always visible) */}
                         {origin && destination && departureDate && (
                           <button
