@@ -75,70 +75,13 @@ export interface ActivityDeepLinkParams {
 // TRAVELPAYOUTS DIRECT LINKS (NEW)
 // ============================================
 
-// ============================================
-// KIWI.COM LOCALE-BASED LINKS (Travelpayouts)
-// ============================================
 
-export const KIWI_LOCALE_LINKS: Record<string, string> = {
-  en: 'https://kiwi.tpo.li/86fSRBiW',
-  us: 'https://kiwi.tpo.li/86fSRBiW',
-  gb: 'https://kiwi.tpo.li/86fSRBiW',
-  fi: 'https://kiwi.tpo.li/FlbrGNAb',
-  it: 'https://kiwi.tpo.li/FkohAWmX',
-  da: 'https://kiwi.tpo.li/hdFvOHv9',
-  de: 'https://kiwi.tpo.li/05w53cIL',
-  fr: 'https://kiwi.tpo.li/9WglCjcd',
-  es: 'https://kiwi.tpo.li/B9nwUGI3',
-  br: 'https://kiwi.tpo.li/kFu9p3mD',
-  pt: 'https://kiwi.tpo.li/kFu9p3mD',
-  pl: 'https://kiwi.tpo.li/rAmlqxKS',
-  nl: 'https://kiwi.tpo.li/pnteIyi2',
-  cs: 'https://kiwi.tpo.li/NCNRQN5B',
-  cz: 'https://kiwi.tpo.li/NCNRQN5B',
-};
-
-// Kiwi.com promo IDs by locale (from Travelpayouts)
-const KIWI_PROMO_IDS: Record<string, number> = {
-  en: 3791, us: 3791, gb: 3791,
-  fi: 5000, it: 5000, da: 5000, de: 5000,
-  fr: 5000, es: 5000, br: 5000, pt: 5000,
-  pl: 5000, nl: 5000, cs: 5000, cz: 5000,
-};
-
-/** Get the best Kiwi.com tracking link for a given locale/language code */
-export function getKiwiLink(locale?: string): string {
-  if (!locale) return KIWI_LOCALE_LINKS.en;
-  const key = locale.toLowerCase().split('-')[0];
-  return KIWI_LOCALE_LINKS[key] || KIWI_LOCALE_LINKS.en;
-}
-
-/**
- * Build a Kiwi.com deep link with search parameters via Travelpayouts tracking
- * Uses the c111.travelpayouts.com/click redirect with custom_url
- */
-export function buildKiwiDeepLink(params: {
-  origin: string;
-  destination: string;
-  departureDate?: string;
-  returnDate?: string;
-  locale?: string;
-}): string {
-  const localeKey = params.locale?.toLowerCase().split('-')[0] || 'us';
-  const localeSegment = localeKey === 'en' ? 'us' : localeKey;
-  const origin = encodeURIComponent(params.origin.toUpperCase());
-  const destination = encodeURIComponent(params.destination.toUpperCase());
-  const departure = params.departureDate || 'anytime';
-  const arrival = params.returnDate || 'no-return';
-
-  return `https://www.kiwi.com/${localeSegment}/search/results/${origin}/${destination}/${departure}/${arrival}/`;
-}
 
 export const TRAVELPAYOUTS_DIRECT_LINKS = {
   // FLIGHTS
   flights: {
     primary: 'https://searadar.tpo.li/iAbLlX9i',
     backup: 'https://aviasales.tpo.li/aayXqoez',
-    kiwi: 'https://kiwi.tpo.li/86fSRBiW', // default EN link
     subId: 'zivo_flights',
   },
   
@@ -232,20 +175,6 @@ export const FLIGHT_PARTNERS: AffiliatePartner[] = [
     logo: 'FL',
     isActive: true,
     priority: 90,
-  },
-  {
-    id: 'kiwi',
-    name: 'Kiwi.com',
-    network: 'travelpayouts',
-    baseUrl: 'https://www.kiwi.com',
-    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.flights.kiwi,
-    subId: 'zivo_flights_kiwi',
-    commissionRate: '3-5%',
-    features: ['Virtual interlining', 'Nomad search', 'Kiwi Guarantee', 'Multi-city'],
-    logo: 'KW',
-    isActive: true,
-    priority: 85,
-    supportedRegions: ['US', 'GB', 'EN', 'FI', 'IT', 'DA', 'DE', 'FR', 'ES', 'BR', 'PL', 'NL', 'CS', 'CZ'],
   },
 ];
 

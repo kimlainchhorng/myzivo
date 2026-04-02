@@ -29,7 +29,7 @@ export interface MultiProviderResult {
 // Partner configuration
 const FLIGHT_PARTNERS = [
   { id: "duffel", name: "Airline Direct", isOfficial: true },
-  { id: "kiwi", name: "Kiwi.com", isOfficial: false },
+  
   { id: "mytrip", name: "Mytrip", isOfficial: false },
   { id: "trip", name: "Trip.com", isOfficial: false },
 ];
@@ -50,7 +50,7 @@ const CAR_PARTNERS = [
 
 /**
  * Multi-provider pricing — returns empty until real partner APIs are integrated
- * TODO: Integrate TravelPayouts, Kiwi.com, or other meta-search APIs
+ * TODO: Integrate TravelPayouts or other meta-search APIs
  */
 export function useMultiProviderPricing(
   basePrice: number,
