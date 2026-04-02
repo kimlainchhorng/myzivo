@@ -83,6 +83,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showPersonalization, setShowPersonalization] = useState(false);
   const [showMiniApps, setShowMiniApps] = useState(false);
   const [showSecurity, setShowSecurity] = useState(false);
+  const [showCallHistory, setShowCallHistory] = useState(false);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
