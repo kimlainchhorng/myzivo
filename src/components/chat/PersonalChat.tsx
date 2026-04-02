@@ -6,7 +6,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Phone, Video, X, Mic, Square, Search, Plus, Pin } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Phone, Video, X, Mic, Square, Search, Plus, Pin, Settings, Image as ImageIcon, Smile } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
@@ -17,6 +17,9 @@ import VoiceMessagePlayer from "./VoiceMessagePlayer";
 import LocationShareBubble from "./LocationShareBubble";
 import ChatSearch from "./ChatSearch";
 import ChatAttachMenu from "./ChatAttachMenu";
+import ChatNotificationSettings from "./ChatNotificationSettings";
+import ChatMediaGallery from "./ChatMediaGallery";
+import StickerKeyboard from "./StickerKeyboard";
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
@@ -37,6 +40,7 @@ interface Message {
   video_url?: string | null;
   voice_url?: string | null;
   message_type?: string;
+  delivered_at?: string | null;
   reply_to_id?: string | null;
   location_lat?: number | null;
   location_lng?: number | null;
@@ -67,6 +71,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [disappearingMode, setDisappearingMode] = useState(false);
+  const [showNotifSettings, setShowNotifSettings] = useState(false);
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [showStickerKeyboard, setShowStickerKeyboard] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -133,7 +140,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           });
           scrollToBottom();
           if (msg.receiver_id === user.id) {
-            (supabase as any).from("direct_messages").update({ is_read: true }).eq("id", msg.id);
+            (supabase as any).from("direct_messages").update({ is_read: true, delivered_at: new Date().toISOString() }).eq("id", msg.id);
           }
         }
       })
@@ -385,14 +392,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               ) : "Personal chat"}
             </p>
           </div>
+          <button onClick={() => setShowMediaGallery(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <ImageIcon className="h-5 w-5 text-muted-foreground" />
+          </button>
           <button onClick={() => setShowSearch(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <Search className="h-5 w-5 text-muted-foreground" />
           </button>
+          <button onClick={() => setShowNotifSettings(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <Settings className="h-4.5 w-4.5 text-muted-foreground" />
+          </button>
           <button onClick={() => { void handleStartCall("voice"); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <Phone className="h-5 w-5 text-primary" />
-          </button>
-          <button onClick={() => { void handleStartCall("video"); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Video className="h-5 w-5 text-primary" />
           </button>
         </div>
 
@@ -488,6 +498,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                     time={formatMsgTime(msg.created_at)}
                     isMe={isMe}
                     isRead={msg.is_read}
+                    isDelivered={!!msg.delivered_at}
                     imageUrl={msg.image_url}
                     videoUrl={msg.video_url}
                     isPinned={msg.is_pinned}
@@ -593,6 +604,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <Mic className="h-5 w-5" />
           </button>
 
+          {/* Sticker button */}
+          <button
+            onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
+            className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors shrink-0 ${
+              showStickerKeyboard ? "text-primary" : "text-muted-foreground hover:text-primary"
+            }`}
+          >
+            <Smile className="h-5 w-5" />
+          </button>
+
           <input
             ref={inputRef}
             value={input}
@@ -612,6 +633,41 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           </button>
         </div>
       )}
+
+      {/* Sticker keyboard */}
+      <AnimatePresence>
+        {showStickerKeyboard && (
+          <StickerKeyboard
+            open={showStickerKeyboard}
+            onClose={() => setShowStickerKeyboard(false)}
+            onSendSticker={(sticker) => {
+              setInput((prev) => prev + sticker);
+              setShowStickerKeyboard(false);
+              inputRef.current?.focus();
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Notification settings */}
+      <ChatNotificationSettings
+        open={showNotifSettings}
+        onClose={() => setShowNotifSettings(false)}
+        chatPartnerId={recipientId}
+        chatPartnerName={recipientName}
+      />
+
+      {/* Media gallery */}
+      <AnimatePresence>
+        {showMediaGallery && (
+          <ChatMediaGallery
+            open={showMediaGallery}
+            onClose={() => setShowMediaGallery(false)}
+            recipientId={recipientId}
+            recipientName={recipientName}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

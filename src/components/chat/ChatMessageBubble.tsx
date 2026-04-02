@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥", "👏", "🎉", "💯", "🤔", "😍", "💀"];
 
 interface ChatMessageBubbleProps {
   id: string;
@@ -17,6 +17,7 @@ interface ChatMessageBubbleProps {
   time: string;
   isMe: boolean;
   isRead?: boolean;
+  isDelivered?: boolean;
   imageUrl?: string | null;
   videoUrl?: string | null;
   isPinned?: boolean;
@@ -28,7 +29,7 @@ interface ChatMessageBubbleProps {
 }
 
 export default function ChatMessageBubble({
-  id, message, time, isMe, isRead, imageUrl, videoUrl, isPinned, expiresAt,
+  id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt,
   onReply, onDelete, onForward, onPin,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
@@ -201,7 +202,9 @@ export default function ChatMessageBubble({
               </span>
               {isMe && !isOptimistic && (
                 isRead
-                  ? <CheckCheck className="h-3 w-3 text-primary-foreground/60" />
+                  ? <CheckCheck className="h-3 w-3 text-blue-400" />
+                  : isDelivered
+                  ? <CheckCheck className="h-3 w-3 text-primary-foreground/40" />
                   : <Check className="h-3 w-3 text-primary-foreground/40" />
               )}
             </div>
