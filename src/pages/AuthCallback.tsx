@@ -82,13 +82,27 @@ const AuthCallback = () => {
         }
       }
 
-      // OAuth providers (apple, google, etc.) already verify the user's email —
-      // skip our custom OTP verification for them.
+      // OAuth providers already verify email, and email confirmation links
+      // update auth.users.email_confirmed_at even if our profile flag lags behind.
       const provider = user.app_metadata?.provider;
-      const isOAuthUser = provider && provider !== "email";
-      const needsVerification = !isOAuthUser && resolvedProfile.email_verified !== true;
+      const isOAuthUser = Boolean(provider && provider !== "email");
+      const isEmailConfirmedInAuth = Boolean(user.email_confirmed_at);
+      const isEmailVerified = isOAuthUser || isEmailConfirmedInAuth || resolvedProfile.email_verified === true;
 
-      if (needsVerification && user.email) {
+      if (isEmailConfirmedInAuth && resolvedProfile.email_verified !== true) {
+        const { error: syncProfileError } = await supabase
+          .from("profiles")
+          .update({ email_verified: true })
+          .or(`user_id.eq.${userId},id.eq.${userId}`);
+
+        if (syncProfileError) {
+          console.error("Failed to sync profile email verification:", syncProfileError);
+        } else {
+          resolvedProfile = { ...resolvedProfile, email_verified: true };
+        }
+      }
+
+      if (!isEmailVerified && user.email) {
         // Send OTP for verification — but don't block if it fails
         try {
           const { data: otpResponse, error: otpError } = await supabase.functions.invoke(
