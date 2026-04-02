@@ -165,16 +165,25 @@ export default function ChatMessageBubble({
           </div>
         )}
 
-        {/* Video */}
+        {/* Video — thumbnail preview with play button overlay */}
         {videoUrl && (
-          <div className={`rounded-2xl overflow-hidden mb-1 shadow-sm ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
+          <div className={`rounded-2xl overflow-hidden mb-1 shadow-sm relative ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
             <video
               src={videoUrl}
-              className="max-w-full max-h-60 rounded-2xl"
-              controls
+              className="max-w-full max-h-60 rounded-2xl object-cover w-full"
               playsInline
               preload="metadata"
+              muted
+              style={{ pointerEvents: "none" }}
             />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl">
+              <div className="h-12 w-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                <Play className="h-5 w-5 text-foreground/80 ml-0.5" fill="currentColor" />
+              </div>
+            </div>
+            <div className={`absolute bottom-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-medium ${isMe ? "bg-black/40 text-white" : "bg-black/40 text-white"}`}>
+              Video
+            </div>
           </div>
         )}
 
