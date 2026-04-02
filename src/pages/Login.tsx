@@ -178,7 +178,7 @@ const Login = () => {
       // Check email verification for email/password users
       if (!user.email_confirmed_at) {
         setIsLoading(false);
-        navigate("/verify-email", { replace: true });
+        toast.error("Please verify your email before signing in.");
         return;
       }
 
