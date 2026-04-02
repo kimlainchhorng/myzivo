@@ -109,7 +109,7 @@ const AuthCallback = () => {
         
         // OTP failed — still redirect, don't show error
         setStatus("success");
-        setTimeout(() => navigate("/verify-email", { replace: true }), 200);
+        setTimeout(() => navigate("/login", { replace: true }), 200);
         return;
       }
 

@@ -161,7 +161,7 @@ const Login = () => {
         toast.error("Incorrect email or password. Please try again.");
       } else if (msg.includes("email not confirmed")) {
         toast.error("Please verify your email before signing in.");
-        navigate("/verify-email", { replace: true });
+
       } else if (msg.includes("too many requests") || msg.includes("rate limit")) {
         toast.error("Too many attempts. Please wait a moment and try again.");
       } else if (msg.includes("user not found")) {
@@ -178,7 +178,7 @@ const Login = () => {
       // Check email verification for email/password users
       if (!user.email_confirmed_at) {
         setIsLoading(false);
-        navigate("/verify-email", { replace: true });
+        toast.error("Please verify your email before signing in.");
         return;
       }
 
@@ -246,18 +246,16 @@ const Login = () => {
 
       if (otpError || !otpResponse?.success) {
         console.error("Failed to send OTP:", otpError || otpResponse?.error);
-        // Fall back to old verification email flow
+        // Fall back to toast message
         setIsLoading(false);
         toast.success("Account created! Please check your email to verify.");
-        navigate("/verify-email");
         return;
       }
     } catch (err) {
       console.error("OTP send error:", err);
-      // Fall back to old verification email flow
+      // Fall back to toast message
       setIsLoading(false);
       toast.success("Account created! Please check your email to verify.");
-      navigate("/verify-email");
       return;
     }
 
