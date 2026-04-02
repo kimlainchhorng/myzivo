@@ -112,6 +112,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         password,
       });
+      if (!error) {
+        // Log login event asynchronously (fire-and-forget)
+        supabase.functions.invoke("log-login", {
+          body: { user_agent: navigator.userAgent },
+        }).catch(() => { /* non-critical */ });
+      }
       return { error };
     } catch (err) {
       return { error: err as Error };
