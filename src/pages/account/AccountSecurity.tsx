@@ -43,6 +43,7 @@ import SEOHead from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/hooks/useI18n";
 import { supabase } from "@/integrations/supabase/client";
+import { checkPasswordBreach } from "@/lib/security/passwordStrength";
 import { formatDistanceToNow } from "date-fns";
 
 // Sessions loaded from backend — no hardcoded data
