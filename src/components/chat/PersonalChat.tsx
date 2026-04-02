@@ -5,10 +5,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Phone, Video } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
+import CallScreen from "./CallScreen";
 
 interface PersonalChatProps {
   recipientId: string;
@@ -39,6 +40,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [activeCall, setActiveCall] = useState<"voice" | "video" | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -147,7 +149,31 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <p className="text-sm font-bold text-foreground truncate">{recipientName}</p>
           <p className="text-[10px] text-muted-foreground">Personal chat</p>
         </div>
+        <button
+          onClick={() => setActiveCall("voice")}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+        >
+          <Phone className="h-5 w-5 text-primary" />
+        </button>
+        <button
+          onClick={() => setActiveCall("video")}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+        >
+          <Video className="h-5 w-5 text-primary" />
+        </button>
       </div>
+
+      {/* Call Screen */}
+      <AnimatePresence>
+        {activeCall && (
+          <CallScreen
+            recipientName={recipientName}
+            recipientAvatar={recipientAvatar}
+            callType={activeCall}
+            onEnd={() => setActiveCall(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
