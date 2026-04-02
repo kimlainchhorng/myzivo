@@ -202,7 +202,7 @@ const Login = () => {
       const { data: profile } = await supabase
         .from("profiles")
         .select("setup_complete")
-        .eq("user_id", user.id)
+        .or(`user_id.eq.${user.id},id.eq.${user.id}`)
         .maybeSingle();
 
       // Check if user is admin for auto-redirect

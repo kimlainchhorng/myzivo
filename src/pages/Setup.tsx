@@ -109,24 +109,30 @@ export default function Setup() {
         phone_verified: true,
         phone_verified_at: new Date().toISOString(),
         setup_complete: true,
+        user_id: user.id,
+        email: user.email ?? null,
       };
 
-      const { data: updatedRows, error: updateError } = await supabase
+      const { data: existingProfile, error: existingProfileError } = await supabase
         .from("profiles")
-        .update(profileUpdate)
-        .or(`user_id.eq.${user.id},id.eq.${user.id}`)
         .select("id")
-        .limit(1);
+        .or(`user_id.eq.${user.id},id.eq.${user.id}`)
+        .maybeSingle();
 
-      if (updateError) throw updateError;
+      if (existingProfileError) throw existingProfileError;
 
-      if (!updatedRows || updatedRows.length === 0) {
+      if (existingProfile) {
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update(profileUpdate)
+          .eq("id", existingProfile.id);
+
+        if (updateError) throw updateError;
+      } else {
         const { error: insertError } = await supabase
           .from("profiles")
           .insert({
             id: user.id,
-            user_id: user.id,
-            email: user.email ?? null,
             ...profileUpdate,
           });
 
