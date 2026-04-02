@@ -331,10 +331,13 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
                         {/* Avatar */}
                         <div className="relative shrink-0">
                           <Avatar className={`h-[52px] w-[52px] ${missed ? "ring-2 ring-red-500/20" : "ring-1 ring-border/10"}`}>
+                            {getAvatarUrl(otherUserId) && (
+                              <AvatarImage src={getAvatarUrl(otherUserId)!} alt={getDisplayName(otherUserId)} />
+                            )}
                             <AvatarFallback className={`text-sm font-bold ${
                               missed ? "bg-red-50 text-red-400 dark:bg-red-500/10" : "bg-muted/60 text-muted-foreground"
                             }`}>
-                              {otherUserId.slice(0, 2).toUpperCase()}
+                              {getInitials(otherUserId)}
                             </AvatarFallback>
                           </Avatar>
                           {/* Call type badge */}
