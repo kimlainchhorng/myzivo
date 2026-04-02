@@ -259,10 +259,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       const upload = async () => {
         const path = `${user?.id}/${Date.now()}.webm`;
         const { error } = await supabase.storage
-          .from("chat_uploads")
+          .from("chat-media-files")
           .upload(path, voice.audioBlob!, { contentType: "audio/webm" });
         if (error) { toast.error("Failed to upload voice note"); voice.clearBlob(); return; }
-        const { data: urlData } = supabase.storage.from("chat_uploads").getPublicUrl(path);
+        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
         await handleSend({ voiceUrl: urlData.publicUrl });
         voice.clearBlob();
       };
@@ -279,9 +279,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     try {
       const ext = file.name.split(".").pop() || "jpg";
       const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("chat_uploads").upload(path, file, { contentType: file.type });
+      const { error } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type });
       if (error) throw error;
-      const { data: urlData } = supabase.storage.from("chat_uploads").getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
       await handleSend({ imageUrl: urlData.publicUrl });
     } catch { toast.error("Failed to upload image"); }
     setUploadingMedia(false);
@@ -297,9 +297,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     try {
       const ext = file.name.split(".").pop() || "mp4";
       const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("chat_uploads").upload(path, file, { contentType: file.type });
+      const { error } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type });
       if (error) throw error;
-      const { data: urlData } = supabase.storage.from("chat_uploads").getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
       await handleSend({ videoUrl: urlData.publicUrl });
     } catch { toast.error("Failed to upload video"); }
     setUploadingMedia(false);
