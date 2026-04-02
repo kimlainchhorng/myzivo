@@ -774,8 +774,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
               }}
               renderTrigger={(openFilePicker) => (
-                <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted/60 transition-colors shrink-0">
-                  <FileText className="h-[18px] w-[18px]" />
+                <button onClick={openFilePicker} className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground/70 hover:bg-muted/60 hover:text-muted-foreground active:scale-90 transition-all shrink-0">
+                  <FileText className="h-[17px] w-[17px]" />
                 </button>
               )}
             />
@@ -788,19 +788,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 onChange={handleInputChange}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                 placeholder={disappearingMode ? "Disappearing message..." : "Message..."}
-                className={`w-full h-10 pl-4 pr-20 rounded-full border text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all ${
-                  disappearingMode ? "bg-amber-500/5 border-amber-500/20" : "bg-muted/40 border-border/20"
+                className={`w-full h-11 pl-4 pr-12 rounded-full border text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/20 transition-all shadow-sm ${
+                  disappearingMode ? "bg-amber-500/5 border-amber-500/20" : "bg-muted/30 border-border/15"
                 }`}
               />
               {/* Inline icons inside input */}
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0">
                 <button
                   onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
-                  className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
-                    showStickerKeyboard ? "text-primary" : "text-muted-foreground/60 hover:text-muted-foreground"
+                  className={`h-8 w-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                    showStickerKeyboard ? "text-primary bg-primary/10" : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/40"
                   }`}
                 >
-                  <Smile className="h-[18px] w-[18px]" />
+                  <Smile className="h-[19px] w-[19px]" />
                 </button>
               </div>
             </div>
@@ -810,16 +810,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <button
                 onClick={() => handleSend()}
                 disabled={sending}
-                className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
+                className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-md"
               >
-                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
               </button>
             ) : (
               <button
                 onClick={voice.startRecording}
-                className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors shrink-0"
+                className="h-11 w-11 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/15 active:scale-90 transition-all shrink-0 shadow-sm"
               >
-                <Mic className="h-[18px] w-[18px]" />
+                <Mic className="h-[19px] w-[19px]" />
               </button>
             )}
           </div>
