@@ -1,5 +1,5 @@
 /**
- * CallEventBubble — Inline call event shown in chat timeline
+ * CallEventBubble — Compact inline call event in chat timeline
  */
 import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Video } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
@@ -13,14 +13,14 @@ interface CallEventBubbleProps {
   onCallback?: () => void;
 }
 
-function formatTime(dateStr: string) {
+function fmtTime(dateStr: string) {
   const d = new Date(dateStr);
   if (isToday(d)) return format(d, "h:mm a");
-  if (isYesterday(d)) return "Yesterday " + format(d, "h:mm a");
-  return format(d, "MMM d, h:mm a");
+  if (isYesterday(d)) return "Yesterday";
+  return format(d, "MMM d");
 }
 
-function formatDuration(s: number) {
+function fmtDur(s: number) {
   if (!s) return "";
   const m = Math.floor(s / 60);
   const sec = s % 60;
@@ -38,55 +38,46 @@ export default function CallEventBubble({
   const isMissed = status === "missed" || status === "no_answer" || status === "declined";
   const isVideo = callType === "video";
 
-  const icon = isMissed
-    ? <PhoneMissed className="w-4 h-4" />
-    : isOutgoing
-      ? <PhoneOutgoing className="w-4 h-4" />
-      : <PhoneIncoming className="w-4 h-4" />;
-
   const label = isMissed
-    ? (isOutgoing ? "No Answer" : "Missed Call")
+    ? (status === "declined" ? "Declined" : isOutgoing ? "No answer" : "Missed call")
     : isOutgoing
-      ? (isVideo ? "Outgoing Video Call" : "Outgoing Voice Call")
-      : (isVideo ? "Incoming Video Call" : "Incoming Voice Call");
+      ? (isVideo ? "Video call" : "Voice call")
+      : (isVideo ? "Video call" : "Voice call");
 
-  const colorClass = isMissed ? "text-red-500" : "text-emerald-500";
-  const bgClass = isMissed ? "bg-red-500/8" : "bg-emerald-500/8";
+  const dirLabel = isMissed ? "" : isOutgoing ? "Outgoing" : "Incoming";
+
+  const color = isMissed ? "text-red-500" : "text-emerald-600 dark:text-emerald-400";
   const iconBg = isMissed ? "bg-red-500/10" : "bg-emerald-500/10";
 
+  const DirIcon = isMissed
+    ? PhoneMissed
+    : isOutgoing ? PhoneOutgoing : PhoneIncoming;
+
   return (
-    <div className="flex justify-center my-2">
-      <button
+    <div className="flex justify-center my-1.5">
+      <div
         onClick={onCallback}
-        className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl ${bgClass} border border-border/20 hover:border-border/40 transition-all active:scale-[0.98] max-w-[85%]`}
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/40 border border-border/20 cursor-pointer hover:bg-muted/60 active:scale-[0.97] transition-all select-none"
       >
-        {/* Icon */}
-        <div className={`w-9 h-9 rounded-full ${iconBg} flex items-center justify-center ${colorClass} shrink-0`}>
-          {isVideo ? <Video className="w-4 h-4" /> : icon}
-        </div>
+        {/* Direction icon */}
+        <DirIcon className={`w-3.5 h-3.5 ${color} shrink-0`} />
 
-        {/* Info */}
-        <div className="text-left min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className={`${colorClass}`}>{icon}</span>
-            <span className={`text-[13px] font-semibold ${colorClass}`}>{label}</span>
-          </div>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span className="text-[11px] text-muted-foreground/60">{formatTime(createdAt)}</span>
-            {durationSeconds > 0 && (
-              <>
-                <span className="text-muted-foreground/20 text-[10px]">•</span>
-                <span className="text-[11px] text-muted-foreground/60 tabular-nums">{formatDuration(durationSeconds)}</span>
-              </>
-            )}
-          </div>
-        </div>
+        {/* Label */}
+        <span className={`text-[12px] font-medium ${color}`}>
+          {dirLabel && <span className="text-muted-foreground/60">{dirLabel} </span>}
+          {label}
+        </span>
 
-        {/* Callback icon */}
-        <div className={`w-8 h-8 rounded-full ${iconBg} flex items-center justify-center ${colorClass} shrink-0 ml-1`}>
-          {isVideo ? <Video className="w-3.5 h-3.5" /> : <Phone className="w-3.5 h-3.5" />}
+        {/* Duration or time */}
+        <span className="text-[11px] text-muted-foreground/50 tabular-nums">
+          {durationSeconds > 0 ? fmtDur(durationSeconds) : fmtTime(createdAt)}
+        </span>
+
+        {/* Callback button */}
+        <div className={`w-6 h-6 rounded-full ${iconBg} flex items-center justify-center ${color} shrink-0`}>
+          {isVideo ? <Video className="w-3 h-3" /> : <Phone className="w-3 h-3" />}
         </div>
-      </button>
+      </div>
     </div>
   );
 }
