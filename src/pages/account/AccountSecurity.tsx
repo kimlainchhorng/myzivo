@@ -45,9 +45,7 @@ import { useI18n } from "@/hooks/useI18n";
 import { supabase } from "@/integrations/supabase/client";
 import { checkPasswordBreach } from "@/lib/security/passwordStrength";
 import { formatDistanceToNow } from "date-fns";
-
-// Sessions loaded from backend — no hardcoded data
-const activeSessions: { id: string; device: string; location: string; lastActive: Date; current?: boolean }[] = [];
+import LoginHistorySection from "@/components/auth/LoginHistorySection";
 
 export default function AccountSecurity() {
   const navigate = useNavigate();
@@ -335,76 +333,8 @@ export default function AccountSecurity() {
             </CardContent>
           </Card>
 
-          {/* Active Sessions */}
-          <Card className="mb-6">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Monitor className="w-5 h-5" />
-                    Active Sessions
-                  </CardTitle>
-                  <CardDescription>
-                    Devices where you're currently logged in
-                  </CardDescription>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Log out all devices
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Log out of all devices?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will log you out of all devices, including this one. You'll need to log in again.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleLogoutAllDevices} disabled={isLoggingOutAll}>
-                        {isLoggingOutAll ? "Logging out..." : "Log out everywhere"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {activeSessions.map((session) => (
-                  <div key={session.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center">
-                        {session.device.includes("iPhone") ? (
-                          <Smartphone className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <Monitor className="w-5 h-5 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm flex items-center gap-2">
-                          {session.device}
-                          {session.current && (
-                            <Badge variant="secondary" className="text-xs">Current</Badge>
-                          )}
-                        </p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-2">
-                          <MapPin className="w-3 h-3" />
-                          {session.location}
-                          <span>•</span>
-                          <Clock className="w-3 h-3" />
-                          {session.current ? "Active now" : formatDistanceToNow(session.lastActive, { addSuffix: true })}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Active Sessions & Login History */}
+          <LoginHistorySection />
 
           {/* Data Management */}
           <Card className="mb-6">
