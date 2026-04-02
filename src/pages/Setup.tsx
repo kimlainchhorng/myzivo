@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { User, ArrowRight, Loader2 } from "lucide-react";
+import { User, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { normalizePhoneDigits, normalizePhoneE164 } from "@/lib/phone";
