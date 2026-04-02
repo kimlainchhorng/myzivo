@@ -549,7 +549,7 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/auth-callback" element={<AuthCallback />} />
                 <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
+                
                 <Route path="/verify-otp" element={<VerifyOTP />} />
                 <Route path="/setup" element={<Setup />} />
                 
