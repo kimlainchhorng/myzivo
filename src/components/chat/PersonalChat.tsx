@@ -5,10 +5,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Phone, Video } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
+import CallScreen from "./CallScreen";
 
 interface PersonalChatProps {
   recipientId: string;
