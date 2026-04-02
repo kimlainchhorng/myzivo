@@ -22,6 +22,14 @@ interface UseWebRTCOptions {
   onEnded: () => void;
 }
 
+interface CallSignalData {
+  offer?: RTCSessionDescriptionInit | null;
+  answer?: RTCSessionDescriptionInit | null;
+  caller_ice_candidates?: RTCIceCandidateInit[] | null;
+  callee_ice_candidates?: RTCIceCandidateInit[] | null;
+  status?: string | null;
+}
+
 export function useWebRTC({
   callId,
   role,
@@ -35,7 +43,7 @@ export function useWebRTC({
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [callState, setCallState] = useState<"ringing" | "connected" | "ended">("ringing");
-  const addedCandidatesCount = useRef<number>(0);
+  const addedCandidatesCount = useRef(0);
   const startedRef = useRef(false);
 
   const cleanup = useCallback(() => {
@@ -43,14 +51,77 @@ export function useWebRTC({
     localStreamRef.current = null;
     pcRef.current?.close();
     pcRef.current = null;
+    addedCandidatesCount.current = 0;
     setCallState("ended");
     startedRef.current = false;
   }, []);
 
-  // Initialize peer connection and media
+  const processSignalData = useCallback(async (data: CallSignalData) => {
+    const pc = pcRef.current;
+    if (!pc) return;
+
+    if (data.status === "ended" || data.status === "declined") {
+      cleanup();
+      onEnded();
+      return;
+    }
+
+    if (role === "callee" && data.offer && !pc.remoteDescription) {
+      try {
+        await pc.setRemoteDescription(data.offer);
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        await (supabase as any)
+          .from("call_signals")
+          .update({ answer: { type: answer.type, sdp: answer.sdp } })
+          .eq("id", callId);
+      } catch (e) {
+        console.error("Error handling offer:", e);
+      }
+    }
+
+    if (role === "caller" && data.answer && !pc.remoteDescription) {
+      try {
+        await pc.setRemoteDescription(data.answer);
+      } catch (e) {
+        console.error("Error handling answer:", e);
+      }
+    }
+
+    const remoteCandidates = role === "caller" ? data.callee_ice_candidates : data.caller_ice_candidates;
+    if (remoteCandidates?.length && pc.remoteDescription) {
+      const newCandidates = remoteCandidates.slice(addedCandidatesCount.current);
+      for (const candidate of newCandidates) {
+        try {
+          await pc.addIceCandidate(candidate);
+          addedCandidatesCount.current += 1;
+        } catch {
+          // duplicate or invalid candidate, skip
+        }
+      }
+    }
+  }, [callId, cleanup, onEnded, role]);
+
+  const syncExistingSignal = useCallback(async (activeCallId: string) => {
+    try {
+      const { data } = await (supabase as any)
+        .from("call_signals")
+        .select("offer, answer, caller_ice_candidates, callee_ice_candidates, status")
+        .eq("id", activeCallId)
+        .single();
+
+      if (data) {
+        await processSignalData(data);
+      }
+    } catch (err) {
+      console.warn("Signal sync failed:", err);
+    }
+  }, [processSignalData]);
+
   const start = useCallback(async (activeCallId: string) => {
     if (startedRef.current || !activeCallId) return null;
     startedRef.current = true;
+    setCallState("ringing");
 
     try {
       const constraints: MediaStreamConstraints = {
@@ -63,15 +134,12 @@ export function useWebRTC({
       const pc = new RTCPeerConnection(ICE_SERVERS);
       pcRef.current = pc;
 
-      // Add local tracks
       localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
 
-      // Remote stream
       pc.ontrack = (e) => {
         if (e.streams[0]) onRemoteStream(e.streams[0]);
       };
 
-      // ICE candidate handling
       pc.onicecandidate = async (e) => {
         if (!e.candidate) return;
         const field = role === "caller" ? "caller_ice_candidates" : "callee_ice_candidates";
@@ -103,12 +171,12 @@ export function useWebRTC({
       if (role === "caller") {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        // Store serialized SDP
         await (supabase as any).from("call_signals")
           .update({ offer: { type: offer.type, sdp: offer.sdp } })
           .eq("id", activeCallId);
       }
 
+      await syncExistingSignal(activeCallId);
       return localStream;
     } catch (err) {
       console.error("WebRTC start failed:", err);
@@ -116,9 +184,8 @@ export function useWebRTC({
       onEnded();
       return null;
     }
-  }, [role, callType, onRemoteStream, onEnded, cleanup]);
+  }, [callType, cleanup, onEnded, onRemoteStream, role, syncExistingSignal]);
 
-  // Handle incoming signaling updates via Realtime
   useEffect(() => {
     if (!callId) return;
 
@@ -129,58 +196,13 @@ export function useWebRTC({
         schema: "public",
         table: "call_signals",
         filter: `id=eq.${callId}`,
-      }, async (payload: any) => {
-        const data = payload.new;
-        const pc = pcRef.current;
-        if (!pc) return;
-
-        // Callee receives offer → set remote description and create answer
-        if (role === "callee" && data.offer && !pc.remoteDescription) {
-          try {
-            await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            await (supabase as any).from("call_signals")
-              .update({ answer: { type: answer.type, sdp: answer.sdp } })
-              .eq("id", callId);
-          } catch (e) {
-            console.error("Error handling offer:", e);
-          }
-        }
-
-        // Caller receives answer
-        if (role === "caller" && data.answer && !pc.remoteDescription) {
-          try {
-            await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-          } catch (e) {
-            console.error("Error handling answer:", e);
-          }
-        }
-
-        // Process only NEW ICE candidates from the other peer
-        const remoteCandidates = role === "caller" ? data.callee_ice_candidates : data.caller_ice_candidates;
-        if (remoteCandidates?.length && pc.remoteDescription) {
-          const newCandidates = remoteCandidates.slice(addedCandidatesCount.current);
-          for (const c of newCandidates) {
-            try {
-              await pc.addIceCandidate(new RTCIceCandidate(c));
-              addedCandidatesCount.current++;
-            } catch {
-              // duplicate or invalid candidate, skip
-            }
-          }
-        }
-
-        // Call ended/declined by other party
-        if (data.status === "ended" || data.status === "declined") {
-          cleanup();
-          onEnded();
-        }
+      }, (payload: any) => {
+        void processSignalData(payload.new);
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [callId, role, cleanup, onEnded]);
+  }, [callId, processSignalData]);
 
   const toggleMute = useCallback(() => {
     const stream = localStreamRef.current;

@@ -60,7 +60,15 @@ export default function CallScreen({
     setTimeout(onEnd, 300);
   }, [onEnd]);
 
-  const webrtc = useWebRTC({
+  const {
+    start,
+    endCall,
+    toggleMute,
+    toggleCamera,
+    isMuted,
+    isCameraOff,
+    callState,
+  } = useWebRTC({
     callId: callId || "",
     role,
     callType,
@@ -85,19 +93,19 @@ export default function CallScreen({
   useEffect(() => {
     if (!callId) return;
     const init = async () => {
-      const localStream = await webrtc.start(callId);
+      const localStream = await start(callId);
       if (localStream && localVideoRef.current && callType === "video") {
         localVideoRef.current.srcObject = localStream;
       }
     };
-    init();
-  }, [callId, callType, webrtc]);
+    void init();
+  }, [callId, callType, start]);
 
   useEffect(() => {
-    if (role !== "caller" || webrtc.callState !== "ringing" || !callId) return;
+    if (role !== "caller" || callState !== "ringing" || !callId) return;
     const stopRingback = playOutgoingRingback();
     return () => { stopRingback(); };
-  }, [role, webrtc.callState, callId]);
+  }, [role, callId, callState]);
 
   useEffect(() => {
     if (role !== "caller" || !callId) return;
@@ -111,25 +119,36 @@ export default function CallScreen({
       }, (payload: any) => {
         const data = payload.new;
         if (data.status === "declined" || data.status === "ended") {
-          webrtc.endCall();
+          void endCall();
         }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [role, callId, webrtc]);
+  }, [role, callId, endCall]);
 
   useEffect(() => {
-    if (webrtc.callState === "connected") {
+    if (callState === "connected") {
       timerRef.current = setInterval(() => setDuration((d) => d + 1), 1000);
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [webrtc.callState]);
+  }, [callState]);
 
   const formatDuration = (s: number) => {
     const m = Math.floor(s / 60);
     const sec = s % 60;
     return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
   };
+
+  const statusText =
+    callState === "ringing"
+      ? role === "caller"
+        ? callType === "video"
+          ? "Video calling..."
+          : "Calling..."
+        : "Connecting..."
+      : callState === "connected"
+        ? formatDuration(duration)
+        : "Call ended";
 
   return (
     <motion.div
@@ -151,12 +170,8 @@ export default function CallScreen({
           </AvatarFallback>
         </Avatar>
         <h2 className="text-xl font-bold text-foreground">{recipientName}</h2>
-        <p className="text-sm text-muted-foreground">
-          {webrtc.callState === "ringing" && (callType === "video" ? "Video calling..." : "Calling...")}
-          {webrtc.callState === "connected" && formatDuration(duration)}
-          {webrtc.callState === "ended" && "Call ended"}
-        </p>
-        {webrtc.callState === "ringing" && (
+        <p className="text-sm text-muted-foreground">{statusText}</p>
+        {callState === "ringing" && (
           <div className="flex gap-1 mt-2">
             {[0, 1, 2].map((i) => (
               <motion.div
@@ -170,7 +185,7 @@ export default function CallScreen({
         )}
       </div>
 
-      <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+      <audio ref={remoteAudioRef} autoPlay playsInline className="absolute h-0 w-0 opacity-0 pointer-events-none" />
 
       {callType === "video" && (
         <div className="flex-1 w-full max-w-sm mx-auto my-6 relative">
@@ -180,7 +195,7 @@ export default function CallScreen({
             playsInline
             className="w-full h-full rounded-2xl bg-muted/30 border border-border/20 object-cover"
           />
-          {!webrtc.isCameraOff && (
+          {!isCameraOff && (
             <video
               ref={localVideoRef}
               autoPlay
@@ -196,16 +211,16 @@ export default function CallScreen({
 
       <div className="flex items-center justify-center gap-5 pb-6">
         <button
-          onClick={webrtc.toggleMute}
+          onClick={toggleMute}
           className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors ${
-            webrtc.isMuted ? "bg-destructive/15 text-destructive" : "bg-muted text-foreground"
+            isMuted ? "bg-destructive/15 text-destructive" : "bg-muted text-foreground"
           }`}
         >
-          {webrtc.isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
         </button>
 
         <button
-          onClick={webrtc.endCall}
+          onClick={() => { void endCall(); }}
           className="h-16 w-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform"
         >
           <PhoneOff className="h-6 w-6" />
@@ -213,12 +228,12 @@ export default function CallScreen({
 
         {callType === "video" ? (
           <button
-            onClick={webrtc.toggleCamera}
+            onClick={toggleCamera}
             className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors ${
-              webrtc.isCameraOff ? "bg-destructive/15 text-destructive" : "bg-muted text-foreground"
+              isCameraOff ? "bg-destructive/15 text-destructive" : "bg-muted text-foreground"
             }`}
           >
-            {webrtc.isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+            {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
           </button>
         ) : (
           <button
