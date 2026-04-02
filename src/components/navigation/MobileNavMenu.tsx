@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { ChevronDown, ArrowRight, X, Car, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +120,7 @@ const MobileNavSection = ({
 
 const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleNavigate = (href: string) => {
     navigate(href);
@@ -235,7 +237,7 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
             </Button>
           ) : (
             <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={() => handleNavigate("/login")}>
+              <Button variant="outline" className="flex-1" onClick={() => handleNavigate(withRedirectParam("/login", location.pathname === "/" ? null : `${location.pathname}${location.search ?? ""}`))}>
                 Log in
               </Button>
               <Button variant="hero" className="flex-1" onClick={() => handleNavigate("/signup")}>

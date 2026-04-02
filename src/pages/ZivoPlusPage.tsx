@@ -3,6 +3,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Crown, Zap, Shield, Star,
@@ -210,7 +211,7 @@ export default function ZivoPlusPage() {
 
   const handleCheckout = async () => {
     if (!user) {
-      navigate("/login?redirect=/zivo-plus");
+      navigate(withRedirectParam("/login", "/zivo-plus"));
       return;
     }
     setIsCheckingOut(true);

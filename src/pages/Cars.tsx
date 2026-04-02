@@ -4,6 +4,7 @@
  */
 
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -161,7 +162,7 @@ export default function Cars() {
     
     if (!user) {
       // Redirect to login with return URL
-      navigate(`/login?redirect=/p2p/vehicle/${vehicleId}?${linkParams.toString()}`);
+      navigate(withRedirectParam("/login", `/p2p/vehicle/${vehicleId}?${linkParams.toString()}`));
     } else {
       navigate(`/p2p/vehicle/${vehicleId}?${linkParams.toString()}`);
     }

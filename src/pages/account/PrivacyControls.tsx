@@ -6,7 +6,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import {
   ArrowLeft, Shield, Download, Trash2, Eye, Mail, Clock,
   CheckCircle2, AlertTriangle, FileText, Lock, RefreshCw,
@@ -138,9 +139,11 @@ export default function PrivacyControls() {
     essential: true,
   });
 
+  const location = useLocation();
   // Redirect if not logged in
   if (!authLoading && !user) {
-    return <Navigate to="/login?redirect=/account/privacy" replace />;
+    const redirectTarget = `${location.pathname}${location.search ?? ""}`;
+    return <Navigate to={withRedirectParam("/login", redirectTarget)} replace />;
   }
 
   const handleRequestSubmit = async () => {

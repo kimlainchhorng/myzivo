@@ -34,6 +34,7 @@ import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
 import tabCarsBg from "@/assets/tab-cars-bg.jpg";
 import tabRidesBg from "@/assets/tab-rides-bg.jpg";
 import tabEatsBg from "@/assets/tab-eats-bg.jpg";
+import { withRedirectParam } from "@/lib/authRedirect";
 
 const serviceNavItems = [
   { label: "Flights", href: "/flights", icon: Plane, cssVar: "var(--flights)", bg: tabFlightsBg },
@@ -505,7 +506,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate("/login")}
+                        onClick={() => navigate(withRedirectParam("/login", location.pathname === "/" ? null : `${location.pathname}${location.search ?? ""}`))}
                         className={cn(
                           "rounded-full font-semibold text-[13px] px-5 h-9 transition-all duration-300",
                           scrolled || !isHomePage
@@ -654,7 +655,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       variant="outline"
                       className="w-full rounded-xl"
                       onClick={() => {
-                        navigate("/login");
+                        navigate(withRedirectParam("/login", location.pathname === "/" ? null : `${location.pathname}${location.search ?? ""}`));
                         setIsMobileMenuOpen(false);
                       }}
                     >
