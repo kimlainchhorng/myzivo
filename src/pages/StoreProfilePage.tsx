@@ -435,7 +435,7 @@ export default function StoreProfilePage() {
             )}
 
             {/* Instagram button */}
-            {(store as any).instagram_url && (
+            {(store as any).instagram_url && isAllowedSocialUrl((store as any).instagram_url) && (
               <motion.a
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
