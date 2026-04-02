@@ -71,6 +71,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [disappearingMode, setDisappearingMode] = useState(false);
+  const [showNotifSettings, setShowNotifSettings] = useState(false);
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [showStickerKeyboard, setShowStickerKeyboard] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
