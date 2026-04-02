@@ -6,7 +6,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Phone, Video, X, Mic, Square, Search, Plus, Pin, Settings, Image as ImageIcon, Smile } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Phone, X, Mic, Square, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
@@ -20,9 +20,13 @@ import ChatAttachMenu from "./ChatAttachMenu";
 import ChatNotificationSettings from "./ChatNotificationSettings";
 import ChatMediaGallery from "./ChatMediaGallery";
 import StickerKeyboard from "./StickerKeyboard";
+import ChatPersonalization, { getWallpaperClass } from "./ChatPersonalization";
+import ChatMiniApps from "./ChatMiniApps";
+import ChatSecurity from "./ChatSecurity";
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { useChatDraft } from "@/hooks/useChatDraft";
 
 interface PersonalChatProps {
   recipientId: string;
@@ -74,6 +78,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showNotifSettings, setShowNotifSettings] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [showStickerKeyboard, setShowStickerKeyboard] = useState(false);
+  const [showPersonalization, setShowPersonalization] = useState(false);
+  const [showMiniApps, setShowMiniApps] = useState(false);
+  const [showSecurity, setShowSecurity] = useState(false);
+  const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,6 +90,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   const { isTyping: recipientTyping, isOnline: recipientOnline, setTyping } = useChatPresence(user?.id, recipientId);
   const voice = useVoiceRecorder();
+  const { draft, updateDraft, clearDraft } = useChatDraft(user?.id, recipientId);
+
+  // Sync draft to input on load
+  useEffect(() => {
+    if (draft && !input) setInput(draft);
+  }, [draft]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
@@ -168,6 +182,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
     const msgType = voiceUrl ? "voice" : videoUrl ? "video" : imageUrl ? "image" : locationLat != null ? "location" : "text";
     setInput("");
+    clearDraft();
     const currentReply = replyTo;
     setReplyTo(null);
     setSending(true);
@@ -340,6 +355,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
+    updateDraft(e.target.value);
     setTyping(!!e.target.value.trim());
   };
 
@@ -392,14 +408,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               ) : "Personal chat"}
             </p>
           </div>
+          <button onClick={() => setShowMiniApps(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <Zap className="h-4.5 w-4.5 text-muted-foreground" />
+          </button>
           <button onClick={() => setShowMediaGallery(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <ImageIcon className="h-5 w-5 text-muted-foreground" />
+            <ImageIcon className="h-4.5 w-4.5 text-muted-foreground" />
           </button>
           <button onClick={() => setShowSearch(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Search className="h-5 w-5 text-muted-foreground" />
-          </button>
-          <button onClick={() => setShowNotifSettings(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Settings className="h-4.5 w-4.5 text-muted-foreground" />
+            <Search className="h-4.5 w-4.5 text-muted-foreground" />
           </button>
           <button onClick={() => { void handleStartCall("voice"); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <Phone className="h-5 w-5 text-primary" />
@@ -419,6 +435,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <span className="text-[9px] text-muted-foreground">{pinnedMessages.length} pinned</span>
           </button>
         )}
+
+        {/* Quick settings strip */}
+        <div className="flex px-4 py-1 gap-1 border-t border-border/10">
+          <button onClick={() => setShowPersonalization(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-muted-foreground hover:bg-muted/60 transition-colors">
+            <Palette className="w-3 h-3" /> Theme
+          </button>
+          <button onClick={() => setShowNotifSettings(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-muted-foreground hover:bg-muted/60 transition-colors">
+            <Settings className="w-3 h-3" /> Notify
+          </button>
+          <button onClick={() => setShowSecurity(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-muted-foreground hover:bg-muted/60 transition-colors">
+            <Shield className="w-3 h-3" /> Privacy
+          </button>
+        </div>
       </div>
 
       {/* Search bar */}
@@ -436,7 +465,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       </AnimatePresence>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+      <div ref={scrollRef} className={`flex-1 overflow-y-auto px-4 py-3 space-y-2 ${getWallpaperClass(chatStyle.wallpaper)}`}>
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -668,6 +697,32 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           />
         )}
       </AnimatePresence>
+
+      {/* Personalization */}
+      <ChatPersonalization
+        open={showPersonalization}
+        onClose={() => setShowPersonalization(false)}
+        chatPartnerId={recipientId}
+        chatPartnerName={recipientName}
+        onApply={(s) => setChatStyle(s)}
+      />
+
+      {/* Mini Apps */}
+      <ChatMiniApps
+        open={showMiniApps}
+        onClose={() => setShowMiniApps(false)}
+        chatPartnerId={recipientId}
+        chatPartnerName={recipientName}
+      />
+
+      {/* Security */}
+      <ChatSecurity
+        open={showSecurity}
+        onClose={() => setShowSecurity(false)}
+        chatPartnerId={recipientId}
+        chatPartnerName={recipientName}
+        onBlock={onClose}
+      />
     </motion.div>
   );
 }

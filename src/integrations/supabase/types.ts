@@ -4192,6 +4192,30 @@ export type Database = {
           },
         ]
       }
+      blocked_users: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       bonus_zones: {
         Row: {
           bonus_type: string | null
@@ -6486,6 +6510,30 @@ export type Database = {
           },
         ]
       }
+      chat_drafts: {
+        Row: {
+          chat_partner_id: string
+          draft_text: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_partner_id: string
+          draft_text?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_partner_id?: string
+          draft_text?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_group_members: {
         Row: {
           group_id: string
@@ -6653,6 +6701,42 @@ export type Database = {
           },
         ]
       }
+      chat_polls: {
+        Row: {
+          chat_partner_id: string
+          created_at: string
+          creator_id: string
+          id: string
+          is_anonymous: boolean | null
+          is_closed: boolean | null
+          options: Json
+          question: string
+          votes: Json
+        }
+        Insert: {
+          chat_partner_id: string
+          created_at?: string
+          creator_id: string
+          id?: string
+          is_anonymous?: boolean | null
+          is_closed?: boolean | null
+          options?: Json
+          question: string
+          votes?: Json
+        }
+        Update: {
+          chat_partner_id?: string
+          created_at?: string
+          creator_id?: string
+          id?: string
+          is_anonymous?: boolean | null
+          is_closed?: boolean | null
+          options?: Json
+          question?: string
+          votes?: Json
+        }
+        Relationships: []
+      }
       chat_read_receipts: {
         Row: {
           created_at: string | null
@@ -6731,36 +6815,81 @@ export type Database = {
           created_at: string
           dnd_end: string | null
           dnd_start: string | null
+          font_size: string | null
           id: string
           is_muted: boolean | null
           mute_until: string | null
           notification_tone: string | null
+          retention_days: number | null
+          theme_color: string | null
           updated_at: string
           user_id: string
+          wallpaper: string | null
         }
         Insert: {
           chat_partner_id: string
           created_at?: string
           dnd_end?: string | null
           dnd_start?: string | null
+          font_size?: string | null
           id?: string
           is_muted?: boolean | null
           mute_until?: string | null
           notification_tone?: string | null
+          retention_days?: number | null
+          theme_color?: string | null
           updated_at?: string
           user_id: string
+          wallpaper?: string | null
         }
         Update: {
           chat_partner_id?: string
           created_at?: string
           dnd_end?: string | null
           dnd_start?: string | null
+          font_size?: string | null
           id?: string
           is_muted?: boolean | null
           mute_until?: string | null
           notification_tone?: string | null
+          retention_days?: number | null
+          theme_color?: string | null
           updated_at?: string
           user_id?: string
+          wallpaper?: string | null
+        }
+        Relationships: []
+      }
+      chat_split_bills: {
+        Row: {
+          chat_partner_id: string
+          created_at: string
+          creator_id: string
+          id: string
+          splits: Json
+          status: string | null
+          title: string
+          total_amount: number
+        }
+        Insert: {
+          chat_partner_id: string
+          created_at?: string
+          creator_id: string
+          id?: string
+          splits?: Json
+          status?: string | null
+          title: string
+          total_amount?: number
+        }
+        Update: {
+          chat_partner_id?: string
+          created_at?: string
+          creator_id?: string
+          id?: string
+          splits?: Json
+          status?: string | null
+          title?: string
+          total_amount?: number
         }
         Relationships: []
       }
@@ -6788,6 +6917,39 @@ export type Database = {
           is_default?: boolean | null
           name?: string
           stickers?: Json
+        }
+        Relationships: []
+      }
+      chat_todos: {
+        Row: {
+          chat_partner_id: string
+          created_at: string
+          creator_id: string
+          id: string
+          is_shared: boolean | null
+          items: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          chat_partner_id: string
+          created_at?: string
+          creator_id: string
+          id?: string
+          is_shared?: boolean | null
+          items?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          chat_partner_id?: string
+          created_at?: string
+          creator_id?: string
+          id?: string
+          is_shared?: boolean | null
+          items?: Json
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -42845,6 +43007,36 @@ export type Database = {
           restaurant_id?: string | null
           source?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reported_id: string
+          reporter_id: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reported_id: string
+          reporter_id: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reported_id?: string
+          reporter_id?: string
+          status?: string | null
         }
         Relationships: []
       }
