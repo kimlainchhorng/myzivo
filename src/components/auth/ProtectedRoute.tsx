@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { withRedirectParam } from "@/lib/authRedirect";
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
@@ -23,7 +24,9 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
   }
 
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const redirectTarget = `${location.pathname}${location.search ?? ""}${location.hash ?? ""}`;
+    const loginUrl = withRedirectParam("/login", redirectTarget);
+    return <Navigate to={loginUrl} state={{ from: location }} replace />;
   }
 
   if (requireAdmin && !isAdmin) {
