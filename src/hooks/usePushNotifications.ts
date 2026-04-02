@@ -8,6 +8,7 @@ import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } fro
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { safeInternalPath } from "@/lib/urlSafety";
 
 export interface NotificationData {
   title: string;
