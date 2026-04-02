@@ -105,7 +105,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+
 const VerifyOTP = lazy(() => lazyRetry(() => import("./pages/VerifyOTP")));
 const Setup = lazy(() => lazyRetry(() => import("./pages/Setup")));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
