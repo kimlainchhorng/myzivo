@@ -215,13 +215,68 @@ export default function ChatHubPage() {
     },
   });
 
+  // Fetch group chats
+  const { data: groupChats = [] } = useQuery({
+    queryKey: ["chat-hub-groups", user?.id],
+    enabled: !!user && active === "personal",
+    queryFn: async () => {
+      const { data: memberships } = await (supabase as any)
+        .from("chat_group_members")
+        .select("group_id")
+        .eq("user_id", user!.id);
+
+      if (!memberships?.length) return [];
+
+      const groupIds = memberships.map((m: any) => m.group_id);
+      const { data: groups } = await (supabase as any)
+        .from("chat_groups")
+        .select("id, name, avatar_url, created_at")
+        .in("id", groupIds);
+
+      if (!groups) return [];
+
+      const enriched = await Promise.all(
+        groups.map(async (g: any) => {
+          const { data: lastMsg } = await (supabase as any)
+            .from("group_messages")
+            .select("message, created_at, sender_id")
+            .eq("group_id", g.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const { data: memberCount } = await (supabase as any)
+            .from("chat_group_members")
+            .select("id", { count: "exact", head: true })
+            .eq("group_id", g.id);
+
+          return {
+            id: g.id,
+            name: g.name,
+            avatar: g.avatar_url,
+            lastMessage: lastMsg?.message || "Group created",
+            lastTime: lastMsg?.created_at || g.created_at,
+            unread: 0,
+            isGroup: true,
+          };
+        })
+      );
+      return enriched;
+    },
+  });
+
   const currentCategory = categories.find((c) => c.id === active)!;
+
+  // Merge personal chats + group chats for the personal tab
+  const mergedPersonalList = active === "personal"
+    ? [...personalChats, ...groupChats].sort((a: any, b: any) => new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime())
+    : [];
 
   const chatList =
     active === "shop" ? shopChats :
     active === "ride" ? rideChats :
     active === "support" ? supportChats :
-    personalChats;
+    mergedPersonalList;
 
   const filtered = search
     ? chatList.filter((c: any) => c.name?.toLowerCase().includes(search.toLowerCase()))
