@@ -235,5 +235,6 @@ export function useWebRTC({
     isCameraOff,
     callState,
     localStream: localStreamRef,
+    peerConnection: pcRef,
   };
 }
