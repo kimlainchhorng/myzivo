@@ -101,7 +101,11 @@ export default function Setup() {
     return publicUrl;
   };
 
-  const handleContinue = async (skipPhotos = false) => {
+  const handleSkip = () => {
+    navigate("/", { replace: true });
+  };
+
+  const handleContinue = async () => {
     if (!user) {
       toast.error("Please sign in to continue.");
       navigate("/login", { replace: true });
