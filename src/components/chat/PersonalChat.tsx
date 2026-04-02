@@ -162,6 +162,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         >
           <Video className="h-5 w-5 text-primary" />
         </button>
+        </div>
       </div>
 
       {/* Call Screen */}
