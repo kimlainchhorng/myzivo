@@ -432,7 +432,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
 
                   <div className="flex-1 min-w-0">
                     <p className={`text-[15px] font-semibold ${!vm.is_read ? "text-foreground" : "text-muted-foreground"}`}>
-                      {vm.caller_id.slice(0, 8)}...
+                      {getDisplayName(vm.caller_id)}
                     </p>
                     {vm.transcription && (
                       <p className="text-[13px] text-muted-foreground/60 truncate mt-0.5">{vm.transcription}</p>
