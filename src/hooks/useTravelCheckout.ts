@@ -4,6 +4,7 @@
  */
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isAllowedCheckoutUrl } from "@/lib/urlSafety";
 
 export function useTravelCheckout() {
   const [isLoading, setIsLoading] = useState(false);
@@ -29,8 +30,11 @@ export function useTravelCheckout() {
         if (invokeError) throw invokeError;
         if (!data?.success) throw new Error(data?.error || "Failed to create checkout session");
 
-        // Redirect to Stripe Checkout
+        // Redirect to Stripe Checkout — validate domain to prevent open redirect
         if (data.url) {
+          if (!isAllowedCheckoutUrl(data.url)) {
+            throw new Error("Invalid checkout URL returned");
+          }
           window.location.href = data.url;
         }
 
