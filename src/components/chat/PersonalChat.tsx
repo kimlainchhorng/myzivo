@@ -60,6 +60,23 @@ interface Message {
   is_read: boolean;
 }
 
+interface CallEvent {
+  id: string;
+  caller_id: string;
+  callee_id: string;
+  call_type: string;
+  status: string;
+  duration_seconds: number;
+  created_at: string;
+  _isCallEvent: true;
+}
+
+type TimelineItem = Message | CallEvent;
+
+function isCallEvent(item: TimelineItem): item is CallEvent {
+  return "_isCallEvent" in item;
+}
+
 function formatMsgTime(dateStr: string) {
   const d = new Date(dateStr);
   if (isToday(d)) return format(d, "h:mm a");
