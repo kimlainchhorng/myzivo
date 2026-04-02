@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Loader2, AlertTriangle, Lock, Info, Shield, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";

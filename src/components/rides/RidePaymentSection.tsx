@@ -11,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 
 const USD_TO_KHR = 4062.5;
 function toKHR(usd: number): string {

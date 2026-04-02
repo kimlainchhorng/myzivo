@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 
 const DISPLAY_TIERS = [
   { key: "standard" as const, name: "Explorer", miles: 0, color: "from-gray-400 to-gray-500", benefits: ["Basic rewards", "Price alerts", "Trip tracking"] },
