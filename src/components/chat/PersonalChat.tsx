@@ -665,7 +665,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
           <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
 
-          {/* Enhanced media uploader for documents */}
+          {/* Document upload button */}
           <ChatMediaUploader
             recipientId={recipientId}
             onMediaSent={(opts) => {
@@ -673,6 +673,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
               else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
             }}
+            renderTrigger={(openFilePicker) => (
+              <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0">
+                <FileText className="h-5 w-5" />
+              </button>
+            )}
           />
 
           {/* Mic button */}
