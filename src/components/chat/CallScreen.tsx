@@ -199,50 +199,68 @@ export default function CallScreen({
 
   return (
     <motion.div
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-between bg-background"
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-between"
       initial={{ opacity: 0, scale: 1.05 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.25 }}
       style={{
-        paddingTop: "max(env(safe-area-inset-top, 0px), 3rem)",
-        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2rem)",
+        paddingTop: "max(env(safe-area-inset-top, 0px), 2.5rem)",
+        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1.5rem)",
+        background: callType === "video"
+          ? "hsl(var(--background))"
+          : "linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%)",
       }}
     >
-      {/* Top bar with quality + minimize */}
-      <div className="absolute top-0 left-0 right-0 px-4 pt-3 flex items-center justify-between safe-area-top">
+      {/* Top bar */}
+      <div className="absolute top-0 left-0 right-0 px-4 pt-3 flex items-center justify-between safe-area-top z-10">
         <CallQualityBadge stats={qualityStats} />
         <div className="flex items-center gap-2">
           {recording.isRecording && (
             <motion.div
-              className="flex items-center gap-1 px-2 py-1 rounded-full bg-destructive/10 text-destructive text-[10px] font-medium"
-              animate={{ opacity: [1, 0.5, 1] }}
-              transition={{ repeat: Infinity, duration: 1 }}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold"
+              animate={{ opacity: [1, 0.4, 1] }}
+              transition={{ repeat: Infinity, duration: 1.2 }}
             >
               <Circle className="w-2 h-2 fill-current" /> REC {formatDuration(recording.recordingDuration)}
             </motion.div>
           )}
           {onMinimize && (
-            <button onClick={() => onMinimize({ remoteStream: remoteStreamRef.current, duration, isMuted })} className="h-9 w-9 rounded-full bg-muted/50 flex items-center justify-center">
-              <Minimize2 className="h-4 w-4 text-foreground" />
+            <button
+              onClick={() => onMinimize({ remoteStream: remoteStreamRef.current, duration, isMuted })}
+              className="h-9 w-9 rounded-full bg-foreground/5 backdrop-blur-sm flex items-center justify-center hover:bg-foreground/10 transition-colors"
+            >
+              <Minimize2 className="h-4 w-4 text-foreground/70" />
             </button>
           )}
         </div>
       </div>
 
-      <div className="flex flex-col items-center gap-3 mt-8">
-        <Avatar className="h-24 w-24 border-4 border-primary/20">
-          <AvatarImage src={recipientAvatar || undefined} />
-          <AvatarFallback className="text-2xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
-        </Avatar>
-        <h2 className="text-xl font-bold text-foreground">{recipientName}</h2>
-        <p className="text-sm text-muted-foreground">{statusText}</p>
+      {/* Caller info */}
+      <div className="flex flex-col items-center gap-4 mt-10 px-6">
+        <div className="relative">
+          {callState === "ringing" && (
+            <motion.div
+              className="absolute inset-0 rounded-full border-2 border-primary/30"
+              animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          )}
+          <Avatar className="h-24 w-24 border-[3px] border-primary/15 shadow-lg">
+            <AvatarImage src={recipientAvatar || undefined} />
+            <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
+          </Avatar>
+        </div>
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-foreground">{recipientName}</h2>
+          <p className="text-sm text-muted-foreground mt-1">{statusText}</p>
+        </div>
         {callState === "ringing" && (
-          <div className="flex gap-1 mt-2">
+          <div className="flex gap-1.5">
             {[0, 1, 2].map((i) => (
-              <motion.div key={i} className="h-2 w-2 rounded-full bg-primary"
-                animate={{ opacity: [0.3, 1, 0.3] }}
-                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.3 }}
+              <motion.div key={i} className="h-1.5 w-1.5 rounded-full bg-primary"
+                animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.2, 0.8] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
               />
             ))}
           </div>
@@ -251,16 +269,23 @@ export default function CallScreen({
 
       <audio ref={remoteAudioRef} autoPlay playsInline className="absolute h-0 w-0 opacity-0 pointer-events-none" />
 
+      {/* Video area */}
       {callType === "video" && (
-        <div className="flex-1 w-full max-w-sm mx-auto my-6 relative">
+        <div className="flex-1 w-full px-4 my-4 relative">
           <video ref={remoteVideoRef} autoPlay playsInline
-            className="w-full h-full rounded-2xl bg-muted/30 border border-border/20 object-cover" />
+            className="w-full h-full rounded-3xl bg-muted/20 object-cover shadow-inner" />
           {!isCameraOff && (
-            <video ref={localVideoRef} autoPlay playsInline muted
-              className="absolute bottom-3 right-3 w-24 h-32 rounded-xl border-2 border-background object-cover shadow-lg" />
+            <motion.div
+              drag
+              dragMomentum={false}
+              className="absolute bottom-4 right-4 cursor-grab active:cursor-grabbing"
+            >
+              <video ref={localVideoRef} autoPlay playsInline muted
+                className="w-[90px] h-[120px] rounded-2xl border-[3px] border-background object-cover shadow-2xl" />
+            </motion.div>
           )}
           {screenShare.isSharing && (
-            <div className="absolute top-3 left-3 px-2 py-1 rounded-full bg-primary/20 text-primary text-[10px] font-medium flex items-center gap-1">
+            <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-semibold flex items-center gap-1.5 shadow-lg">
               <Monitor className="w-3 h-3" /> Sharing screen
             </div>
           )}
@@ -270,81 +295,87 @@ export default function CallScreen({
       {callType === "voice" && <div className="flex-1" />}
 
       {/* Controls */}
-      <div className="flex flex-wrap items-center justify-center gap-4 pb-6 px-4">
-        <button onClick={toggleMute}
-          className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors ${
-            isMuted ? "bg-destructive/15 text-destructive" : "bg-muted text-foreground"
-          }`}>
-          {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-        </button>
-
-        {callType === "video" ? (
-          <>
-            <button onClick={toggleCamera}
-              className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors ${
-                isCameraOff ? "bg-destructive/15 text-destructive" : "bg-muted text-foreground"
-              }`}>
-              {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
-            </button>
-            <button onClick={screenShare.toggleSharing}
-              className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors ${
-                screenShare.isSharing ? "bg-primary/15 text-primary" : "bg-muted text-foreground"
-              }`}>
-              {screenShare.isSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
-            </button>
-          </>
-        ) : (
-          <button onClick={() => setIsSpeaker(!isSpeaker)}
-            className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors ${
-              isSpeaker ? "bg-primary/15 text-primary" : "bg-muted text-foreground"
+      <div className="w-full px-8 pb-4">
+        <div className="flex items-center justify-center gap-5">
+          <button onClick={toggleMute}
+            className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
+              isMuted ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/80"
             }`}>
-            <Volume2 className="h-5 w-5" />
+            {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
           </button>
-        )}
 
-        {/* Record button */}
-        <button onClick={handleRecordToggle}
-          className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors ${
-            recording.isRecording ? "bg-destructive/15 text-destructive" : "bg-muted text-foreground"
-          }`}>
-          {recording.isRecording ? <Square className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
-        </button>
+          {callType === "video" ? (
+            <>
+              <button onClick={toggleCamera}
+                className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                  isCameraOff ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/80"
+                }`}>
+                {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+              </button>
+              <button onClick={screenShare.toggleSharing}
+                className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                  screenShare.isSharing ? "bg-primary/15 text-primary" : "bg-foreground/8 text-foreground/80"
+                }`}>
+                {screenShare.isSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
+              </button>
+            </>
+          ) : (
+            <button onClick={() => setIsSpeaker(!isSpeaker)}
+              className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                isSpeaker ? "bg-primary/15 text-primary" : "bg-foreground/8 text-foreground/80"
+              }`}>
+              <Volume2 className="h-5 w-5" />
+            </button>
+          )}
 
-        <button onClick={() => { void endCall(); }}
-          className="h-16 w-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform">
-          <PhoneOff className="h-6 w-6" />
-        </button>
+          <button onClick={handleRecordToggle}
+            className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
+              recording.isRecording ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/80"
+            }`}>
+            {recording.isRecording ? <Square className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
+          </button>
+
+          <button onClick={() => { void endCall(); }}
+            className="h-[60px] w-[60px] rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform shadow-lg shadow-destructive/25">
+            <PhoneOff className="h-6 w-6" />
+          </button>
+        </div>
       </div>
 
       {/* Recording consent modal */}
       <AnimatePresence>
         {showRecordConsent && (
           <motion.div
-            className="absolute inset-0 z-[65] bg-background/80 backdrop-blur-sm flex items-center justify-center p-6"
+            className="absolute inset-0 z-[65] bg-background/80 backdrop-blur-md flex items-center justify-center p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="bg-background border border-border rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-background border border-border/30 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
+            >
               <h3 className="text-base font-bold text-foreground mb-2">Record this call?</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Both parties will be notified that this call is being recorded. Recordings are saved securely and can be deleted anytime.
+              <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
+                Both parties will be notified. Recordings are saved securely and can be deleted anytime.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowRecordConsent(false)}
-                  className="flex-1 h-10 rounded-xl bg-muted text-foreground text-sm font-medium"
+                  className="flex-1 h-11 rounded-2xl bg-muted text-foreground text-sm font-medium active:scale-95 transition-transform"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmRecording}
-                  className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground text-sm font-medium"
+                  className="flex-1 h-11 rounded-2xl bg-primary text-primary-foreground text-sm font-medium active:scale-95 transition-transform shadow-sm"
                 >
                   Start Recording
                 </button>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
