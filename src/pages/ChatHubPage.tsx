@@ -155,13 +155,69 @@ export default function ChatHubPage() {
     },
   });
 
+  // Fetch personal chats from direct_messages
+  const { data: personalChats = [] } = useQuery({
+    queryKey: ["chat-hub-personal", user?.id],
+    enabled: !!user && active === "personal",
+    queryFn: async () => {
+      // Get all DMs involving this user, ordered by most recent
+      const { data } = await supabase
+        .from("direct_messages")
+        .select("*")
+        .or(`sender_id.eq.${user!.id},receiver_id.eq.${user!.id}`)
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (!data || data.length === 0) return [];
+
+      // Group by the other user
+      const grouped = new Map<string, { lastMsg: any; unread: number }>();
+      for (const msg of data as any[]) {
+        const otherId = msg.sender_id === user!.id ? msg.receiver_id : msg.sender_id;
+        if (!grouped.has(otherId)) {
+          grouped.set(otherId, { lastMsg: msg, unread: 0 });
+        }
+        if (msg.receiver_id === user!.id && !msg.is_read) {
+          grouped.get(otherId)!.unread += 1;
+        }
+      }
+
+      // Fetch profiles for all other users
+      const otherIds = Array.from(grouped.keys());
+      if (otherIds.length === 0) return [];
+
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", otherIds);
+
+      const profileMap = new Map<string, any>();
+      for (const p of (profiles || []) as any[]) {
+        profileMap.set(p.user_id, p);
+      }
+
+      return otherIds.map((otherId) => {
+        const entry = grouped.get(otherId)!;
+        const profile = profileMap.get(otherId);
+        return {
+          id: otherId,
+          name: profile?.full_name || "User",
+          avatar: profile?.avatar_url || null,
+          lastMessage: entry.lastMsg.message || "📷 Image",
+          lastTime: entry.lastMsg.created_at,
+          unread: entry.unread,
+        };
+      });
+    },
+  });
+
   const currentCategory = categories.find((c) => c.id === active)!;
 
   const chatList =
     active === "shop" ? shopChats :
     active === "ride" ? rideChats :
     active === "support" ? supportChats :
-    []; // personal — future feature
+    personalChats;
 
   const filtered = search
     ? chatList.filter((c: any) => c.name?.toLowerCase().includes(search.toLowerCase()))
@@ -236,6 +292,7 @@ export default function ChatHubPage() {
 
   const handlePullRefresh = useCallback(async () => {
     await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }),
       queryClient.invalidateQueries({ queryKey: ["chat-hub-shop"] }),
       queryClient.invalidateQueries({ queryKey: ["chat-hub-ride"] }),
       queryClient.invalidateQueries({ queryKey: ["chat-hub-support"] }),
