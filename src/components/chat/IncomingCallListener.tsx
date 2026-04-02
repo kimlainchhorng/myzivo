@@ -113,6 +113,13 @@ export default function IncomingCallListener() {
     return () => { supabase.removeChannel(channel); };
   }, [user?.id]);
 
+  // Play ringtone while incoming call is active
+  useEffect(() => {
+    if (!incoming) return;
+    const stopRing = createRingtone();
+    return () => { stopRing(); };
+  }, [incoming?.id]);
+
   // Also listen for call ended/declined while ringing
   useEffect(() => {
     if (!incoming) return;
