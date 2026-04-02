@@ -33,6 +33,15 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data: ForgotPasswordForm) => {
     setIsLoading(true);
+
+    // Rate limit: prevent enumeration attacks
+    const { allowed, retryAfter } = await checkRateLimit("auth:forgot_password");
+    if (!allowed) {
+      setIsLoading(false);
+      toast.error(`Too many requests. Try again in ${formatLockout(retryAfter)}.`);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${window.location.origin}/reset-password`,
