@@ -435,6 +435,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <span className="text-[9px] text-muted-foreground">{pinnedMessages.length} pinned</span>
           </button>
         )}
+
+        {/* Quick settings strip */}
+        <div className="flex px-4 py-1 gap-1 border-t border-border/10">
+          <button onClick={() => setShowPersonalization(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-muted-foreground hover:bg-muted/60 transition-colors">
+            <Palette className="w-3 h-3" /> Theme
+          </button>
+          <button onClick={() => setShowNotifSettings(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-muted-foreground hover:bg-muted/60 transition-colors">
+            <Settings className="w-3 h-3" /> Notify
+          </button>
+          <button onClick={() => setShowSecurity(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-muted-foreground hover:bg-muted/60 transition-colors">
+            <Shield className="w-3 h-3" /> Privacy
+          </button>
+        </div>
       </div>
 
       {/* Search bar */}
