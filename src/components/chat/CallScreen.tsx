@@ -9,6 +9,49 @@ import { useWebRTC, CallRole } from "@/hooks/useWebRTC";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+/** Creates a ringback tone for the caller (single gentle beep pattern) */
+function createRingbackTone() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = 0.15;
+    gainNode.connect(ctx.destination);
+    let stopped = false;
+    let currentOsc: OscillatorNode | null = null;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const playTone = (freq: number, dur: number): Promise<void> =>
+      new Promise((resolve) => {
+        if (stopped) { resolve(); return; }
+        const osc = ctx.createOscillator();
+        currentOsc = osc;
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        osc.connect(gainNode);
+        osc.start();
+        timeout = setTimeout(() => { osc.stop(); osc.disconnect(); currentOsc = null; resolve(); }, dur);
+      });
+
+    const loop = async () => {
+      while (!stopped) {
+        await playTone(440, 1000);
+        if (stopped) break;
+        await new Promise(r => { timeout = setTimeout(r, 3000); });
+      }
+    };
+    loop();
+
+    return () => {
+      stopped = true;
+      clearTimeout(timeout);
+      try { currentOsc?.stop(); } catch {}
+      try { ctx.close(); } catch {}
+    };
+  } catch {
+    return () => {};
+  }
+}
+
 interface CallScreenProps {
   recipientName: string;
   recipientAvatar?: string | null;
