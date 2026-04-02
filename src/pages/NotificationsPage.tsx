@@ -397,24 +397,95 @@ const NotificationsPage = () => {
             </GlassCard3D>
           </motion.div>
 
+          {/* ── Friend Requests Section (shown on 'all' and 'social' tabs) ── */}
+          {(activeTab === 'all' || activeTab === 'social') && friendRequests.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2">
+                <UserPlus className="w-3.5 h-3.5 text-blue-500" />
+                Friend Requests
+                <Badge className="bg-blue-500 text-white text-[9px] h-4 px-1.5 border-0">
+                  {friendRequests.length}
+                </Badge>
+              </p>
+              <div className="space-y-2.5">
+                <AnimatePresence mode="popLayout">
+                  {friendRequests.map((req) => (
+                    <FriendRequestCard
+                      key={req.id}
+                      request={req}
+                      onAccept={() => handleAcceptFriend(req)}
+                      onDecline={() => handleDeclineFriend(req)}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+
           {/* ── Notification List ── */}
-          {isLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map((i) => (
+          {activeTab !== 'social' && (
+            <>
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <div className="relative rounded-2xl overflow-hidden">
+                        <div className="absolute inset-0 bg-card/50 backdrop-blur-xl" />
+                        <div className="relative h-20 animate-pulse" />
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : filteredNotifications.length === 0 && friendRequests.length === 0 ? (
                 <motion.div
-                  key={i}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.1 }}
+                  initial={{ opacity: 0, y: 30, rotateX: 8 }}
+                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ perspective: '800px' }}
                 >
-                  <div className="relative rounded-2xl overflow-hidden">
-                    <div className="absolute inset-0 bg-card/50 backdrop-blur-xl" />
-                    <div className="relative h-20 animate-pulse" />
-                  </div>
+                  <GlassCard3D className="shadow-xl">
+                    <div className="p-10 text-center">
+                      {getEmptyIcon(activeTab)}
+                      <h3 className="font-bold text-base mb-1">All caught up</h3>
+                      <p className="text-muted-foreground text-sm max-w-[250px] mx-auto">
+                        {getEmptyMessage(activeTab)}
+                      </p>
+                    </div>
+                  </GlassCard3D>
                 </motion.div>
-              ))}
-            </div>
-          ) : filteredNotifications.length === 0 ? (
+              ) : filteredNotifications.length > 0 ? (
+                <div className="space-y-2.5">
+                  {filteredNotifications.map((notification, i) => (
+                    <motion.div
+                      key={notification.id}
+                      initial={{ opacity: 0, y: 20, rotateX: 6 }}
+                      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                      transition={{ delay: i * 0.04, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                      style={{ perspective: '800px' }}
+                    >
+                      <NotificationItem
+                        notification={notification}
+                        onMarkAsRead={() => markAsRead([notification.id])}
+                        onClick={() => handleNotificationClick(notification)}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              ) : null}
+            </>
+          )}
+
+          {/* Social tab empty state */}
+          {activeTab === 'social' && friendRequests.length === 0 && !loadingFR && (
             <motion.div
               initial={{ opacity: 0, y: 30, rotateX: 8 }}
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
@@ -423,32 +494,14 @@ const NotificationsPage = () => {
             >
               <GlassCard3D className="shadow-xl">
                 <div className="p-10 text-center">
-                  {getEmptyIcon(activeTab)}
-                  <h3 className="font-bold text-base mb-1">All caught up</h3>
+                  {getEmptyIcon('social')}
+                  <h3 className="font-bold text-base mb-1">No requests</h3>
                   <p className="text-muted-foreground text-sm max-w-[250px] mx-auto">
-                    {getEmptyMessage(activeTab)}
+                    {getEmptyMessage('social')}
                   </p>
                 </div>
               </GlassCard3D>
             </motion.div>
-          ) : (
-            <div className="space-y-2.5">
-              {filteredNotifications.map((notification, i) => (
-                <motion.div
-                  key={notification.id}
-                  initial={{ opacity: 0, y: 20, rotateX: 6 }}
-                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                  transition={{ delay: i * 0.04, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                  style={{ perspective: '800px' }}
-                >
-                  <NotificationItem
-                    notification={notification}
-                    onMarkAsRead={() => markAsRead([notification.id])}
-                    onClick={() => handleNotificationClick(notification)}
-                  />
-                </motion.div>
-              ))}
-            </div>
           )}
 
           {/* ── Weekly Summary (3D Glass) ── */}
