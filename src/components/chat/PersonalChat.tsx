@@ -57,6 +57,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setActiveCall(type);
   }, []);
 
+  // Load messages
   useEffect(() => {
     if (!user?.id) return;
     const load = async () => {
@@ -71,6 +72,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setLoading(false);
       scrollToBottom();
 
+      // Mark unread as read
       if (data?.length) {
         const unread = data.filter((m: Message) => m.receiver_id === user.id && !m.is_read);
         if (unread.length) {
@@ -86,10 +88,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     load();
   }, [user?.id, recipientId, scrollToBottom]);
 
+  // Realtime: INSERT + DELETE
   useEffect(() => {
     if (!user?.id) return;
+    const channelName = `dm-${[user.id, recipientId].sort().join("-")}`;
     const channel = supabase
-      .channel(`dm-${[user.id, recipientId].sort().join("-")}`)
+      .channel(channelName)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
@@ -110,25 +114,59 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           }
         }
       })
+      .on("postgres_changes", {
+        event: "DELETE",
+        schema: "public",
+        table: "direct_messages",
+      }, (payload: any) => {
+        const oldMsg = payload.old;
+        if (oldMsg?.id) {
+          setMessages((prev) => prev.filter((m) => m.id !== oldMsg.id));
+        }
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, recipientId, scrollToBottom]);
 
+  // Send with optimistic update
   const handleSend = async () => {
     if (!input.trim() || !user?.id || sending) return;
     const text = input.trim();
-    const replyMeta = replyTo ? { reply_to_id: replyTo.id, reply_to_text: replyTo.message, reply_to_is_me: replyTo.isMe } : null;
+    const replyInfo = replyTo;
     setInput("");
     setReplyTo(null);
     setSending(true);
+
+    // Optimistic message
+    const optimisticId = `opt-${Date.now()}`;
+    const optimisticMsg: Message = {
+      id: optimisticId,
+      sender_id: user.id,
+      receiver_id: recipientId,
+      message: text,
+      created_at: new Date().toISOString(),
+      is_read: false,
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    scrollToBottom();
+
     try {
-      await (supabase as any).from("direct_messages").insert({
+      const { data, error } = await (supabase as any).from("direct_messages").insert({
         sender_id: user.id,
         receiver_id: recipientId,
         message: text,
-      });
-    } catch {}
+      }).select().single();
+
+      if (error) throw error;
+
+      // Replace optimistic with real
+      setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
+    } catch {
+      // Remove optimistic on failure
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+      toast.error("Failed to send message");
+    }
     setSending(false);
     inputRef.current?.focus();
   };
@@ -139,14 +177,24 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   }, []);
 
   const handleDelete = useCallback(async (id: string) => {
+    // Optimistic delete
+    setMessages((prev) => prev.filter((m) => m.id !== id));
     try {
-      await (supabase as any).from("direct_messages").delete().eq("id", id).eq("sender_id", user?.id);
-      setMessages((prev) => prev.filter((m) => m.id !== id));
+      const { error } = await (supabase as any).from("direct_messages").delete().eq("id", id).eq("sender_id", user?.id);
+      if (error) throw error;
       toast.success("Message deleted");
     } catch {
       toast.error("Failed to delete");
+      // Re-fetch to restore
+      const { data } = await (supabase as any)
+        .from("direct_messages")
+        .select("*")
+        .or(`and(sender_id.eq.${user?.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user?.id})`)
+        .order("created_at", { ascending: true })
+        .limit(100);
+      setMessages(data || []);
     }
-  }, [user?.id]);
+  }, [user?.id, recipientId]);
 
   const initials = (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
@@ -158,6 +206,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
+      {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="px-3 py-2 flex items-center gap-3">
           <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
@@ -186,6 +235,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         </div>
       </div>
 
+      {/* Call overlay */}
       <AnimatePresence>
         {activeCall && (
           <CallScreen
@@ -198,6 +248,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </AnimatePresence>
 
+      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
         {loading ? (
           <div className="flex items-center justify-center h-40">
@@ -218,6 +269,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 message={msg.message}
                 time={formatMsgTime(msg.created_at)}
                 isMe={isMe}
+                isRead={msg.is_read}
                 onReply={handleReply}
                 onDelete={handleDelete}
               />
@@ -247,6 +299,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </AnimatePresence>
 
+      {/* Input */}
       <div className="bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
         <input
           ref={inputRef}
