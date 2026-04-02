@@ -75,13 +75,15 @@ export function useWebRTC({
       pc.onicecandidate = async (e) => {
         if (!e.candidate) return;
         const field = role === "caller" ? "caller_ice_candidates" : "callee_ice_candidates";
-        await (supabase as any).rpc("append_ice_candidate", {
-          p_call_id: activeCallId,
-          p_field: field,
-          p_candidate: e.candidate.toJSON(),
-        }).catch((err: any) => {
+        try {
+          await (supabase as any).rpc("append_ice_candidate", {
+            p_call_id: activeCallId,
+            p_field: field,
+            p_candidate: e.candidate.toJSON(),
+          });
+        } catch (err: any) {
           console.warn("ICE candidate append failed:", err);
-        });
+        }
       };
 
       pc.onconnectionstatechange = () => {
