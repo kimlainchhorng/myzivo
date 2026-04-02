@@ -650,6 +650,26 @@ export default function ChatHubPage() {
           />
         )}
       </AnimatePresence>
+      {/* Inline Group Chat */}
+      <AnimatePresence>
+        {openGroupChat && (
+          <GroupChat
+            groupId={openGroupChat.id}
+            groupName={openGroupChat.name}
+            groupAvatar={openGroupChat.avatar}
+            onClose={() => setOpenGroupChat(null)}
+          />
+        )}
+      </AnimatePresence>
+      {/* Create Group Modal */}
+      <CreateGroupModal
+        open={showCreateGroup}
+        onClose={() => setShowCreateGroup(false)}
+        onCreated={(group) => {
+          setOpenGroupChat({ id: group.id, name: group.name, avatar: group.avatar });
+          queryClient.invalidateQueries({ queryKey: ["chat-hub-groups"] });
+        }}
+      />
     </PullToRefresh>
   );
 }
