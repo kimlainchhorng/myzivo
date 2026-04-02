@@ -215,7 +215,9 @@ const AuthCallback = () => {
         const redirectUrl = await exchangeToken(token);
 
         if (redirectUrl) {
-          window.location.href = redirectUrl;
+          // Validate the redirect URL is internal to prevent open redirect
+          const safeTarget = getSafeRedirectTarget(redirectUrl);
+          navigate(safeTarget, { replace: true });
         } else {
           setStatus("error");
         }
