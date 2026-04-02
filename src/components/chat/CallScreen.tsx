@@ -216,15 +216,6 @@ export default function CallScreen({
       <div className="absolute top-0 left-0 right-0 px-4 pt-3 flex items-center justify-between safe-area-top z-10">
         <CallQualityBadge stats={qualityStats} />
         <div className="flex items-center gap-2">
-          {recording.isRecording && (
-            <motion.div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold"
-              animate={{ opacity: [1, 0.4, 1] }}
-              transition={{ repeat: Infinity, duration: 1.2 }}
-            >
-              <Circle className="w-2 h-2 fill-current" /> REC {formatDuration(recording.recordingDuration)}
-            </motion.div>
-          )}
           {onMinimize && (
             <button
               onClick={() => onMinimize({ remoteStream: remoteStreamRef.current, duration, isMuted })}
