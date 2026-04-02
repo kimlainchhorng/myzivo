@@ -1,7 +1,7 @@
 /**
  * useCallQuality — Monitor WebRTC connection quality stats
  */
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, type RefObject } from "react";
 
 export interface CallQualityStats {
   bitrate: number;
@@ -18,7 +18,7 @@ function getQuality(packetLoss: number, rtt: number): CallQualityStats["quality"
   return "poor";
 }
 
-export function useCallQuality(pc: RTCPeerConnection | null) {
+export function useCallQuality(pcRef: RefObject<RTCPeerConnection | null>) {
   const [stats, setStats] = useState<CallQualityStats>({
     bitrate: 0, packetLoss: 0, jitter: 0, roundTripTime: 0, quality: "good",
   });
@@ -26,9 +26,10 @@ export function useCallQuality(pc: RTCPeerConnection | null) {
   const prevTimestamp = useRef(0);
 
   useEffect(() => {
-    if (!pc) return;
-
     const interval = setInterval(async () => {
+      const pc = pcRef.current;
+      if (!pc) return;
+
       try {
         const report = await pc.getStats();
         let totalPacketsLost = 0;
@@ -58,7 +59,7 @@ export function useCallQuality(pc: RTCPeerConnection | null) {
         if (prevBytes.current > 0 && prevTimestamp.current > 0) {
           const timeDiff = (timestamp - prevTimestamp.current) / 1000;
           if (timeDiff > 0) {
-            bitrate = ((bytesReceived - prevBytes.current) * 8) / timeDiff / 1000; // kbps
+            bitrate = ((bytesReceived - prevBytes.current) * 8) / timeDiff / 1000;
           }
         }
         prevBytes.current = bytesReceived;
@@ -77,7 +78,7 @@ export function useCallQuality(pc: RTCPeerConnection | null) {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [pc]);
+  }, [pcRef]);
 
   return stats;
 }
