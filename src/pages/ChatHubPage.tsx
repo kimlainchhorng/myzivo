@@ -1,13 +1,15 @@
 /**
  * ChatHubPage — Unified messaging hub with category tabs:
- * Personal, Shop, Support, Ride
+ * Personal, Shop, Support, Ride + Group chats
  */
 import { useState, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X, Bell } from "lucide-react";
+import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X, Bell, Users, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
+import GroupChat from "@/components/chat/GroupChat";
+import CreateGroupModal from "@/components/chat/CreateGroupModal";
 import { withRedirectParam } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
