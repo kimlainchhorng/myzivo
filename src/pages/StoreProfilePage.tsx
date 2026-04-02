@@ -511,7 +511,7 @@ export default function StoreProfilePage() {
             )}
 
             {/* TikTok button */}
-            {(store as any).tiktok_url && (
+            {(store as any).tiktok_url && isAllowedSocialUrl((store as any).tiktok_url) && (
               <motion.a
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
