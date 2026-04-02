@@ -233,9 +233,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     try {
       const ext = file.name.split(".").pop() || "jpg";
       const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("chat_uploads").upload(path, file, { contentType: file.type });
+      const { error } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type });
       if (error) throw error;
-      const { data: urlData } = supabase.storage.from("chat_uploads").getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
       await handleSend(urlData.publicUrl);
     } catch { toast.error("Failed to upload image"); }
     setUploadingImage(false);
