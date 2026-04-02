@@ -517,7 +517,11 @@ export default function ChatHubPage() {
                           logo: chat.avatar,
                         });
                       } else if (active === "personal") {
-                        setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
+                        if ((chat as any).isGroup) {
+                          setOpenGroupChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
+                        } else {
+                          setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
+                        }
                       } else if (active === "support") {
                         navigate(`/support`);
                       }
