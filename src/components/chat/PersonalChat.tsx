@@ -392,14 +392,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               ) : "Personal chat"}
             </p>
           </div>
+          <button onClick={() => setShowMediaGallery(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <ImageIcon className="h-5 w-5 text-muted-foreground" />
+          </button>
           <button onClick={() => setShowSearch(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <Search className="h-5 w-5 text-muted-foreground" />
           </button>
+          <button onClick={() => setShowNotifSettings(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <Settings className="h-4.5 w-4.5 text-muted-foreground" />
+          </button>
           <button onClick={() => { void handleStartCall("voice"); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <Phone className="h-5 w-5 text-primary" />
-          </button>
-          <button onClick={() => { void handleStartCall("video"); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Video className="h-5 w-5 text-primary" />
           </button>
         </div>
 
