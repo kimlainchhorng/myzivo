@@ -15,7 +15,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function Setup() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -28,14 +28,18 @@ export default function Setup() {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  // Check if already set up
   useEffect(() => {
-    if (!user) {
-      setChecking(false);
-      return;
-    }
+    let isActive = true;
 
     const loadProfile = async () => {
+      if (authLoading) return;
+
+      if (!user) {
+        if (isActive) setChecking(false);
+        navigate("/login", { replace: true });
+        return;
+      }
+
       try {
         const { data: profile } = await supabase
           .from("profiles")
@@ -43,8 +47,9 @@ export default function Setup() {
           .or(`user_id.eq.${user.id},id.eq.${user.id}`)
           .maybeSingle();
 
+        if (!isActive) return;
+
         if (profile?.setup_complete) {
-          toast.info("Your profile is already set up.");
           navigate("/", { replace: true });
           return;
         }
@@ -54,12 +59,16 @@ export default function Setup() {
       } catch (err) {
         console.error("Error loading profile:", err);
       } finally {
-        setChecking(false);
+        if (isActive) setChecking(false);
       }
     };
 
     loadProfile();
-  }, [user, navigate]);
+
+    return () => {
+      isActive = false;
+    };
+  }, [authLoading, user, navigate]);
 
   const handleImageSelect = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -72,19 +81,22 @@ export default function Setup() {
       toast.error("Please upload a JPG, PNG, or WebP image");
       return;
     }
+
     if (file.size > MAX_FILE_SIZE) {
       toast.error("File size must be less than 5MB");
       return;
     }
 
     const previewUrl = URL.createObjectURL(file);
+
     if (type === "avatar") {
       setAvatarFile(file);
       setAvatarPreview(previewUrl);
-    } else {
-      setCoverFile(file);
-      setCoverPreview(previewUrl);
+      return;
     }
+
+    setCoverFile(file);
+    setCoverPreview(previewUrl);
   };
 
   const uploadImage = async (file: File, bucket: string, folder: string): Promise<string> => {
@@ -97,44 +109,49 @@ export default function Setup() {
 
     if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(filePath);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(bucket).getPublicUrl(filePath);
+
     return publicUrl;
   };
 
-  const handleSkip = () => {
-    navigate("/", { replace: true });
-  };
-
-  const handleContinue = async () => {
+  const persistSetup = async ({
+    includeUploads,
+    redirectTo,
+  }: {
+    includeUploads: boolean;
+    redirectTo: string;
+  }) => {
     if (!user) {
-      toast.error("Please sign in to continue.");
       navigate("/login", { replace: true });
       return;
     }
+
     setSaving(true);
 
     try {
-      // Upload images if selected
       let avatarUrl: string | undefined;
       let coverUrl: string | undefined;
 
-      if (avatarFile) {
+      if (includeUploads && avatarFile) {
         avatarUrl = await uploadImage(avatarFile, "avatars", user.id);
       }
 
-      if (coverFile) {
+      if (includeUploads && coverFile) {
         coverUrl = await uploadImage(coverFile, "covers", user.id);
       }
 
-      const meta = user.user_metadata || {};
-      const fullName = meta.full_name || "";
+      const metadata = user.user_metadata ?? {};
+      const fullName = typeof metadata.full_name === "string" ? metadata.full_name : null;
+      const phone = typeof metadata.phone === "string" ? metadata.phone : null;
 
       const profileUpdate: Record<string, unknown> = {
         setup_complete: true,
         user_id: user.id,
         email: user.email ?? null,
-        full_name: fullName || null,
-        phone: meta.phone || null,
+        full_name: fullName,
+        phone,
       };
 
       if (avatarUrl) profileUpdate.avatar_url = avatarUrl;
@@ -167,7 +184,7 @@ export default function Setup() {
       }
 
       toast.success("Account setup complete!");
-      navigate("/", { replace: true });
+      navigate(redirectTo, { replace: true });
     } catch (err: any) {
       console.error("Setup error:", err);
       toast.error(err?.message || "Failed to save. Please try again.");
@@ -176,7 +193,15 @@ export default function Setup() {
     }
   };
 
-  if (checking) {
+  const handleContinue = async () => {
+    await persistSetup({ includeUploads: true, redirectTo: "/" });
+  };
+
+  const handleSkip = async () => {
+    await persistSetup({ includeUploads: false, redirectTo: "/profile" });
+  };
+
+  if (authLoading || checking) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-[#0a1628] to-[#0d2137]">
         <Loader2 className="w-6 h-6 animate-spin text-white/50" />
@@ -188,7 +213,6 @@ export default function Setup() {
     <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-b from-[#0a1628] to-[#0d2137] px-4 py-8">
       <div className="w-full max-w-md">
         <div className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl overflow-hidden">
-          {/* Cover Photo */}
           <div className="relative h-32 sm:h-36 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent overflow-hidden group">
             {coverPreview ? (
               <img
@@ -204,6 +228,7 @@ export default function Setup() {
                 </div>
               </div>
             )}
+
             <button
               type="button"
               onClick={() => coverInputRef.current?.click()}
@@ -213,6 +238,7 @@ export default function Setup() {
                 <Camera className="w-5 h-5 text-white" />
               </div>
             </button>
+
             <input
               ref={coverInputRef}
               type="file"
@@ -222,7 +248,6 @@ export default function Setup() {
             />
           </div>
 
-          {/* Avatar — overlapping the cover */}
           <div className="relative flex justify-center -mt-12 z-10">
             <div className="relative group">
               <div className="w-24 h-24 rounded-full border-4 border-[#0d2137] bg-white/10 overflow-hidden shadow-lg">
@@ -238,6 +263,7 @@ export default function Setup() {
                   </div>
                 )}
               </div>
+
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
@@ -247,9 +273,11 @@ export default function Setup() {
                   <Camera className="w-4 h-4 text-white" />
                 </div>
               </button>
+
               <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-lg border-2 border-[#0d2137]">
                 <Camera className="w-3 h-3 text-primary-foreground" />
               </div>
+
               <input
                 ref={avatarInputRef}
                 type="file"
@@ -260,7 +288,6 @@ export default function Setup() {
             </div>
           </div>
 
-          {/* Content */}
           <div className="px-6 pb-6 pt-3 sm:px-8 sm:pb-8">
             <div className="mb-5">
               <button
@@ -271,6 +298,7 @@ export default function Setup() {
                 <ArrowLeft className="w-4 h-4" />
                 Back
               </button>
+
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-white tracking-tight">Add Your Photos</h1>
                 <p className="text-white/50 text-sm mt-1">Personalize your profile with a photo and cover</p>
@@ -278,7 +306,7 @@ export default function Setup() {
             </div>
 
             <Button
-              onClick={() => handleContinue()}
+              onClick={handleContinue}
               disabled={saving}
               className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm mt-2 touch-manipulation active:scale-[0.98] transition-all"
             >
