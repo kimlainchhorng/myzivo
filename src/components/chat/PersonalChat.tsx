@@ -40,6 +40,7 @@ interface Message {
   video_url?: string | null;
   voice_url?: string | null;
   message_type?: string;
+  delivered_at?: string | null;
   reply_to_id?: string | null;
   location_lat?: number | null;
   location_lng?: number | null;
