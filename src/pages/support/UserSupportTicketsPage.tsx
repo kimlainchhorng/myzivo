@@ -22,6 +22,7 @@ import MobileBottomNav from "@/components/shared/MobileBottomNav";
 type TicketFilter = 'active' | 'resolved' | 'all';
 
 export default function UserSupportTicketsPage() {
+  const location = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const [filter, setFilter] = useState<TicketFilter>('active');
   

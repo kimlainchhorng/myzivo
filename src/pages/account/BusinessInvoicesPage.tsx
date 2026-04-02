@@ -39,6 +39,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 
 export default function BusinessInvoicesPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const { data: membership, isLoading: membershipLoading } = useBusinessMembership();
   const { invoices, isLoading: invoicesLoading, totalPaid, totalPending, totalOverdue } = useBusinessInvoices();

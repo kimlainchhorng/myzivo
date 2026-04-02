@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 export default function TravelerDashboard() {
+  const location = useLocation();
   const { user, isLoading } = useAuth();
   const [showBucketList, setShowBucketList] = useState(false);
   const [showTravelMap, setShowTravelMap] = useState(false);

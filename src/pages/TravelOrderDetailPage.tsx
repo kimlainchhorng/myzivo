@@ -43,6 +43,7 @@ const statusConfig: Record<string, { icon: React.ElementType; label: string; col
 
 export default function TravelOrderDetailPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
+  const location = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const { data: order, isLoading, error } = useTripDetails(orderNumber);
   const { resendConfirmation, isResending } = useOrderActions();

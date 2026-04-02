@@ -22,6 +22,7 @@ import { TripCard } from "@/components/travel/TripCard";
  // MobileTripsPremium removed - use standard trips view on mobile
 
 export default function TravelTripsPage() {
+  const location = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const [filter, setFilter] = useState<TripFilter>("upcoming");
    const isMobile = useIsMobile();
