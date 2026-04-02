@@ -73,10 +73,10 @@ export default function Setup() {
         const lastName = fullName.split(" ").slice(1).join(" ") || "";
         const phone = profile?.phone || meta.phone || "";
 
-        const current = form.getValues();
-        if (!current.first_name && firstName) form.setValue("first_name", firstName);
-        if (!current.last_name && lastName) form.setValue("last_name", lastName);
-        if (!current.phone && phone) form.setValue("phone", phone);
+        // Always set values from DB/metadata, overriding empty defaults
+        if (firstName) form.setValue("first_name", firstName, { shouldValidate: true });
+        if (lastName) form.setValue("last_name", lastName, { shouldValidate: true });
+        if (phone) form.setValue("phone", phone, { shouldValidate: true });
       } catch (err) {
         console.error("Error loading profile:", err);
       } finally {
@@ -85,7 +85,8 @@ export default function Setup() {
     };
 
     loadProfile();
-  }, [user, form, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, navigate]);
 
   const onSubmit = async (data: SetupValues) => {
     if (!user) return;
