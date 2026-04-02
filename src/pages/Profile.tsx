@@ -462,9 +462,9 @@ const Profile = () => {
               >
                 <span className="relative">
                   <Bell className="w-3.5 h-3.5 text-destructive" />
-                  {notifUnreadCount > 0 && (
+                  {totalNotifCount > 0 && (
                     <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground px-1 shadow-md shadow-destructive/30">
-                      {notifUnreadCount > 99 ? '99+' : notifUnreadCount}
+                      {totalNotifCount > 99 ? '99+' : totalNotifCount}
                     </span>
                   )}
                 </span>
