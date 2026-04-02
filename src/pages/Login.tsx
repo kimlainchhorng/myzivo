@@ -118,6 +118,8 @@ const Login = () => {
   // Signup form
   const signupForm = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
+    mode: "onTouched",
+    reValidateMode: "onChange",
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -440,7 +442,21 @@ const Login = () => {
                     <FormLabel className="text-white/70 text-xs font-medium">{t("auth.phone")}</FormLabel>
                     <FormControl>
                       <div>
-                        <CountryPhoneInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
+                        <CountryPhoneInput
+                          value={field.value}
+                          onChange={(val) => {
+                            field.onChange(val);
+                            // Re-validate immediately only if error is already showing
+                            if (signupForm.formState.errors.phone) {
+                              signupForm.trigger("phone");
+                            }
+                          }}
+                          onBlur={() => {
+                            field.onBlur();
+                            signupForm.trigger("phone");
+                          }}
+                          name={field.name}
+                        />
                       </div>
                     </FormControl>
                     <FormMessage className="text-red-400 text-xs" />
