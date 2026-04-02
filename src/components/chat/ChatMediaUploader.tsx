@@ -46,7 +46,7 @@ function getFileIcon(type: string) {
   return <FileText className="w-5 h-5 text-orange-500" />;
 }
 
-export default function ChatMediaUploader({ recipientId, onMediaSent, renderTrigger }: ChatMediaUploaderProps) {
+export function ChatMediaUploader({ recipientId, onMediaSent, renderTrigger }: ChatMediaUploaderProps) {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
