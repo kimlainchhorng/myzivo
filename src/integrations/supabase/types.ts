@@ -9973,38 +9973,56 @@ export type Database = {
       direct_messages: {
         Row: {
           created_at: string
+          expires_at: string | null
           id: string
           image_url: string | null
+          is_pinned: boolean
           is_read: boolean
+          location_label: string | null
+          location_lat: number | null
+          location_lng: number | null
           message: string
           message_type: string
           receiver_id: string
           reply_to_id: string | null
           sender_id: string
+          video_url: string | null
           voice_url: string | null
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
           id?: string
           image_url?: string | null
+          is_pinned?: boolean
           is_read?: boolean
+          location_label?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
           message: string
           message_type?: string
           receiver_id: string
           reply_to_id?: string | null
           sender_id: string
+          video_url?: string | null
           voice_url?: string | null
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
           id?: string
           image_url?: string | null
+          is_pinned?: boolean
           is_read?: boolean
+          location_label?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
           message?: string
           message_type?: string
           receiver_id?: string
           reply_to_id?: string | null
           sender_id?: string
+          video_url?: string | null
           voice_url?: string | null
         }
         Relationships: [
@@ -18676,35 +18694,53 @@ export type Database = {
       group_messages: {
         Row: {
           created_at: string
+          expires_at: string | null
           group_id: string
           id: string
           image_url: string | null
+          is_pinned: boolean
+          location_label: string | null
+          location_lat: number | null
+          location_lng: number | null
           message: string
           message_type: string
           reply_to_id: string | null
           sender_id: string
+          video_url: string | null
           voice_url: string | null
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
           group_id: string
           id?: string
           image_url?: string | null
+          is_pinned?: boolean
+          location_label?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
           message?: string
           message_type?: string
           reply_to_id?: string | null
           sender_id: string
+          video_url?: string | null
           voice_url?: string | null
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
           group_id?: string
           id?: string
           image_url?: string | null
+          is_pinned?: boolean
+          location_label?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
           message?: string
           message_type?: string
           reply_to_id?: string | null
           sender_id?: string
+          video_url?: string | null
           voice_url?: string | null
         }
         Relationships: [
@@ -48255,6 +48291,7 @@ export type Database = {
         Returns: Json
       }
       clean_expired_flight_cache: { Args: never; Returns: undefined }
+      cleanup_expired_messages: { Args: never; Returns: undefined }
       cleanup_expired_otp_codes: { Args: never; Returns: undefined }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
       cleanup_old_location_history: { Args: never; Returns: undefined }

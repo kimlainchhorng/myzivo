@@ -1,12 +1,12 @@
 /**
  * PersonalChat — Full messenger-style 1-on-1 chat
- * Features: realtime messages, image sharing, emoji reactions, typing indicator, online status,
- * voice messages, reply threads, message search
+ * Features: realtime messages, image/video/GIF sharing, emoji reactions, typing indicator, online status,
+ * voice messages, reply threads, message search, disappearing messages, forward, pin, location sharing
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Phone, Video, X, ImagePlus, Mic, Square, Search } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Phone, Video, X, Mic, Square, Search, Plus, Pin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
@@ -14,7 +14,9 @@ import CallScreen from "./CallScreen";
 import { primeCallAudio } from "@/lib/callAudio";
 import ChatMessageBubble from "./ChatMessageBubble";
 import VoiceMessagePlayer from "./VoiceMessagePlayer";
+import LocationShareBubble from "./LocationShareBubble";
 import ChatSearch from "./ChatSearch";
+import ChatAttachMenu from "./ChatAttachMenu";
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
@@ -32,9 +34,15 @@ interface Message {
   receiver_id: string;
   message: string;
   image_url: string | null;
+  video_url?: string | null;
   voice_url?: string | null;
   message_type?: string;
   reply_to_id?: string | null;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  location_label?: string | null;
+  is_pinned?: boolean;
+  expires_at?: string | null;
   created_at: string;
   is_read: boolean;
 }
@@ -54,12 +62,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [sending, setSending] = useState(false);
   const [activeCall, setActiveCall] = useState<"voice" | "video" | null>(null);
   const [replyTo, setReplyTo] = useState<{ id: string; message: string; isMe: boolean } | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [disappearingMode, setDisappearingMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const { isTyping: recipientTyping, isOnline: recipientOnline, setTyping } = useChatPresence(user?.id, recipientId);
@@ -126,6 +137,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           }
         }
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "direct_messages" }, (payload: any) => {
+        const updated = payload.new as Message;
+        setMessages((prev) => prev.map((m) => m.id === updated.id ? { ...m, ...updated } : m));
+      })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "direct_messages" }, (payload: any) => {
         if (payload.old?.id) setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
       })
@@ -135,12 +150,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   }, [user?.id, recipientId, scrollToBottom]);
 
   // Send
-  const handleSend = async (imageUrl?: string, voiceUrl?: string) => {
+  const handleSend = async (opts?: {
+    imageUrl?: string; voiceUrl?: string; videoUrl?: string;
+    locationLat?: number; locationLng?: number; locationLabel?: string;
+  }) => {
     const text = input.trim();
-    if (!text && !imageUrl && !voiceUrl) return;
+    const { imageUrl, voiceUrl, videoUrl, locationLat, locationLng, locationLabel } = opts || {};
+    if (!text && !imageUrl && !voiceUrl && !videoUrl && locationLat == null) return;
     if (!user?.id || sending) return;
 
-    const msgType = voiceUrl ? "voice" : imageUrl ? "image" : "text";
+    const msgType = voiceUrl ? "voice" : videoUrl ? "video" : imageUrl ? "image" : locationLat != null ? "location" : "text";
     setInput("");
     const currentReply = replyTo;
     setReplyTo(null);
@@ -153,9 +172,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       receiver_id: recipientId,
       message: text,
       image_url: imageUrl || null,
+      video_url: videoUrl || null,
       voice_url: voiceUrl || null,
       message_type: msgType,
       reply_to_id: currentReply?.id || null,
+      location_lat: locationLat || null,
+      location_lng: locationLng || null,
+      location_label: locationLabel || null,
+      is_pinned: false,
+      expires_at: disappearingMode ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
       created_at: new Date().toISOString(),
       is_read: false,
     };
@@ -171,8 +196,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         message_type: msgType,
       };
       if (imageUrl) insertData.image_url = imageUrl;
+      if (videoUrl) insertData.video_url = videoUrl;
       if (voiceUrl) insertData.voice_url = voiceUrl;
       if (currentReply) insertData.reply_to_id = currentReply.id;
+      if (locationLat != null) {
+        insertData.location_lat = locationLat;
+        insertData.location_lng = locationLng;
+        insertData.location_label = locationLabel || "";
+      }
+      if (disappearingMode) {
+        insertData.expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      }
 
       const { data, error } = await (supabase as any)
         .from("direct_messages")
@@ -198,14 +232,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         const { error } = await supabase.storage
           .from("chat_uploads")
           .upload(path, voice.audioBlob!, { contentType: "audio/webm" });
-
-        if (error) {
-          toast.error("Failed to upload voice note");
-          voice.clearBlob();
-          return;
-        }
+        if (error) { toast.error("Failed to upload voice note"); voice.clearBlob(); return; }
         const { data: urlData } = supabase.storage.from("chat_uploads").getPublicUrl(path);
-        await handleSend(undefined, urlData.publicUrl);
+        await handleSend({ voiceUrl: urlData.publicUrl });
         voice.clearBlob();
       };
       upload();
@@ -217,20 +246,69 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
     if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
-
-    setUploadingImage(true);
+    setUploadingMedia(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
       const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("chat_uploads").upload(path, file, { contentType: file.type });
-      if (uploadError) throw uploadError;
+      const { error } = await supabase.storage.from("chat_uploads").upload(path, file, { contentType: file.type });
+      if (error) throw error;
       const { data: urlData } = supabase.storage.from("chat_uploads").getPublicUrl(path);
-      await handleSend(urlData.publicUrl);
+      await handleSend({ imageUrl: urlData.publicUrl });
     } catch { toast.error("Failed to upload image"); }
-    setUploadingImage(false);
+    setUploadingMedia(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  // Video upload
+  const handleVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    if (file.size > 25 * 1024 * 1024) { toast.error("Video must be under 25MB"); return; }
+    setUploadingMedia(true);
+    try {
+      const ext = file.name.split(".").pop() || "mp4";
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("chat_uploads").upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("chat_uploads").getPublicUrl(path);
+      await handleSend({ videoUrl: urlData.publicUrl });
+    } catch { toast.error("Failed to upload video"); }
+    setUploadingMedia(false);
+    if (videoInputRef.current) videoInputRef.current.value = "";
+  };
+
+  // Location sharing
+  const handleLocationShare = () => {
+    if (!navigator.geolocation) { toast.error("Location not supported"); return; }
+    toast.loading("Getting location...", { id: "loc" });
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        toast.dismiss("loc");
+        handleSend({
+          locationLat: pos.coords.latitude,
+          locationLng: pos.coords.longitude,
+          locationLabel: "My Location",
+        });
+      },
+      () => { toast.dismiss("loc"); toast.error("Location access denied"); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  // Forward message
+  const handleForward = useCallback((id: string, message: string) => {
+    navigator.clipboard.writeText(message);
+    toast.success("Message copied — paste it in another chat to forward");
+  }, []);
+
+  // Pin/unpin
+  const handlePin = useCallback(async (id: string, pinned: boolean) => {
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, is_pinned: pinned } : m));
+    try {
+      await (supabase as any).from("direct_messages").update({ is_pinned: pinned }).eq("id", id);
+      toast.success(pinned ? "Message pinned" : "Message unpinned");
+    } catch { toast.error("Failed to update pin"); }
+  }, []);
 
   const handleReply = useCallback((id: string, message: string, isMe: boolean) => {
     setReplyTo({ id, message, isMe });
@@ -267,6 +345,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }
   }, []);
 
+  // Pinned messages
+  const pinnedMessages = messages.filter((m) => m.is_pinned);
+
   const initials = (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
@@ -299,6 +380,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 <span className="text-primary font-medium">typing...</span>
               ) : recipientOnline ? (
                 <span className="text-green-600">Online</span>
+              ) : disappearingMode ? (
+                <span className="text-amber-500">⏱ Disappearing mode</span>
               ) : "Personal chat"}
             </p>
           </div>
@@ -312,30 +395,33 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <Video className="h-5 w-5 text-primary" />
           </button>
         </div>
+
+        {/* Pinned messages bar */}
+        {pinnedMessages.length > 0 && (
+          <button
+            onClick={() => scrollToMessage(pinnedMessages[pinnedMessages.length - 1].id)}
+            className="w-full px-4 py-1.5 bg-primary/5 border-t border-primary/10 flex items-center gap-2 text-left"
+          >
+            <Pin className="w-3 h-3 text-primary shrink-0" />
+            <span className="text-[11px] text-foreground truncate flex-1">
+              {pinnedMessages[pinnedMessages.length - 1].message || "📷 Media"}
+            </span>
+            <span className="text-[9px] text-muted-foreground">{pinnedMessages.length} pinned</span>
+          </button>
+        )}
       </div>
 
       {/* Search bar */}
       <AnimatePresence>
         {showSearch && (
-          <ChatSearch
-            messages={messages}
-            onClose={() => setShowSearch(false)}
-            onScrollToMessage={scrollToMessage}
-            currentUserId={user?.id}
-          />
+          <ChatSearch messages={messages} onClose={() => setShowSearch(false)} onScrollToMessage={scrollToMessage} currentUserId={user?.id} />
         )}
       </AnimatePresence>
 
       {/* Call overlay */}
       <AnimatePresence>
         {activeCall && (
-          <CallScreen
-            recipientName={recipientName}
-            recipientAvatar={recipientAvatar}
-            recipientId={recipientId}
-            callType={activeCall}
-            onEnd={() => setActiveCall(null)}
-          />
+          <CallScreen recipientName={recipientName} recipientAvatar={recipientAvatar} recipientId={recipientId} callType={activeCall} onEnd={() => setActiveCall(null)} />
         )}
       </AnimatePresence>
 
@@ -375,8 +461,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   </div>
                 )}
 
-                {/* Voice message */}
-                {msg.message_type === "voice" && msg.voice_url ? (
+                {/* Location message */}
+                {msg.message_type === "location" && msg.location_lat != null && msg.location_lng != null ? (
+                  <LocationShareBubble
+                    lat={msg.location_lat}
+                    lng={msg.location_lng}
+                    label={msg.location_label || undefined}
+                    isMe={isMe}
+                    time={formatMsgTime(msg.created_at)}
+                  />
+                ) : msg.message_type === "voice" && msg.voice_url ? (
                   <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[75%] px-3 py-2.5 rounded-2xl ${
                       isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
@@ -395,8 +489,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                     isMe={isMe}
                     isRead={msg.is_read}
                     imageUrl={msg.image_url}
+                    videoUrl={msg.video_url}
+                    isPinned={msg.is_pinned}
+                    expiresAt={msg.expires_at}
                     onReply={handleReply}
                     onDelete={handleDelete}
+                    onForward={handleForward}
+                    onPin={handlePin}
                   />
                 )}
               </div>
@@ -446,17 +545,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             exit={{ height: 0, opacity: 0 }}
             className="bg-destructive/5 border-t border-destructive/20 px-4 py-3 flex items-center gap-3"
           >
-            <motion.div
-              className="w-3 h-3 rounded-full bg-destructive"
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ repeat: Infinity, duration: 1 }}
-            />
+            <motion.div className="w-3 h-3 rounded-full bg-destructive" animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 1 }} />
             <span className="text-sm font-medium text-foreground flex-1">
               Recording... {Math.floor(voice.duration / 60)}:{(voice.duration % 60).toString().padStart(2, "0")}
             </span>
-            <button onClick={voice.cancelRecording} className="text-xs text-muted-foreground px-3 py-1 rounded-full bg-muted">
-              Cancel
-            </button>
+            <button onClick={voice.cancelRecording} className="text-xs text-muted-foreground px-3 py-1 rounded-full bg-muted">Cancel</button>
             <button onClick={voice.stopRecording} className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
               <Square className="w-3.5 h-3.5" />
             </button>
@@ -466,21 +559,37 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       {/* Input area */}
       {!voice.isRecording && (
-        <div className="bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadingImage}
-            className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0"
-          >
-            {uploadingImage ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
-          </button>
+        <div className="bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+          {/* Attach menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowAttachMenu(!showAttachMenu)}
+              disabled={uploadingMedia}
+              className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors shrink-0 ${
+                showAttachMenu ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"
+              }`}
+            >
+              {uploadingMedia ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
+            </button>
+            <ChatAttachMenu
+              open={showAttachMenu}
+              onClose={() => setShowAttachMenu(false)}
+              onImageSelect={() => fileInputRef.current?.click()}
+              onVideoSelect={() => videoInputRef.current?.click()}
+              onLocationShare={handleLocationShare}
+              onToggleDisappearing={() => {
+                setDisappearingMode(!disappearingMode);
+                toast.success(disappearingMode ? "Disappearing messages OFF" : "Disappearing messages ON — messages auto-delete after 24h");
+              }}
+              disappearingEnabled={disappearingMode}
+            />
+          </div>
+
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+          <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
 
           {/* Mic button */}
-          <button
-            onClick={voice.startRecording}
-            className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0"
-          >
+          <button onClick={voice.startRecording} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0">
             <Mic className="h-5 w-5" />
           </button>
 
@@ -489,12 +598,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             value={input}
             onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder="Type a message..."
-            className="flex-1 h-10 px-4 rounded-full bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            placeholder={disappearingMode ? "Disappearing message..." : "Type a message..."}
+            className={`flex-1 h-10 px-4 rounded-full border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+              disappearingMode ? "bg-amber-500/5 border-amber-500/30" : "bg-muted/50 border-border/30"
+            }`}
           />
           <button
             onClick={() => handleSend()}
-            disabled={(!input.trim() && !uploadingImage) || sending}
+            disabled={(!input.trim() && !uploadingMedia) || sending}
             className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0"
           >
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
