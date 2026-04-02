@@ -293,16 +293,16 @@ function ActionBtn({ icon: Icon, label, onClick, destructive, active }: {
   return (
     <button
       onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className={`flex flex-col items-center gap-0.5 px-3.5 py-2 text-[10px] font-semibold transition-colors ${
+      className={`flex flex-col items-center justify-center gap-1 min-w-[56px] px-3 py-2.5 transition-colors active:scale-95 ${
         destructive
-          ? "hover:bg-destructive/5 text-destructive"
+          ? "hover:bg-red-50 dark:hover:bg-red-500/5 text-red-500"
           : active
           ? "bg-primary/5 text-primary"
-          : "hover:bg-muted/50 text-foreground/80"
+          : "hover:bg-muted/40 text-foreground/70"
       }`}
     >
-      <Icon className="h-4 w-4" />
-      <span>{label}</span>
+      <Icon className="h-[18px] w-[18px]" />
+      <span className="text-[10px] font-semibold leading-none">{label}</span>
     </button>
   );
 }
