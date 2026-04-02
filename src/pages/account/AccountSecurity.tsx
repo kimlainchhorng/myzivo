@@ -79,6 +79,20 @@ export default function AccountSecurity() {
 
     setIsChangingPassword(true);
     try {
+      // Step 0: Check new password against known breaches
+      try {
+        const breach = await checkPasswordBreach(passwordForm.new);
+        if (breach.breached) {
+          toast.error(
+            `This password was found in ${breach.count.toLocaleString()} data breaches. Please choose a different password.`,
+            { duration: 8000 }
+          );
+          return;
+        }
+      } catch {
+        // Continue if breach check fails
+      }
+
       // Step 1: Verify current password by re-authenticating
       const { error: verifyError } = await supabase.auth.signInWithPassword({
         email: user?.email ?? "",
