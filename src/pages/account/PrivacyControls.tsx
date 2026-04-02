@@ -139,9 +139,11 @@ export default function PrivacyControls() {
     essential: true,
   });
 
+  const location = useLocation();
   // Redirect if not logged in
   if (!authLoading && !user) {
-    return <Navigate to="/login?redirect=/account/privacy" replace />;
+    const redirectTarget = `${location.pathname}${location.search ?? ""}`;
+    return <Navigate to={withRedirectParam("/login", redirectTarget)} replace />;
   }
 
   const handleRequestSubmit = async () => {

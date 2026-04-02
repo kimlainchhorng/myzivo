@@ -211,7 +211,7 @@ export default function ZivoPlusPage() {
 
   const handleCheckout = async () => {
     if (!user) {
-      navigate("/login?redirect=/zivo-plus");
+      navigate(withRedirectParam("/login", "/zivo-plus"));
       return;
     }
     setIsCheckingOut(true);

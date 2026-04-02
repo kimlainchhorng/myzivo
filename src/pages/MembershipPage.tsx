@@ -114,7 +114,7 @@ export default function MembershipPage() {
 
   const handleJoin = async () => {
     if (!user) {
-      navigate("/login?redirect=/membership");
+      navigate(withRedirectParam("/login", "/membership"));
       return;
     }
 
