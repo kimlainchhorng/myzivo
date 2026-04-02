@@ -259,10 +259,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       const upload = async () => {
         const path = `${user?.id}/${Date.now()}.webm`;
         const { error } = await supabase.storage
-          .from("chat_uploads")
+          .from("chat-media-files")
           .upload(path, voice.audioBlob!, { contentType: "audio/webm" });
         if (error) { toast.error("Failed to upload voice note"); voice.clearBlob(); return; }
-        const { data: urlData } = supabase.storage.from("chat_uploads").getPublicUrl(path);
+        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
         await handleSend({ voiceUrl: urlData.publicUrl });
         voice.clearBlob();
       };
