@@ -604,6 +604,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <Mic className="h-5 w-5" />
           </button>
 
+          {/* Sticker button */}
+          <button
+            onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
+            className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors shrink-0 ${
+              showStickerKeyboard ? "text-primary" : "text-muted-foreground hover:text-primary"
+            }`}
+          >
+            <Smile className="h-5 w-5" />
+          </button>
+
           <input
             ref={inputRef}
             value={input}
@@ -623,6 +633,41 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           </button>
         </div>
       )}
+
+      {/* Sticker keyboard */}
+      <AnimatePresence>
+        {showStickerKeyboard && (
+          <StickerKeyboard
+            open={showStickerKeyboard}
+            onClose={() => setShowStickerKeyboard(false)}
+            onSendSticker={(sticker) => {
+              setInput((prev) => prev + sticker);
+              setShowStickerKeyboard(false);
+              inputRef.current?.focus();
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Notification settings */}
+      <ChatNotificationSettings
+        open={showNotifSettings}
+        onClose={() => setShowNotifSettings(false)}
+        chatPartnerId={recipientId}
+        chatPartnerName={recipientName}
+      />
+
+      {/* Media gallery */}
+      <AnimatePresence>
+        {showMediaGallery && (
+          <ChatMediaGallery
+            open={showMediaGallery}
+            onClose={() => setShowMediaGallery(false)}
+            recipientId={recipientId}
+            recipientName={recipientName}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
