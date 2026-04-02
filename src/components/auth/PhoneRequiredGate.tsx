@@ -10,6 +10,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
+import { withRedirectParam } from "@/lib/authRedirect";
 
 interface PhoneRequiredGateProps {
   children: React.ReactNode;
