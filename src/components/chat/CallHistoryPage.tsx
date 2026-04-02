@@ -351,7 +351,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
                           <p className={`text-[15px] font-semibold truncate ${
                             missed ? "text-red-500" : "text-foreground"
                           }`}>
-                            {otherUserId.slice(0, 8)}...
+                            {getDisplayName(otherUserId)}
                           </p>
                           <div className="flex items-center gap-1.5 mt-1">
                             <span className={`${meta.color}`}>{meta.icon}</span>
