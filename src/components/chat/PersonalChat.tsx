@@ -140,7 +140,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           });
           scrollToBottom();
           if (msg.receiver_id === user.id) {
-            (supabase as any).from("direct_messages").update({ is_read: true }).eq("id", msg.id);
+            (supabase as any).from("direct_messages").update({ is_read: true, delivered_at: new Date().toISOString() }).eq("id", msg.id);
           }
         }
       })
