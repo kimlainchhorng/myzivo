@@ -295,11 +295,11 @@ export default function CallScreen({
       {callType === "voice" && <div className="flex-1" />}
 
       {/* Controls */}
-      <div className="w-full px-8 pb-4">
-        <div className="flex items-center justify-center gap-5">
+      <div className="w-full px-6 pb-6">
+        <div className="flex items-center justify-center gap-4">
           <button onClick={toggleMute}
-            className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
-              isMuted ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/80"
+            className={`h-[56px] w-[56px] rounded-full flex flex-col items-center justify-center transition-all active:scale-90 ${
+              isMuted ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/70"
             }`}>
             {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
           </button>
@@ -307,36 +307,37 @@ export default function CallScreen({
           {callType === "video" ? (
             <>
               <button onClick={toggleCamera}
-                className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                  isCameraOff ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/80"
+                className={`h-[56px] w-[56px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                  isCameraOff ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/70"
                 }`}>
                 {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
               </button>
               <button onClick={screenShare.toggleSharing}
-                className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                  screenShare.isSharing ? "bg-primary/15 text-primary" : "bg-foreground/8 text-foreground/80"
+                className={`h-[56px] w-[56px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                  screenShare.isSharing ? "bg-primary/15 text-primary" : "bg-foreground/8 text-foreground/70"
                 }`}>
                 {screenShare.isSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
               </button>
             </>
           ) : (
-            <button onClick={() => setIsSpeaker(!isSpeaker)}
-              className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                isSpeaker ? "bg-primary/15 text-primary" : "bg-foreground/8 text-foreground/80"
-              }`}>
-              <Volume2 className="h-5 w-5" />
-            </button>
+            <>
+              <button onClick={() => setIsSpeaker(!isSpeaker)}
+                className={`h-[56px] w-[56px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                  isSpeaker ? "bg-primary/15 text-primary" : "bg-foreground/8 text-foreground/70"
+                }`}>
+                <Volume2 className="h-5 w-5" />
+              </button>
+              <button
+                className="h-[56px] w-[56px] rounded-full flex items-center justify-center bg-foreground/8 text-foreground/70 transition-all active:scale-90"
+                onClick={() => { void endCall(); }}
+              >
+                <MessageCircle className="h-5 w-5" />
+              </button>
+            </>
           )}
 
-          <button onClick={handleRecordToggle}
-            className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
-              recording.isRecording ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/80"
-            }`}>
-            {recording.isRecording ? <Square className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
-          </button>
-
           <button onClick={() => { void endCall(); }}
-            className="h-[60px] w-[60px] rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform shadow-lg shadow-destructive/25">
+            className="h-[64px] w-[64px] rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform shadow-xl shadow-destructive/30">
             <PhoneOff className="h-6 w-6" />
           </button>
         </div>
