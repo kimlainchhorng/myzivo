@@ -418,25 +418,25 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/20 safe-area-top">
-        <div className="px-2 py-2.5 flex items-center gap-2">
-          <button onClick={onClose} className="min-h-[44px] min-w-[40px] flex items-center justify-center -ml-1">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-2xl border-b border-border/10 safe-area-top shadow-sm">
+        <div className="px-2 py-2 flex items-center gap-2.5">
+          <button onClick={onClose} className="min-h-[44px] min-w-[36px] flex items-center justify-center -ml-1 active:scale-90 transition-transform">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <div className="relative shrink-0">
-            <Avatar className="h-10 w-10 border-2 border-border/20">
+            <Avatar className="h-10 w-10 ring-2 ring-primary/10 shadow-sm">
               <AvatarImage src={recipientAvatar || undefined} />
               <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
             </Avatar>
             {recipientOnline && (
-              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-[2.5px] border-background" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-background shadow-sm" />
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-semibold text-foreground truncate leading-tight">{recipientName}</p>
+            <p className="text-[15px] font-bold text-foreground truncate leading-tight tracking-tight">{recipientName}</p>
             <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
               {recipientTyping ? (
-                <span className="text-primary font-medium">typing...</span>
+                <span className="text-primary font-medium animate-pulse">typing...</span>
               ) : recipientOnline ? (
                 <span className="text-emerald-500 font-medium">Online</span>
               ) : disappearingMode ? (
@@ -446,19 +446,20 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           </div>
 
           {/* Primary actions: Video + Voice call */}
-          <button onClick={() => { void handleStartCall("video"); }} className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/60 transition-colors">
-            <Video className="h-[18px] w-[18px] text-foreground/70" />
-          </button>
-          <button onClick={() => { void handleStartCall("voice"); }} className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/60 transition-colors">
-            <Phone className="h-[18px] w-[18px] text-foreground/70" />
-          </button>
+          <div className="flex items-center gap-0.5">
+            <button onClick={() => { void handleStartCall("video"); }} className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all">
+              <Video className="h-[19px] w-[19px] text-foreground/60" />
+            </button>
+            <button onClick={() => { void handleStartCall("voice"); }} className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all">
+              <Phone className="h-[18px] w-[18px] text-foreground/60" />
+            </button>
 
-          {/* Overflow menu for secondary actions */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/60 transition-colors -mr-1">
-                <MoreVertical className="h-[18px] w-[18px] text-foreground/70" />
-              </button>
+            {/* Overflow menu for secondary actions */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all -mr-1">
+                  <MoreVertical className="h-[18px] w-[18px] text-foreground/60" />
+                </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 bg-background border-border/40">
               <DropdownMenuItem onClick={() => setShowSearch(true)} className="gap-2.5 text-[13px]">
