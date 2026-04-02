@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
-import { Trash2, Reply, Check, CheckCheck, Copy, Forward, Pin, Timer } from "lucide-react";
+import { Trash2, Reply, Check, CheckCheck, Copy, Forward, Pin, Timer, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ export default function ChatMessageBubble({
   const { user } = useAuth();
   const [showActions, setShowActions] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>([]);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
@@ -165,16 +166,28 @@ export default function ChatMessageBubble({
           </div>
         )}
 
-        {/* Video */}
+        {/* Video — thumbnail preview with play button overlay */}
         {videoUrl && (
-          <div className={`rounded-2xl overflow-hidden mb-1 shadow-sm ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
+          <div
+            onClick={(e) => { e.stopPropagation(); if (!didLongPress.current) setShowVideoPlayer(true); }}
+            className={`rounded-2xl overflow-hidden mb-1 shadow-sm relative cursor-pointer ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}
+          >
             <video
               src={videoUrl}
-              className="max-w-full max-h-60 rounded-2xl"
-              controls
+              className="max-w-full max-h-60 rounded-2xl object-cover w-full"
               playsInline
               preload="metadata"
+              muted
+              style={{ pointerEvents: "none" }}
             />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl">
+              <div className="h-12 w-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                <Play className="h-5 w-5 text-foreground/80 ml-0.5" fill="currentColor" />
+              </div>
+            </div>
+            <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/40 text-white">
+              Video
+            </div>
           </div>
         )}
 
@@ -281,6 +294,34 @@ export default function ChatMessageBubble({
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Fullscreen video player */}
+      <AnimatePresence>
+        {showVideoPlayer && videoUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+            onClick={() => setShowVideoPlayer(false)}
+          >
+            <button
+              onClick={() => setShowVideoPlayer(false)}
+              className="absolute top-4 right-4 safe-area-top h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white z-10"
+            >
+              ✕
+            </button>
+            <video
+              src={videoUrl}
+              className="max-w-full max-h-full"
+              controls
+              autoPlay
+              playsInline
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
