@@ -3,6 +3,7 @@
  * View, search, and manage all registered users
  */
 import { useState, useMemo } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Users, Search, Mail, Calendar, Shield, ChevronLeft, ChevronRight,
-  UserCheck, UserX, Eye
+  UserCheck, UserX, Eye, BadgeCheck, ShieldCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -20,15 +21,36 @@ import { format } from "date-fns";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const PAGE_SIZE = 20;
 
 export default function AdminUsersPage() {
   const { isAdmin, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+
+  // Verify / Unverify mutation
+  const verifyMutation = useMutation({
+    mutationFn: async ({ userId, verified }: { userId: string; verified: boolean }) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_verified: verified })
+        .eq("id", userId);
+      if (error) throw error;
+    },
+    onSuccess: (_, { verified }) => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      toast.success(verified ? "Account verified ✓" : "Verification removed");
+      if (selectedUser) {
+        setSelectedUser({ ...selectedUser, is_verified: verified });
+      }
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to update verification"),
+  });
 
   // Fetch all profiles
   const { data: profiles, isLoading } = useQuery({
@@ -236,7 +258,12 @@ export default function AdminUsersPage() {
                                 {(user.full_name || user.email || "?").charAt(0).toUpperCase()}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-medium text-foreground truncate">{user.full_name || "—"}</p>
+                                <div className="flex items-center gap-1">
+                                  <p className="font-medium text-foreground truncate">{user.full_name || "—"}</p>
+                                  {user.is_verified && (
+                                    <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
+                                  )}
+                                </div>
                                 {user.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
                               </div>
                             </div>
@@ -389,6 +416,33 @@ export default function AdminUsersPage() {
                     <span className="text-sm text-muted-foreground">Regular user (no special roles)</span>
                   )}
                 </div>
+              </div>
+
+              {/* Verify action */}
+              <div className="pt-2 border-t border-border">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Account Verification</p>
+                <Button
+                  variant={selectedUser.is_verified ? "outline" : "default"}
+                  size="sm"
+                  className="gap-2"
+                  disabled={verifyMutation.isPending}
+                  onClick={() => verifyMutation.mutate({ userId: selectedUser.id || selectedUser.user_id, verified: !selectedUser.is_verified })}
+                >
+                  {selectedUser.is_verified ? (
+                    <>
+                      <ShieldCheck className="w-4 h-4 text-primary" />
+                      Verified — Remove Badge
+                    </>
+                  ) : (
+                    <>
+                      <BadgeCheck className="w-4 h-4" />
+                      Verify Account
+                    </>
+                  )}
+                </Button>
+                {selectedUser.is_verified && (
+                  <p className="text-[10px] text-muted-foreground mt-1.5">This account has been verified by an admin.</p>
+                )}
               </div>
             </div>
           )}
