@@ -28,9 +28,29 @@ const PAGE_SIZE = 20;
 export default function AdminUsersPage() {
   const { isAdmin, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+
+  // Verify / Unverify mutation
+  const verifyMutation = useMutation({
+    mutationFn: async ({ userId, verified }: { userId: string; verified: boolean }) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_verified: verified })
+        .eq("id", userId);
+      if (error) throw error;
+    },
+    onSuccess: (_, { verified }) => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      toast.success(verified ? "Account verified ✓" : "Verification removed");
+      if (selectedUser) {
+        setSelectedUser({ ...selectedUser, is_verified: verified });
+      }
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to update verification"),
+  });
 
   // Fetch all profiles
   const { data: profiles, isLoading } = useQuery({
