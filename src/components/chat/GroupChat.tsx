@@ -215,7 +215,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           voice.clearBlob();
           return;
         }
-        const { data: urlData } = supabase.storage.from("chat_uploads").getPublicUrl(path);
+        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
         await handleSend(undefined, urlData.publicUrl);
         voice.clearBlob();
       };
