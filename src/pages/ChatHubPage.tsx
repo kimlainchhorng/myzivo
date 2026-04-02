@@ -15,6 +15,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import ChatStories from "@/components/chat/ChatStories";
 import { toast } from "sonner";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
+import PersonalChat from "@/components/chat/PersonalChat";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useCallback } from "react";
 
