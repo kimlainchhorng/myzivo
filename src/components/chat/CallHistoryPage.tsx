@@ -11,8 +11,13 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+
+interface ProfileInfo {
+  full_name: string | null;
+  avatar_url: string | null;
+}
 
 interface CallRecord {
   id: string;
@@ -71,6 +76,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
   const [playingVm, setPlayingVm] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [profiles, setProfiles] = useState<Record<string, ProfileInfo>>({});
 
   useEffect(() => {
     if (!user?.id) return;
@@ -90,12 +96,54 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
           .order("created_at", { ascending: false })
           .limit(20),
       ]);
-      setCalls(callsRes.data || []);
-      setVoicemails(vmRes.data || []);
+      const callsData: CallRecord[] = callsRes.data || [];
+      const vmData: VoicemailRecord[] = vmRes.data || [];
+      setCalls(callsData);
+      setVoicemails(vmData);
+
+      // Collect unique user IDs to fetch profiles
+      const userIds = new Set<string>();
+      callsData.forEach((c) => {
+        if (c.caller_id !== user.id) userIds.add(c.caller_id);
+        if (c.callee_id !== user.id) userIds.add(c.callee_id);
+      });
+      vmData.forEach((v) => { if (v.caller_id !== user.id) userIds.add(v.caller_id); });
+
+      if (userIds.size > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .in("id", Array.from(userIds));
+        if (profilesData) {
+          const map: Record<string, ProfileInfo> = {};
+          profilesData.forEach((p) => {
+            map[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+          });
+          setProfiles(map);
+        }
+      }
+
       setLoading(false);
     };
     load();
   }, [user?.id]);
+
+  const getDisplayName = (userId: string) => {
+    return profiles[userId]?.full_name || userId.slice(0, 8) + "...";
+  };
+
+  const getInitials = (userId: string) => {
+    const name = profiles[userId]?.full_name;
+    if (name) {
+      const parts = name.trim().split(/\s+/);
+      return parts.length > 1
+        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+        : name.slice(0, 2).toUpperCase();
+    }
+    return userId.slice(0, 2).toUpperCase();
+  };
+
+  const getAvatarUrl = (userId: string) => profiles[userId]?.avatar_url || null;
 
   const deleteVoicemail = async (id: string) => {
     setVoicemails((prev) => prev.filter((v) => v.id !== id));
@@ -283,10 +331,13 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
                         {/* Avatar */}
                         <div className="relative shrink-0">
                           <Avatar className={`h-[52px] w-[52px] ${missed ? "ring-2 ring-red-500/20" : "ring-1 ring-border/10"}`}>
+                            {getAvatarUrl(otherUserId) && (
+                              <AvatarImage src={getAvatarUrl(otherUserId)!} alt={getDisplayName(otherUserId)} />
+                            )}
                             <AvatarFallback className={`text-sm font-bold ${
                               missed ? "bg-red-50 text-red-400 dark:bg-red-500/10" : "bg-muted/60 text-muted-foreground"
                             }`}>
-                              {otherUserId.slice(0, 2).toUpperCase()}
+                              {getInitials(otherUserId)}
                             </AvatarFallback>
                           </Avatar>
                           {/* Call type badge */}
@@ -300,7 +351,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
                           <p className={`text-[15px] font-semibold truncate ${
                             missed ? "text-red-500" : "text-foreground"
                           }`}>
-                            {otherUserId.slice(0, 8)}...
+                            {getDisplayName(otherUserId)}
                           </p>
                           <div className="flex items-center gap-1.5 mt-1">
                             <span className={`${meta.color}`}>{meta.icon}</span>
@@ -364,8 +415,11 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
                 >
                   <div className="relative shrink-0">
                     <Avatar className="h-[52px] w-[52px] ring-1 ring-border/10">
+                      {getAvatarUrl(vm.caller_id) && (
+                        <AvatarImage src={getAvatarUrl(vm.caller_id)!} alt={getDisplayName(vm.caller_id)} />
+                      )}
                       <AvatarFallback className="text-sm font-bold bg-amber-50 text-amber-500 dark:bg-amber-500/10">
-                        {vm.caller_id.slice(0, 2).toUpperCase()}
+                        {getInitials(vm.caller_id)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-500/10 ring-[2.5px] ring-background flex items-center justify-center text-amber-500">
@@ -378,7 +432,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
 
                   <div className="flex-1 min-w-0">
                     <p className={`text-[15px] font-semibold ${!vm.is_read ? "text-foreground" : "text-muted-foreground"}`}>
-                      {vm.caller_id.slice(0, 8)}...
+                      {getDisplayName(vm.caller_id)}
                     </p>
                     {vm.transcription && (
                       <p className="text-[13px] text-muted-foreground/60 truncate mt-0.5">{vm.transcription}</p>
