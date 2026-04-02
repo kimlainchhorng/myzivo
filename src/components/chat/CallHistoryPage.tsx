@@ -415,8 +415,11 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
                 >
                   <div className="relative shrink-0">
                     <Avatar className="h-[52px] w-[52px] ring-1 ring-border/10">
+                      {getAvatarUrl(vm.caller_id) && (
+                        <AvatarImage src={getAvatarUrl(vm.caller_id)!} alt={getDisplayName(vm.caller_id)} />
+                      )}
                       <AvatarFallback className="text-sm font-bold bg-amber-50 text-amber-500 dark:bg-amber-500/10">
-                        {vm.caller_id.slice(0, 2).toUpperCase()}
+                        {getInitials(vm.caller_id)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-500/10 ring-[2.5px] ring-background flex items-center justify-center text-amber-500">
