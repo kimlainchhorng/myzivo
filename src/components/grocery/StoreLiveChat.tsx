@@ -8,6 +8,7 @@ import { X, Send, MessageCircle, Loader2, Trash2, ChevronLeft, User, MapPin, QrC
 import { supabase } from "@/integrations/supabase/client";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
+import { isAllowedPaymentUrl } from "@/lib/urlSafety";
 
 interface StoreLiveChatProps {
   storeId: string;
