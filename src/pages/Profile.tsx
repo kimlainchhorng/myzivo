@@ -137,6 +137,32 @@ const Profile = () => {
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
   const { unreadCount: notifUnreadCount } = useNotifications(20);
+  
+  // Count pending friend requests + new followers
+  const [socialCount, setSocialCount] = useState(0);
+  useEffect(() => {
+    if (!user) return;
+    const fetchSocialCount = async () => {
+      const { count: friendReqCount } = await (supabase as any)
+        .from('friendships')
+        .select('id', { count: 'exact', head: true })
+        .eq('friend_id', user.id)
+        .eq('status', 'pending');
+      setSocialCount(friendReqCount || 0);
+    };
+    fetchSocialCount();
+    
+    // Listen for realtime changes
+    const channel = supabase
+      .channel('profile-social-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships', filter: `friend_id=eq.${user.id}` }, () => {
+        fetchSocialCount();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+  
+  const totalNotifCount = notifUnreadCount + socialCount;
   const affiliateAttribution = useAffiliateAttribution();
   const { isPlus, plan } = useZivoPlus();
   const updateProfile = useUpdateUserProfile();
