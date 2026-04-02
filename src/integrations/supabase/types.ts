@@ -5582,6 +5582,51 @@ export type Database = {
         }
         Relationships: []
       }
+      call_signals: {
+        Row: {
+          answer: Json | null
+          call_type: string
+          callee_ice_candidates: Json[] | null
+          callee_id: string
+          caller_ice_candidates: Json[] | null
+          caller_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          offer: Json | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          answer?: Json | null
+          call_type?: string
+          callee_ice_candidates?: Json[] | null
+          callee_id: string
+          caller_ice_candidates?: Json[] | null
+          caller_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          offer?: Json | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          answer?: Json | null
+          call_type?: string
+          callee_ice_candidates?: Json[] | null
+          callee_id?: string
+          caller_ice_candidates?: Json[] | null
+          caller_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          offer?: Json | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       calls: {
         Row: {
           caller_id: string
