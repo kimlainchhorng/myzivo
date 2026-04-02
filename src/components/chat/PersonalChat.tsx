@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
 import CallScreen from "./CallScreen";
+import CallPiP from "./CallPiP";
 import { primeCallAudio } from "@/lib/callAudio";
 import ChatMessageBubble from "./ChatMessageBubble";
 import VoiceMessagePlayer from "./VoiceMessagePlayer";
