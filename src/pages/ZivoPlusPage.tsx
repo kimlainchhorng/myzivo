@@ -3,6 +3,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Crown, Zap, Shield, Star,

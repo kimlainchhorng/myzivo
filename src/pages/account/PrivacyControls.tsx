@@ -6,7 +6,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import {
   ArrowLeft, Shield, Download, Trash2, Eye, Mail, Clock,
   CheckCircle2, AlertTriangle, FileText, Lock, RefreshCw,

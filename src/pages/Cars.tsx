@@ -161,7 +161,7 @@ export default function Cars() {
     
     if (!user) {
       // Redirect to login with return URL
-      navigate(`/login?redirect=/p2p/vehicle/${vehicleId}?${linkParams.toString()}`);
+      navigate(withRedirectParam("/login", `/p2p/vehicle/${vehicleId}?${linkParams.toString()}`));
     } else {
       navigate(`/p2p/vehicle/${vehicleId}?${linkParams.toString()}`);
     }
