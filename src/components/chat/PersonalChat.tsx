@@ -567,12 +567,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 return (
                   <CallEventBubble
                     key={`call-${item.id}`}
+                    id={item.id}
                     callType={item.call_type as "voice" | "video"}
                     status={item.status}
                     isOutgoing={item.caller_id === user?.id}
                     durationSeconds={item.duration_seconds}
                     createdAt={item.created_at}
                     onCallback={() => handleStartCall(item.call_type as "voice" | "video")}
+                    onDelete={async (callId) => {
+                      await (supabase as any).from("call_events").delete().eq("id", callId);
+                      toast.success("Call deleted");
+                    }}
                   />
                 );
               }
