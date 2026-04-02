@@ -18,7 +18,7 @@ import {
   ESIM_PARTNERS,
   LUGGAGE_PARTNERS,
   COMPENSATION_PARTNERS,
-  getKiwiLink,
+  
 } from '@/config/affiliateLinks';
 
 type ServiceType = 'flights' | 'hotels' | 'cars' | 'transfers' | 'activities' | 'esim' | 'luggage' | 'compensation' | 'extras';
