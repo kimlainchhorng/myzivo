@@ -161,6 +161,12 @@ const Login = () => {
         toast.error("Incorrect email or password. Please try again.");
       } else if (msg.includes("email not confirmed")) {
         toast.error("Please verify your email before signing in.");
+        // Resend OTP and redirect to verification
+        try {
+          await supabase.functions.invoke("send-otp-email", { body: { email: data.email } });
+          toast.info("Verification code sent to your email.");
+        } catch {}
+        navigate("/verify-otp", { state: { email: data.email } });
 
       } else if (msg.includes("too many requests") || msg.includes("rate limit")) {
         toast.error("Too many attempts. Please wait a moment and try again.");
