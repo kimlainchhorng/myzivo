@@ -473,7 +473,7 @@ export default function StoreProfilePage() {
             )}
 
             {/* Telegram button */}
-            {(store as any).telegram_url && (
+            {(store as any).telegram_url && isAllowedSocialUrl((store as any).telegram_url) && (
               <motion.a
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
