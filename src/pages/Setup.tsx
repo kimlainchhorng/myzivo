@@ -34,6 +34,7 @@ export default function Setup() {
   const [saving, setSaving] = useState(false);
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
   const [pendingData, setPendingData] = useState<SetupValues | null>(null);
+  const [checking, setChecking] = useState(true);
 
   const form = useForm<SetupValues>({
     resolver: zodResolver(setupSchema),
@@ -44,21 +45,44 @@ export default function Setup() {
     },
   });
 
-  // Pre-fill form from user metadata when user becomes available
+  // Fetch existing profile data — redirect if already set up, otherwise pre-fill
   useEffect(() => {
     if (!user) return;
-    const meta = user.user_metadata || {};
-    const fullName = meta.full_name || "";
-    const firstName = fullName.split(" ")[0] || "";
-    const lastName = fullName.split(" ").slice(1).join(" ") || "";
-    const phone = meta.phone || "";
 
-    const current = form.getValues();
-    // Only set if fields are still empty (don't override user edits)
-    if (!current.first_name && firstName) form.setValue("first_name", firstName);
-    if (!current.last_name && lastName) form.setValue("last_name", lastName);
-    if (!current.phone && phone) form.setValue("phone", phone);
-  }, [user, form]);
+    const loadProfile = async () => {
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, phone, setup_complete")
+          .or(`user_id.eq.${user.id},id.eq.${user.id}`)
+          .maybeSingle();
+
+        if (profile?.setup_complete) {
+          toast.info("Your profile is already set up.");
+          navigate("/", { replace: true });
+          return;
+        }
+
+        // Pre-fill from profile or user metadata
+        const meta = user.user_metadata || {};
+        const fullName = profile?.full_name || meta.full_name || "";
+        const firstName = fullName.split(" ")[0] || "";
+        const lastName = fullName.split(" ").slice(1).join(" ") || "";
+        const phone = profile?.phone || meta.phone || "";
+
+        const current = form.getValues();
+        if (!current.first_name && firstName) form.setValue("first_name", firstName);
+        if (!current.last_name && lastName) form.setValue("last_name", lastName);
+        if (!current.phone && phone) form.setValue("phone", phone);
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    loadProfile();
+  }, [user, form, navigate]);
 
   const onSubmit = async (data: SetupValues) => {
     if (!user) return;
