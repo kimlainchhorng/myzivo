@@ -5445,6 +5445,48 @@ export type Database = {
           },
         ]
       }
+      call_history: {
+        Row: {
+          call_signal_id: string | null
+          call_type: string
+          callee_id: string
+          caller_id: string
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          recording_id: string | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          call_signal_id?: string | null
+          call_type?: string
+          callee_id: string
+          caller_id: string
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          recording_id?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          call_signal_id?: string | null
+          call_type?: string
+          callee_id?: string
+          caller_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          recording_id?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       call_logs: {
         Row: {
           call_direction: string
@@ -5554,6 +5596,60 @@ export type Database = {
             columns: ["related_restaurant_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      call_recordings: {
+        Row: {
+          call_history_id: string | null
+          consent_given_by: string[] | null
+          created_at: string
+          duration_seconds: number | null
+          file_size_bytes: number | null
+          group_call_id: string | null
+          id: string
+          recorder_id: string
+          recording_url: string | null
+          status: string | null
+        }
+        Insert: {
+          call_history_id?: string | null
+          consent_given_by?: string[] | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          group_call_id?: string | null
+          id?: string
+          recorder_id: string
+          recording_url?: string | null
+          status?: string | null
+        }
+        Update: {
+          call_history_id?: string | null
+          consent_given_by?: string[] | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          group_call_id?: string | null
+          id?: string
+          recorder_id?: string
+          recording_url?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_recordings_call_history_id_fkey"
+            columns: ["call_history_id"]
+            isOneToOne: false
+            referencedRelation: "call_history"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_recordings_group_call_id_fkey"
+            columns: ["group_call_id"]
+            isOneToOne: false
+            referencedRelation: "group_calls"
             referencedColumns: ["id"]
           },
         ]
@@ -6587,6 +6683,57 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      chat_media: {
+        Row: {
+          chat_partner_id: string
+          created_at: string
+          duration_seconds: number | null
+          file_name: string
+          file_size_bytes: number | null
+          file_type: string
+          file_url: string
+          height: number | null
+          id: string
+          message_id: string | null
+          mime_type: string | null
+          sender_id: string
+          thumbnail_url: string | null
+          width: number | null
+        }
+        Insert: {
+          chat_partner_id: string
+          created_at?: string
+          duration_seconds?: number | null
+          file_name: string
+          file_size_bytes?: number | null
+          file_type?: string
+          file_url: string
+          height?: number | null
+          id?: string
+          message_id?: string | null
+          mime_type?: string | null
+          sender_id: string
+          thumbnail_url?: string | null
+          width?: number | null
+        }
+        Update: {
+          chat_partner_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          file_name?: string
+          file_size_bytes?: number | null
+          file_type?: string
+          file_url?: string
+          height?: number | null
+          id?: string
+          message_id?: string | null
+          mime_type?: string | null
+          sender_id?: string
+          thumbnail_url?: string | null
+          width?: number | null
         }
         Relationships: []
       }
@@ -18919,6 +19066,89 @@ export type Database = {
           period?: string
           period_key?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      group_call_participants: {
+        Row: {
+          created_at: string
+          group_call_id: string
+          id: string
+          is_camera_off: boolean | null
+          is_muted: boolean | null
+          joined_at: string | null
+          left_at: string | null
+          role: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_call_id: string
+          id?: string
+          is_camera_off?: boolean | null
+          is_muted?: boolean | null
+          joined_at?: string | null
+          left_at?: string | null
+          role?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_call_id?: string
+          id?: string
+          is_camera_off?: boolean | null
+          is_muted?: boolean | null
+          joined_at?: string | null
+          left_at?: string | null
+          role?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_call_participants_group_call_id_fkey"
+            columns: ["group_call_id"]
+            isOneToOne: false
+            referencedRelation: "group_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_calls: {
+        Row: {
+          call_type: string
+          created_at: string
+          ended_at: string | null
+          host_id: string
+          id: string
+          max_participants: number | null
+          started_at: string | null
+          status: string
+          title: string | null
+        }
+        Insert: {
+          call_type?: string
+          created_at?: string
+          ended_at?: string | null
+          host_id: string
+          id?: string
+          max_participants?: number | null
+          started_at?: string | null
+          status?: string
+          title?: string | null
+        }
+        Update: {
+          call_type?: string
+          created_at?: string
+          ended_at?: string | null
+          host_id?: string
+          id?: string
+          max_participants?: number | null
+          started_at?: string | null
+          status?: string
+          title?: string | null
         }
         Relationships: []
       }
@@ -44055,6 +44285,50 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      voicemails: {
+        Row: {
+          audio_url: string
+          call_history_id: string | null
+          caller_id: string
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          is_read: boolean | null
+          recipient_id: string
+          transcription: string | null
+        }
+        Insert: {
+          audio_url: string
+          call_history_id?: string | null
+          caller_id: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          is_read?: boolean | null
+          recipient_id: string
+          transcription?: string | null
+        }
+        Update: {
+          audio_url?: string
+          call_history_id?: string | null
+          caller_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          is_read?: boolean | null
+          recipient_id?: string
+          transcription?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voicemails_call_history_id_fkey"
+            columns: ["call_history_id"]
+            isOneToOne: false
+            referencedRelation: "call_history"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       waitlist: {
         Row: {
