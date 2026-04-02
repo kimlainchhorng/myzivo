@@ -47,7 +47,10 @@ export default function Setup() {
 
   // Fetch existing profile data — redirect if already set up, otherwise pre-fill
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setChecking(false);
+      return;
+    }
 
     const loadProfile = async () => {
       try {
