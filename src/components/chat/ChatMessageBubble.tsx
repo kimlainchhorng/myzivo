@@ -17,6 +17,7 @@ interface ChatMessageBubbleProps {
   time: string;
   isMe: boolean;
   isRead?: boolean;
+  isDelivered?: boolean;
   imageUrl?: string | null;
   videoUrl?: string | null;
   isPinned?: boolean;
