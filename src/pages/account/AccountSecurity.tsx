@@ -71,11 +71,27 @@ export default function AccountSecurity() {
       toast.error("Password must be at least 8 characters");
       return;
     }
+    if (!passwordForm.current) {
+      toast.error("Please enter your current password");
+      return;
+    }
 
     setIsChangingPassword(true);
     try {
+      // Step 1: Verify current password by re-authenticating
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user?.email ?? "",
+        password: passwordForm.current,
+      });
+      if (verifyError) {
+        toast.error("Current password is incorrect");
+        return;
+      }
+
+      // Step 2: Update to new password
       const { error } = await supabase.auth.updateUser({ password: passwordForm.new });
       if (error) throw error;
+
       toast.success("Password updated successfully");
       setPasswordForm({ current: "", new: "", confirm: "" });
     } catch (error: any) {

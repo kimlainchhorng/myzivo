@@ -57,7 +57,7 @@ export function setupActivityTracking(onExpire: () => void): () => void {
 
     // Check max session age
     if (currentTime - sessionStart > maxAge) {
-      console.warn(`[SessionSecurity] Max session age exceeded (${remembered ? '7d' : '24h'})`);
+      console.warn(`[SessionSecurity] Max session age exceeded (${remembered ? '30d' : '24h'})`);
       onExpire();
       return;
     }
