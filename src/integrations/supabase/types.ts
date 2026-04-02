@@ -5582,6 +5582,51 @@ export type Database = {
         }
         Relationships: []
       }
+      call_signals: {
+        Row: {
+          answer: Json | null
+          call_type: string
+          callee_ice_candidates: Json[] | null
+          callee_id: string
+          caller_ice_candidates: Json[] | null
+          caller_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          offer: Json | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          answer?: Json | null
+          call_type?: string
+          callee_ice_candidates?: Json[] | null
+          callee_id: string
+          caller_ice_candidates?: Json[] | null
+          caller_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          offer?: Json | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          answer?: Json | null
+          call_type?: string
+          callee_ice_candidates?: Json[] | null
+          callee_id?: string
+          caller_ice_candidates?: Json[] | null
+          caller_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          offer?: Json | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       calls: {
         Row: {
           caller_id: string
@@ -47918,6 +47963,10 @@ export type Database = {
         Returns: Json
       }
       aggregate_demand_snapshot: { Args: never; Returns: number }
+      append_ice_candidate: {
+        Args: { p_call_id: string; p_candidate: Json; p_field: string }
+        Returns: undefined
+      }
       apply_pricing_to_job: { Args: { p_job_id: string }; Returns: Json }
       apply_wallet_credit: {
         Args: { p_amount_cents: number; p_order_id: string; p_user_id: string }
