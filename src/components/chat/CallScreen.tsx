@@ -3,12 +3,12 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PhoneOff, Mic, MicOff, Video, VideoOff, Volume2, Monitor, MonitorOff, Circle, Square, Minimize2 } from "lucide-react";
+import { PhoneOff, Mic, MicOff, Video, VideoOff, Volume2, Monitor, MonitorOff, Minimize2, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWebRTC, CallRole } from "@/hooks/useWebRTC";
 import { useCallQuality } from "@/hooks/useCallQuality";
 import { useScreenShare } from "@/hooks/useScreenShare";
-import { useCallRecording } from "@/hooks/useCallRecording";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { playOutgoingRingback } from "@/lib/callAudio";
@@ -39,7 +39,6 @@ export default function CallScreen({
   const [callHistoryId, setCallHistoryId] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
   const [isSpeaker, setIsSpeaker] = useState(false);
-  const [showRecordConsent, setShowRecordConsent] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -100,10 +99,6 @@ export default function CallScreen({
   // Hooks for enhancements — connected to live PeerConnection ref
   const qualityStats = useCallQuality(peerConnection);
   const screenShare = useScreenShare(peerConnection);
-  const recording = useCallRecording({
-    callHistoryId: callHistoryId || undefined,
-    userId: user?.id || "",
-  });
 
   // Create call signal
   useEffect(() => {
@@ -169,25 +164,6 @@ export default function CallScreen({
     return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
   };
 
-  const handleRecordToggle = () => {
-    if (recording.isRecording) {
-      recording.stopRecording();
-    } else {
-      setShowRecordConsent(true);
-    }
-  };
-
-  const confirmRecording = () => {
-    setShowRecordConsent(false);
-    const ls = localStream.current;
-    const rs = remoteStreamRef.current;
-    if (ls && rs) {
-      recording.startRecording(ls, rs);
-    } else {
-      toast.error("Cannot record — streams not available");
-    }
-  };
-
   const statusText =
     callState === "ringing"
       ? role === "caller"
@@ -216,15 +192,6 @@ export default function CallScreen({
       <div className="absolute top-0 left-0 right-0 px-4 pt-3 flex items-center justify-between safe-area-top z-10">
         <CallQualityBadge stats={qualityStats} />
         <div className="flex items-center gap-2">
-          {recording.isRecording && (
-            <motion.div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold"
-              animate={{ opacity: [1, 0.4, 1] }}
-              transition={{ repeat: Infinity, duration: 1.2 }}
-            >
-              <Circle className="w-2 h-2 fill-current" /> REC {formatDuration(recording.recordingDuration)}
-            </motion.div>
-          )}
           {onMinimize && (
             <button
               onClick={() => onMinimize({ remoteStream: remoteStreamRef.current, duration, isMuted })}
@@ -237,30 +204,39 @@ export default function CallScreen({
       </div>
 
       {/* Caller info */}
-      <div className="flex flex-col items-center gap-4 mt-10 px-6">
+      <div className="flex flex-col items-center gap-5 mt-12 px-6">
         <div className="relative">
           {callState === "ringing" && (
-            <motion.div
-              className="absolute inset-0 rounded-full border-2 border-primary/30"
-              animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
+            <>
+              <motion.div
+                className="absolute -inset-3 rounded-full border-2 border-primary/20"
+                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <motion.div
+                className="absolute -inset-6 rounded-full border border-primary/10"
+                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
+              />
+            </>
           )}
-          <Avatar className="h-24 w-24 border-[3px] border-primary/15 shadow-lg">
+          <Avatar className="h-28 w-28 border-[3px] border-primary/10 shadow-xl">
             <AvatarImage src={recipientAvatar || undefined} />
-            <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
+            <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
           </Avatar>
         </div>
         <div className="text-center">
-          <h2 className="text-xl font-bold text-foreground">{recipientName}</h2>
-          <p className="text-sm text-muted-foreground mt-1">{statusText}</p>
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">{recipientName}</h2>
+          <p className={`text-sm mt-1.5 font-medium ${callState === "connected" ? "text-primary tabular-nums" : "text-muted-foreground"}`}>
+            {statusText}
+          </p>
         </div>
         {callState === "ringing" && (
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             {[0, 1, 2].map((i) => (
-              <motion.div key={i} className="h-1.5 w-1.5 rounded-full bg-primary"
-                animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.2, 0.8] }}
-                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+              <motion.div key={i} className="h-2 w-2 rounded-full bg-primary"
+                animate={{ opacity: [0.2, 1, 0.2], scale: [0.7, 1.2, 0.7] }}
+                transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.25 }}
               />
             ))}
           </div>
@@ -295,11 +271,11 @@ export default function CallScreen({
       {callType === "voice" && <div className="flex-1" />}
 
       {/* Controls */}
-      <div className="w-full px-8 pb-4">
-        <div className="flex items-center justify-center gap-5">
+      <div className="w-full px-6 pb-6">
+        <div className="flex items-center justify-center gap-4">
           <button onClick={toggleMute}
-            className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
-              isMuted ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/80"
+            className={`h-[56px] w-[56px] rounded-full flex flex-col items-center justify-center transition-all active:scale-90 ${
+              isMuted ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/70"
             }`}>
             {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
           </button>
@@ -307,78 +283,42 @@ export default function CallScreen({
           {callType === "video" ? (
             <>
               <button onClick={toggleCamera}
-                className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                  isCameraOff ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/80"
+                className={`h-[56px] w-[56px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                  isCameraOff ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/70"
                 }`}>
                 {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
               </button>
               <button onClick={screenShare.toggleSharing}
-                className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                  screenShare.isSharing ? "bg-primary/15 text-primary" : "bg-foreground/8 text-foreground/80"
+                className={`h-[56px] w-[56px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                  screenShare.isSharing ? "bg-primary/15 text-primary" : "bg-foreground/8 text-foreground/70"
                 }`}>
                 {screenShare.isSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
               </button>
             </>
           ) : (
-            <button onClick={() => setIsSpeaker(!isSpeaker)}
-              className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                isSpeaker ? "bg-primary/15 text-primary" : "bg-foreground/8 text-foreground/80"
-              }`}>
-              <Volume2 className="h-5 w-5" />
-            </button>
+            <>
+              <button onClick={() => setIsSpeaker(!isSpeaker)}
+                className={`h-[56px] w-[56px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                  isSpeaker ? "bg-primary/15 text-primary" : "bg-foreground/8 text-foreground/70"
+                }`}>
+                <Volume2 className="h-5 w-5" />
+              </button>
+              <button
+                className="h-[56px] w-[56px] rounded-full flex items-center justify-center bg-foreground/8 text-foreground/70 transition-all active:scale-90"
+                onClick={() => { void endCall(); }}
+              >
+                <MessageCircle className="h-5 w-5" />
+              </button>
+            </>
           )}
 
-          <button onClick={handleRecordToggle}
-            className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all active:scale-90 ${
-              recording.isRecording ? "bg-destructive/15 text-destructive" : "bg-foreground/8 text-foreground/80"
-            }`}>
-            {recording.isRecording ? <Square className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
-          </button>
-
           <button onClick={() => { void endCall(); }}
-            className="h-[60px] w-[60px] rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform shadow-lg shadow-destructive/25">
+            className="h-[64px] w-[64px] rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform shadow-xl shadow-destructive/30">
             <PhoneOff className="h-6 w-6" />
           </button>
         </div>
       </div>
 
-      {/* Recording consent modal */}
-      <AnimatePresence>
-        {showRecordConsent && (
-          <motion.div
-            className="absolute inset-0 z-[65] bg-background/80 backdrop-blur-md flex items-center justify-center p-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-background border border-border/30 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
-            >
-              <h3 className="text-base font-bold text-foreground mb-2">Record this call?</h3>
-              <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-                Both parties will be notified. Recordings are saved securely and can be deleted anytime.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowRecordConsent(false)}
-                  className="flex-1 h-11 rounded-2xl bg-muted text-foreground text-sm font-medium active:scale-95 transition-transform"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmRecording}
-                  className="flex-1 h-11 rounded-2xl bg-primary text-primary-foreground text-sm font-medium active:scale-95 transition-transform shadow-sm"
-                >
-                  Start Recording
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }
