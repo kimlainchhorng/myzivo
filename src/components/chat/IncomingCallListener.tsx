@@ -3,80 +3,14 @@
  * Shows a banner when another user calls, allowing accept/decline
  * Plays a ringtone sound while ringing
  */
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Phone, PhoneOff, Video } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import CallScreen from "./CallScreen";
-
-/** Creates a repeating ringtone using Web Audio API */
-function createRingtone() {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-
-    // Resume suspended AudioContext (browser autoplay policy)
-    if (ctx.state === "suspended") {
-      ctx.resume().catch(() => {});
-    }
-
-    const gainNode = ctx.createGain();
-    gainNode.gain.value = 0.3;
-    gainNode.connect(ctx.destination);
-
-    let stopped = false;
-    let currentOsc: OscillatorNode | null = null;
-    let timeout: ReturnType<typeof setTimeout>;
-
-    const playTone = (freq: number, duration: number): Promise<void> => {
-      return new Promise((resolve) => {
-        if (stopped) { resolve(); return; }
-        // Re-check context state before each tone
-        if (ctx.state === "suspended") {
-          ctx.resume().catch(() => {});
-        }
-        const osc = ctx.createOscillator();
-        currentOsc = osc;
-        osc.type = "sine";
-        osc.frequency.value = freq;
-        osc.connect(gainNode);
-        osc.start();
-        timeout = setTimeout(() => {
-          osc.stop();
-          osc.disconnect();
-          currentOsc = null;
-          resolve();
-        }, duration);
-      });
-    };
-
-    const ringLoop = async () => {
-      // Small initial delay to allow context resume
-      await new Promise(r => { timeout = setTimeout(r, 100); });
-      while (!stopped) {
-        await playTone(440, 400);
-        if (stopped) break;
-        await new Promise(r => { timeout = setTimeout(r, 100); });
-        if (stopped) break;
-        await playTone(480, 400);
-        if (stopped) break;
-        await new Promise(r => { timeout = setTimeout(r, 1500); });
-      }
-    };
-
-    ringLoop();
-
-    return () => {
-      stopped = true;
-      clearTimeout(timeout);
-      try { currentOsc?.stop(); } catch {}
-      try { ctx.close(); } catch {}
-    };
-  } catch {
-    return () => {};
-  }
-}
+import { playIncomingRingtone, primeCallAudio, registerCallAudioUnlock } from "@/lib/callAudio";
 
 interface IncomingCall {
   id: string;
@@ -90,6 +24,8 @@ export default function IncomingCallListener() {
   const { user } = useAuth();
   const [incoming, setIncoming] = useState<IncomingCall | null>(null);
   const [answeredCall, setAnsweredCall] = useState<IncomingCall | null>(null);
+
+  useEffect(() => registerCallAudioUnlock(), []);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -105,7 +41,6 @@ export default function IncomingCallListener() {
         const call = payload.new;
         if (call.status !== "ringing") return;
 
-        // Fetch caller profile info
         const { data: profile } = await (supabase as any)
           .from("profiles")
           .select("full_name, avatar_url")
@@ -125,14 +60,12 @@ export default function IncomingCallListener() {
     return () => { supabase.removeChannel(channel); };
   }, [user?.id]);
 
-  // Play ringtone while incoming call is active
   useEffect(() => {
     if (!incoming) return;
-    const stopRing = createRingtone();
+    const stopRing = playIncomingRingtone();
     return () => { stopRing(); };
   }, [incoming?.id]);
 
-  // Also listen for call ended/declined while ringing
   useEffect(() => {
     if (!incoming) return;
 
@@ -154,8 +87,9 @@ export default function IncomingCallListener() {
     return () => { supabase.removeChannel(channel); };
   }, [incoming?.id]);
 
-  const handleAccept = useCallback(() => {
+  const handleAccept = useCallback(async () => {
     if (!incoming) return;
+    await primeCallAudio();
     setAnsweredCall(incoming);
     setIncoming(null);
   }, [incoming]);
@@ -178,7 +112,6 @@ export default function IncomingCallListener() {
 
   return (
     <>
-      {/* Incoming call banner */}
       <AnimatePresence>
         {incoming && (
           <motion.div
@@ -204,14 +137,12 @@ export default function IncomingCallListener() {
                   Incoming {incoming.call_type} call...
                 </p>
               </div>
-              {/* Decline */}
               <button
                 onClick={handleDecline}
                 className="h-12 w-12 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform"
               >
                 <PhoneOff className="h-5 w-5" />
               </button>
-              {/* Accept */}
               <button
                 onClick={handleAccept}
                 className="h-12 w-12 rounded-full bg-green-500 text-white flex items-center justify-center active:scale-90 transition-transform"
@@ -227,7 +158,6 @@ export default function IncomingCallListener() {
         )}
       </AnimatePresence>
 
-      {/* Active answered call */}
       <AnimatePresence>
         {answeredCall && (
           <CallScreen

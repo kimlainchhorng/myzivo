@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
 import CallScreen from "./CallScreen";
+import { primeCallAudio } from "@/lib/callAudio";
 
 interface PersonalChatProps {
   recipientId: string;
@@ -48,7 +49,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
   }, []);
 
-  // Load messages
+  const handleStartCall = useCallback(async (type: "voice" | "video") => {
+    await primeCallAudio();
+    setActiveCall(type);
+  }, []);
+
   useEffect(() => {
     if (!user?.id) return;
     const load = async () => {
@@ -63,7 +68,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setLoading(false);
       scrollToBottom();
 
-      // Mark unread messages as read
       if (data?.length) {
         const unread = data.filter((m: Message) => m.receiver_id === user.id && !m.is_read);
         if (unread.length) {
@@ -77,9 +81,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       }
     };
     load();
-  }, [user?.id, recipientId]);
+  }, [user?.id, recipientId, scrollToBottom]);
 
-  // Realtime subscription
   useEffect(() => {
     if (!user?.id) return;
     const channel = supabase
@@ -99,7 +102,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             return [...prev, msg];
           });
           scrollToBottom();
-          // Auto-mark as read if we're the receiver
           if (msg.receiver_id === user.id) {
             (supabase as any).from("direct_messages").update({ is_read: true }).eq("id", msg.id);
           }
@@ -108,7 +110,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [user?.id, recipientId]);
+  }, [user?.id, recipientId, scrollToBottom]);
 
   const handleSend = async () => {
     if (!input.trim() || !user?.id || sending) return;
@@ -121,7 +123,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         receiver_id: recipientId,
         message: text,
       });
-    } catch { /* ignore */ }
+    } catch {}
     setSending(false);
     inputRef.current?.focus();
   };
@@ -136,36 +138,34 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
-      {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="px-3 py-2 flex items-center gap-3">
-        <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-          <ArrowLeft className="h-5 w-5 text-foreground" />
-        </button>
-        <Avatar className="h-9 w-9 border-2 border-border/30">
-          <AvatarImage src={recipientAvatar || undefined} />
-          <AvatarFallback className="text-xs font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-foreground truncate">{recipientName}</p>
-          <p className="text-[10px] text-muted-foreground">Personal chat</p>
-        </div>
-        <button
-          onClick={() => setActiveCall("voice")}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center"
-        >
-          <Phone className="h-5 w-5 text-primary" />
-        </button>
-        <button
-          onClick={() => setActiveCall("video")}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center"
-        >
-          <Video className="h-5 w-5 text-primary" />
-        </button>
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <ArrowLeft className="h-5 w-5 text-foreground" />
+          </button>
+          <Avatar className="h-9 w-9 border-2 border-border/30">
+            <AvatarImage src={recipientAvatar || undefined} />
+            <AvatarFallback className="text-xs font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-foreground truncate">{recipientName}</p>
+            <p className="text-[10px] text-muted-foreground">Personal chat</p>
+          </div>
+          <button
+            onClick={() => { void handleStartCall("voice"); }}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+          >
+            <Phone className="h-5 w-5 text-primary" />
+          </button>
+          <button
+            onClick={() => { void handleStartCall("video"); }}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+          >
+            <Video className="h-5 w-5 text-primary" />
+          </button>
         </div>
       </div>
 
-      {/* Call Screen */}
       <AnimatePresence>
         {activeCall && (
           <CallScreen
@@ -178,7 +178,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </AnimatePresence>
 
-      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
         {loading ? (
           <div className="flex items-center justify-center h-40">
@@ -212,8 +211,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </div>
 
-      {/* Input */}
-      <div className="mt-auto bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0.5rem)' }}>
+      <div className="mt-auto bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
         <input
           ref={inputRef}
           value={input}
