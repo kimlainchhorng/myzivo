@@ -6,7 +6,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Phone, X, Mic, Square, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield, Video, History, FileText } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Phone, X, Mic, Square, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield, Video, History, FileText, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
@@ -388,50 +389,73 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
-        <div className="px-3 py-2 flex items-center gap-3">
-          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/20 safe-area-top">
+        <div className="px-2 py-2.5 flex items-center gap-2">
+          <button onClick={onClose} className="min-h-[44px] min-w-[40px] flex items-center justify-center -ml-1">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
-          <div className="relative">
-            <Avatar className="h-9 w-9 border-2 border-border/30">
+          <div className="relative shrink-0">
+            <Avatar className="h-10 w-10 border-2 border-border/20">
               <AvatarImage src={recipientAvatar || undefined} />
-              <AvatarFallback className="text-xs font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
+              <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
             </Avatar>
             {recipientOnline && (
-              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-background" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-[2.5px] border-background" />
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-foreground truncate">{recipientName}</p>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-[15px] font-semibold text-foreground truncate leading-tight">{recipientName}</p>
+            <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
               {recipientTyping ? (
                 <span className="text-primary font-medium">typing...</span>
               ) : recipientOnline ? (
-                <span className="text-green-600">Online</span>
+                <span className="text-emerald-500 font-medium">Online</span>
               ) : disappearingMode ? (
-                <span className="text-amber-500">⏱ Disappearing mode</span>
-              ) : "Personal chat"}
+                <span className="text-amber-500">⏱ Disappearing</span>
+              ) : "Tap here for info"}
             </p>
           </div>
-          <button onClick={() => setShowMiniApps(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Zap className="h-4.5 w-4.5 text-muted-foreground" />
+
+          {/* Primary actions: Video + Voice call */}
+          <button onClick={() => { void handleStartCall("video"); }} className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/60 transition-colors">
+            <Video className="h-[18px] w-[18px] text-foreground/70" />
           </button>
-          <button onClick={() => setShowMediaGallery(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <ImageIcon className="h-4.5 w-4.5 text-muted-foreground" />
+          <button onClick={() => { void handleStartCall("voice"); }} className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/60 transition-colors">
+            <Phone className="h-[18px] w-[18px] text-foreground/70" />
           </button>
-          <button onClick={() => setShowSearch(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Search className="h-4.5 w-4.5 text-muted-foreground" />
-          </button>
-          <button onClick={() => setShowCallHistory(true)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <History className="h-4.5 w-4.5 text-muted-foreground" />
-          </button>
-          <button onClick={() => { void handleStartCall("video"); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Video className="h-4.5 w-4.5 text-muted-foreground" />
-          </button>
-          <button onClick={() => { void handleStartCall("voice"); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Phone className="h-5 w-5 text-primary" />
-          </button>
+
+          {/* Overflow menu for secondary actions */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/60 transition-colors -mr-1">
+                <MoreVertical className="h-[18px] w-[18px] text-foreground/70" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-background border-border/40">
+              <DropdownMenuItem onClick={() => setShowSearch(true)} className="gap-2.5 text-[13px]">
+                <Search className="w-4 h-4 text-muted-foreground" /> Search
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowMediaGallery(true)} className="gap-2.5 text-[13px]">
+                <ImageIcon className="w-4 h-4 text-muted-foreground" /> Media & Files
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowCallHistory(true)} className="gap-2.5 text-[13px]">
+                <History className="w-4 h-4 text-muted-foreground" /> Call History
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowMiniApps(true)} className="gap-2.5 text-[13px]">
+                <Zap className="w-4 h-4 text-muted-foreground" /> Mini Apps
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setShowPersonalization(true)} className="gap-2.5 text-[13px]">
+                <Palette className="w-4 h-4 text-muted-foreground" /> Theme
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowNotifSettings(true)} className="gap-2.5 text-[13px]">
+                <Settings className="w-4 h-4 text-muted-foreground" /> Notifications
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowSecurity(true)} className="gap-2.5 text-[13px]">
+                <Shield className="w-4 h-4 text-muted-foreground" /> Privacy
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Pinned messages bar */}
@@ -447,19 +471,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <span className="text-[9px] text-muted-foreground">{pinnedMessages.length} pinned</span>
           </button>
         )}
-
-        {/* Quick settings strip */}
-        <div className="flex px-4 py-1 gap-1 border-t border-border/10">
-          <button onClick={() => setShowPersonalization(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-muted-foreground hover:bg-muted/60 transition-colors">
-            <Palette className="w-3 h-3" /> Theme
-          </button>
-          <button onClick={() => setShowNotifSettings(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-muted-foreground hover:bg-muted/60 transition-colors">
-            <Settings className="w-3 h-3" /> Notify
-          </button>
-          <button onClick={() => setShowSecurity(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-muted-foreground hover:bg-muted/60 transition-colors">
-            <Shield className="w-3 h-3" /> Privacy
-          </button>
-        </div>
       </div>
 
       {/* Search bar */}
@@ -636,82 +647,94 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       {/* Input area */}
       {!voice.isRecording && (
-        <div className="bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
-          {/* Attach menu */}
-          <div className="relative">
-            <button
-              onClick={() => setShowAttachMenu(!showAttachMenu)}
-              disabled={uploadingMedia}
-              className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors shrink-0 ${
-                showAttachMenu ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"
-              }`}
-            >
-              {uploadingMedia ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
-            </button>
-            <ChatAttachMenu
-              open={showAttachMenu}
-              onClose={() => setShowAttachMenu(false)}
-              onImageSelect={() => fileInputRef.current?.click()}
-              onVideoSelect={() => videoInputRef.current?.click()}
-              onLocationShare={handleLocationShare}
-              onToggleDisappearing={() => {
-                setDisappearingMode(!disappearingMode);
-                toast.success(disappearingMode ? "Disappearing messages OFF" : "Disappearing messages ON — messages auto-delete after 24h");
+        <div className="bg-background/95 backdrop-blur-sm border-t border-border/15 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+          <div className="flex items-end gap-1.5">
+            {/* Attach */}
+            <div className="relative shrink-0">
+              <button
+                onClick={() => setShowAttachMenu(!showAttachMenu)}
+                disabled={uploadingMedia}
+                className={`h-10 w-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                  showAttachMenu ? "bg-primary text-primary-foreground rotate-45" : "text-muted-foreground hover:bg-muted/60"
+                }`}
+              >
+                {uploadingMedia ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Plus className="h-5 w-5" />}
+              </button>
+              <ChatAttachMenu
+                open={showAttachMenu}
+                onClose={() => setShowAttachMenu(false)}
+                onImageSelect={() => fileInputRef.current?.click()}
+                onVideoSelect={() => videoInputRef.current?.click()}
+                onLocationShare={handleLocationShare}
+                onToggleDisappearing={() => {
+                  setDisappearingMode(!disappearingMode);
+                  toast.success(disappearingMode ? "Disappearing messages OFF" : "Disappearing messages ON — messages auto-delete after 24h");
+                }}
+                disappearingEnabled={disappearingMode}
+              />
+            </div>
+
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+            <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
+
+            {/* Document upload */}
+            <ChatMediaUploader
+              recipientId={recipientId}
+              onMediaSent={(opts) => {
+                if (opts.imageUrl) handleSend({ imageUrl: opts.imageUrl });
+                else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
+                else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
               }}
-              disappearingEnabled={disappearingMode}
+              renderTrigger={(openFilePicker) => (
+                <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted/60 transition-colors shrink-0">
+                  <FileText className="h-[18px] w-[18px]" />
+                </button>
+              )}
             />
-          </div>
 
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-          <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
+            {/* Input field */}
+            <div className="flex-1 relative">
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                placeholder={disappearingMode ? "Disappearing message..." : "Message..."}
+                className={`w-full h-10 pl-4 pr-20 rounded-full border text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all ${
+                  disappearingMode ? "bg-amber-500/5 border-amber-500/20" : "bg-muted/40 border-border/20"
+                }`}
+              />
+              {/* Inline icons inside input */}
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                <button
+                  onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
+                  className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+                    showStickerKeyboard ? "text-primary" : "text-muted-foreground/60 hover:text-muted-foreground"
+                  }`}
+                >
+                  <Smile className="h-[18px] w-[18px]" />
+                </button>
+              </div>
+            </div>
 
-          {/* Document upload button */}
-          <ChatMediaUploader
-            recipientId={recipientId}
-            onMediaSent={(opts) => {
-              if (opts.imageUrl) handleSend({ imageUrl: opts.imageUrl });
-              else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
-              else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
-            }}
-            renderTrigger={(openFilePicker) => (
-              <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0">
-                <FileText className="h-5 w-5" />
+            {/* Send or Mic button — contextual */}
+            {input.trim() ? (
+              <button
+                onClick={() => handleSend()}
+                disabled={sending}
+                className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </button>
+            ) : (
+              <button
+                onClick={voice.startRecording}
+                className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors shrink-0"
+              >
+                <Mic className="h-[18px] w-[18px]" />
               </button>
             )}
-          />
-
-          {/* Mic button */}
-          <button onClick={voice.startRecording} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0">
-            <Mic className="h-5 w-5" />
-          </button>
-
-          {/* Sticker button */}
-          <button
-            onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
-            className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors shrink-0 ${
-              showStickerKeyboard ? "text-primary" : "text-muted-foreground hover:text-primary"
-            }`}
-          >
-            <Smile className="h-5 w-5" />
-          </button>
-
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder={disappearingMode ? "Disappearing message..." : "Type a message..."}
-            className={`flex-1 h-10 px-4 rounded-full border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-              disappearingMode ? "bg-amber-500/5 border-amber-500/30" : "bg-muted/50 border-border/30"
-            }`}
-          />
-          <button
-            onClick={() => handleSend()}
-            disabled={(!input.trim() && !uploadingMedia) || sending}
-            className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0"
-          >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </button>
+          </div>
         </div>
       )}
 
