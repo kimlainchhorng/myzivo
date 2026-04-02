@@ -732,6 +732,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         chatPartnerName={recipientName}
         onBlock={onClose}
       />
+
+      {/* Call History */}
+      <AnimatePresence>
+        {showCallHistory && (
+          <CallHistoryPage
+            onClose={() => setShowCallHistory(false)}
+            onCallUser={(userId, type) => {
+              setShowCallHistory(false);
+              handleStartCall(type);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
