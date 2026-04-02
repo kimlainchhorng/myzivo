@@ -662,6 +662,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
           <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
 
+          {/* Enhanced media uploader for documents */}
+          <ChatMediaUploader
+            recipientId={recipientId}
+            onMediaSent={(opts) => {
+              if (opts.imageUrl) handleSend({ imageUrl: opts.imageUrl });
+              else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
+              else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
+            }}
+          />
+
           {/* Mic button */}
           <button onClick={voice.startRecording} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0">
             <Mic className="h-5 w-5" />
