@@ -90,6 +90,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   const { isTyping: recipientTyping, isOnline: recipientOnline, setTyping } = useChatPresence(user?.id, recipientId);
   const voice = useVoiceRecorder();
+  const { draft, updateDraft, clearDraft } = useChatDraft(user?.id, recipientId);
+
+  // Sync draft to input on load
+  useEffect(() => {
+    if (draft && !input) setInput(draft);
+  }, [draft]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
