@@ -196,6 +196,128 @@ export default function CallScreen({
     <span className="text-[10px] mt-1 text-muted-foreground font-medium">{children}</span>
   );
 
+  // Full-screen video layout
+  if (callType === "video") {
+    return (
+      <motion.div
+        className="fixed inset-0 z-[60] bg-black"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.25 }}
+      >
+        {/* Remote video — full screen background */}
+        <video
+          ref={remoteVideoRef}
+          autoPlay
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+
+        {/* Dark overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60 pointer-events-none" />
+
+        {/* Top bar */}
+        <div className="absolute top-0 left-0 right-0 px-5 flex items-center justify-between z-20"
+          style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 1rem)" }}>
+          <CallQualityBadge stats={qualityStats} />
+          <div className="flex items-center gap-2">
+            {onMinimize && (
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => onMinimize({ remoteStream: remoteStreamRef.current, duration, isMuted })}
+                className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10"
+              >
+                <Minimize2 className="h-4 w-4 text-white/80" />
+              </motion.button>
+            )}
+          </div>
+        </div>
+
+        {/* Caller info overlay — top center */}
+        <div className="absolute top-0 left-0 right-0 z-10 flex flex-col items-center"
+          style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 3.5rem), 4.5rem)" }}>
+          <h2 className="text-xl font-bold text-white tracking-tight drop-shadow-lg">{recipientName}</h2>
+          <motion.p
+            key={statusText}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`text-sm mt-0.5 font-medium ${callState === "connected" ? "text-green-400 tabular-nums" : "text-white/70"}`}
+          >
+            {statusText}
+          </motion.p>
+          {callState === "ringing" && (
+            <div className="flex gap-1.5 mt-2">
+              {[0, 1, 2].map((i) => (
+                <motion.div key={i} className="h-2 w-2 rounded-full bg-green-400"
+                  animate={{ opacity: [0.2, 1, 0.2], scale: [0.6, 1.3, 0.6] }}
+                  transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.2 }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Screen share badge */}
+        {screenShare.isSharing && (
+          <div className="absolute top-20 left-5 z-20 px-3 py-1.5 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-semibold flex items-center gap-1.5 shadow-lg">
+            <Monitor className="w-3 h-3" /> Sharing screen
+          </div>
+        )}
+
+        {/* Local video — draggable PiP */}
+        {!isCameraOff && (
+          <motion.div
+            drag
+            dragMomentum={false}
+            className="absolute bottom-32 right-4 cursor-grab active:cursor-grabbing z-20"
+          >
+            <video ref={localVideoRef} autoPlay playsInline muted
+              className="w-[110px] h-[150px] rounded-2xl border-2 border-white/20 object-cover shadow-2xl" />
+          </motion.div>
+        )}
+
+        <audio ref={remoteAudioRef} autoPlay playsInline className="absolute h-0 w-0 opacity-0 pointer-events-none" />
+
+        {/* Bottom controls */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 px-6"
+          style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1.5rem)" }}>
+          <div className="flex items-end justify-center gap-5">
+            <div className="flex flex-col items-center">
+              <ControlBtn onClick={toggleMute} active={isMuted}>
+                {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              </ControlBtn>
+              <span className="text-[10px] mt-1 text-white/60 font-medium">{isMuted ? "Unmute" : "Mute"}</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <ControlBtn onClick={toggleCamera} active={isCameraOff}>
+                {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+              </ControlBtn>
+              <span className="text-[10px] mt-1 text-white/60 font-medium">{isCameraOff ? "Start" : "Stop"}</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <ControlBtn onClick={screenShare.toggleSharing} active={screenShare.isSharing} activeColor="primary">
+                {screenShare.isSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
+              </ControlBtn>
+              <span className="text-[10px] mt-1 text-white/60 font-medium">Screen</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                onClick={() => { void endCall(); }}
+                className="h-16 w-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-xl shadow-destructive/25"
+              >
+                <PhoneOff className="h-6 w-6" />
+              </motion.button>
+              <span className="text-[10px] mt-1 text-white/60 font-medium">End</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Voice call layout
   return (
     <motion.div
       className="fixed inset-0 z-[60] flex flex-col items-center"
@@ -206,9 +328,7 @@ export default function CallScreen({
       style={{
         paddingTop: "max(env(safe-area-inset-top, 0px), 2.5rem)",
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1.5rem)",
-        background: callType === "video"
-          ? "hsl(var(--background))"
-          : "linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.5) 100%)",
+        background: "linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.5) 100%)",
       }}
     >
       {/* Top bar */}
@@ -231,27 +351,19 @@ export default function CallScreen({
       {/* Caller info */}
       <div className="flex flex-col items-center gap-4 mt-14 px-6">
         <div className="relative">
-          {/* Ripple rings while ringing */}
           {callState === "ringing" && (
             <>
-              <motion.div
-                className="absolute -inset-4 rounded-full border-2 border-primary/15"
+              <motion.div className="absolute -inset-4 rounded-full border-2 border-primary/15"
                 animate={{ scale: [1, 1.5, 1], opacity: [0.6, 0, 0.6] }}
-                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <motion.div
-                className="absolute -inset-8 rounded-full border border-primary/8"
+                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }} />
+              <motion.div className="absolute -inset-8 rounded-full border border-primary/8"
                 animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0, 0.3] }}
-                transition={{ duration: 2.2, repeat: Infinity, delay: 0.4, ease: "easeInOut" }}
-              />
-              <motion.div
-                className="absolute -inset-12 rounded-full border border-primary/5"
+                transition={{ duration: 2.2, repeat: Infinity, delay: 0.4, ease: "easeInOut" }} />
+              <motion.div className="absolute -inset-12 rounded-full border border-primary/5"
                 animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0, 0.15] }}
-                transition={{ duration: 2.2, repeat: Infinity, delay: 0.8, ease: "easeInOut" }}
-              />
+                transition={{ duration: 2.2, repeat: Infinity, delay: 0.8, ease: "easeInOut" }} />
             </>
           )}
-          {/* Connected glow */}
           {callState === "connected" && (
             <div className="absolute -inset-1 rounded-full bg-primary/10 blur-md" />
           )}
@@ -260,113 +372,51 @@ export default function CallScreen({
             <AvatarFallback className="text-4xl font-bold bg-primary/8 text-primary">{initials}</AvatarFallback>
           </Avatar>
         </div>
-
         <div className="text-center mt-2">
           <h2 className="text-2xl font-bold text-foreground tracking-tight">{recipientName}</h2>
-          <motion.p
-            key={statusText}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`text-sm mt-1 font-medium ${callState === "connected" ? "text-primary tabular-nums" : "text-muted-foreground"}`}
-          >
+          <motion.p key={statusText} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+            className={`text-sm mt-1 font-medium ${callState === "connected" ? "text-primary tabular-nums" : "text-muted-foreground"}`}>
             {statusText}
           </motion.p>
         </div>
-
-        {/* Ringing dots */}
         {callState === "ringing" && (
           <div className="flex gap-1.5 mt-1">
             {[0, 1, 2].map((i) => (
               <motion.div key={i} className="h-2 w-2 rounded-full bg-primary"
                 animate={{ opacity: [0.2, 1, 0.2], scale: [0.6, 1.3, 0.6] }}
-                transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.2 }}
-              />
+                transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.2 }} />
             ))}
           </div>
         )}
       </div>
 
       <audio ref={remoteAudioRef} autoPlay playsInline className="absolute h-0 w-0 opacity-0 pointer-events-none" />
-
-      {/* Video area */}
-      {callType === "video" && (
-        <div className="flex-1 w-full px-4 my-4 relative">
-          <video ref={remoteVideoRef} autoPlay playsInline
-            className="w-full h-full rounded-3xl bg-muted/10 object-cover shadow-inner border border-border/10" />
-          {!isCameraOff && (
-            <motion.div
-              drag
-              dragMomentum={false}
-              className="absolute bottom-4 right-4 cursor-grab active:cursor-grabbing"
-            >
-              <video ref={localVideoRef} autoPlay playsInline muted
-                className="w-[100px] h-[130px] rounded-2xl border-[3px] border-background object-cover shadow-2xl" />
-            </motion.div>
-          )}
-          {screenShare.isSharing && (
-            <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-semibold flex items-center gap-1.5 shadow-lg">
-              <Monitor className="w-3 h-3" /> Sharing screen
-            </div>
-          )}
-        </div>
-      )}
-
-      {callType === "voice" && <div className="flex-1" />}
+      <div className="flex-1" />
 
       {/* Controls */}
       <div className="w-full px-6 pb-4">
         <div className="flex items-end justify-center gap-5">
-          {/* Mute */}
           <div className="flex flex-col items-center">
             <ControlBtn onClick={toggleMute} active={isMuted}>
               {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </ControlBtn>
             <ControlLabel>{isMuted ? "Unmute" : "Mute"}</ControlLabel>
           </div>
-
-          {callType === "video" ? (
-            <>
-              {/* Camera */}
-              <div className="flex flex-col items-center">
-                <ControlBtn onClick={toggleCamera} active={isCameraOff}>
-                  {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
-                </ControlBtn>
-                <ControlLabel>{isCameraOff ? "Start" : "Stop"}</ControlLabel>
-              </div>
-              {/* Screen Share */}
-              <div className="flex flex-col items-center">
-                <ControlBtn onClick={screenShare.toggleSharing} active={screenShare.isSharing} activeColor="primary">
-                  {screenShare.isSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
-                </ControlBtn>
-                <ControlLabel>Screen</ControlLabel>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Speaker */}
-              <div className="flex flex-col items-center">
-                <ControlBtn onClick={() => setIsSpeaker(!isSpeaker)} active={isSpeaker} activeColor="primary">
-                  <Volume2 className="h-5 w-5" />
-                </ControlBtn>
-                <ControlLabel>Speaker</ControlLabel>
-              </div>
-              {/* Chat */}
-              <div className="flex flex-col items-center">
-                <ControlBtn onClick={() => toast.info("Opening chat...")}>
-                  <MessageCircle className="h-5 w-5" />
-                </ControlBtn>
-                <ControlLabel>Chat</ControlLabel>
-              </div>
-            </>
-          )}
-
-          {/* End call */}
           <div className="flex flex-col items-center">
-            <motion.button
-              whileTap={{ scale: 0.85 }}
-              onClick={() => { void endCall(); }}
-              className="h-16 w-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-xl shadow-destructive/25"
-            >
+            <ControlBtn onClick={() => setIsSpeaker(!isSpeaker)} active={isSpeaker} activeColor="primary">
+              <Volume2 className="h-5 w-5" />
+            </ControlBtn>
+            <ControlLabel>Speaker</ControlLabel>
+          </div>
+          <div className="flex flex-col items-center">
+            <ControlBtn onClick={() => toast.info("Opening chat...")}>
+              <MessageCircle className="h-5 w-5" />
+            </ControlBtn>
+            <ControlLabel>Chat</ControlLabel>
+          </div>
+          <div className="flex flex-col items-center">
+            <motion.button whileTap={{ scale: 0.85 }} onClick={() => { void endCall(); }}
+              className="h-16 w-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-xl shadow-destructive/25">
               <PhoneOff className="h-6 w-6" />
             </motion.button>
             <ControlLabel>End</ControlLabel>
