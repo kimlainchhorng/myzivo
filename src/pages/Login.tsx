@@ -118,7 +118,11 @@ const Login = () => {
   // Signup form
   const signupForm = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
+<<<<<<< HEAD
     mode: "onTouched",
+=======
+    mode: "onChange",
+>>>>>>> 9515f3166ce486a708965f4c284718350aca416c
     reValidateMode: "onChange",
     defaultValues: {
       firstName: "",
@@ -444,16 +448,33 @@ const Login = () => {
                       <div>
                         <CountryPhoneInput
                           value={field.value}
+<<<<<<< HEAD
                           onChange={(val) => {
                             field.onChange(val);
                             // Re-validate immediately only if error is already showing
                             if (signupForm.formState.errors.phone) {
                               signupForm.trigger("phone");
+=======
+                          onChange={(value) => {
+                            signupForm.setValue("phone", value, {
+                              shouldDirty: true,
+                              shouldTouch: true,
+                              shouldValidate: true,
+                            });
+
+                            const digits = normalizePhoneDigits(value);
+                            if (digits.length >= 7 && digits.length <= 15) {
+                              signupForm.clearErrors("phone");
+>>>>>>> 9515f3166ce486a708965f4c284718350aca416c
                             }
                           }}
                           onBlur={() => {
                             field.onBlur();
+<<<<<<< HEAD
                             signupForm.trigger("phone");
+=======
+                            void signupForm.trigger("phone");
+>>>>>>> 9515f3166ce486a708965f4c284718350aca416c
                           }}
                           name={field.name}
                         />
