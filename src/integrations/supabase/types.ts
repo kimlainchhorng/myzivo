@@ -47963,6 +47963,10 @@ export type Database = {
         Returns: Json
       }
       aggregate_demand_snapshot: { Args: never; Returns: number }
+      append_ice_candidate: {
+        Args: { p_call_id: string; p_candidate: Json; p_field: string }
+        Returns: undefined
+      }
       apply_pricing_to_job: { Args: { p_job_id: string }; Returns: Json }
       apply_wallet_credit: {
         Args: { p_amount_cents: number; p_order_id: string; p_user_id: string }
