@@ -124,7 +124,13 @@ async function armAudioElement(audio: HTMLAudioElement) {
   audio.pause();
   audio.currentTime = 0;
   audio.muted = true;
-  await audio.play();
+  try {
+    await audio.play();
+    console.log("[callAudio] Audio element armed successfully");
+  } catch (err) {
+    console.warn("[callAudio] armAudioElement play() failed:", err);
+    throw err;
+  }
 }
 
 async function primeIncomingAudio() {
@@ -184,6 +190,7 @@ function resetLoop(audio: HTMLAudioElement) {
 function startLoop(audio: HTMLAudioElement) {
   audio.currentTime = 0;
   audio.muted = false;
+  console.log("[callAudio] Ringtone unmuted — should be audible now");
 }
 
 function stopLoop(audio: HTMLAudioElement, clearRequested: () => void): StopTone {
