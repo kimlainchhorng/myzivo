@@ -162,15 +162,29 @@ const Login = () => {
       } else if (msg.includes("email not confirmed")) {
         // Send OTP and redirect to verification page
         toast.info("Sending verification code...");
+        let otpSent = false;
         try {
-          await supabase.functions.invoke("send-otp-email", { body: { email: data.email } });
-          toast.success("Verification code sent to your email!");
+          const { data: otpData, error: otpError } = await supabase.functions.invoke("send-otp-email", { body: { email: data.email } });
+          if (otpError || !otpData?.success) {
+            const otpMsg = otpData?.error || otpError?.message || "Failed to send code";
+            if (otpData?.retryAfter) {
+              toast.error("Too many attempts. Please wait an hour before trying again.");
+            } else {
+              toast.error(otpMsg);
+            }
+          } else {
+            toast.success("Verification code sent to your email!");
+            otpSent = true;
+          }
         } catch (err) {
           console.error("Failed to send OTP:", err);
           toast.error("Failed to send verification code. Please try again.");
         }
         setIsLoading(false);
-        navigate("/verify-otp", { state: { email: data.email } });
+        // Only navigate to verify-otp if the code was actually sent
+        if (otpSent) {
+          navigate("/verify-otp", { state: { email: data.email } });
+        }
       } else if (msg.includes("too many requests") || msg.includes("rate limit")) {
         setIsLoading(false);
         toast.error("Too many attempts. Please wait a moment and try again.");
