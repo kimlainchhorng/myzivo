@@ -351,7 +351,7 @@ const AuthCallback = () => {
               <Button variant="outline" onClick={() => navigate("/")} className="rounded-xl touch-manipulation active:scale-95">
                 Go Home
               </Button>
-              <Button onClick={() => navigate("/login")} className="rounded-xl touch-manipulation active:scale-95">
+              <Button onClick={() => navigate(withRedirectParam("/login", redirectTo))} className="rounded-xl touch-manipulation active:scale-95">
                 Sign In
               </Button>
             </div>
