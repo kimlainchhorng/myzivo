@@ -120,6 +120,7 @@ const MobileNavSection = ({
 
 const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleNavigate = (href: string) => {
     navigate(href);
