@@ -170,8 +170,13 @@ const Login = () => {
     if (error) {
       const msg = (error.message || "").toLowerCase();
       if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
+        const lockoutSec = recordAuthFailure("login");
         setIsLoading(false);
-        toast.error("Incorrect email or password. Please try again.");
+        if (lockoutSec) {
+          toast.error(`Too many failed attempts. Locked for ${formatLockout(lockoutSec)}.`);
+        } else {
+          toast.error("Incorrect email or password. Please try again.");
+        }
       } else if (msg.includes("email not confirmed")) {
         // Send OTP and redirect to verification page
         toast.info("Sending verification code...");
