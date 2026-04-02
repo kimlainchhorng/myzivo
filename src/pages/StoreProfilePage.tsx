@@ -399,10 +399,7 @@ export default function StoreProfilePage() {
             </motion.button>
 
             {/* Facebook button */}
-            {(store as any).facebook_url && (() => {
-              const { isAllowedSocialUrl } = require("@/lib/urlSafety");
-              return isAllowedSocialUrl((store as any).facebook_url);
-            })() && (
+            {(store as any).facebook_url && isAllowedSocialUrl((store as any).facebook_url) && (
               <motion.button
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
