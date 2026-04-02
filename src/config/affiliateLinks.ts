@@ -82,7 +82,7 @@ export const TRAVELPAYOUTS_DIRECT_LINKS = {
   flights: {
     primary: 'https://searadar.tpo.li/iAbLlX9i',
     backup: 'https://aviasales.tpo.li/aayXqoez',
-    kiwi: 'https://kiwi.tpo.li/86fSRBiW', // default EN link
+    subId: 'zivo_flights',
     subId: 'zivo_flights',
   },
   
