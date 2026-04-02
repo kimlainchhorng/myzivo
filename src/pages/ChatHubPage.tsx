@@ -386,13 +386,25 @@ export default function ChatHubPage() {
             </button>
             <h1 className="text-2xl font-bold text-foreground">Chat</h1>
           </div>
-          <button
-            onClick={() => navigate('/notifications')}
-            className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
-            aria-label="Notifications"
-          >
-            <Bell className="w-5 h-5 text-muted-foreground" />
-          </button>
+          <div className="flex items-center gap-1">
+            {active === "personal" && (
+              <button
+                onClick={() => setShowCreateGroup(true)}
+                className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                aria-label="New group"
+              >
+                <Users className="w-5 h-5 text-muted-foreground" />
+                <Plus className="w-2.5 h-2.5 text-primary absolute bottom-1 right-1" />
+              </button>
+            )}
+            <button
+              onClick={() => navigate('/notifications')}
+              className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+              aria-label="Notifications"
+            >
+              <Bell className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </div>
         </div>
 
         {/* Search */}
