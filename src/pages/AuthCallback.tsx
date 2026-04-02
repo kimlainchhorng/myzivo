@@ -65,7 +65,7 @@ const AuthCallback = () => {
           const { data: retryProfile } = await supabase
             .from("profiles")
             .select("setup_complete, email_verified")
-            .eq("user_id", userId)
+            .or(`user_id.eq.${userId},id.eq.${userId}`)
             .maybeSingle();
 
           if (retryProfile) {
