@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "👏", "🎉", "💯", "😍"];
+const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
 
 interface ChatMessageBubbleProps {
   id: string;
@@ -250,7 +250,7 @@ export default function ChatMessageBubble({
             >
               {/* Emoji reactions row */}
               {showReactions && (
-                <div className="bg-background/98 backdrop-blur-2xl shadow-2xl shadow-black/12 border border-border/30 rounded-[20px] px-1.5 py-1.5 flex items-center">
+                <div className="bg-background/98 backdrop-blur-2xl shadow-2xl shadow-black/12 border border-border/30 rounded-[20px] px-1.5 py-1.5 flex items-center max-w-[calc(100vw-32px)]">
                   {REACTION_EMOJIS.map((emoji) => (
                     <button
                       key={emoji}
