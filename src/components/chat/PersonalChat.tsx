@@ -944,6 +944,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             recipientName={recipientName}
             recipientAvatar={recipientAvatar}
             isOnline={recipientOnline}
+            lastSeen={recipientLastSeen}
             onClose={() => setShowContactInfo(false)}
             onStartCall={(type) => { setShowContactInfo(false); void handleStartCall(type); }}
             onOpenMediaGallery={() => { setShowContactInfo(false); setShowMediaGallery(true); }}

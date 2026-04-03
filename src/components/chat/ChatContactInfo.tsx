@@ -151,10 +151,15 @@ export default function ChatContactInfo({
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
                 <span className="text-[13px] font-medium text-emerald-600">Active now</span>
               </>
+            ) : lastSeen ? (
+              <>
+                <Clock className="h-3 w-3 text-muted-foreground" />
+                <span className="text-[13px] text-muted-foreground">Last seen {lastSeen}</span>
+              </>
             ) : (
               <>
                 <Clock className="h-3 w-3 text-muted-foreground" />
-                <span className="text-[13px] text-muted-foreground">Recently active</span>
+                <span className="text-[13px] text-muted-foreground">Offline</span>
               </>
             )}
           </div>
