@@ -1,6 +1,6 @@
 /**
  * PublicProfilePage — View another user's public profile
- * Shows avatar, name, posts, follow/friend actions
+ * Shows cover photo, avatar, name, posts/videos/reels, follow/friend/share actions
  * Respects profile_visibility privacy settings
  */
 import { useParams, useNavigate } from "react-router-dom";
@@ -8,24 +8,23 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX, Heart, MessageCircle, Lock, ShieldCheck, Globe, Users } from "lucide-react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX,
+  Heart, MessageCircle, Lock, ShieldCheck, Users, Share2, Link2, MoreHorizontal,
+  Play, Eye,
+} from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
-import { useCallback } from "react";
+
+type PostTab = "all" | "photos" | "videos";
 
 export default function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -34,17 +33,18 @@ export default function PublicProfilePage() {
   const queryClient = useQueryClient();
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [confirmAction, setConfirmAction] = useState<null | { action: "cancel" | "unfriend"; label: string }>(null);
+  const [postTab, setPostTab] = useState<PostTab>("all");
 
   const isOwnProfile = user?.id === userId;
 
-  // Fetch profile with privacy settings
+  // Fetch profile with cover photo and privacy settings
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["public-profile", userId],
     queryFn: async () => {
       if (!userId) return null;
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, profile_visibility, is_verified")
+        .select("id, full_name, avatar_url, cover_url, cover_position, profile_visibility, is_verified")
         .eq("id", userId)
         .single();
       return data;
@@ -52,7 +52,7 @@ export default function PublicProfilePage() {
     enabled: !!userId,
   });
 
-  // Check friendship status (needed to determine if friends-only profiles are visible)
+  // Check friendship status
   const { data: friendshipStatus = "none" } = useQuery({
     queryKey: ["friendship-status", userId],
     queryFn: async () => {
@@ -62,7 +62,6 @@ export default function PublicProfilePage() {
     enabled: !!userId && !!user && !isOwnProfile,
   });
 
-  // Determine if profile content should be locked
   const visibility = profile?.profile_visibility || "public";
   const isFriend = friendshipStatus === "friends";
   const isLocked = !isOwnProfile && (
@@ -70,7 +69,7 @@ export default function PublicProfilePage() {
     (visibility === "friends" && !isFriend)
   );
 
-  // Fetch user posts (only if not locked)
+  // Fetch user posts
   const { data: posts = [], isLoading: postsLoading } = useQuery({
     queryKey: ["public-profile-posts", userId],
     queryFn: async () => {
@@ -86,7 +85,7 @@ export default function PublicProfilePage() {
     enabled: !!userId && !isLocked,
   });
 
-  // Fetch counts via RPC
+  // Fetch counts
   const { data: followerCount = 0 } = useQuery({
     queryKey: ["follower-count", userId],
     queryFn: async () => {
@@ -114,7 +113,6 @@ export default function PublicProfilePage() {
     enabled: !!userId,
   });
 
-  // Check if current user follows this profile
   const { data: isFollowing = false } = useQuery({
     queryKey: ["is-following", userId],
     queryFn: async () => {
@@ -130,13 +128,11 @@ export default function PublicProfilePage() {
       if (!user || !userId || user.id === userId) throw new Error("Invalid");
       if (isFollowing) {
         const { error } = await supabase.from("followers").delete()
-          .eq("follower_id", user.id)
-          .eq("following_id", userId);
+          .eq("follower_id", user.id).eq("following_id", userId);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("followers").insert({
-          follower_id: user.id,
-          following_id: userId,
+          follower_id: user.id, following_id: userId,
         });
         if (error) throw error;
       }
@@ -149,50 +145,35 @@ export default function PublicProfilePage() {
     onError: (err: any) => toast.error(err?.message || "Something went wrong"),
   });
 
-  // Add Friend / Cancel Request
+  // Friend mutations
   const friendMutation = useMutation({
     mutationFn: async (action: "add" | "cancel" | "accept" | "unfriend") => {
       if (!user || !userId || user.id === userId) throw new Error("Invalid");
       if (action === "add") {
         if (!isFollowing) {
           await supabase.from("followers").insert({
-            follower_id: user.id,
-            following_id: userId,
+            follower_id: user.id, following_id: userId,
           }).throwOnError();
         }
         const { error } = await supabase.from("friendships").insert({
-          user_id: user.id,
-          friend_id: userId,
-          status: "pending",
+          user_id: user.id, friend_id: userId, status: "pending",
         });
         if (error) throw error;
 
-        const senderProfile = await supabase
-          .from("profiles")
-          .select("full_name, avatar_url")
-          .eq("user_id", user.id)
-          .single();
-        const senderName = senderProfile.data?.full_name || "Someone";
-        const senderAvatar = senderProfile.data?.avatar_url;
-
         try {
+          const senderProfile = await supabase.from("profiles")
+            .select("full_name, avatar_url").eq("user_id", user.id).single();
+          const senderName = senderProfile.data?.full_name || "Someone";
+          const senderAvatar = senderProfile.data?.avatar_url;
           await supabase.functions.invoke("send-push-notification", {
             body: {
-              user_id: userId,
-              notification_type: "friend_request_received",
+              user_id: userId, notification_type: "friend_request_received",
               title: `${senderName} · Following`,
               body: `${senderName} sent you a friend request`,
-              data: {
-                type: "friend_request",
-                sender_id: user.id,
-                avatar_url: senderAvatar,
-                action_url: `/user/${user.id}`,
-              },
+              data: { type: "friend_request", sender_id: user.id, avatar_url: senderAvatar, action_url: `/user/${user.id}` },
             },
           });
-        } catch (pushErr) {
-          console.warn("[FriendRequest] Push notification failed:", pushErr);
-        }
+        } catch {}
       } else if (action === "cancel" || action === "unfriend") {
         const { error } = await supabase.from("friendships").delete()
           .or(`and(user_id.eq.${user.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${user.id})`);
@@ -200,14 +181,12 @@ export default function PublicProfilePage() {
       } else if (action === "accept") {
         if (!isFollowing) {
           await supabase.from("followers").insert({
-            follower_id: user.id,
-            following_id: userId,
+            follower_id: user.id, following_id: userId,
           }).throwOnError();
         }
         const { error } = await supabase.from("friendships")
           .update({ status: "accepted", accepted_at: new Date().toISOString() })
-          .eq("user_id", userId)
-          .eq("friend_id", user.id);
+          .eq("user_id", userId).eq("friend_id", user.id);
         if (error) throw error;
       }
     },
@@ -217,10 +196,8 @@ export default function PublicProfilePage() {
       queryClient.invalidateQueries({ queryKey: ["is-following", userId] });
       queryClient.invalidateQueries({ queryKey: ["follower-count", userId] });
       const msgs: Record<string, string> = {
-        add: "Friend request sent!",
-        cancel: "Request cancelled",
-        accept: "Friend added!",
-        unfriend: "Unfriended",
+        add: "Friend request sent!", cancel: "Request cancelled",
+        accept: "Friend added!", unfriend: "Unfriended",
       };
       toast.success(msgs[action]);
     },
@@ -230,59 +207,71 @@ export default function PublicProfilePage() {
   const isLoading = profileLoading || (!isLocked && postsLoading);
   const initials = (profile?.full_name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
 
-  // Friend button config
   const getFriendButton = () => {
     switch (friendshipStatus) {
-      case "friends":
-        return { label: "Friends", icon: UserCheck, variant: "active" as const, action: "unfriend" as const };
-      case "request_sent":
-        return { label: "Requested", icon: UserX, variant: "pending" as const, action: "cancel" as const };
-      case "request_received":
-        return { label: "Accept", icon: UserPlus, variant: "accept" as const, action: "accept" as const };
-      default:
-        return { label: "Add Friend", icon: UserPlus, variant: "default" as const, action: "add" as const };
+      case "friends": return { label: "Friends", icon: UserCheck, variant: "active" as const, action: "unfriend" as const };
+      case "request_sent": return { label: "Requested", icon: UserX, variant: "pending" as const, action: "cancel" as const };
+      case "request_received": return { label: "Accept", icon: UserPlus, variant: "accept" as const, action: "accept" as const };
+      default: return { label: "Add Friend", icon: UserPlus, variant: "default" as const, action: "add" as const };
     }
   };
-
   const friendBtn = getFriendButton();
 
   const handlePullRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["public-profile", userId] });
+    await queryClient.invalidateQueries({ queryKey: ["public-profile-posts", userId] });
   }, [queryClient, userId]);
 
-  // Privacy lock message
+  // Share profile
+  const handleShare = async () => {
+    const url = `${window.location.origin}/user/${userId}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${profile?.full_name || "User"} on ZIVO`, url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("Profile link copied!");
+    }
+  };
+
+  // Filter posts by tab
+  const filteredPosts = posts.filter((post: any) => {
+    if (postTab === "photos") return post.media_type === "image";
+    if (postTab === "videos") return post.media_type === "video";
+    return true;
+  });
+
+  const photoCount = posts.filter((p: any) => p.media_type === "image").length;
+  const videoCount = posts.filter((p: any) => p.media_type === "video").length;
+
   const getPrivacyInfo = () => {
     if (visibility === "private") {
       return {
-        icon: Lock,
-        title: "This Account is Private",
+        icon: Lock, title: "This Account is Private",
         description: "This user has set their profile to private. Their posts and activity are not visible to others.",
         showAddFriend: false,
       };
     }
-    // friends only
     return {
-      icon: Users,
-      title: "Friends Only",
+      icon: Users, title: "Friends Only",
       description: `Only friends can see ${profile?.full_name || "this user"}'s posts and activity. Send a friend request to connect.`,
       showAddFriend: friendshipStatus === "none" || friendshipStatus === "request_received",
     };
   };
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 safe-area-top">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="px-4 py-2.5 flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
-          <h1 className="text-lg font-bold text-foreground truncate">{profile?.full_name || "Profile"}</h1>
-        {profile && visibility !== "public" && (
-          <div className="ml-auto flex items-center gap-1 text-muted-foreground">
-            {visibility === "private" ? <Lock className="h-3.5 w-3.5" /> : <Users className="h-3.5 w-3.5" />}
-          </div>
-        )}
+          <h1 className="text-lg font-bold text-foreground truncate flex-1">{profile?.full_name || "Profile"}</h1>
+          <button onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+            <Share2 className="h-5 w-5 text-foreground" />
+          </button>
         </div>
       </div>
 
@@ -297,82 +286,84 @@ export default function PublicProfilePage() {
         </div>
       ) : (
         <>
-          {/* Profile header */}
-          <div className="flex flex-col items-center pt-8 pb-4 px-4">
-            <Avatar className="h-24 w-24 border-4 border-primary/20">
-              <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback className="text-2xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
-            </Avatar>
-            <div className="flex items-center gap-1.5 mt-4">
-              <h2 className="text-xl font-bold text-foreground">{profile.full_name}</h2>
-              {profile.is_verified && (
-                <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" fill="hsl(var(--primary))" />
-                  <path d="M8 12.5L10.5 15L16 9.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+          {/* Cover Photo + Avatar */}
+          <div className="relative">
+            {/* Cover photo */}
+            <div className="w-full h-36 bg-gradient-to-br from-primary/20 via-primary/10 to-muted overflow-hidden">
+              {profile.cover_url && (
+                <img
+                  src={profile.cover_url}
+                  alt="Cover"
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: `center ${profile.cover_position ?? 50}%` }}
+                />
               )}
             </div>
 
-            {/* Stats row — hide counts if locked */}
+            {/* Avatar overlapping cover */}
+            <div className="absolute left-1/2 -translate-x-1/2 -bottom-14">
+              <div className="relative">
+                <Avatar className="h-28 w-28 border-4 border-background shadow-lg">
+                  <AvatarImage src={profile.avatar_url || undefined} />
+                  <AvatarFallback className="text-3xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
+                </Avatar>
+                {profile.is_verified && (
+                  <div className="absolute bottom-1 right-1 h-6 w-6 rounded-full bg-background flex items-center justify-center">
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="hsl(var(--primary))" />
+                      <path d="M8 12.5L10.5 15L16 9.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Profile Info */}
+          <div className="flex flex-col items-center pt-16 pb-4 px-4">
+            <h2 className="text-xl font-bold text-foreground">{profile.full_name}</h2>
+
+            {/* Stats row */}
             {!isLocked ? (
               <div className="flex gap-6 mt-4">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-foreground">{posts.length}</p>
-                  <p className="text-[11px] text-muted-foreground">Posts</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-foreground">{followerCount}</p>
-                  <p className="text-[11px] text-muted-foreground">Followers</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-foreground">{followingCount}</p>
-                  <p className="text-[11px] text-muted-foreground">Following</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-foreground">{friendCount}</p>
-                  <p className="text-[11px] text-muted-foreground">Friends</p>
-                </div>
+                {[
+                  { count: posts.length, label: "Posts" },
+                  { count: followerCount, label: "Followers" },
+                  { count: followingCount, label: "Following" },
+                  { count: friendCount, label: "Friends" },
+                ].map((s) => (
+                  <div key={s.label} className="text-center">
+                    <p className="text-lg font-bold text-foreground">{s.count}</p>
+                    <p className="text-[11px] text-muted-foreground">{s.label}</p>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="flex gap-6 mt-4">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-foreground">—</p>
-                  <p className="text-[11px] text-muted-foreground">Posts</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-foreground">—</p>
-                  <p className="text-[11px] text-muted-foreground">Followers</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-foreground">—</p>
-                  <p className="text-[11px] text-muted-foreground">Following</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-foreground">—</p>
-                  <p className="text-[11px] text-muted-foreground">Friends</p>
-                </div>
+                {["Posts", "Followers", "Following", "Friends"].map((l) => (
+                  <div key={l} className="text-center">
+                    <p className="text-lg font-bold text-foreground">—</p>
+                    <p className="text-[11px] text-muted-foreground">{l}</p>
+                  </div>
+                ))}
               </div>
             )}
 
             {/* Action buttons */}
             {!isOwnProfile && user && (
               <div className="flex gap-3 mt-5 w-full max-w-xs">
-                {/* Follow button */}
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => followMutation.mutate()}
                   disabled={followMutation.isPending}
                   className={`flex-1 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    isFollowing
-                      ? "bg-muted text-foreground border border-border"
-                      : "bg-primary text-primary-foreground"
+                    isFollowing ? "bg-muted text-foreground border border-border" : "bg-primary text-primary-foreground"
                   }`}
                 >
                   <Heart className={`h-4 w-4 ${isFollowing ? "fill-primary text-primary" : ""}`} />
                   {isFollowing ? "Following" : "Follow"}
                 </motion.button>
 
-                {/* Friend button */}
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => {
@@ -386,12 +377,9 @@ export default function PublicProfilePage() {
                   }}
                   disabled={friendMutation.isPending}
                   className={`flex-1 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    friendshipStatus === "friends"
-                      ? "bg-primary/10 text-primary border border-primary/30"
-                      : friendshipStatus === "request_sent"
-                      ? "bg-muted text-muted-foreground border border-border"
-                      : friendshipStatus === "request_received"
-                      ? "bg-primary text-primary-foreground"
+                    friendshipStatus === "friends" ? "bg-primary/10 text-primary border border-primary/30"
+                      : friendshipStatus === "request_sent" ? "bg-muted text-muted-foreground border border-border"
+                      : friendshipStatus === "request_received" ? "bg-primary text-primary-foreground"
                       : "bg-muted text-foreground border border-border"
                   }`}
                 >
@@ -399,30 +387,17 @@ export default function PublicProfilePage() {
                   {friendBtn.label}
                 </motion.button>
 
-                {/* Message button — friends only */}
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => {
                     if (friendshipStatus === "friends") {
                       navigate(`/chat`, { state: { openChat: { recipientId: userId, recipientName: profile?.full_name || "User", recipientAvatar: profile?.avatar_url } } });
-                    } else if (friendshipStatus === "request_sent") {
-                      toast("Friend request pending", {
-                        description: `Waiting for ${profile?.full_name || "this user"} to accept your friend request before you can chat.`,
-                      });
-                    } else if (friendshipStatus === "request_received") {
-                      toast("Accept friend request first", {
-                        description: "Accept their friend request to start chatting.",
-                      });
                     } else {
-                      toast("Add as friend to chat", {
-                        description: "You need to be friends to send messages. Send a friend request first!",
-                      });
+                      toast("Add as friend to chat", { description: "You need to be friends to send messages." });
                     }
                   }}
                   className={`h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
-                    friendshipStatus === "friends"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted border border-border text-muted-foreground opacity-60"
+                    friendshipStatus === "friends" ? "bg-primary text-primary-foreground" : "bg-muted border border-border text-muted-foreground opacity-60"
                   }`}
                 >
                   <MessageCircle className="h-4 w-4" />
@@ -431,17 +406,26 @@ export default function PublicProfilePage() {
             )}
 
             {isOwnProfile && (
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate("/account/profile-edit")}
-                className="mt-5 h-11 px-8 rounded-xl bg-muted text-foreground text-sm font-semibold border border-border"
-              >
-                Edit Profile
-              </motion.button>
+              <div className="flex gap-3 mt-5">
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate("/account/profile-edit")}
+                  className="h-11 px-8 rounded-xl bg-muted text-foreground text-sm font-semibold border border-border"
+                >
+                  Edit Profile
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleShare}
+                  className="h-11 w-11 rounded-xl bg-muted text-foreground flex items-center justify-center border border-border"
+                >
+                  <Share2 className="h-4 w-4" />
+                </motion.button>
+              </div>
             )}
           </div>
 
-          {/* Privacy lock screen */}
+          {/* Privacy lock */}
           {isLocked ? (
             <div className="px-4 mt-2">
               <div className="flex flex-col items-center justify-center py-16 px-6 rounded-2xl bg-muted/30 border border-border/40">
@@ -453,19 +437,11 @@ export default function PublicProfilePage() {
                         <privacy.icon className="h-7 w-7 text-muted-foreground" />
                       </div>
                       <h3 className="text-base font-bold text-foreground mb-1.5">{privacy.title}</h3>
-                      <p className="text-sm text-muted-foreground text-center leading-relaxed max-w-[260px]">
-                        {privacy.description}
-                      </p>
+                      <p className="text-sm text-muted-foreground text-center leading-relaxed max-w-[260px]">{privacy.description}</p>
                       {privacy.showAddFriend && !isOwnProfile && user && (
                         <motion.button
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => {
-                            if (friendshipStatus === "request_received") {
-                              friendMutation.mutate("accept");
-                            } else {
-                              friendMutation.mutate("add");
-                            }
-                          }}
+                          onClick={() => friendMutation.mutate(friendshipStatus === "request_received" ? "accept" : "add")}
                           disabled={friendMutation.isPending}
                           className="mt-5 h-10 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold flex items-center gap-2"
                         >
@@ -486,96 +462,162 @@ export default function PublicProfilePage() {
             </div>
           ) : (
             <>
-              {/* Posts grid */}
-              <div className="px-1">
-                <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30">
-                  <Grid3X3 className="h-4 w-4 text-foreground" />
-                  <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Posts</span>
+              {/* Content Tabs */}
+              <div className="border-b border-border/30">
+                <div className="flex">
+                  {([
+                    { key: "all" as PostTab, icon: Grid3X3, label: "All", count: posts.length },
+                    { key: "photos" as PostTab, icon: ImageIcon, label: "Photos", count: photoCount },
+                    { key: "videos" as PostTab, icon: Film, label: "Videos", count: videoCount },
+                  ] as const).map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setPostTab(tab.key)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold uppercase tracking-wider transition-colors relative ${
+                        postTab === tab.key ? "text-foreground" : "text-muted-foreground"
+                      }`}
+                    >
+                      <tab.icon className="h-4 w-4" />
+                      <span>{tab.label}</span>
+                      {tab.count > 0 && (
+                        <span className={`text-[10px] ${postTab === tab.key ? "text-primary" : "text-muted-foreground/60"}`}>
+                          {tab.count}
+                        </span>
+                      )}
+                      {postTab === tab.key && (
+                        <motion.div
+                          layoutId="profile-tab-indicator"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full"
+                        />
+                      )}
+                    </button>
+                  ))}
                 </div>
-                {posts.length === 0 ? (
+              </div>
+
+              {/* Posts grid */}
+              <div className="px-0.5">
+                {filteredPosts.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
-                    <ImageIcon className="h-8 w-8 mb-2" />
-                    <p className="text-sm">No posts yet</p>
+                    {postTab === "videos" ? <Film className="h-8 w-8 mb-2" /> : <ImageIcon className="h-8 w-8 mb-2" />}
+                    <p className="text-sm">No {postTab === "all" ? "posts" : postTab} yet</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-3 gap-0.5 mt-0.5">
-                    {posts.map((post: any) => (
-                      <button
+                    {filteredPosts.map((post: any) => (
+                      <motion.button
                         key={post.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         onClick={() => setSelectedPost(post)}
-                        className="relative aspect-square overflow-hidden bg-muted"
+                        className="relative aspect-square overflow-hidden bg-muted group"
                       >
                         {post.media_type === "video" ? (
                           <>
                             <video src={post.media_url} className="w-full h-full object-cover" muted preload="metadata" />
+                            <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-active:opacity-100 transition-opacity">
+                              <Play className="h-8 w-8 text-white fill-white" />
+                            </div>
                             <div className="absolute top-1.5 right-1.5">
                               <Film className="h-3.5 w-3.5 text-white drop-shadow" />
                             </div>
+                            {post.views_count > 0 && (
+                              <div className="absolute bottom-1 left-1.5 flex items-center gap-0.5">
+                                <Eye className="h-3 w-3 text-white drop-shadow" />
+                                <span className="text-[10px] text-white font-semibold drop-shadow">{post.views_count}</span>
+                              </div>
+                            )}
                           </>
                         ) : (
                           <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
                         )}
-                      </button>
+                        {post.likes_count > 0 && (
+                          <div className="absolute bottom-1 right-1.5 flex items-center gap-0.5">
+                            <Heart className="h-3 w-3 text-white fill-white drop-shadow" />
+                            <span className="text-[10px] text-white font-semibold drop-shadow">{post.likes_count}</span>
+                          </div>
+                        )}
+                      </motion.button>
                     ))}
                   </div>
                 )}
               </div>
 
               {/* Post detail overlay */}
-              {selectedPost && (
-                <div className="fixed inset-0 z-50 bg-black/90 flex flex-col" onClick={() => setSelectedPost(null)}>
-                  <div className="flex items-center gap-3 px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => setSelectedPost(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-                      <ArrowLeft className="h-5 w-5 text-white" />
-                    </button>
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={profile.avatar_url || undefined} />
-                      <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-semibold text-white">{profile.full_name}</p>
-                      <p className="text-[10px] text-white/60">
-                        {(() => { try { return formatDistanceToNow(new Date(selectedPost.created_at), { addSuffix: true }); } catch { return ""; } })()}
-                      </p>
+              <AnimatePresence>
+                {selectedPost && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 bg-black/95 flex flex-col"
+                    onClick={() => setSelectedPost(null)}
+                  >
+                    <div className="flex items-center gap-3 px-4 py-3 safe-area-top" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={() => setSelectedPost(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                        <ArrowLeft className="h-5 w-5 text-white" />
+                      </button>
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={profile.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-white">{profile.full_name}</p>
+                        <p className="text-[10px] text-white/60">
+                          {(() => { try { return formatDistanceToNow(new Date(selectedPost.created_at), { addSuffix: true }); } catch { return ""; } })()}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleShare();
+                        }}
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      >
+                        <Share2 className="h-5 w-5 text-white" />
+                      </button>
                     </div>
-                  </div>
-                  <div className="flex-1 flex items-center justify-center px-2" onClick={(e) => e.stopPropagation()}>
-                    {selectedPost.media_type === "video" ? (
-                      <video src={selectedPost.media_url} controls autoPlay className="max-h-[70vh] w-full object-contain rounded-lg" />
-                    ) : (
-                      <img src={selectedPost.media_url} alt="" className="max-h-[70vh] w-full object-contain rounded-lg" />
+                    <div className="flex-1 flex items-center justify-center px-2" onClick={(e) => e.stopPropagation()}>
+                      {selectedPost.media_type === "video" ? (
+                        <video src={selectedPost.media_url} controls autoPlay className="max-h-[70vh] w-full object-contain rounded-lg" />
+                      ) : (
+                        <img src={selectedPost.media_url} alt="" className="max-h-[70vh] w-full object-contain rounded-lg" />
+                      )}
+                    </div>
+                    {selectedPost.caption && (
+                      <p className="px-4 py-3 text-white text-sm" onClick={(e) => e.stopPropagation()}>{selectedPost.caption}</p>
                     )}
-                  </div>
-                  {selectedPost.caption && (
-                    <p className="px-4 py-3 text-white text-sm" onClick={(e) => e.stopPropagation()}>{selectedPost.caption}</p>
-                  )}
-                </div>
-              )}
+                    <div className="flex items-center gap-4 px-4 pb-4" onClick={(e) => e.stopPropagation()}>
+                      {selectedPost.likes_count > 0 && (
+                        <span className="text-xs text-white/60 flex items-center gap-1">
+                          <Heart className="h-3.5 w-3.5" /> {selectedPost.likes_count}
+                        </span>
+                      )}
+                      {selectedPost.views_count > 0 && (
+                        <span className="text-xs text-white/60 flex items-center gap-1">
+                          <Eye className="h-3.5 w-3.5" /> {selectedPost.views_count}
+                        </span>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </>
           )}
         </>
       )}
 
-      {/* Confirmation dialog for cancel/unfriend */}
+      {/* Confirmation dialog */}
       <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {confirmAction?.action === "cancel" ? "Cancel Friend Request?" : "Unfriend?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmAction?.label}
-            </AlertDialogDescription>
+            <AlertDialogTitle>{confirmAction?.action === "cancel" ? "Cancel Friend Request?" : "Unfriend?"}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmAction?.label}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>No, keep it</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                if (confirmAction) {
-                  friendMutation.mutate(confirmAction.action);
-                }
-                setConfirmAction(null);
-              }}
+              onClick={() => { if (confirmAction) friendMutation.mutate(confirmAction.action); setConfirmAction(null); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {confirmAction?.action === "cancel" ? "Yes, cancel request" : "Yes, unfriend"}
