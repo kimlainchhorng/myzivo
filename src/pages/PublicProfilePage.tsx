@@ -103,7 +103,7 @@ export default function PublicProfilePage() {
             .in("id", sharedPostIds);
 
           if (storePosts && storePosts.length > 0) {
-            const storeIds = [...new Set(storePosts.map((sp: any) => sp.store_id))];
+            const storeIds = [...new Set(storePosts.map((sp: any) => sp.store_id))] as string[];
             const { data: storeProfiles } = await supabase
               .from("store_profiles")
               .select("id, name, logo_url")
