@@ -275,7 +275,7 @@ export default function ChatMessageBubble({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
-              onClick={() => { setShowActions(false); setShowReactions(false); }}
+              onClick={() => { setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.85, y: 10 }}
