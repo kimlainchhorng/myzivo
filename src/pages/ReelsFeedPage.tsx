@@ -1188,6 +1188,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
 function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [muted, setMuted] = useState(true);
