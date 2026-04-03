@@ -781,6 +781,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       expiresAt={msg.expires_at}
                       messageType={msg.message_type}
                       senderId={msg.sender_id}
+                      lockedPriceCents={msg.locked_price_cents}
                       onReply={handleReply}
                       onDelete={handleDelete}
                       onForward={handleForward}
