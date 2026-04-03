@@ -1458,50 +1458,64 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             </button>
           </div>
 
-          {/* Sharer's caption if any */}
-          {item.caption && (
+          {/* Sharer's own caption (not the original post's caption) */}
+          {item.caption && item.caption !== item.shared_from_caption && (
             <div className="px-3 pb-2">
               <p className="text-[13px] text-foreground">{item.caption}</p>
             </div>
           )}
 
           {/* Embedded original post card */}
-          <div className="mx-3 mb-2 border border-border/60 rounded-xl overflow-hidden bg-muted/20">
+          <div className="mx-3 mb-2 border border-border/50 rounded-2xl overflow-hidden bg-card shadow-sm">
             {/* Original author header */}
-            <button
-              type="button"
-              onClick={() => {
-                if (item.shared_from_source === "store" && item.shared_from_store_slug) {
-                  navigate(`/grocery/shop/${item.shared_from_store_slug}`);
-                } else if (item.shared_from_user_id) {
-                  navigate(`/user/${item.shared_from_user_id}`);
-                }
-              }}
-              className="flex items-center gap-2.5 px-3 py-2 w-full active:opacity-70"
-            >
-              <div className="h-8 w-8 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
-                {item.shared_from_user_avatar ? (
-                  <img src={item.shared_from_user_avatar} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-[10px] font-bold">
-                    {(item.shared_from_user_name || (item.shared_from_source === "store" ? "S" : "?"))[0]}
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-[12px] font-semibold text-foreground truncate">
-                  {item.shared_from_user_name || (item.shared_from_source === "store" ? "Store" : "Someone")}
-                </p>
-                <div className="flex items-center gap-1">
-                  <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+            <div className="flex items-center px-3 py-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  if (item.shared_from_source === "store" && item.shared_from_store_slug) {
+                    navigate(`/grocery/shop/${item.shared_from_store_slug}`);
+                  } else if (item.shared_from_user_id) {
+                    navigate(`/user/${item.shared_from_user_id}`);
+                  }
+                }}
+                className="flex items-center gap-2.5 flex-1 min-w-0 active:opacity-70"
+              >
+                <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+                  {item.shared_from_user_avatar ? (
+                    <img src={item.shared_from_user_avatar} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
+                      {(item.shared_from_user_name || (item.shared_from_source === "store" ? "S" : "?"))[0]}
+                    </div>
+                  )}
                 </div>
-              </div>
-            </button>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-[13px] font-semibold text-foreground truncate">
+                    {item.shared_from_user_name || (item.shared_from_source === "store" ? "Store" : "Someone")}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                  </div>
+                </div>
+              </button>
+              {/* Follow button */}
+              {item.shared_from_user_id && item.shared_from_user_id !== currentUserId && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toast.success(`Following ${item.shared_from_user_name || "user"}`);
+                  }}
+                  className="text-[12px] font-semibold text-primary px-2 py-1 active:opacity-70"
+                >
+                  Follow
+                </button>
+              )}
+            </div>
 
             {/* Original post caption */}
             {item.shared_from_caption && (
               <div className="px-3 pb-2">
-                <p className="text-[12px] text-foreground">{item.shared_from_caption}</p>
+                <p className="text-[13px] text-foreground">{item.shared_from_caption}</p>
               </div>
             )}
 
