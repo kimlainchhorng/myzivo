@@ -41,7 +41,7 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
     }
 
     // Fetch profiles for all comment authors
-    const userIds = [...new Set(rawComments.map((c: any) => c.user_id))];
+    const userIds = [...new Set(rawComments.map((c: any) => c.user_id))] as string[];
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, full_name, avatar_url")
