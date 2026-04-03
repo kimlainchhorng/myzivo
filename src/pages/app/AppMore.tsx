@@ -54,7 +54,7 @@ const AppMore = () => {
                 transition={{ delay: i * 0.04, duration: 0.3 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={isPartner ? () => setShowPartnerSheet(true) : undefined}
-                className="rounded-2xl bg-card border border-border/40 shadow-sm p-3.5 flex items-center gap-3 touch-manipulation cursor-pointer active:bg-muted/30 transition-colors"
+                className="rounded-2xl bg-card border border-border/40 shadow-sm p-3 flex items-center gap-2.5 touch-manipulation cursor-pointer active:bg-muted/30 transition-colors"
               >
                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", link.iconBg)}>
                   <link.icon className={cn("w-5 h-5", link.iconColor)} />
