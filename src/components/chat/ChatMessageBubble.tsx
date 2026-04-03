@@ -274,32 +274,32 @@ export default function ChatMessageBubble({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[3px]"
+              className="fixed inset-0 z-40 bg-black/25 backdrop-blur-sm"
               onClick={() => { setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 8 }}
+              initial={{ opacity: 0, scale: 0.92, y: 6 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 8 }}
-              transition={{ type: "spring", damping: 24, stiffness: 400 }}
-              className={`absolute z-50 bottom-full mb-3 flex flex-col gap-2.5 ${isMe ? "right-0 items-end" : "left-0 items-start"}`}
+              exit={{ opacity: 0, scale: 0.92, y: 6 }}
+              transition={{ type: "spring", damping: 26, stiffness: 420 }}
+              className={`absolute z-50 bottom-full mb-3 flex flex-col gap-2 ${isMe ? "right-0 items-end" : "left-0 items-start"}`}
             >
               {/* Emoji reactions row */}
               {showReactions && (
                 <motion.div
-                  initial={{ opacity: 0, y: 6 }}
+                  initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 }}
-                  className="bg-background/95 backdrop-blur-xl shadow-2xl shadow-black/12 border border-border/15 rounded-full px-2.5 py-2 flex items-center gap-0.5 max-w-[calc(100vw-32px)]"
+                  transition={{ delay: 0.04 }}
+                  className="bg-background shadow-lg shadow-black/10 border border-border/30 rounded-full px-1.5 py-1 flex items-center gap-0 max-w-[calc(100vw-32px)]"
                 >
                   {REACTION_EMOJIS.map((emoji, i) => (
                     <motion.button
                       key={emoji}
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.03 * i, type: "spring", stiffness: 500 }}
+                      transition={{ delay: 0.025 * i, type: "spring", stiffness: 500 }}
                       onClick={(e) => { e.stopPropagation(); toggleReaction(emoji); }}
-                      className="h-[38px] w-[38px] flex items-center justify-center rounded-full hover:bg-muted/50 transition-all text-[22px] hover:scale-125 active:scale-90 duration-150"
+                      className="h-[36px] w-[36px] flex items-center justify-center rounded-full hover:bg-muted/50 transition-all text-[20px] hover:scale-110 active:scale-90 duration-150"
                     >
                       {emoji}
                     </motion.button>
@@ -309,44 +309,37 @@ export default function ChatMessageBubble({
 
               {/* Action buttons */}
               <motion.div
-                initial={{ opacity: 0, y: 6 }}
+                initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.08 }}
-                className="bg-background/95 backdrop-blur-xl shadow-2xl shadow-black/12 border border-border/15 rounded-2xl overflow-hidden min-w-[200px]"
+                transition={{ delay: 0.06 }}
+                className="bg-background shadow-lg shadow-black/10 border border-border/30 rounded-xl overflow-hidden min-w-[190px]"
               >
-                {!showDeleteSub ? (
-                  <>
-                    <MenuBtn icon={Reply} label="Reply" onClick={() => { onReply(id, message, isMe); setShowActions(false); setShowReactions(false); }} />
-                    <div className="mx-4 h-px bg-border/20" />
-                    <MenuBtn icon={Copy} label="Copy" onClick={handleCopy} />
-                    <div className="mx-4 h-px bg-border/20" />
-                    <MenuBtn icon={Forward} label="Forward" onClick={handleForward} />
-                    <div className="mx-4 h-px bg-border/20" />
-                    <MenuBtn icon={Pin} label={isPinned ? "Unpin" : "Pin"} onClick={handlePin} active={isPinned} />
-                    <div className="mx-4 h-px bg-border/20" />
-                    <MenuBtn icon={Trash2} label="Delete" onClick={() => setShowDeleteSub(true)} destructive chevron />
-                  </>
-                ) : (
-                  <>
-                    <div className="px-4 py-3 border-b border-border/15">
-                      <span className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">Delete message</span>
-                    </div>
-                    {isMe && (
-                      <>
-                        <MenuBtn icon={Trash2} label="Delete for everyone" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }} destructive />
-                        <div className="mx-4 h-px bg-border/20" />
-                      </>
-                    )}
-                    <MenuBtn icon={Trash2} label="Delete for me" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }} destructive />
-                    <div className="mx-4 h-px bg-border/20" />
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setShowDeleteSub(false); }}
-                      className="flex items-center justify-center w-full px-4 py-3 hover:bg-muted/40 transition-colors active:scale-[0.97]"
-                    >
-                      <span className="text-[13px] font-medium text-muted-foreground">Cancel</span>
-                    </button>
-                  </>
-                )}
+                <AnimatePresence mode="wait">
+                  {!showDeleteSub ? (
+                    <motion.div key="actions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }}>
+                      <MsgMenuItem icon={Reply} label="Reply" onClick={() => { onReply(id, message, isMe); setShowActions(false); setShowReactions(false); }} />
+                      <MsgMenuItem icon={Copy} label="Copy" onClick={handleCopy} />
+                      <MsgMenuItem icon={Forward} label="Forward" onClick={handleForward} />
+                      <MsgMenuItem icon={Pin} label={isPinned ? "Unpin" : "Pin"} onClick={handlePin} active={isPinned} />
+                      <MsgMenuItem icon={Trash2} label="Delete" onClick={() => setShowDeleteSub(true)} destructive chevron />
+                    </motion.div>
+                  ) : (
+                    <motion.div key="delete" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 6 }} transition={{ duration: 0.1 }}>
+                      {isMe && (
+                        <MsgMenuItem icon={Trash2} label="Delete for everyone" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }} destructive />
+                      )}
+                      <MsgMenuItem icon={Trash2} label="Delete for me" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }} destructive />
+                      <div className="border-t border-border/30">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setShowDeleteSub(false); }}
+                          className="w-full py-2.5 text-center text-[13px] font-medium text-muted-foreground hover:bg-muted/30 active:bg-muted/50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             </motion.div>
           </>
@@ -558,27 +551,19 @@ function ActionBtn({ icon: Icon, label, onClick, destructive, active }: {
   );
 }
 
-function MenuBtn({ icon: Icon, label, onClick, destructive, active, chevron }: {
+function MsgMenuItem({ icon: Icon, label, onClick, destructive, active, chevron }: {
   icon: any; label: string; onClick: () => void; destructive?: boolean; active?: boolean; chevron?: boolean;
 }) {
   return (
     <button
       onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-left transition-colors active:scale-[0.97] ${
-        destructive
-          ? "hover:bg-destructive/5 text-destructive"
-          : active
-          ? "bg-primary/5 text-primary"
-          : "hover:bg-muted/50 text-foreground"
+      className={`flex items-center gap-3 w-full px-4 py-3 text-left transition-colors active:bg-muted/60 border-b border-border/15 last:border-b-0 ${
+        destructive ? "text-destructive hover:bg-destructive/5" : active ? "text-primary bg-primary/5" : "text-foreground hover:bg-muted/30"
       }`}
     >
-      <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-        destructive ? "bg-destructive/10" : active ? "bg-primary/10" : "bg-muted/60"
-      }`}>
-        <Icon className={`h-4 w-4 ${destructive ? "" : active ? "text-primary" : "text-muted-foreground"}`} />
-      </div>
+      <Icon className="h-[18px] w-[18px] shrink-0 opacity-70" />
       <span className="text-[14px] font-medium flex-1">{label}</span>
-      {chevron && <ChevronRight className="h-4 w-4 opacity-40" />}
+      {chevron && <ChevronRight className="h-4 w-4 opacity-30" />}
     </button>
   );
 }
