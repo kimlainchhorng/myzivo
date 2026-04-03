@@ -19,7 +19,7 @@ type FeedItem = {
   comments: number;
   caption: string;
   time: string;
-  url: string;
+  url: string | null;
   filterCss?: string;
   views?: number;
   user: { name: string; avatar: string };
@@ -40,8 +40,8 @@ const LOCAL_POSTS_KEY = "zivo_social_posts_v1";
 type UserPostRow = {
   id: string;
   user_id: string;
-  media_type: "photo" | "reel";
-  media_url: string;
+  media_type: string;
+  media_url: string | null;
   caption: string | null;
   filter_css: string | null;
   likes_count: number | null;
@@ -50,6 +50,9 @@ type UserPostRow = {
   created_at: string;
   is_published: boolean;
 };
+
+const normalizeFeedItemType = (mediaType: string | null | undefined): "photo" | "reel" =>
+  mediaType === "reel" || mediaType === "video" ? "reel" : "photo";
 
 const demoFeed: FeedItem[] = [];
 
@@ -160,25 +163,26 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
         const remotePosts: FeedItem[] = (data as UserPostRow[])
           .map((row) => {
+            const normalizedType = normalizeFeedItemType(row.media_type);
             const prof = avatarMap[row.user_id];
             const displayName = prof?.full_name || (row.user_id === user?.id ? (user?.email?.split("@")[0] || "You") : "Zivo User");
             return {
               id: row.id,
-              type: row.media_type,
+              type: normalizedType,
               likes: Number(row.likes_count ?? 0),
               comments: Number(row.comments_count ?? 0),
               caption: row.caption || "",
               time: row.created_at ? "recent" : "now",
-              url: row.media_url,
+              url: row.media_url || null,
               filterCss: row.filter_css || undefined,
-              views: row.media_type === "reel" ? Number(row.views_count ?? 0) : undefined,
+              views: normalizedType === "reel" ? Number(row.views_count ?? 0) : undefined,
               user: {
                 name: displayName,
                 avatar: prof?.avatar_url || "",
               },
             };
           })
-          .filter((item) => Boolean(item.url));
+          .filter((item) => Boolean(item.url) || Boolean(item.caption.trim()));
 
         if (remotePosts.length > 0) mergeFeed(remotePosts);
       } catch {
@@ -209,7 +213,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   }, [user?.id]);
 
   const persistLocalPost = useCallback((post: FeedItem) => {
-    if (post.url.startsWith("blob:")) return;
+    if (!post.url || post.url.startsWith("blob:")) return;
     try {
       const existing = JSON.parse(localStorage.getItem(LOCAL_POSTS_KEY) || "[]") as FeedItem[];
       const next = [post, ...existing.filter((item) => item.id !== post.id)].slice(0, 100);
@@ -333,56 +337,74 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         "grid gap-0.5 rounded-2xl overflow-hidden",
         activeTab === "reel" ? "grid-cols-2" : "grid-cols-3"
       )}>
-        {filtered.map((item) => (
-          <motion.div
-            key={item.id}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setSelectedPost(item)}
-            className={cn(
-              "relative bg-muted/40 group cursor-pointer overflow-hidden",
-              item.type === "reel" ? "aspect-[9/14]" : "aspect-square"
-            )}
-          >
-            {item.type === "reel" ? (
-              <video
-                src={item.url}
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{ filter: item.filterCss || "none" }}
-                muted
-                playsInline
-                preload="metadata"
-              />
-            ) : (
-              <img
-                src={item.url}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{ filter: item.filterCss || "none" }}
-                loading="lazy"
-              />
-            )}
-            {item.type === "reel" && (
-              <div className="absolute top-1.5 right-1.5 z-10">
-                <Play className="w-4 h-4 text-white fill-white drop-shadow-lg" />
+        {filtered.map((item) => {
+          const hasMedia = Boolean(item.url);
+
+          return (
+            <motion.div
+              key={item.id}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSelectedPost(item)}
+              className={cn(
+                "relative bg-muted/40 group cursor-pointer overflow-hidden",
+                item.type === "reel" ? "aspect-[9/14]" : "aspect-square"
+              )}
+            >
+              {hasMedia ? (
+                item.type === "reel" ? (
+                  <video
+                    src={item.url || undefined}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ filter: item.filterCss || "none" }}
+                    muted
+                    playsInline
+                    preload="metadata"
+                  />
+                ) : (
+                  <img
+                    src={item.url || undefined}
+                    alt={item.caption || "Shared post"}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ filter: item.filterCss || "none" }}
+                    loading="lazy"
+                  />
+                )
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-muted/80 via-card to-muted/40 p-3 flex flex-col justify-between">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <Link2 className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] font-semibold text-foreground line-clamp-5 whitespace-pre-wrap break-words">
+                      {item.caption || "Shared post"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">Shared post</p>
+                  </div>
+                </div>
+              )}
+              {item.type === "reel" && hasMedia && (
+                <div className="absolute top-1.5 right-1.5 z-10">
+                  <Play className="w-4 h-4 text-white fill-white drop-shadow-lg" />
+                </div>
+              )}
+              {item.type === "reel" && hasMedia && item.views && (
+                <div className="absolute bottom-1.5 left-1.5 z-10 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5 flex items-center gap-0.5">
+                  <Eye className="w-2.5 h-2.5 text-white" />
+                  <span className="text-[9px] text-white font-bold">{item.views > 1000 ? `${(item.views / 1000).toFixed(1)}k` : item.views}</span>
+                </div>
+              )}
+              {/* Hover overlay */}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <span className="flex items-center gap-0.5 text-white text-[10px] font-bold">
+                  <Heart className="w-3 h-3 fill-white" /> {item.likes}
+                </span>
+                <span className="flex items-center gap-0.5 text-white text-[10px] font-bold">
+                  <MessageCircle className="w-3 h-3 fill-white" /> {item.comments}
+                </span>
               </div>
-            )}
-            {item.type === "reel" && item.views && (
-              <div className="absolute bottom-1.5 left-1.5 z-10 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5 flex items-center gap-0.5">
-                <Eye className="w-2.5 h-2.5 text-white" />
-                <span className="text-[9px] text-white font-bold">{item.views > 1000 ? `${(item.views / 1000).toFixed(1)}k` : item.views}</span>
-              </div>
-            )}
-            {/* Hover overlay */}
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <span className="flex items-center gap-0.5 text-white text-[10px] font-bold">
-                <Heart className="w-3 h-3 fill-white" /> {item.likes}
-              </span>
-              <span className="flex items-center gap-0.5 text-white text-[10px] font-bold">
-                <MessageCircle className="w-3 h-3 fill-white" /> {item.comments}
-              </span>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Post Detail Viewer */}
@@ -457,24 +479,35 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               </div>
 
               {/* Content */}
-              <div className="flex-1 flex items-center justify-center overflow-hidden">
-                {selectedPost.type === "reel" ? (
-                  <video
-                    src={selectedPost.url}
-                    className="w-full h-full object-contain"
-                    style={{ filter: selectedPost.filterCss || "none" }}
-                    controls
-                    playsInline
-                    autoPlay
-                    loop
-                  />
+              <div className="flex-1 flex items-center justify-center overflow-hidden px-4">
+                {selectedPost.url ? (
+                  selectedPost.type === "reel" ? (
+                    <video
+                      src={selectedPost.url}
+                      className="w-full h-full object-contain"
+                      style={{ filter: selectedPost.filterCss || "none" }}
+                      controls
+                      playsInline
+                      autoPlay
+                      loop
+                    />
+                  ) : (
+                    <img
+                      src={selectedPost.url}
+                      alt={selectedPost.caption || "Shared post"}
+                      className="w-full h-full object-contain"
+                      style={{ filter: selectedPost.filterCss || "none" }}
+                    />
+                  )
                 ) : (
-                  <img
-                    src={selectedPost.url}
-                    alt=""
-                    className="w-full h-full object-contain"
-                    style={{ filter: selectedPost.filterCss || "none" }}
-                  />
+                  <div className="w-full max-w-md rounded-3xl border border-border/30 bg-card p-6 shadow-2xl">
+                    <div className="mb-4 h-12 w-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                      <Link2 className="w-6 h-6 text-primary" />
+                    </div>
+                    <p className="text-sm leading-6 text-foreground whitespace-pre-wrap break-words">
+                      {selectedPost.caption || "Shared post"}
+                    </p>
+                  </div>
                 )}
               </div>
 

@@ -47,6 +47,9 @@ interface FeedItem {
   allow_mentions?: boolean;
 }
 
+const normalizeUserPostMediaType = (mediaType: string | null | undefined): "image" | "video" =>
+  mediaType === "video" || mediaType === "reel" ? "video" : "image";
+
 export default function ReelsFeedPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -188,13 +191,14 @@ export default function ReelsFeedPage() {
 
           for (const post of userPosts as any[]) {
             const profile = profileMap.get(post.user_id);
-            if (!post.media_url) continue;
+            if (!post.media_url && !post.caption?.trim()) continue;
+            const normalizedMediaType = normalizeUserPostMediaType(post.media_type);
 
             allItems.push({
               id: `u-${post.id}`,
               source: "user",
-              media_urls: [post.media_url],
-              media_type: post.media_type === "video" ? "video" : "image",
+              media_urls: post.media_url ? [post.media_url] : [],
+              media_type: normalizedMediaType,
               caption: post.caption,
               likes_count: post.likes_count || 0,
               comments_count: post.comments_count || 0,
@@ -1304,6 +1308,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   };
 
   const mediaUrl = item.media_urls[currentMedia] || item.media_urls[0];
+  const hasMedia = Boolean(mediaUrl);
 
   return (
     <div className="bg-card">
@@ -1343,43 +1348,57 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
       </div>
 
       {/* Media */}
-      <div ref={containerRef} className="relative w-full aspect-square bg-black">
-        {item.media_type === "video" ? (
-          <>
-            <video
-              ref={videoRef}
-              src={mediaUrl}
-              muted={muted}
-              loop
-              playsInline
-              preload="metadata"
-              onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
-              className="h-full w-full object-cover cursor-pointer"
-            />
-            {!isPlaying && (
-              <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
-                <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
+      <div ref={containerRef} className={cn("relative w-full aspect-square", hasMedia ? "bg-black" : "bg-transparent")}>
+        {hasMedia ? (
+          item.media_type === "video" ? (
+            <>
+              <video
+                ref={videoRef}
+                src={mediaUrl}
+                muted={muted}
+                loop
+                playsInline
+                preload="metadata"
+                onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
+                className="h-full w-full object-cover cursor-pointer"
+              />
+              {!isPlaying && (
+                <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
+                  <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
+                </button>
+              )}
+              <button
+                onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
+                className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
+              >
+                {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
               </button>
-            )}
-            <button
-              onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
-              className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
-            >
-              {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
-            </button>
-          </>
+            </>
+          ) : (
+            <img
+              src={mediaUrl}
+              alt={item.caption || "Shared post"}
+              className="h-full w-full object-cover cursor-pointer"
+              loading="lazy"
+              onClick={() => onOpenFullscreen?.()}
+            />
+          )
         ) : (
-          <img
-            src={mediaUrl}
-            alt={item.caption || ""}
-            className="h-full w-full object-cover cursor-pointer"
-            loading="lazy"
-            onClick={() => onOpenFullscreen?.()}
-          />
+          <div className="h-full w-full bg-gradient-to-br from-muted/80 via-card to-muted/40 p-5 flex flex-col justify-between">
+            <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Link2 className="h-6 w-6 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <p className="text-base font-semibold text-foreground whitespace-pre-wrap break-words line-clamp-6">
+                {item.caption || "Shared post"}
+              </p>
+              <p className="text-xs text-muted-foreground">Shared to profile</p>
+            </div>
+          </div>
         )}
 
         {/* Multi-image indicator */}
-        {item.media_urls.length > 1 && (
+        {hasMedia && item.media_urls.length > 1 && (
           <>
             <div className="absolute top-3 right-3 bg-black/50 px-2 py-0.5 rounded-full text-[10px] text-white font-medium">
               {currentMedia + 1}/{item.media_urls.length}
