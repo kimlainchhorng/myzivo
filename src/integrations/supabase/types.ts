@@ -39561,6 +39561,48 @@ export type Database = {
           },
         ]
       }
+      scheduled_messages: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          message: string
+          message_type: string
+          receiver_id: string
+          scheduled_at: string
+          sender_id: string
+          status: string
+          video_url: string | null
+          voice_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          message?: string
+          message_type?: string
+          receiver_id: string
+          scheduled_at: string
+          sender_id: string
+          status?: string
+          video_url?: string | null
+          voice_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          message?: string
+          message_type?: string
+          receiver_id?: string
+          scheduled_at?: string
+          sender_id?: string
+          status?: string
+          video_url?: string | null
+          voice_url?: string | null
+        }
+        Relationships: []
+      }
       scheduled_reports: {
         Row: {
           created_at: string
