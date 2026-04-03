@@ -199,9 +199,11 @@ export default function ReelsFeedPage() {
             const normalizedMediaType = normalizeUserPostMediaType(post.media_type);
 
             let sharedFromUserName: string | null = null;
+            let sharedFromUserAvatar: string | null = null;
             if (post.shared_from_user_id) {
               const sharedProfile = profileMap.get(post.shared_from_user_id);
               sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
+              sharedFromUserAvatar = sharedProfile?.avatar_url || null;
             }
 
             allItems.push({
