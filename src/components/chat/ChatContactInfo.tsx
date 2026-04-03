@@ -68,9 +68,6 @@ export default function ChatContactInfo({
     .toUpperCase()
     .slice(0, 2);
 
-  // Fake profile views count for display
-  const profileViews = Math.floor(Math.random() * 30) + 5;
-
   return (
     <motion.div
       className="fixed inset-0 z-[60] bg-background flex flex-col"
