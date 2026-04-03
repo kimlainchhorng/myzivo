@@ -29,6 +29,7 @@ import PullToRefresh from "@/components/shared/PullToRefresh";
 import CommentsSheet from "@/components/social/CommentsSheet";
 import FeedStoryRing from "@/components/social/FeedStoryRing";
 import SuggestedUsersCarousel from "@/components/social/SuggestedUsersCarousel";
+import CreatePostModal from "@/components/social/CreatePostModal";
 
 interface FeedItem {
   id: string;
