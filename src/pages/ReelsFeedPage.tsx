@@ -1516,63 +1516,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden max-h-[85vh] overflow-y-auto"
+              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden"
             >
-              {/* Post preview header */}
-              <div className="px-4 pt-4 pb-2">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
-                    {item.author_avatar ? (
-                      <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
-                        {item.author_name?.[0]}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground leading-tight truncate">{item.author_name}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {timeAgo}{" · "}<Globe className="inline w-3 h-3 -mt-0.5" />
-                    </p>
-                  </div>
-                </div>
-
-                {/* Shared content preview */}
-                {isSharedPost && item.shared_from_user_name && (
-                  <div className="rounded-xl border border-border/50 p-2.5 mb-2 bg-muted/20">
-                    <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-full overflow-hidden bg-muted shrink-0">
-                        {item.shared_from_user_avatar ? (
-                          <img src={item.shared_from_user_avatar} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-muted-foreground/40">
-                            {item.shared_from_user_name?.[0]}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs font-semibold text-foreground">{item.shared_from_user_name}</p>
-                    </div>
-                    {item.shared_from_caption && (
-                      <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{item.shared_from_caption}</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Media thumbnail */}
-                {mediaUrl && (
-                  <div className="rounded-xl overflow-hidden max-h-48 mb-1">
-                    {item.media_type === "video" ? (
-                      <video src={mediaUrl} className="w-full h-full object-cover max-h-48" muted />
-                    ) : (
-                      <img src={mediaUrl} alt="" className="w-full h-full object-cover max-h-48" />
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Drag handle */}
-              <div className="flex justify-center pb-1">
+              <div className="flex justify-center py-3">
                 <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
               </div>
               <div className="px-2">
