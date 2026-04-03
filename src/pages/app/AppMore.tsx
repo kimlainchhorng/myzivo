@@ -1,7 +1,7 @@
 /**
  * App More Screen — Quick Access only
  */
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -10,10 +10,12 @@ import {
 } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const partnerOptions = [
   { icon: Car, label: "Become a Driver", description: "Earn money driving with ZIVO", href: "/partner-with-zivo?type=driver", color: "from-blue-500 to-blue-600" },
@@ -37,6 +39,19 @@ const AppMore = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("full_name, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setProfile(data as any);
+      });
+  }, [user]);
 
   return (
     <AppLayout title="More" hideHeader>
@@ -48,17 +63,14 @@ const AppMore = () => {
             animate={{ opacity: 1, y: 0 }}
             className="mb-5 p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 flex items-center gap-3"
           >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/25 to-primary/10 flex items-center justify-center shadow-inner overflow-hidden">
-              {user.user_metadata?.avatar_url ? (
-                <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover rounded-full" />
-              ) : (
-                <span className="text-primary font-bold text-lg">
-                  {(user.email?.[0] || "Z").toUpperCase()}
-                </span>
-              )}
-            </div>
+            <Avatar className="w-12 h-12 border-2 border-primary/20">
+              <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || undefined} />
+              <AvatarFallback className="bg-gradient-to-br from-primary/25 to-primary/10 text-primary font-bold text-lg">
+                {(profile?.full_name?.[0] || user.email?.[0] || "Z").toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm truncate">{user.user_metadata?.full_name || user.email?.split("@")[0]}</p>
+              <p className="font-bold text-sm truncate">{profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0]}</p>
               <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
             </div>
             <button
