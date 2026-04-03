@@ -15,6 +15,12 @@ interface ShareSheetProps {
   shareMediaUrl?: string;
   /** Original media type of the content being shared */
   shareMediaType?: "image" | "video";
+  /** Original post ID being shared */
+  sharePostId?: string;
+  /** Original post author's user ID */
+  sharePostAuthorId?: string;
+  /** Original post author's display name */
+  sharePostAuthorName?: string;
 }
 
 export default function ShareSheet({
