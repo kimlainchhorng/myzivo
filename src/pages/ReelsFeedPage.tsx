@@ -1359,8 +1359,25 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const mediaUrl = item.media_urls[currentMedia] || item.media_urls[0];
   const hasMedia = Boolean(mediaUrl);
 
+  const isSharedPost = Boolean(item.shared_from_post_id || item.shared_from_user_id);
+
   return (
     <div className="bg-card">
+      {/* Shared indicator — Facebook style */}
+      {isSharedPost && (
+        <div className="flex items-center gap-2 px-3 pt-2.5 pb-0.5">
+          <Share2 className="h-3.5 w-3.5 text-muted-foreground" />
+          <p className="text-[12px] text-muted-foreground">
+            <span className="font-semibold text-foreground">{item.author_name}</span>
+            {" shared "}
+            {item.shared_from_user_name ? (
+              <><span className="font-semibold text-foreground">{item.shared_from_user_name}</span>'s post</>
+            ) : (
+              "a post"
+            )}
+          </p>
+        </div>
+      )}
       {/* Author header */}
       <div className="flex items-center">
       <button
