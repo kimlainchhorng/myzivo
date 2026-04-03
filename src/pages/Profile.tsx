@@ -9,7 +9,7 @@ import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
   Shield, Star, ChevronRight, UserPlus, UserCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
-  Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell,
+  Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -450,6 +450,16 @@ const Profile = () => {
                 </span>
                 <span className="ml-1">Notifications</span>
                 <ChevronDown className={cn("w-3 h-3 transition-transform duration-300", showNotifPanel ? "rotate-180 text-primary-foreground/70" : "text-muted-foreground")} />
+              </motion.button>
+
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/notifications')}
+                className="relative z-20 flex min-h-[36px] items-center gap-1.5 px-3 py-2 rounded-xl bg-card/70 backdrop-blur-xl border border-border/30 text-[11px] font-bold shadow-lg shadow-primary/[0.05] hover:bg-card/90 touch-manipulation transition-all"
+                style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
+              >
+                <MoreHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
+                <span>More</span>
               </motion.button>
             </div>
 
