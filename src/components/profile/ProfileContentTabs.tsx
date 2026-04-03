@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import ProfileFeedCard from "./ProfileFeedCard";
 import UnifiedShareSheet from "@/components/shared/ShareSheet";
 import CreatePostModal from "@/components/social/CreatePostModal";
 import CommentsSheet from "@/components/social/CommentsSheet";
