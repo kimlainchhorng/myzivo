@@ -47,6 +47,25 @@ function formatChatTime(dateStr: string) {
   return format(d, "MMM d");
 }
 
+function parseRichMessagePreview(message: string): string {
+  try {
+    let parsed = JSON.parse(message);
+    if (typeof parsed === "string") parsed = JSON.parse(parsed);
+    if (parsed && parsed.__rich && parsed.payload) {
+      const { type, label } = parsed.payload;
+      switch (type) {
+        case "location": return "📍 Store Location";
+        case "qr": return "💳 Payment QR";
+        case "tracking": return "📦 Delivery Update";
+        case "product": return "🛒 Product";
+        case "order": return "📋 Order Details";
+        default: return label || `📎 ${type || "Attachment"}`;
+      }
+    }
+  } catch {}
+  return message;
+}
+
 function getMessagePreviewIcon(message: string) {
   if (message === "📷 Image" || message.includes("[image]")) return <ImageIcon className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
   if (message.includes("[voice]") || message.includes("🎤")) return <Mic className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
