@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import CommentsSheet from "@/components/social/CommentsSheet";
 import FeedStoryRing from "@/components/social/FeedStoryRing";
+import SuggestedUsersCarousel from "@/components/social/SuggestedUsersCarousel";
 
 interface FeedItem {
   id: string;
