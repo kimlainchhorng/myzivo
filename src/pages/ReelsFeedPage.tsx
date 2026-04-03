@@ -1585,7 +1585,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             shareText={item.caption || `Check out this post by ${item.author_name}`}
             shareMediaUrl={item.media_urls[0] || undefined}
             shareMediaType={item.media_type === "video" ? "video" : "image"}
-            sharePostId={item.id}
+            sharePostId={item.id.replace(/^u-/, "")}
             sharePostAuthorId={item.author_id}
             sharePostAuthorName={item.author_name}
             onClose={() => setShowShareSheet(false)}
