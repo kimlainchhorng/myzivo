@@ -1617,13 +1617,44 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     setShowShareSheet(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!currentUserId) {
       toast.error("Please sign in to bookmark posts");
       return;
     }
-    setSaved(!saved);
-    toast.success(saved ? "Removed from saved" : "Saved!");
+    const newSaved = !saved;
+    setSaved(newSaved);
+    if (newSaved) {
+      await (supabase as any).from("bookmarks").insert({
+        user_id: currentUserId,
+        item_id: item.id,
+        item_type: "post",
+        title: item.caption || `Post by ${item.author_name}`,
+        collection_name: "Posts",
+      });
+      toast.success("Saved to bookmarks");
+    } else {
+      await (supabase as any).from("bookmarks").delete().eq("user_id", currentUserId).eq("item_id", item.id);
+      toast.success("Removed from bookmarks");
+    }
+  };
+
+  const handleEditPost = async () => {
+    if (!currentUserId || !isOwner) return;
+    setEditSaving(true);
+    try {
+      const realId = item.id.replace(/^u-/, "");
+      const table = item.source === "store" ? "store_posts" : "user_posts";
+      const { error } = await (supabase as any).from(table).update({ caption: editCaptionText }).eq("id", realId);
+      if (error) throw error;
+      item.caption = editCaptionText;
+      setShowEditCaption(false);
+      toast.success("Post updated!");
+      queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+    } catch {
+      toast.error("Failed to update post");
+    }
+    setEditSaving(false);
   };
 
   const handleComment = () => {
