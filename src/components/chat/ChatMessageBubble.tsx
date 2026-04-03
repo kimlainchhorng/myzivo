@@ -166,38 +166,43 @@ export default function ChatMessageBubble({
           </div>
         )}
 
-        {/* Video — Reel-style thumbnail with gradient overlay */}
+        {/* Video — compact reel-style thumbnail */}
         {videoUrl && (
           <div
             onClick={(e) => { e.stopPropagation(); if (!didLongPress.current) setShowVideoPlayer(true); }}
-            className={`rounded-2xl overflow-hidden mb-1 relative cursor-pointer group max-w-[220px] ${isMe ? "rounded-br-[6px] ml-auto" : "rounded-bl-[6px]"}`}
+            className={`overflow-hidden mb-1 relative cursor-pointer w-[180px] ${isMe ? "ml-auto" : ""}`}
           >
-            <video
-              src={videoUrl}
-              className="w-full aspect-[3/4] object-cover rounded-2xl"
-              playsInline
-              preload="metadata"
-              muted
-              style={{ pointerEvents: "none" }}
-            />
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/15 rounded-2xl" />
-            {/* Play button */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <motion.div
-                whileTap={{ scale: 0.85 }}
-                className="h-10 w-10 rounded-full bg-white/25 border border-white/30 flex items-center justify-center"
-              >
-                <Play className="h-4 w-4 text-white ml-0.5" fill="white" />
-              </motion.div>
-            </div>
-            {/* Bottom reel label */}
-            <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[9px] font-semibold text-white/90">Reel</span>
+            {/* Video container with rounded corners */}
+            <div className={`rounded-2xl overflow-hidden relative ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
+              <video
+                src={videoUrl}
+                className="w-full aspect-[4/5] object-cover"
+                playsInline
+                preload="metadata"
+                muted
+                style={{ pointerEvents: "none" }}
+              />
+              {/* Dark gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-black/10" />
+              
+              {/* Centered play icon */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-9 w-9 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                  <Play className="h-4 w-4 text-foreground ml-0.5" fill="currentColor" />
+                </div>
               </div>
-              <span className="text-[9px] font-medium text-white/70">▶ Play</span>
+
+              {/* Bottom info bar */}
+              <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <svg viewBox="0 0 10 10" className="w-2 h-2"><circle cx="5" cy="5" r="4" fill="#ef4444" /></svg>
+                  <span className="text-[10px] font-bold text-white tracking-wide">Video</span>
+                </div>
+                <div className="flex items-center gap-1 bg-white/15 rounded-full px-2 py-0.5">
+                  <Play className="h-2.5 w-2.5 text-white" fill="white" />
+                  <span className="text-[9px] font-semibold text-white">Play</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
