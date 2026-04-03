@@ -229,30 +229,93 @@ export default function ChatMessageBubble({
         )}
 
         {/* Message body */}
-        {message && (
-          <div
-            className={`px-3.5 py-2 text-[14.5px] leading-[1.45] ${
-              isMe
-                ? "bg-primary text-primary-foreground rounded-[18px] rounded-br-[5px]"
-                : "bg-muted text-foreground rounded-[18px] rounded-bl-[5px]"
-            }`}
-          >
-            <p className="whitespace-pre-wrap break-words">{message}</p>
-            <div className="flex items-center gap-1 justify-end mt-0.5 -mb-0.5">
-              {isDisappearing && <Timer className={`h-2.5 w-2.5 ${isMe ? "text-primary-foreground/40" : "text-muted-foreground/40"}`} />}
-              <span className={`text-[10px] ${isMe ? "text-primary-foreground/45" : "text-muted-foreground/50"}`}>
-                {time}
-              </span>
-              {isMe && !isOptimistic && (
-                isRead
-                  ? <CheckCheck className="h-3.5 w-3.5 text-sky-400" />
-                  : isDelivered
-                  ? <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/30" />
-                  : <Check className="h-3.5 w-3.5 text-primary-foreground/30" />
+        {message && (() => {
+          const urlRegex = /(https?:\/\/[^\s]+)/gi;
+          const urls = message.match(urlRegex);
+          const hasLink = urls && urls.length > 0;
+          const linkUrl = hasLink ? urls[0] : null;
+          const textWithoutUrl = hasLink ? message.replace(urlRegex, "").trim() : message;
+
+          // Try to extract a readable label from the URL
+          const getLinkLabel = (url: string) => {
+            try {
+              const u = new URL(url);
+              // Check for post/feed links
+              if (u.pathname.includes("/feed")) return "View Post";
+              if (u.pathname.includes("/reels")) return "View Reel";
+              if (u.pathname.includes("/profile")) return "View Profile";
+              if (u.pathname.includes("/store")) return "View Store";
+              return u.hostname.replace("www.", "");
+            } catch { return "Open Link"; }
+          };
+
+          const getLinkDomain = (url: string) => {
+            try { return new URL(url).hostname.replace("www.", ""); } catch { return ""; }
+          };
+
+          return (
+            <div
+              className={`text-[14.5px] leading-[1.45] ${
+                isMe
+                  ? "bg-primary text-primary-foreground rounded-[18px] rounded-br-[5px]"
+                  : "bg-muted text-foreground rounded-[18px] rounded-bl-[5px]"
+              } overflow-hidden`}
+            >
+              {/* Text portion */}
+              {textWithoutUrl && (
+                <p className="whitespace-pre-wrap break-words px-3.5 pt-2 pb-1">{textWithoutUrl}</p>
               )}
+
+              {/* Rich link preview card */}
+              {linkUrl && (
+                <a
+                  href={linkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`block mx-1.5 mb-1.5 ${!textWithoutUrl ? "mt-1.5" : ""} rounded-xl overflow-hidden border ${
+                    isMe ? "border-primary-foreground/15 bg-primary-foreground/10" : "border-border/40 bg-background/60"
+                  } active:scale-[0.98] transition-transform`}
+                >
+                  {/* Preview header bar */}
+                  <div className={`px-3 py-2.5 flex items-center gap-2.5`}>
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      isMe ? "bg-primary-foreground/15" : "bg-primary/10"
+                    }`}>
+                      <svg viewBox="0 0 24 24" className={`w-4.5 h-4.5 ${isMe ? "text-primary-foreground/70" : "text-primary"}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-[13px] font-semibold truncate ${isMe ? "text-primary-foreground" : "text-foreground"}`}>
+                        {getLinkLabel(linkUrl)}
+                      </p>
+                      <p className={`text-[11px] truncate ${isMe ? "text-primary-foreground/50" : "text-muted-foreground"}`}>
+                        {getLinkDomain(linkUrl)}
+                      </p>
+                    </div>
+                    <ChevronRight className={`w-4 h-4 flex-shrink-0 ${isMe ? "text-primary-foreground/30" : "text-muted-foreground/40"}`} />
+                  </div>
+                </a>
+              )}
+
+              {/* Timestamp */}
+              <div className="flex items-center gap-1 justify-end px-3.5 pb-1.5 -mt-0.5">
+                {isDisappearing && <Timer className={`h-2.5 w-2.5 ${isMe ? "text-primary-foreground/40" : "text-muted-foreground/40"}`} />}
+                <span className={`text-[10px] ${isMe ? "text-primary-foreground/45" : "text-muted-foreground/50"}`}>
+                  {time}
+                </span>
+                {isMe && !isOptimistic && (
+                  isRead
+                    ? <CheckCheck className="h-3.5 w-3.5 text-sky-400" />
+                    : isDelivered
+                    ? <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/30" />
+                    : <Check className="h-3.5 w-3.5 text-primary-foreground/30" />
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Reactions */}
         {reactions.length > 0 && (
