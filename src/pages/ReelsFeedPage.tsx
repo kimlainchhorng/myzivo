@@ -386,6 +386,9 @@ export default function ReelsFeedPage() {
             initialCaption={shareForPost ? shareForPost.shareText : undefined}
             sharedMediaUrl={shareForPost?.shareMediaUrl}
             sharedMediaType={shareForPost?.shareMediaType}
+            sharedPostId={shareForPost?.sharePostId}
+            sharedPostAuthorId={shareForPost?.sharePostAuthorId}
+            sharedPostAuthorName={shareForPost?.sharePostAuthorName}
             onClose={() => { setShowCreate(false); setShareForPost(null); }}
             onCreated={() => {
               setShowCreate(false);
