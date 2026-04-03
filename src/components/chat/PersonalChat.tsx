@@ -62,6 +62,7 @@ interface Message {
   expires_at?: string | null;
   created_at: string;
   is_read: boolean;
+  locked_price_cents?: number | null;
 }
 
 interface CallEvent {
