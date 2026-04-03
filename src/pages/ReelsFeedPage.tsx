@@ -69,6 +69,7 @@ export default function ReelsFeedPage() {
   useEffect(() => {
     const state = location.state as { shareToProfile?: boolean; shareUrl?: string; shareText?: string } | null;
     if (state?.shareToProfile && userId) {
+      setShareForPost({ shareUrl: state.shareUrl || "", shareText: state.shareText || "" });
       setShowCreate(true);
       window.history.replaceState({}, document.title);
     }
