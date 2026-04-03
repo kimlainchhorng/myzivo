@@ -884,6 +884,111 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       )}
 
       {/* Share Sheet */}
+      {/* Post Menu Bottom Sheet */}
+      {createPortal(
+        <AnimatePresence>
+          {showPostMenu && selectedPost && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 z-[9998]"
+                onClick={() => setShowPostMenu(false)}
+              />
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                className="fixed bottom-0 left-0 right-0 z-[9999] bg-card rounded-t-2xl shadow-2xl max-h-[80vh] overflow-y-auto safe-area-bottom"
+              >
+                {/* Drag handle */}
+                <div className="flex justify-center pt-3 pb-1">
+                  <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+                </div>
+
+                <div className="py-2">
+                  <button
+                    onClick={() => { toast.info("Post reported"); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-destructive hover:bg-muted/50 transition-colors"
+                  >
+                    <Flag className="w-5 h-5" />
+                    Report
+                  </button>
+                  <button
+                    onClick={() => { toast.success("Notifications turned on"); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Bell className="w-5 h-5" />
+                    Turn on notifications
+                  </button>
+                  <button
+                    onClick={() => {
+                      const url = `${window.location.origin}/profile?post=${selectedPost.id}`;
+                      navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.info("Could not copy link"));
+                      setShowPostMenu(false);
+                    }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Link2 className="w-5 h-5" />
+                    Copy link
+                  </button>
+                  <button
+                    onClick={() => { toast.info("You won't see posts like this anymore"); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <EyeOff className="w-5 h-5" />
+                    Not interested
+                  </button>
+                  <button
+                    onClick={() => { setSharePostId(selectedPost.id); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Share2 className="w-5 h-5" />
+                    Share
+                  </button>
+                  <button
+                    onClick={() => { toast.info("Comment settings coming soon"); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Settings2 className="w-5 h-5" />
+                    Comment settings
+                  </button>
+                  {profileOwnerId === user?.id && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setEditCaptionValue(selectedPost.caption);
+                          setEditingCaption(true);
+                          setShowPostMenu(false);
+                        }}
+                        className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                      >
+                        <Settings2 className="w-5 h-5" />
+                        Edit caption
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (window.confirm("Delete this post? This can't be undone.")) {
+                            handleDeletePost(selectedPost.id);
+                          }
+                        }}
+                        className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-destructive hover:bg-muted/50 transition-colors"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                        Delete post
+                      </button>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
       <CommentsSheet
         open={!!commentPost}
         onClose={() => setCommentPost(null)}
