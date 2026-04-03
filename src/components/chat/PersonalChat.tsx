@@ -123,6 +123,27 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (draft && !input) setInput(draft);
   }, [draft]);
 
+  // Load saved chat personalization on mount
+  useEffect(() => {
+    if (!user?.id || !recipientId) return;
+    const loadStyle = async () => {
+      const { data } = await (supabase as any)
+        .from("chat_settings")
+        .select("wallpaper, theme_color, font_size")
+        .eq("user_id", user.id)
+        .eq("chat_partner_id", recipientId)
+        .maybeSingle();
+      if (data) {
+        setChatStyle({
+          wallpaper: data.wallpaper || "default",
+          themeColor: data.theme_color || "default",
+          fontSize: data.font_size || "medium",
+        });
+      }
+    };
+    loadStyle();
+  }, [user?.id, recipientId]);
+
   const scrollToBottom = useCallback(() => {
     setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
   }, []);
