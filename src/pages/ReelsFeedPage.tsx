@@ -362,9 +362,11 @@ export default function ReelsFeedPage() {
           <CreatePostModal
             userId={userId}
             userProfile={userProfile}
-            onClose={() => setShowCreate(false)}
+            initialCaption={shareForPost ? `${shareForPost.shareText}\n${shareForPost.shareUrl}`.trim() : undefined}
+            onClose={() => { setShowCreate(false); setShareForPost(null); }}
             onCreated={() => {
               setShowCreate(false);
+              setShareForPost(null);
               queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
             }}
           />
