@@ -22,7 +22,7 @@ import ChatAttachMenu from "./ChatAttachMenu";
 import ChatNotificationSettings from "./ChatNotificationSettings";
 import ChatMediaGallery from "./ChatMediaGallery";
 import StickerKeyboard from "./StickerKeyboard";
-import ChatPersonalization, { getWallpaperClass } from "./ChatPersonalization";
+import ChatPersonalization, { getWallpaperClass, getWallpaperStyle } from "./ChatPersonalization";
 import ChatMiniApps from "./ChatMiniApps";
 import ChatSecurity from "./ChatSecurity";
 import CallHistoryPage from "./CallHistoryPage";
