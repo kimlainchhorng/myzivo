@@ -25,8 +25,10 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("Not authenticated");
 
-    const { message_id, seller_id } = await req.json();
+    const { message_id, seller_id, amount_cents } = await req.json();
     if (!message_id || !seller_id) throw new Error("Missing message_id or seller_id");
+
+    const priceCents = typeof amount_cents === "number" && amount_cents >= 50 ? amount_cents : 99;
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -41,7 +43,16 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [{ price: "price_1TIHITBxRnIs4yDmeVUm5mkV", quantity: 1 }],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product: "prod_UGow5ibJh2K1aA",
+            unit_amount: priceCents,
+          },
+          quantity: 1,
+        },
+      ],
       mode: "payment",
       success_url: `${origin}/chat?unlocked=${message_id}`,
       cancel_url: `${origin}/chat`,
@@ -50,6 +61,7 @@ serve(async (req) => {
         buyer_id: user.id,
         seller_id,
         type: "media_unlock",
+        amount_cents: String(priceCents),
       },
     });
 
@@ -58,7 +70,7 @@ serve(async (req) => {
       message_id,
       buyer_id: user.id,
       seller_id,
-      amount_cents: 99,
+      amount_cents: priceCents,
       stripe_session_id: session.id,
       status: "pending",
     });
