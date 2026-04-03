@@ -1540,6 +1540,25 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     }
   };
 
+  // Double-tap to like
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (!liked) handleLike();
+      setShowDoubleTapHeart(true);
+      setTimeout(() => setShowDoubleTapHeart(false), 800);
+    }
+    lastTapRef.current = now;
+  };
+
+  // Emoji reactions
+  const REACTIONS = ["❤️", "😂", "😮", "😢", "🔥", "👏"];
+  const handleReaction = (emoji: string) => {
+    setSelectedReaction(selectedReaction === emoji ? null : emoji);
+    setShowReactionPicker(false);
+    toast.success(`Reacted with ${emoji}`);
+  };
+
   const handleShare = () => {
     setShowShareSheet(true);
   };
