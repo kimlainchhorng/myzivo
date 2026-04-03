@@ -1368,7 +1368,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
       </div>
 
       {/* Media */}
-      <div ref={containerRef} className={cn("relative w-full aspect-square", hasMedia ? "bg-black" : "bg-transparent")}>
+      <div ref={containerRef} className={cn("relative w-full", hasMedia ? "aspect-square bg-black" : "")}>
         {hasMedia ? (
           item.media_type === "video" ? (
             <>
@@ -1403,19 +1403,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
               onClick={() => onOpenFullscreen?.()}
             />
           )
-        ) : (
-          <div className="h-full w-full bg-gradient-to-br from-muted/80 via-card to-muted/40 p-5 flex flex-col justify-between">
-            <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-              <Link2 className="h-6 w-6 text-primary" />
-            </div>
-            <div className="space-y-2">
-              <p className="text-base font-semibold text-foreground whitespace-pre-wrap break-words line-clamp-6">
-                {item.caption || "Shared post"}
-              </p>
-              <p className="text-xs text-muted-foreground">Shared to profile</p>
-            </div>
-          </div>
-        )}
+        ) : null}
 
         {/* Multi-image indicator */}
         {hasMedia && item.media_urls.length > 1 && (

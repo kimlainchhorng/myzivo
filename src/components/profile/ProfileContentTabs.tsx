@@ -370,16 +370,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   />
                 )
               ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-muted/80 via-card to-muted/40 p-3 flex flex-col justify-between">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-                    <Link2 className="w-4 h-4 text-primary" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-card to-muted/30 p-2.5 flex flex-col">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 border border-primary/15 flex items-center justify-center mb-auto">
+                    <Share2 className="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <div className="space-y-1.5">
-                    <p className="text-[11px] font-semibold text-foreground line-clamp-5 whitespace-pre-wrap break-words">
-                      {item.caption || "Shared post"}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">Shared post</p>
-                  </div>
+                  <p className="text-[10px] font-medium text-foreground/80 line-clamp-4 whitespace-pre-wrap break-words leading-tight mt-auto">
+                    {item.caption || "Shared post"}
+                  </p>
                 </div>
               )}
               {item.type === "reel" && hasMedia && (
@@ -500,11 +497,14 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     />
                   )
                 ) : (
-                  <div className="w-full max-w-md rounded-3xl border border-border/30 bg-card p-6 shadow-2xl">
-                    <div className="mb-4 h-12 w-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-                      <Link2 className="w-6 h-6 text-primary" />
+                  <div className="w-full max-w-md rounded-2xl bg-card/90 border border-border/20 p-5 shadow-lg">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Share2 className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="text-xs font-semibold text-white/60">Shared post</span>
                     </div>
-                    <p className="text-sm leading-6 text-foreground whitespace-pre-wrap break-words">
+                    <p className="text-sm leading-relaxed text-white whitespace-pre-wrap break-words">
                       {selectedPost.caption || "Shared post"}
                     </p>
                   </div>
