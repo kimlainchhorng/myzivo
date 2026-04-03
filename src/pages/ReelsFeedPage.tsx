@@ -40,6 +40,10 @@ interface FeedItem {
   author_id?: string;
   store_slug?: string;
   created_at: string;
+  // Share tracking
+  shared_from_post_id?: string | null;
+  shared_from_user_id?: string | null;
+  shared_from_user_name?: string | null;
   // Interaction controls from profile
   comment_control?: "everyone" | "friends" | "off";
   hide_like_counts?: boolean;
