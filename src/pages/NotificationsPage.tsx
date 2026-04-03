@@ -103,7 +103,7 @@ const FriendRequestCard = ({ request, onAccept, onDecline }: { request: FriendRe
 /* ── Social Notification Item ── */
 const SOCIAL_NOTIF_ICONS: Record<string, typeof Heart> = {
   like: Heart, comment: MessageCircleIcon, reply: MessageCircleIcon,
-  share: Share2, follow: UserPlusIcon, mention: AtSign, story_reaction: Flame,
+  share: Share2, follow: UserPlus, mention: AtSign, story_reaction: Flame,
 };
 const SOCIAL_NOTIF_COLORS: Record<string, string> = {
   like: "text-red-500", comment: "text-blue-500", reply: "text-blue-400",
