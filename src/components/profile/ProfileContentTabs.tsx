@@ -49,6 +49,8 @@ type UserPostRow = {
   views_count: number | null;
   created_at: string;
   is_published: boolean;
+  shared_from_post_id: string | null;
+  shared_from_user_id: string | null;
 };
 
 const normalizeFeedItemType = (mediaType: string | null | undefined): "photo" | "reel" =>
