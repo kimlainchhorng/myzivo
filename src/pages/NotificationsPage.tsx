@@ -4,7 +4,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import SEOHead from '@/components/SEOHead';
 import { useNavigate } from 'react-router-dom';
-import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft, UserPlus, Check, X } from 'lucide-react';
+import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft, UserPlus, Check, X, Heart, MessageCircle as MessageCircleIcon, Share2, AtSign, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,7 +20,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { useSocialNotifications, SocialNotification } from '@/hooks/useSocialNotifications';
-import { Heart, MessageCircle as MessageCircleIcon, Share2, UserPlus as UserPlusIcon, AtSign, Flame } from 'lucide-react';
 
 type NotificationCategory = 'all' | 'social' | 'orders' | 'promos' | 'support' | 'delays';
 
