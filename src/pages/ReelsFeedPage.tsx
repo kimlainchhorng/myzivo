@@ -75,6 +75,7 @@ export default function ReelsFeedPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [feedFilter, setFeedFilter] = useState<"all" | "photos" | "videos" | "text">("all");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
@@ -425,6 +426,41 @@ export default function ReelsFeedPage() {
       {/* Story Rings */}
       <FeedStoryRing />
 
+      {/* Trending hashtags */}
+      <div className="px-3 py-2 flex gap-2 overflow-x-auto no-scrollbar border-b border-border/10">
+        {["#travel", "#food", "#zivo", "#deals", "#explore", "#ootd", "#sunset"].map((tag) => (
+          <button
+            key={tag}
+            onClick={() => toast.info(`Showing posts with ${tag}`)}
+            className="px-3 py-1.5 rounded-full bg-primary/8 text-primary text-xs font-semibold whitespace-nowrap hover:bg-primary/15 active:scale-95 transition-all"
+          >
+            {tag}
+          </button>
+        ))}
+      </div>
+
+      {/* Feed filter tabs */}
+      <div className="px-3 py-2 flex gap-2 border-b border-border/10">
+        {([
+          { value: "all" as const, label: "All" },
+          { value: "photos" as const, label: "📷 Photos" },
+          { value: "videos" as const, label: "🎬 Videos" },
+          { value: "text" as const, label: "✍️ Text" },
+        ]).map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => setFeedFilter(tab.value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+              feedFilter === tab.value
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Posts */}
       {isLoading ? (
         <div className="flex items-center justify-center h-60">
@@ -444,9 +480,18 @@ export default function ReelsFeedPage() {
             </button>
           )}
         </div>
-      ) : (
+      ) : (() => {
+        const filteredItems = feedFilter === "all" ? items
+          : feedFilter === "photos" ? items.filter(i => i.media_type === "image" && i.media_urls.length > 0)
+          : feedFilter === "videos" ? items.filter(i => i.media_type === "video")
+          : items.filter(i => !i.media_urls.length || !i.media_urls[0]);
+        return filteredItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
+            <p className="text-sm">No {feedFilter} posts found</p>
+          </div>
+        ) : (
         <div className="divide-y divide-border/20">
-          {items.map((item, idx) => (
+          {filteredItems.map((item, idx) => (
             <FeedCard key={item.id} item={item} currentUserId={userId} onOpenFullscreen={() => {
               if (item.media_type === 'video') {
                 setReelsStartIndex(idx);
@@ -456,7 +501,8 @@ export default function ReelsFeedPage() {
             }} />
           ))}
         </div>
-      )}
+        );
+      })()}
 
       {/* Create Post Modal */}
       <AnimatePresence>
@@ -1481,6 +1527,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
+  const [showEditCaption, setShowEditCaption] = useState(false);
+  const [editCaptionText, setEditCaptionText] = useState(item.caption || "");
+  const [editSaving, setEditSaving] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef(0);
@@ -1614,13 +1663,44 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     setShowShareSheet(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!currentUserId) {
       toast.error("Please sign in to bookmark posts");
       return;
     }
-    setSaved(!saved);
-    toast.success(saved ? "Removed from saved" : "Saved!");
+    const newSaved = !saved;
+    setSaved(newSaved);
+    if (newSaved) {
+      await (supabase as any).from("bookmarks").insert({
+        user_id: currentUserId,
+        item_id: item.id,
+        item_type: "post",
+        title: item.caption || `Post by ${item.author_name}`,
+        collection_name: "Posts",
+      });
+      toast.success("Saved to bookmarks");
+    } else {
+      await (supabase as any).from("bookmarks").delete().eq("user_id", currentUserId).eq("item_id", item.id);
+      toast.success("Removed from bookmarks");
+    }
+  };
+
+  const handleEditPost = async () => {
+    if (!currentUserId || !isOwner) return;
+    setEditSaving(true);
+    try {
+      const realId = item.id.replace(/^u-/, "");
+      const table = item.source === "store" ? "store_posts" : "user_posts";
+      const { error } = await (supabase as any).from(table).update({ caption: editCaptionText }).eq("id", realId);
+      if (error) throw error;
+      item.caption = editCaptionText;
+      setShowEditCaption(false);
+      toast.success("Post updated!");
+      queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+    } catch {
+      toast.error("Failed to update post");
+    }
+    setEditSaving(false);
   };
 
   const handleComment = () => {
@@ -2110,6 +2190,17 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 {/* Owner-only: Delete post */}
                 {isOwner && (
                   <button
+                    onClick={() => { setShowPostMenu(false); setEditCaptionText(item.caption || ""); setShowEditCaption(true); }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                  >
+                    <Settings2 className="h-5 w-5 text-foreground" />
+                    <span className="text-sm font-medium text-foreground">Edit caption</span>
+                  </button>
+                )}
+
+                {/* Owner-only: Delete post */}
+                {isOwner && (
+                  <button
                     onClick={async () => {
                       setShowPostMenu(false);
                       const realId = item.id.replace(/^u-/, "");
@@ -2118,7 +2209,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                         toast.error("Failed to delete post");
                       } else {
                         toast.success("Post deleted");
-                        queryClient.invalidateQueries({ queryKey: ["reels-feed"] });
+                        queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
                       }
                     }}
                     className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
@@ -2300,6 +2391,55 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                     )}
                   </button>
                 ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Caption Sheet */}
+      <AnimatePresence>
+        {showEditCaption && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[230] flex items-end justify-center bg-black/40"
+            onClick={() => setShowEditCaption(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden"
+            >
+              <div className="flex justify-center py-3">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+              </div>
+              <div className="px-4">
+                <h3 className="text-base font-bold text-foreground mb-3">Edit Caption</h3>
+                <textarea
+                  value={editCaptionText}
+                  onChange={(e) => setEditCaptionText(e.target.value)}
+                  rows={4}
+                  maxLength={2200}
+                  className="w-full p-3 rounded-xl bg-muted/50 border border-border/40 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  placeholder="Write a caption..."
+                />
+                <p className="text-[10px] text-muted-foreground mt-1 mb-3">{editCaptionText.length}/2,200</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowEditCaption(false)}
+                    className="flex-1 py-2.5 rounded-xl bg-muted text-foreground text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleEditPost}
+                    disabled={editSaving}
+                    className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
+                  >
+                    {editSaving ? "Saving..." : "Save"}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
