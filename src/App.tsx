@@ -22,7 +22,7 @@ import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import LiveChatWidget from "./components/shared/LiveChatWidget";
-import AIChatbotWidget from "./components/ai/AIChatbotWidget";
+
 import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
 import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
