@@ -544,13 +544,17 @@ function CreatePostModal({
       }
 
       // Insert into user_posts
-      const { error: insertErr } = await (supabase as any).from("user_posts").insert({
+      const insertData: any = {
         user_id: userId,
         media_type: finalMediaType,
         media_url: mediaUrl,
         caption: caption.trim() || null,
         is_published: true,
-      });
+      };
+      if (sharedPostId) insertData.shared_from_post_id = sharedPostId;
+      if (sharedPostAuthorId) insertData.shared_from_user_id = sharedPostAuthorId;
+
+      const { error: insertErr } = await (supabase as any).from("user_posts").insert(insertData);
       if (insertErr) throw insertErr;
 
       toast.success("Post shared! 🎉");
