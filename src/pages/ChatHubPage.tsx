@@ -715,12 +715,12 @@ export default function ChatHubPage() {
                               )}
                             </span>
                           )}
-                          {getMessagePreviewIcon(chat.lastMessage)}
+                          {getMessagePreviewIcon(parseRichMessagePreview(chat.lastMessage))}
                           <span className={cn(
                             "text-[13px] truncate",
                             chat.unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"
                           )}>
-                            {chat.lastMessage}
+                            {parseRichMessagePreview(chat.lastMessage)}
                           </span>
                         </div>
                         {chat.unread > 0 && (
