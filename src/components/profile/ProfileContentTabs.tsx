@@ -357,7 +357,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               {hasMedia ? (
                 item.type === "reel" ? (
                   <video
-                    src={item.url || undefined}
+                    src={item.url ? `${item.url}#t=0.1` : undefined}
                     className="absolute inset-0 w-full h-full object-cover"
                     style={{ filter: item.filterCss || "none" }}
                     muted
