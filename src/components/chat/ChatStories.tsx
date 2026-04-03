@@ -55,7 +55,7 @@ export default function ChatStories() {
     refetchInterval: 60000,
     queryFn: async () => {
       const { data } = await supabase
-        .from("user_stories" as any)
+        .from("stories" as any)
         .select("id, user_id, media_url, media_type, caption, created_at, expires_at, views_count")
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: true });
@@ -103,7 +103,7 @@ export default function ChatStories() {
 
   const deleteStory = useMutation({
     mutationFn: async (storyId: string) => {
-      const { error } = await supabase.from("user_stories" as any).delete().eq("id", storyId);
+      const { error } = await supabase.from("stories" as any).delete().eq("id", storyId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -214,7 +214,7 @@ export default function ChatStories() {
 
       const { data: urlData } = supabase.storage.from("user-stories").getPublicUrl(path);
 
-      const { error: insertError } = await supabase.from("user_stories" as any).insert({
+      const { error: insertError } = await supabase.from("stories" as any).insert({
         user_id: user.id,
         media_url: urlData.publicUrl,
         media_type: isVideo ? "video" : "image",
