@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -62,6 +62,16 @@ export default function ReelsFeedPage() {
   const [searchLoading, setSearchLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const location = useLocation();
+
+  // Handle share-to-profile deep link
+  useEffect(() => {
+    const state = location.state as { shareToProfile?: boolean; shareUrl?: string; shareText?: string } | null;
+    if (state?.shareToProfile && userId) {
+      setShowCreate(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, userId]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {

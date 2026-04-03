@@ -59,15 +59,47 @@ export default function ChatHubPage() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const location = useLocation();
 
-  // Handle deep-link from profile page chat button
+  // Share mode state
+  const [sharePayload, setSharePayload] = useState<{ shareUrl: string; shareText: string } | null>(null);
+
+  // Handle deep-link from profile page chat button OR share-to-chat
   useEffect(() => {
-    const state = location.state as { openChat?: { recipientId: string; recipientName: string; recipientAvatar?: string | null } } | null;
+    const state = location.state as {
+      openChat?: { recipientId: string; recipientName: string; recipientAvatar?: string | null };
+      shareUrl?: string;
+      shareText?: string;
+    } | null;
     if (state?.openChat) {
       setOpenPersonalChat({ id: state.openChat.recipientId, name: state.openChat.recipientName, avatar: state.openChat.recipientAvatar });
-      // Clear the state so it doesn't re-open on back navigation
+      window.history.replaceState({}, document.title);
+    }
+    if (state?.shareUrl) {
+      setSharePayload({ shareUrl: state.shareUrl, shareText: state.shareText || "" });
+      setActive("personal");
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
+  // Send shared content as a DM to selected contact
+  const handleShareToContact = async (contactId: string, contactName: string, contactAvatar?: string | null) => {
+    if (!sharePayload || !user) return;
+    try {
+      const shareMessage = sharePayload.shareText
+        ? `${sharePayload.shareText}\n${sharePayload.shareUrl}`
+        : sharePayload.shareUrl;
+      await supabase.from("direct_messages").insert({
+        sender_id: user.id,
+        receiver_id: contactId,
+        message: shareMessage,
+      });
+      toast.success(`Shared to ${contactName}`);
+      setSharePayload(null);
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] });
+      setOpenPersonalChat({ id: contactId, name: contactName, avatar: contactAvatar });
+    } catch {
+      toast.error("Failed to share");
+    }
+  };
 
   // Fetch store chats for "shop" tab
   const { data: shopChats = [] } = useQuery({
@@ -465,7 +497,21 @@ export default function ChatHubPage() {
         </div>
       </div>
 
-      {/* Stories Row */}
+      {/* Share Mode Banner */}
+      {sharePayload && (
+        <div className="mx-5 mb-3 p-3 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-primary">Share to chat</p>
+            <p className="text-[11px] text-muted-foreground truncate">{sharePayload.shareText || sharePayload.shareUrl}</p>
+          </div>
+          <button
+            onClick={() => setSharePayload(null)}
+            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0"
+          >
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+      )}
       <ChatStories />
 
       {/* Chat List */}
@@ -523,6 +569,11 @@ export default function ChatHubPage() {
                     onClick={() => {
                       if (swipedId === chat.id) {
                         setSwipedId(null);
+                        return;
+                      }
+                      // Share mode: send shared content to this contact
+                      if (sharePayload && active === "personal" && !(chat as any).isGroup) {
+                        handleShareToContact(chat.id, chat.name, chat.avatar);
                         return;
                       }
                       if (active === "shop") {
