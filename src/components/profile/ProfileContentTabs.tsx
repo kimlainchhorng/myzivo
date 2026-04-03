@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -69,6 +70,7 @@ const TABS: { id: TabFilter; label: string; icon: typeof Grid3X3 }[] = [
 
 export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const profileOwnerId = userId || user?.id;
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [showComposer, setShowComposer] = useState(false);
@@ -298,7 +300,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
     <div className="space-y-3">
       {/* Create Post Bar */}
       <button
-        onClick={() => { setShowComposer(true); setComposerType("photo"); }}
+        onClick={() => navigate("/reels", { state: { openCreate: true } })}
         className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors rounded-2xl"
       >
         <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border-2 border-primary/20 shrink-0">

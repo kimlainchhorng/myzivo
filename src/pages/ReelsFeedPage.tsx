@@ -84,9 +84,12 @@ export default function ReelsFeedPage() {
 
   // Handle share-to-profile deep link
   useEffect(() => {
-    const state = location.state as { shareToProfile?: boolean; shareUrl?: string; shareText?: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null;
+    const state = location.state as { shareToProfile?: boolean; openCreate?: boolean; shareUrl?: string; shareText?: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null;
     if (state?.shareToProfile && userId) {
       setShareForPost({ shareUrl: state.shareUrl || "", shareText: state.shareText || "", shareMediaUrl: state.shareMediaUrl, shareMediaType: state.shareMediaType, sharePostId: state.sharePostId, sharePostAuthorId: state.sharePostAuthorId, sharePostAuthorName: state.sharePostAuthorName });
+      setShowCreate(true);
+      window.history.replaceState({}, document.title);
+    } else if (state?.openCreate && userId) {
       setShowCreate(true);
       window.history.replaceState({}, document.title);
     }
