@@ -116,7 +116,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const videoInputRef = useRef<HTMLInputElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  const { isTyping: recipientTyping, isOnline: recipientOnline, setTyping } = useChatPresence(user?.id, recipientId);
+  const { isTyping: recipientTyping, isOnline: recipientOnline, lastSeen: recipientLastSeen, setTyping } = useChatPresence(user?.id, recipientId);
   const voice = useVoiceRecorder();
   const { draft, updateDraft, clearDraft } = useChatDraft(user?.id, recipientId);
 
