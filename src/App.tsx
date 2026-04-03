@@ -66,6 +66,10 @@ const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
 const ExplorePage = lazy(() => import("./pages/ExplorePage"));
 const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
 const PrivacySettingsPage = lazy(() => import("./pages/account/PrivacySettingsPage"));
+const CreatorDashboardPage = lazy(() => import("./pages/CreatorDashboardPage"));
+const EventsPage = lazy(() => import("./pages/EventsPage"));
+const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
+const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
 const DraftsPage = lazy(() => import("./pages/DraftsPage"));
 const AccountAnalyticsPage = lazy(() => import("./pages/account/AccountAnalyticsPage"));
 const VerificationRequestPage = lazy(() => import("./pages/account/VerificationRequestPage"));
@@ -462,6 +466,10 @@ const App = () => (
                 <Route path="/chat" element={<ChatHubPage />} />
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
+                <Route path="/creator-dashboard" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
+                <Route path="/events" element={<EventsPage />} />
+                <Route path="/communities" element={<CommunitiesPage />} />
+                <Route path="/marketplace" element={<MarketplacePage />} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
                 <Route path="/drafts" element={<ProtectedRoute><DraftsPage /></ProtectedRoute>} />
                 <Route path="/account/analytics" element={<ProtectedRoute><AccountAnalyticsPage /></ProtectedRoute>} />

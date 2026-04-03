@@ -8,6 +8,7 @@ import UnifiedShareSheet from "@/components/shared/ShareSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import TipSheet from "@/components/social/TipSheet";
 import {
   Loader2, Heart, MessageCircle, Share2, Eye, Bookmark,
   MoreHorizontal, Play, Volume2, VolumeX, Image as ImageIcon,
@@ -1530,6 +1531,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const [showEditCaption, setShowEditCaption] = useState(false);
   const [editCaptionText, setEditCaptionText] = useState(item.caption || "");
   const [editSaving, setEditSaving] = useState(false);
+  const [tipTarget, setTipTarget] = useState<{ id: string; name: string } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef(0);
@@ -2176,7 +2178,17 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                   <span className="text-sm font-medium text-foreground">Share</span>
                 </button>
 
-                {/* Owner-only: Comment settings */}
+                {/* Tip creator */}
+                {!isOwner && item.author_id && (
+                  <button
+                    onClick={() => { setShowPostMenu(false); setTipTarget({ id: item.author_id!, name: item.author_name }); }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                  >
+                    <Heart className="h-5 w-5 text-amber-500" />
+                    <span className="text-sm font-medium text-foreground">Send Tip</span>
+                  </button>
+                )}
+
                 {isOwner && (
                   <button
                     onClick={() => { setShowPostMenu(false); setShowCommentSettings(true); }}
@@ -2445,6 +2457,13 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Tip Sheet */}
+      <TipSheet
+        open={!!tipTarget}
+        onClose={() => setTipTarget(null)}
+        creatorId={tipTarget?.id || ""}
+        creatorName={tipTarget?.name || ""}
+      />
 
     </div>
   );

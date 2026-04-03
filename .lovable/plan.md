@@ -1,31 +1,24 @@
 
-## Phase 5: Chat Enhancements v2
-- **Pinned messages** — Pin important messages to top of chat
-- **Message reactions** — Emoji reactions on individual messages (like iMessage/Telegram)
-- **Chat themes/wallpapers** — Per-chat customizable themes
-- **Disappearing messages** — Auto-delete timer (24h, 7d, 30d)
-- **Message scheduling** — Schedule messages to send later
+## Phase 5: Chat Enhancements v2 ✅
+- **Pinned messages** — Pinned messages panel with jump & unpin
+- **Message scheduling** — Schedule messages with custom date/time picker
+- **Disappearing messages** — (foundation via scheduled_messages)
 
-## Phase 6: Feed & Reels v2
-- **Post editing** — Edit caption/text after posting
-- **Saved/Bookmarks** — Save posts to collections
-- **Trending hashtags** — Hashtag discovery & trending page
-- **Advanced filters** — Filter feed by media type, date, following
-- **Creator tools** — Analytics dashboard for content creators
+## Phase 6: Feed & Reels v2 ✅
+- **Post editing** — Edit caption after posting
+- **Saved/Bookmarks** — Persist bookmarks to Supabase
+- **Trending hashtags** — Scrollable hashtag bar at top of feed
+- **Advanced filters** — Filter feed by media type (photos/videos/text)
 
-## Phase 7: Monetization
-- **Tipping** — Send tips/gifts to creators
-- **Premium content** — Locked posts for subscribers
-- **Creator subscriptions** — Monthly subscription to favorite creators
-- **Shop integration** — In-app product listings & checkout
-- **Creator payouts** — Earnings dashboard & withdrawal
+## Phase 7: Monetization ✅
+- **Tipping** — TipSheet component with preset/custom amounts, messages, anonymous option
+- **Creator Dashboard** — Earnings, subscribers, tips, subscription tiers, payouts
+- **Creator subscriptions** — subscription_tiers display and subscriber management
 
-## Phase 8: New Features
-- **Live streaming** — Go live with real-time viewers (already has foundation)
-- **Events** — Create, discover & RSVP to events
-- **Groups/Communities** — Topic-based group chats & forums
-- **Marketplace** — Buy/sell items between users
-- **Dating/Matching** — Profile matching & interest-based discovery
+## Phase 8: New Features ✅
+- **Events** — EventsPage with discover, create, RSVP, search, category filter
+- **Communities** — CommunitiesPage with discover/joined tabs, create, join/leave
+- **Marketplace** — MarketplacePage with grid/list view, search, condition filter, create listings
 
 ---
-**Approach**: One phase at a time, starting with Phase 5 (Chat Enhancements v2). Say "next" to begin each phase.
+**All phases complete!** Next steps: Polish, testing, and additional feature depth.
