@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft, Crown, Zap, Shield, Star,
   Check, Loader2, Settings, Sparkles, X, Lock, MessageCircle,
+  Car, Headphones, Percent, Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
