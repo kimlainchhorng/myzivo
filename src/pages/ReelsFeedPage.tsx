@@ -1470,7 +1470,13 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             {/* Original author header */}
             <button
               type="button"
-              onClick={() => item.shared_from_user_id && navigate(`/user/${item.shared_from_user_id}`)}
+              onClick={() => {
+                if (item.shared_from_source === "store" && item.shared_from_store_slug) {
+                  navigate(`/grocery/shop/${item.shared_from_store_slug}`);
+                } else if (item.shared_from_user_id) {
+                  navigate(`/user/${item.shared_from_user_id}`);
+                }
+              }}
               className="flex items-center gap-2.5 px-3 py-2 w-full active:opacity-70"
             >
               <div className="h-8 w-8 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
@@ -1478,13 +1484,13 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                   <img src={item.shared_from_user_avatar} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-[10px] font-bold">
-                    {(item.shared_from_user_name || "?")[0]}
+                    {(item.shared_from_user_name || (item.shared_from_source === "store" ? "S" : "?"))[0]}
                   </div>
                 )}
               </div>
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-[12px] font-semibold text-foreground truncate">
-                  {item.shared_from_user_name || "Unknown"}
+                  {item.shared_from_user_name || (item.shared_from_source === "store" ? "Store" : "Someone")}
                 </p>
                 <div className="flex items-center gap-1">
                   <Globe className="h-2.5 w-2.5 text-muted-foreground" />
