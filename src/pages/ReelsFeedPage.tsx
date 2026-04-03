@@ -75,6 +75,7 @@ export default function ReelsFeedPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [feedFilter, setFeedFilter] = useState<"all" | "photos" | "videos" | "text">("all");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
