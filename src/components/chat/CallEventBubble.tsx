@@ -142,101 +142,105 @@ export default function CallEventBubble({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/20"
+              className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[3px]"
               onClick={closeMenu}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.85, y: 10 }}
+              initial={{ opacity: 0, scale: 0.9, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.85, y: 10 }}
-              transition={{ type: "spring", damping: 22, stiffness: 400 }}
+              exit={{ opacity: 0, scale: 0.9, y: 8 }}
+              transition={{ type: "spring", damping: 24, stiffness: 400 }}
               className="absolute z-50 bottom-full mb-2 right-0"
             >
-              <div className="bg-background shadow-xl shadow-black/8 border border-border/20 rounded-2xl overflow-hidden min-w-[180px]">
+              <div className="bg-background/95 backdrop-blur-xl shadow-2xl shadow-black/12 border border-border/15 rounded-2xl overflow-hidden min-w-[200px]">
                 <AnimatePresence mode="wait">
                   {deleteStep === "menu" ? (
                     <motion.div
                       key="menu"
-                      initial={{ opacity: 0, x: -10 }}
+                      initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.15 }}
+                      exit={{ opacity: 0, x: -8 }}
+                      transition={{ duration: 0.12 }}
                     >
-                      {/* Call back */}
                       <button
                         onClick={(e) => { e.stopPropagation(); onCallback?.(); closeMenu(); }}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-muted/40 transition-colors active:scale-[0.98] text-foreground"
+                        className="flex items-center gap-3.5 w-full px-4 py-3.5 text-left hover:bg-muted/50 transition-colors active:scale-[0.97] text-foreground"
                       >
-                        {isVideo ? <Video className="h-[18px] w-[18px] opacity-70" /> : <Phone className="h-[18px] w-[18px] opacity-70" />}
-                        <span className="text-[13px] font-medium">Call back</span>
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          {isVideo ? <Video className="h-4 w-4 text-primary" /> : <Phone className="h-4 w-4 text-primary" />}
+                        </div>
+                        <span className="text-[14px] font-medium">Call back</span>
                       </button>
 
-                      {/* Call info */}
+                      <div className="mx-4 h-px bg-border/20" />
+
                       <button
                         onClick={(e) => { e.stopPropagation(); closeMenu(); }}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-muted/40 transition-colors active:scale-[0.98] text-foreground"
+                        className="flex items-center gap-3.5 w-full px-4 py-3.5 text-left hover:bg-muted/50 transition-colors active:scale-[0.97] text-foreground"
                       >
-                        <Info className="h-[18px] w-[18px] opacity-70" />
-                        <span className="text-[13px] font-medium">Call info</span>
+                        <div className="h-8 w-8 rounded-full bg-muted/60 flex items-center justify-center">
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <span className="text-[14px] font-medium">Call info</span>
                       </button>
 
-                      {/* Delete — opens sub-step */}
                       {id && onDelete && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setDeleteStep("confirm"); }}
-                          className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-500/5 transition-colors active:scale-[0.98] text-red-500"
-                        >
-                          <Trash2 className="h-[18px] w-[18px] opacity-70" />
-                          <span className="text-[13px] font-medium flex-1">Delete</span>
-                          <ChevronRight className="h-4 w-4 opacity-40" />
-                        </button>
+                        <>
+                          <div className="mx-4 h-px bg-border/20" />
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDeleteStep("confirm"); }}
+                            className="flex items-center gap-3.5 w-full px-4 py-3.5 text-left hover:bg-destructive/5 transition-colors active:scale-[0.97] text-destructive"
+                          >
+                            <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                              <Trash2 className="h-4 w-4" />
+                            </div>
+                            <span className="text-[14px] font-medium flex-1">Delete</span>
+                            <ChevronRight className="h-4 w-4 opacity-40" />
+                          </button>
+                        </>
                       )}
                     </motion.div>
                   ) : (
                     <motion.div
                       key="confirm"
-                      initial={{ opacity: 0, x: 10 }}
+                      initial={{ opacity: 0, x: 8 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 10 }}
-                      transition={{ duration: 0.15 }}
+                      exit={{ opacity: 0, x: 8 }}
+                      transition={{ duration: 0.12 }}
                     >
-                      {/* Header */}
-                      <div className="px-4 py-2.5 border-b border-border/10">
-                        <span className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-wider">Delete Call</span>
+                      <div className="px-4 py-3 border-b border-border/15">
+                        <span className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">Delete call</span>
                       </div>
 
-                      {/* Delete this one */}
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (id) onDelete?.(id);
-                          closeMenu();
-                        }}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-500/5 transition-colors active:scale-[0.98] text-red-500"
+                        onClick={(e) => { e.stopPropagation(); if (id) onDelete?.(id); closeMenu(); }}
+                        className="flex items-center gap-3.5 w-full px-4 py-3.5 text-left hover:bg-destructive/5 transition-colors active:scale-[0.97] text-destructive"
                       >
-                        <Trash2 className="h-[18px] w-[18px] opacity-70" />
-                        <span className="text-[13px] font-medium">Delete this call</span>
+                        <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                          <Trash2 className="h-4 w-4" />
+                        </div>
+                        <span className="text-[14px] font-medium">This call only</span>
                       </button>
 
-                      {/* Delete all */}
+                      <div className="mx-4 h-px bg-border/20" />
+
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteAll?.();
-                          closeMenu();
-                        }}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-500/5 transition-colors active:scale-[0.98] text-red-500"
+                        onClick={(e) => { e.stopPropagation(); onDeleteAll?.(); closeMenu(); }}
+                        className="flex items-center gap-3.5 w-full px-4 py-3.5 text-left hover:bg-destructive/5 transition-colors active:scale-[0.97] text-destructive"
                       >
-                        <Trash2 className="h-[18px] w-[18px] opacity-70" />
-                        <span className="text-[13px] font-medium">Delete all calls</span>
+                        <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                          <Trash2 className="h-4 w-4" />
+                        </div>
+                        <span className="text-[14px] font-medium">All calls</span>
                       </button>
 
-                      {/* Cancel — go back */}
+                      <div className="mx-4 h-px bg-border/20" />
+
                       <button
                         onClick={(e) => { e.stopPropagation(); setDeleteStep("menu"); }}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-muted/40 transition-colors active:scale-[0.98] text-foreground border-t border-border/10"
+                        className="flex items-center justify-center w-full px-4 py-3 text-left hover:bg-muted/40 transition-colors active:scale-[0.97]"
                       >
-                        <span className="text-[13px] font-medium text-muted-foreground w-full text-center">Cancel</span>
+                        <span className="text-[13px] font-medium text-muted-foreground">Cancel</span>
                       </button>
                     </motion.div>
                   )}
