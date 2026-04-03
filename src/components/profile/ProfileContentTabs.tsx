@@ -408,8 +408,8 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
       {/* Feed - conditional layout */}
       {activeTab === "all" && filtered.length > 0 ? (
-        /* Feed-style view for "All" tab */
-        <div className="divide-y divide-border/30 rounded-2xl overflow-hidden border border-border/20">
+        /* Feed-style view for "All" tab — matches PublicProfilePage exactly */
+        <div className="divide-y divide-border/30">
           {filtered.map((item) => (
             <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card">
               {/* Post header */}
