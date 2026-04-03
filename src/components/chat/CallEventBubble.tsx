@@ -152,11 +152,11 @@ export default function CallEventBubble({
               onClick={closeMenu}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 6 }}
+              initial={{ opacity: 0, scale: 0.92, y: openDown ? -6 : 6 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 6 }}
+              exit={{ opacity: 0, scale: 0.92, y: openDown ? -6 : 6 }}
               transition={{ type: "spring", damping: 26, stiffness: 420 }}
-              className="absolute z-50 bottom-full mb-2 right-0"
+              className={`absolute z-50 ${openDown ? "top-full mt-2" : "bottom-full mb-2"} right-0`}
             >
               <div className="bg-background shadow-lg shadow-black/10 border border-border/30 rounded-xl overflow-hidden min-w-[190px]">
                 <AnimatePresence mode="wait">
