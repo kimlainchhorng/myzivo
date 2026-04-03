@@ -168,6 +168,7 @@ export default function ReelsFeedPage() {
             caption: post.caption,
             likes_count: post.likes_count || 0,
             comments_count: post.comments_count || 0,
+            shares_count: post.shares_count || 0,
             views_count: post.view_count || 0,
             author_name: store?.name || "Store",
             author_avatar: store?.logo_url || null,
