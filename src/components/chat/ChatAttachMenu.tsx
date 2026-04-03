@@ -3,7 +3,7 @@
  */
 import React, { forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ImagePlus, Video, MapPin, Timer } from "lucide-react";
+import { ImagePlus, Video, MapPin, Timer, Lock } from "lucide-react";
 
 interface ChatAttachMenuProps {
   open: boolean;
@@ -12,6 +12,7 @@ interface ChatAttachMenuProps {
   onVideoSelect: () => void;
   onLocationShare: () => void;
   onToggleDisappearing: () => void;
+  onLockedImageSelect?: () => void;
   disappearingEnabled: boolean;
 }
 
@@ -19,11 +20,12 @@ const menuItems = [
   { id: "image", label: "Photo", icon: ImagePlus, color: "bg-emerald-500" },
   { id: "video", label: "Video", icon: Video, color: "bg-violet-500" },
   { id: "location", label: "Location", icon: MapPin, color: "bg-blue-500" },
+  { id: "locked", label: "Locked", icon: Lock, color: "bg-rose-500" },
   { id: "disappearing", label: "24h Mode", icon: Timer, color: "bg-amber-500" },
 ] as const;
 
 export default function ChatAttachMenu({
-  open, onClose, onImageSelect, onVideoSelect, onLocationShare, onToggleDisappearing, disappearingEnabled,
+  open, onClose, onImageSelect, onVideoSelect, onLocationShare, onToggleDisappearing, onLockedImageSelect, disappearingEnabled,
 }: ChatAttachMenuProps) {
   if (!open) return null;
 
