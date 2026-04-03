@@ -447,67 +447,135 @@ export default function PublicProfilePage() {
                 <div className="divide-y divide-border/30">
                   {filteredPosts.map((post: any) => (
                     <motion.div key={post.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card">
-                      {/* Post header */}
-                      <div className="flex items-center gap-2.5 px-4 py-3">
-                        <Avatar className="h-9 w-9">
-                          <AvatarImage src={profile.avatar_url || undefined} />
-                          <AvatarFallback className="text-xs font-bold">{initials}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-semibold text-foreground truncate">{profile.full_name}</p>
-                          <p className="text-[10px] text-muted-foreground">{formatTime(post.created_at)} · 🌐</p>
-                        </div>
-                      </div>
-
-                      {/* Shared origin card */}
-                      {post.sharedOrigin && (
-                        <div className="mx-4 mb-2 px-3 py-2.5 rounded-xl border border-border/40 bg-muted/30">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <Avatar className="h-7 w-7">
-                              <AvatarImage src={post.sharedOrigin.avatar} />
-                              <AvatarFallback className="text-[10px]">{post.sharedOrigin.name?.[0] || "S"}</AvatarFallback>
+                      {post.sharedOrigin ? (
+                        /* ── Facebook-style shared post layout ── */
+                        <>
+                          {/* Sharer header */}
+                          <div className="flex items-center gap-2.5 px-3 py-2.5">
+                            <Avatar className="h-9 w-9">
+                              <AvatarImage src={profile.avatar_url || undefined} />
+                              <AvatarFallback className="text-xs font-bold">{initials}</AvatarFallback>
                             </Avatar>
-                            <p className="text-xs font-semibold text-foreground">{post.sharedOrigin.name}</p>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-semibold text-foreground truncate">{profile.full_name}</p>
+                              <div className="flex items-center gap-1">
+                                <p className="text-[10px] text-muted-foreground">{formatTime(post.created_at)}</p>
+                                <span className="text-[10px] text-muted-foreground">·</span>
+                                <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                              </div>
+                            </div>
                           </div>
-                          {post.sharedOrigin.caption && (
-                            <p className="text-xs text-muted-foreground leading-relaxed">{post.sharedOrigin.caption}</p>
+
+                          {/* Sharer's own caption */}
+                          {post.caption && post.caption !== post.sharedOrigin.caption && (
+                            <div className="px-3 pb-2">
+                              <p className="text-[13px] text-foreground">{post.caption}</p>
+                            </div>
                           )}
-                        </div>
-                      )}
 
-                      {/* Caption (if not shared or different from shared) */}
-                      {post.caption && !post.sharedOrigin && (
-                        <p className="px-4 pb-2 text-[13px] text-foreground leading-relaxed">{post.caption}</p>
-                      )}
-
-                      {/* Media */}
-                      {post.media_url && (
-                        <div className="relative w-full aspect-square bg-muted overflow-hidden" onClick={() => setSelectedPost(post)}>
-                          {post.media_type === "video" ? (
-                            <>
-                              <video src={post.media_url} className="w-full h-full object-cover" muted preload="metadata" />
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                                  <Play className="h-5 w-5 text-white fill-white ml-0.5" />
+                          {/* Embedded original post card */}
+                          <div className="mx-3 mb-2 border border-border/50 rounded-2xl overflow-hidden bg-card shadow-sm">
+                            {/* Original author header */}
+                            <div className="flex items-center px-3 py-2.5">
+                              <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                                <Avatar className="h-9 w-9 shrink-0">
+                                  <AvatarImage src={post.sharedOrigin.avatar} />
+                                  <AvatarFallback className="text-[10px]">{post.sharedOrigin.name?.[0] || "S"}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0 text-left">
+                                  <p className="text-[13px] font-semibold text-foreground truncate">{post.sharedOrigin.name}</p>
+                                  <div className="flex items-center gap-1">
+                                    <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                                  </div>
                                 </div>
                               </div>
-                            </>
-                          ) : (
-                            <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                            </div>
+
+                            {/* Original post caption */}
+                            {post.sharedOrigin.caption && (
+                              <div className="px-3 pb-2">
+                                <p className="text-[13px] text-foreground">{post.sharedOrigin.caption}</p>
+                              </div>
+                            )}
+
+                            {/* Original post media */}
+                            {post.media_url && (
+                              <div className="relative w-full aspect-square bg-muted overflow-hidden" onClick={() => setSelectedPost(post)}>
+                                {post.media_type === "video" ? (
+                                  <>
+                                    <video src={post.media_url} className="w-full h-full object-cover" muted preload="metadata" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                                        <Play className="h-5 w-5 text-white fill-white ml-0.5" />
+                                      </div>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        /* ── Normal post layout ── */
+                        <>
+                          {/* Post header */}
+                          <div className="flex items-center gap-2.5 px-3 py-2.5">
+                            <Avatar className="h-9 w-9">
+                              <AvatarImage src={profile.avatar_url || undefined} />
+                              <AvatarFallback className="text-xs font-bold">{initials}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-semibold text-foreground truncate">{profile.full_name}</p>
+                              <div className="flex items-center gap-1">
+                                <p className="text-[10px] text-muted-foreground">{formatTime(post.created_at)}</p>
+                                <span className="text-[10px] text-muted-foreground">·</span>
+                                <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Caption */}
+                          {post.caption && (
+                            <div className="px-3 pb-2">
+                              <p className="text-[13px] text-foreground">
+                                <span className="font-semibold mr-1">{profile.full_name}</span>
+                                {post.caption}
+                              </p>
+                            </div>
                           )}
-                        </div>
+
+                          {/* Media */}
+                          {post.media_url && (
+                            <div className="relative w-full aspect-square bg-muted overflow-hidden" onClick={() => setSelectedPost(post)}>
+                              {post.media_type === "video" ? (
+                                <>
+                                  <video src={post.media_url} className="w-full h-full object-cover" muted preload="metadata" />
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                                      <Play className="h-5 w-5 text-white fill-white ml-0.5" />
+                                    </div>
+                                  </div>
+                                </>
+                              ) : (
+                                <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                              )}
+                            </div>
+                          )}
+                        </>
                       )}
 
                       {/* Interaction bar */}
                       <div className="flex items-center px-4 py-2.5">
                         <div className="flex items-center gap-4 flex-1">
-                          <button onClick={() => handleLike(post.id)} className="flex items-center gap-1 touch-manipulation active:scale-90 transition-transform">
+                          <button onClick={() => handleLike(post.id)} className="touch-manipulation active:scale-90 transition-transform">
                             <Heart className={`h-[22px] w-[22px] ${likedPosts.has(post.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} strokeWidth={1.5} />
                           </button>
-                          <button className="flex items-center gap-1 touch-manipulation active:scale-90 transition-transform">
+                          <button className="touch-manipulation active:scale-90 transition-transform">
                             <MessageCircle className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
                           </button>
-                          <button onClick={handleShare} className="flex items-center gap-1 touch-manipulation active:scale-90 transition-transform">
+                          <button onClick={handleShare} className="touch-manipulation active:scale-90 transition-transform">
                             <Share2 className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
                           </button>
                         </div>

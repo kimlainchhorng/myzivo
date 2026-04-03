@@ -412,57 +412,133 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         <div className="divide-y divide-border/30">
           {filtered.map((item) => (
             <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card">
-              {/* Post header */}
-              <div className="flex items-center gap-2.5 px-4 py-3">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src={item.user.avatar || undefined} />
-                  <AvatarFallback className="text-xs font-bold">{item.user.name?.[0]?.toUpperCase() || "Z"}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-foreground truncate">{item.user.name}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {item.createdAt ? (() => { try { return formatDistanceToNow(new Date(item.createdAt), { addSuffix: true }); } catch { return item.time; } })() : item.time} · 🌐
-                  </p>
-                </div>
-              </div>
-
-              {/* Shared origin card */}
-              {item.sharedOrigin && (
-                <div className="mx-4 mb-2 px-3 py-2.5 rounded-xl border border-border/40 bg-muted/30">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Avatar className="h-7 w-7">
-                      <AvatarImage src={item.sharedOrigin.avatar} />
-                      <AvatarFallback className="text-[10px]">{item.sharedOrigin.name?.[0] || "S"}</AvatarFallback>
+              {item.isShared && item.sharedOrigin ? (
+                /* ── Facebook-style shared post layout ────────────── */
+                <>
+                  {/* Sharer header */}
+                  <div className="flex items-center gap-2.5 px-3 py-2.5">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={item.user.avatar || undefined} />
+                      <AvatarFallback className="text-xs font-bold">{item.user.name?.[0]?.toUpperCase() || "Z"}</AvatarFallback>
                     </Avatar>
-                    <p className="text-xs font-semibold text-foreground">{item.sharedOrigin.name}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-foreground truncate">{item.user.name}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-[10px] text-muted-foreground">
+                          {item.createdAt ? (() => { try { return formatDistanceToNow(new Date(item.createdAt), { addSuffix: true }); } catch { return item.time; } })() : item.time}
+                        </p>
+                        <span className="text-[10px] text-muted-foreground">·</span>
+                        <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                      </div>
+                    </div>
+                    <button onClick={() => setShowPostMenu(true)} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
+                      <MoreVertical className="h-5 w-5" />
+                    </button>
                   </div>
-                  {item.sharedOrigin.caption && (
-                    <p className="text-xs text-muted-foreground leading-relaxed">{item.sharedOrigin.caption}</p>
+
+                  {/* Sharer's own caption */}
+                  {item.caption && item.caption !== item.sharedOrigin.caption && (
+                    <div className="px-3 pb-2">
+                      <p className="text-[13px] text-foreground">{item.caption}</p>
+                    </div>
                   )}
-                </div>
-              )}
 
-              {/* Caption (non-shared only) */}
-              {item.caption && !item.sharedOrigin && (
-                <p className="px-4 pb-2 text-[13px] text-foreground leading-relaxed">{item.caption}</p>
-              )}
-
-              {/* Media */}
-              {item.url && (
-                <div className="relative w-full aspect-square bg-muted overflow-hidden cursor-pointer" onClick={() => setSelectedPost(item)}>
-                  {item.type === "reel" ? (
-                    <>
-                      <video src={`${item.url}#t=0.1`} className="w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} muted playsInline preload="metadata" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                          <Play className="h-5 w-5 text-white fill-white ml-0.5" />
+                  {/* Embedded original post card */}
+                  <div className="mx-3 mb-2 border border-border/50 rounded-2xl overflow-hidden bg-card shadow-sm">
+                    {/* Original author header */}
+                    <div className="flex items-center px-3 py-2.5">
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        <Avatar className="h-9 w-9 shrink-0">
+                          <AvatarImage src={item.sharedOrigin.avatar} />
+                          <AvatarFallback className="text-[10px]">{item.sharedOrigin.name?.[0] || "S"}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0 text-left">
+                          <p className="text-[13px] font-semibold text-foreground truncate">{item.sharedOrigin.name}</p>
+                          <div className="flex items-center gap-1">
+                            <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                          </div>
                         </div>
                       </div>
-                    </>
-                  ) : (
-                    <img src={item.url} alt="" className="w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} loading="lazy" />
+                    </div>
+
+                    {/* Original post caption */}
+                    {item.sharedOrigin.caption && (
+                      <div className="px-3 pb-2">
+                        <p className="text-[13px] text-foreground">{item.sharedOrigin.caption}</p>
+                      </div>
+                    )}
+
+                    {/* Original post media */}
+                    {item.url && (
+                      <div className="relative w-full aspect-square bg-muted overflow-hidden cursor-pointer" onClick={() => setSelectedPost(item)}>
+                        {item.type === "reel" ? (
+                          <>
+                            <video src={`${item.url}#t=0.1`} className="w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} muted playsInline preload="metadata" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                                <Play className="h-5 w-5 text-white fill-white ml-0.5" />
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <img src={item.url} alt="" className="w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} loading="lazy" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                /* ── Normal post layout ────────────────────────────── */
+                <>
+                  {/* Post header */}
+                  <div className="flex items-center gap-2.5 px-3 py-2.5">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={item.user.avatar || undefined} />
+                      <AvatarFallback className="text-xs font-bold">{item.user.name?.[0]?.toUpperCase() || "Z"}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-foreground truncate">{item.user.name}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-[10px] text-muted-foreground">
+                          {item.createdAt ? (() => { try { return formatDistanceToNow(new Date(item.createdAt), { addSuffix: true }); } catch { return item.time; } })() : item.time}
+                        </p>
+                        <span className="text-[10px] text-muted-foreground">·</span>
+                        <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                      </div>
+                    </div>
+                    <button onClick={() => setShowPostMenu(true)} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
+                      <MoreVertical className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  {/* Caption */}
+                  {item.caption && (
+                    <div className="px-3 pb-2">
+                      <p className="text-[13px] text-foreground">
+                        <span className="font-semibold mr-1">{item.user.name}</span>
+                        {item.caption}
+                      </p>
+                    </div>
                   )}
-                </div>
+
+                  {/* Media */}
+                  {item.url && (
+                    <div className="relative w-full aspect-square bg-muted overflow-hidden cursor-pointer" onClick={() => setSelectedPost(item)}>
+                      {item.type === "reel" ? (
+                        <>
+                          <video src={`${item.url}#t=0.1`} className="w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} muted playsInline preload="metadata" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                              <Play className="h-5 w-5 text-white fill-white ml-0.5" />
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <img src={item.url} alt="" className="w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} loading="lazy" />
+                      )}
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Interaction bar */}
