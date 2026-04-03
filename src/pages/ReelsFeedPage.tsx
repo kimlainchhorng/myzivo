@@ -1651,6 +1651,27 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                     <span className="text-sm font-medium text-foreground">Comment settings</span>
                   </button>
                 )}
+
+                {/* Owner-only: Delete post */}
+                {isOwner && (
+                  <button
+                    onClick={async () => {
+                      setShowPostMenu(false);
+                      const realId = item.id.replace(/^u-/, "");
+                      const { error } = await supabase.from("user_posts").delete().eq("id", realId).eq("user_id", currentUserId);
+                      if (error) {
+                        toast.error("Failed to delete post");
+                      } else {
+                        toast.success("Post deleted");
+                        queryClient.invalidateQueries({ queryKey: ["reels-feed"] });
+                      }
+                    }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                  >
+                    <Trash2 className="h-5 w-5 text-destructive" />
+                    <span className="text-sm font-medium text-destructive">Delete post</span>
+                  </button>
+                )}
               </div>
             </motion.div>
           </motion.div>
