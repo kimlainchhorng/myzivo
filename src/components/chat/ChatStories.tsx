@@ -149,7 +149,7 @@ export default function ChatStories() {
         .order("created_at", { ascending: true });
       if (!data || data.length === 0) return [];
       const userIds = [...new Set((data as any[]).map((c: any) => c.user_id))];
-      const { data: profiles } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", userIds);
+      const { data: profiles } = await supabase.from("public_profiles" as any).select("id, full_name, avatar_url").in("id", userIds);
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
       return (data as any[]).map((c: any) => ({
         ...c,

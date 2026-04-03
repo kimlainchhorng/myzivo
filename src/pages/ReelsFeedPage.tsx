@@ -130,7 +130,7 @@ export default function ReelsFeedPage() {
     searchTimerRef.current = setTimeout(async () => {
       try {
         const words = q.trim().toLowerCase().split(/\s+/);
-        let query = supabase.from("profiles").select("id, full_name, avatar_url").limit(20);
+        let query = supabase.from("public_profiles" as any).select("id, full_name, avatar_url").limit(20);
         words.forEach((w) => { query = query.ilike("full_name", `%${w}%`); });
         const { data } = await query;
         setSearchResults(data || []);
