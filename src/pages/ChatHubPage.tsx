@@ -571,6 +571,11 @@ export default function ChatHubPage() {
                         setSwipedId(null);
                         return;
                       }
+                      // Share mode: send shared content to this contact
+                      if (sharePayload && active === "personal" && !(chat as any).isGroup) {
+                        handleShareToContact(chat.id, chat.name, chat.avatar);
+                        return;
+                      }
                       if (active === "shop") {
                         setOpenShopChat({
                           storeId: chat.storeId,
