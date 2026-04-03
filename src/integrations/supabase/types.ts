@@ -2604,6 +2604,53 @@ export type Database = {
         }
         Relationships: []
       }
+      appeal_requests: {
+        Row: {
+          action_id: string | null
+          appeal_text: string
+          created_at: string | null
+          evidence_urls: Json | null
+          id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          action_id?: string | null
+          appeal_text: string
+          created_at?: string | null
+          evidence_urls?: Json | null
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          action_id?: string | null
+          appeal_text?: string
+          created_at?: string | null
+          evidence_urls?: Json | null
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appeal_requests_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "moderation_actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       application_events: {
         Row: {
           actor_user_id: string | null
@@ -9071,6 +9118,57 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string | null
+        }
+        Relationships: []
+      }
+      content_moderation_queue: {
+        Row: {
+          ai_category: string | null
+          ai_confidence: number | null
+          assigned_to: string | null
+          auto_flagged: boolean | null
+          content_id: string
+          content_type: string
+          created_at: string | null
+          id: string
+          priority: number | null
+          reason: string
+          reported_by: string | null
+          severity: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_category?: string | null
+          ai_confidence?: number | null
+          assigned_to?: string | null
+          auto_flagged?: boolean | null
+          content_id: string
+          content_type: string
+          created_at?: string | null
+          id?: string
+          priority?: number | null
+          reason: string
+          reported_by?: string | null
+          severity?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_category?: string | null
+          ai_confidence?: number | null
+          assigned_to?: string | null
+          auto_flagged?: boolean | null
+          content_id?: string
+          content_type?: string
+          created_at?: string | null
+          id?: string
+          priority?: number | null
+          reason?: string
+          reported_by?: string | null
+          severity?: string | null
+          status?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -21947,6 +22045,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ip_bans: {
+        Row: {
+          banned_by: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          ip_address: string
+          is_active: boolean | null
+          reason: string | null
+        }
+        Insert: {
+          banned_by?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address: string
+          is_active?: boolean | null
+          reason?: string | null
+        }
+        Update: {
+          banned_by?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string
+          is_active?: boolean | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       item_availability_log: {
         Row: {
           category: string
@@ -26114,6 +26242,59 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_actions: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          duration_hours: number | null
+          id: string
+          is_automated: boolean | null
+          moderator_id: string
+          notes: string | null
+          queue_item_id: string | null
+          reason: string | null
+          target_content_id: string | null
+          target_content_type: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          duration_hours?: number | null
+          id?: string
+          is_automated?: boolean | null
+          moderator_id: string
+          notes?: string | null
+          queue_item_id?: string | null
+          reason?: string | null
+          target_content_id?: string | null
+          target_content_type?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          duration_hours?: number | null
+          id?: string
+          is_automated?: boolean | null
+          moderator_id?: string
+          notes?: string | null
+          queue_item_id?: string | null
+          reason?: string | null
+          target_content_id?: string | null
+          target_content_type?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_actions_queue_item_id_fkey"
+            columns: ["queue_item_id"]
+            isOneToOne: false
+            referencedRelation: "content_moderation_queue"
             referencedColumns: ["id"]
           },
         ]
@@ -36165,6 +36346,39 @@ export type Database = {
           },
         ]
       }
+      restricted_words: {
+        Row: {
+          action: string | null
+          added_by: string | null
+          category: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          severity: string | null
+          word: string
+        }
+        Insert: {
+          action?: string | null
+          added_by?: string | null
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          severity?: string | null
+          word: string
+        }
+        Update: {
+          action?: string | null
+          added_by?: string | null
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          severity?: string | null
+          word?: string
+        }
+        Relationships: []
+      }
       restricted_zone_logs: {
         Row: {
           action: string
@@ -37815,6 +38029,54 @@ export type Database = {
         }
         Relationships: []
       }
+      safety_reports: {
+        Row: {
+          assigned_to: string | null
+          created_at: string | null
+          description: string | null
+          evidence_urls: Json | null
+          id: string
+          incident_type: string
+          location: string | null
+          reported_user_id: string | null
+          reporter_id: string
+          resolution: string | null
+          resolved_at: string | null
+          status: string | null
+          urgency: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string | null
+          evidence_urls?: Json | null
+          id?: string
+          incident_type: string
+          location?: string | null
+          reported_user_id?: string | null
+          reporter_id: string
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: string | null
+          urgency?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string | null
+          evidence_urls?: Json | null
+          id?: string
+          incident_type?: string
+          location?: string | null
+          reported_user_id?: string | null
+          reporter_id?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: string | null
+          urgency?: string | null
+        }
+        Relationships: []
+      }
       safety_share_links: {
         Row: {
           created_at: string
@@ -38880,6 +39142,39 @@ export type Database = {
         }
         Relationships: []
       }
+      shadow_bans: {
+        Row: {
+          applied_by: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          reason: string | null
+          scope: string | null
+          user_id: string
+        }
+        Insert: {
+          applied_by?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          reason?: string | null
+          scope?: string | null
+          user_id: string
+        }
+        Update: {
+          applied_by?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          reason?: string | null
+          scope?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       share_events: {
         Row: {
           created_at: string | null
@@ -39511,6 +39806,45 @@ export type Database = {
             referencedColumns: ["driver_id"]
           },
         ]
+      }
+      spam_detections: {
+        Row: {
+          action_taken: string | null
+          confidence: number | null
+          content_id: string | null
+          content_type: string | null
+          created_at: string | null
+          detection_method: string | null
+          id: string
+          is_false_positive: boolean | null
+          pattern: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_taken?: string | null
+          confidence?: number | null
+          content_id?: string | null
+          content_type?: string | null
+          created_at?: string | null
+          detection_method?: string | null
+          id?: string
+          is_false_positive?: boolean | null
+          pattern?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_taken?: string | null
+          confidence?: number | null
+          content_id?: string | null
+          content_type?: string | null
+          created_at?: string | null
+          detection_method?: string | null
+          id?: string
+          is_false_positive?: boolean | null
+          pattern?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       special_fees: {
         Row: {
@@ -46674,6 +47008,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_warnings: {
+        Row: {
+          acknowledged_at: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_acknowledged: boolean | null
+          message: string
+          severity: string | null
+          user_id: string
+          warned_by: string | null
+          warning_type: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_acknowledged?: boolean | null
+          message: string
+          severity?: string | null
+          user_id: string
+          warned_by?: string | null
+          warning_type: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_acknowledged?: boolean | null
+          message?: string
+          severity?: string | null
+          user_id?: string
+          warned_by?: string | null
+          warning_type?: string
+        }
+        Relationships: []
       }
       vehicle_availability: {
         Row: {
