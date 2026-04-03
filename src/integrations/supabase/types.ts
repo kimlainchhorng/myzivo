@@ -3192,27 +3192,6 @@ export type Database = {
         }
         Relationships: []
       }
-      auth_relay_tokens: {
-        Row: {
-          access_token: string
-          created_at: string
-          refresh_token: string
-          relay_id: string
-        }
-        Insert: {
-          access_token: string
-          created_at?: string
-          refresh_token: string
-          relay_id: string
-        }
-        Update: {
-          access_token?: string
-          created_at?: string
-          refresh_token?: string
-          relay_id?: string
-        }
-        Relationships: []
-      }
       auto_incentive_rules: {
         Row: {
           auto_apply: boolean
@@ -52018,21 +51997,6 @@ export type Database = {
           pickup_lat?: number | null
           pickup_lng?: number | null
           status?: Database["public"]["Enums"]["job_status"] | null
-        }
-        Relationships: []
-      }
-      auth_relay_tokens_safe: {
-        Row: {
-          created_at: string | null
-          relay_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          relay_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          relay_id?: string | null
         }
         Relationships: []
       }
