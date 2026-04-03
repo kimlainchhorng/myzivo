@@ -395,9 +395,9 @@ export default function ReelsFeedPage() {
       {userId && (
         <button
           onClick={() => setShowCreate(true)}
-          className="w-full flex items-center gap-3 px-4 py-3 border-b border-border/20 bg-card hover:bg-muted/30 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors"
         >
-          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border-2 border-primary/20 shrink-0">
             {userProfile?.avatar ? (
               <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -406,13 +406,16 @@ export default function ReelsFeedPage() {
               </div>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">Share a moment...</p>
-          <div className="ml-auto flex gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <ImageIcon className="h-4 w-4 text-primary" />
+          <p className="text-sm text-muted-foreground flex-1 text-left">What's on your mind?</p>
+          <div className="flex gap-1.5">
+            <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+              <ImageIcon className="h-3.5 w-3.5 text-emerald-600" />
             </div>
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <Camera className="h-4 w-4 text-primary" />
+            <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+              <Film className="h-3.5 w-3.5 text-blue-600" />
+            </div>
+            <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+              <Camera className="h-3.5 w-3.5 text-orange-600" />
             </div>
           </div>
         </button>
@@ -428,10 +431,18 @@ export default function ReelsFeedPage() {
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-60 text-muted-foreground/60">
-          <ImageIcon className="h-10 w-10 mb-2" />
-          <p className="text-sm">No posts yet</p>
-          <p className="text-xs mt-1">Be the first to share something!</p>
+        <div className="flex flex-col items-center justify-center h-60 text-center px-6">
+          <div className="text-5xl mb-3">📸</div>
+          <p className="text-base font-bold text-foreground mb-1">No posts yet</p>
+          <p className="text-sm text-muted-foreground mb-4">Be the first to share something amazing!</p>
+          {userId && (
+            <button
+              onClick={() => setShowCreate(true)}
+              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform shadow-lg shadow-primary/20"
+            >
+              Create Post
+            </button>
+          )}
         </div>
       ) : (
         <div className="divide-y divide-border/20">
