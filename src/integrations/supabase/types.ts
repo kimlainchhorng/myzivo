@@ -43085,7 +43085,7 @@ export type Database = {
           is_published: boolean | null
           likes_count: number | null
           media_type: string
-          media_url: string
+          media_url: string | null
           updated_at: string | null
           user_id: string
           views_count: number | null
@@ -43099,7 +43099,7 @@ export type Database = {
           is_published?: boolean | null
           likes_count?: number | null
           media_type?: string
-          media_url: string
+          media_url?: string | null
           updated_at?: string | null
           user_id: string
           views_count?: number | null
@@ -43113,7 +43113,7 @@ export type Database = {
           is_published?: boolean | null
           likes_count?: number | null
           media_type?: string
-          media_url?: string
+          media_url?: string | null
           updated_at?: string | null
           user_id?: string
           views_count?: number | null
