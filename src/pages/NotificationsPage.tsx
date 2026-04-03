@@ -19,6 +19,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { useSocialNotifications, SocialNotification } from '@/hooks/useSocialNotifications';
+import { Heart, MessageCircle as MessageCircleIcon, Share2, UserPlus as UserPlusIcon, AtSign, Flame } from 'lucide-react';
 
 type NotificationCategory = 'all' | 'social' | 'orders' | 'promos' | 'support' | 'delays';
 
