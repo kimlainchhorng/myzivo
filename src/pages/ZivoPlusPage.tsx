@@ -199,7 +199,7 @@ export default function ZivoPlusPage() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { isPlus, plan, subscriptionEnd, isLoading, refresh } = useZivoPlus();
-  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "annual">("annual");
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>("annual");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isManaging, setIsManaging] = useState(false);
   const [legalSheet, setLegalSheet] = useState<"terms" | "privacy" | null>(null);
