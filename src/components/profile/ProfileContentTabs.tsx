@@ -487,169 +487,29 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
       {/* Feed - conditional layout */}
       {activeTab === "all" && filtered.length > 0 ? (
-        /* Feed-style view for "All" tab — matches PublicProfilePage exactly */
+        /* Feed-style view for "All" tab — full parity with main feed */
         <div className="divide-y divide-border/30">
           {filtered.map((item) => (
-            <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card">
-              {item.isShared && item.sharedOrigin ? (
-                /* ── Facebook-style shared post layout ────────────── */
-                <>
-                  {/* Sharer header */}
-                  <div className="flex items-center gap-2.5 px-3 py-2.5">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={item.user.avatar || undefined} />
-                      <AvatarFallback className="text-xs font-bold">{item.user.name?.[0]?.toUpperCase() || "Z"}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-foreground truncate">{item.user.name}</p>
-                      <div className="flex items-center gap-1">
-                        <p className="text-[10px] text-muted-foreground">
-                          {item.createdAt ? (() => { try { return formatDistanceToNow(new Date(item.createdAt), { addSuffix: true }); } catch { return item.time; } })() : item.time}
-                        </p>
-                        <span className="text-[10px] text-muted-foreground">·</span>
-                        <Globe className="h-2.5 w-2.5 text-muted-foreground" />
-                      </div>
-                    </div>
-                    <button onClick={(e) => { e.stopPropagation(); setSelectedPost(item); setShowPostMenu(true); }} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
-                      <MoreVertical className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  {/* Sharer's own caption */}
-                  {item.caption && item.caption !== item.sharedOrigin.caption && (
-                    <div className="px-3 pb-2">
-                      <p className="text-[13px] text-foreground">{item.caption}</p>
-                    </div>
-                  )}
-
-                  {/* Embedded original post card */}
-                  <div className="mx-3 mb-2 border border-border/50 rounded-2xl overflow-hidden bg-card shadow-sm">
-                    {/* Original author header */}
-                    <div className="flex items-center px-3 py-2.5">
-                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                        <Avatar className="h-9 w-9 shrink-0">
-                          <AvatarImage src={item.sharedOrigin.avatar} />
-                          <AvatarFallback className="text-[10px]">{item.sharedOrigin.name?.[0] || "S"}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0 text-left">
-                          <p className="text-[13px] font-semibold text-foreground truncate">{item.sharedOrigin.name}</p>
-                          <div className="flex items-center gap-1">
-                            <Globe className="h-2.5 w-2.5 text-muted-foreground" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Original post caption */}
-                    {item.sharedOrigin.caption && (
-                      <div className="px-3 pb-2">
-                        <p className="text-[13px] text-foreground">{item.sharedOrigin.caption}</p>
-                      </div>
-                    )}
-
-                    {/* Original post media */}
-                    {item.url && (
-                      <div className="relative w-full aspect-square bg-muted overflow-hidden cursor-pointer" onClick={() => setSelectedPost(item)}>
-                        {item.type === "reel" ? (
-                          <>
-                            <video src={`${item.url}#t=0.1`} className="w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} muted playsInline preload="metadata" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                                <Play className="h-5 w-5 text-white fill-white ml-0.5" />
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          <img src={item.url} alt="" className="w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} loading="lazy" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </>
-              ) : (
-                /* ── Normal post layout ────────────────────────────── */
-                <>
-                  {/* Post header */}
-                  <div className="flex items-center gap-2.5 px-3 py-2.5">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={item.user.avatar || undefined} />
-                      <AvatarFallback className="text-xs font-bold">{item.user.name?.[0]?.toUpperCase() || "Z"}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-foreground truncate">{item.user.name}</p>
-                      <div className="flex items-center gap-1">
-                        <p className="text-[10px] text-muted-foreground">
-                          {item.createdAt ? (() => { try { return formatDistanceToNow(new Date(item.createdAt), { addSuffix: true }); } catch { return item.time; } })() : item.time}
-                        </p>
-                        <span className="text-[10px] text-muted-foreground">·</span>
-                        <Globe className="h-2.5 w-2.5 text-muted-foreground" />
-                      </div>
-                    </div>
-                    <button onClick={(e) => { e.stopPropagation(); setSelectedPost(item); setShowPostMenu(true); }} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
-                      <MoreVertical className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  {/* Caption */}
-                  {item.caption && (
-                    <div className="px-3 pb-2">
-                      <p className="text-[13px] text-foreground">
-                        <span className="font-semibold mr-1">{item.user.name}</span>
-                        {item.caption}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Media */}
-                  {item.url && (
-                    <div className="relative w-full aspect-square bg-muted overflow-hidden cursor-pointer" onClick={() => setSelectedPost(item)}>
-                      {item.type === "reel" ? (
-                        <>
-                          <video src={`${item.url}#t=0.1`} className="w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} muted playsInline preload="metadata" />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                              <Play className="h-5 w-5 text-white fill-white ml-0.5" />
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        <img src={item.url} alt="" className="w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} loading="lazy" />
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Interaction bar */}
-              <div className="flex items-center px-4 py-2.5">
-                <div className="flex items-center gap-4 flex-1">
-                  <button onClick={() => {
-                    const isLiked = likedPosts.has(item.id);
-                    setLikedPosts((prev) => { const next = new Set(prev); if (isLiked) next.delete(item.id); else next.add(item.id); return next; });
-                    setFeed((prev) => prev.map((p) => p.id === item.id ? { ...p, likes: p.likes + (isLiked ? -1 : 1) } : p));
-                  }} className="touch-manipulation active:scale-90 transition-transform">
-                    <Heart className={`h-[22px] w-[22px] ${likedPosts.has(item.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} strokeWidth={1.5} />
-                  </button>
-                  <button onClick={() => openComments(item)} className="touch-manipulation active:scale-90 transition-transform">
-                    <MessageCircle className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
-                  </button>
-                  <button onClick={() => setSharePostId(item.id)} className="touch-manipulation active:scale-90 transition-transform">
-                    <Share2 className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
-                  </button>
-                </div>
-                <button onClick={() => void handleBookmarkToggle(item)} className="touch-manipulation active:scale-90 transition-transform">
-                  <Bookmark className={`h-[22px] w-[22px] ${bookmarkedPosts.has(toUserPostInteractionId(item.id)) ? "fill-foreground text-foreground" : "text-foreground"}`} strokeWidth={1.5} />
-                </button>
-              </div>
-
-              {/* Counts */}
-              {(item.likes > 0 || item.comments > 0) && (
-                <div className="px-4 pb-3 flex items-center gap-3">
-                  {item.likes > 0 && <span className="text-xs font-semibold text-foreground">{item.likes} {item.likes === 1 ? "like" : "likes"}</span>}
-                  {item.comments > 0 && <span className="text-xs text-muted-foreground">{item.comments} {item.comments === 1 ? "comment" : "comments"}</span>}
-                </div>
-              )}
-            </motion.div>
+            <ProfileFeedCard
+              key={item.id}
+              item={{
+                ...item,
+                userId: profileOwnerId,
+              }}
+              currentUserId={user?.id}
+              profileOwnerId={profileOwnerId}
+              isLiked={likedPosts.has(item.id)}
+              isBookmarked={bookmarkedPosts.has(toUserPostInteractionId(item.id))}
+              onToggleLike={(feedItem) => {
+                const isLiked = likedPosts.has(feedItem.id);
+                setLikedPosts((prev) => { const next = new Set(prev); if (isLiked) next.delete(feedItem.id); else next.add(feedItem.id); return next; });
+                setFeed((prev) => prev.map((p) => p.id === feedItem.id ? { ...p, likes: p.likes + (isLiked ? -1 : 1) } : p));
+              }}
+              onToggleBookmark={(feedItem) => void handleBookmarkToggle(feedItem as any)}
+              onOpenMenu={(feedItem) => { setSelectedPost(feedItem as any); setShowPostMenu(true); }}
+              onShare={(postId) => setSharePostId(postId)}
+              onSelectPost={(feedItem) => setSelectedPost(feedItem as any)}
+            />
           ))}
         </div>
       ) : (
