@@ -431,40 +431,6 @@ export default function ReelsFeedPage() {
       {/* Suggested Users */}
       <SuggestedUsersCarousel />
 
-      {/* Trending hashtags */}
-      <div className="px-3 py-2 flex gap-2 overflow-x-auto no-scrollbar border-b border-border/10">
-        {["#travel", "#food", "#zivo", "#deals", "#explore", "#ootd", "#sunset"].map((tag) => (
-          <button
-            key={tag}
-            onClick={() => toast.info(`Showing posts with ${tag}`)}
-            className="px-3 py-1.5 rounded-full bg-primary/8 text-primary text-xs font-semibold whitespace-nowrap hover:bg-primary/15 active:scale-95 transition-all"
-          >
-            {tag}
-          </button>
-        ))}
-      </div>
-
-      {/* Feed filter tabs */}
-      <div className="px-3 py-2 flex gap-2 border-b border-border/10">
-        {([
-          { value: "all" as const, label: "All" },
-          { value: "photos" as const, label: "📷 Photos" },
-          { value: "videos" as const, label: "🎬 Videos" },
-          { value: "text" as const, label: "✍️ Text" },
-        ]).map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setFeedFilter(tab.value)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-              feedFilter === tab.value
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted/60 text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
 
       {/* Posts */}
       {isLoading ? (
