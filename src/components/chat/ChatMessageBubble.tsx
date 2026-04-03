@@ -24,6 +24,7 @@ interface ChatMessageBubbleProps {
   isPinned?: boolean;
   expiresAt?: string | null;
   messageType?: string;
+  senderId?: string;
   onReply: (id: string, message: string, isMe: boolean) => void;
   onDelete: (id: string) => void;
   onForward?: (id: string, message: string) => void;
