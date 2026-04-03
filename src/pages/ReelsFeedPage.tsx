@@ -62,6 +62,16 @@ export default function ReelsFeedPage() {
   const [searchLoading, setSearchLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const location = useLocation();
+
+  // Handle share-to-profile deep link
+  useEffect(() => {
+    const state = location.state as { shareToProfile?: boolean; shareUrl?: string; shareText?: string } | null;
+    if (state?.shareToProfile && userId) {
+      setShowCreate(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, userId]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
