@@ -933,6 +933,27 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           />
         )}
       </AnimatePresence>
+
+      {/* Contact Info */}
+      <AnimatePresence>
+        {showContactInfo && (
+          <ChatContactInfo
+            recipientId={recipientId}
+            recipientName={recipientName}
+            recipientAvatar={recipientAvatar}
+            isOnline={recipientOnline}
+            onClose={() => setShowContactInfo(false)}
+            onStartCall={(type) => { setShowContactInfo(false); void handleStartCall(type); }}
+            onOpenMediaGallery={() => { setShowContactInfo(false); setShowMediaGallery(true); }}
+            onOpenSearch={() => { setShowContactInfo(false); setShowSearch(true); }}
+            onOpenCallHistory={() => { setShowContactInfo(false); setShowCallHistory(true); }}
+            onOpenPersonalization={() => { setShowContactInfo(false); setShowPersonalization(true); }}
+            onOpenSecurity={() => { setShowContactInfo(false); setShowSecurity(true); }}
+            onOpenMiniApps={() => { setShowContactInfo(false); setShowMiniApps(true); }}
+            onOpenNotifSettings={() => { setShowContactInfo(false); setShowNotifSettings(true); }}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
