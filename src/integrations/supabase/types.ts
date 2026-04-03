@@ -6960,6 +6960,7 @@ export type Database = {
         Row: {
           chat_partner_id: string
           created_at: string
+          custom_wallpapers: string[]
           dnd_end: string | null
           dnd_start: string | null
           font_size: string | null
@@ -6976,6 +6977,7 @@ export type Database = {
         Insert: {
           chat_partner_id: string
           created_at?: string
+          custom_wallpapers?: string[]
           dnd_end?: string | null
           dnd_start?: string | null
           font_size?: string | null
@@ -6992,6 +6994,7 @@ export type Database = {
         Update: {
           chat_partner_id?: string
           created_at?: string
+          custom_wallpapers?: string[]
           dnd_end?: string | null
           dnd_start?: string | null
           font_size?: string | null
