@@ -926,15 +926,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     }
   };
 
-  const submitComment = () => {
-    if (!commentText.trim()) return;
-    setComments((prev) => [
-      ...prev,
-      { id: Date.now().toString(), text: commentText.trim(), author: "You", time: "just now" },
-    ]);
-    setCommentText("");
-    toast.success("Comment added!");
-  };
+  // Comments are now handled by CommentsSheet
 
   const timeAgo = (() => {
     try {
