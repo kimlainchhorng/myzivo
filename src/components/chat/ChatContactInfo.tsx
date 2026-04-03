@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
+import ChatBackupExport from "./ChatBackupExport";
 import {
   ArrowLeft,
   Bell,
@@ -76,6 +77,7 @@ export default function ChatContactInfo({
 }: ChatContactInfoProps) {
   const [muteNotifs, setMuteNotifs] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showExport, setShowExport] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -392,7 +394,10 @@ export default function ChatContactInfo({
             <SectionButton icon={Palette} label="Theme & Wallpaper" chevron onClick={onOpenPersonalization} />
             <SectionButton icon={Zap} label="Mini Apps" chevron onClick={onOpenMiniApps} />
             <SectionButton icon={History} label="Call History" chevron onClick={onOpenCallHistory} />
+            <SectionButton icon={FileText} label="Export Chat" chevron onClick={() => setShowExport(true)} />
           </Section>
+
+          <ChatBackupExport open={showExport} onClose={() => setShowExport(false)} recipientId={recipientId} recipientName={recipientName} />
 
           <div className="h-[6px] bg-muted/30" />
 

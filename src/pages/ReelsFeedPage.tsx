@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import CommentsSheet from "@/components/social/CommentsSheet";
 import FeedStoryRing from "@/components/social/FeedStoryRing";
+import SuggestedUsersCarousel from "@/components/social/SuggestedUsersCarousel";
 
 interface FeedItem {
   id: string;
@@ -426,6 +427,9 @@ export default function ReelsFeedPage() {
 
       {/* Story Rings */}
       <FeedStoryRing />
+
+      {/* Suggested Users */}
+      <SuggestedUsersCarousel />
 
       {/* Trending hashtags */}
       <div className="px-3 py-2 flex gap-2 overflow-x-auto no-scrollbar border-b border-border/10">
