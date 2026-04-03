@@ -1481,6 +1481,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
+  const [showEditCaption, setShowEditCaption] = useState(false);
+  const [editCaptionText, setEditCaptionText] = useState(item.caption || "");
+  const [editSaving, setEditSaving] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef(0);
