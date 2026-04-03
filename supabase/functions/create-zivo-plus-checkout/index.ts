@@ -65,7 +65,7 @@ serve(async (req) => {
       });
       const alreadyPlus = subs.data.some((s) => {
         const prod = s.items.data[0]?.price?.product;
-        return prod === "prod_Twd0bbN76Y6chu" || prod === "prod_UGpAC1qAhDttlE" || prod === "prod_Twd004sz9HeIVX";
+        return prod === "prod_Twd0bbN76Y6chu" || prod === "prod_UGpAC1qAhDttlE" || prod === "prod_UGpG91XdzsUk4s" || prod === "prod_Twd004sz9HeIVX";
       });
       if (alreadyPlus) {
         throw new Error("You already have an active ZIVO+ subscription");

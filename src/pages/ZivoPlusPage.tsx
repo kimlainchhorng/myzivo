@@ -436,25 +436,29 @@ export default function ZivoPlusPage() {
 
         {/* Comparison */}
         <div className="space-y-2">
-          <h3 className="text-[14px] font-bold text-foreground px-1">Free vs. ZIVO+</h3>
+          <h3 className="text-[14px] font-bold text-foreground px-1">Plan Comparison</h3>
           <div className="rounded-2xl border border-border/20 overflow-hidden">
-            <div className="grid grid-cols-3 bg-muted/20 px-4 py-2.5 border-b border-border/10">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">Feature</span>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase text-center">Free</span>
-              <span className="text-[10px] font-bold text-amber-600 uppercase text-center">ZIVO+</span>
+            <div className="grid grid-cols-[1fr_50px_50px_50px] bg-muted/20 px-3 py-2.5 border-b border-border/10">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase">Feature</span>
+              <span className="text-[9px] font-bold text-muted-foreground uppercase text-center">Basic</span>
+              <span className="text-[9px] font-bold text-amber-600 uppercase text-center">Chat+</span>
+              <span className="text-[9px] font-bold text-purple-600 uppercase text-center">Pro</span>
             </div>
             {[
-              { feat: "Service Fee", free: "5%", plus: "Free" },
-              { feat: "Delivery Priority", free: "Standard", plus: "Priority" },
-              { feat: "Freshness Guarantee", free: "24 hours", plus: "48 hours" },
-              { feat: "Lock & Unlock Chat", free: "—", plus: "✓" },
-              { feat: "Member Deals", free: "—", plus: "✓" },
-              { feat: "Support", free: "Standard", plus: "Priority" },
+              { feat: "Service Fee", basic: "Free", chat: "Free", pro: "Free" },
+              { feat: "Priority Delivery", basic: "✓", chat: "✓", pro: "✓" },
+              { feat: "48h Guarantee", basic: "✓", chat: "✓", pro: "✓" },
+              { feat: "Member Deals", basic: "✓", chat: "✓", pro: "✓" },
+              { feat: "Lock & Unlock", basic: "—", chat: "✓", pro: "✓" },
+              { feat: "Ride Discounts", basic: "—", chat: "—", pro: "10%" },
+              { feat: "VIP Support", basic: "—", chat: "—", pro: "✓" },
+              { feat: "Monthly Perks", basic: "—", chat: "—", pro: "✓" },
             ].map((row, i) => (
-              <div key={row.feat} className={`grid grid-cols-3 px-4 py-2.5 ${i < 5 ? "border-b border-border/10" : ""}`}>
-                <span className="text-[11px] text-foreground/90 font-medium">{row.feat}</span>
-                <span className="text-[11px] text-muted-foreground text-center">{row.free}</span>
-                <span className="text-[11px] text-amber-600 font-bold text-center">{row.plus}</span>
+              <div key={row.feat} className={`grid grid-cols-[1fr_50px_50px_50px] px-3 py-2.5 ${i < 7 ? "border-b border-border/10" : ""}`}>
+                <span className="text-[10px] text-foreground/90 font-medium">{row.feat}</span>
+                <span className="text-[10px] text-muted-foreground text-center">{row.basic}</span>
+                <span className="text-[10px] text-amber-600 font-bold text-center">{row.chat}</span>
+                <span className="text-[10px] text-purple-600 font-bold text-center">{row.pro}</span>
               </div>
             ))}
           </div>

@@ -6,7 +6,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export type ZivoPlusPlan = "monthly" | "chat" | "annual" | null;
+export type ZivoPlusPlan = "monthly" | "chat" | "pro" | "annual" | null;
 
 interface ZivoPlusState {
   isPlus: boolean;
