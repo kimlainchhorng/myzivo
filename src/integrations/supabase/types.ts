@@ -37693,6 +37693,7 @@ export type Database = {
           media_type: string
           media_urls: string[]
           scheduled_at: string | null
+          shares_count: number
           store_id: string
           thumbnail_url: string | null
           updated_at: string
@@ -37710,6 +37711,7 @@ export type Database = {
           media_type?: string
           media_urls?: string[]
           scheduled_at?: string | null
+          shares_count?: number
           store_id: string
           thumbnail_url?: string | null
           updated_at?: string
@@ -37727,6 +37729,7 @@ export type Database = {
           media_type?: string
           media_urls?: string[]
           scheduled_at?: string | null
+          shares_count?: number
           store_id?: string
           thumbnail_url?: string | null
           updated_at?: string
@@ -43088,6 +43091,7 @@ export type Database = {
           media_url: string | null
           shared_from_post_id: string | null
           shared_from_user_id: string | null
+          shares_count: number
           updated_at: string | null
           user_id: string
           views_count: number | null
@@ -43104,6 +43108,7 @@ export type Database = {
           media_url?: string | null
           shared_from_post_id?: string | null
           shared_from_user_id?: string | null
+          shares_count?: number
           updated_at?: string | null
           user_id: string
           views_count?: number | null
@@ -43120,6 +43125,7 @@ export type Database = {
           media_url?: string | null
           shared_from_post_id?: string | null
           shared_from_user_id?: string | null
+          shares_count?: number
           updated_at?: string | null
           user_id?: string
           views_count?: number | null
@@ -48940,6 +48946,7 @@ export type Database = {
           media_type: string
           media_urls: string[]
           scheduled_at: string | null
+          shares_count: number
           store_id: string
           thumbnail_url: string | null
           updated_at: string
