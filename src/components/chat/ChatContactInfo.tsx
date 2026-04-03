@@ -54,6 +54,7 @@ export default function ChatContactInfo({
   recipientName,
   recipientAvatar,
   isOnline,
+  lastSeen,
   onClose,
   onStartCall,
   onOpenMediaGallery,
