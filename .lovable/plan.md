@@ -31,3 +31,17 @@
 ## Phase 12: Commerce & Payments ✅
 - **Marketplace orders** — Purchase/sales tracking at /marketplace/orders
 - **Seller reviews** — Star rating review sheet for marketplace sellers
+
+## Phase 13: Live Streaming & Spaces ✅
+- **Audio Spaces** — Create/join audio rooms with speaker/listener roles, raise hand, mute at /spaces
+
+## Phase 14: AI & Smart Features ✅
+- **AI Chatbot Assistant** — Floating chat widget with FAQ-style responses (global)
+- **Smart Search** — Unified search across posts, users, communities, marketplace at /smart-search
+
+## Phase 15: Notifications & Real-time ✅
+- **Notification Center** — Full notifications page with categories at /notification-center
+- **Activity Feed** — Timeline of interactions and updates at /activity
+
+## Phase 16: Admin & Moderation ✅
+- **Admin Moderation** — Content reports queue, user management, platform overview at /admin/moderation

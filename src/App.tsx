@@ -22,6 +22,7 @@ import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import LiveChatWidget from "./components/shared/LiveChatWidget";
+import AIChatbotWidget from "./components/ai/AIChatbotWidget";
 import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
 import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
@@ -74,6 +75,11 @@ const ContentAnalyticsPage = lazy(() => import("./pages/ContentAnalyticsPage"));
 const MarketplaceOrdersPage = lazy(() => import("./pages/MarketplaceOrdersPage"));
 const DatingPage = lazy(() => import("./pages/DatingPage"));
 const DraftsPage = lazy(() => import("./pages/DraftsPage"));
+const AudioSpacesPage = lazy(() => import("./pages/AudioSpacesPage"));
+const SmartSearchPage = lazy(() => import("./pages/SmartSearchPage"));
+const NotificationCenterPage = lazy(() => import("./pages/NotificationCenterPage"));
+const ActivityFeedPage = lazy(() => import("./pages/ActivityFeedPage"));
+const AdminModerationPage = lazy(() => import("./pages/AdminModerationPage"));
 const AccountAnalyticsPage = lazy(() => import("./pages/account/AccountAnalyticsPage"));
 const VerificationRequestPage = lazy(() => import("./pages/account/VerificationRequestPage"));
 const ActivityLogPage = lazy(() => import("./pages/account/ActivityLogPage"));
@@ -476,6 +482,11 @@ const App = () => (
                 <Route path="/marketplace/orders" element={<ProtectedRoute><MarketplaceOrdersPage /></ProtectedRoute>} />
                 <Route path="/content-analytics" element={<ProtectedRoute><ContentAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/dating" element={<ProtectedRoute><DatingPage /></ProtectedRoute>} />
+                <Route path="/spaces" element={<AudioSpacesPage />} />
+                <Route path="/smart-search" element={<SmartSearchPage />} />
+                <Route path="/notification-center" element={<ProtectedRoute><NotificationCenterPage /></ProtectedRoute>} />
+                <Route path="/activity" element={<ProtectedRoute><ActivityFeedPage /></ProtectedRoute>} />
+                <Route path="/admin/moderation" element={<ProtectedRoute><AdminModerationPage /></ProtectedRoute>} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
                 <Route path="/drafts" element={<ProtectedRoute><DraftsPage /></ProtectedRoute>} />
                 <Route path="/account/analytics" element={<ProtectedRoute><AccountAnalyticsPage /></ProtectedRoute>} />
@@ -771,6 +782,7 @@ const App = () => (
           {/* ScrollToTopButton removed */}
           {/* LiveChatWidget removed */}
           <SpatialCursor />
+          <AIChatbotWidget />
           <BrandThemeApplicator />
           <IncomingCallListener />
         </ZivoPlusProvider>
