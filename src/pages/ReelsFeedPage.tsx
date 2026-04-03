@@ -472,6 +472,9 @@ function CreatePostModal({
   initialCaption,
   sharedMediaUrl,
   sharedMediaType,
+  sharedPostId,
+  sharedPostAuthorId,
+  sharedPostAuthorName,
 }: {
   userId: string;
   userProfile: { name: string; avatar: string | null } | null;
@@ -480,6 +483,9 @@ function CreatePostModal({
   initialCaption?: string;
   sharedMediaUrl?: string;
   sharedMediaType?: "image" | "video";
+  sharedPostId?: string;
+  sharedPostAuthorId?: string;
+  sharedPostAuthorName?: string;
 }) {
   const [caption, setCaption] = useState(initialCaption || "");
   const [file, setFile] = useState<File | null>(null);
