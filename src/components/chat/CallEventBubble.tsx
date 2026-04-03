@@ -63,6 +63,10 @@ export default function CallEventBubble({
     longPressTimer.current = setTimeout(() => {
       didLongPress.current = true;
       setDeleteStep("menu");
+      if (bubbleRef.current) {
+        const rect = bubbleRef.current.getBoundingClientRect();
+        setOpenDown(rect.top < 280);
+      }
       setShowActions(true);
       if (navigator.vibrate) navigator.vibrate(30);
     }, 400);
