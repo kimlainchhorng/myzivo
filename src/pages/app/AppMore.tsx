@@ -1,7 +1,7 @@
 /**
  * App More Screen — Quick Access only
  */
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -10,10 +10,12 @@ import {
 } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const partnerOptions = [
   { icon: Car, label: "Become a Driver", description: "Earn money driving with ZIVO", href: "/partner-with-zivo?type=driver", color: "from-blue-500 to-blue-600" },
@@ -37,6 +39,19 @@ const AppMore = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("full_name, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setProfile(data as any);
+      });
+  }, [user]);
 
   return (
     <AppLayout title="More" hideHeader>
