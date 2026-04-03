@@ -101,7 +101,53 @@ const FriendRequestCard = ({ request, onAccept, onDecline }: { request: FriendRe
   </motion.div>
 );
 
-const NotificationsPage = () => {
+/* ── Social Notification Item ── */
+const SOCIAL_NOTIF_ICONS: Record<string, typeof Heart> = {
+  like: Heart, comment: MessageCircleIcon, reply: MessageCircleIcon,
+  share: Share2, follow: UserPlusIcon, mention: AtSign, story_reaction: Flame,
+};
+const SOCIAL_NOTIF_COLORS: Record<string, string> = {
+  like: "text-red-500", comment: "text-blue-500", reply: "text-blue-400",
+  share: "text-green-500", follow: "text-primary", mention: "text-purple-500", story_reaction: "text-orange-500",
+};
+
+const SocialNotifItem = ({ notif, index, onClick }: { notif: SocialNotification; index: number; onClick: () => void }) => {
+  const Icon = SOCIAL_NOTIF_ICONS[notif.type] || Heart;
+  const color = SOCIAL_NOTIF_COLORS[notif.type] || "text-primary";
+  const timeAgo = (() => { try { return formatDistanceToNow(new Date(notif.created_at), { addSuffix: true }); } catch { return ""; } })();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.03, duration: 0.3 }}
+    >
+      <GlassCard3D glow={!notif.is_read}>
+        <button onClick={onClick} className="w-full flex items-center gap-3 p-3 text-left touch-manipulation">
+          <div className="relative shrink-0">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={notif.actor_avatar || undefined} />
+              <AvatarFallback className="text-xs font-bold">{notif.actor_name?.[0] || "?"}</AvatarFallback>
+            </Avatar>
+            <div className={cn("absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-card flex items-center justify-center", color)}>
+              <Icon className="h-3 w-3" />
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={cn("text-[13px] leading-snug", !notif.is_read && "font-semibold")}>
+              {notif.message}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{timeAgo}</p>
+          </div>
+          {!notif.is_read && (
+            <div className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
+          )}
+        </button>
+      </GlassCard3D>
+    </motion.div>
+  );
+};
+
   const navigate = useNavigate();
   const { t } = useI18n();
   const { user } = useAuth();
