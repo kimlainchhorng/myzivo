@@ -75,6 +75,19 @@ export default function ReelsFeedPage() {
     }
   }, [location.state, userId]);
 
+  // Listen for share-to-profile custom event (when already on /reels)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && userId) {
+        setShareForPost({ shareUrl: detail.shareUrl || "", shareText: detail.shareText || "" });
+        setShowCreate(true);
+      }
+    };
+    window.addEventListener("zivo-share-to-profile", handler);
+    return () => window.removeEventListener("zivo-share-to-profile", handler);
+  }, [userId]);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       const uid = data.user?.id || null;
