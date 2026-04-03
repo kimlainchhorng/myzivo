@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
@@ -15,7 +16,7 @@ import {
   Image as ImageIcon,
   FileText,
   Link2,
-  Users,
+  UserRound,
   Palette,
   Shield,
   Ban,
@@ -26,7 +27,10 @@ import {
   ChevronRight,
   History,
   Zap,
+  Clock,
+  MessageCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface ChatContactInfoProps {
   recipientId: string;
@@ -45,6 +49,7 @@ interface ChatContactInfoProps {
 }
 
 export default function ChatContactInfo({
+  recipientId,
   recipientName,
   recipientAvatar,
   isOnline,
@@ -59,6 +64,7 @@ export default function ChatContactInfo({
   onOpenNotifSettings,
 }: ChatContactInfoProps) {
   const [muteNotifs, setMuteNotifs] = useState(false);
+  const navigate = useNavigate();
 
   const initials = (recipientName || "U")
     .split(" ")
@@ -66,6 +72,35 @@ export default function ChatContactInfo({
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+  const handleViewProfile = () => {
+    onClose();
+    navigate(`/user/${recipientId}`);
+  };
+
+  const handleBlock = () => {
+    toast.info(`Block ${recipientName}?`, {
+      action: { label: "Block", onClick: () => toast.success(`${recipientName} blocked`) },
+    });
+  };
+
+  const handleReport = () => {
+    toast.info(`Report ${recipientName}?`, {
+      action: { label: "Report", onClick: () => toast.success("Report submitted") },
+    });
+  };
+
+  const handleDeleteConversation = () => {
+    toast.info("Delete this entire conversation?", {
+      action: {
+        label: "Delete",
+        onClick: () => {
+          toast.success("Conversation deleted");
+          onClose();
+        },
+      },
+    });
+  };
 
   return (
     <motion.div
@@ -76,69 +111,89 @@ export default function ChatContactInfo({
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-2xl border-b border-border/8 safe-area-top">
-        <div className="px-3 py-3 flex items-center gap-3">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-2xl border-b border-border/40 safe-area-top">
+        <div className="px-2 py-2.5 flex items-center gap-3">
           <button
             onClick={onClose}
-            className="min-h-[44px] min-w-[36px] flex items-center justify-center active:scale-90 transition-transform"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform rounded-full hover:bg-muted/50"
           >
-            <ArrowLeft className="h-5 w-5 text-foreground" />
+            <ArrowLeft className="h-[22px] w-[22px] text-foreground" />
           </button>
-          <p className="text-[16px] font-semibold text-foreground">Profile</p>
+          <p className="text-[17px] font-bold text-foreground tracking-tight">Contact Info</p>
         </div>
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
+      <div className="flex-1 overflow-y-auto scrollbar-hide overscroll-contain">
         {/* Profile hero */}
-        <div className="flex flex-col items-center pt-8 pb-6 px-4">
+        <div className="flex flex-col items-center pt-10 pb-5 px-4">
           <div className="relative">
-            <Avatar className="h-24 w-24 ring-4 ring-primary/10">
-              <AvatarImage src={recipientAvatar || undefined} />
-              <AvatarFallback className="text-2xl font-bold bg-primary/8 text-primary">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <div className="rounded-full p-[3px] bg-gradient-to-br from-primary/20 via-primary/5 to-transparent">
+              <Avatar className="h-[100px] w-[100px] ring-[3px] ring-background">
+                <AvatarImage src={recipientAvatar || undefined} className="object-cover" />
+                <AvatarFallback className="text-[28px] font-bold bg-primary/8 text-primary">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </div>
             {isOnline && (
-              <span className="absolute bottom-1 right-1 h-5 w-5 rounded-full bg-emerald-500 border-[3px] border-background" />
+              <span className="absolute bottom-1.5 right-1.5 h-[18px] w-[18px] rounded-full bg-emerald-500 border-[3px] border-background shadow-sm" />
             )}
           </div>
-          <h2 className="text-xl font-bold text-foreground mt-4">{recipientName}</h2>
-          <p className="text-[13px] text-muted-foreground mt-0.5">
-            {isOnline ? "Active now" : "Recently active"}
-          </p>
-
+          <h2 className="text-[22px] font-bold text-foreground mt-4 text-center leading-tight">
+            {recipientName}
+          </h2>
+          <div className="flex items-center gap-1.5 mt-1.5">
+            {isOnline ? (
+              <>
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="text-[13px] font-medium text-emerald-600">Active now</span>
+              </>
+            ) : (
+              <>
+                <Clock className="h-3 w-3 text-muted-foreground" />
+                <span className="text-[13px] text-muted-foreground">Recently active</span>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Quick action buttons */}
-        <div className="flex justify-center gap-4 px-6 pb-6">
+        {/* Quick action buttons row */}
+        <div className="flex justify-center gap-5 px-8 pb-7">
           {[
             { icon: Phone, label: "Audio", action: () => onStartCall?.("voice") },
             { icon: Video, label: "Video", action: () => onStartCall?.("video") },
             { icon: Search, label: "Search", action: onOpenSearch },
-            { icon: Users, label: "Profile", action: () => {} },
+            { icon: UserRound, label: "Profile", action: handleViewProfile },
           ].map(({ icon: Icon, label, action }) => (
             <button
               key={label}
               onClick={action}
-              className="flex flex-col items-center gap-1.5 min-w-[60px]"
+              className="flex flex-col items-center gap-2 min-w-[56px] group"
             >
-              <div className="h-10 w-10 rounded-full bg-muted/70 flex items-center justify-center active:scale-90 transition-transform">
-                <Icon className="h-[18px] w-[18px] text-foreground" />
+              <div className="h-11 w-11 rounded-full bg-muted/60 flex items-center justify-center active:scale-90 transition-all group-hover:bg-muted/80">
+                <Icon className="h-[19px] w-[19px] text-foreground/80" />
               </div>
-              <span className="text-[11px] font-medium text-muted-foreground">{label}</span>
+              <span className="text-[11px] font-semibold text-muted-foreground tracking-wide">
+                {label}
+              </span>
             </button>
           ))}
         </div>
 
+        {/* Divider */}
+        <div className="h-[6px] bg-muted/30" />
+
         {/* Sections */}
-        <div className="space-y-2 pb-20">
+        <div className="pb-24">
           {/* Media & Files section */}
           <Section title="Media, Files & Links">
             <SectionButton icon={ImageIcon} label="Media" chevron onClick={onOpenMediaGallery} />
-            <SectionButton icon={FileText} label="Files" chevron />
-            <SectionButton icon={Link2} label="Links" chevron />
+            <SectionButton icon={FileText} label="Files" chevron onClick={() => toast.info("No files shared yet")} />
+            <SectionButton icon={Link2} label="Links" chevron onClick={() => toast.info("No links shared yet")} />
           </Section>
+
+          <div className="h-[6px] bg-muted/30" />
 
           {/* Customize section */}
           <Section title="Customize Chat">
@@ -147,16 +202,20 @@ export default function ChatContactInfo({
             <SectionButton icon={History} label="Call History" chevron onClick={onOpenCallHistory} />
           </Section>
 
+          <div className="h-[6px] bg-muted/30" />
+
           {/* Notifications */}
           <Section title="Notifications">
-            <div className="flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-3">
-                {muteNotifs ? (
-                  <BellOff className="h-[18px] w-[18px] text-muted-foreground" />
-                ) : (
-                  <Bell className="h-[18px] w-[18px] text-muted-foreground" />
-                )}
-                <span className="text-[14px] font-medium text-foreground">
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <div className="flex items-center gap-3.5">
+                <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center">
+                  {muteNotifs ? (
+                    <BellOff className="h-[16px] w-[16px] text-muted-foreground" />
+                  ) : (
+                    <Bell className="h-[16px] w-[16px] text-muted-foreground" />
+                  )}
+                </div>
+                <span className="text-[14.5px] font-medium text-foreground">
                   Mute Notifications
                 </span>
               </div>
@@ -164,24 +223,41 @@ export default function ChatContactInfo({
                 checked={muteNotifs}
                 onCheckedChange={(v) => {
                   setMuteNotifs(v);
-                  onOpenNotifSettings?.();
+                  toast.success(v ? "Notifications muted" : "Notifications unmuted");
                 }}
               />
             </div>
+            <SectionButton
+              icon={MessageCircle}
+              label="Notification Settings"
+              chevron
+              onClick={onOpenNotifSettings}
+            />
           </Section>
+
+          <div className="h-[6px] bg-muted/30" />
 
           {/* Privacy & Safety */}
           <Section title="Privacy & Safety">
             <SectionButton icon={Shield} label="Privacy Settings" chevron onClick={onOpenSecurity} />
-            <SectionButton icon={Ban} label="Block" className="text-destructive" />
-            <SectionButton icon={Flag} label="Report" className="text-destructive" />
+            <SectionButton icon={Ban} label="Block" className="text-destructive" onClick={handleBlock} />
+            <SectionButton icon={Flag} label="Report" className="text-destructive" onClick={handleReport} />
           </Section>
 
-          {/* Danger zone */}
-          <div className="px-4 pt-4">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-destructive/5 active:bg-destructive/10 transition-colors">
-              <Trash2 className="h-[18px] w-[18px] text-destructive" />
-              <span className="text-[14px] font-medium text-destructive">Delete Conversation</span>
+          <div className="h-[6px] bg-muted/30" />
+
+          {/* Delete conversation */}
+          <div className="py-2">
+            <button
+              onClick={handleDeleteConversation}
+              className="w-full flex items-center gap-3.5 px-4 py-3.5 active:bg-destructive/5 transition-colors"
+            >
+              <div className="h-8 w-8 rounded-full bg-destructive/8 flex items-center justify-center">
+                <Trash2 className="h-[16px] w-[16px] text-destructive" />
+              </div>
+              <span className="text-[14.5px] font-medium text-destructive">
+                Delete Conversation
+              </span>
             </button>
           </div>
         </div>
@@ -194,13 +270,11 @@ export default function ChatContactInfo({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div>
-      <p className="px-4 pt-4 pb-1.5 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+    <div className="py-1">
+      <p className="px-4 pt-3 pb-2 text-[11.5px] font-bold text-muted-foreground/70 uppercase tracking-[0.08em]">
         {title}
       </p>
-      <div className="mx-3 bg-muted/30 rounded-xl overflow-hidden divide-y divide-border/10">
-        {children}
-      </div>
+      <div>{children}</div>
     </div>
   );
 }
@@ -221,13 +295,15 @@ function SectionButton({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-3 active:bg-muted/50 transition-colors"
+      className="w-full flex items-center gap-3.5 px-4 py-3.5 active:bg-muted/40 transition-colors"
     >
-      <Icon className={`h-[18px] w-[18px] text-muted-foreground ${className || ""}`} />
-      <span className={`text-[14px] font-medium flex-1 text-left ${className || "text-foreground"}`}>
+      <div className={`h-8 w-8 rounded-full flex items-center justify-center ${className ? "bg-destructive/8" : "bg-muted/50"}`}>
+        <Icon className={`h-[16px] w-[16px] ${className || "text-muted-foreground"}`} />
+      </div>
+      <span className={`text-[14.5px] font-medium flex-1 text-left ${className || "text-foreground"}`}>
         {label}
       </span>
-      {chevron && <ChevronRight className="h-4 w-4 text-muted-foreground/50" />}
+      {chevron && <ChevronRight className="h-[18px] w-[18px] text-muted-foreground/40" />}
     </button>
   );
 }
