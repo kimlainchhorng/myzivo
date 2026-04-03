@@ -551,27 +551,19 @@ function ActionBtn({ icon: Icon, label, onClick, destructive, active }: {
   );
 }
 
-function MenuBtn({ icon: Icon, label, onClick, destructive, active, chevron }: {
+function MsgMenuItem({ icon: Icon, label, onClick, destructive, active, chevron }: {
   icon: any; label: string; onClick: () => void; destructive?: boolean; active?: boolean; chevron?: boolean;
 }) {
   return (
     <button
       onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-left transition-colors active:scale-[0.97] ${
-        destructive
-          ? "hover:bg-destructive/5 text-destructive"
-          : active
-          ? "bg-primary/5 text-primary"
-          : "hover:bg-muted/50 text-foreground"
+      className={`flex items-center gap-3 w-full px-4 py-3 text-left transition-colors active:bg-muted/60 border-b border-border/15 last:border-b-0 ${
+        destructive ? "text-destructive hover:bg-destructive/5" : active ? "text-primary bg-primary/5" : "text-foreground hover:bg-muted/30"
       }`}
     >
-      <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-        destructive ? "bg-destructive/10" : active ? "bg-primary/10" : "bg-muted/60"
-      }`}>
-        <Icon className={`h-4 w-4 ${destructive ? "" : active ? "text-primary" : "text-muted-foreground"}`} />
-      </div>
+      <Icon className="h-[18px] w-[18px] shrink-0 opacity-70" />
       <span className="text-[14px] font-medium flex-1">{label}</span>
-      {chevron && <ChevronRight className="h-4 w-4 opacity-40" />}
+      {chevron && <ChevronRight className="h-4 w-4 opacity-30" />}
     </button>
   );
 }

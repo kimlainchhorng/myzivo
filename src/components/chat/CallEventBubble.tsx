@@ -185,3 +185,20 @@ export default function CallEventBubble({
     </div>
   );
 }
+
+function MenuItem({ icon: Icon, label, onClick, destructive, chevron }: {
+  icon: any; label: string; onClick: () => void; destructive?: boolean; chevron?: boolean;
+}) {
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      className={`flex items-center gap-3 w-full px-4 py-3 text-left transition-colors active:bg-muted/60 border-b border-border/15 last:border-b-0 ${
+        destructive ? "text-destructive hover:bg-destructive/5" : "text-foreground hover:bg-muted/30"
+      }`}
+    >
+      <Icon className="h-[18px] w-[18px] shrink-0 opacity-70" />
+      <span className="text-[14px] font-medium flex-1">{label}</span>
+      {chevron && <ChevronRight className="h-4 w-4 opacity-30" />}
+    </button>
+  );
+}
