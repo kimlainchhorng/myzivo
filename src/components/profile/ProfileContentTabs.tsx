@@ -14,6 +14,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
+type SharedOriginInfo = {
+  name: string;
+  avatar: string;
+  caption: string;
+};
+
 type FeedItem = {
   id: string;
   type: "photo" | "reel";
@@ -26,6 +32,8 @@ type FeedItem = {
   views?: number;
   user: { name: string; avatar: string };
   isShared?: boolean;
+  sharedOrigin?: SharedOriginInfo | null;
+  createdAt?: string;
 };
 
 type NewPostPayload = {
