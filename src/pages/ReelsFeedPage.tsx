@@ -51,6 +51,7 @@ export default function ReelsFeedPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
+  const [shareForPost, setShareForPost] = useState<{ shareUrl: string; shareText: string } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
@@ -68,6 +69,7 @@ export default function ReelsFeedPage() {
   useEffect(() => {
     const state = location.state as { shareToProfile?: boolean; shareUrl?: string; shareText?: string } | null;
     if (state?.shareToProfile && userId) {
+      setShareForPost({ shareUrl: state.shareUrl || "", shareText: state.shareText || "" });
       setShowCreate(true);
       window.history.replaceState({}, document.title);
     }
@@ -360,9 +362,11 @@ export default function ReelsFeedPage() {
           <CreatePostModal
             userId={userId}
             userProfile={userProfile}
-            onClose={() => setShowCreate(false)}
+            initialCaption={shareForPost ? `${shareForPost.shareText}\n${shareForPost.shareUrl}`.trim() : undefined}
+            onClose={() => { setShowCreate(false); setShareForPost(null); }}
             onCreated={() => {
               setShowCreate(false);
+              setShareForPost(null);
               queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
             }}
           />
@@ -439,13 +443,15 @@ function CreatePostModal({
   userProfile,
   onClose,
   onCreated,
+  initialCaption,
 }: {
   userId: string;
   userProfile: { name: string; avatar: string | null } | null;
   onClose: () => void;
   onCreated: () => void;
+  initialCaption?: string;
 }) {
-  const [caption, setCaption] = useState("");
+  const [caption, setCaption] = useState(initialCaption || "");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
