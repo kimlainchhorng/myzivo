@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen, Scale } from "lucide-react";
+import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen, Scale, BarChart3, ShieldCheck, Download, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const settingsItems = [
