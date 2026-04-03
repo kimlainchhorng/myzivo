@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => ({
       },
     },
     cssCodeSplit: true,
-    sourcemap: false,
+    sourcemap: 'hidden',
   },
   plugins: [
     react(),
