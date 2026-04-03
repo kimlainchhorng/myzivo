@@ -7801,6 +7801,38 @@ export type Database = {
           },
         ]
       }
+      comment_reactions: {
+        Row: {
+          comment_id: string
+          created_at: string
+          emoji: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          emoji: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_settings: {
         Row: {
           commission_percentage: number
@@ -29146,6 +29178,50 @@ export type Database = {
         }
         Relationships: []
       }
+      post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          likes_count: number
+          parent_id: string | null
+          post_id: string
+          post_source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          parent_id?: string | null
+          post_id: string
+          post_source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          parent_id?: string | null
+          post_id?: string
+          post_source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_alerts: {
         Row: {
           cabin_class: string | null
@@ -37930,6 +38006,51 @@ export type Database = {
         }
         Relationships: []
       }
+      stories: {
+        Row: {
+          background_color: string | null
+          created_at: string
+          duration_seconds: number
+          expires_at: string
+          id: string
+          media_type: string
+          media_url: string
+          text_color: string | null
+          text_overlay: string | null
+          text_position: string | null
+          user_id: string
+          view_count: number
+        }
+        Insert: {
+          background_color?: string | null
+          created_at?: string
+          duration_seconds?: number
+          expires_at?: string
+          id?: string
+          media_type?: string
+          media_url: string
+          text_color?: string | null
+          text_overlay?: string | null
+          text_position?: string | null
+          user_id: string
+          view_count?: number
+        }
+        Update: {
+          background_color?: string | null
+          created_at?: string
+          duration_seconds?: number
+          expires_at?: string
+          id?: string
+          media_type?: string
+          media_url?: string
+          text_color?: string | null
+          text_overlay?: string | null
+          text_position?: string | null
+          user_id?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
       story_comments: {
         Row: {
           content: string
@@ -43035,6 +43156,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_notifications: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          is_read: boolean
+          message: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          is_read?: boolean
+          message: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_personalization_settings: {
         Row: {
