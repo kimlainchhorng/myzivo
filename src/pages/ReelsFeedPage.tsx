@@ -25,6 +25,7 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import CommentsSheet from "@/components/social/CommentsSheet";
 
 interface FeedItem {
   id: string;
