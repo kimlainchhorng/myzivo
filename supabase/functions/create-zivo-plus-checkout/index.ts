@@ -16,6 +16,7 @@ const logStep = (step: string, details?: any) => {
 // Price IDs
 const PRICES: Record<string, string> = {
   monthly: "price_1SyjkMBxRnIs4yDmaW20lkln",
+  chat: "price_1TIHWdBxRnIs4yDmTfsdqdod",
   annual: "price_1SyjkSBxRnIs4yDmSFHyzxLL",
 };
 
