@@ -431,22 +431,119 @@ const Profile = () => {
 
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/notifications')}
-                className="relative z-20 flex min-h-[36px] items-center gap-1.5 px-3.5 py-2 rounded-xl bg-card/70 backdrop-blur-xl border border-border/30 text-[11px] font-bold shadow-lg shadow-primary/[0.05] touch-manipulation transition-all hover:bg-card/90"
+                onClick={() => setShowNotifPanel(prev => !prev)}
+                className={cn(
+                  "relative z-20 flex min-h-[36px] items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-bold shadow-lg touch-manipulation transition-all",
+                  showNotifPanel
+                    ? "bg-primary text-primary-foreground shadow-primary/25"
+                    : "bg-card/70 backdrop-blur-xl border border-border/30 shadow-primary/[0.05] hover:bg-card/90"
+                )}
                 style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
               >
                 <span className="relative">
-                  <Bell className="w-3.5 h-3.5 text-destructive" />
-                  {totalNotifCount > 0 && (
+                  <Bell className={cn("w-3.5 h-3.5", showNotifPanel ? "text-primary-foreground" : "text-destructive")} />
+                  {totalNotifCount > 0 && !showNotifPanel && (
                     <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground px-1 shadow-md shadow-destructive/30">
                       {totalNotifCount > 99 ? '99+' : totalNotifCount}
                     </span>
                   )}
                 </span>
                 <span className="ml-1">Notifications</span>
-                <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                <ChevronDown className={cn("w-3 h-3 transition-transform duration-300", showNotifPanel ? "rotate-180 text-primary-foreground/70" : "text-muted-foreground")} />
               </motion.button>
             </div>
+
+            {/* Inline Notifications Panel */}
+            <AnimatePresence>
+              {showNotifPanel && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-2 rounded-2xl bg-card/80 backdrop-blur-xl border border-border/40 shadow-xl shadow-primary/[0.04] p-3">
+                    {/* Panel Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-bold">Notifications</span>
+                        {totalNotifCount > 0 && (
+                          <Badge variant="secondary" className="text-[10px] h-5 px-1.5">{totalNotifCount} new</Badge>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setShowNotifPanel(false)}
+                        className="p-1.5 rounded-xl hover:bg-muted/50 transition-colors touch-manipulation active:scale-90"
+                        aria-label="Close notifications"
+                      >
+                        <X className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </div>
+
+                    {/* Quick Notification Items */}
+                    <div className="space-y-1.5 mb-3">
+                      {totalNotifCount === 0 ? (
+                        <div className="text-center py-4">
+                          <Bell className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                          <p className="text-xs text-muted-foreground">No new notifications</p>
+                        </div>
+                      ) : (
+                        <>
+                          {socialCount > 0 && (
+                            <button
+                              onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
+                              className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-primary/5 border border-primary/15 hover:bg-primary/10 transition-colors text-left touch-manipulation"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                                <UserPlus className="w-4 h-4 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold">Friend Requests</p>
+                                <p className="text-[10px] text-muted-foreground">{socialCount} pending</p>
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            </button>
+                          )}
+                          {notifUnreadCount > 0 && (
+                            <button
+                              onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
+                              className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-left touch-manipulation"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                                <Bell className="w-4 h-4 text-destructive" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold">Unread Alerts</p>
+                                <p className="text-[10px] text-muted-foreground">{notifUnreadCount} notifications</p>
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {/* View All + Close Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
+                        className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold touch-manipulation active:scale-95 transition-transform"
+                      >
+                        View All
+                      </button>
+                      <button
+                        onClick={() => setShowNotifPanel(false)}
+                        className="px-4 py-2 rounded-xl bg-muted/50 text-muted-foreground text-xs font-bold touch-manipulation active:scale-95 transition-transform hover:bg-muted/70"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </ParallaxSection>
 
           {/* ── Country Selector (compact cards) ── */}
