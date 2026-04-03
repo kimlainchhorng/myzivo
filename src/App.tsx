@@ -623,6 +623,7 @@ const App = () => (
                 <Route path="/setup" element={<Setup />} />
                 
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/more" element={<ProtectedRoute><MorePage /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
                 <Route path="/user/:userId" element={<PublicProfilePage />} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
