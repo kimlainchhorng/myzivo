@@ -389,13 +389,25 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (videoInputRef.current) videoInputRef.current.value = "";
   };
 
-  // Locked media upload (photo or video)
+  // Locked media: first show price picker
   const handleLockedMediaSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
     const isVideo = file.type.startsWith("video");
     const maxSize = isVideo ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
     if (file.size > maxSize) { toast.error(`File must be under ${isVideo ? "25MB" : "5MB"}`); return; }
+    setPendingLockedFile(file);
+    setShowLockedPricePicker(true);
+    if (lockedImageInputRef.current) lockedImageInputRef.current.value = "";
+  };
+
+  // Locked media: upload after price confirmed
+  const handleLockedMediaConfirm = async (priceCents: number) => {
+    setShowLockedPricePicker(false);
+    const file = pendingLockedFile;
+    setPendingLockedFile(null);
+    if (!file || !user?.id) return;
+    const isVideo = file.type.startsWith("video");
     setUploadingMedia(true);
     try {
       const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
@@ -404,7 +416,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       if (error) throw error;
       const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
       const messageType = isVideo ? "locked_video" : "locked_image";
-      const label = isVideo ? "🔒 Locked Video" : "🔒 Locked Photo";
+      const priceLabel = `$${(priceCents / 100).toFixed(2)}`;
+      const label = isVideo ? `🔒 Locked Video · ${priceLabel}` : `🔒 Locked Photo · ${priceLabel}`;
       const text = input.trim();
       setInput("");
       clearDraft();
@@ -418,6 +431,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         voice_url: null, message_type: messageType,
         reply_to_id: null, location_lat: null, location_lng: null, location_label: null,
         is_pinned: false, expires_at: null, created_at: new Date().toISOString(), is_read: false,
+        locked_price_cents: priceCents,
       };
       setMessages((prev) => [...prev, optimisticMsg]);
       scrollToBottom();
@@ -430,6 +444,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           image_url: isVideo ? null : urlData.publicUrl,
           video_url: isVideo ? urlData.publicUrl : null,
           message_type: messageType,
+          locked_price_cents: priceCents,
         })
         .select().single();
       if (insertErr) throw insertErr;
@@ -437,7 +452,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     } catch { toast.error("Failed to upload locked media"); }
     setUploadingMedia(false);
     setSending(false);
-    if (lockedImageInputRef.current) lockedImageInputRef.current.value = "";
   };
 
 
