@@ -46,6 +46,8 @@ interface FeedItem {
   shared_from_user_name?: string | null;
   shared_from_user_avatar?: string | null;
   shared_from_caption?: string | null;
+  shared_from_source?: "user" | "store" | null;
+  shared_from_store_slug?: string | null;
   // Interaction controls from profile
   comment_control?: "everyone" | "friends" | "off";
   hide_like_counts?: boolean;
@@ -186,22 +188,75 @@ export default function ReelsFeedPage() {
         if (userPosts?.length) {
           const userIds = [...new Set(userPosts.map((p: any) => p.user_id))] as string[];
           const sharedFromUserIds = [...new Set(userPosts.filter((p: any) => p.shared_from_user_id).map((p: any) => p.shared_from_user_id))] as string[];
-          const allProfileIds = [...new Set([...userIds, ...sharedFromUserIds])];
+          const sharedFromPostIds = [...new Set(userPosts.filter((p: any) => p.shared_from_post_id).map((p: any) => p.shared_from_post_id))] as string[];
+
+          let originalUserPosts: Array<{ id: string; user_id: string; caption: string | null }> = [];
+          let originalStorePosts: Array<{ id: string; store_id: string; caption: string | null }> = [];
+
+          if (sharedFromPostIds.length) {
+            const [{ data: sourceUserPosts }, { data: sourceStorePosts }] = await Promise.all([
+              (supabase as any).from("user_posts").select("id, user_id, caption").in("id", sharedFromPostIds),
+              supabase.from("store_posts").select("id, store_id, caption").in("id", sharedFromPostIds),
+            ]);
+
+            originalUserPosts = (sourceUserPosts ?? []) as Array<{ id: string; user_id: string; caption: string | null }>;
+            originalStorePosts = (sourceStorePosts ?? []) as Array<{ id: string; store_id: string; caption: string | null }>;
+          }
+
+          const originalUserIds = [...new Set(originalUserPosts.map((p) => p.user_id))] as string[];
+          const allProfileIds = [...new Set([...userIds, ...sharedFromUserIds, ...originalUserIds])];
           const { data: profiles } = await supabase
             .from("profiles")
             .select("user_id, full_name, avatar_url, comment_control, hide_like_counts, allow_sharing, allow_mentions")
             .in("user_id", allProfileIds);
+
+          let sharedStores: Array<{ id: string; name: string; logo_url: string | null; slug: string }> = [];
+          const sharedStoreIds = [...new Set(originalStorePosts.map((p) => p.store_id))] as string[];
+          if (sharedStoreIds.length) {
+            const { data } = await supabase
+              .from("store_profiles")
+              .select("id, name, logo_url, slug")
+              .in("id", sharedStoreIds);
+            sharedStores = (data ?? []) as Array<{ id: string; name: string; logo_url: string | null; slug: string }>;
+          }
+
           const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+          const originalUserPostMap = new Map(originalUserPosts.map((post) => [post.id, post]));
+          const originalStorePostMap = new Map(originalStorePosts.map((post) => [post.id, post]));
+          const sharedStoreMap = new Map(sharedStores.map((store) => [store.id, store]));
 
           for (const post of userPosts as any[]) {
             const profile = profileMap.get(post.user_id);
             if (!post.media_url && !post.caption?.trim()) continue;
             const normalizedMediaType = normalizeUserPostMediaType(post.media_type);
 
+            const originalUserPost = post.shared_from_post_id ? originalUserPostMap.get(post.shared_from_post_id) : null;
+            const originalStorePost = post.shared_from_post_id ? originalStorePostMap.get(post.shared_from_post_id) : null;
+
+            let sharedFromSource: "user" | "store" | null = null;
+            let sharedFromUserId: string | null = post.shared_from_user_id || null;
             let sharedFromUserName: string | null = null;
             let sharedFromUserAvatar: string | null = null;
-            if (post.shared_from_user_id) {
+            let sharedFromCaption: string | null = null;
+            let sharedFromStoreSlug: string | null = null;
+
+            if (originalStorePost) {
+              const sharedStore = sharedStoreMap.get(originalStorePost.store_id);
+              sharedFromSource = "store";
+              sharedFromUserName = sharedStore?.name?.trim() || "Store";
+              sharedFromUserAvatar = sharedStore?.logo_url || null;
+              sharedFromCaption = originalStorePost.caption || null;
+              sharedFromStoreSlug = sharedStore?.slug || null;
+            } else if (originalUserPost) {
+              const sharedProfile = profileMap.get(originalUserPost.user_id);
+              sharedFromSource = "user";
+              sharedFromUserId = originalUserPost.user_id;
+              sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
+              sharedFromUserAvatar = sharedProfile?.avatar_url || null;
+              sharedFromCaption = originalUserPost.caption || null;
+            } else if (post.shared_from_user_id) {
               const sharedProfile = profileMap.get(post.shared_from_user_id);
+              sharedFromSource = "user";
               sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
               sharedFromUserAvatar = sharedProfile?.avatar_url || null;
             }
@@ -220,10 +275,12 @@ export default function ReelsFeedPage() {
               author_id: post.user_id,
               created_at: post.created_at,
               shared_from_post_id: post.shared_from_post_id || null,
-              shared_from_user_id: post.shared_from_user_id || null,
+              shared_from_user_id: sharedFromUserId,
               shared_from_user_name: sharedFromUserName,
               shared_from_user_avatar: sharedFromUserAvatar,
-              shared_from_caption: null,
+              shared_from_caption: sharedFromCaption,
+              shared_from_source: sharedFromSource,
+              shared_from_store_slug: sharedFromStoreSlug,
               comment_control: profile?.comment_control || "everyone",
               hide_like_counts: profile?.hide_like_counts || false,
               allow_sharing: profile?.allow_sharing !== false,
@@ -1413,7 +1470,13 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             {/* Original author header */}
             <button
               type="button"
-              onClick={() => item.shared_from_user_id && navigate(`/user/${item.shared_from_user_id}`)}
+              onClick={() => {
+                if (item.shared_from_source === "store" && item.shared_from_store_slug) {
+                  navigate(`/grocery/shop/${item.shared_from_store_slug}`);
+                } else if (item.shared_from_user_id) {
+                  navigate(`/user/${item.shared_from_user_id}`);
+                }
+              }}
               className="flex items-center gap-2.5 px-3 py-2 w-full active:opacity-70"
             >
               <div className="h-8 w-8 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
@@ -1421,13 +1484,13 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                   <img src={item.shared_from_user_avatar} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-[10px] font-bold">
-                    {(item.shared_from_user_name || "?")[0]}
+                    {(item.shared_from_user_name || (item.shared_from_source === "store" ? "S" : "?"))[0]}
                   </div>
                 )}
               </div>
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-[12px] font-semibold text-foreground truncate">
-                  {item.shared_from_user_name || "Unknown"}
+                  {item.shared_from_user_name || (item.shared_from_source === "store" ? "Store" : "Someone")}
                 </p>
                 <div className="flex items-center gap-1">
                   <Globe className="h-2.5 w-2.5 text-muted-foreground" />
