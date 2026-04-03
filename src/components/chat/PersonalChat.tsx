@@ -439,23 +439,23 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-2xl border-b border-border/10 safe-area-top shadow-sm">
-        <div className="px-2 py-2 flex items-center gap-2.5">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-2xl border-b border-border/8 safe-area-top">
+        <div className="px-2 py-2.5 flex items-center gap-3">
           <button onClick={onClose} className="min-h-[44px] min-w-[36px] flex items-center justify-center -ml-1 active:scale-90 transition-transform">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <div className="relative shrink-0">
-            <Avatar className="h-10 w-10 ring-2 ring-primary/10 shadow-sm">
+            <Avatar className="h-[42px] w-[42px] ring-2 ring-border/10">
               <AvatarImage src={recipientAvatar || undefined} />
-              <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
+              <AvatarFallback className="text-xs font-bold bg-primary/8 text-primary">{initials}</AvatarFallback>
             </Avatar>
             {recipientOnline && (
-              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-background shadow-sm" />
+              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
             )}
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-bold text-foreground truncate leading-tight tracking-tight">{recipientName}</p>
-            <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+          <div className="min-w-0 flex-1" onClick={() => {}}>
+            <p className="text-[15px] font-semibold text-foreground truncate leading-tight">{recipientName}</p>
+            <p className="text-[11px] text-muted-foreground/70 leading-tight mt-0.5">
               {recipientTyping ? (
                 <span className="text-primary font-medium animate-pulse">typing...</span>
               ) : recipientOnline ? (
@@ -466,20 +466,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             </p>
           </div>
 
-          {/* Primary actions: Video + Voice call */}
-          <div className="flex items-center gap-0.5">
-            <button onClick={() => { void handleStartCall("video"); }} className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all">
-              <Video className="h-[19px] w-[19px] text-foreground/60" />
+          {/* Action buttons */}
+          <div className="flex items-center gap-1">
+            <button onClick={() => { void handleStartCall("video"); }} className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-all">
+              <Video className="h-5 w-5 text-foreground/50" />
             </button>
-            <button onClick={() => { void handleStartCall("voice"); }} className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all">
-              <Phone className="h-[18px] w-[18px] text-foreground/60" />
+            <button onClick={() => { void handleStartCall("voice"); }} className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-all">
+              <Phone className="h-[19px] w-[19px] text-foreground/50" />
             </button>
 
-            {/* Overflow menu for secondary actions */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all -mr-1">
-                  <MoreVertical className="h-[18px] w-[18px] text-foreground/60" />
+                <button className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-all -mr-1">
+                  <MoreVertical className="h-5 w-5 text-foreground/50" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={8} className="w-52 bg-background/95 backdrop-blur-xl border-border/30 shadow-xl shadow-black/10 rounded-xl p-1.5">
@@ -495,7 +494,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <DropdownMenuItem onClick={() => setShowMiniApps(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <Zap className="w-[18px] h-[18px] text-muted-foreground" /> Mini Apps
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="my-1.5 bg-border/20" />
+              <DropdownMenuSeparator className="my-1.5 bg-border/15" />
               <DropdownMenuItem onClick={() => setShowPersonalization(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <Palette className="w-[18px] h-[18px] text-muted-foreground" /> Theme
               </DropdownMenuItem>
