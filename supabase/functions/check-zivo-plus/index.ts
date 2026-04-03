@@ -72,8 +72,9 @@ serve(async (req) => {
 
     // ZIVO+ product IDs
     const PLUS_MONTHLY_PRODUCT = "prod_Twd0bbN76Y6chu";
+    const PLUS_CHAT_PRODUCT = "prod_UGpAC1qAhDttlE";
     const PLUS_ANNUAL_PRODUCT = "prod_Twd004sz9HeIVX";
-    const PLUS_PRODUCTS = new Set([PLUS_MONTHLY_PRODUCT, PLUS_ANNUAL_PRODUCT]);
+    const PLUS_PRODUCTS = new Set([PLUS_MONTHLY_PRODUCT, PLUS_CHAT_PRODUCT, PLUS_ANNUAL_PRODUCT]);
 
     let plusSubscription = null;
     for (const sub of subscriptions.data) {
@@ -93,7 +94,7 @@ serve(async (req) => {
     }
 
     const productId = plusSubscription.items.data[0]?.price?.product;
-    const plan = productId === PLUS_ANNUAL_PRODUCT ? "annual" : "monthly";
+    const plan = productId === PLUS_ANNUAL_PRODUCT ? "annual" : productId === PLUS_CHAT_PRODUCT ? "chat" : "monthly";
     const subscriptionEnd = new Date(plusSubscription.current_period_end * 1000).toISOString();
 
     logStep("Active ZIVO+ found", { plan, subscriptionEnd, subId: plusSubscription.id });
