@@ -464,6 +464,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 <span className="text-emerald-500 font-medium">Online</span>
               ) : disappearingMode ? (
                 <span className="text-amber-500">⏱ Disappearing</span>
+              ) : recipientLastSeen ? (
+                <span className="text-muted-foreground">Last seen {recipientLastSeen}</span>
               ) : "Tap here for info"}
             </p>
           </div>
