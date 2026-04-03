@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      ab_test_assignments: {
+        Row: {
+          assigned_at: string | null
+          converted: boolean | null
+          converted_at: string | null
+          id: string
+          test_id: string
+          user_id: string
+          variant: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          converted?: boolean | null
+          converted_at?: string | null
+          id?: string
+          test_id: string
+          user_id: string
+          variant: string
+        }
+        Update: {
+          assigned_at?: string | null
+          converted?: boolean | null
+          converted_at?: string | null
+          id?: string
+          test_id?: string
+          user_id?: string
+          variant?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_test_assignments_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "ab_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ab_tests: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          name: string
+          starts_at: string | null
+          status: string | null
+          traffic_percentage: number | null
+          variants: Json
+          winner_variant: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          name: string
+          starts_at?: string | null
+          status?: string | null
+          traffic_percentage?: number | null
+          variants?: Json
+          winner_variant?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          name?: string
+          starts_at?: string | null
+          status?: string | null
+          traffic_percentage?: number | null
+          variants?: Json
+          winner_variant?: string | null
+        }
+        Relationships: []
+      }
       abandoned_searches: {
         Row: {
           checkout_initiated: boolean | null
@@ -2544,6 +2621,39 @@ export type Database = {
           },
         ]
       }
+      app_changelogs: {
+        Row: {
+          changes: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_published: boolean | null
+          release_date: string | null
+          title: string
+          version: string
+        }
+        Insert: {
+          changes?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean | null
+          release_date?: string | null
+          title: string
+          version: string
+        }
+        Update: {
+          changes?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean | null
+          release_date?: string | null
+          title?: string
+          version?: string
+        }
+        Relationships: []
+      }
       app_installs: {
         Row: {
           app_version: string | null
@@ -2913,6 +3023,89 @@ export type Database = {
           conversation_id?: string
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      audio_room_participants: {
+        Row: {
+          id: string
+          is_muted: boolean | null
+          joined_at: string | null
+          left_at: string | null
+          role: string | null
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_muted?: boolean | null
+          joined_at?: string | null
+          left_at?: string | null
+          role?: string | null
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_muted?: boolean | null
+          joined_at?: string | null
+          left_at?: string | null
+          role?: string | null
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_room_participants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "audio_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_rooms: {
+        Row: {
+          cover_url: string | null
+          description: string | null
+          ended_at: string | null
+          host_id: string
+          id: string
+          is_recording: boolean | null
+          listener_count: number | null
+          max_speakers: number | null
+          started_at: string | null
+          status: string | null
+          title: string
+          topic: string | null
+        }
+        Insert: {
+          cover_url?: string | null
+          description?: string | null
+          ended_at?: string | null
+          host_id: string
+          id?: string
+          is_recording?: boolean | null
+          listener_count?: number | null
+          max_speakers?: number | null
+          started_at?: string | null
+          status?: string | null
+          title: string
+          topic?: string | null
+        }
+        Update: {
+          cover_url?: string | null
+          description?: string | null
+          ended_at?: string | null
+          host_id?: string
+          id?: string
+          is_recording?: boolean | null
+          listener_count?: number | null
+          max_speakers?: number | null
+          started_at?: string | null
+          status?: string | null
+          title?: string
+          topic?: string | null
         }
         Relationships: []
       }
@@ -7625,6 +7818,53 @@ export type Database = {
         }
         Relationships: []
       }
+      check_ins: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          id: string
+          is_public: boolean | null
+          lat: number | null
+          lng: number | null
+          location_name: string | null
+          photo_url: string | null
+          place_id: string | null
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          location_name?: string | null
+          photo_url?: string | null
+          place_id?: string | null
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          location_name?: string | null
+          photo_url?: string | null
+          place_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "check_ins_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_templates: {
         Row: {
           checklist_type: string
@@ -9313,6 +9553,30 @@ export type Database = {
           status?: string | null
           summary?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      contact_sync: {
+        Row: {
+          contact_hash: string
+          id: string
+          matched_user_id: string | null
+          synced_at: string | null
+          user_id: string
+        }
+        Insert: {
+          contact_hash: string
+          id?: string
+          matched_user_id?: string | null
+          synced_at?: string | null
+          user_id: string
+        }
+        Update: {
+          contact_hash?: string
+          id?: string
+          matched_user_id?: string | null
+          synced_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -17408,6 +17672,42 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flags: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_enabled: boolean | null
+          name: string
+          rollout_percentage: number | null
+          target_roles: string[] | null
+          target_users: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          name: string
+          rollout_percentage?: number | null
+          target_roles?: string[] | null
+          target_users?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          name?: string
+          rollout_percentage?: number | null
+          target_roles?: string[] | null
+          target_users?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       featured_listings: {
         Row: {
           boost_amount: number | null
@@ -17597,6 +17897,54 @@ export type Database = {
           tips_settle_instantly?: boolean | null
           tips_to_driver_percent?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      feedback_submissions: {
+        Row: {
+          app_version: string | null
+          category: string | null
+          created_at: string | null
+          device_info: string | null
+          id: string
+          message: string
+          rating: number | null
+          responded_at: string | null
+          response: string | null
+          screenshot_url: string | null
+          status: string | null
+          subject: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app_version?: string | null
+          category?: string | null
+          created_at?: string | null
+          device_info?: string | null
+          id?: string
+          message: string
+          rating?: number | null
+          responded_at?: string | null
+          response?: string | null
+          screenshot_url?: string | null
+          status?: string | null
+          subject?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app_version?: string | null
+          category?: string | null
+          created_at?: string | null
+          device_info?: string | null
+          id?: string
+          message?: string
+          rating?: number | null
+          responded_at?: string | null
+          response?: string | null
+          screenshot_url?: string | null
+          status?: string | null
+          subject?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -20379,6 +20727,44 @@ export type Database = {
           },
         ]
       }
+      game_scores: {
+        Row: {
+          game_id: string
+          id: string
+          level: number | null
+          metadata: Json | null
+          played_at: string | null
+          score: number
+          user_id: string
+        }
+        Insert: {
+          game_id: string
+          id?: string
+          level?: number | null
+          metadata?: Json | null
+          played_at?: string | null
+          score: number
+          user_id: string
+        }
+        Update: {
+          game_id?: string
+          id?: string
+          level?: number | null
+          metadata?: Json | null
+          played_at?: string | null
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_scores_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "mini_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       geofence_events: {
         Row: {
           created_at: string | null
@@ -22273,6 +22659,45 @@ export type Database = {
           },
         ]
       }
+      invitation_links: {
+        Row: {
+          code: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          link_type: string | null
+          max_uses: number | null
+          metadata: Json | null
+          use_count: number | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          link_type?: string | null
+          max_uses?: number | null
+          metadata?: Json | null
+          use_count?: number | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          link_type?: string | null
+          max_uses?: number | null
+          metadata?: Json | null
+          use_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number | null
@@ -22837,6 +23262,56 @@ export type Database = {
           },
         ]
       }
+      journal_entries: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          entry_date: string | null
+          id: string
+          journal_id: string
+          lat: number | null
+          lng: number | null
+          location_name: string | null
+          media_urls: Json | null
+          mood: string | null
+          weather: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          entry_date?: string | null
+          id?: string
+          journal_id: string
+          lat?: number | null
+          lng?: number | null
+          location_name?: string | null
+          media_urls?: Json | null
+          mood?: string | null
+          weather?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          entry_date?: string | null
+          id?: string
+          journal_id?: string
+          lat?: number | null
+          lng?: number | null
+          location_name?: string | null
+          media_urls?: Json | null
+          mood?: string | null
+          weather?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "travel_journals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_base_articles: {
         Row: {
           category: string
@@ -23304,6 +23779,41 @@ export type Database = {
         }
         Relationships: []
       }
+      leaderboard_entries: {
+        Row: {
+          id: string
+          leaderboard_id: string
+          rank: number | null
+          score: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          leaderboard_id: string
+          rank?: number | null
+          score: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          leaderboard_id?: string
+          rank?: number | null
+          score?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leaderboard_entries_leaderboard_id_fkey"
+            columns: ["leaderboard_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leaderboard_snapshots: {
         Row: {
           entity_id: string | null
@@ -23330,6 +23840,47 @@ export type Database = {
           score?: number | null
         }
         Relationships: []
+      }
+      leaderboards: {
+        Row: {
+          created_at: string | null
+          game_id: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          period: string | null
+          reset_at: string | null
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          game_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          period?: string | null
+          reset_at?: string | null
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          game_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          period?: string | null
+          reset_at?: string | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leaderboards_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "mini_games"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ledger_entries: {
         Row: {
@@ -23819,6 +24370,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      location_shares: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          lat: number | null
+          lng: number | null
+          shared_with: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          shared_with: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          shared_with?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       login_history: {
         Row: {
@@ -26509,6 +27093,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mini_games: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          icon_url: string | null
+          id: string
+          is_active: boolean | null
+          is_multiplayer: boolean | null
+          max_players: number | null
+          name: string
+          play_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_multiplayer?: boolean | null
+          max_players?: number | null
+          name: string
+          play_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_multiplayer?: boolean | null
+          max_players?: number | null
+          name?: string
+          play_count?: number | null
+        }
+        Relationships: []
       }
       moderation_actions: {
         Row: {
@@ -31322,6 +31945,51 @@ export type Database = {
         }
         Relationships: []
       }
+      places: {
+        Row: {
+          address: string | null
+          category: string | null
+          cover_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_verified: boolean | null
+          lat: number | null
+          lng: number | null
+          name: string
+          rating: number | null
+          review_count: number | null
+        }
+        Insert: {
+          address?: string | null
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_verified?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          name: string
+          rating?: number | null
+          review_count?: number | null
+        }
+        Update: {
+          address?: string | null
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_verified?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          rating?: number | null
+          review_count?: number | null
+        }
+        Relationships: []
+      }
       platform_pricing: {
         Row: {
           base_delivery_fee_cents: number
@@ -31439,6 +32107,204 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
           value?: Json
+        }
+        Relationships: []
+      }
+      playlist_items: {
+        Row: {
+          added_at: string | null
+          id: string
+          playlist_id: string
+          reel_id: string | null
+          sort_order: number | null
+          sound_id: string | null
+          title: string | null
+        }
+        Insert: {
+          added_at?: string | null
+          id?: string
+          playlist_id: string
+          reel_id?: string | null
+          sort_order?: number | null
+          sound_id?: string | null
+          title?: string | null
+        }
+        Update: {
+          added_at?: string | null
+          id?: string
+          playlist_id?: string
+          reel_id?: string | null
+          sort_order?: number | null
+          sound_id?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_items_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlists: {
+        Row: {
+          cover_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          title: string
+          track_count: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          title: string
+          track_count?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          title?: string
+          track_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      podcast_episodes: {
+        Row: {
+          audio_url: string
+          description: string | null
+          duration_seconds: number | null
+          episode_number: number | null
+          id: string
+          is_published: boolean | null
+          play_count: number | null
+          podcast_id: string
+          published_at: string | null
+          season_number: number | null
+          title: string
+        }
+        Insert: {
+          audio_url: string
+          description?: string | null
+          duration_seconds?: number | null
+          episode_number?: number | null
+          id?: string
+          is_published?: boolean | null
+          play_count?: number | null
+          podcast_id: string
+          published_at?: string | null
+          season_number?: number | null
+          title: string
+        }
+        Update: {
+          audio_url?: string
+          description?: string | null
+          duration_seconds?: number | null
+          episode_number?: number | null
+          id?: string
+          is_published?: boolean | null
+          play_count?: number | null
+          podcast_id?: string
+          published_at?: string | null
+          season_number?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_episodes_podcast_id_fkey"
+            columns: ["podcast_id"]
+            isOneToOne: false
+            referencedRelation: "podcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      podcast_subscriptions: {
+        Row: {
+          created_at: string | null
+          id: string
+          podcast_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          podcast_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          podcast_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_subscriptions_podcast_id_fkey"
+            columns: ["podcast_id"]
+            isOneToOne: false
+            referencedRelation: "podcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      podcasts: {
+        Row: {
+          category: string | null
+          cover_url: string | null
+          created_at: string | null
+          creator_id: string
+          description: string | null
+          episode_count: number | null
+          id: string
+          is_active: boolean | null
+          language: string | null
+          rss_url: string | null
+          subscriber_count: number | null
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          creator_id: string
+          description?: string | null
+          episode_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          language?: string | null
+          rss_url?: string | null
+          subscriber_count?: number | null
+          title: string
+        }
+        Update: {
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          creator_id?: string
+          description?: string | null
+          episode_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          language?: string | null
+          rss_url?: string | null
+          subscriber_count?: number | null
+          title?: string
         }
         Relationships: []
       }
@@ -42985,6 +43851,38 @@ export type Database = {
         }
         Relationships: []
       }
+      survey_responses: {
+        Row: {
+          answers: Json
+          completed_at: string | null
+          id: string
+          survey_id: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string | null
+          id?: string
+          survey_id: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string | null
+          id?: string
+          survey_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "user_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sync_logs: {
         Row: {
           device_role: string | null
@@ -44973,6 +45871,48 @@ export type Database = {
           show_disclosure_modal?: boolean
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      travel_journals: {
+        Row: {
+          cover_url: string | null
+          created_at: string | null
+          description: string | null
+          destination: string | null
+          end_date: string | null
+          entry_count: number | null
+          id: string
+          is_public: boolean | null
+          start_date: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          destination?: string | null
+          end_date?: string | null
+          entry_count?: number | null
+          id?: string
+          is_public?: boolean | null
+          start_date?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          destination?: string | null
+          end_date?: string | null
+          entry_count?: number | null
+          id?: string
+          is_public?: boolean | null
+          start_date?: string | null
+          title?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -47230,6 +48170,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_referrals: {
+        Row: {
+          created_at: string | null
+          id: string
+          referral_code: string
+          referred_id: string | null
+          referrer_id: string
+          reward_type: string | null
+          reward_value: number | null
+          rewarded_at: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          referral_code: string
+          referred_id?: string | null
+          referrer_id: string
+          reward_type?: string | null
+          reward_value?: number | null
+          rewarded_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          referral_code?: string
+          referred_id?: string | null
+          referrer_id?: string
+          reward_type?: string | null
+          reward_value?: number | null
+          rewarded_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       user_reports: {
         Row: {
           created_at: string
@@ -47495,6 +48471,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_surveys: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          questions: Json
+          response_count: number | null
+          starts_at: string | null
+          status: string | null
+          target_audience: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          questions?: Json
+          response_count?: number | null
+          starts_at?: string | null
+          status?: string | null
+          target_audience?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          questions?: Json
+          response_count?: number | null
+          starts_at?: string | null
+          status?: string | null
+          target_audience?: string | null
+          title?: string
+        }
+        Relationships: []
       }
       user_warnings: {
         Row: {
@@ -48603,6 +49618,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      waitlists: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          feature: string
+          id: string
+          invited_at: string | null
+          joined_at: string | null
+          position: number | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          feature: string
+          id?: string
+          invited_at?: string | null
+          joined_at?: string | null
+          position?: number | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          feature?: string
+          id?: string
+          invited_at?: string | null
+          joined_at?: string | null
+          position?: number | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       wallet_balances: {
         Row: {
