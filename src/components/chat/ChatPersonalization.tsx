@@ -211,7 +211,43 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
                   </button>
                 ))}
 
-                {/* Upload Photo Button */}
+                {/* Custom uploaded photos — inline in the grid */}
+                {customPhotos.map((url) => (
+                  <div key={url} className="relative group">
+                    <button
+                      onClick={() => setWallpaper(`custom:${url}`)}
+                      className={`aspect-[3/4] rounded-2xl border-[2.5px] transition-all overflow-hidden w-full ${
+                        wallpaper === `custom:${url}`
+                          ? "border-primary shadow-lg shadow-primary/15"
+                          : "border-border/20 hover:border-border/50"
+                      }`}
+                    >
+                      <img src={url} alt="Custom wallpaper" className="w-full h-full object-cover" />
+                      {wallpaper === `custom:${url}` && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute inset-0 flex items-center justify-center bg-black/20"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-md">
+                            <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                          </div>
+                        </motion.div>
+                      )}
+                      <span className="absolute bottom-1.5 left-0 right-0 text-[9px] text-center font-semibold text-white drop-shadow-md">
+                        Photo
+                      </span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeCustomPhoto(url); }}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
+                    >
+                      <Trash2 className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+                ))}
+
+                {/* Upload Photo Button — always last in grid */}
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
@@ -231,46 +267,6 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
                   </span>
                 </button>
               </div>
-
-              {/* Custom Photo Wallpapers */}
-              {customPhotos.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-[10px] text-muted-foreground font-medium mb-2">Your Photos</p>
-                  <div className="grid grid-cols-4 gap-2.5">
-                    {customPhotos.map((url) => (
-                      <div key={url} className="relative group">
-                        <button
-                          onClick={() => setWallpaper(`custom:${url}`)}
-                          className={`aspect-[3/4] rounded-2xl border-[2.5px] transition-all overflow-hidden w-full ${
-                            wallpaper === `custom:${url}`
-                              ? "border-primary shadow-lg shadow-primary/15"
-                              : "border-border/20 hover:border-border/50"
-                          }`}
-                        >
-                          <img src={url} alt="Custom wallpaper" className="w-full h-full object-cover" />
-                          {wallpaper === `custom:${url}` && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="absolute inset-0 flex items-center justify-center bg-black/20"
-                            >
-                              <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-md">
-                                <Check className="w-3.5 h-3.5 text-primary-foreground" />
-                              </div>
-                            </motion.div>
-                          )}
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); removeCustomPhoto(url); }}
-                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
-                        >
-                          <Trash2 className="w-2.5 h-2.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <input
                 ref={fileInputRef}
