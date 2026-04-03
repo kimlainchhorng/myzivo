@@ -471,9 +471,15 @@ function CreatePostModal({
     setPreview(url);
   };
 
+  const hasSharedLink = !!initialCaption;
+
   const handlePost = async () => {
-    if (!file) {
+    if (!file && !hasSharedLink) {
       toast.error("Please select a photo or video");
+      return;
+    }
+    if (!file && !caption.trim()) {
+      toast.error("Please write something to share");
       return;
     }
     setUploading(true);
