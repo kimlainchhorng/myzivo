@@ -4,6 +4,7 @@
  * Everyone can post photos/videos that show up here
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import UnifiedShareSheet from "@/components/shared/ShareSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
