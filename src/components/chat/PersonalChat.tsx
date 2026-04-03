@@ -455,7 +455,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
             )}
           </div>
-          <div className="min-w-0 flex-1" onClick={() => {}}>
+          <div className="min-w-0 flex-1 cursor-pointer" onClick={() => setShowContactInfo(true)}>
             <p className="text-[15px] font-semibold text-foreground truncate leading-tight">{recipientName}</p>
             <p className="text-[11px] text-muted-foreground/70 leading-tight mt-0.5">
               {recipientTyping ? (
