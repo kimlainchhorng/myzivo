@@ -187,16 +187,25 @@ export default function ReelsFeedPage() {
 
         if (userPosts?.length) {
           const userIds = [...new Set(userPosts.map((p: any) => p.user_id))] as string[];
+          const sharedFromUserIds = [...new Set(userPosts.filter((p: any) => p.shared_from_user_id).map((p: any) => p.shared_from_user_id))] as string[];
+          const allProfileIds = [...new Set([...userIds, ...sharedFromUserIds])];
           const { data: profiles } = await supabase
             .from("profiles")
             .select("id, first_name, last_name, avatar_url, comment_control, hide_like_counts, allow_sharing, allow_mentions")
-            .in("id", userIds);
+            .in("id", allProfileIds);
           const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
           for (const post of userPosts as any[]) {
             const profile = profileMap.get(post.user_id);
             if (!post.media_url && !post.caption?.trim()) continue;
             const normalizedMediaType = normalizeUserPostMediaType(post.media_type);
+            
+            // Resolve shared-from user name
+            let sharedFromUserName: string | null = null;
+            if (post.shared_from_user_id) {
+              const sharedProfile = profileMap.get(post.shared_from_user_id);
+              sharedFromUserName = sharedProfile ? `${sharedProfile.first_name || ""} ${sharedProfile.last_name || ""}`.trim() || "Someone" : "Someone";
+            }
 
             allItems.push({
               id: `u-${post.id}`,
@@ -211,6 +220,9 @@ export default function ReelsFeedPage() {
               author_avatar: profile?.avatar_url || null,
               author_id: post.user_id,
               created_at: post.created_at,
+              shared_from_post_id: post.shared_from_post_id || null,
+              shared_from_user_id: post.shared_from_user_id || null,
+              shared_from_user_name: sharedFromUserName,
               comment_control: profile?.comment_control || "everyone",
               hide_like_counts: profile?.hide_like_counts || false,
               allow_sharing: profile?.allow_sharing !== false,
