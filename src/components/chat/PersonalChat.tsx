@@ -916,6 +916,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
             <input ref={lockedImageInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleLockedMediaSelect} />
 
+            {/* Locked media price picker */}
+            <LockedMediaPricePicker
+              open={showLockedPricePicker}
+              onClose={() => { setShowLockedPricePicker(false); setPendingLockedFile(null); }}
+              onConfirm={handleLockedMediaConfirm}
+            />
+
             {/* Document upload */}
             <ChatMediaUploader
               recipientId={recipientId}
