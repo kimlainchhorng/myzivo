@@ -297,21 +297,26 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   return (
     <div className="space-y-3">
       {/* Create Post Bar */}
-      <motion.button
-        whileTap={{ scale: 0.97 }}
+      <button
         onClick={() => setShowComposer(true)}
-        className="w-full flex items-center gap-3 bg-card rounded-2xl border border-border/30 p-3.5 shadow-sm"
+        className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors rounded-2xl"
       >
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <Plus className="w-5 h-5 text-primary" />
+        <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border-2 border-primary/20 shrink-0 flex items-center justify-center text-muted-foreground/50">
+          <Camera className="h-4 w-4" />
         </div>
-        <span className="text-sm text-muted-foreground flex-1 text-left">What's on your mind?</span>
-        <div className="flex items-center gap-2">
-          <Image className="w-4.5 h-4.5 text-primary/60" />
-          <Film className="w-4.5 h-4.5 text-accent-foreground/40" />
-          <Radio className="w-4.5 h-4.5 text-destructive/60" />
+        <p className="text-sm text-muted-foreground flex-1 text-left">What's on your mind?</p>
+        <div className="flex gap-1.5">
+          <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+            <Image className="h-3.5 w-3.5 text-emerald-600" />
+          </div>
+          <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+            <Film className="h-3.5 w-3.5 text-blue-600" />
+          </div>
+          <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+            <Camera className="h-3.5 w-3.5 text-orange-600" />
+          </div>
         </div>
-      </motion.button>
+      </button>
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-1 bg-muted/30 rounded-xl p-1">
