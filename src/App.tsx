@@ -66,6 +66,11 @@ const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
 const ExplorePage = lazy(() => import("./pages/ExplorePage"));
 const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
 const PrivacySettingsPage = lazy(() => import("./pages/account/PrivacySettingsPage"));
+const DraftsPage = lazy(() => import("./pages/DraftsPage"));
+const AccountAnalyticsPage = lazy(() => import("./pages/account/AccountAnalyticsPage"));
+const VerificationRequestPage = lazy(() => import("./pages/account/VerificationRequestPage"));
+const ActivityLogPage = lazy(() => import("./pages/account/ActivityLogPage"));
+const AccountExportPage = lazy(() => import("./pages/account/AccountExportPage"));
 const GroceryStorePage = lazy(() => import("./pages/GroceryStorePage"));
 const StoreProfilePage = lazy(() => import("./pages/StoreProfilePage"));
 const StoreMapPage = lazy(() => import("./pages/StoreMapPage"));
@@ -458,6 +463,11 @@ const App = () => (
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
+                <Route path="/drafts" element={<ProtectedRoute><DraftsPage /></ProtectedRoute>} />
+                <Route path="/account/analytics" element={<ProtectedRoute><AccountAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/account/verification" element={<ProtectedRoute><VerificationRequestPage /></ProtectedRoute>} />
+                <Route path="/account/activity-log" element={<ProtectedRoute><ActivityLogPage /></ProtectedRoute>} />
+                <Route path="/account/export" element={<ProtectedRoute><AccountExportPage /></ProtectedRoute>} />
                 <Route path="/store-map" element={<StoreMapPage />} />
                 <Route path="/grocery/store/:slug" element={<GroceryStorePage />} />
                 <Route path="/grocery/shop/:slug" element={<StoreProfilePage />} />

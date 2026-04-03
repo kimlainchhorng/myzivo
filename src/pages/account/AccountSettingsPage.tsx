@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen, Scale } from "lucide-react";
+import { ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight, UserPen, Scale, BarChart3, ShieldCheck, Download, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const settingsItems = [
@@ -11,6 +11,10 @@ const settingsItems = [
   { icon: Bell, label: "Notifications", description: "Preferences & alerts", href: "/account/notifications", color: "bg-sky-500/15", iconColor: "text-sky-500" },
   { icon: CreditCard, label: "Payment Methods", description: "Manage cards & wallets", href: "/account/wallet", color: "bg-purple-500/15", iconColor: "text-purple-500" },
   { icon: Gift, label: "Gift Cards", description: "Buy, send, or redeem", href: "/account/gift-cards", color: "bg-pink-500/15", iconColor: "text-pink-500" },
+  { icon: BarChart3, label: "Analytics", description: "Profile stats & insights", href: "/account/analytics", color: "bg-cyan-500/15", iconColor: "text-cyan-500" },
+  { icon: ShieldCheck, label: "Verification", description: "Request verified badge", href: "/account/verification", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+  { icon: Download, label: "Export Data", description: "Download your data", href: "/account/export", color: "bg-green-500/15", iconColor: "text-green-500" },
+  { icon: Clock, label: "Activity Log", description: "Login & action history", href: "/account/activity-log", color: "bg-amber-500/15", iconColor: "text-amber-500" },
   { icon: Scale, label: "Legal & Policies", description: "Terms, privacy & 1,000+ policies", href: "/account/legal", color: "bg-slate-500/15", iconColor: "text-slate-500" },
 ];
 
