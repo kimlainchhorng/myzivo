@@ -14,6 +14,16 @@ interface PullToRefreshProps {
 
 const THRESHOLD = 80;
 const MAX_PULL = 120;
+const INTERACTIVE_SELECTOR = [
+  "button",
+  "a",
+  "input",
+  "textarea",
+  "select",
+  "label",
+  "[role='button']",
+  "[data-disable-pull-to-refresh='true']",
+].join(", ");
 
 export default function PullToRefresh({ onRefresh, children, className }: PullToRefreshProps) {
   const [refreshing, setRefreshing] = useState(false);
@@ -29,6 +39,8 @@ export default function PullToRefresh({ onRefresh, children, className }: PullTo
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (refreshing) return;
+    const target = e.target as HTMLElement | null;
+    if (target?.closest(INTERACTIVE_SELECTOR)) return;
     const scrollTop = containerRef.current?.scrollTop ?? 0;
     if (scrollTop <= 0) {
       touchStartY.current = e.touches[0].clientY;
