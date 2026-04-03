@@ -230,9 +230,8 @@ export default function ChatMessageBubble({
                       e.stopPropagation();
                       setUnlockLoading(true);
                       try {
-                        const senderId = isMe ? undefined : undefined;
                         const { data, error } = await supabase.functions.invoke("unlock-media-checkout", {
-                          body: { message_id: id, seller_id: (window as any).__locked_seller_id || "" },
+                          body: { message_id: id, seller_id: senderId || "" },
                         });
                         if (error) throw error;
                         if (data?.url) {
