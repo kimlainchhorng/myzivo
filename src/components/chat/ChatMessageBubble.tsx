@@ -329,7 +329,7 @@ export default function ChatMessageBubble({
                   ) : (
                     <DollarSign className="h-3.5 w-3.5" />
                   )}
-                  Unlock · $0.99
+                  Unlock · {unlockPriceLabel}
                 </button>
               </div>
             )}
