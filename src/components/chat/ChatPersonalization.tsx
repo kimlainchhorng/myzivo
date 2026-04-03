@@ -139,6 +139,8 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
 
   if (!open) return null;
 
+  const selectedFontSize = FONT_SIZES.find(f => f.id === fontSize)?.size || "text-sm";
+
   return (
     <AnimatePresence>
       <motion.div
@@ -154,104 +156,114 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
           transition={{ type: "spring", damping: 28, stiffness: 320 }}
-          className="relative bg-background rounded-t-3xl w-full max-w-md max-h-[88vh] overflow-hidden flex flex-col"
+          className="relative bg-background rounded-t-[28px] w-full max-w-md max-h-[88vh] overflow-hidden flex flex-col shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="sticky top-0 bg-background/95 backdrop-blur-xl z-10 px-6 pt-4 pb-3 border-b border-border/20">
-            <div className="w-10 h-1 rounded-full bg-muted-foreground/20 mx-auto mb-4" />
+          <div className="bg-background z-10 px-6 pt-3 pb-4">
+            <div className="w-9 h-[5px] rounded-full bg-muted-foreground/15 mx-auto mb-5" />
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-foreground">Personalize Chat</h3>
-                <p className="text-xs text-primary font-medium mt-0.5">{chatPartnerName}</p>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">Personalize Chat</h3>
+                <p className="text-[13px] text-primary font-semibold mt-0.5">{chatPartnerName}</p>
               </div>
-              <button onClick={onClose} className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center hover:bg-muted transition-colors">
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={onClose}
+                className="w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+              >
                 <X className="w-4 h-4 text-muted-foreground" />
-              </button>
+              </motion.button>
             </div>
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-5 space-y-7">
+          <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-5 space-y-6">
 
             {/* Wallpaper */}
-            <section>
-              <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <section className="bg-muted/20 rounded-2xl p-4">
+              <h4 className="text-[13px] font-bold text-foreground mb-3 flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center">
                   <ImageIcon className="w-3.5 h-3.5 text-primary" />
                 </div>
                 Chat Wallpaper
               </h4>
-              <div className="grid grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-4 gap-2">
                 {WALLPAPERS.map((w) => (
-                  <button
+                  <motion.button
                     key={w.id}
+                    whileTap={{ scale: 0.93 }}
                     onClick={() => setWallpaper(w.id)}
-                    className={`aspect-[3/4] rounded-2xl border-[2.5px] transition-all overflow-hidden relative group ${
+                    className={`aspect-[3/4] rounded-xl border-2 transition-all overflow-hidden relative ${
                       wallpaper === w.id
-                        ? "border-primary shadow-lg shadow-primary/15"
-                        : "border-border/20 hover:border-border/50"
+                        ? "border-primary shadow-md shadow-primary/20 ring-1 ring-primary/20"
+                        : "border-transparent hover:border-border/40"
                     }`}
                   >
-                    <div className={`w-full h-full ${w.preview}`} />
+                    <div className={`w-full h-full rounded-[10px] ${w.preview}`} />
                     {wallpaper === w.id && (
                       <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 15 }}
                         className="absolute inset-0 flex items-center justify-center"
                       >
-                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-md">
-                          <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+                          <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />
                         </div>
                       </motion.div>
                     )}
-                    <span className="absolute bottom-1.5 left-0 right-0 text-[9px] text-center font-semibold text-foreground/70">
+                    <span className="absolute bottom-1 left-0 right-0 text-[8px] text-center font-semibold text-foreground/60">
                       {w.label}
                     </span>
-                  </button>
+                  </motion.button>
                 ))}
 
-                {/* Custom uploaded photos — inline in the grid */}
+                {/* Custom uploaded photos */}
                 {customPhotos.map((url) => (
                   <div key={url} className="relative group">
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 0.93 }}
                       onClick={() => setWallpaper(`custom:${url}`)}
-                      className={`aspect-[3/4] rounded-2xl border-[2.5px] transition-all overflow-hidden w-full ${
+                      className={`aspect-[3/4] rounded-xl border-2 transition-all overflow-hidden w-full ${
                         wallpaper === `custom:${url}`
-                          ? "border-primary shadow-lg shadow-primary/15"
-                          : "border-border/20 hover:border-border/50"
+                          ? "border-primary shadow-md shadow-primary/20 ring-1 ring-primary/20"
+                          : "border-transparent hover:border-border/40"
                       }`}
                     >
-                      <img src={url} alt="Custom wallpaper" className="w-full h-full object-cover" />
+                      <img src={url} alt="Custom wallpaper" className="w-full h-full object-cover rounded-[10px]" />
                       {wallpaper === `custom:${url}` && (
                         <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute inset-0 flex items-center justify-center bg-black/20"
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          className="absolute inset-0 flex items-center justify-center bg-black/15 rounded-[10px]"
                         >
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-md">
-                            <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+                            <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />
                           </div>
                         </motion.div>
                       )}
-                      <span className="absolute bottom-1.5 left-0 right-0 text-[9px] text-center font-semibold text-white drop-shadow-md">
+                      <span className="absolute bottom-1 left-0 right-0 text-[8px] text-center font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
                         Photo
                       </span>
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.85 }}
                       onClick={(e) => { e.stopPropagation(); removeCustomPhoto(url); }}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
                     >
                       <Trash2 className="w-2.5 h-2.5" />
-                    </button>
+                    </motion.button>
                   </div>
                 ))}
 
-                {/* Upload Photo Button — always last in grid */}
-                <button
+                {/* Upload Photo */}
+                <motion.button
+                  whileTap={{ scale: 0.93 }}
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="aspect-[3/4] rounded-2xl border-[2.5px] border-dashed border-primary/30 flex flex-col items-center justify-center gap-1.5 hover:border-primary/60 hover:bg-primary/5 transition-all"
+                  className="aspect-[3/4] rounded-xl border-2 border-dashed border-primary/25 flex flex-col items-center justify-center gap-1 hover:border-primary/50 hover:bg-primary/5 transition-all"
                 >
                   {uploading ? (
                     <motion.div
@@ -260,27 +272,21 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
                       className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent"
                     />
                   ) : (
-                    <Plus className="w-5 h-5 text-primary/60" />
+                    <Plus className="w-5 h-5 text-primary/50" />
                   )}
-                  <span className="text-[8px] font-semibold text-primary/60">
-                    {uploading ? "Uploading" : "Photo"}
+                  <span className="text-[8px] font-bold text-primary/50">
+                    {uploading ? "Adding..." : "Photo"}
                   </span>
-                </button>
+                </motion.button>
               </div>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                className="hidden"
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
             </section>
 
             {/* Bubble Color */}
-            <section>
-              <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <section className="bg-muted/20 rounded-2xl p-4">
+              <h4 className="text-[13px] font-bold text-foreground mb-3 flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Palette className="w-3.5 h-3.5 text-primary" />
                 </div>
                 Bubble Color
@@ -289,17 +295,17 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
                 {THEME_COLORS.map((c) => (
                   <motion.button
                     key={c.id}
-                    whileTap={{ scale: 0.9 }}
+                    whileTap={{ scale: 0.85 }}
                     onClick={() => setThemeColor(c.id)}
-                    className={`w-11 h-11 rounded-full ${c.color} border-[3px] transition-all flex items-center justify-center shadow-sm ${
+                    className={`w-11 h-11 rounded-full ${c.color} transition-all flex items-center justify-center ${
                       themeColor === c.id
-                        ? "border-foreground/80 scale-110 shadow-lg"
-                        : "border-transparent hover:scale-105"
+                        ? "ring-[3px] ring-offset-2 ring-offset-background ring-foreground/60 scale-105 shadow-lg"
+                        : "hover:scale-110 shadow-sm"
                     }`}
                   >
                     {themeColor === c.id && (
-                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                        <Check className="w-4 h-4 text-white drop-shadow-md" />
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500 }}>
+                        <Check className="w-4 h-4 text-white drop-shadow-md" strokeWidth={3} />
                       </motion.div>
                     )}
                   </motion.button>
@@ -308,38 +314,38 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
             </section>
 
             {/* Font Size */}
-            <section>
-              <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <section className="bg-muted/20 rounded-2xl p-4">
+              <h4 className="text-[13px] font-bold text-foreground mb-3 flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Type className="w-3.5 h-3.5 text-primary" />
                 </div>
                 Font Size
               </h4>
-              <div className="grid grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-4 gap-2">
                 {FONT_SIZES.map((f) => (
                   <motion.button
                     key={f.id}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setFontSize(f.id)}
-                    className={`py-3.5 rounded-2xl border-[2.5px] transition-all ${
+                    className={`py-3 rounded-xl border-2 transition-all ${
                       fontSize === f.id
                         ? "border-primary bg-primary/8 shadow-sm"
-                        : "border-border/20 hover:border-border/40"
+                        : "border-transparent bg-background hover:bg-muted/30"
                     }`}
                   >
                     <span className={`${f.display} font-bold text-foreground block text-center`}>Aa</span>
-                    <span className={`text-[9px] block text-center mt-1 font-semibold ${
-                      fontSize === f.id ? "text-primary" : "text-muted-foreground"
+                    <span className={`text-[9px] block text-center mt-0.5 font-bold ${
+                      fontSize === f.id ? "text-primary" : "text-muted-foreground/60"
                     }`}>{f.label}</span>
                   </motion.button>
                 ))}
               </div>
             </section>
 
-            {/* Preview */}
-            <section>
-              <h4 className="text-sm font-bold text-foreground mb-3">Preview</h4>
-              <div className={`rounded-2xl p-4 h-24 flex flex-col justify-end relative overflow-hidden border border-border/20 ${
+            {/* Live Preview */}
+            <section className="bg-muted/20 rounded-2xl p-4">
+              <h4 className="text-[13px] font-bold text-foreground mb-3">Preview</h4>
+              <div className={`rounded-2xl p-4 h-28 flex flex-col justify-between relative overflow-hidden border border-border/10 ${
                 wallpaper.startsWith("custom:") ? "" : getWallpaperClass(wallpaper)
               }`}
                 style={wallpaper.startsWith("custom:") ? {
@@ -348,23 +354,24 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
                   backgroundPosition: "center"
                 } : undefined}
               >
-                <div className={`self-end max-w-[70%] px-3 py-2 rounded-2xl rounded-br-sm ${
-                  getThemeColorClass(themeColor)
-                }`}>
-                  <span className={`text-white ${FONT_SIZES.find(f => f.id === fontSize)?.size || "text-sm"}`}>
-                    Hello! 👋
-                  </span>
+                {/* Received bubble */}
+                <div className="self-start max-w-[65%] px-3 py-1.5 rounded-2xl rounded-bl-sm bg-muted/80 backdrop-blur-sm">
+                  <span className={`text-foreground ${selectedFontSize}`}>Hey there! 😊</span>
+                </div>
+                {/* Sent bubble */}
+                <div className={`self-end max-w-[65%] px-3 py-1.5 rounded-2xl rounded-br-sm ${getThemeColorClass(themeColor)}`}>
+                  <span className={`text-white ${selectedFontSize}`}>Hello! 👋</span>
                 </div>
               </div>
             </section>
           </div>
 
-          {/* Save button — sticky at bottom */}
-          <div className="px-6 py-4 border-t border-border/20 bg-background/95 backdrop-blur-xl">
+          {/* Save button */}
+          <div className="px-6 py-4 bg-background border-t border-border/10">
             <motion.button
-              whileTap={{ scale: 0.98 }}
+              whileTap={{ scale: 0.97 }}
               onClick={handleSave}
-              className="w-full h-12 rounded-2xl bg-primary text-primary-foreground text-sm font-bold shadow-lg shadow-primary/20 active:shadow-sm transition-shadow"
+              className="w-full h-[52px] rounded-2xl bg-primary text-primary-foreground text-[15px] font-bold shadow-lg shadow-primary/20 active:shadow-sm transition-all"
             >
               Apply Changes
             </motion.button>
