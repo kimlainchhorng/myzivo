@@ -1697,8 +1697,11 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             </button>
           )}
           {item.allow_sharing !== false && (
-            <button onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
+            <button onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground gap-1">
               <Share2 className="h-6 w-6" />
+              {item.shares_count > 0 && (
+                <span className="text-[12px] text-muted-foreground">{item.shares_count}</span>
+              )}
             </button>
           )}
         </div>
