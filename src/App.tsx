@@ -86,6 +86,13 @@ const WalletDashboardPage = lazy(() => import("./pages/WalletDashboardPage"));
 const BadgesPage = lazy(() => import("./pages/BadgesPage"));
 const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
 const AppSettingsPage = lazy(() => import("./pages/AppSettingsPage"));
+const WatchPartyPage = lazy(() => import("./pages/WatchPartyPage"));
+const WhiteboardPage = lazy(() => import("./pages/WhiteboardPage"));
+const QRProfilePage = lazy(() => import("./pages/QRProfilePage"));
+const LinkHubPage = lazy(() => import("./pages/LinkHubPage"));
+const NearbyPage = lazy(() => import("./pages/NearbyPage"));
+const CheckInPage = lazy(() => import("./pages/CheckInPage"));
+const SafetyCenterPage = lazy(() => import("./pages/SafetyCenterPage"));
 const AccountAnalyticsPage = lazy(() => import("./pages/account/AccountAnalyticsPage"));
 const VerificationRequestPage = lazy(() => import("./pages/account/VerificationRequestPage"));
 const ActivityLogPage = lazy(() => import("./pages/account/ActivityLogPage"));
@@ -500,6 +507,13 @@ const App = () => (
                 <Route path="/leaderboard" element={<LeaderboardPage />} />
                 <Route path="/settings" element={<ProtectedRoute><AppSettingsPage /></ProtectedRoute>} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
+                <Route path="/watch-party" element={<WatchPartyPage />} />
+                <Route path="/whiteboard" element={<WhiteboardPage />} />
+                <Route path="/qr-profile" element={<ProtectedRoute><QRProfilePage /></ProtectedRoute>} />
+                <Route path="/link-hub" element={<ProtectedRoute><LinkHubPage /></ProtectedRoute>} />
+                <Route path="/nearby" element={<NearbyPage />} />
+                <Route path="/check-in" element={<ProtectedRoute><CheckInPage /></ProtectedRoute>} />
+                <Route path="/safety" element={<ProtectedRoute><SafetyCenterPage /></ProtectedRoute>} />
                 <Route path="/drafts" element={<ProtectedRoute><DraftsPage /></ProtectedRoute>} />
                 <Route path="/account/analytics" element={<ProtectedRoute><AccountAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/account/verification" element={<ProtectedRoute><VerificationRequestPage /></ProtectedRoute>} />
