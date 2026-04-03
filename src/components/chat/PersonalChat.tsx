@@ -482,28 +482,28 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   <MoreVertical className="h-[18px] w-[18px] text-foreground/60" />
                 </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-background border-border/40">
-              <DropdownMenuItem onClick={() => setShowSearch(true)} className="gap-2.5 text-[13px]">
-                <Search className="w-4 h-4 text-muted-foreground" /> Search
+            <DropdownMenuContent align="end" sideOffset={8} className="w-52 bg-background/95 backdrop-blur-xl border-border/30 shadow-xl shadow-black/10 rounded-xl p-1.5">
+              <DropdownMenuItem onClick={() => setShowSearch(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <Search className="w-[18px] h-[18px] text-muted-foreground" /> Search
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowMediaGallery(true)} className="gap-2.5 text-[13px]">
-                <ImageIcon className="w-4 h-4 text-muted-foreground" /> Media & Files
+              <DropdownMenuItem onClick={() => setShowMediaGallery(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <ImageIcon className="w-[18px] h-[18px] text-muted-foreground" /> Media & Files
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowCallHistory(true)} className="gap-2.5 text-[13px]">
-                <History className="w-4 h-4 text-muted-foreground" /> Call History
+              <DropdownMenuItem onClick={() => setShowCallHistory(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <History className="w-[18px] h-[18px] text-muted-foreground" /> Call History
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowMiniApps(true)} className="gap-2.5 text-[13px]">
-                <Zap className="w-4 h-4 text-muted-foreground" /> Mini Apps
+              <DropdownMenuItem onClick={() => setShowMiniApps(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <Zap className="w-[18px] h-[18px] text-muted-foreground" /> Mini Apps
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setShowPersonalization(true)} className="gap-2.5 text-[13px]">
-                <Palette className="w-4 h-4 text-muted-foreground" /> Theme
+              <DropdownMenuSeparator className="my-1.5 bg-border/20" />
+              <DropdownMenuItem onClick={() => setShowPersonalization(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <Palette className="w-[18px] h-[18px] text-muted-foreground" /> Theme
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowNotifSettings(true)} className="gap-2.5 text-[13px]">
-                <Settings className="w-4 h-4 text-muted-foreground" /> Notifications
+              <DropdownMenuItem onClick={() => setShowNotifSettings(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <Settings className="w-[18px] h-[18px] text-muted-foreground" /> Notifications
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowSecurity(true)} className="gap-2.5 text-[13px]">
-                <Shield className="w-4 h-4 text-muted-foreground" /> Privacy
+              <DropdownMenuItem onClick={() => setShowSecurity(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <Shield className="w-[18px] h-[18px] text-muted-foreground" /> Privacy
               </DropdownMenuItem>
             </DropdownMenuContent>
             </DropdownMenu>
