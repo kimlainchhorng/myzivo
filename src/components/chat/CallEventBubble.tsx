@@ -46,8 +46,10 @@ export default function CallEventBubble({
 }: CallEventBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [deleteStep, setDeleteStep] = useState<"menu" | "confirm">("menu");
+  const [openDown, setOpenDown] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
+  const bubbleRef = useRef<HTMLDivElement>(null);
 
   const isMissed = status === "missed" || status === "no_answer" || status === "declined";
   const isVideo = callType === "video";
