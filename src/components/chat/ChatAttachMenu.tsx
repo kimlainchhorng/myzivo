@@ -34,6 +34,7 @@ export default function ChatAttachMenu({
       case "image": onImageSelect(); break;
       case "video": onVideoSelect(); break;
       case "location": onLocationShare(); break;
+      case "locked": onLockedImageSelect?.(); break;
       case "disappearing": onToggleDisappearing(); break;
     }
     onClose();
