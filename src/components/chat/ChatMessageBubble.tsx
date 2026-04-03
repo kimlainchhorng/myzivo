@@ -151,7 +151,7 @@ export default function ChatMessageBubble({
   const isDisappearing = !!expiresAt;
 
   return (
-    <div className={`flex ${isMe ? "justify-end" : "justify-start"} relative px-1`}>
+    <div ref={bubbleRef} className={`flex ${isMe ? "justify-end" : "justify-start"} relative px-1`}>
       <motion.div
         drag="x"
         dragConstraints={{ left: isMe ? -80 : 0, right: isMe ? 0 : 80 }}
