@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
+import ChatBackupExport from "./ChatBackupExport";
 import {
   ArrowLeft,
   Bell,
