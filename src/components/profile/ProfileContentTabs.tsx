@@ -8,6 +8,7 @@ import {
   Plus, Heart, MessageCircle, Eye, X, SwitchCamera, Mic, MicOff, Sparkles,
   Share2, Play, Radio, ChevronDown, Globe, Users, Lock, Link2, MoreHorizontal,
   MapPin, Image, Film, Grid3X3, Clapperboard, Camera, Trash2, Pencil, MoreVertical, Bookmark,
+  Flag, Bell, EyeOff, Settings2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -508,7 +509,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                         <Globe className="h-2.5 w-2.5 text-muted-foreground" />
                       </div>
                     </div>
-                    <button onClick={() => { setSelectedPost(item); setShowPostMenu(true); }} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
+                    <button onClick={(e) => { e.stopPropagation(); setSelectedPost(item); setShowPostMenu(true); }} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
                       <MoreVertical className="h-5 w-5" />
                     </button>
                   </div>
@@ -583,7 +584,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                         <Globe className="h-2.5 w-2.5 text-muted-foreground" />
                       </div>
                     </div>
-                    <button onClick={() => { setSelectedPost(item); setShowPostMenu(true); }} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
+                    <button onClick={(e) => { e.stopPropagation(); setSelectedPost(item); setShowPostMenu(true); }} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
                       <MoreVertical className="h-5 w-5" />
                     </button>
                   </div>
@@ -733,47 +734,12 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   <p className="text-white/50 text-[10px]">{selectedPost.time} ago</p>
                 </div>
                 {profileOwnerId === user?.id && (
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowPostMenu(!showPostMenu)}
-                      className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
-                    >
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
-                    <AnimatePresence>
-                      {showPostMenu && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9, y: -5 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.9, y: -5 }}
-                          className="absolute right-0 top-full mt-1 bg-card rounded-xl shadow-2xl border border-border/30 overflow-hidden z-50 min-w-[160px]"
-                        >
-                          <button
-                            onClick={() => {
-                              setEditCaptionValue(selectedPost.caption);
-                              setEditingCaption(true);
-                              setShowPostMenu(false);
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors"
-                          >
-                            <Pencil className="w-4 h-4" />
-                            Edit Caption
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (window.confirm("Delete this post? This can't be undone.")) {
-                                handleDeletePost(selectedPost.id);
-                              }
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete Post
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                  <button
+                    onClick={() => setShowPostMenu(!showPostMenu)}
+                    className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
                 )}
               </div>
 
@@ -918,6 +884,111 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       )}
 
       {/* Share Sheet */}
+      {/* Post Menu Bottom Sheet */}
+      {createPortal(
+        <AnimatePresence>
+          {showPostMenu && selectedPost && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 z-[9998]"
+                onClick={() => setShowPostMenu(false)}
+              />
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                className="fixed bottom-0 left-0 right-0 z-[9999] bg-card rounded-t-2xl shadow-2xl max-h-[80vh] overflow-y-auto safe-area-bottom"
+              >
+                {/* Drag handle */}
+                <div className="flex justify-center pt-3 pb-1">
+                  <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+                </div>
+
+                <div className="py-2">
+                  <button
+                    onClick={() => { toast.info("Post reported"); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-destructive hover:bg-muted/50 transition-colors"
+                  >
+                    <Flag className="w-5 h-5" />
+                    Report
+                  </button>
+                  <button
+                    onClick={() => { toast.success("Notifications turned on"); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Bell className="w-5 h-5" />
+                    Turn on notifications
+                  </button>
+                  <button
+                    onClick={() => {
+                      const url = `${window.location.origin}/profile?post=${selectedPost.id}`;
+                      navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.info("Could not copy link"));
+                      setShowPostMenu(false);
+                    }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Link2 className="w-5 h-5" />
+                    Copy link
+                  </button>
+                  <button
+                    onClick={() => { toast.info("You won't see posts like this anymore"); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <EyeOff className="w-5 h-5" />
+                    Not interested
+                  </button>
+                  <button
+                    onClick={() => { setSharePostId(selectedPost.id); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Share2 className="w-5 h-5" />
+                    Share
+                  </button>
+                  <button
+                    onClick={() => { toast.info("Comment settings coming soon"); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Settings2 className="w-5 h-5" />
+                    Comment settings
+                  </button>
+                  {profileOwnerId === user?.id && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setEditCaptionValue(selectedPost.caption);
+                          setEditingCaption(true);
+                          setShowPostMenu(false);
+                        }}
+                        className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                      >
+                        <Settings2 className="w-5 h-5" />
+                        Edit caption
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (window.confirm("Delete this post? This can't be undone.")) {
+                            handleDeletePost(selectedPost.id);
+                          }
+                        }}
+                        className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-destructive hover:bg-muted/50 transition-colors"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                        Delete post
+                      </button>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
       <CommentsSheet
         open={!!commentPost}
         onClose={() => setCommentPost(null)}
