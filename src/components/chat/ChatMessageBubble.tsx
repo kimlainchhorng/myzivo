@@ -25,6 +25,7 @@ interface ChatMessageBubbleProps {
   expiresAt?: string | null;
   messageType?: string;
   senderId?: string;
+  lockedPriceCents?: number | null;
   onReply: (id: string, message: string, isMe: boolean) => void;
   onDelete: (id: string) => void;
   onForward?: (id: string, message: string) => void;
