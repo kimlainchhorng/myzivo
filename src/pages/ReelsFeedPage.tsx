@@ -484,21 +484,29 @@ function CreatePostModal({
     }
     setUploading(true);
     try {
-      // Upload to user-posts bucket
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${userId}/${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage
-        .from("user-posts")
-        .upload(path, file, { contentType: file.type });
-      if (uploadErr) throw uploadErr;
+      let mediaUrl: string | null = null;
+      let finalMediaType = mediaType;
 
-      const { data: urlData } = supabase.storage.from("user-posts").getPublicUrl(path);
-      const mediaUrl = urlData.publicUrl;
+      if (file) {
+        // Upload to user-posts bucket
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${userId}/${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from("user-posts")
+          .upload(path, file, { contentType: file.type });
+        if (uploadErr) throw uploadErr;
+
+        const { data: urlData } = supabase.storage.from("user-posts").getPublicUrl(path);
+        mediaUrl = urlData.publicUrl;
+      } else {
+        // Text-only post (shared link) - use image type with no media
+        finalMediaType = "image";
+      }
 
       // Insert into user_posts
       const { error: insertErr } = await (supabase as any).from("user_posts").insert({
         user_id: userId,
-        media_type: mediaType,
+        media_type: finalMediaType,
         media_url: mediaUrl,
         caption: caption.trim() || null,
         is_published: true,
