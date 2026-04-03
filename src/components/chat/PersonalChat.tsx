@@ -28,6 +28,7 @@ import ChatSecurity from "./ChatSecurity";
 import CallHistoryPage from "./CallHistoryPage";
 import { ChatMediaUploader } from "./ChatMediaUploader";
 import CallEventBubble from "./CallEventBubble";
+import LockedMediaPricePicker from "./LockedMediaPricePicker";
 import ChatContactInfo from "./ChatContactInfo";
 import MessageScheduler from "./MessageScheduler";
 import PinnedMessagesPanel from "./PinnedMessagesPanel";
