@@ -285,11 +285,11 @@ export default function ChatMessageBubble({
               onClick={() => { setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 6 }}
+              initial={{ opacity: 0, scale: 0.92, y: openDown ? -6 : 6 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 6 }}
+              exit={{ opacity: 0, scale: 0.92, y: openDown ? -6 : 6 }}
               transition={{ type: "spring", damping: 26, stiffness: 420 }}
-              className={`absolute z-50 ${openDown ? "top-full mt-3" : "bottom-full mb-3"} flex flex-col gap-2 ${isMe ? "right-0 items-end" : "left-0 items-start"}`}
+              className={`absolute z-50 ${openDown ? "top-full mt-3 flex-col-reverse" : "bottom-full mb-3 flex-col"} flex gap-2 ${isMe ? "right-0 items-end" : "left-0 items-start"}`}
             >
               {/* Emoji reactions row */}
               {showReactions && (
