@@ -57,6 +57,17 @@ export default function ChatHubPage() {
   const [openPersonalChat, setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
   const [openGroupChat, setOpenGroupChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const location = useLocation();
+
+  // Handle deep-link from profile page chat button
+  useEffect(() => {
+    const state = location.state as { openChat?: { recipientId: string; recipientName: string; recipientAvatar?: string | null } } | null;
+    if (state?.openChat) {
+      setOpenPersonalChat({ id: state.openChat.recipientId, name: state.openChat.recipientName, avatar: state.openChat.recipientAvatar });
+      // Clear the state so it doesn't re-open on back navigation
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Fetch store chats for "shop" tab
   const { data: shopChats = [] } = useQuery({
