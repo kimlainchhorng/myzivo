@@ -597,7 +597,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                     onCallback={() => handleStartCall(item.call_type as "voice" | "video")}
                     onDelete={async (callId) => {
                       await (supabase as any).from("call_events").delete().eq("id", callId);
+                      setCallEvents(prev => prev.filter(c => c.id !== callId));
                       toast.success("Call deleted");
+                    }}
+                    onDeleteAll={async () => {
+                      const ids = callEvents.map(c => c.id);
+                      if (ids.length === 0) return;
+                      await (supabase as any).from("call_events").delete().in("id", ids);
+                      setCallEvents([]);
+                      toast.success(`${ids.length} call${ids.length > 1 ? "s" : ""} deleted`);
                     }}
                   />
                 );

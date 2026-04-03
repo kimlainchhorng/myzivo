@@ -1,10 +1,10 @@
 /**
- * CallEventBubble — Sleek inline call event in chat timeline (right-aligned)
- * Supports long-press to show delete action
+ * CallEventBubble — Inline call event in chat timeline (right-aligned)
+ * Long-press: call back, call info, delete (this / all)
  */
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, PhoneMissed, Video, ArrowUpRight, ArrowDownLeft, Trash2, Info } from "lucide-react";
+import { Phone, PhoneMissed, Video, ArrowUpRight, ArrowDownLeft, Trash2, Info, ChevronRight } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 
 interface CallEventBubbleProps {
@@ -16,6 +16,7 @@ interface CallEventBubbleProps {
   createdAt: string;
   onCallback?: () => void;
   onDelete?: (id: string) => void;
+  onDeleteAll?: () => void;
 }
 
 function fmtTime(dateStr: string) {
@@ -41,8 +42,10 @@ export default function CallEventBubble({
   createdAt,
   onCallback,
   onDelete,
+  onDeleteAll,
 }: CallEventBubbleProps) {
   const [showActions, setShowActions] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<"menu" | "confirm">("menu");
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
 
@@ -57,6 +60,7 @@ export default function CallEventBubble({
     didLongPress.current = false;
     longPressTimer.current = setTimeout(() => {
       didLongPress.current = true;
+      setDeleteStep("menu");
       setShowActions(true);
       if (navigator.vibrate) navigator.vibrate(30);
     }, 400);
@@ -74,6 +78,11 @@ export default function CallEventBubble({
     if (didLongPress.current) return;
     if (showActions) { setShowActions(false); return; }
     onCallback?.();
+  };
+
+  const closeMenu = () => {
+    setShowActions(false);
+    setDeleteStep("menu");
   };
 
   return (
@@ -133,40 +142,105 @@ export default function CallEventBubble({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
-              onClick={() => setShowActions(false)}
+              className="fixed inset-0 z-40 bg-black/20"
+              onClick={closeMenu}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.85, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.85, y: 10 }}
               transition={{ type: "spring", damping: 22, stiffness: 400 }}
-              className="absolute z-50 bottom-full mb-2 right-0 items-end"
+              className="absolute z-50 bottom-full mb-2 right-0"
             >
-              <div className="bg-background shadow-xl shadow-black/8 border border-border/20 rounded-2xl overflow-hidden min-w-[160px]">
-                <button
-                  onClick={(e) => { e.stopPropagation(); onCallback?.(); setShowActions(false); }}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-muted/40 transition-colors active:scale-[0.98] text-foreground"
-                >
-                  {isVideo ? <Video className="h-[18px] w-[18px] opacity-70" /> : <Phone className="h-[18px] w-[18px] opacity-70" />}
-                  <span className="text-[13px] font-medium">Call back</span>
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowActions(false); }}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-muted/40 transition-colors active:scale-[0.98] text-foreground"
-                >
-                  <Info className="h-[18px] w-[18px] opacity-70" />
-                  <span className="text-[13px] font-medium">Call info</span>
-                </button>
-                {id && onDelete && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(id); setShowActions(false); }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-500/5 transition-colors active:scale-[0.98] text-red-500"
-                  >
-                    <Trash2 className="h-[18px] w-[18px] opacity-70" />
-                    <span className="text-[13px] font-medium">Delete</span>
-                  </button>
-                )}
+              <div className="bg-background shadow-xl shadow-black/8 border border-border/20 rounded-2xl overflow-hidden min-w-[180px]">
+                <AnimatePresence mode="wait">
+                  {deleteStep === "menu" ? (
+                    <motion.div
+                      key="menu"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      {/* Call back */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onCallback?.(); closeMenu(); }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-muted/40 transition-colors active:scale-[0.98] text-foreground"
+                      >
+                        {isVideo ? <Video className="h-[18px] w-[18px] opacity-70" /> : <Phone className="h-[18px] w-[18px] opacity-70" />}
+                        <span className="text-[13px] font-medium">Call back</span>
+                      </button>
+
+                      {/* Call info */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); closeMenu(); }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-muted/40 transition-colors active:scale-[0.98] text-foreground"
+                      >
+                        <Info className="h-[18px] w-[18px] opacity-70" />
+                        <span className="text-[13px] font-medium">Call info</span>
+                      </button>
+
+                      {/* Delete — opens sub-step */}
+                      {id && onDelete && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeleteStep("confirm"); }}
+                          className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-500/5 transition-colors active:scale-[0.98] text-red-500"
+                        >
+                          <Trash2 className="h-[18px] w-[18px] opacity-70" />
+                          <span className="text-[13px] font-medium flex-1">Delete</span>
+                          <ChevronRight className="h-4 w-4 opacity-40" />
+                        </button>
+                      )}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="confirm"
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      {/* Header */}
+                      <div className="px-4 py-2.5 border-b border-border/10">
+                        <span className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-wider">Delete Call</span>
+                      </div>
+
+                      {/* Delete this one */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (id) onDelete?.(id);
+                          closeMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-500/5 transition-colors active:scale-[0.98] text-red-500"
+                      >
+                        <Trash2 className="h-[18px] w-[18px] opacity-70" />
+                        <span className="text-[13px] font-medium">Delete this call</span>
+                      </button>
+
+                      {/* Delete all */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteAll?.();
+                          closeMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-500/5 transition-colors active:scale-[0.98] text-red-500"
+                      >
+                        <Trash2 className="h-[18px] w-[18px] opacity-70" />
+                        <span className="text-[13px] font-medium">Delete all calls</span>
+                      </button>
+
+                      {/* Cancel — go back */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteStep("menu"); }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-muted/40 transition-colors active:scale-[0.98] text-foreground border-t border-border/10"
+                      >
+                        <span className="text-[13px] font-medium text-muted-foreground w-full text-center">Cancel</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           </>
