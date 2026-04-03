@@ -507,6 +507,13 @@ const App = () => (
                 <Route path="/leaderboard" element={<LeaderboardPage />} />
                 <Route path="/settings" element={<ProtectedRoute><AppSettingsPage /></ProtectedRoute>} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
+                <Route path="/watch-party" element={<WatchPartyPage />} />
+                <Route path="/whiteboard" element={<WhiteboardPage />} />
+                <Route path="/qr-profile" element={<ProtectedRoute><QRProfilePage /></ProtectedRoute>} />
+                <Route path="/link-hub" element={<ProtectedRoute><LinkHubPage /></ProtectedRoute>} />
+                <Route path="/nearby" element={<NearbyPage />} />
+                <Route path="/check-in" element={<ProtectedRoute><CheckInPage /></ProtectedRoute>} />
+                <Route path="/safety" element={<ProtectedRoute><SafetyCenterPage /></ProtectedRoute>} />
                 <Route path="/drafts" element={<ProtectedRoute><DraftsPage /></ProtectedRoute>} />
                 <Route path="/account/analytics" element={<ProtectedRoute><AccountAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/account/verification" element={<ProtectedRoute><VerificationRequestPage /></ProtectedRoute>} />
