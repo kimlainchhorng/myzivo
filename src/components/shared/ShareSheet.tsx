@@ -101,26 +101,16 @@ export default function ShareSheet({
 
       // Increment shares_count on the original post
       if (sharePostId) {
-        await (supabase as any).from("user_posts").update({ shares_count: (supabase as any).rpc ? undefined : 0 }).eq("id", "noop").single().then(() => {});
-        // Use RPC-style increment
-        await supabase.rpc("increment_shares_count" as any, { post_id: sharePostId }).catch(() => {
-          // Fallback: try direct SQL increment via store_posts too
-          (supabase as any).from("user_posts")
-            .select("shares_count")
-            .eq("id", sharePostId)
-            .single()
-            .then(({ data: postData }: any) => {
-              if (postData) {
-                (supabase as any).from("user_posts").update({ shares_count: (postData.shares_count || 0) + 1 }).eq("id", sharePostId);
-              } else {
-                supabase.from("store_posts").select("shares_count").eq("id", sharePostId).single().then(({ data: storeData }: any) => {
-                  if (storeData) {
-                    supabase.from("store_posts").update({ shares_count: (storeData.shares_count || 0) + 1 } as any).eq("id", sharePostId);
-                  }
-                });
-              }
-            });
-        });
+        // Try user_posts first, then store_posts
+        const { data: up } = await (supabase as any).from("user_posts").select("shares_count").eq("id", sharePostId).single();
+        if (up) {
+          await (supabase as any).from("user_posts").update({ shares_count: (up.shares_count || 0) + 1 }).eq("id", sharePostId);
+        } else {
+          const { data: sp } = await supabase.from("store_posts").select("shares_count").eq("id", sharePostId).single();
+          if (sp) {
+            await supabase.from("store_posts").update({ shares_count: ((sp as any).shares_count || 0) + 1 } as any).eq("id", sharePostId);
+          }
+        }
       }
 
       onClose();
