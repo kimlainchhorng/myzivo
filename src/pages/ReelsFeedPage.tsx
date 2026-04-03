@@ -1198,8 +1198,6 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const [notificationsOn, setNotificationsOn] = useState(false);
   const [commentSetting, setCommentSetting] = useState<"everyone" | "friends" | "off">(item.comment_control || "everyone");
   const [showCommentSettings, setShowCommentSettings] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [localLikes, setLocalLikes] = useState(item.likes_count);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
