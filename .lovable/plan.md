@@ -1,47 +1,37 @@
 
-# Communication Workflow Upgrade Plan
+# Social Features Upgrade Plan
 
-## Phase 1: Database Schema (Migration)
-Create tables for:
-- **call_history** — Log all calls with duration, type, participants, recording URL
-- **voicemails** — Store voicemail recordings with transcription
-- **chat_media** — Track uploaded files/images/videos in chat threads
-- **group_calls** — Multi-party call sessions with participant list
-- **call_recordings** — Store recordings with consent tracking
+## Phase 1: Comments Section Upgrade
+- Add reply threads (nested comments with parent_id)
+- Emoji reactions on comments (❤️ 😂 😮 😢 🔥)
+- Improved comment UI with avatars, timestamps, like counts
+- "View replies" expandable threads
+- Migration: Add `parent_comment_id` and `comment_reactions` table
 
-## Phase 2: Chat Media & File Sharing
-- Upload images, videos, documents, voice notes in chat
-- File preview cards with download links
-- Upload progress indicator
-- Voice note recording with waveform playback
-- Integration with Supabase Storage bucket
+## Phase 2: Stories Feature
+- 24-hour disappearing stories with auto-cleanup
+- Story creation: photo/video upload with text overlay
+- Story viewer with progress bar and swipe navigation
+- Viewers list for story owner
+- Story ring around profile avatars in feed
+- Migration: Create `stories` and `story_views` tables
 
-## Phase 3: Call History & Voicemail
-- Call log page showing missed/incoming/outgoing calls
-- Duration tracking in WebRTC hook
-- Voicemail recording when call is declined/missed
-- Voicemail playback with duration display
+## Phase 3: Post Creation Upgrade
+- Multi-image carousel posts (up to 10 images)
+- User tagging (@mentions) in captions
+- Location tags with search
+- Basic image filters (brightness, contrast, saturation)
+- Migration: Update `user_posts` for multi-media and location
 
-## Phase 4: Live Chat-to-Call Handoff
-- "Call" button inside PersonalChat that initiates WebRTC call
-- Seamless transition from text to voice/video
-- Call state shown inline in chat thread
-- Return to chat after call ends
-
-## Phase 5: Call Enhancements
-- **Call quality indicator**: Monitor RTCPeerConnection stats (bitrate, packet loss, jitter)
-- **Picture-in-picture**: Floating mini video during navigation
-- **Screen sharing**: Add screen track to WebRTC connection
-- **Call recording**: MediaRecorder on combined streams with consent UI
-
-## Phase 6: Group Video/Voice Calls
-- Multi-party mesh topology (up to 4 participants)
-- Participant grid layout with speaker detection
-- Group call invite system via chat
+## Phase 4: Notifications System
+- In-app notification center with bell icon + badge count
+- Real-time notifications for: likes, comments, shares, follows, mentions
+- Notification grouping (e.g., "3 people liked your post")
+- Mark as read / mark all read
+- Migration: Create `notifications` table with type enum
 
 ## Implementation Order
-1. Migration (all tables at once)
-2. Chat media sharing + chat-to-call handoff (core workflow)
-3. Call history + voicemail
-4. Call quality + PiP + screen sharing + recording
-5. Group calls (most complex)
+1. Phase 1 (Comments) — builds on existing comment system
+2. Phase 4 (Notifications) — needed by all other features
+3. Phase 2 (Stories) — new standalone feature
+4. Phase 3 (Post Creation) — enhances existing flow
