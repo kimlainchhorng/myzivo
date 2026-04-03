@@ -762,6 +762,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       isPinned={msg.is_pinned}
                       expiresAt={msg.expires_at}
                       messageType={msg.message_type}
+                      senderId={msg.sender_id}
                       onReply={handleReply}
                       onDelete={handleDelete}
                       onForward={handleForward}
