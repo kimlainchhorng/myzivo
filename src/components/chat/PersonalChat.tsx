@@ -849,8 +849,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             {input.trim() ? (
               <button
                 onClick={() => handleSend()}
+                onContextMenu={(e) => { e.preventDefault(); setShowScheduler(true); }}
                 disabled={sending}
                 className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
+                title="Long press to schedule"
               >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
               </button>
