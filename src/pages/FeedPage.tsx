@@ -4,6 +4,7 @@
  * Videos auto-play when scrolled into view, pause when scrolled away.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import UnifiedShareSheet from "@/components/shared/ShareSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
