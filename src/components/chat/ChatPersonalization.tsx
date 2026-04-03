@@ -386,6 +386,9 @@ export function getWallpaperClass(id: string): string {
     forest: "bg-gradient-to-b from-green-100/30 to-emerald-100/30 dark:from-green-950/20 dark:to-emerald-950/20",
     midnight: "bg-gradient-to-b from-slate-200/30 to-indigo-100/30 dark:from-slate-900/40 dark:to-indigo-950/30",
     lavender: "bg-gradient-to-b from-purple-100/30 to-violet-100/30 dark:from-purple-950/20 dark:to-violet-950/20",
+    cherry: "bg-gradient-to-b from-rose-100/30 to-red-100/30 dark:from-rose-950/20 dark:to-red-950/20",
+    gold: "bg-gradient-to-b from-amber-100/30 to-yellow-100/30 dark:from-amber-950/20 dark:to-yellow-950/20",
+    slate: "bg-gradient-to-b from-gray-200/30 to-slate-300/30 dark:from-gray-800/30 dark:to-slate-900/30",
   };
   return map[id] || "";
 }
