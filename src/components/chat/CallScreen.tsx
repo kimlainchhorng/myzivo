@@ -280,36 +280,63 @@ export default function CallScreen({
         <audio ref={remoteAudioRef} autoPlay playsInline className="absolute h-0 w-0 opacity-0 pointer-events-none" />
 
         {/* Bottom controls */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 px-6"
-          style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1.5rem)" }}>
-          <div className="flex items-end justify-center gap-5">
-            <div className="flex flex-col items-center">
-              <ControlBtn onClick={toggleMute} active={isMuted}>
-                {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-              </ControlBtn>
-              <span className="text-[10px] mt-1 text-white/60 font-medium">{isMuted ? "Unmute" : "Mute"}</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <ControlBtn onClick={toggleCamera} active={isCameraOff}>
-                {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
-              </ControlBtn>
-              <span className="text-[10px] mt-1 text-white/60 font-medium">{isCameraOff ? "Start" : "Stop"}</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <ControlBtn onClick={screenShare.toggleSharing} active={screenShare.isSharing} activeColor="primary">
-                {screenShare.isSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
-              </ControlBtn>
-              <span className="text-[10px] mt-1 text-white/60 font-medium">Screen</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <motion.button
-                whileTap={{ scale: 0.85 }}
-                onClick={() => { void endCall(); }}
-                className="h-16 w-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-xl shadow-destructive/25"
-              >
-                <PhoneOff className="h-6 w-6" />
-              </motion.button>
-              <span className="text-[10px] mt-1 text-white/60 font-medium">End</span>
+        <div className="absolute bottom-0 left-0 right-0 z-20 px-4"
+          style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 0.75rem), 1.25rem)" }}>
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/10 px-5 py-4 shadow-2xl">
+            <div className="flex items-center justify-around">
+              {/* Mute */}
+              <div className="flex flex-col items-center gap-1.5">
+                <motion.button
+                  whileTap={{ scale: 0.88 }}
+                  onClick={toggleMute}
+                  className={`h-12 w-12 rounded-full flex items-center justify-center transition-all ${
+                    isMuted ? "bg-white/25 text-white" : "bg-white/10 text-white/80 hover:bg-white/20"
+                  }`}
+                >
+                  {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                </motion.button>
+                <span className="text-[10px] text-white/50 font-medium">{isMuted ? "Unmute" : "Mute"}</span>
+              </div>
+
+              {/* Camera */}
+              <div className="flex flex-col items-center gap-1.5">
+                <motion.button
+                  whileTap={{ scale: 0.88 }}
+                  onClick={toggleCamera}
+                  className={`h-12 w-12 rounded-full flex items-center justify-center transition-all ${
+                    isCameraOff ? "bg-white/25 text-white" : "bg-white/10 text-white/80 hover:bg-white/20"
+                  }`}
+                >
+                  {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+                </motion.button>
+                <span className="text-[10px] text-white/50 font-medium">{isCameraOff ? "Start" : "Stop"}</span>
+              </div>
+
+              {/* Screen Share */}
+              <div className="flex flex-col items-center gap-1.5">
+                <motion.button
+                  whileTap={{ scale: 0.88 }}
+                  onClick={screenShare.toggleSharing}
+                  className={`h-12 w-12 rounded-full flex items-center justify-center transition-all ${
+                    screenShare.isSharing ? "bg-green-500/30 text-green-400" : "bg-white/10 text-white/80 hover:bg-white/20"
+                  }`}
+                >
+                  {screenShare.isSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
+                </motion.button>
+                <span className="text-[10px] text-white/50 font-medium">Screen</span>
+              </div>
+
+              {/* End Call */}
+              <div className="flex flex-col items-center gap-1.5">
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => { void endCall(); }}
+                  className="h-14 w-14 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg shadow-destructive/40"
+                >
+                  <PhoneOff className="h-6 w-6" />
+                </motion.button>
+                <span className="text-[10px] text-white/50 font-medium">End</span>
+              </div>
             </div>
           </div>
         </div>
