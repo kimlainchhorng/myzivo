@@ -595,6 +595,7 @@ function MsgMenuItem({ icon: Icon, label, onClick, destructive, active, chevron 
 
 /* ── Link Preview Card ─────────────────────────────────────────── */
 function LinkPreviewCard({ url, isMe, hasText }: { url: string; isMe: boolean; hasText: boolean }) {
+  const navigate = useNavigate();
   const [preview, setPreview] = useState<{
     mediaUrl?: string | null;
     mediaType?: "image" | "video";
