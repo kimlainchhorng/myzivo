@@ -44,7 +44,7 @@ export default function PrivacySettingsPage() {
         .eq("blocker_id", user.id);
       if (!data?.length) return [];
       const ids = data.map((b: any) => b.blocked_id);
-      const { data: profiles } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids);
+      const { data: profiles } = await supabase.from("public_profiles" as any).select("id, full_name, avatar_url").in("id", ids);
       return data.map((b: any) => ({
         ...b,
         profile: profiles?.find((p: any) => p.id === b.blocked_id),

@@ -41,7 +41,7 @@ export function useSocialNotifications(limit = 30) {
     // Fetch actor profiles
     const actorIds = [...new Set((data as any[]).map((n: any) => n.actor_id).filter(Boolean))] as string[];
     const { data: profiles } = actorIds.length > 0
-      ? await supabase.from("profiles").select("id, full_name, avatar_url").in("id", actorIds)
+      ? await supabase.from("public_profiles" as any).select("id, full_name, avatar_url").in("id", actorIds)
       : { data: [] };
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
