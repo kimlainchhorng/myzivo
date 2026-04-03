@@ -151,8 +151,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     loadStyle();
   }, [user?.id, recipientId]);
 
-  const scrollToBottom = useCallback(() => {
+  const isNearBottomRef = useRef(true);
+
+  const scrollToBottom = useCallback((force?: boolean) => {
+    if (!force && !isNearBottomRef.current) return;
     setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // Consider "near bottom" if within 150px of the bottom
+    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
   }, []);
 
   const handleStartCall = useCallback(async (type: "voice" | "video") => {
