@@ -231,24 +231,24 @@ export default function ChatMessageBubble({
         {/* Message body */}
         {message && (
           <div
-            className={`px-3.5 py-2.5 text-[14px] leading-relaxed shadow-sm ${
+            className={`px-3.5 py-2 text-[14.5px] leading-[1.45] ${
               isMe
-                ? "bg-primary text-primary-foreground rounded-2xl rounded-br-[6px]"
-                : "bg-muted text-foreground rounded-2xl rounded-bl-[6px]"
+                ? "bg-primary text-primary-foreground rounded-[18px] rounded-br-[5px]"
+                : "bg-muted text-foreground rounded-[18px] rounded-bl-[5px]"
             }`}
           >
             <p className="whitespace-pre-wrap break-words">{message}</p>
-            <div className="flex items-center gap-1 justify-end mt-1 -mb-0.5">
+            <div className="flex items-center gap-1 justify-end mt-0.5 -mb-0.5">
               {isDisappearing && <Timer className={`h-2.5 w-2.5 ${isMe ? "text-primary-foreground/40" : "text-muted-foreground/40"}`} />}
-              <span className={`text-[10px] font-medium ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/60"}`}>
+              <span className={`text-[10px] ${isMe ? "text-primary-foreground/45" : "text-muted-foreground/50"}`}>
                 {time}
               </span>
               {isMe && !isOptimistic && (
                 isRead
-                  ? <CheckCheck className="h-3.5 w-3.5 text-blue-400" />
+                  ? <CheckCheck className="h-3.5 w-3.5 text-sky-400" />
                   : isDelivered
-                  ? <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/35" />
-                  : <Check className="h-3.5 w-3.5 text-primary-foreground/35" />
+                  ? <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/30" />
+                  : <Check className="h-3.5 w-3.5 text-primary-foreground/30" />
               )}
             </div>
           </div>

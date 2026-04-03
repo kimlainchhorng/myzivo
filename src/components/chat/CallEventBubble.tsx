@@ -92,36 +92,36 @@ export default function CallEventBubble({
   };
 
   return (
-    <div ref={bubbleRef} className="flex justify-end my-1 relative">
+    <div ref={bubbleRef} className="flex justify-end my-1.5 relative px-1">
       <div
         onClick={handleClick}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         onPointerMove={handlePointerMove}
-        className={`inline-flex items-center gap-2.5 pl-3.5 pr-2 py-2 rounded-2xl rounded-br-[6px] cursor-pointer active:scale-[0.97] transition-all select-none shadow-sm ${
+        className={`inline-flex items-center gap-2 pl-3 pr-2.5 py-2.5 rounded-[16px] rounded-br-[5px] cursor-pointer active:scale-[0.97] transition-all select-none ${
           isMissed
-            ? "bg-red-50 dark:bg-red-500/8 border border-red-200/30 dark:border-red-500/15"
-            : "bg-emerald-50 dark:bg-emerald-500/8 border border-emerald-200/30 dark:border-emerald-500/15"
+            ? "bg-destructive/8 border border-destructive/12"
+            : "bg-emerald-500/8 border border-emerald-500/12"
         }`}
       >
-        {/* Direction arrow */}
-        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-          isMissed ? "bg-red-100 dark:bg-red-500/15" : "bg-emerald-100 dark:bg-emerald-500/15"
+        {/* Direction icon */}
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
+          isMissed ? "bg-destructive/12" : "bg-emerald-500/12"
         }`}>
           {isMissed ? (
-            <PhoneMissed className="w-3 h-3 text-red-500" />
+            <PhoneMissed className="w-3.5 h-3.5 text-destructive" />
           ) : isOutgoing ? (
-            <ArrowUpRight className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+            <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
           ) : (
-            <ArrowDownLeft className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+            <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
           )}
         </div>
 
         {/* Label + time */}
-        <div className="flex flex-col">
-          <span className={`text-[12px] font-semibold leading-tight ${
-            isMissed ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400"
+        <div className="flex flex-col min-w-0">
+          <span className={`text-[13px] font-semibold leading-tight ${
+            isMissed ? "text-destructive" : "text-emerald-700 dark:text-emerald-400"
           }`}>
             {label}
           </span>
@@ -131,12 +131,12 @@ export default function CallEventBubble({
         </div>
 
         {/* Callback icon */}
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center ml-0.5 ${
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center ml-1 ${
           isMissed
-            ? "bg-red-100 dark:bg-red-500/15 text-red-500"
-            : "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+            ? "bg-destructive/12 text-destructive"
+            : "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400"
         }`}>
-          {isVideo ? <Video className="w-3.5 h-3.5" /> : <Phone className="w-3.5 h-3.5" />}
+          {isVideo ? <Video className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
         </div>
       </div>
 

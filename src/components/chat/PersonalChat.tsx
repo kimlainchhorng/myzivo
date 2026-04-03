@@ -439,23 +439,23 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-2xl border-b border-border/10 safe-area-top shadow-sm">
-        <div className="px-2 py-2 flex items-center gap-2.5">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-2xl border-b border-border/8 safe-area-top">
+        <div className="px-2 py-2.5 flex items-center gap-3">
           <button onClick={onClose} className="min-h-[44px] min-w-[36px] flex items-center justify-center -ml-1 active:scale-90 transition-transform">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <div className="relative shrink-0">
-            <Avatar className="h-10 w-10 ring-2 ring-primary/10 shadow-sm">
+            <Avatar className="h-[42px] w-[42px] ring-2 ring-border/10">
               <AvatarImage src={recipientAvatar || undefined} />
-              <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
+              <AvatarFallback className="text-xs font-bold bg-primary/8 text-primary">{initials}</AvatarFallback>
             </Avatar>
             {recipientOnline && (
-              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-background shadow-sm" />
+              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
             )}
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-bold text-foreground truncate leading-tight tracking-tight">{recipientName}</p>
-            <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+          <div className="min-w-0 flex-1" onClick={() => {}}>
+            <p className="text-[15px] font-semibold text-foreground truncate leading-tight">{recipientName}</p>
+            <p className="text-[11px] text-muted-foreground/70 leading-tight mt-0.5">
               {recipientTyping ? (
                 <span className="text-primary font-medium animate-pulse">typing...</span>
               ) : recipientOnline ? (
@@ -466,20 +466,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             </p>
           </div>
 
-          {/* Primary actions: Video + Voice call */}
-          <div className="flex items-center gap-0.5">
-            <button onClick={() => { void handleStartCall("video"); }} className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all">
-              <Video className="h-[19px] w-[19px] text-foreground/60" />
+          {/* Action buttons */}
+          <div className="flex items-center gap-1">
+            <button onClick={() => { void handleStartCall("video"); }} className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-all">
+              <Video className="h-5 w-5 text-foreground/50" />
             </button>
-            <button onClick={() => { void handleStartCall("voice"); }} className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all">
-              <Phone className="h-[18px] w-[18px] text-foreground/60" />
+            <button onClick={() => { void handleStartCall("voice"); }} className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-all">
+              <Phone className="h-[19px] w-[19px] text-foreground/50" />
             </button>
 
-            {/* Overflow menu for secondary actions */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all -mr-1">
-                  <MoreVertical className="h-[18px] w-[18px] text-foreground/60" />
+                <button className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-all -mr-1">
+                  <MoreVertical className="h-5 w-5 text-foreground/50" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={8} className="w-52 bg-background/95 backdrop-blur-xl border-border/30 shadow-xl shadow-black/10 rounded-xl p-1.5">
@@ -495,7 +494,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <DropdownMenuItem onClick={() => setShowMiniApps(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <Zap className="w-[18px] h-[18px] text-muted-foreground" /> Mini Apps
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="my-1.5 bg-border/20" />
+              <DropdownMenuSeparator className="my-1.5 bg-border/15" />
               <DropdownMenuItem onClick={() => setShowPersonalization(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <Palette className="w-[18px] h-[18px] text-muted-foreground" /> Theme
               </DropdownMenuItem>
@@ -769,7 +768,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       {/* Input area */}
       {!voice.isRecording && (
-        <div className="bg-background/95 backdrop-blur-sm border-t border-border/15 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+        <div className="bg-background border-t border-border/10 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
           <div className="flex items-end gap-1.5">
             {/* Attach */}
             <div className="relative shrink-0">
@@ -777,7 +776,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 onClick={() => setShowAttachMenu(!showAttachMenu)}
                 disabled={uploadingMedia}
                 className={`h-10 w-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
-                  showAttachMenu ? "bg-primary text-primary-foreground rotate-45" : "text-muted-foreground hover:bg-muted/60"
+                  showAttachMenu ? "bg-primary text-primary-foreground rotate-45" : "text-muted-foreground/60 hover:bg-muted/50"
                 }`}
               >
                 {uploadingMedia ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Plus className="h-5 w-5" />}
@@ -808,8 +807,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
               }}
               renderTrigger={(openFilePicker) => (
-                <button onClick={openFilePicker} className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground/70 hover:bg-muted/60 hover:text-muted-foreground active:scale-90 transition-all shrink-0">
-                  <FileText className="h-[17px] w-[17px]" />
+                <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0">
+                  <FileText className="h-[18px] w-[18px]" />
                 </button>
               )}
             />
@@ -822,38 +821,37 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 onChange={handleInputChange}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                 placeholder={disappearingMode ? "Disappearing message..." : "Message..."}
-                className={`w-full h-11 pl-4 pr-12 rounded-full border text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/20 transition-all shadow-sm ${
-                  disappearingMode ? "bg-amber-500/5 border-amber-500/20" : "bg-muted/30 border-border/15"
+                className={`w-full h-11 pl-4 pr-12 rounded-full border text-[14.5px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/15 transition-all ${
+                  disappearingMode ? "bg-amber-500/5 border-amber-500/15" : "bg-muted/25 border-border/10"
                 }`}
               />
-              {/* Inline icons inside input */}
-              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0">
+              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center">
                 <button
                   onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
                   className={`h-8 w-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                    showStickerKeyboard ? "text-primary bg-primary/10" : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/40"
+                    showStickerKeyboard ? "text-primary bg-primary/10" : "text-muted-foreground/40 hover:text-muted-foreground"
                   }`}
                 >
-                  <Smile className="h-[19px] w-[19px]" />
+                  <Smile className="h-5 w-5" />
                 </button>
               </div>
             </div>
 
-            {/* Send or Mic button — contextual */}
+            {/* Send or Mic */}
             {input.trim() ? (
               <button
                 onClick={() => handleSend()}
                 disabled={sending}
-                className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-md"
+                className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
               >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
               </button>
             ) : (
               <button
                 onClick={voice.startRecording}
-                className="h-11 w-11 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/15 active:scale-90 transition-all shrink-0 shadow-sm"
+                className="h-11 w-11 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/15 active:scale-90 transition-all shrink-0"
               >
-                <Mic className="h-[19px] w-[19px]" />
+                <Mic className="h-5 w-5" />
               </button>
             )}
           </div>
