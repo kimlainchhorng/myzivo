@@ -1,7 +1,7 @@
 /**
  * useChatPresence — Real-time typing indicators + online/offline status
  * Uses Supabase Realtime Presence for instant online detection
- * and join/leave events to refresh last_seen dynamically
+ * and postgres_changes on profiles for live last_seen updates
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +16,11 @@ interface PresenceState {
 function formatLastSeen(dateStr: string | null): string | null {
   if (!dateStr) return null;
   try {
-    return formatDistanceToNow(new Date(dateStr), { addSuffix: true });
+    const d = new Date(dateStr);
+    const diffMs = Date.now() - d.getTime();
+    // If less than 1 minute, show "just now"
+    if (diffMs < 60000) return "just now";
+    return formatDistanceToNow(d, { addSuffix: true });
   } catch {
     return null;
   }
@@ -25,7 +29,6 @@ function formatLastSeen(dateStr: string | null): string | null {
 export function useChatPresence(userId: string | undefined, recipientId: string) {
   const channelRef = useRef<any>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSeenRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const rawLastSeenRef = useRef<string | null>(null);
   const [state, setState] = useState<PresenceState>({ isTyping: false, isOnline: false, lastSeen: null });
 
@@ -47,6 +50,34 @@ export function useChatPresence(userId: string | undefined, recipientId: string)
     fetchLastSeen();
   }, [fetchLastSeen]);
 
+  // Subscribe to postgres_changes on profiles for real-time last_seen updates
+  useEffect(() => {
+    if (!recipientId) return;
+    const channel = supabase
+      .channel(`profile-lastseen-${recipientId}`)
+      .on(
+        "postgres_changes" as any,
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `user_id=eq.${recipientId}`,
+        },
+        (payload: any) => {
+          const newLastSeen = payload.new?.last_seen as string | null;
+          if (newLastSeen) {
+            rawLastSeenRef.current = newLastSeen;
+            setState((prev) => ({ ...prev, lastSeen: formatLastSeen(newLastSeen) }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [recipientId]);
+
   // Refresh the "X minutes ago" text every 30s so it stays accurate
   useEffect(() => {
     const interval = setInterval(() => {
@@ -57,7 +88,7 @@ export function useChatPresence(userId: string | undefined, recipientId: string)
     return () => clearInterval(interval);
   }, [state.isOnline]);
 
-  // Realtime Presence channel
+  // Realtime Presence channel for instant online/typing detection
   useEffect(() => {
     if (!userId) return;
 
@@ -76,17 +107,16 @@ export function useChatPresence(userId: string | undefined, recipientId: string)
           setState((prev) => ({ ...prev, isOnline: false, isTyping: false }));
         }
       })
-      .on("presence", { event: "leave" }, ({ key }: { key: string }) => {
-        // When the recipient leaves, refresh their last_seen from the DB
-        if (key === recipientId) {
-          setState((prev) => ({ ...prev, isOnline: false, isTyping: false }));
-          // Small delay so their last_seen write lands first
-          setTimeout(() => fetchLastSeen(), 1500);
-        }
-      })
       .on("presence", { event: "join" }, ({ key }: { key: string }) => {
         if (key === recipientId) {
           setState((prev) => ({ ...prev, isOnline: true }));
+        }
+      })
+      .on("presence", { event: "leave" }, ({ key }: { key: string }) => {
+        if (key === recipientId) {
+          setState((prev) => ({ ...prev, isOnline: false, isTyping: false }));
+          // Refetch last_seen after a delay so the DB write lands first
+          setTimeout(() => fetchLastSeen(), 2000);
         }
       })
       .subscribe(async (status: string) => {
@@ -95,16 +125,16 @@ export function useChatPresence(userId: string | undefined, recipientId: string)
         }
       });
 
-    // Update own last_seen periodically (every 30s for faster detection)
-    const updateLastSeen = () => {
-      (supabase as any)
+    // Update own last_seen every 30s
+    const updateOwnLastSeen = async () => {
+      if (!userId) return;
+      await supabase
         .from("profiles")
-        .update({ last_seen: new Date().toISOString() })
-        .eq("user_id", userId)
-        .then(() => {});
+        .update({ last_seen: new Date().toISOString() } as any)
+        .eq("user_id", userId);
     };
-    updateLastSeen();
-    const interval = setInterval(updateLastSeen, 30000);
+    updateOwnLastSeen();
+    const interval = setInterval(updateOwnLastSeen, 30000);
 
     return () => {
       clearInterval(interval);
