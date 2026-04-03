@@ -146,7 +146,7 @@ const Setup = lazy(() => lazyRetry(() => import("./pages/Setup")));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const Profile = lazy(() => import("./pages/Profile"));
+const Profile = lazy(() => lazyRetry(() => import("./pages/Profile")));
 const MorePage = lazy(() => import("./pages/MorePage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
