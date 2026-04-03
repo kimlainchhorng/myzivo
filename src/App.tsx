@@ -473,6 +473,9 @@ const App = () => (
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/communities" element={<CommunitiesPage />} />
                 <Route path="/marketplace" element={<MarketplacePage />} />
+                <Route path="/marketplace/orders" element={<ProtectedRoute><MarketplaceOrdersPage /></ProtectedRoute>} />
+                <Route path="/content-analytics" element={<ProtectedRoute><ContentAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/dating" element={<ProtectedRoute><DatingPage /></ProtectedRoute>} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
                 <Route path="/drafts" element={<ProtectedRoute><DraftsPage /></ProtectedRoute>} />
                 <Route path="/account/analytics" element={<ProtectedRoute><AccountAnalyticsPage /></ProtectedRoute>} />
