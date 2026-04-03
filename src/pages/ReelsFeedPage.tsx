@@ -317,15 +317,6 @@ export default function ReelsFeedPage() {
           >
             <Search className="h-4.5 w-4.5 text-foreground" />
           </button>
-          {userId && (
-            <button
-              onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Post
-            </button>
-          )}
         </div>
       </div>
 
