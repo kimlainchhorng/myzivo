@@ -75,6 +75,19 @@ export default function ReelsFeedPage() {
     }
   }, [location.state, userId]);
 
+  // Listen for share-to-profile custom event (when already on /reels)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && userId) {
+        setShareForPost({ shareUrl: detail.shareUrl || "", shareText: detail.shareText || "" });
+        setShowCreate(true);
+      }
+    };
+    window.addEventListener("zivo-share-to-profile", handler);
+    return () => window.removeEventListener("zivo-share-to-profile", handler);
+  }, [userId]);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       const uid = data.user?.id || null;
@@ -471,28 +484,42 @@ function CreatePostModal({
     setPreview(url);
   };
 
+  const hasSharedLink = !!initialCaption;
+
   const handlePost = async () => {
-    if (!file) {
+    if (!file && !hasSharedLink) {
       toast.error("Please select a photo or video");
+      return;
+    }
+    if (!file && !caption.trim()) {
+      toast.error("Please write something to share");
       return;
     }
     setUploading(true);
     try {
-      // Upload to user-posts bucket
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${userId}/${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage
-        .from("user-posts")
-        .upload(path, file, { contentType: file.type });
-      if (uploadErr) throw uploadErr;
+      let mediaUrl: string | null = null;
+      let finalMediaType = mediaType;
 
-      const { data: urlData } = supabase.storage.from("user-posts").getPublicUrl(path);
-      const mediaUrl = urlData.publicUrl;
+      if (file) {
+        // Upload to user-posts bucket
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${userId}/${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from("user-posts")
+          .upload(path, file, { contentType: file.type });
+        if (uploadErr) throw uploadErr;
+
+        const { data: urlData } = supabase.storage.from("user-posts").getPublicUrl(path);
+        mediaUrl = urlData.publicUrl;
+      } else {
+        // Text-only post (shared link) - use image type with no media
+        finalMediaType = "image";
+      }
 
       // Insert into user_posts
       const { error: insertErr } = await (supabase as any).from("user_posts").insert({
         user_id: userId,
-        media_type: mediaType,
+        media_type: finalMediaType,
         media_url: mediaUrl,
         caption: caption.trim() || null,
         is_published: true,
@@ -529,12 +556,12 @@ function CreatePostModal({
             <XIcon className="h-5 w-5" />
           </button>
           <h2 className="text-sm font-bold text-foreground">Create Post</h2>
-          <button
+           <button
             onClick={handlePost}
-            disabled={!file || uploading}
+            disabled={(!file && !hasSharedLink && !caption.trim()) || uploading}
             className={cn(
               "px-4 py-1.5 rounded-full text-xs font-bold transition-all",
-              file && !uploading
+              (file || (hasSharedLink && caption.trim())) && !uploading
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground"
             )}
