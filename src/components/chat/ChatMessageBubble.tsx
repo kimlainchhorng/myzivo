@@ -236,23 +236,6 @@ export default function ChatMessageBubble({
           const linkUrl = hasLink ? urls[0] : null;
           const textWithoutUrl = hasLink ? message.replace(urlRegex, "").trim() : message;
 
-          // Try to extract a readable label from the URL
-          const getLinkInfo = (url: string): { label: string; description: string; icon: string; color: string } => {
-            try {
-              const u = new URL(url);
-              const p = u.pathname + u.search;
-              if (p.includes("/feed") || p.includes("post=")) return { label: "Shared Post", description: "Tap to view this post on ZIVO", icon: "📸", color: "from-pink-500/20 to-purple-500/20" };
-              if (p.includes("/reels")) return { label: "Shared Reel", description: "Tap to watch this reel on ZIVO", icon: "🎬", color: "from-orange-500/20 to-red-500/20" };
-              if (p.includes("/profile") || p.includes("/user")) return { label: "Profile", description: "Tap to view profile on ZIVO", icon: "👤", color: "from-blue-500/20 to-cyan-500/20" };
-              if (p.includes("/store") || p.includes("/shop")) return { label: "Store", description: "Tap to view store on ZIVO", icon: "🛍️", color: "from-green-500/20 to-emerald-500/20" };
-              if (p.includes("/ride")) return { label: "Ride", description: "Tap to view ride details", icon: "🚗", color: "from-yellow-500/20 to-amber-500/20" };
-              if (u.hostname.includes("lovable")) return { label: "ZIVO Link", description: "Tap to open on ZIVO", icon: "🔗", color: "from-primary/20 to-primary/10" };
-              return { label: u.hostname.replace("www.", ""), description: "Tap to open link", icon: "🌐", color: "from-slate-500/20 to-gray-500/20" };
-            } catch { return { label: "Link", description: "Tap to open", icon: "🔗", color: "from-slate-500/20 to-gray-500/20" }; }
-          };
-
-          const linkInfo = linkUrl ? getLinkInfo(linkUrl) : null;
-
           return (
             <div
               className={`text-[14.5px] leading-[1.45] ${
@@ -266,42 +249,9 @@ export default function ChatMessageBubble({
                 <p className="whitespace-pre-wrap break-words px-3.5 pt-2.5 pb-1">{textWithoutUrl}</p>
               )}
 
-              {/* Rich link preview card */}
-              {linkUrl && linkInfo && (
-                <a
-                  href={linkUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`block mx-1.5 mb-1.5 ${!textWithoutUrl ? "mt-1.5" : "mt-0.5"} rounded-2xl overflow-hidden ${
-                    isMe ? "bg-primary-foreground/[0.08]" : "bg-background/70"
-                  } active:scale-[0.97] transition-transform`}
-                >
-                  {/* Gradient banner */}
-                  <div className={`h-16 bg-gradient-to-br ${linkInfo.color} flex items-center justify-center relative`}>
-                    <span className="text-3xl">{linkInfo.icon}</span>
-                    <div className={`absolute bottom-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase ${
-                      isMe ? "bg-primary-foreground/20 text-primary-foreground/70" : "bg-foreground/10 text-foreground/50"
-                    }`}>
-                      ZIVO
-                    </div>
-                  </div>
-                  {/* Info section */}
-                  <div className="px-3 py-2.5 flex items-center gap-2.5">
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-[13px] font-bold truncate ${isMe ? "text-primary-foreground" : "text-foreground"}`}>
-                        {linkInfo.label}
-                      </p>
-                      <p className={`text-[11px] mt-0.5 ${isMe ? "text-primary-foreground/50" : "text-muted-foreground"}`}>
-                        {linkInfo.description}
-                      </p>
-                    </div>
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      isMe ? "bg-primary-foreground/15" : "bg-primary/10"
-                    }`}>
-                      <ChevronRight className={`w-4 h-4 ${isMe ? "text-primary-foreground/60" : "text-primary"}`} />
-                    </div>
-                  </div>
-                </a>
+              {/* Rich link preview */}
+              {linkUrl && (
+                <LinkPreviewCard url={linkUrl} isMe={isMe} hasText={!!textWithoutUrl} />
               )}
 
               {/* Timestamp */}
