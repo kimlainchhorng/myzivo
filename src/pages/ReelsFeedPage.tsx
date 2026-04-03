@@ -222,6 +222,8 @@ export default function ReelsFeedPage() {
               shared_from_post_id: post.shared_from_post_id || null,
               shared_from_user_id: post.shared_from_user_id || null,
               shared_from_user_name: sharedFromUserName,
+              shared_from_user_avatar: sharedFromUserAvatar,
+              shared_from_caption: null,
               comment_control: profile?.comment_control || "everyone",
               hide_like_counts: profile?.hide_like_counts || false,
               allow_sharing: profile?.allow_sharing !== false,
