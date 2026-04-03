@@ -543,12 +543,12 @@ function CreatePostModal({
             <XIcon className="h-5 w-5" />
           </button>
           <h2 className="text-sm font-bold text-foreground">Create Post</h2>
-          <button
+           <button
             onClick={handlePost}
-            disabled={!file || uploading}
+            disabled={(!file && !hasSharedLink && !caption.trim()) || uploading}
             className={cn(
               "px-4 py-1.5 rounded-full text-xs font-bold transition-all",
-              file && !uploading
+              (file || (hasSharedLink && caption.trim())) && !uploading
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground"
             )}
