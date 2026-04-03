@@ -503,6 +503,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 <Zap className="w-[18px] h-[18px] text-muted-foreground" /> Mini Apps
               </DropdownMenuItem>
               <DropdownMenuSeparator className="my-1.5 bg-border/15" />
+              <DropdownMenuItem onClick={() => setShowPinnedPanel(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <Pin className="w-[18px] h-[18px] text-muted-foreground" /> Pinned Messages
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowPersonalization(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <Palette className="w-[18px] h-[18px] text-muted-foreground" /> Theme
               </DropdownMenuItem>
