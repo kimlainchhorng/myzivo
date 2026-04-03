@@ -54,7 +54,7 @@ export default function ReelsFeedPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
-  const [shareForPost, setShareForPost] = useState<{ shareUrl: string; shareText: string } | null>(null);
+  const [shareForPost, setShareForPost] = useState<{ shareUrl: string; shareText: string; shareMediaUrl?: string; shareMediaType?: "image" | "video" } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
@@ -70,9 +70,9 @@ export default function ReelsFeedPage() {
 
   // Handle share-to-profile deep link
   useEffect(() => {
-    const state = location.state as { shareToProfile?: boolean; shareUrl?: string; shareText?: string } | null;
+    const state = location.state as { shareToProfile?: boolean; shareUrl?: string; shareText?: string; shareMediaUrl?: string; shareMediaType?: "image" | "video" } | null;
     if (state?.shareToProfile && userId) {
-      setShareForPost({ shareUrl: state.shareUrl || "", shareText: state.shareText || "" });
+      setShareForPost({ shareUrl: state.shareUrl || "", shareText: state.shareText || "", shareMediaUrl: state.shareMediaUrl, shareMediaType: state.shareMediaType });
       setShowCreate(true);
       window.history.replaceState({}, document.title);
     }
@@ -83,7 +83,7 @@ export default function ReelsFeedPage() {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail && userId) {
-        setShareForPost({ shareUrl: detail.shareUrl || "", shareText: detail.shareText || "" });
+        setShareForPost({ shareUrl: detail.shareUrl || "", shareText: detail.shareText || "", shareMediaUrl: detail.shareMediaUrl, shareMediaType: detail.shareMediaType });
         setShowCreate(true);
       }
     };
@@ -380,6 +380,8 @@ export default function ReelsFeedPage() {
             userId={userId}
             userProfile={userProfile}
             initialCaption={shareForPost ? `${shareForPost.shareText}\n${shareForPost.shareUrl}`.trim() : undefined}
+            sharedMediaUrl={shareForPost?.shareMediaUrl}
+            sharedMediaType={shareForPost?.shareMediaType}
             onClose={() => { setShowCreate(false); setShareForPost(null); }}
             onCreated={() => {
               setShowCreate(false);
@@ -461,17 +463,21 @@ function CreatePostModal({
   onClose,
   onCreated,
   initialCaption,
+  sharedMediaUrl,
+  sharedMediaType,
 }: {
   userId: string;
   userProfile: { name: string; avatar: string | null } | null;
   onClose: () => void;
   onCreated: () => void;
   initialCaption?: string;
+  sharedMediaUrl?: string;
+  sharedMediaType?: "image" | "video";
 }) {
   const [caption, setCaption] = useState(initialCaption || "");
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [mediaType, setMediaType] = useState<"image" | "video">("image");
+  const [preview, setPreview] = useState<string | null>(sharedMediaUrl || null);
+  const [mediaType, setMediaType] = useState<"image" | "video">(sharedMediaType || "image");
   const [selectedType, setSelectedType] = useState<"Photo" | "Video" | "Reel" | "Live" | null>(null);
   const [visibility, setVisibility] = useState<"everyone" | "friends" | "onlyme">("everyone");
   const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
@@ -488,7 +494,7 @@ function CreatePostModal({
     setPreview(url);
   };
 
-  const hasSharedLink = !!initialCaption;
+  const hasSharedLink = !!initialCaption || !!sharedMediaUrl;
 
   const handlePost = async () => {
     if (!file && !hasSharedLink) {
@@ -515,6 +521,10 @@ function CreatePostModal({
 
         const { data: urlData } = supabase.storage.from("user-posts").getPublicUrl(path);
         mediaUrl = urlData.publicUrl;
+      } else if (sharedMediaUrl) {
+        // Re-use the original media from the shared post
+        mediaUrl = sharedMediaUrl;
+        finalMediaType = sharedMediaType || "image";
       } else {
         // Text-only post (shared link) - use image type with no media
         finalMediaType = "image";
@@ -689,12 +699,20 @@ function CreatePostModal({
             ) : (
               <img src={preview} alt="" className="h-full w-full object-cover" />
             )}
-            <button
-              onClick={() => { setFile(null); setPreview(null); }}
-              className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center"
-            >
-              <XIcon className="h-4 w-4 text-white" />
-            </button>
+            {/* Only show remove button for user-picked files, not for shared media */}
+            {file && (
+              <button
+                onClick={() => { setFile(null); setPreview(null); }}
+                className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center"
+              >
+                <XIcon className="h-4 w-4 text-white" />
+              </button>
+            )}
+            {sharedMediaUrl && !file && (
+              <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white uppercase tracking-wider flex items-center gap-1">
+                <Share2 className="h-3 w-3" /> Shared
+              </div>
+            )}
             {selectedType && (
               <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white uppercase tracking-wider">
                 {selectedType}
@@ -1130,6 +1148,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           <UnifiedShareSheet
             shareUrl={shareUrl}
             shareText={item.caption || `Check out this post by ${item.author_name}`}
+            shareMediaUrl={mediaUrl}
+            shareMediaType={item.media_type === "video" ? "video" : "image"}
             onClose={() => setShowShareSheet(false)}
             positioning="absolute"
             zIndex={80}
@@ -1534,6 +1554,8 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           <UnifiedShareSheet
             shareUrl={shareUrl}
             shareText={item.caption || `Check out this post by ${item.author_name}`}
+            shareMediaUrl={item.media_urls[0] || undefined}
+            shareMediaType={item.media_type === "video" ? "video" : "image"}
             onClose={() => setShowShareSheet(false)}
             zIndex={70}
           />

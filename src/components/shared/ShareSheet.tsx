@@ -11,6 +11,10 @@ interface ShareSheetProps {
   /** Use "absolute" for overlays inside a relative container (e.g. Reels), "fixed" for normal pages */
   positioning?: "fixed" | "absolute";
   zIndex?: number;
+  /** Original media URL of the content being shared (for Share to Profile) */
+  shareMediaUrl?: string;
+  /** Original media type of the content being shared */
+  shareMediaType?: "image" | "video";
 }
 
 export default function ShareSheet({
@@ -19,6 +23,8 @@ export default function ShareSheet({
   onClose,
   positioning = "fixed",
   zIndex = 60,
+  shareMediaUrl,
+  shareMediaType,
 }: ShareSheetProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const navigate = useNavigate();
@@ -63,10 +69,10 @@ export default function ShareSheet({
   const handleShareToProfile = () => {
     onClose();
     // Use replace + key to force re-render even if already on /reels
-    navigate("/reels", { state: { shareToProfile: true, shareUrl, shareText }, replace: true });
+    navigate("/reels", { state: { shareToProfile: true, shareUrl, shareText, shareMediaUrl, shareMediaType }, replace: true });
     // Small delay to ensure state is picked up if already on /reels
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("zivo-share-to-profile", { detail: { shareUrl, shareText } }));
+      window.dispatchEvent(new CustomEvent("zivo-share-to-profile", { detail: { shareUrl, shareText, shareMediaUrl, shareMediaType } }));
     }, 100);
     toast.success("Create a post to share");
   };
