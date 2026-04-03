@@ -134,7 +134,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       try {
         const query = (supabase as any)
           .from("user_posts")
-          .select("id, user_id, media_type, media_url, caption, filter_css, likes_count, comments_count, views_count, created_at, is_published")
+          .select("id, user_id, media_type, media_url, caption, filter_css, likes_count, comments_count, views_count, created_at, is_published, shared_from_post_id, shared_from_user_id")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(50);
