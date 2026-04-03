@@ -94,6 +94,11 @@ export default function ChatMessageBubble({
     hasMoved.current = false;
     longPressTimer.current = setTimeout(() => {
       didLongPress.current = true;
+      // Check if bubble is in top half of viewport → open menu downward
+      if (bubbleRef.current) {
+        const rect = bubbleRef.current.getBoundingClientRect();
+        setOpenDown(rect.top < 320);
+      }
       setShowActions(true);
       setShowReactions(true);
       if (navigator.vibrate) navigator.vibrate(30);
