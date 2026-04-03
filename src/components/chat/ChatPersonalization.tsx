@@ -24,6 +24,9 @@ const WALLPAPERS = [
   { id: "forest", label: "Forest", preview: "bg-gradient-to-b from-green-100/50 to-emerald-100/50 dark:from-green-950/30 dark:to-emerald-950/30" },
   { id: "midnight", label: "Midnight", preview: "bg-gradient-to-b from-slate-200/50 to-indigo-100/50 dark:from-slate-900/50 dark:to-indigo-950/40" },
   { id: "lavender", label: "Lavender", preview: "bg-gradient-to-b from-purple-100/50 to-violet-100/50 dark:from-purple-950/30 dark:to-violet-950/30" },
+  { id: "cherry", label: "Cherry", preview: "bg-gradient-to-b from-rose-100/50 to-red-100/50 dark:from-rose-950/30 dark:to-red-950/30" },
+  { id: "gold", label: "Gold", preview: "bg-gradient-to-b from-amber-100/50 to-yellow-100/50 dark:from-amber-950/30 dark:to-yellow-950/30" },
+  { id: "slate", label: "Slate", preview: "bg-gradient-to-b from-gray-200/50 to-slate-300/50 dark:from-gray-800/40 dark:to-slate-900/50" },
 ];
 
 const THEME_COLORS = [
@@ -208,7 +211,43 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
                   </button>
                 ))}
 
-                {/* Upload Photo Button */}
+                {/* Custom uploaded photos — inline in the grid */}
+                {customPhotos.map((url) => (
+                  <div key={url} className="relative group">
+                    <button
+                      onClick={() => setWallpaper(`custom:${url}`)}
+                      className={`aspect-[3/4] rounded-2xl border-[2.5px] transition-all overflow-hidden w-full ${
+                        wallpaper === `custom:${url}`
+                          ? "border-primary shadow-lg shadow-primary/15"
+                          : "border-border/20 hover:border-border/50"
+                      }`}
+                    >
+                      <img src={url} alt="Custom wallpaper" className="w-full h-full object-cover" />
+                      {wallpaper === `custom:${url}` && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute inset-0 flex items-center justify-center bg-black/20"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-md">
+                            <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                          </div>
+                        </motion.div>
+                      )}
+                      <span className="absolute bottom-1.5 left-0 right-0 text-[9px] text-center font-semibold text-white drop-shadow-md">
+                        Photo
+                      </span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeCustomPhoto(url); }}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
+                    >
+                      <Trash2 className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+                ))}
+
+                {/* Upload Photo Button — always last in grid */}
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
@@ -228,46 +267,6 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
                   </span>
                 </button>
               </div>
-
-              {/* Custom Photo Wallpapers */}
-              {customPhotos.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-[10px] text-muted-foreground font-medium mb-2">Your Photos</p>
-                  <div className="grid grid-cols-4 gap-2.5">
-                    {customPhotos.map((url) => (
-                      <div key={url} className="relative group">
-                        <button
-                          onClick={() => setWallpaper(`custom:${url}`)}
-                          className={`aspect-[3/4] rounded-2xl border-[2.5px] transition-all overflow-hidden w-full ${
-                            wallpaper === `custom:${url}`
-                              ? "border-primary shadow-lg shadow-primary/15"
-                              : "border-border/20 hover:border-border/50"
-                          }`}
-                        >
-                          <img src={url} alt="Custom wallpaper" className="w-full h-full object-cover" />
-                          {wallpaper === `custom:${url}` && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="absolute inset-0 flex items-center justify-center bg-black/20"
-                            >
-                              <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-md">
-                                <Check className="w-3.5 h-3.5 text-primary-foreground" />
-                              </div>
-                            </motion.div>
-                          )}
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); removeCustomPhoto(url); }}
-                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
-                        >
-                          <Trash2 className="w-2.5 h-2.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <input
                 ref={fileInputRef}
@@ -387,6 +386,9 @@ export function getWallpaperClass(id: string): string {
     forest: "bg-gradient-to-b from-green-100/30 to-emerald-100/30 dark:from-green-950/20 dark:to-emerald-950/20",
     midnight: "bg-gradient-to-b from-slate-200/30 to-indigo-100/30 dark:from-slate-900/40 dark:to-indigo-950/30",
     lavender: "bg-gradient-to-b from-purple-100/30 to-violet-100/30 dark:from-purple-950/20 dark:to-violet-950/20",
+    cherry: "bg-gradient-to-b from-rose-100/30 to-red-100/30 dark:from-rose-950/20 dark:to-red-950/20",
+    gold: "bg-gradient-to-b from-amber-100/30 to-yellow-100/30 dark:from-amber-950/20 dark:to-yellow-950/20",
+    slate: "bg-gradient-to-b from-gray-200/30 to-slate-300/30 dark:from-gray-800/30 dark:to-slate-900/30",
   };
   return map[id] || "";
 }
