@@ -133,7 +133,7 @@ export default function PublicProfilePage() {
               .in("id", unresolvedIds);
 
             if (userPosts && userPosts.length > 0) {
-              const uids = [...new Set(userPosts.map((up: any) => up.user_id))];
+              const uids = [...new Set(userPosts.map((up: any) => up.user_id))] as string[];
               const { data: profiles } = await supabase
                 .from("profiles")
                 .select("id, full_name, avatar_url")
