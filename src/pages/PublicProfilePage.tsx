@@ -404,7 +404,7 @@ export default function PublicProfilePage() {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => {
                     if (friendshipStatus === "friends") {
-                      navigate(`/chat`);
+                      navigate(`/chat`, { state: { openChat: { recipientId: userId, recipientName: profile?.full_name || "User", recipientAvatar: profile?.avatar_url } } });
                     } else if (friendshipStatus === "request_sent") {
                       toast("Friend request pending", {
                         description: `Waiting for ${profile?.full_name || "this user"} to accept your friend request before you can chat.`,
