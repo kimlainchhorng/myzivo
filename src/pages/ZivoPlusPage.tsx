@@ -338,8 +338,15 @@ export default function ZivoPlusPage() {
               <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
                 <b.icon className="h-5 w-5 text-amber-500" />
               </div>
-              <div>
-                <p className="text-[13px] font-bold text-foreground">{b.title}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-[13px] font-bold text-foreground">{b.title}</p>
+                  {(b as any).plan && (
+                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 uppercase">
+                      {(b as any).plan === "chat" ? "Chat+" : "Pro"}
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{b.desc}</p>
               </div>
             </motion.div>
