@@ -34,6 +34,7 @@ interface FeedItem {
   caption: string | null;
   likes_count: number;
   comments_count: number;
+  shares_count: number;
   views_count: number;
   author_name: string;
   author_avatar: string | null;
