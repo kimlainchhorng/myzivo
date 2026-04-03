@@ -520,7 +520,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         {/* Pinned messages bar */}
         {pinnedMessages.length > 0 && (
           <button
-            onClick={() => scrollToMessage(pinnedMessages[pinnedMessages.length - 1].id)}
+            onClick={() => setShowPinnedPanel(true)}
             className="w-full px-4 py-1.5 bg-primary/5 border-t border-primary/10 flex items-center gap-2 text-left"
           >
             <Pin className="w-3 h-3 text-primary shrink-0" />
