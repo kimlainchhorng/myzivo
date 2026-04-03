@@ -317,31 +317,10 @@ export default function ChatMessageBubble({
         )}
       </AnimatePresence>
 
-      {/* Fullscreen video player */}
+      {/* Fullscreen Reel-style video player */}
       <AnimatePresence>
         {showVideoPlayer && videoUrl && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
-            onClick={() => setShowVideoPlayer(false)}
-          >
-            <button
-              onClick={() => setShowVideoPlayer(false)}
-              className="absolute top-4 right-4 safe-area-top h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white z-10"
-            >
-              ✕
-            </button>
-            <video
-              src={videoUrl}
-              className="max-w-full max-h-full"
-              controls
-              autoPlay
-              playsInline
-              onClick={(e) => e.stopPropagation()}
-            />
-          </motion.div>
+          <ReelVideoPlayer videoUrl={videoUrl} onClose={() => setShowVideoPlayer(false)} />
         )}
       </AnimatePresence>
     </div>
