@@ -2457,6 +2457,13 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Tip Sheet */}
+      <TipSheet
+        open={!!tipTarget}
+        onClose={() => setTipTarget(null)}
+        creatorId={tipTarget?.id || ""}
+        creatorName={tipTarget?.name || ""}
+      />
 
     </div>
   );
