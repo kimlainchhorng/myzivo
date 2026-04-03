@@ -58,7 +58,7 @@ export default function ReelsFeedPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
-  const [shareForPost, setShareForPost] = useState<{ shareUrl: string; shareText: string; shareMediaUrl?: string; shareMediaType?: "image" | "video" } | null>(null);
+  const [shareForPost, setShareForPost] = useState<{ shareUrl: string; shareText: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
