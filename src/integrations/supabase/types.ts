@@ -9688,6 +9688,344 @@ export type Database = {
         }
         Relationships: []
       }
+      creator_analytics: {
+        Row: {
+          comments: number | null
+          created_at: string | null
+          creator_id: string
+          date: string
+          id: string
+          likes: number | null
+          new_followers: number | null
+          new_subscribers: number | null
+          profile_visits: number | null
+          revenue_cents: number | null
+          shares: number | null
+          views: number | null
+        }
+        Insert: {
+          comments?: number | null
+          created_at?: string | null
+          creator_id: string
+          date: string
+          id?: string
+          likes?: number | null
+          new_followers?: number | null
+          new_subscribers?: number | null
+          profile_visits?: number | null
+          revenue_cents?: number | null
+          shares?: number | null
+          views?: number | null
+        }
+        Update: {
+          comments?: number | null
+          created_at?: string | null
+          creator_id?: string
+          date?: string
+          id?: string
+          likes?: number | null
+          new_followers?: number | null
+          new_subscribers?: number | null
+          profile_visits?: number | null
+          revenue_cents?: number | null
+          shares?: number | null
+          views?: number | null
+        }
+        Relationships: []
+      }
+      creator_earnings: {
+        Row: {
+          ad_revenue_cents: number | null
+          content_sales_cents: number | null
+          created_at: string | null
+          creator_id: string
+          date: string
+          id: string
+          subscriptions_cents: number | null
+          tips_cents: number | null
+          total_cents: number | null
+        }
+        Insert: {
+          ad_revenue_cents?: number | null
+          content_sales_cents?: number | null
+          created_at?: string | null
+          creator_id: string
+          date: string
+          id?: string
+          subscriptions_cents?: number | null
+          tips_cents?: number | null
+          total_cents?: number | null
+        }
+        Update: {
+          ad_revenue_cents?: number | null
+          content_sales_cents?: number | null
+          created_at?: string | null
+          creator_id?: string
+          date?: string
+          id?: string
+          subscriptions_cents?: number | null
+          tips_cents?: number | null
+          total_cents?: number | null
+        }
+        Relationships: []
+      }
+      creator_links: {
+        Row: {
+          click_count: number | null
+          created_at: string | null
+          creator_id: string
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          sort_order: number | null
+          title: string
+          url: string
+        }
+        Insert: {
+          click_count?: number | null
+          created_at?: string | null
+          creator_id: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          sort_order?: number | null
+          title: string
+          url: string
+        }
+        Update: {
+          click_count?: number | null
+          created_at?: string | null
+          creator_id?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          sort_order?: number | null
+          title?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      creator_milestones: {
+        Row: {
+          achieved_at: string | null
+          creator_id: string
+          description: string | null
+          id: string
+          is_celebrated: boolean | null
+          milestone_type: string
+          milestone_value: number
+          title: string | null
+        }
+        Insert: {
+          achieved_at?: string | null
+          creator_id: string
+          description?: string | null
+          id?: string
+          is_celebrated?: boolean | null
+          milestone_type: string
+          milestone_value: number
+          title?: string | null
+        }
+        Update: {
+          achieved_at?: string | null
+          creator_id?: string
+          description?: string | null
+          id?: string
+          is_celebrated?: boolean | null
+          milestone_type?: string
+          milestone_value?: number
+          title?: string | null
+        }
+        Relationships: []
+      }
+      creator_payouts: {
+        Row: {
+          amount_cents: number
+          created_at: string | null
+          creator_id: string
+          fee_cents: number | null
+          id: string
+          method: string | null
+          net_cents: number
+          paid_at: string | null
+          period_end: string | null
+          period_start: string | null
+          reference_id: string | null
+          status: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string | null
+          creator_id: string
+          fee_cents?: number | null
+          id?: string
+          method?: string | null
+          net_cents: number
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          reference_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string | null
+          creator_id?: string
+          fee_cents?: number | null
+          id?: string
+          method?: string | null
+          net_cents?: number
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          reference_id?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      creator_profiles: {
+        Row: {
+          avatar_url: string | null
+          banner_url: string | null
+          bio: string | null
+          category: string | null
+          created_at: string | null
+          display_name: string | null
+          follower_count: number | null
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          payout_details: Json | null
+          payout_method: string | null
+          subscriber_count: number | null
+          total_earnings_cents: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          banner_url?: string | null
+          bio?: string | null
+          category?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          follower_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          payout_details?: Json | null
+          payout_method?: string | null
+          subscriber_count?: number | null
+          total_earnings_cents?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          banner_url?: string | null
+          bio?: string | null
+          category?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          follower_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          payout_details?: Json | null
+          payout_method?: string | null
+          subscriber_count?: number | null
+          total_earnings_cents?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      creator_subscriptions: {
+        Row: {
+          cancelled_at: string | null
+          created_at: string | null
+          creator_id: string
+          expires_at: string | null
+          id: string
+          payment_method: string | null
+          price_cents: number | null
+          started_at: string | null
+          status: string | null
+          subscriber_id: string
+          tier_id: string | null
+        }
+        Insert: {
+          cancelled_at?: string | null
+          created_at?: string | null
+          creator_id: string
+          expires_at?: string | null
+          id?: string
+          payment_method?: string | null
+          price_cents?: number | null
+          started_at?: string | null
+          status?: string | null
+          subscriber_id: string
+          tier_id?: string | null
+        }
+        Update: {
+          cancelled_at?: string | null
+          created_at?: string | null
+          creator_id?: string
+          expires_at?: string | null
+          id?: string
+          payment_method?: string | null
+          price_cents?: number | null
+          started_at?: string | null
+          status?: string | null
+          subscriber_id?: string
+          tier_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_subscriptions_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_tips: {
+        Row: {
+          amount_cents: number
+          created_at: string | null
+          creator_id: string
+          currency: string | null
+          id: string
+          is_anonymous: boolean | null
+          message: string | null
+          payment_intent_id: string | null
+          tipper_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string | null
+          creator_id: string
+          currency?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          message?: string | null
+          payment_intent_id?: string | null
+          tipper_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string | null
+          creator_id?: string
+          currency?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          message?: string | null
+          payment_intent_id?: string | null
+          tipper_id?: string
+        }
+        Relationships: []
+      }
       credit_ledger: {
         Row: {
           admin_id: string | null
@@ -16576,6 +16914,36 @@ export type Database = {
           updated_at?: string
           variants?: Json
           winner_variant?: string | null
+        }
+        Relationships: []
+      }
+      fan_badges: {
+        Row: {
+          badge_icon: string | null
+          badge_name: string | null
+          badge_type: string
+          creator_id: string
+          earned_at: string | null
+          fan_id: string
+          id: string
+        }
+        Insert: {
+          badge_icon?: string | null
+          badge_name?: string | null
+          badge_type: string
+          creator_id: string
+          earned_at?: string | null
+          fan_id: string
+          id?: string
+        }
+        Update: {
+          badge_icon?: string | null
+          badge_name?: string | null
+          badge_type?: string
+          creator_id?: string
+          earned_at?: string | null
+          fan_id?: string
+          id?: string
         }
         Relationships: []
       }
@@ -29086,6 +29454,89 @@ export type Database = {
           },
         ]
       }
+      paid_content: {
+        Row: {
+          content_type: string | null
+          content_url: string | null
+          created_at: string | null
+          creator_id: string
+          currency: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          preview_text: string | null
+          price_cents: number
+          purchase_count: number | null
+          thumbnail_url: string | null
+          title: string
+        }
+        Insert: {
+          content_type?: string | null
+          content_url?: string | null
+          created_at?: string | null
+          creator_id: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          preview_text?: string | null
+          price_cents: number
+          purchase_count?: number | null
+          thumbnail_url?: string | null
+          title: string
+        }
+        Update: {
+          content_type?: string | null
+          content_url?: string | null
+          created_at?: string | null
+          creator_id?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          preview_text?: string | null
+          price_cents?: number
+          purchase_count?: number | null
+          thumbnail_url?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      paid_content_access: {
+        Row: {
+          amount_paid_cents: number | null
+          content_id: string
+          granted_at: string | null
+          id: string
+          payment_intent_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_paid_cents?: number | null
+          content_id: string
+          granted_at?: string | null
+          id?: string
+          payment_intent_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_paid_cents?: number | null
+          content_id?: string
+          granted_at?: string | null
+          id?: string
+          payment_intent_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paid_content_access_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "paid_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_checkout_config: {
         Row: {
           checkout_mode: Database["public"]["Enums"]["checkout_mode"]
@@ -40773,6 +41224,48 @@ export type Database = {
           id?: string
           name?: string | null
           price?: number | null
+        }
+        Relationships: []
+      }
+      subscription_tiers: {
+        Row: {
+          benefits: Json | null
+          created_at: string | null
+          creator_id: string
+          currency: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          max_subscribers: number | null
+          name: string
+          price_cents: number
+          sort_order: number | null
+        }
+        Insert: {
+          benefits?: Json | null
+          created_at?: string | null
+          creator_id: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_subscribers?: number | null
+          name: string
+          price_cents: number
+          sort_order?: number | null
+        }
+        Update: {
+          benefits?: Json | null
+          created_at?: string | null
+          creator_id?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_subscribers?: number | null
+          name?: string
+          price_cents?: number
+          sort_order?: number | null
         }
         Relationships: []
       }
