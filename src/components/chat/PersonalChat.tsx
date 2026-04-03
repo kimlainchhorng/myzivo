@@ -151,8 +151,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     loadStyle();
   }, [user?.id, recipientId]);
 
-  const scrollToBottom = useCallback(() => {
+  const isNearBottomRef = useRef(true);
+
+  const scrollToBottom = useCallback((force?: boolean) => {
+    if (!force && !isNearBottomRef.current) return;
     setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // Consider "near bottom" if within 150px of the bottom
+    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
   }, []);
 
   const handleStartCall = useCallback(async (type: "voice" | "video") => {
@@ -183,7 +193,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setMessages(data);
       setCallEvents((callRes.data || []).map((c: any) => ({ ...c, _isCallEvent: true as const })));
       setLoading(false);
-      scrollToBottom();
+      scrollToBottom(true);
 
       if (data?.length) {
         const unread = data.filter((m: Message) => m.receiver_id === user.id && !m.is_read);
@@ -621,7 +631,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       </AnimatePresence>
 
       {/* Messages */}
-      <div ref={scrollRef} className={`flex-1 overflow-y-auto px-4 py-3 space-y-2 ${getWallpaperClass(chatStyle.wallpaper)}`} style={getWallpaperStyle(chatStyle.wallpaper)}>
+      <div ref={scrollRef} onScroll={handleScroll} className={`flex-1 overflow-y-auto px-4 py-3 space-y-2 ${getWallpaperClass(chatStyle.wallpaper)}`} style={getWallpaperStyle(chatStyle.wallpaper)}>
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
