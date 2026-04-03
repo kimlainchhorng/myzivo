@@ -41,10 +41,10 @@ import { lazyRetry } from "@/lib/lazyRetry";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
-const Index = lazy(() => import("./pages/Index"));
+const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
 
 // App (mobile-first) pages
-const AppHome = lazy(() => import("./pages/app/AppHome"));
+const AppHome = lazy(() => lazyRetry(() => import("./pages/app/AppHome")));
 const AppTravel = lazy(() => import("./pages/app/AppTravel"));
 const AppMore = lazy(() => import("./pages/app/AppMore"));
 const ServicesPage = lazy(() => import("./pages/app/ServicesPage"));
