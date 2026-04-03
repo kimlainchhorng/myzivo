@@ -214,6 +214,9 @@ export default function ChatHubPage() {
       return otherIds.map((otherId) => {
         const entry = grouped.get(otherId)!;
         const profile = profileMap.get(otherId);
+        // Consider online if last_seen within 2 minutes
+        const lastSeen = profile?.last_seen ? new Date(profile.last_seen) : null;
+        const isOnline = lastSeen ? (Date.now() - lastSeen.getTime()) < 2 * 60 * 1000 : false;
         return {
           id: otherId,
           name: profile?.full_name || "User",
@@ -221,6 +224,7 @@ export default function ChatHubPage() {
           lastMessage: entry.lastMsg.message || "📷 Image",
           lastTime: entry.lastMsg.created_at,
           unread: entry.unread,
+          isOnline,
         };
       });
     },
