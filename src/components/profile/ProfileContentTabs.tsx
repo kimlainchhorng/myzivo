@@ -614,78 +614,24 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         document.body
       )}
 
-      {/* Composer Modal */}
+      {/* Create Post Modal */}
       {createPortal(
         <AnimatePresence>
-          {showComposer && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-end justify-center"
-              onClick={() => { setShowComposer(false); setComposerType(null); }}
-            >
-              <motion.div
-                initial={{ y: "100%" }}
-                animate={{ y: 0 }}
-                exit={{ y: "100%" }}
-                transition={{ type: "spring", damping: 28, stiffness: 300 }}
-                className="w-full max-w-lg bg-card rounded-t-3xl shadow-2xl overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-center pt-3 pb-1">
-                  <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
-                </div>
-
-                {!composerType ? (
-                  <div className="p-5 space-y-4">
-                    <h3 className="text-lg font-bold text-foreground text-center">Create</h3>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { id: "photo" as const, label: "Photo", icon: Image, color: "text-primary" },
-                        { id: "reel" as const, label: "Reel", icon: Clapperboard, color: "text-accent-foreground" },
-                        { id: "live" as const, label: "Go Live", icon: Radio, color: "text-destructive" },
-                      ].map((opt) => {
-                        const Icon = opt.icon;
-                        return (
-                          <motion.button
-                            key={opt.id}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => {
-                            if (opt.id === "live") {
-                              toast("🔴 Go Live is coming soon!", { description: "Stay tuned for live broadcasting features." });
-                              return;
-                            } else {
-                                setComposerType(opt.id);
-                              }
-                            }}
-                            className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-muted/40 border border-border/20 hover:bg-muted/60 transition-colors"
-                          >
-                            <div className={cn("w-12 h-12 rounded-full bg-background flex items-center justify-center shadow-sm", opt.id === "live" && "bg-destructive/10")}>
-                              <Icon className={cn("w-6 h-6", opt.color)} />
-                            </div>
-                            <span className="text-sm font-semibold text-foreground">{opt.label}</span>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                    <button
-                      onClick={() => { setShowComposer(false); setComposerType(null); }}
-                      className="w-full py-3 text-sm font-medium text-muted-foreground"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <ComposerForm
-                    type={composerType}
-                    onCreatePost={handleCreatePost}
-                    onClose={() => { setShowComposer(false); setComposerType(null); }}
-                    onBack={() => setComposerType(null)}
-                  />
-                )}
-              </motion.div>
-            </motion.div>
+          {showCreatePost && user?.id && (
+            <CreatePostModal
+              userId={user.id}
+              userProfile={{
+                name: profileName || user?.email?.split("@")[0] || "You",
+                avatar: profileAvatar,
+              }}
+              onClose={() => setShowCreatePost(false)}
+              onCreated={() => {
+                setShowCreatePost(false);
+                // Refresh feed
+                setFeed([]);
+                window.location.reload();
+              }}
+            />
           )}
         </AnimatePresence>,
         document.body
