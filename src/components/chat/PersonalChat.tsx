@@ -165,6 +165,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
   }, []);
 
+  useEffect(() => {
+    const previousBodyOverscroll = document.body.style.overscrollBehavior;
+    const previousHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+
+    document.body.style.overscrollBehavior = "none";
+    document.documentElement.style.overscrollBehavior = "none";
+
+    return () => {
+      document.body.style.overscrollBehavior = previousBodyOverscroll;
+      document.documentElement.style.overscrollBehavior = previousHtmlOverscroll;
+    };
+  }, []);
+
   const handleStartCall = useCallback(async (type: "voice" | "video") => {
     await primeCallAudio();
     setActiveCall(type);
@@ -631,7 +644,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       </AnimatePresence>
 
       {/* Messages */}
-      <div ref={scrollRef} onScroll={handleScroll} className={`flex-1 overflow-y-auto px-4 py-3 space-y-2 ${getWallpaperClass(chatStyle.wallpaper)}`} style={getWallpaperStyle(chatStyle.wallpaper)}>
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className={`flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 space-y-2 ${getWallpaperClass(chatStyle.wallpaper)}`}
+        style={{
+          ...getWallpaperStyle(chatStyle.wallpaper),
+          WebkitOverflowScrolling: "touch",
+          touchAction: "pan-y",
+        }}
+      >
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
