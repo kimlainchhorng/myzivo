@@ -345,38 +345,44 @@ export default function ZivoPlusPage() {
         {!isPlus && (
           <div className="space-y-3">
             <h3 className="text-[14px] font-bold text-foreground px-1">Choose Your Plan</h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {PLANS.map((p) => (
                 <motion.button
                   key={p.id}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setSelectedPlan(p.id)}
-                  className={`relative p-4 rounded-2xl border-2 text-left transition-all duration-200 ${
+                  className={`relative p-3 rounded-2xl border-2 text-left transition-all duration-200 ${
                     selectedPlan === p.id
                       ? "border-amber-500/50 bg-amber-500/5 shadow-md shadow-amber-500/10"
                       : "border-border/20 bg-card hover:border-border/40"
                   }`}
                 >
                   {p.badge && (
-                    <span className="absolute -top-2.5 right-3 text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-sm">
+                    <span className="absolute -top-2.5 right-2 text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500 text-white shadow-sm">
                       {p.badge}
                     </span>
-                  )}
-                  <p className="text-[12px] font-bold text-muted-foreground mb-1">{p.name}</p>
-                  <div className="flex items-baseline gap-0.5">
-                    <span className="text-[22px] font-extrabold text-foreground">{p.price}</span>
-                    <span className="text-[11px] text-muted-foreground">{p.period}</span>
-                  </div>
-                  {p.savings && (
-                    <p className="text-[10px] font-bold text-emerald-600 mt-1">{p.savings}</p>
                   )}
                   {selectedPlan === p.id && (
                     <motion.div
                       layoutId="plan-check"
-                      className="absolute top-3 left-3 h-5 w-5 rounded-full bg-amber-500 flex items-center justify-center"
+                      className="absolute top-2.5 left-2.5 h-4 w-4 rounded-full bg-amber-500 flex items-center justify-center"
                     >
-                      <Check className="h-3 w-3 text-white" />
+                      <Check className="h-2.5 w-2.5 text-white" />
                     </motion.div>
+                  )}
+                  <p className="text-[10px] font-bold text-muted-foreground mb-1">{p.name}</p>
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="text-[18px] font-extrabold text-foreground">{p.price}</span>
+                    <span className="text-[9px] text-muted-foreground">{p.period}</span>
+                  </div>
+                  {p.savings && (
+                    <p className="text-[9px] font-bold text-emerald-600 mt-1">{p.savings}</p>
+                  )}
+                  {p.highlight && (
+                    <div className="flex items-center gap-1 mt-1.5">
+                      <Lock className="h-2.5 w-2.5 text-amber-500" />
+                      <p className="text-[8px] font-semibold text-amber-600 leading-tight">{p.highlight}</p>
+                    </div>
                   )}
                 </motion.button>
               ))}
