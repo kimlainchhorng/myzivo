@@ -44,6 +44,8 @@ export default function ChatMessageBubble({
   const isLockedType = messageType === "locked_image" || messageType === "locked_video";
   const [isLocked, setIsLocked] = useState(isLockedType && !isMe);
   const [unlockLoading, setUnlockLoading] = useState(false);
+  const unlockPrice = lockedPriceCents && lockedPriceCents > 0 ? lockedPriceCents : 99;
+  const unlockPriceLabel = `$${(unlockPrice / 100).toFixed(2)}`;
   const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>([]);
   const [openDown, setOpenDown] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
