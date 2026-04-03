@@ -127,7 +127,7 @@ export default function ChatStories() {
         .order("viewed_at", { ascending: false });
       if (!data || data.length === 0) return [];
       const viewerIds = (data as any[]).map((v: any) => v.viewer_id);
-      const { data: profiles } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", viewerIds);
+      const { data: profiles } = await supabase.from("public_profiles" as any).select("id, full_name, avatar_url").in("id", viewerIds);
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
       return (data as any[]).map((v: any) => ({
         ...v,
