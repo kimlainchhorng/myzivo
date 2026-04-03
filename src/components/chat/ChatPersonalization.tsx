@@ -61,20 +61,40 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
   useEffect(() => {
     if (!open || !user?.id) return;
     const load = async () => {
-      const { data } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from("chat_settings")
         .select("wallpaper, theme_color, font_size, custom_wallpapers")
         .eq("user_id", user.id)
         .eq("chat_partner_id", chatPartnerId)
         .maybeSingle();
-      if (data) {
-        setWallpaper(data.wallpaper || "default");
-        setThemeColor(data.theme_color || "default");
-        setFontSize(data.font_size || "medium");
-        setCustomPhotos(data.custom_wallpapers || []);
+
+      if (error) return;
+
+      if (!data) {
+        setWallpaper("default");
+        setThemeColor("default");
+        setFontSize("medium");
+        setCustomPhotos([]);
+        return;
       }
+
+      const savedWallpaper = data.wallpaper || "default";
+      const savedCustomPhotos = Array.isArray(data.custom_wallpapers) ? data.custom_wallpapers : [];
+      const activeCustomPhoto = savedWallpaper.startsWith("custom:")
+        ? savedWallpaper.replace("custom:", "")
+        : null;
+
+      setWallpaper(savedWallpaper);
+      setThemeColor(data.theme_color || "default");
+      setFontSize(data.font_size || "medium");
+      setCustomPhotos(
+        activeCustomPhoto && !savedCustomPhotos.includes(activeCustomPhoto)
+          ? [...savedCustomPhotos, activeCustomPhoto]
+          : savedCustomPhotos
+      );
     };
-    load();
+
+    void load();
   }, [open, user?.id, chatPartnerId]);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,7 +116,7 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
         .from("chat-media-files")
         .getPublicUrl(path);
       const newUrl = urlData.publicUrl;
-      const updated = [...customPhotos, newUrl];
+      const updated = customPhotos.includes(newUrl) ? customPhotos : [...customPhotos, newUrl];
       setCustomPhotos(updated);
       setWallpaper(`custom:${newUrl}`);
       toast.success("Wallpaper added!");
@@ -116,7 +136,15 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
 
   const handleSave = async () => {
     if (!user?.id) return;
-    await (supabase as any)
+
+    const activeCustomPhoto = wallpaper.startsWith("custom:")
+      ? wallpaper.replace("custom:", "")
+      : null;
+    const wallpapersToSave = activeCustomPhoto && !customPhotos.includes(activeCustomPhoto)
+      ? [...customPhotos, activeCustomPhoto]
+      : customPhotos;
+
+    const { error } = await (supabase as any)
       .from("chat_settings")
       .upsert({
         user_id: user.id,
@@ -124,9 +152,16 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
         wallpaper,
         theme_color: themeColor,
         font_size: fontSize,
-        custom_wallpapers: customPhotos,
+        custom_wallpapers: wallpapersToSave,
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id,chat_partner_id" });
+
+    if (error) {
+      toast.error("Could not save chat personalization");
+      return;
+    }
+
+    setCustomPhotos(wallpapersToSave);
     onApply({ wallpaper, themeColor, fontSize });
     toast.success("Chat personalized ✨");
     onClose();
