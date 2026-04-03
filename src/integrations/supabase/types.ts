@@ -25869,6 +25869,42 @@ export type Database = {
           },
         ]
       }
+      media_unlocks: {
+        Row: {
+          amount_cents: number
+          buyer_id: string
+          created_at: string
+          id: string
+          message_id: string
+          seller_id: string
+          status: string
+          stripe_session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number
+          buyer_id: string
+          created_at?: string
+          id?: string
+          message_id: string
+          seller_id: string
+          status?: string
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          message_id?: string
+          seller_id?: string
+          status?: string
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       membership_plans: {
         Row: {
           created_at: string | null
