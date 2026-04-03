@@ -146,12 +146,12 @@ export default function ChatContactInfo({
   const { data: recipientProfile } = useQuery({
     queryKey: ["recipient-profile", recipientId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("profiles")
         .select("user_id, full_name, avatar_url, bio, email, city, country")
         .eq("user_id", recipientId)
         .maybeSingle();
-      return data;
+      return data as any;
     },
   });
 
