@@ -168,6 +168,7 @@ const Profile = () => {
   const updateProfile = useUpdateUserProfile();
   const uploadAvatar = useUploadAvatar();
   const langTriggerRef = useRef<HTMLButtonElement>(null);
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const profileCardRef = useRef<HTMLDivElement>(null);
