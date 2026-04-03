@@ -596,14 +596,14 @@ export default function ChatHubPage() {
               )}
             </div>
           ) : (
-            <div className="space-y-0.5">
+            <div className="space-y-2 px-1">
               {displayList.map((chat: any, idx: number) => (
                 <motion.div
                   key={chat.id}
-                  initial={{ opacity: 0, y: 8 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.02 }}
-                  className="relative overflow-hidden rounded-2xl"
+                  transition={{ delay: idx * 0.025, type: "spring", stiffness: 300, damping: 28 }}
+                  className="relative overflow-hidden"
                 >
                   {/* Delete button behind */}
                   {canDelete && swipedId === chat.id && (
@@ -618,9 +618,11 @@ export default function ChatHubPage() {
                   )}
                   <motion.button
                     className={cn(
-                      "w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-muted/40 active:bg-muted/60 active:scale-[0.99] transition-all text-left relative z-10 bg-background",
+                      "w-full flex items-center gap-3.5 p-3.5 rounded-2xl transition-all text-left relative z-10",
+                      "bg-card border border-border/40 shadow-sm hover:shadow-md hover:border-border/60",
+                      "active:scale-[0.98] active:shadow-none",
                       canDelete && swipedId === chat.id && "-translate-x-16",
-                      chat.unread > 0 && "bg-primary/[0.03]"
+                      chat.unread > 0 && "border-primary/20 bg-primary/[0.02] shadow-primary/5"
                     )}
                     onClick={() => {
                       if (swipedId === chat.id) {
@@ -660,7 +662,7 @@ export default function ChatHubPage() {
                     {/* Avatar */}
                     <div className="relative flex-shrink-0">
                       <div className={cn(
-                        "w-[52px] h-[52px] rounded-full flex items-center justify-center overflow-hidden",
+                        "w-[54px] h-[54px] rounded-2xl flex items-center justify-center overflow-hidden ring-2 ring-border/30",
                         (chat as any).isGroup ? "bg-primary/10" : "bg-muted"
                       )}>
                         {chat.avatar ? (
@@ -681,21 +683,21 @@ export default function ChatHubPage() {
                       </div>
                       {/* Online indicator */}
                       {active === "personal" && !(chat as any).isGroup && (chat as any).isOnline && (
-                        <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-background" />
+                        <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-card" />
                       )}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
+                      <div className="flex items-center justify-between mb-1">
                         <span className={cn(
-                          "text-[14.5px] truncate",
+                          "text-[15px] truncate leading-tight",
                           chat.unread > 0 ? "font-bold text-foreground" : "font-semibold text-foreground"
                         )}>
                           {chat.name}
                         </span>
                         <span className={cn(
-                          "text-[11px] flex-shrink-0 ml-2",
+                          "text-[11px] flex-shrink-0 ml-2 tabular-nums",
                           chat.unread > 0 ? "text-primary font-semibold" : "text-muted-foreground"
                         )}>
                           {formatChatTime(chat.lastTime)}
@@ -717,14 +719,14 @@ export default function ChatHubPage() {
                           )}
                           {getMessagePreviewIcon(parseRichMessagePreview(chat.lastMessage))}
                           <span className={cn(
-                            "text-[13px] truncate",
+                            "text-[13px] truncate leading-snug",
                             chat.unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"
                           )}>
                             {parseRichMessagePreview(chat.lastMessage)}
                           </span>
                         </div>
                         {chat.unread > 0 && (
-                          <span className="min-w-[20px] h-[20px] px-1.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="min-w-[22px] h-[22px] px-1.5 bg-primary text-primary-foreground text-[11px] font-bold rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
                             {chat.unread > 99 ? "99+" : chat.unread}
                           </span>
                         )}
