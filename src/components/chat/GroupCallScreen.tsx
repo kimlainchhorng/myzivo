@@ -209,7 +209,7 @@ function ParticipantTile({ participant, isVideo }: { participant: Participant; i
       </div>
       {participant.isSpeaking && (
         <motion.div
-          className="absolute inset-0 border-2 border-green-500/30 rounded-xl"
+          className="absolute inset-0 border-2 border-primary/30 rounded-xl"
           animate={{ opacity: [0.3, 0.8, 0.3] }}
           transition={{ repeat: Infinity, duration: 1 }}
         />

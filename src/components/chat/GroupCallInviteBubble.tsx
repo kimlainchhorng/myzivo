@@ -54,8 +54,8 @@ export default function GroupCallInviteBubble({
               <>
                 <span className="text-[11px] text-muted-foreground">·</span>
                 <span className="flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-[11px] text-green-600 font-medium">Live</span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                  <span className="text-[11px] text-primary font-medium">Live</span>
                 </span>
               </>
             )}
