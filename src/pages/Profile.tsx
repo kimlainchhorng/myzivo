@@ -411,32 +411,6 @@ const Profile = () => {
         <div className="px-4 pt-4 max-w-lg mx-auto">
 
           {/* ── Header with 3D parallax ── */}
-          <motion.div style={{ y: headerY, scale: headerScale }} className="flex items-start justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <motion.div whileHover={{ scale: 1.1, rotateY: 10 }} whileTap={{ scale: 0.9 }}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate(-1)}
-                  className="rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 shadow-lg shadow-primary/[0.05] hover:bg-card/80 -ml-2 touch-manipulation active:scale-95"
-                  aria-label="Go back"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </motion.div>
-              <div>
-                <h1 className="font-display text-xl font-bold">{t("profile.title")}</h1>
-                <p className="text-muted-foreground text-xs">{t("profile.subtitle")}</p>
-              </div>
-            </div>
-            {isAdmin && (
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="outline" size="sm" onClick={() => navigate("/admin/analytics")} className="gap-2 rounded-2xl backdrop-blur-xl bg-card/60 border-border/30 shadow-lg">
-                  <Shield className="h-4 w-4" /> Admin Dashboard
-                </Button>
-              </motion.div>
-            )}
-          </motion.div>
 
           {/* ── Language Selector & Notifications (compact pills) ── */}
           <ParallaxSection index={0}>
