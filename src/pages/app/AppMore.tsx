@@ -37,7 +37,7 @@ const quickLinks = [
 
 const AppMore = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
 
