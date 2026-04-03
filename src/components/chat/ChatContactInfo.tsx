@@ -394,7 +394,10 @@ export default function ChatContactInfo({
             <SectionButton icon={Palette} label="Theme & Wallpaper" chevron onClick={onOpenPersonalization} />
             <SectionButton icon={Zap} label="Mini Apps" chevron onClick={onOpenMiniApps} />
             <SectionButton icon={History} label="Call History" chevron onClick={onOpenCallHistory} />
+            <SectionButton icon={FileText} label="Export Chat" chevron onClick={() => setShowExport(true)} />
           </Section>
+
+          <ChatBackupExport open={showExport} onClose={() => setShowExport(false)} recipientId={recipientId} recipientName={recipientName} />
 
           <div className="h-[6px] bg-muted/30" />
 
