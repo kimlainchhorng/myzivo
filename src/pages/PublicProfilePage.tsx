@@ -17,12 +17,14 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import CommentsSheet from "@/components/social/CommentsSheet";
 import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolveSharedOrigins";
+import { toUserPostInteractionId } from "@/lib/social/postInteraction";
 
 type PostTab = "all" | "photos" | "videos";
 
@@ -34,6 +36,7 @@ export default function PublicProfilePage() {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [confirmAction, setConfirmAction] = useState<null | { action: "cancel" | "unfriend"; label: string }>(null);
   const [postTab, setPostTab] = useState<PostTab>("all");
+  const [commentPost, setCommentPost] = useState<any>(null);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
 
@@ -211,13 +214,87 @@ export default function PublicProfilePage() {
     });
   };
 
-  const handleBookmark = (postId: string) => {
+  useEffect(() => {
+    let alive = true;
+
+    const loadBookmarkedPosts = async () => {
+      if (!user?.id) {
+        if (alive) setBookmarkedPosts(new Set());
+        return;
+      }
+
+      const interactionIds = posts.map((post: any) => toUserPostInteractionId(post.id));
+      if (!interactionIds.length) {
+        if (alive) setBookmarkedPosts(new Set());
+        return;
+      }
+
+      const { data } = await (supabase as any)
+        .from("bookmarks")
+        .select("item_id")
+        .eq("user_id", user.id)
+        .eq("item_type", "post")
+        .in("item_id", interactionIds);
+
+      if (!alive) return;
+      setBookmarkedPosts(new Set((data ?? []).map((row: any) => row.item_id)));
+    };
+
+    void loadBookmarkedPosts();
+
+    return () => {
+      alive = false;
+    };
+  }, [posts, user?.id]);
+
+  const handleBookmark = async (post: any) => {
+    if (!user?.id) {
+      toast.error("Please sign in to bookmark posts");
+      return;
+    }
+
+    const interactionId = toUserPostInteractionId(post.id);
+    const wasBookmarked = bookmarkedPosts.has(interactionId);
+
     setBookmarkedPosts((prev) => {
       const next = new Set(prev);
-      if (next.has(postId)) { next.delete(postId); toast.success("Removed from bookmarks"); }
-      else { next.add(postId); toast.success("Saved to bookmarks"); }
+      if (wasBookmarked) next.delete(interactionId);
+      else next.add(interactionId);
       return next;
     });
+
+    try {
+      if (wasBookmarked) {
+        const { error } = await (supabase as any)
+          .from("bookmarks")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("item_type", "post")
+          .eq("item_id", interactionId);
+
+        if (error) throw error;
+        toast.success("Removed from bookmarks");
+      } else {
+        const { error } = await (supabase as any).from("bookmarks").insert({
+          user_id: user.id,
+          item_id: interactionId,
+          item_type: "post",
+          title: post.caption || `Post by ${profile?.full_name || "User"}`,
+          collection_name: "Posts",
+        });
+
+        if (error) throw error;
+        toast.success("Saved to bookmarks");
+      }
+    } catch (error: any) {
+      setBookmarkedPosts((prev) => {
+        const next = new Set(prev);
+        if (wasBookmarked) next.add(interactionId);
+        else next.delete(interactionId);
+        return next;
+      });
+      toast.error(error?.message || "Bookmark failed");
+    }
   };
 
   // Filter posts
@@ -512,15 +589,15 @@ export default function PublicProfilePage() {
                           <button onClick={() => handleLike(post.id)} className="touch-manipulation active:scale-90 transition-transform">
                             <Heart className={`h-[22px] w-[22px] ${likedPosts.has(post.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} strokeWidth={1.5} />
                           </button>
-                          <button className="touch-manipulation active:scale-90 transition-transform">
+                          <button onClick={() => setCommentPost(post)} className="touch-manipulation active:scale-90 transition-transform">
                             <MessageCircle className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
                           </button>
                           <button onClick={handleShare} className="touch-manipulation active:scale-90 transition-transform">
                             <Share2 className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
                           </button>
                         </div>
-                        <button onClick={() => handleBookmark(post.id)} className="touch-manipulation active:scale-90 transition-transform">
-                          <Bookmark className={`h-[22px] w-[22px] ${bookmarkedPosts.has(post.id) ? "fill-foreground text-foreground" : "text-foreground"}`} strokeWidth={1.5} />
+                        <button onClick={() => void handleBookmark(post)} className="touch-manipulation active:scale-90 transition-transform">
+                          <Bookmark className={`h-[22px] w-[22px] ${bookmarkedPosts.has(toUserPostInteractionId(post.id)) ? "fill-foreground text-foreground" : "text-foreground"}`} strokeWidth={1.5} />
                         </button>
                       </div>
 
@@ -575,6 +652,15 @@ export default function PublicProfilePage() {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              <CommentsSheet
+                open={!!commentPost}
+                onClose={() => setCommentPost(null)}
+                postId={commentPost ? toUserPostInteractionId(commentPost.id) : ""}
+                postSource="user"
+                currentUserId={user?.id ?? null}
+                commentsCount={commentPost?.comments_count ?? 0}
+              />
             </>
           )}
         </>
