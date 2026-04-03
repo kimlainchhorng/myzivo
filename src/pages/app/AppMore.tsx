@@ -40,7 +40,36 @@ const AppMore = () => {
 
   return (
     <AppLayout title="More" hideHeader>
-      <div className="flex flex-col justify-center px-5 py-8 min-h-[70dvh]">
+      <div className="flex flex-col px-5 py-6 min-h-[70dvh]">
+        {/* Account Card */}
+        {user && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-5 p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 flex items-center gap-3"
+          >
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/25 to-primary/10 flex items-center justify-center shadow-inner overflow-hidden">
+              {user.user_metadata?.avatar_url ? (
+                <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+              ) : (
+                <span className="text-primary font-bold text-lg">
+                  {(user.email?.[0] || "Z").toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm truncate">{user.user_metadata?.full_name || user.email?.split("@")[0]}</p>
+              <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+            </div>
+            <button
+              onClick={() => navigate("/profile")}
+              className="px-3.5 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-bold touch-manipulation active:scale-95 transition-transform"
+            >
+              Edit
+            </button>
+          </motion.div>
+        )}
+
         <h2 className="font-bold text-lg mb-4">Quick Access</h2>
 
         <div className="grid grid-cols-2 gap-3">
