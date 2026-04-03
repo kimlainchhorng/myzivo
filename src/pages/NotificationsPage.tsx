@@ -493,8 +493,37 @@ const NotificationsPage = () => {
             </>
           )}
 
+          {/* Social Notifications (likes, comments, shares, follows) */}
+          {(activeTab === 'all' || activeTab === 'social') && socialNotifs.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              {activeTab === 'social' && (
+                <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2">
+                  <Heart className="w-3.5 h-3.5 text-red-500" />
+                  Activity
+                </p>
+              )}
+              <div className="space-y-2">
+                {socialNotifs.map((sn, i) => (
+                  <SocialNotifItem
+                    key={sn.id}
+                    notif={sn}
+                    index={i}
+                    onClick={() => {
+                      if (!sn.is_read) markSocialRead([sn.id]);
+                      if (sn.entity_type === 'post' && sn.entity_id) navigate(`/reels`);
+                    }}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* Social tab empty state */}
-          {activeTab === 'social' && friendRequests.length === 0 && !loadingFR && (
+          {activeTab === 'social' && friendRequests.length === 0 && socialNotifs.length === 0 && !loadingFR && (
             <motion.div
               initial={{ opacity: 0, y: 30, rotateX: 8 }}
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
@@ -504,9 +533,9 @@ const NotificationsPage = () => {
               <GlassCard3D className="shadow-xl">
                 <div className="p-10 text-center">
                   {getEmptyIcon('social')}
-                  <h3 className="font-bold text-base mb-1">No requests</h3>
+                  <h3 className="font-bold text-base mb-1">No activity yet</h3>
                   <p className="text-muted-foreground text-sm max-w-[250px] mx-auto">
-                    {getEmptyMessage('social')}
+                    When people like, comment, or share your posts, you'll see it here.
                   </p>
                 </div>
               </GlassCard3D>
