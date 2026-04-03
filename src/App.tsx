@@ -483,7 +483,7 @@ const App = () => (
                 <Route path="/content-analytics" element={<ProtectedRoute><ContentAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/dating" element={<ProtectedRoute><DatingPage /></ProtectedRoute>} />
                 <Route path="/spaces" element={<AudioSpacesPage />} />
-                <Route path="/search" element={<SmartSearchPage />} />
+                <Route path="/smart-search" element={<SmartSearchPage />} />
                 <Route path="/notification-center" element={<ProtectedRoute><NotificationCenterPage /></ProtectedRoute>} />
                 <Route path="/activity" element={<ProtectedRoute><ActivityFeedPage /></ProtectedRoute>} />
                 <Route path="/admin/moderation" element={<ProtectedRoute><AdminModerationPage /></ProtectedRoute>} />
