@@ -1,18 +1,22 @@
 
-## Phase 13-16 ✅ (Live Streaming, AI, Notifications, Admin)
-## Phase 17-20 ✅ (Content Creation, Payments, Gamification, Settings)
+## Create Post Modal — Improvement Plan
 
-## Phase 21: Collaboration & Co-creation ✅
-- **Watch Party** — Synchronized video watching room with chat at /watch-party
-- **Whiteboard** — Real-time drawing canvas with pen, eraser, colors at /whiteboard
+### 🐛 Fixes
+1. **Only first file uploads** — Currently `handlePost` only uploads `files[0]`, ignoring carousel files 2-10
+2. **Album uses `prompt()`** — Replace browser `prompt()` with inline album input (bad UX)
+3. **Tag search from button doesn't work properly** — The tag button opens search but uses caption-based matching instead of standalone search
 
-## Phase 22: Social Sharing & Link Hub ✅
-- **QR Profile** — Generate & scan QR codes for profile sharing at /qr-profile
-- **Link-in-Bio** — Customizable link page builder with analytics at /link-hub
+### 🎨 UI/Design (Facebook-style polish)
+4. **Larger caption area** — Make textarea auto-grow instead of fixed 3 rows
+5. **Better media toolbar** — Align icons evenly across bottom with labels, matching Facebook's grid style
+6. **Character counter** — Show remaining chars near caption (2200 max)
+7. **Polished visibility selector** — Better dropdown animation and styling
 
-## Phase 23: Location & Discovery ✅
-- **Nearby** — Discover nearby users, posts, deals on a map at /nearby
-- **Check-in** — Location check-in with friends tagging at /check-in
+### ✨ New Features
+8. **Multi-file upload support** — Actually upload all files and store as carousel
+9. **Draft save** — Auto-save draft to localStorage so content isn't lost on accidental close
+10. **Emoji picker button** — Quick emoji insertion in caption
+11. **Post scheduling** — Option to schedule post for later
 
-## Phase 24: Safety & Wellbeing ✅
-- **Safety Center** — Content filters, screen time, parental controls, restricted mode at /safety
+### Which items would you like me to implement?
+I recommend starting with the **bug fixes (#1-3)** and **UI polish (#4-7)** as priority.
