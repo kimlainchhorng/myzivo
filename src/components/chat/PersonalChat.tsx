@@ -849,11 +849,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   toast.success(disappearingMode ? "Disappearing messages OFF" : "Disappearing messages ON — messages auto-delete after 24h");
                 }}
                 disappearingEnabled={disappearingMode}
+                onLockedImageSelect={() => lockedImageInputRef.current?.click()}
               />
             </div>
 
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
             <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
+            <input ref={lockedImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleLockedImageSelect} />
 
             {/* Document upload */}
             <ChatMediaUploader
