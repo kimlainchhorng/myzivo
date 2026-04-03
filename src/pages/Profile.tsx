@@ -455,18 +455,16 @@ const Profile = () => {
 
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => { setShowQuickAccess((v) => !v); setShowNotifPanel(false); }}
+                onClick={() => navigate("/more")}
                 className={cn(
                   "relative z-20 flex min-h-[36px] items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-xl border text-[11px] font-bold shadow-lg touch-manipulation transition-all",
-                  showQuickAccess
-                    ? "bg-primary text-primary-foreground border-primary/40 shadow-primary/20"
-                    : "bg-card/70 border-border/30 shadow-primary/[0.05] hover:bg-card/90"
+                  "bg-card/70 border-border/30 shadow-primary/[0.05] hover:bg-card/90"
                 )}
                 style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
               >
-                <MoreHorizontal className={cn("w-3.5 h-3.5", showQuickAccess ? "text-primary-foreground" : "text-muted-foreground")} />
+                <MoreHorizontal className={cn("w-3.5 h-3.5", "text-muted-foreground")} />
                 <span>More</span>
-                <ChevronDown className={cn("w-3 h-3 transition-transform duration-300", showQuickAccess ? "rotate-180 text-primary-foreground/70" : "text-muted-foreground")} />
+                <ChevronRight className={cn("w-3 h-3 text-muted-foreground")} />
               </motion.button>
             </div>
 
