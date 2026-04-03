@@ -29,6 +29,8 @@ import CallHistoryPage from "./CallHistoryPage";
 import { ChatMediaUploader } from "./ChatMediaUploader";
 import CallEventBubble from "./CallEventBubble";
 import ChatContactInfo from "./ChatContactInfo";
+import MessageScheduler from "./MessageScheduler";
+import PinnedMessagesPanel from "./PinnedMessagesPanel";
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
@@ -108,6 +110,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showSecurity, setShowSecurity] = useState(false);
   const [showCallHistory, setShowCallHistory] = useState(false);
   const [showContactInfo, setShowContactInfo] = useState(false);
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [showPinnedPanel, setShowPinnedPanel] = useState(false);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -499,6 +503,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 <Zap className="w-[18px] h-[18px] text-muted-foreground" /> Mini Apps
               </DropdownMenuItem>
               <DropdownMenuSeparator className="my-1.5 bg-border/15" />
+              <DropdownMenuItem onClick={() => setShowPinnedPanel(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <Pin className="w-[18px] h-[18px] text-muted-foreground" /> Pinned Messages
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowPersonalization(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <Palette className="w-[18px] h-[18px] text-muted-foreground" /> Theme
               </DropdownMenuItem>
@@ -516,7 +523,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         {/* Pinned messages bar */}
         {pinnedMessages.length > 0 && (
           <button
-            onClick={() => scrollToMessage(pinnedMessages[pinnedMessages.length - 1].id)}
+            onClick={() => setShowPinnedPanel(true)}
             className="w-full px-4 py-1.5 bg-primary/5 border-t border-primary/10 flex items-center gap-2 text-left"
           >
             <Pin className="w-3 h-3 text-primary shrink-0" />
@@ -845,8 +852,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             {input.trim() ? (
               <button
                 onClick={() => handleSend()}
+                onContextMenu={(e) => { e.preventDefault(); setShowScheduler(true); }}
                 disabled={sending}
                 className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
+                title="Long press to schedule"
               >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
               </button>
@@ -957,6 +966,45 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           />
         )}
       </AnimatePresence>
+
+      {/* Message Scheduler */}
+      <MessageScheduler
+        open={showScheduler}
+        onClose={() => setShowScheduler(false)}
+        message={input}
+        onSchedule={async (scheduledAt) => {
+          if (!user?.id || !input.trim()) return;
+          try {
+            await (supabase as any).from("scheduled_messages").insert({
+              sender_id: user.id,
+              receiver_id: recipientId,
+              message: input.trim(),
+              scheduled_at: scheduledAt.toISOString(),
+            });
+            setInput("");
+            clearDraft();
+            setShowScheduler(false);
+            toast.success(`Message scheduled for ${format(scheduledAt, "MMM d, h:mm a")}`);
+          } catch {
+            toast.error("Failed to schedule message");
+          }
+        }}
+      />
+
+      {/* Pinned Messages Panel */}
+      <PinnedMessagesPanel
+        open={showPinnedPanel}
+        onClose={() => setShowPinnedPanel(false)}
+        messages={pinnedMessages.map(m => ({
+          id: m.id,
+          message: m.message,
+          sender_name: m.sender_id === user?.id ? "You" : recipientName,
+          time: formatMsgTime(m.created_at),
+          isMe: m.sender_id === user?.id,
+        }))}
+        onJumpToMessage={scrollToMessage}
+        onUnpin={(id) => handlePin(id, false)}
+      />
     </motion.div>
   );
 }
