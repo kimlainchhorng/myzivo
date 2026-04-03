@@ -37,6 +37,7 @@ interface ChatContactInfoProps {
   recipientName: string;
   recipientAvatar?: string | null;
   isOnline?: boolean;
+  lastSeen?: string | null;
   onClose: () => void;
   onStartCall?: (type: "voice" | "video") => void;
   onOpenMediaGallery?: () => void;
