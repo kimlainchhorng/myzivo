@@ -24,9 +24,9 @@ export default function AccountAnalyticsPage() {
     queryFn: async () => {
       if (!user) return null;
       const [{ count: followers }, { count: following }, { count: posts }] = await Promise.all([
-        supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", user.id),
-        supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", user.id),
-        supabase.from("user_posts" as any).select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        (supabase as any).from("follows").select("*", { count: "exact", head: true }).eq("following_id", user.id),
+        (supabase as any).from("follows").select("*", { count: "exact", head: true }).eq("follower_id", user.id),
+        (supabase as any).from("user_posts").select("*", { count: "exact", head: true }).eq("user_id", user.id),
       ]);
       return {
         followers: followers || 0,
