@@ -70,6 +70,7 @@ const TABS: { id: TabFilter; label: string; icon: typeof Grid3X3 }[] = [
 
 export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const profileOwnerId = userId || user?.id;
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [showComposer, setShowComposer] = useState(false);
