@@ -77,6 +77,7 @@ export default function ChatContactInfo({
 }: ChatContactInfoProps) {
   const [muteNotifs, setMuteNotifs] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showExport, setShowExport] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
