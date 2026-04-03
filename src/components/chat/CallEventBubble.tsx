@@ -92,7 +92,7 @@ export default function CallEventBubble({
   };
 
   return (
-    <div className="flex justify-end my-1 relative">
+    <div ref={bubbleRef} className="flex justify-end my-1 relative">
       <div
         onClick={handleClick}
         onPointerDown={handlePointerDown}
