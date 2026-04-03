@@ -172,23 +172,29 @@ export default function ChatMessageBubble({
             onClick={(e) => { e.stopPropagation(); if (!didLongPress.current) setShowVideoPlayer(true); }}
             className={`overflow-hidden mb-1 relative cursor-pointer w-[180px] ${isMe ? "ml-auto" : ""}`}
           >
-            {/* Video container with rounded corners */}
-            <div className={`rounded-2xl overflow-hidden relative ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
+            <div className={`rounded-2xl overflow-hidden relative bg-muted ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
+              {/* Use video with #t=0.1 to force first frame thumbnail */}
               <video
-                src={videoUrl}
+                src={`${videoUrl}#t=0.1`}
                 className="w-full aspect-[4/5] object-cover"
                 playsInline
-                preload="metadata"
+                preload="auto"
                 muted
+                crossOrigin="anonymous"
                 style={{ pointerEvents: "none" }}
+                onLoadedData={(e) => {
+                  // Seek to 0.1s to ensure a frame is rendered as thumbnail
+                  const v = e.currentTarget;
+                  if (v.readyState >= 2) v.currentTime = 0.1;
+                }}
               />
-              {/* Dark gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-black/10" />
+              {/* Subtle gradient overlay for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
               
               {/* Centered play icon */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-9 w-9 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                  <Play className="h-4 w-4 text-foreground ml-0.5" fill="currentColor" />
+                <div className="h-10 w-10 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                  <Play className="h-4.5 w-4.5 text-foreground ml-0.5" fill="currentColor" />
                 </div>
               </div>
 
