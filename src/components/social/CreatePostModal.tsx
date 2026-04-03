@@ -1,12 +1,13 @@
 /**
  * CreatePostModal — Facebook-style "Create Post" modal
- * Extracted as a shared component for use in Feed and Profile pages
+ * Shared component for Feed and Profile pages
  */
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X as XIcon, Globe, Users, Lock, FolderPlus, MapPin, Hash,
   ChevronDown, Image as ImageIcon, Play, Film, Radio, Plus, Search, Share2, Loader2,
+  Smile,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -25,6 +26,28 @@ interface CreatePostModalProps {
   sharedPostAuthorName?: string;
 }
 
+const FILTERS = [
+  { name: "Original", css: "none" },
+  { name: "Vivid", css: "saturate(1.75) contrast(1.08)" },
+  { name: "Warm", css: "sepia(0.3) saturate(1.35) brightness(1.04)" },
+  { name: "Cool", css: "saturate(0.85) hue-rotate(18deg) brightness(1.06)" },
+  { name: "B&W", css: "grayscale(1) contrast(1.2)" },
+  { name: "Vintage", css: "sepia(0.28) saturate(1.08) contrast(0.94) brightness(1.08)" },
+  { name: "Dreamy", css: "brightness(1.15) saturate(0.72) contrast(0.84)" },
+  { name: "Noir", css: "grayscale(0.9) contrast(1.35) brightness(0.88)" },
+];
+
+const LOCATIONS = [
+  "New York, NY", "Los Angeles, CA", "Chicago, IL", "Miami, FL",
+  "San Francisco, CA", "Las Vegas, NV", "Seattle, WA", "Austin, TX",
+  "Denver, CO", "Nashville, TN", "Portland, OR", "Boston, MA",
+  "Phnom Penh, Cambodia", "Siem Reap, Cambodia", "Battambang, Cambodia",
+];
+
+const QUICK_EMOJIS = ["😀", "❤️", "🔥", "👏", "😂", "😍", "🎉", "💯", "🤩", "😎", "✨", "🙏"];
+
+const DRAFT_KEY = "zivo-post-draft";
+
 export default function CreatePostModal({
   userId,
   userProfile,
@@ -37,7 +60,19 @@ export default function CreatePostModal({
   sharedPostAuthorId,
   sharedPostAuthorName,
 }: CreatePostModalProps) {
-  const [caption, setCaption] = useState(initialCaption || "");
+  // Load draft from localStorage
+  const loadDraft = () => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved && !initialCaption && !sharedMediaUrl) {
+        const draft = JSON.parse(saved);
+        return draft.caption || "";
+      }
+    } catch {}
+    return initialCaption || "";
+  };
+
+  const [caption, setCaption] = useState(loadDraft);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>(sharedMediaUrl ? [sharedMediaUrl] : []);
   const [mediaType, setMediaType] = useState<"image" | "video">(sharedMediaType || "image");
@@ -45,6 +80,8 @@ export default function CreatePostModal({
   const [visibility, setVisibility] = useState<"everyone" | "friends" | "onlyme">("everyone");
   const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
   const [album, setAlbum] = useState<string | null>(null);
+  const [showAlbumInput, setShowAlbumInput] = useState(false);
+  const [albumInput, setAlbumInput] = useState("");
   const [uploading, setUploading] = useState(false);
   const [currentPreview, setCurrentPreview] = useState(0);
   const [location, setLocation] = useState<string | null>(null);
@@ -56,28 +93,45 @@ export default function CreatePostModal({
   const [tagResults, setTagResults] = useState<any[]>([]);
   const [tagSearching, setTagSearching] = useState(false);
   const [activeFilter, setActiveFilter] = useState(0);
+  const [showEmojis, setShowEmojis] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const captionRef = useRef<HTMLTextAreaElement>(null);
   const tagTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const albumInputRef = useRef<HTMLInputElement>(null);
 
-  const FILTERS = [
-    { name: "Original", css: "none" },
-    { name: "Vivid", css: "saturate(1.75) contrast(1.08)" },
-    { name: "Warm", css: "sepia(0.3) saturate(1.35) brightness(1.04)" },
-    { name: "Cool", css: "saturate(0.85) hue-rotate(18deg) brightness(1.06)" },
-    { name: "B&W", css: "grayscale(1) contrast(1.2)" },
-    { name: "Vintage", css: "sepia(0.28) saturate(1.08) contrast(0.94) brightness(1.08)" },
-    { name: "Dreamy", css: "brightness(1.15) saturate(0.72) contrast(0.84)" },
-    { name: "Noir", css: "grayscale(0.9) contrast(1.35) brightness(0.88)" },
-  ];
-
-  const LOCATIONS = [
-    "New York, NY", "Los Angeles, CA", "Chicago, IL", "Miami, FL",
-    "San Francisco, CA", "Las Vegas, NV", "Seattle, WA", "Austin, TX",
-    "Denver, CO", "Nashville, TN", "Portland, OR", "Boston, MA",
-  ];
   const filteredLocations = locationQuery
     ? LOCATIONS.filter((l) => l.toLowerCase().includes(locationQuery.toLowerCase()))
     : LOCATIONS;
+
+  // Auto-save draft
+  useEffect(() => {
+    if (!sharedMediaUrl && !initialCaption) {
+      const timer = setTimeout(() => {
+        if (caption.trim()) {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({ caption, timestamp: Date.now() }));
+        } else {
+          localStorage.removeItem(DRAFT_KEY);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [caption, sharedMediaUrl, initialCaption]);
+
+  // Auto-resize textarea
+  const autoResize = useCallback(() => {
+    const el = captionRef.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 200) + "px";
+    }
+  }, []);
+
+  useEffect(() => { autoResize(); }, [caption, autoResize]);
+
+  // Focus album input when shown
+  useEffect(() => {
+    if (showAlbumInput) albumInputRef.current?.focus();
+  }, [showAlbumInput]);
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []);
@@ -122,7 +176,7 @@ export default function CreatePostModal({
     if (lastWord.startsWith("@") && lastWord.length > 1) {
       handleTagSearch(lastWord.slice(1));
       setShowTagSearch(true);
-    } else {
+    } else if (showTagSearch && !tagQuery) {
       setShowTagSearch(false);
     }
   };
@@ -137,6 +191,11 @@ export default function CreatePostModal({
     }
   };
 
+  const insertEmoji = (emoji: string) => {
+    setCaption((prev) => prev + emoji);
+    captionRef.current?.focus();
+  };
+
   const hasSharedLink = !!initialCaption || !!sharedMediaUrl;
 
   const handlePost = async () => {
@@ -149,16 +208,21 @@ export default function CreatePostModal({
       let mediaUrl: string | null = null;
       let finalMediaType = mediaType;
 
+      // Upload all files (first one is primary media_url)
       if (files.length > 0) {
-        const file = files[0];
-        const ext = file.name.split(".").pop() || "jpg";
-        const path = `${userId}/${Date.now()}.${ext}`;
-        const { error: uploadErr } = await supabase.storage
-          .from("user-posts")
-          .upload(path, file, { contentType: file.type });
-        if (uploadErr) throw uploadErr;
-        const { data: urlData } = supabase.storage.from("user-posts").getPublicUrl(path);
-        mediaUrl = urlData.publicUrl;
+        const uploadedUrls: string[] = [];
+        for (const file of files) {
+          const ext = file.name.split(".").pop() || "jpg";
+          const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+          const { error: uploadErr } = await supabase.storage
+            .from("user-posts")
+            .upload(path, file, { contentType: file.type });
+          if (uploadErr) throw uploadErr;
+          const { data: urlData } = supabase.storage.from("user-posts").getPublicUrl(path);
+          uploadedUrls.push(urlData.publicUrl);
+        }
+        mediaUrl = uploadedUrls[0];
+        if (files[0].type.startsWith("video")) finalMediaType = "video";
       } else if (sharedMediaUrl) {
         mediaUrl = sharedMediaUrl;
         finalMediaType = sharedMediaType || "image";
@@ -181,6 +245,9 @@ export default function CreatePostModal({
       const { error: insertErr } = await (supabase as any).from("user_posts").insert(insertData);
       if (insertErr) throw insertErr;
 
+      // Clear draft on successful post
+      localStorage.removeItem(DRAFT_KEY);
+
       toast.success("Post shared! 🎉");
       onCreated();
     } catch (err: any) {
@@ -190,6 +257,9 @@ export default function CreatePostModal({
       setUploading(false);
     }
   };
+
+  const charCount = caption.length;
+  const charLimit = 2200;
 
   return (
     <motion.div
@@ -206,8 +276,8 @@ export default function CreatePostModal({
         className="w-full max-w-lg bg-card rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-auto pb-20 z-[60]"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
-          <button onClick={onClose} className="text-muted-foreground">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 sticky top-0 bg-card z-10 rounded-t-3xl">
+          <button onClick={onClose} className="text-muted-foreground active:scale-90 transition-transform">
             <XIcon className="h-5 w-5" />
           </button>
           <h2 className="text-sm font-bold text-foreground">Create Post</h2>
@@ -217,7 +287,7 @@ export default function CreatePostModal({
             className={cn(
               "px-4 py-1.5 rounded-full text-xs font-bold transition-all",
               (files.length > 0 || caption.trim() || hasSharedLink) && !uploading
-                ? "bg-primary text-primary-foreground"
+                ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-muted text-muted-foreground"
             )}
           >
@@ -227,7 +297,7 @@ export default function CreatePostModal({
 
         {/* Author */}
         <div className="flex items-center gap-3 px-4 py-3">
-          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border border-border/30">
+          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
             {userProfile?.avatar ? (
               <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -236,11 +306,11 @@ export default function CreatePostModal({
               </div>
             )}
           </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">{userProfile?.name || "You"}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">{userProfile?.name || "You"}</p>
             {location && (
               <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                <MapPin className="h-2.5 w-2.5" /> {location}
+                <MapPin className="h-2.5 w-2.5 shrink-0" /> {location}
               </p>
             )}
           </div>
@@ -291,22 +361,68 @@ export default function CreatePostModal({
             </AnimatePresence>
           </div>
 
-          {/* Album button */}
-          <button
-            onClick={() => {
-              const name = prompt("Album name:");
-              if (name?.trim()) setAlbum(name.trim());
-            }}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
-              album
-                ? "bg-primary/10 text-primary border-primary/30"
-                : "bg-muted/40 text-muted-foreground border-border/30 hover:bg-muted/50"
-            )}
-          >
-            <FolderPlus className="h-3.5 w-3.5" />
-            {album || "Album"}
-          </button>
+          {/* Album button — inline input instead of prompt() */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                if (album) {
+                  setAlbum(null);
+                  setShowAlbumInput(false);
+                } else {
+                  setShowAlbumInput(!showAlbumInput);
+                }
+              }}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
+                album
+                  ? "bg-primary/10 text-primary border-primary/30"
+                  : "bg-muted/40 text-muted-foreground border-border/30 hover:bg-muted/50"
+              )}
+            >
+              <FolderPlus className="h-3.5 w-3.5" />
+              {album || "Album"}
+              {album && <XIcon className="h-3 w-3 ml-0.5" />}
+            </button>
+            <AnimatePresence>
+              {showAlbumInput && !album && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="absolute top-full left-0 mt-1 w-48 bg-card border border-border/40 rounded-xl shadow-lg z-10 p-2"
+                >
+                  <input
+                    ref={albumInputRef}
+                    type="text"
+                    placeholder="Album name..."
+                    value={albumInput}
+                    onChange={(e) => setAlbumInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && albumInput.trim()) {
+                        setAlbum(albumInput.trim());
+                        setShowAlbumInput(false);
+                        setAlbumInput("");
+                      }
+                    }}
+                    className="w-full bg-muted/30 rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/50 outline-none border border-border/20 focus:border-primary/40"
+                  />
+                  <button
+                    onClick={() => {
+                      if (albumInput.trim()) {
+                        setAlbum(albumInput.trim());
+                        setShowAlbumInput(false);
+                        setAlbumInput("");
+                      }
+                    }}
+                    disabled={!albumInput.trim()}
+                    className="mt-1.5 w-full py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium disabled:opacity-40"
+                  >
+                    Add
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Location tag */}
           <button
@@ -324,7 +440,7 @@ export default function CreatePostModal({
 
           {/* Tag people */}
           <button
-            onClick={() => { setShowTagSearch(true); setTagQuery(""); }}
+            onClick={() => { setShowTagSearch(true); setTagQuery(""); handleTagSearch(""); }}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
               taggedUsers.length > 0
@@ -381,6 +497,65 @@ export default function CreatePostModal({
           )}
         </AnimatePresence>
 
+        {/* Tag search panel (standalone, not caption-based) */}
+        <AnimatePresence>
+          {showTagSearch && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden mx-4 mb-2"
+            >
+              <div className="bg-muted/30 rounded-xl border border-border/20 p-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search people..."
+                    value={tagQuery}
+                    onChange={(e) => handleTagSearch(e.target.value)}
+                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none"
+                    autoFocus
+                  />
+                  <button onClick={() => setShowTagSearch(false)} className="text-xs text-muted-foreground">Done</button>
+                </div>
+                {tagSearching && <p className="text-xs text-muted-foreground py-2 text-center">Searching...</p>}
+                <div className="max-h-[140px] overflow-y-auto space-y-0.5">
+                  {tagResults.map((u: any) => {
+                    const isTagged = taggedUsers.some((t) => t.id === u.id);
+                    return (
+                      <button
+                        key={u.id}
+                        onClick={() => {
+                          if (isTagged) {
+                            setTaggedUsers((prev) => prev.filter((t) => t.id !== u.id));
+                          } else {
+                            setTaggedUsers((prev) => [...prev, { id: u.id, name: u.full_name }]);
+                          }
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors",
+                          isTagged ? "bg-primary/10" : "hover:bg-muted/50"
+                        )}
+                      >
+                        <div className="h-7 w-7 rounded-full bg-muted overflow-hidden shrink-0">
+                          {u.avatar_url ? <img src={u.avatar_url} className="h-full w-full object-cover" alt="" /> :
+                            <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-muted-foreground">{(u.full_name || "?")[0]}</div>}
+                        </div>
+                        <span className="text-xs font-medium text-foreground flex-1 text-left truncate">{u.full_name}</span>
+                        {isTagged && <span className="text-primary text-xs">✓</span>}
+                      </button>
+                    );
+                  })}
+                  {!tagSearching && tagQuery && tagResults.length === 0 && (
+                    <p className="text-xs text-muted-foreground py-2 text-center">No results</p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Tagged users */}
         {taggedUsers.length > 0 && (
           <div className="px-4 pb-2 flex flex-wrap gap-1.5">
@@ -398,15 +573,59 @@ export default function CreatePostModal({
         {/* Caption with @mention autocomplete */}
         <div className="px-4 relative">
           <textarea
+            ref={captionRef}
             placeholder="Write a caption... Use @ to tag people"
             value={caption}
             onChange={(e) => handleCaptionChange(e.target.value)}
-            maxLength={2200}
-            rows={3}
-            className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+            maxLength={charLimit}
+            rows={2}
+            className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none leading-relaxed"
+            style={{ minHeight: "48px" }}
           />
+
+          {/* Character counter & emoji toggle */}
+          <div className="flex items-center justify-between mt-1 mb-2">
+            <button
+              onClick={() => setShowEmojis(!showEmojis)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Smile className="h-5 w-5" />
+            </button>
+            <span className={cn(
+              "text-[10px] font-medium",
+              charCount > charLimit * 0.9 ? "text-destructive" : "text-muted-foreground/50"
+            )}>
+              {charCount}/{charLimit}
+            </span>
+          </div>
+
+          {/* Quick emoji row */}
           <AnimatePresence>
-            {showTagSearch && tagResults.length > 0 && (
+            {showEmojis && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden mb-2"
+              >
+                <div className="flex gap-1.5 flex-wrap">
+                  {QUICK_EMOJIS.map((e) => (
+                    <button
+                      key={e}
+                      onClick={() => insertEmoji(e)}
+                      className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-muted/50 text-lg transition-colors active:scale-90"
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* @mention autocomplete */}
+          <AnimatePresence>
+            {showTagSearch && tagResults.length > 0 && !showAlbumInput && (
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -475,7 +694,7 @@ export default function CreatePostModal({
             {files.length > 0 && (
               <button
                 onClick={() => removeMedia(currentPreview)}
-                className="absolute top-2 left-2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center"
+                className="absolute top-2 left-2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center active:scale-90 transition-transform"
               >
                 <XIcon className="h-4 w-4 text-white" />
               </button>
@@ -526,12 +745,12 @@ export default function CreatePostModal({
         )}
 
         {/* Media type selector — bottom toolbar */}
-        <div className="px-4 py-3 border-t border-border/30 flex items-center gap-3">
+        <div className="px-4 py-3 border-t border-border/30 grid grid-cols-4 gap-1">
           {[
-            { label: "Photo", icon: ImageIcon, accept: "image/*" },
-            { label: "Video", icon: Play, accept: "video/*" },
-            { label: "Reel", icon: Film, accept: "video/*" },
-            { label: "Live", icon: Radio, accept: "" },
+            { label: "Photo", icon: ImageIcon, accept: "image/*", color: "text-emerald-500" },
+            { label: "Video", icon: Play, accept: "video/*", color: "text-rose-500" },
+            { label: "Reel", icon: Film, accept: "video/*", color: "text-violet-500" },
+            { label: "Live", icon: Radio, accept: "", color: "text-amber-500" },
           ].map((opt) => (
             <button
               key={opt.label}
@@ -547,11 +766,11 @@ export default function CreatePostModal({
                   fileRef.current.click();
                 }
               }}
-              className="flex flex-col items-center gap-1 min-w-[48px] min-h-[48px] justify-center"
+              className="flex flex-col items-center gap-1.5 py-2 rounded-xl hover:bg-muted/30 transition-colors active:scale-95"
             >
               <opt.icon className={cn(
                 "h-5 w-5 transition-colors",
-                selectedType === opt.label ? "text-primary" : "text-muted-foreground"
+                selectedType === opt.label ? "text-primary" : opt.color
               )} />
               <span className={cn(
                 "text-[10px] font-medium transition-colors",
@@ -561,8 +780,11 @@ export default function CreatePostModal({
               </span>
             </button>
           ))}
+        </div>
 
-          {files.length > 0 && files.length < 10 && (
+        {/* Add more media button */}
+        {files.length > 0 && files.length < 10 && (
+          <div className="px-4 pb-2">
             <button
               onClick={() => {
                 if (fileRef.current) {
@@ -571,13 +793,13 @@ export default function CreatePostModal({
                   fileRef.current.click();
                 }
               }}
-              className="flex flex-col items-center gap-1 min-w-[48px] min-h-[48px] justify-center ml-auto"
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-border/40 text-xs text-primary font-medium hover:bg-primary/5 transition-colors"
             >
-              <Plus className="h-5 w-5 text-primary" />
-              <span className="text-[10px] font-medium text-primary">Add</span>
+              <Plus className="h-4 w-4" />
+              Add more ({files.length}/10)
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         <input
           ref={fileRef}
