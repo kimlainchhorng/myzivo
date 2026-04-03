@@ -23,15 +23,19 @@ const BENEFITS = [
   { icon: Zap, title: "Priority Delivery", desc: "Your orders are matched with drivers first for faster fulfillment." },
   { icon: Shield, title: "Extended Guarantee", desc: "48-hour freshness guarantee (vs. 24h for standard)." },
   { icon: Star, title: "Exclusive Deals", desc: "Members-only discounts and early access to seasonal promotions." },
-  { icon: Lock, title: "Lock & Unlock Media", desc: "Send locked photos & videos in chat — set your own price and earn when others unlock." },
+  { icon: Lock, title: "Lock & Unlock Media", desc: "Send locked photos & videos in chat — set your own price and earn when others unlock.", plan: "chat" },
+  { icon: Car, title: "Ride Discounts", desc: "10% off all ZIVO rides with priority pickup matching.", plan: "pro" },
+  { icon: Headphones, title: "VIP Support", desc: "24/7 dedicated support line with priority response times.", plan: "pro" },
+  { icon: Gift, title: "Monthly Perks", desc: "Free delivery credits, surprise rewards, and early feature access.", plan: "pro" },
 ];
 
-type PlanId = "monthly" | "chat" | "annual";
+type PlanId = "monthly" | "chat" | "pro" | "annual";
 
-const PLANS: { id: PlanId; name: string; price: string; period: string; savings: string | null; badge: string | null; highlight?: string }[] = [
-  { id: "monthly", name: "Monthly", price: "$9.99", period: "/month", savings: null, badge: null },
-  { id: "chat", name: "Chat+", price: "$15.99", period: "/month", savings: null, badge: "New", highlight: "Lock & Unlock media in chat" },
-  { id: "annual", name: "Annual", price: "$79.99", period: "/year", savings: "Save 33%", badge: "Best Value" },
+const PLANS: { id: PlanId; name: string; price: string; period: string; savings: string | null; badge: string | null; highlight?: string; desc?: string }[] = [
+  { id: "monthly", name: "Basic", price: "$9.99", period: "/mo", savings: null, badge: null, desc: "Essential perks" },
+  { id: "chat", name: "Chat+", price: "$15.99", period: "/mo", savings: null, badge: "Popular", highlight: "Lock & Unlock", desc: "Creator tools" },
+  { id: "pro", name: "Pro", price: "$29.99", period: "/mo", savings: null, badge: "Best", highlight: "All perks", desc: "Everything included" },
+  { id: "annual", name: "Annual", price: "$79.99", period: "/yr", savings: "Save 33%", badge: null, desc: "Basic plan, yearly" },
 ];
 
 /* ── Inline Legal Content ── */
