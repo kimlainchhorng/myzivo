@@ -768,7 +768,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       {/* Input area */}
       {!voice.isRecording && (
-        <div className="bg-background/95 backdrop-blur-sm border-t border-border/15 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+        <div className="bg-background border-t border-border/10 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
           <div className="flex items-end gap-1.5">
             {/* Attach */}
             <div className="relative shrink-0">
@@ -776,7 +776,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 onClick={() => setShowAttachMenu(!showAttachMenu)}
                 disabled={uploadingMedia}
                 className={`h-10 w-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
-                  showAttachMenu ? "bg-primary text-primary-foreground rotate-45" : "text-muted-foreground hover:bg-muted/60"
+                  showAttachMenu ? "bg-primary text-primary-foreground rotate-45" : "text-muted-foreground/60 hover:bg-muted/50"
                 }`}
               >
                 {uploadingMedia ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Plus className="h-5 w-5" />}
@@ -807,8 +807,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
               }}
               renderTrigger={(openFilePicker) => (
-                <button onClick={openFilePicker} className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground/70 hover:bg-muted/60 hover:text-muted-foreground active:scale-90 transition-all shrink-0">
-                  <FileText className="h-[17px] w-[17px]" />
+                <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0">
+                  <FileText className="h-[18px] w-[18px]" />
                 </button>
               )}
             />
@@ -821,38 +821,37 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 onChange={handleInputChange}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                 placeholder={disappearingMode ? "Disappearing message..." : "Message..."}
-                className={`w-full h-11 pl-4 pr-12 rounded-full border text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/20 transition-all shadow-sm ${
-                  disappearingMode ? "bg-amber-500/5 border-amber-500/20" : "bg-muted/30 border-border/15"
+                className={`w-full h-11 pl-4 pr-12 rounded-full border text-[14.5px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/15 transition-all ${
+                  disappearingMode ? "bg-amber-500/5 border-amber-500/15" : "bg-muted/25 border-border/10"
                 }`}
               />
-              {/* Inline icons inside input */}
-              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0">
+              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center">
                 <button
                   onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
                   className={`h-8 w-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                    showStickerKeyboard ? "text-primary bg-primary/10" : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/40"
+                    showStickerKeyboard ? "text-primary bg-primary/10" : "text-muted-foreground/40 hover:text-muted-foreground"
                   }`}
                 >
-                  <Smile className="h-[19px] w-[19px]" />
+                  <Smile className="h-5 w-5" />
                 </button>
               </div>
             </div>
 
-            {/* Send or Mic button — contextual */}
+            {/* Send or Mic */}
             {input.trim() ? (
               <button
                 onClick={() => handleSend()}
                 disabled={sending}
-                className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-md"
+                className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
               >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
               </button>
             ) : (
               <button
                 onClick={voice.startRecording}
-                className="h-11 w-11 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/15 active:scale-90 transition-all shrink-0 shadow-sm"
+                className="h-11 w-11 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/15 active:scale-90 transition-all shrink-0"
               >
-                <Mic className="h-[19px] w-[19px]" />
+                <Mic className="h-5 w-5" />
               </button>
             )}
           </div>
