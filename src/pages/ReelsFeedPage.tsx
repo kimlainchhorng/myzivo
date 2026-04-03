@@ -2144,6 +2144,17 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 {/* Owner-only: Delete post */}
                 {isOwner && (
                   <button
+                    onClick={() => { setShowPostMenu(false); setEditCaptionText(item.caption || ""); setShowEditCaption(true); }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                  >
+                    <Settings2 className="h-5 w-5 text-foreground" />
+                    <span className="text-sm font-medium text-foreground">Edit caption</span>
+                  </button>
+                )}
+
+                {/* Owner-only: Delete post */}
+                {isOwner && (
+                  <button
                     onClick={async () => {
                       setShowPostMenu(false);
                       const realId = item.id.replace(/^u-/, "");
@@ -2152,7 +2163,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                         toast.error("Failed to delete post");
                       } else {
                         toast.success("Post deleted");
-                        queryClient.invalidateQueries({ queryKey: ["reels-feed"] });
+                        queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
                       }
                     }}
                     className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
