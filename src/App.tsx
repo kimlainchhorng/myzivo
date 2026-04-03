@@ -781,6 +781,7 @@ const App = () => (
           {/* ScrollToTopButton removed */}
           {/* LiveChatWidget removed */}
           <SpatialCursor />
+          <AIChatbotWidget />
           <BrandThemeApplicator />
           <IncomingCallListener />
         </ZivoPlusProvider>
