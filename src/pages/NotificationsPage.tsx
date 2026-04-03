@@ -147,7 +147,7 @@ const SocialNotifItem = ({ notif, index, onClick }: { notif: SocialNotification;
   );
 };
 
-  const navigate = useNavigate();
+  const NotificationsPage = () => {
   const { t } = useI18n();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<NotificationCategory>('all');
