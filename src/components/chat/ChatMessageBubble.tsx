@@ -327,7 +327,181 @@ export default function ChatMessageBubble({
   );
 }
 
-function ActionBtn({ icon: Icon, label, onClick, destructive, active }: {
+/** Reel-style fullscreen video player */
+function ReelVideoPlayer({ videoUrl, onClose }: { videoUrl: string; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const hideControlsAfterDelay = useCallback(() => {
+    if (controlsTimer.current) clearTimeout(controlsTimer.current);
+    setShowControls(true);
+    controlsTimer.current = setTimeout(() => setShowControls(false), 3000);
+  }, []);
+
+  useEffect(() => {
+    hideControlsAfterDelay();
+    return () => { if (controlsTimer.current) clearTimeout(controlsTimer.current); };
+  }, [hideControlsAfterDelay]);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    hideControlsAfterDelay();
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setIsPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!videoRef.current) return;
+    videoRef.current.muted = !videoRef.current.muted;
+    setIsMuted(!isMuted);
+  };
+
+  const handleTimeUpdate = () => {
+    if (!videoRef.current) return;
+    setProgress((videoRef.current.currentTime / (videoRef.current.duration || 1)) * 100);
+  };
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (!videoRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    videoRef.current.currentTime = pct * videoRef.current.duration;
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-[9999] bg-black flex flex-col"
+      onClick={togglePlay}
+    >
+      {/* Video */}
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        className="w-full h-full object-contain"
+        autoPlay
+        playsInline
+        loop
+        onTimeUpdate={handleTimeUpdate}
+        onClick={(e) => e.stopPropagation()}
+      />
+
+      {/* Top bar */}
+      <motion.div
+        animate={{ opacity: showControls ? 1 : 0 }}
+        className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/60 to-transparent pt-[max(env(safe-area-inset-top),12px)] px-4 pb-8"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-white text-[15px] font-bold">Reels</span>
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.85 }}
+            onClick={(e) => { e.stopPropagation(); onClose(); }}
+            className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center"
+          >
+            <X className="w-5 h-5 text-white" />
+          </motion.button>
+        </div>
+      </motion.div>
+
+      {/* Center play/pause indicator */}
+      <AnimatePresence>
+        {!isPlaying && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 1.5, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+          >
+            <div className="w-20 h-20 rounded-full bg-black/40 flex items-center justify-center">
+              <Play className="w-10 h-10 text-white ml-1" fill="white" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Right-side action buttons (Reel-style) */}
+      <div className="absolute right-3 bottom-28 flex flex-col items-center gap-5 z-10">
+        <motion.button
+          whileTap={{ scale: 0.8 }}
+          onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
+          className="flex flex-col items-center gap-1"
+        >
+          <div className={`w-11 h-11 rounded-full flex items-center justify-center ${liked ? "bg-red-500/20" : "bg-white/10"}`}>
+            <Heart className={`w-6 h-6 ${liked ? "text-red-500 fill-red-500" : "text-white"}`} />
+          </div>
+          <span className="text-white text-[10px] font-semibold">Like</span>
+        </motion.button>
+
+        <motion.button
+          whileTap={{ scale: 0.8 }}
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          className="flex flex-col items-center gap-1"
+        >
+          <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
+            <MessageCircle className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-white text-[10px] font-semibold">Reply</span>
+        </motion.button>
+
+        <motion.button
+          whileTap={{ scale: 0.8 }}
+          onClick={(e) => { e.stopPropagation(); }}
+          className="flex flex-col items-center gap-1"
+        >
+          <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
+            <Share2 className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-white text-[10px] font-semibold">Share</span>
+        </motion.button>
+
+        <motion.button
+          whileTap={{ scale: 0.8 }}
+          onClick={toggleMute}
+          className="flex flex-col items-center gap-1"
+        >
+          <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
+            {isMuted ? <VolumeX className="w-6 h-6 text-white" /> : <Volume2 className="w-6 h-6 text-white" />}
+          </div>
+          <span className="text-white text-[10px] font-semibold">{isMuted ? "Unmute" : "Mute"}</span>
+        </motion.button>
+      </div>
+
+      {/* Bottom progress bar */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent pb-[max(env(safe-area-inset-bottom),8px)] px-4 pt-6">
+        <div
+          className="w-full h-1 rounded-full bg-white/20 cursor-pointer mb-3"
+          onClick={handleSeek}
+        >
+          <motion.div
+            className="h-full rounded-full bg-white"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+
   icon: any; label: string; onClick: () => void; destructive?: boolean; active?: boolean;
 }) {
   return (
