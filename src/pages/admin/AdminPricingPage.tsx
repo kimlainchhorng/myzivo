@@ -127,25 +127,78 @@ export default function AdminPricingPage() {
     },
   });
 
+  // All Cambodian cities (excluding Phnom Penh) that should sync
+  const CAMBODIA_OTHER_CITIES = COUNTRY_FILTERS[2].cities !== "all"
+    ? (COUNTRY_FILTERS[2].cities as string[]).filter((c) => c !== "Phnom Penh")
+    : [];
+
   const upsert = useMutation({
     mutationFn: async (values: typeof form & { id?: string }) => {
+      const now = new Date().toISOString();
       if (values.id) {
         const { error } = await supabase
           .from("city_pricing")
-          .update({ ...values, updated_at: new Date().toISOString() })
+          .update({ ...values, updated_at: now })
           .eq("id", values.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("city_pricing")
-          .insert({ ...values, updated_at: new Date().toISOString() });
+          .insert({ ...values, updated_at: now });
         if (error) throw error;
+      }
+
+      // Auto-sync: if this is a Phnom Penh row, propagate pricing to all other Cambodian cities
+      const isCambodiaCity = COUNTRY_FILTERS[2].cities !== "all" &&
+        (COUNTRY_FILTERS[2].cities as string[]).some((c) => c.toLowerCase() === values.city.toLowerCase());
+
+      if (values.city === "Phnom Penh" || isCambodiaCity) {
+        // Always sync from Phnom Penh pricing to all other cities for this ride_type
+        const pricingFields = {
+          base_fare: values.base_fare,
+          per_mile: values.per_mile,
+          per_minute: values.per_minute,
+          booking_fee: values.booking_fee,
+          minimum_fare: values.minimum_fare,
+          card_fee_pct: values.card_fee_pct,
+          is_active: values.is_active,
+        };
+
+        // Only sync to others if editing Phnom Penh
+        if (values.city === "Phnom Penh") {
+          for (const otherCity of CAMBODIA_OTHER_CITIES) {
+            // Check if row exists for this city + ride_type
+            const { data: existing } = await supabase
+              .from("city_pricing")
+              .select("id")
+              .eq("city", otherCity)
+              .eq("ride_type", values.ride_type)
+              .maybeSingle();
+
+            if (existing) {
+              await supabase
+                .from("city_pricing")
+                .update({ ...pricingFields, updated_at: now })
+                .eq("id", existing.id);
+            } else {
+              await supabase
+                .from("city_pricing")
+                .insert({
+                  city: otherCity,
+                  ride_type: values.ride_type,
+                  ...pricingFields,
+                  updated_at: now,
+                });
+            }
+          }
+        }
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-city-pricing"] });
       queryClient.invalidateQueries({ queryKey: ["city-pricing"] });
-      toast.success(editingId ? "Pricing updated" : "Pricing added");
+      const syncMsg = form.city === "Phnom Penh" ? " (synced to all Cambodia cities)" : "";
+      toast.success((editingId ? "Pricing updated" : "Pricing added") + syncMsg);
       closeDialog();
     },
     onError: (e) => toast.error(e.message),
@@ -248,11 +301,19 @@ export default function AdminPricingPage() {
                         onChange={(e) => setForm({ ...form, city: e.target.value })}
                       >
                         {(activeFilter.cities as string[]).map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c}>
+                            {c}{isCambodia && c === "Phnom Penh" ? " ★ Master" : ""}
+                          </option>
                         ))}
                       </select>
                     ) : (
                       <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="default" />
+                    )}
+                    {isCambodia && form.city === "Phnom Penh" && (
+                      <p className="text-xs text-amber-600 mt-1">⚡ Changes will auto-sync to all 25 other Cambodia cities</p>
+                    )}
+                    {isCambodia && form.city !== "Phnom Penh" && (
+                      <p className="text-xs text-muted-foreground mt-1">Pricing follows Phnom Penh. Edit Phnom Penh to change all.</p>
                     )}
                   </div>
                   <div>

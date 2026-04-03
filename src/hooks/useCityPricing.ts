@@ -89,13 +89,26 @@ export function useCityPricing(city?: string) {
       
       // Then override with city-specific if available
       if (city) {
+        // For Cambodia cities, first apply Phnom Penh as baseline, then city-specific overrides
+        const cityLower = city.toLowerCase();
+        const isKH = isCambodiaCity(city);
+        
+        if (isKH && cityLower !== "phnom penh") {
+          // Apply Phnom Penh baseline first
+          for (const row of rows) {
+            if (row.city?.toLowerCase() === "phnom penh") {
+              const vehicleId = DB_TO_VEHICLE_ID[row.ride_type];
+              if (vehicleId) pricingMap[vehicleId] = convertKhrToUsd(row);
+            }
+          }
+        }
+
+        // Then apply city-specific overrides (if any exist)
         for (const row of rows) {
-          if (row.city?.toLowerCase() === city.toLowerCase()) {
+          if (row.city?.toLowerCase() === cityLower) {
             const vehicleId = DB_TO_VEHICLE_ID[row.ride_type];
             if (!vehicleId) continue;
-            
-            // Cambodia cities store KHR values → convert to USD for fare engine
-            const converted = isCambodiaCity(row.city) ? convertKhrToUsd(row) : row;
+            const converted = isKH ? convertKhrToUsd(row) : row;
             pricingMap[vehicleId] = converted;
           }
         }
