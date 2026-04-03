@@ -116,7 +116,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const videoInputRef = useRef<HTMLInputElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  const { isTyping: recipientTyping, isOnline: recipientOnline, setTyping } = useChatPresence(user?.id, recipientId);
+  const { isTyping: recipientTyping, isOnline: recipientOnline, lastSeen: recipientLastSeen, setTyping } = useChatPresence(user?.id, recipientId);
   const voice = useVoiceRecorder();
   const { draft, updateDraft, clearDraft } = useChatDraft(user?.id, recipientId);
 
@@ -464,6 +464,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 <span className="text-emerald-500 font-medium">Online</span>
               ) : disappearingMode ? (
                 <span className="text-amber-500">⏱ Disappearing</span>
+              ) : recipientLastSeen ? (
+                <span className="text-muted-foreground">Last seen {recipientLastSeen}</span>
               ) : "Tap here for info"}
             </p>
           </div>
@@ -942,6 +944,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             recipientName={recipientName}
             recipientAvatar={recipientAvatar}
             isOnline={recipientOnline}
+            lastSeen={recipientLastSeen}
             onClose={() => setShowContactInfo(false)}
             onStartCall={(type) => { setShowContactInfo(false); void handleStartCall(type); }}
             onOpenMediaGallery={() => { setShowContactInfo(false); setShowMediaGallery(true); }}

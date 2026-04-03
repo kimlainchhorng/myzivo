@@ -203,7 +203,7 @@ export default function ChatHubPage() {
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, full_name, avatar_url")
+        .select("user_id, full_name, avatar_url, last_seen")
         .in("user_id", otherIds);
 
       const profileMap = new Map<string, any>();
@@ -214,6 +214,9 @@ export default function ChatHubPage() {
       return otherIds.map((otherId) => {
         const entry = grouped.get(otherId)!;
         const profile = profileMap.get(otherId);
+        // Consider online if last_seen within 2 minutes
+        const lastSeen = profile?.last_seen ? new Date(profile.last_seen) : null;
+        const isOnline = lastSeen ? (Date.now() - lastSeen.getTime()) < 2 * 60 * 1000 : false;
         return {
           id: otherId,
           name: profile?.full_name || "User",
@@ -221,6 +224,7 @@ export default function ChatHubPage() {
           lastMessage: entry.lastMsg.message || "📷 Image",
           lastTime: entry.lastMsg.created_at,
           unread: entry.unread,
+          isOnline,
         };
       });
     },
@@ -554,17 +558,22 @@ export default function ChatHubPage() {
                     }}
                     style={{ x: 0 }}
                   >
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${(chat as any).isGroup ? 'bg-primary/10' : 'bg-muted'}`}>
-                      {chat.avatar ? (
-                        <img src={chat.avatar} alt="" className="w-full h-full object-cover" />
-                      ) : (chat as any).isGroup ? (
-                        <Users className="w-5 h-5 text-primary" />
-                      ) : active === "personal" ? (
-                        <span className="text-sm font-bold text-muted-foreground">
-                          {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
-                        </span>
-                      ) : (
-                        <currentCategory.icon className="w-5 h-5 text-muted-foreground" />
+                    <div className="relative">
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${(chat as any).isGroup ? 'bg-primary/10' : 'bg-muted'}`}>
+                        {chat.avatar ? (
+                          <img src={chat.avatar} alt="" className="w-full h-full object-cover" />
+                        ) : (chat as any).isGroup ? (
+                          <Users className="w-5 h-5 text-primary" />
+                        ) : active === "personal" ? (
+                          <span className="text-sm font-bold text-muted-foreground">
+                            {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                          </span>
+                        ) : (
+                          <currentCategory.icon className="w-5 h-5 text-muted-foreground" />
+                        )}
+                      </div>
+                      {active === "personal" && !(chat as any).isGroup && (chat as any).isOnline && (
+                        <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
