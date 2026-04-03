@@ -82,18 +82,14 @@ export default function ReelsFeedPage() {
     }
   }, [location.state, userId]);
 
-  // Listen for share-to-profile custom event (when already on /reels)
   useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail && userId) {
-        setShareForPost({ shareUrl: detail.shareUrl || "", shareText: detail.shareText || "", shareMediaUrl: detail.shareMediaUrl, shareMediaType: detail.shareMediaType, sharePostId: detail.sharePostId, sharePostAuthorId: detail.sharePostAuthorId, sharePostAuthorName: detail.sharePostAuthorName });
-        setShowCreate(true);
-      }
+    const refreshFeed = () => {
+      queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
     };
-    window.addEventListener("zivo-share-to-profile", handler);
-    return () => window.removeEventListener("zivo-share-to-profile", handler);
-  }, [userId]);
+
+    window.addEventListener("zivo-feed-refresh", refreshFeed);
+    return () => window.removeEventListener("zivo-feed-refresh", refreshFeed);
+  }, [queryClient]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -191,20 +187,19 @@ export default function ReelsFeedPage() {
           const allProfileIds = [...new Set([...userIds, ...sharedFromUserIds])];
           const { data: profiles } = await supabase
             .from("profiles")
-            .select("id, first_name, last_name, avatar_url, comment_control, hide_like_counts, allow_sharing, allow_mentions")
-            .in("id", allProfileIds);
-          const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+            .select("user_id, full_name, avatar_url, comment_control, hide_like_counts, allow_sharing, allow_mentions")
+            .in("user_id", allProfileIds);
+          const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
           for (const post of userPosts as any[]) {
             const profile = profileMap.get(post.user_id);
             if (!post.media_url && !post.caption?.trim()) continue;
             const normalizedMediaType = normalizeUserPostMediaType(post.media_type);
-            
-            // Resolve shared-from user name
+
             let sharedFromUserName: string | null = null;
             if (post.shared_from_user_id) {
               const sharedProfile = profileMap.get(post.shared_from_user_id);
-              sharedFromUserName = sharedProfile ? `${sharedProfile.first_name || ""} ${sharedProfile.last_name || ""}`.trim() || "Someone" : "Someone";
+              sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
             }
 
             allItems.push({
@@ -216,7 +211,7 @@ export default function ReelsFeedPage() {
               likes_count: post.likes_count || 0,
               comments_count: post.comments_count || 0,
               views_count: post.views_count || 0,
-              author_name: profile ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "User" : "User",
+              author_name: profile?.full_name?.trim() || "User",
               author_avatar: profile?.avatar_url || null,
               author_id: post.user_id,
               created_at: post.created_at,
