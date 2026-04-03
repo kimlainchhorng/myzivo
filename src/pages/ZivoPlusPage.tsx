@@ -22,11 +22,15 @@ const BENEFITS = [
   { icon: Zap, title: "Priority Delivery", desc: "Your orders are matched with drivers first for faster fulfillment." },
   { icon: Shield, title: "Extended Guarantee", desc: "48-hour freshness guarantee (vs. 24h for standard)." },
   { icon: Star, title: "Exclusive Deals", desc: "Members-only discounts and early access to seasonal promotions." },
+  { icon: Lock, title: "Lock & Unlock Media", desc: "Send locked photos & videos in chat — set your own price and earn when others unlock." },
 ];
 
-const PLANS = [
-  { id: "monthly" as const, name: "Monthly", price: "$9.99", period: "/month", savings: null, badge: null },
-  { id: "annual" as const, name: "Annual", price: "$79.99", period: "/year", savings: "Save 33%", badge: "Best Value" },
+type PlanId = "monthly" | "chat" | "annual";
+
+const PLANS: { id: PlanId; name: string; price: string; period: string; savings: string | null; badge: string | null; highlight?: string }[] = [
+  { id: "monthly", name: "Monthly", price: "$9.99", period: "/month", savings: null, badge: null },
+  { id: "chat", name: "Chat+", price: "$15.99", period: "/month", savings: null, badge: "New", highlight: "Lock & Unlock media in chat" },
+  { id: "annual", name: "Annual", price: "$79.99", period: "/year", savings: "Save 33%", badge: "Best Value" },
 ];
 
 /* ── Inline Legal Content ── */
