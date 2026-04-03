@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   Bell,
   BellOff,
-  Eye,
   Search,
   Image as ImageIcon,
   FileText,
@@ -68,9 +67,6 @@ export default function ChatContactInfo({
     .toUpperCase()
     .slice(0, 2);
 
-  // Fake profile views count for display
-  const profileViews = Math.floor(Math.random() * 30) + 5;
-
   return (
     <motion.div
       className="fixed inset-0 z-[60] bg-background flex flex-col"
@@ -112,12 +108,6 @@ export default function ChatContactInfo({
             {isOnline ? "Active now" : "Recently active"}
           </p>
 
-          {/* Profile views badge */}
-          <div className="mt-3 flex items-center gap-1.5 bg-muted/60 rounded-full px-3.5 py-1.5">
-            <Eye className="h-3.5 w-3.5 text-primary" />
-            <span className="text-[12px] font-semibold text-foreground">{profileViews}</span>
-            <span className="text-[12px] text-muted-foreground">profile views</span>
-          </div>
         </div>
 
         {/* Quick action buttons */}
