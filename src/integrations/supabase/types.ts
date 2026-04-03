@@ -43086,6 +43086,8 @@ export type Database = {
           likes_count: number | null
           media_type: string
           media_url: string | null
+          shared_from_post_id: string | null
+          shared_from_user_id: string | null
           updated_at: string | null
           user_id: string
           views_count: number | null
@@ -43100,6 +43102,8 @@ export type Database = {
           likes_count?: number | null
           media_type?: string
           media_url?: string | null
+          shared_from_post_id?: string | null
+          shared_from_user_id?: string | null
           updated_at?: string | null
           user_id: string
           views_count?: number | null
@@ -43114,6 +43118,8 @@ export type Database = {
           likes_count?: number | null
           media_type?: string
           media_url?: string | null
+          shared_from_post_id?: string | null
+          shared_from_user_id?: string | null
           updated_at?: string | null
           user_id?: string
           views_count?: number | null

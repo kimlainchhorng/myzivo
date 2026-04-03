@@ -15,6 +15,12 @@ interface ShareSheetProps {
   shareMediaUrl?: string;
   /** Original media type of the content being shared */
   shareMediaType?: "image" | "video";
+  /** Original post ID being shared */
+  sharePostId?: string;
+  /** Original post author's user ID */
+  sharePostAuthorId?: string;
+  /** Original post author's display name */
+  sharePostAuthorName?: string;
 }
 
 export default function ShareSheet({
@@ -25,6 +31,9 @@ export default function ShareSheet({
   zIndex = 60,
   shareMediaUrl,
   shareMediaType,
+  sharePostId,
+  sharePostAuthorId,
+  sharePostAuthorName,
 }: ShareSheetProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const navigate = useNavigate();
@@ -69,10 +78,10 @@ export default function ShareSheet({
   const handleShareToProfile = () => {
     onClose();
     // Use replace + key to force re-render even if already on /reels
-    navigate("/reels", { state: { shareToProfile: true, shareUrl, shareText, shareMediaUrl, shareMediaType }, replace: true });
+    navigate("/reels", { state: { shareToProfile: true, shareUrl, shareText, shareMediaUrl, shareMediaType, sharePostId, sharePostAuthorId, sharePostAuthorName }, replace: true });
     // Small delay to ensure state is picked up if already on /reels
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("zivo-share-to-profile", { detail: { shareUrl, shareText, shareMediaUrl, shareMediaType } }));
+      window.dispatchEvent(new CustomEvent("zivo-share-to-profile", { detail: { shareUrl, shareText, shareMediaUrl, shareMediaType, sharePostId, sharePostAuthorId, sharePostAuthorName } }));
     }, 100);
     toast.success("Create a post to share");
   };

@@ -678,6 +678,9 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               shareText={feed.find((p) => p.id === sharePostId)?.caption || "Check out this post!"}
               shareMediaUrl={feed.find((p) => p.id === sharePostId)?.url || undefined}
               shareMediaType={feed.find((p) => p.id === sharePostId)?.type === "reel" ? "video" : "image"}
+              sharePostId={sharePostId}
+              sharePostAuthorId={profileOwnerId}
+              sharePostAuthorName={feed.find((p) => p.id === sharePostId)?.user?.name}
               onClose={() => setSharePostId(null)}
               zIndex={9999}
             />

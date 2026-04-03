@@ -40,6 +40,10 @@ interface FeedItem {
   author_id?: string;
   store_slug?: string;
   created_at: string;
+  // Share tracking
+  shared_from_post_id?: string | null;
+  shared_from_user_id?: string | null;
+  shared_from_user_name?: string | null;
   // Interaction controls from profile
   comment_control?: "everyone" | "friends" | "off";
   hide_like_counts?: boolean;
@@ -54,7 +58,7 @@ export default function ReelsFeedPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
-  const [shareForPost, setShareForPost] = useState<{ shareUrl: string; shareText: string; shareMediaUrl?: string; shareMediaType?: "image" | "video" } | null>(null);
+  const [shareForPost, setShareForPost] = useState<{ shareUrl: string; shareText: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
@@ -70,9 +74,9 @@ export default function ReelsFeedPage() {
 
   // Handle share-to-profile deep link
   useEffect(() => {
-    const state = location.state as { shareToProfile?: boolean; shareUrl?: string; shareText?: string; shareMediaUrl?: string; shareMediaType?: "image" | "video" } | null;
+    const state = location.state as { shareToProfile?: boolean; shareUrl?: string; shareText?: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null;
     if (state?.shareToProfile && userId) {
-      setShareForPost({ shareUrl: state.shareUrl || "", shareText: state.shareText || "", shareMediaUrl: state.shareMediaUrl, shareMediaType: state.shareMediaType });
+      setShareForPost({ shareUrl: state.shareUrl || "", shareText: state.shareText || "", shareMediaUrl: state.shareMediaUrl, shareMediaType: state.shareMediaType, sharePostId: state.sharePostId, sharePostAuthorId: state.sharePostAuthorId, sharePostAuthorName: state.sharePostAuthorName });
       setShowCreate(true);
       window.history.replaceState({}, document.title);
     }
@@ -83,7 +87,7 @@ export default function ReelsFeedPage() {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail && userId) {
-        setShareForPost({ shareUrl: detail.shareUrl || "", shareText: detail.shareText || "", shareMediaUrl: detail.shareMediaUrl, shareMediaType: detail.shareMediaType });
+        setShareForPost({ shareUrl: detail.shareUrl || "", shareText: detail.shareText || "", shareMediaUrl: detail.shareMediaUrl, shareMediaType: detail.shareMediaType, sharePostId: detail.sharePostId, sharePostAuthorId: detail.sharePostAuthorId, sharePostAuthorName: detail.sharePostAuthorName });
         setShowCreate(true);
       }
     };
@@ -176,23 +180,32 @@ export default function ReelsFeedPage() {
       try {
         const { data: userPosts } = await (supabase as any)
           .from("user_posts")
-          .select("id, media_url, media_type, caption, likes_count, comments_count, views_count, created_at, user_id")
+          .select("id, media_url, media_type, caption, likes_count, comments_count, views_count, created_at, user_id, shared_from_post_id, shared_from_user_id")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(50);
 
         if (userPosts?.length) {
           const userIds = [...new Set(userPosts.map((p: any) => p.user_id))] as string[];
+          const sharedFromUserIds = [...new Set(userPosts.filter((p: any) => p.shared_from_user_id).map((p: any) => p.shared_from_user_id))] as string[];
+          const allProfileIds = [...new Set([...userIds, ...sharedFromUserIds])];
           const { data: profiles } = await supabase
             .from("profiles")
             .select("id, first_name, last_name, avatar_url, comment_control, hide_like_counts, allow_sharing, allow_mentions")
-            .in("id", userIds);
+            .in("id", allProfileIds);
           const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
           for (const post of userPosts as any[]) {
             const profile = profileMap.get(post.user_id);
             if (!post.media_url && !post.caption?.trim()) continue;
             const normalizedMediaType = normalizeUserPostMediaType(post.media_type);
+            
+            // Resolve shared-from user name
+            let sharedFromUserName: string | null = null;
+            if (post.shared_from_user_id) {
+              const sharedProfile = profileMap.get(post.shared_from_user_id);
+              sharedFromUserName = sharedProfile ? `${sharedProfile.first_name || ""} ${sharedProfile.last_name || ""}`.trim() || "Someone" : "Someone";
+            }
 
             allItems.push({
               id: `u-${post.id}`,
@@ -207,6 +220,9 @@ export default function ReelsFeedPage() {
               author_avatar: profile?.avatar_url || null,
               author_id: post.user_id,
               created_at: post.created_at,
+              shared_from_post_id: post.shared_from_post_id || null,
+              shared_from_user_id: post.shared_from_user_id || null,
+              shared_from_user_name: sharedFromUserName,
               comment_control: profile?.comment_control || "everyone",
               hide_like_counts: profile?.hide_like_counts || false,
               allow_sharing: profile?.allow_sharing !== false,
@@ -382,6 +398,9 @@ export default function ReelsFeedPage() {
             initialCaption={shareForPost ? shareForPost.shareText : undefined}
             sharedMediaUrl={shareForPost?.shareMediaUrl}
             sharedMediaType={shareForPost?.shareMediaType}
+            sharedPostId={shareForPost?.sharePostId}
+            sharedPostAuthorId={shareForPost?.sharePostAuthorId}
+            sharedPostAuthorName={shareForPost?.sharePostAuthorName}
             onClose={() => { setShowCreate(false); setShareForPost(null); }}
             onCreated={() => {
               setShowCreate(false);
@@ -465,6 +484,9 @@ function CreatePostModal({
   initialCaption,
   sharedMediaUrl,
   sharedMediaType,
+  sharedPostId,
+  sharedPostAuthorId,
+  sharedPostAuthorName,
 }: {
   userId: string;
   userProfile: { name: string; avatar: string | null } | null;
@@ -473,6 +495,9 @@ function CreatePostModal({
   initialCaption?: string;
   sharedMediaUrl?: string;
   sharedMediaType?: "image" | "video";
+  sharedPostId?: string;
+  sharedPostAuthorId?: string;
+  sharedPostAuthorName?: string;
 }) {
   const [caption, setCaption] = useState(initialCaption || "");
   const [file, setFile] = useState<File | null>(null);
@@ -531,13 +556,17 @@ function CreatePostModal({
       }
 
       // Insert into user_posts
-      const { error: insertErr } = await (supabase as any).from("user_posts").insert({
+      const insertData: any = {
         user_id: userId,
         media_type: finalMediaType,
         media_url: mediaUrl,
         caption: caption.trim() || null,
         is_published: true,
-      });
+      };
+      if (sharedPostId) insertData.shared_from_post_id = sharedPostId;
+      if (sharedPostAuthorId) insertData.shared_from_user_id = sharedPostAuthorId;
+
+      const { error: insertErr } = await (supabase as any).from("user_posts").insert(insertData);
       if (insertErr) throw insertErr;
 
       toast.success("Post shared! 🎉");
@@ -1330,8 +1359,25 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const mediaUrl = item.media_urls[currentMedia] || item.media_urls[0];
   const hasMedia = Boolean(mediaUrl);
 
+  const isSharedPost = Boolean(item.shared_from_post_id || item.shared_from_user_id);
+
   return (
     <div className="bg-card">
+      {/* Shared indicator — Facebook style */}
+      {isSharedPost && (
+        <div className="flex items-center gap-2 px-3 pt-2.5 pb-0.5">
+          <Share2 className="h-3.5 w-3.5 text-muted-foreground" />
+          <p className="text-[12px] text-muted-foreground">
+            <span className="font-semibold text-foreground">{item.author_name}</span>
+            {" shared "}
+            {item.shared_from_user_name ? (
+              <><span className="font-semibold text-foreground">{item.shared_from_user_name}</span>'s post</>
+            ) : (
+              "a post"
+            )}
+          </p>
+        </div>
+      )}
       {/* Author header */}
       <div className="flex items-center">
       <button
@@ -1544,6 +1590,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             shareText={item.caption || `Check out this post by ${item.author_name}`}
             shareMediaUrl={item.media_urls[0] || undefined}
             shareMediaType={item.media_type === "video" ? "video" : "image"}
+            sharePostId={item.id}
+            sharePostAuthorId={item.author_id}
+            sharePostAuthorName={item.author_name}
             onClose={() => setShowShareSheet(false)}
             zIndex={70}
           />
