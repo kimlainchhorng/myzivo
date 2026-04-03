@@ -166,27 +166,40 @@ export default function ChatMessageBubble({
           </div>
         )}
 
-        {/* Video — thumbnail preview with play button overlay */}
+        {/* Video — Reel-style thumbnail with gradient overlay */}
         {videoUrl && (
           <div
             onClick={(e) => { e.stopPropagation(); if (!didLongPress.current) setShowVideoPlayer(true); }}
-            className={`rounded-2xl overflow-hidden mb-1 shadow-sm relative cursor-pointer ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}
+            className={`rounded-2xl overflow-hidden mb-1 relative cursor-pointer group ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}
           >
             <video
               src={videoUrl}
-              className="max-w-full max-h-60 rounded-2xl object-cover w-full"
+              className="w-full aspect-[9/14] max-h-72 object-cover rounded-2xl"
               playsInline
               preload="metadata"
               muted
               style={{ pointerEvents: "none" }}
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl">
-              <div className="h-12 w-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                <Play className="h-5 w-5 text-foreground/80 ml-0.5" fill="currentColor" />
-              </div>
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 rounded-2xl" />
+            {/* Play button */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <motion.div
+                whileTap={{ scale: 0.85 }}
+                className="h-14 w-14 rounded-full bg-white/25 border border-white/30 flex items-center justify-center shadow-2xl"
+              >
+                <Play className="h-6 w-6 text-white ml-0.5" fill="white" />
+              </motion.div>
             </div>
-            <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/40 text-white">
-              Video
+            {/* Bottom reel-style info */}
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] font-semibold text-white/90">Reel</span>
+              </div>
+              <div className="px-2 py-0.5 rounded-full bg-black/30 text-[10px] font-medium text-white/80">
+                Tap to play
+              </div>
             </div>
           </div>
         )}
