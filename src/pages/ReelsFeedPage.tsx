@@ -15,7 +15,7 @@ import {
   Globe, Users, Lock, FolderPlus, MapPin, Hash, ChevronDown,
   Flag, Bell, BellOff, Link2, EyeOff, AlertTriangle, ShieldAlert,
   UserX, Ban, Skull, HelpCircle, ChevronLeft, MessageSquareOff,
-  MessageSquare, UserCheck, Settings2, Search,
+  MessageSquare, UserCheck, Settings2, Search, Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useCallback, useEffect } from "react";
