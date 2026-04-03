@@ -118,6 +118,13 @@ const NotificationsPage = () => {
     fetchNotifications,
   } = useNotifications(100);
 
+  const {
+    notifications: socialNotifs,
+    unreadCount: socialUnread,
+    markAsRead: markSocialRead,
+    markAllAsRead: markAllSocialRead,
+  } = useSocialNotifications(50);
+
   // Fetch pending friend requests
   const fetchFriendRequests = useCallback(async () => {
     if (!user) return;
