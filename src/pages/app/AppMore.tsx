@@ -54,16 +54,16 @@ const AppMore = () => {
                 transition={{ delay: i * 0.04, duration: 0.3 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={isPartner ? () => setShowPartnerSheet(true) : undefined}
-                className="rounded-2xl bg-card border border-border/40 shadow-sm p-3.5 flex items-center gap-3 touch-manipulation cursor-pointer active:bg-muted/30 transition-colors"
+                className="rounded-2xl bg-card border border-border/40 shadow-sm p-3 flex items-center gap-2.5 touch-manipulation cursor-pointer active:bg-muted/30 transition-colors"
               >
                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", link.iconBg)}>
                   <link.icon className={cn("w-5 h-5", link.iconColor)} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm leading-tight truncate">{link.label}</p>
-                  <p className="text-[10px] text-muted-foreground truncate mt-0.5">{link.description}</p>
+                  <p className="font-semibold text-[13px] leading-tight">{link.label}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{link.description}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 ml-auto" />
               </motion.div>
             );
 
