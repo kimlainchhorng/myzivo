@@ -63,6 +63,9 @@ const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
 const FeedPage = lazy(() => import("./pages/FeedPage"));
 const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
 const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
+const ExplorePage = lazy(() => import("./pages/ExplorePage"));
+const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
+const PrivacySettingsPage = lazy(() => import("./pages/account/PrivacySettingsPage"));
 const GroceryStorePage = lazy(() => import("./pages/GroceryStorePage"));
 const StoreProfilePage = lazy(() => import("./pages/StoreProfilePage"));
 const StoreMapPage = lazy(() => import("./pages/StoreMapPage"));
@@ -452,6 +455,9 @@ const App = () => (
                 <Route path="/feed" element={<FeedPage />} />
                 <Route path="/reels" element={<ReelsFeedPage />} />
                 <Route path="/chat" element={<ChatHubPage />} />
+                <Route path="/explore" element={<ExplorePage />} />
+                <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
+                <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
                 <Route path="/store-map" element={<StoreMapPage />} />
                 <Route path="/grocery/store/:slug" element={<GroceryStorePage />} />
                 <Route path="/grocery/shop/:slug" element={<StoreProfilePage />} />

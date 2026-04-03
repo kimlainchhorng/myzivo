@@ -4343,6 +4343,33 @@ export type Database = {
           },
         ]
       }
+      bookmarks: {
+        Row: {
+          collection_name: string | null
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Insert: {
+          collection_name?: string | null
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Update: {
+          collection_name?: string | null
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       brand_regions: {
         Row: {
           brand_id: string
@@ -24227,6 +24254,30 @@ export type Database = {
         }
         Relationships: []
       }
+      muted_conversations: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          muted_until: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          muted_until?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          muted_until?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_attempts: {
         Row: {
           channel: string
@@ -29766,6 +29817,36 @@ export type Database = {
           name?: string | null
           priority?: number
           state?: string | null
+        }
+        Relationships: []
+      }
+      privacy_settings: {
+        Row: {
+          allow_message_requests: boolean | null
+          id: string
+          profile_visibility: string | null
+          show_activity_status: boolean | null
+          show_read_receipts: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_message_requests?: boolean | null
+          id?: string
+          profile_visibility?: string | null
+          show_activity_status?: boolean | null
+          show_read_receipts?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_message_requests?: boolean | null
+          id?: string
+          profile_visibility?: string | null
+          show_activity_status?: boolean | null
+          show_read_receipts?: boolean | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
