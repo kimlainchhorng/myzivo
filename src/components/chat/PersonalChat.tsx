@@ -889,6 +889,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 }}
                 disappearingEnabled={disappearingMode}
                 onLockedImageSelect={() => lockedImageInputRef.current?.click()}
+
               />
             </div>
 
