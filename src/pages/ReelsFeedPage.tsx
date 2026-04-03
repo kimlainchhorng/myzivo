@@ -427,6 +427,9 @@ export default function ReelsFeedPage() {
         </button>
       )}
 
+      {/* Story Rings */}
+      <FeedStoryRing />
+
       {/* Posts */}
       {isLoading ? (
         <div className="flex items-center justify-center h-60">
