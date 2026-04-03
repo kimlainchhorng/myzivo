@@ -24,6 +24,9 @@ const WALLPAPERS = [
   { id: "forest", label: "Forest", preview: "bg-gradient-to-b from-green-100/50 to-emerald-100/50 dark:from-green-950/30 dark:to-emerald-950/30" },
   { id: "midnight", label: "Midnight", preview: "bg-gradient-to-b from-slate-200/50 to-indigo-100/50 dark:from-slate-900/50 dark:to-indigo-950/40" },
   { id: "lavender", label: "Lavender", preview: "bg-gradient-to-b from-purple-100/50 to-violet-100/50 dark:from-purple-950/30 dark:to-violet-950/30" },
+  { id: "cherry", label: "Cherry", preview: "bg-gradient-to-b from-rose-100/50 to-red-100/50 dark:from-rose-950/30 dark:to-red-950/30" },
+  { id: "gold", label: "Gold", preview: "bg-gradient-to-b from-amber-100/50 to-yellow-100/50 dark:from-amber-950/30 dark:to-yellow-950/30" },
+  { id: "slate", label: "Slate", preview: "bg-gradient-to-b from-gray-200/50 to-slate-300/50 dark:from-gray-800/40 dark:to-slate-900/50" },
 ];
 
 const THEME_COLORS = [
