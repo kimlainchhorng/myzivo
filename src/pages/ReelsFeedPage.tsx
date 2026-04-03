@@ -188,22 +188,75 @@ export default function ReelsFeedPage() {
         if (userPosts?.length) {
           const userIds = [...new Set(userPosts.map((p: any) => p.user_id))] as string[];
           const sharedFromUserIds = [...new Set(userPosts.filter((p: any) => p.shared_from_user_id).map((p: any) => p.shared_from_user_id))] as string[];
-          const allProfileIds = [...new Set([...userIds, ...sharedFromUserIds])];
+          const sharedFromPostIds = [...new Set(userPosts.filter((p: any) => p.shared_from_post_id).map((p: any) => p.shared_from_post_id))] as string[];
+
+          let originalUserPosts: Array<{ id: string; user_id: string; caption: string | null }> = [];
+          let originalStorePosts: Array<{ id: string; store_id: string; caption: string | null }> = [];
+
+          if (sharedFromPostIds.length) {
+            const [{ data: sourceUserPosts }, { data: sourceStorePosts }] = await Promise.all([
+              (supabase as any).from("user_posts").select("id, user_id, caption").in("id", sharedFromPostIds),
+              supabase.from("store_posts").select("id, store_id, caption").in("id", sharedFromPostIds),
+            ]);
+
+            originalUserPosts = (sourceUserPosts ?? []) as Array<{ id: string; user_id: string; caption: string | null }>;
+            originalStorePosts = (sourceStorePosts ?? []) as Array<{ id: string; store_id: string; caption: string | null }>;
+          }
+
+          const originalUserIds = [...new Set(originalUserPosts.map((p) => p.user_id))] as string[];
+          const allProfileIds = [...new Set([...userIds, ...sharedFromUserIds, ...originalUserIds])];
           const { data: profiles } = await supabase
             .from("profiles")
             .select("user_id, full_name, avatar_url, comment_control, hide_like_counts, allow_sharing, allow_mentions")
             .in("user_id", allProfileIds);
+
+          let sharedStores: Array<{ id: string; name: string; logo_url: string | null; slug: string }> = [];
+          const sharedStoreIds = [...new Set(originalStorePosts.map((p) => p.store_id))] as string[];
+          if (sharedStoreIds.length) {
+            const { data } = await supabase
+              .from("store_profiles")
+              .select("id, name, logo_url, slug")
+              .in("id", sharedStoreIds);
+            sharedStores = (data ?? []) as Array<{ id: string; name: string; logo_url: string | null; slug: string }>;
+          }
+
           const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+          const originalUserPostMap = new Map(originalUserPosts.map((post) => [post.id, post]));
+          const originalStorePostMap = new Map(originalStorePosts.map((post) => [post.id, post]));
+          const sharedStoreMap = new Map(sharedStores.map((store) => [store.id, store]));
 
           for (const post of userPosts as any[]) {
             const profile = profileMap.get(post.user_id);
             if (!post.media_url && !post.caption?.trim()) continue;
             const normalizedMediaType = normalizeUserPostMediaType(post.media_type);
 
+            const originalUserPost = post.shared_from_post_id ? originalUserPostMap.get(post.shared_from_post_id) : null;
+            const originalStorePost = post.shared_from_post_id ? originalStorePostMap.get(post.shared_from_post_id) : null;
+
+            let sharedFromSource: "user" | "store" | null = null;
+            let sharedFromUserId: string | null = post.shared_from_user_id || null;
             let sharedFromUserName: string | null = null;
             let sharedFromUserAvatar: string | null = null;
-            if (post.shared_from_user_id) {
+            let sharedFromCaption: string | null = null;
+            let sharedFromStoreSlug: string | null = null;
+
+            if (originalStorePost) {
+              const sharedStore = sharedStoreMap.get(originalStorePost.store_id);
+              sharedFromSource = "store";
+              sharedFromUserName = sharedStore?.name?.trim() || "Store";
+              sharedFromUserAvatar = sharedStore?.logo_url || null;
+              sharedFromCaption = originalStorePost.caption || null;
+              sharedFromStoreSlug = sharedStore?.slug || null;
+            } else if (originalUserPost) {
+              const sharedProfile = profileMap.get(originalUserPost.user_id);
+              sharedFromSource = "user";
+              sharedFromUserId = originalUserPost.user_id;
+              sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
+              sharedFromUserAvatar = sharedProfile?.avatar_url || null;
+              sharedFromCaption = originalUserPost.caption || null;
+            } else if (post.shared_from_user_id) {
               const sharedProfile = profileMap.get(post.shared_from_user_id);
+              sharedFromSource = "user";
               sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
               sharedFromUserAvatar = sharedProfile?.avatar_url || null;
             }
@@ -222,10 +275,12 @@ export default function ReelsFeedPage() {
               author_id: post.user_id,
               created_at: post.created_at,
               shared_from_post_id: post.shared_from_post_id || null,
-              shared_from_user_id: post.shared_from_user_id || null,
+              shared_from_user_id: sharedFromUserId,
               shared_from_user_name: sharedFromUserName,
               shared_from_user_avatar: sharedFromUserAvatar,
-              shared_from_caption: null,
+              shared_from_caption: sharedFromCaption,
+              shared_from_source: sharedFromSource,
+              shared_from_store_slug: sharedFromStoreSlug,
               comment_control: profile?.comment_control || "everyone",
               hide_like_counts: profile?.hide_like_counts || false,
               allow_sharing: profile?.allow_sharing !== false,
