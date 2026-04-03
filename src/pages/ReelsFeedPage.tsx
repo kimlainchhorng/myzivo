@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import CommentsSheet from "@/components/social/CommentsSheet";
+import FeedStoryRing from "@/components/social/FeedStoryRing";
 
 interface FeedItem {
   id: string;
