@@ -203,7 +203,7 @@ export default function ChatHubPage() {
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, full_name, avatar_url")
+        .select("user_id, full_name, avatar_url, last_seen")
         .in("user_id", otherIds);
 
       const profileMap = new Map<string, any>();
