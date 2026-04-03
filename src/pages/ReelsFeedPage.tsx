@@ -82,18 +82,14 @@ export default function ReelsFeedPage() {
     }
   }, [location.state, userId]);
 
-  // Listen for share-to-profile custom event (when already on /reels)
   useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail && userId) {
-        setShareForPost({ shareUrl: detail.shareUrl || "", shareText: detail.shareText || "", shareMediaUrl: detail.shareMediaUrl, shareMediaType: detail.shareMediaType, sharePostId: detail.sharePostId, sharePostAuthorId: detail.sharePostAuthorId, sharePostAuthorName: detail.sharePostAuthorName });
-        setShowCreate(true);
-      }
+    const refreshFeed = () => {
+      queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
     };
-    window.addEventListener("zivo-share-to-profile", handler);
-    return () => window.removeEventListener("zivo-share-to-profile", handler);
-  }, [userId]);
+
+    window.addEventListener("zivo-feed-refresh", refreshFeed);
+    return () => window.removeEventListener("zivo-feed-refresh", refreshFeed);
+  }, [queryClient]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {

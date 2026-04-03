@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MoreHorizontal, X, MessageCircle, User } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ShareSheetProps {
   shareUrl: string;
@@ -36,6 +37,7 @@ export default function ShareSheet({
   sharePostAuthorName,
 }: ShareSheetProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [sharingToProfile, setSharingToProfile] = useState(false);
   const navigate = useNavigate();
 
   const shareEncodedUrl = encodeURIComponent(shareUrl);
@@ -70,20 +72,42 @@ export default function ShareSheet({
 
   const handleShareToChat = () => {
     onClose();
-    // Navigate to chat hub with a share payload in state
     navigate("/chat", { state: { shareUrl, shareText } });
     toast.success("Select a chat to share");
   };
 
-  const handleShareToProfile = () => {
-    onClose();
-    // Use replace + key to force re-render even if already on /reels
-    navigate("/reels", { state: { shareToProfile: true, shareUrl, shareText, shareMediaUrl, shareMediaType, sharePostId, sharePostAuthorId, sharePostAuthorName }, replace: true });
-    // Small delay to ensure state is picked up if already on /reels
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("zivo-share-to-profile", { detail: { shareUrl, shareText, shareMediaUrl, shareMediaType, sharePostId, sharePostAuthorId, sharePostAuthorName } }));
-    }, 100);
-    toast.success("Create a post to share");
+  const handleShareToProfile = async () => {
+    if (sharingToProfile) return;
+    setSharingToProfile(true);
+
+    try {
+      const { data, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!data.user) throw new Error("Please sign in to share");
+
+      const insertData: any = {
+        user_id: data.user.id,
+        media_type: shareMediaType || "image",
+        media_url: shareMediaUrl || null,
+        caption: shareText.trim() || null,
+        is_published: true,
+      };
+
+      if (sharePostId) insertData.shared_from_post_id = sharePostId;
+      if (sharePostAuthorId) insertData.shared_from_user_id = sharePostAuthorId;
+
+      const { error: insertError } = await (supabase as any).from("user_posts").insert(insertData);
+      if (insertError) throw insertError;
+
+      onClose();
+      window.dispatchEvent(new CustomEvent("zivo-feed-refresh"));
+      navigate("/reels", { replace: false });
+      toast.success("Shared to profile");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to share to profile");
+    } finally {
+      setSharingToProfile(false);
+    }
   };
 
   // ── In-app share options (first row) ────────────────────────────────────
