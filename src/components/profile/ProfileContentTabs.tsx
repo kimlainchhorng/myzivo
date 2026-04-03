@@ -180,6 +180,44 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           } catch {}
         }
 
+        // Resolve shared post origins
+        const sharedPostIds = (data as UserPostRow[])
+          .filter((r) => r.shared_from_post_id)
+          .map((r) => r.shared_from_post_id!);
+        let originMap: Record<string, SharedOriginInfo> = {};
+        if (sharedPostIds.length > 0) {
+          try {
+            const { data: storePosts } = await (supabase as any)
+              .from("store_posts").select("id, caption, store_id").in("id", sharedPostIds);
+            if (storePosts && storePosts.length > 0) {
+              const storeIds = [...new Set(storePosts.map((sp: any) => sp.store_id))] as string[];
+              const { data: storeProfiles } = await supabase.from("store_profiles").select("id, name, logo_url").in("id", storeIds);
+              const storeMap: Record<string, any> = {};
+              (storeProfiles || []).forEach((s: any) => { storeMap[s.id] = s; });
+              storePosts.forEach((sp: any) => {
+                const store = storeMap[sp.store_id];
+                originMap[sp.id] = { name: store?.name || "Store", avatar: store?.logo_url || "", caption: sp.caption || "" };
+              });
+            }
+          } catch {}
+          const unresolvedIds = sharedPostIds.filter((id) => !originMap[id]);
+          if (unresolvedIds.length > 0) {
+            try {
+              const { data: sharedUserPosts } = await (supabase as any).from("user_posts").select("id, caption, user_id").in("id", unresolvedIds);
+              if (sharedUserPosts?.length > 0) {
+                const suids = [...new Set(sharedUserPosts.map((up: any) => up.user_id))] as string[];
+                const { data: sharedProfiles } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", suids);
+                const spMap: Record<string, any> = {};
+                (sharedProfiles || []).forEach((p: any) => { spMap[p.id] = p; });
+                sharedUserPosts.forEach((up: any) => {
+                  const sp = spMap[up.user_id];
+                  originMap[up.id] = { name: sp?.full_name || "User", avatar: sp?.avatar_url || "", caption: up.caption || "" };
+                });
+              }
+            } catch {}
+          }
+        }
+
         const remotePosts: FeedItem[] = (data as UserPostRow[])
           .map((row) => {
             const normalizedType = normalizeFeedItemType(row.media_type);
@@ -200,6 +238,8 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 avatar: prof?.avatar_url || "",
               },
               isShared: Boolean(row.shared_from_post_id || row.shared_from_user_id),
+              sharedOrigin: row.shared_from_post_id ? originMap[row.shared_from_post_id] || null : null,
+              createdAt: row.created_at,
             };
           })
           .filter((item) => Boolean(item.url) || Boolean(item.caption.trim()));
