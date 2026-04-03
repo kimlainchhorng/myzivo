@@ -170,36 +170,34 @@ export default function ChatMessageBubble({
         {videoUrl && (
           <div
             onClick={(e) => { e.stopPropagation(); if (!didLongPress.current) setShowVideoPlayer(true); }}
-            className={`rounded-2xl overflow-hidden mb-1 relative cursor-pointer group ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}
+            className={`rounded-2xl overflow-hidden mb-1 relative cursor-pointer group max-w-[220px] ${isMe ? "rounded-br-[6px] ml-auto" : "rounded-bl-[6px]"}`}
           >
             <video
               src={videoUrl}
-              className="w-full aspect-[9/14] max-h-72 object-cover rounded-2xl"
+              className="w-full aspect-[3/4] object-cover rounded-2xl"
               playsInline
               preload="metadata"
               muted
               style={{ pointerEvents: "none" }}
             />
             {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 rounded-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/15 rounded-2xl" />
             {/* Play button */}
             <div className="absolute inset-0 flex items-center justify-center">
               <motion.div
                 whileTap={{ scale: 0.85 }}
-                className="h-14 w-14 rounded-full bg-white/25 border border-white/30 flex items-center justify-center shadow-2xl"
+                className="h-10 w-10 rounded-full bg-white/25 border border-white/30 flex items-center justify-center"
               >
-                <Play className="h-6 w-6 text-white ml-0.5" fill="white" />
+                <Play className="h-4 w-4 text-white ml-0.5" fill="white" />
               </motion.div>
             </div>
-            {/* Bottom reel-style info */}
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
+            {/* Bottom reel label */}
+            <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between">
+              <div className="flex items-center gap-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[10px] font-semibold text-white/90">Reel</span>
+                <span className="text-[9px] font-semibold text-white/90">Reel</span>
               </div>
-              <div className="px-2 py-0.5 rounded-full bg-black/30 text-[10px] font-medium text-white/80">
-                Tap to play
-              </div>
+              <span className="text-[9px] font-medium text-white/70">▶ Play</span>
             </div>
           </div>
         )}
