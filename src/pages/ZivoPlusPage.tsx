@@ -430,10 +430,11 @@ export default function ZivoPlusPage() {
               { feat: "Service Fee", free: "5%", plus: "Free" },
               { feat: "Delivery Priority", free: "Standard", plus: "Priority" },
               { feat: "Freshness Guarantee", free: "24 hours", plus: "48 hours" },
+              { feat: "Lock & Unlock Chat", free: "—", plus: "✓" },
               { feat: "Member Deals", free: "—", plus: "✓" },
               { feat: "Support", free: "Standard", plus: "Priority" },
             ].map((row, i) => (
-              <div key={row.feat} className={`grid grid-cols-3 px-4 py-2.5 ${i < 4 ? "border-b border-border/10" : ""}`}>
+              <div key={row.feat} className={`grid grid-cols-3 px-4 py-2.5 ${i < 5 ? "border-b border-border/10" : ""}`}>
                 <span className="text-[11px] text-foreground/90 font-medium">{row.feat}</span>
                 <span className="text-[11px] text-muted-foreground text-center">{row.free}</span>
                 <span className="text-[11px] text-amber-600 font-bold text-center">{row.plus}</span>
