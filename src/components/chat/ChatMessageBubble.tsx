@@ -49,6 +49,20 @@ export default function ChatMessageBubble({
   const hasMoved = useRef(false);
   const bubbleRef = useRef<HTMLDivElement>(null);
 
+  // Check if already unlocked
+  useEffect(() => {
+    if (!isLockedType || isMe || !id || id.startsWith("opt-")) return;
+    const checkUnlock = async () => {
+      try {
+        const { data } = await supabase.functions.invoke("verify-media-unlock", {
+          body: { message_id: id },
+        });
+        if (data?.unlocked) setIsLocked(false);
+      } catch {}
+    };
+    checkUnlock();
+  }, [id, isLockedType, isMe]);
+
   // Load reactions
   useEffect(() => {
     if (!id || id.startsWith("opt-")) return;
