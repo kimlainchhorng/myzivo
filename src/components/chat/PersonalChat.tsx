@@ -193,7 +193,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setMessages(data);
       setCallEvents((callRes.data || []).map((c: any) => ({ ...c, _isCallEvent: true as const })));
       setLoading(false);
-      scrollToBottom();
+      scrollToBottom(true);
 
       if (data?.length) {
         const unread = data.filter((m: Message) => m.receiver_id === user.id && !m.is_read);
