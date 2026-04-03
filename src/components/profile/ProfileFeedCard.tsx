@@ -385,7 +385,8 @@ export default function ProfileFeedCard({
         open={showComments}
         onClose={() => setShowComments(false)}
         postId={toUserPostInteractionId(item.id)}
-        currentUserId={currentUserId}
+        postSource="user"
+        currentUserId={currentUserId || null}
         commentsCount={item.comments}
       />
     </div>
