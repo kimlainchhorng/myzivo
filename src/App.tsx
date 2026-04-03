@@ -80,6 +80,12 @@ const SmartSearchPage = lazy(() => import("./pages/SmartSearchPage"));
 const NotificationCenterPage = lazy(() => import("./pages/NotificationCenterPage"));
 const ActivityFeedPage = lazy(() => import("./pages/ActivityFeedPage"));
 const AdminModerationPage = lazy(() => import("./pages/AdminModerationPage"));
+const ContentSchedulerPage = lazy(() => import("./pages/ContentSchedulerPage"));
+const StoryPollsPage = lazy(() => import("./pages/StoryPollsPage"));
+const WalletDashboardPage = lazy(() => import("./pages/WalletDashboardPage"));
+const BadgesPage = lazy(() => import("./pages/BadgesPage"));
+const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
+const AppSettingsPage = lazy(() => import("./pages/AppSettingsPage"));
 const AccountAnalyticsPage = lazy(() => import("./pages/account/AccountAnalyticsPage"));
 const VerificationRequestPage = lazy(() => import("./pages/account/VerificationRequestPage"));
 const ActivityLogPage = lazy(() => import("./pages/account/ActivityLogPage"));
@@ -487,6 +493,12 @@ const App = () => (
                 <Route path="/notification-center" element={<ProtectedRoute><NotificationCenterPage /></ProtectedRoute>} />
                 <Route path="/activity" element={<ProtectedRoute><ActivityFeedPage /></ProtectedRoute>} />
                 <Route path="/admin/moderation" element={<ProtectedRoute><AdminModerationPage /></ProtectedRoute>} />
+                <Route path="/content-scheduler" element={<ProtectedRoute><ContentSchedulerPage /></ProtectedRoute>} />
+                <Route path="/story-polls" element={<ProtectedRoute><StoryPollsPage /></ProtectedRoute>} />
+                <Route path="/wallet-dashboard" element={<ProtectedRoute><WalletDashboardPage /></ProtectedRoute>} />
+                <Route path="/badges" element={<BadgesPage />} />
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
+                <Route path="/settings" element={<ProtectedRoute><AppSettingsPage /></ProtectedRoute>} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
                 <Route path="/drafts" element={<ProtectedRoute><DraftsPage /></ProtectedRoute>} />
                 <Route path="/account/analytics" element={<ProtectedRoute><AccountAnalyticsPage /></ProtectedRoute>} />
