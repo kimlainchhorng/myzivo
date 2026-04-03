@@ -62,7 +62,12 @@ export default function ShareSheet({
 
   const handleShareToProfile = () => {
     onClose();
-    navigate("/reels", { state: { shareToProfile: true, shareUrl, shareText } });
+    // Use replace + key to force re-render even if already on /reels
+    navigate("/reels", { state: { shareToProfile: true, shareUrl, shareText }, replace: true });
+    // Small delay to ensure state is picked up if already on /reels
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("zivo-share-to-profile", { detail: { shareUrl, shareText } }));
+    }, 100);
     toast.success("Create a post to share");
   };
 
