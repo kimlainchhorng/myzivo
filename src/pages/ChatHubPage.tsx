@@ -404,6 +404,8 @@ export default function ChatHubPage() {
     ? profileResults
     : filtered;
 
+  const hasOverlayChatOpen = Boolean(openShopChat || openPersonalChat || openGroupChat);
+
   const canDelete = active === "personal";
 
   const handleDeleteChat = async (chatId: string, category: ChatCategory) => {
@@ -452,7 +454,7 @@ export default function ChatHubPage() {
   }
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-24">
+    <PullToRefresh onRefresh={handlePullRefresh} enabled={!hasOverlayChatOpen} className="min-h-screen bg-background pb-24 overscroll-none">
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-xl border-b border-border/20">
         <div className="px-5 pt-4 pb-3 flex items-center justify-between">

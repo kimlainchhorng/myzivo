@@ -10,6 +10,7 @@ interface PullToRefreshProps {
   onRefresh: () => Promise<void>;
   children: ReactNode;
   className?: string;
+  enabled?: boolean;
 }
 
 const THRESHOLD = 80;
@@ -25,7 +26,7 @@ const INTERACTIVE_SELECTOR = [
   "[data-disable-pull-to-refresh='true']",
 ].join(", ");
 
-export default function PullToRefresh({ onRefresh, children, className }: PullToRefreshProps) {
+export default function PullToRefresh({ onRefresh, children, className, enabled = true }: PullToRefreshProps) {
   const [refreshing, setRefreshing] = useState(false);
   const pullY = useMotionValue(0);
   const touchStartY = useRef(0);
@@ -38,7 +39,7 @@ export default function PullToRefresh({ onRefresh, children, className }: PullTo
   const spinnerRotate = useTransform(pullY, [0, MAX_PULL], [0, 360]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (refreshing) return;
+    if (!enabled || refreshing) return;
     const target = e.target as HTMLElement | null;
     if (target?.closest(INTERACTIVE_SELECTOR)) return;
     const scrollTop = containerRef.current?.scrollTop ?? 0;
@@ -46,10 +47,10 @@ export default function PullToRefresh({ onRefresh, children, className }: PullTo
       touchStartY.current = e.touches[0].clientY;
       isPulling.current = true;
     }
-  }, [refreshing]);
+  }, [enabled, refreshing]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isPulling.current || refreshing) return;
+    if (!enabled || !isPulling.current || refreshing) return;
     const scrollTop = containerRef.current?.scrollTop ?? 0;
     if (scrollTop > 0) {
       isPulling.current = false;
@@ -60,10 +61,10 @@ export default function PullToRefresh({ onRefresh, children, className }: PullTo
     // Rubber band effect
     const dampened = Math.min(MAX_PULL, delta * 0.45);
     pullY.set(dampened);
-  }, [refreshing, pullY]);
+  }, [enabled, refreshing, pullY]);
 
   const handleTouchEnd = useCallback(async () => {
-    if (!isPulling.current) return;
+    if (!enabled || !isPulling.current) return;
     isPulling.current = false;
     const currentPull = pullY.get();
 
@@ -80,7 +81,7 @@ export default function PullToRefresh({ onRefresh, children, className }: PullTo
     } else {
       animate(pullY, 0, { type: "spring", stiffness: 300, damping: 25 });
     }
-  }, [pullY, refreshing, onRefresh]);
+  }, [enabled, pullY, refreshing, onRefresh]);
 
   return (
     <div className={className} style={{ position: "relative", overflow: "hidden" }}>
