@@ -1837,7 +1837,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           )}
 
           {/* Media */}
-          <div ref={containerRef} className={cn("relative w-full", hasMedia ? "aspect-square bg-black" : "")}>
+          <div ref={containerRef} onClick={handleDoubleTap} className={cn("relative w-full", hasMedia ? "aspect-square bg-black" : "")}>
             {hasMedia ? (
               item.media_type === "video" ? (
                 <>
