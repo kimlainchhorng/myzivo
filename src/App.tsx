@@ -455,6 +455,9 @@ const App = () => (
                 <Route path="/feed" element={<FeedPage />} />
                 <Route path="/reels" element={<ReelsFeedPage />} />
                 <Route path="/chat" element={<ChatHubPage />} />
+                <Route path="/explore" element={<ExplorePage />} />
+                <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
+                <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
                 <Route path="/store-map" element={<StoreMapPage />} />
                 <Route path="/grocery/store/:slug" element={<GroceryStorePage />} />
                 <Route path="/grocery/shop/:slug" element={<StoreProfilePage />} />
