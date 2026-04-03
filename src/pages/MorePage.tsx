@@ -29,7 +29,7 @@ const partnerOptions = [
 export default function MorePage() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
 
   const quickLinks = [
