@@ -508,7 +508,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                         <Globe className="h-2.5 w-2.5 text-muted-foreground" />
                       </div>
                     </div>
-                    <button onClick={() => setShowPostMenu(true)} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
+                    <button onClick={() => { setSelectedPost(item); setShowPostMenu(true); }} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
                       <MoreVertical className="h-5 w-5" />
                     </button>
                   </div>
@@ -583,7 +583,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                         <Globe className="h-2.5 w-2.5 text-muted-foreground" />
                       </div>
                     </div>
-                    <button onClick={() => setShowPostMenu(true)} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
+                    <button onClick={() => { setSelectedPost(item); setShowPostMenu(true); }} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
                       <MoreVertical className="h-5 w-5" />
                     </button>
                   </div>
