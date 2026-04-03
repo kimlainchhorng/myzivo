@@ -1,10 +1,11 @@
 /**
  * ChatHubPage — Unified messaging hub with category tabs:
  * Personal, Shop, Support, Ride + Group chats
+ * 2026-style design with premium UI
  */
 import { useState, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X, Bell, Users, Plus } from "lucide-react";
+import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X, Bell, Users, Plus, Edit3, Check, CheckCheck, Image as ImageIcon, Mic, MapPin, Phone, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -29,13 +30,14 @@ interface CategoryTab {
   icon: typeof MessageCircle;
   emptyTitle: string;
   emptyDesc: string;
+  emptyIcon: string;
 }
 
 const categories: CategoryTab[] = [
-  { id: "personal", label: "Personal", icon: MessageCircle, emptyTitle: "No personal chats", emptyDesc: "Start a conversation with friends or contacts" },
-  { id: "shop", label: "Shop", icon: Store, emptyTitle: "No shop chats", emptyDesc: "Chat with stores you've ordered from" },
-  { id: "support", label: "Support", icon: Headphones, emptyTitle: "No support chats", emptyDesc: "Get help from ZIVO support team" },
-  { id: "ride", label: "Ride", icon: Car, emptyTitle: "No ride chats", emptyDesc: "Messages from your ride drivers" },
+  { id: "personal", label: "Personal", icon: MessageCircle, emptyTitle: "No conversations yet", emptyDesc: "Start chatting with friends and family", emptyIcon: "💬" },
+  { id: "shop", label: "Shop", icon: Store, emptyTitle: "No shop chats", emptyDesc: "Your conversations with stores will appear here", emptyIcon: "🛍️" },
+  { id: "support", label: "Support", icon: Headphones, emptyTitle: "Need help?", emptyDesc: "Contact our support team anytime", emptyIcon: "🎧" },
+  { id: "ride", label: "Ride", icon: Car, emptyTitle: "No ride chats", emptyDesc: "Messages from your drivers will show here", emptyIcon: "🚗" },
 ];
 
 function formatChatTime(dateStr: string) {
@@ -43,6 +45,14 @@ function formatChatTime(dateStr: string) {
   if (isToday(d)) return format(d, "h:mm a");
   if (isYesterday(d)) return "Yesterday";
   return format(d, "MMM d");
+}
+
+function getMessagePreviewIcon(message: string) {
+  if (message === "📷 Image" || message.includes("[image]")) return <ImageIcon className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
+  if (message.includes("[voice]") || message.includes("🎤")) return <Mic className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
+  if (message.includes("[location]") || message.includes("📍")) return <MapPin className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
+  if (message.includes("[video]")) return <Video className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
+  return null;
 }
 
 export default function ChatHubPage() {
@@ -161,7 +171,6 @@ export default function ChatHubPage() {
 
       if (!data || data.length === 0) return [];
 
-      // Group by chat_id, take latest message per chat
       const grouped = new Map<string, any>();
       for (const msg of data as any[]) {
         const key = msg.chat_id || msg.order_id || msg.id;
@@ -207,7 +216,6 @@ export default function ChatHubPage() {
     queryKey: ["chat-hub-personal", user?.id],
     enabled: !!user && active === "personal",
     queryFn: async () => {
-      // Get all DMs involving this user, ordered by most recent
       const { data } = await supabase
         .from("direct_messages")
         .select("*")
@@ -217,7 +225,6 @@ export default function ChatHubPage() {
 
       if (!data || data.length === 0) return [];
 
-      // Group by the other user
       const grouped = new Map<string, { lastMsg: any; unread: number }>();
       for (const msg of data as any[]) {
         const otherId = msg.sender_id === user!.id ? msg.receiver_id : msg.sender_id;
@@ -229,7 +236,6 @@ export default function ChatHubPage() {
         }
       }
 
-      // Fetch profiles for all other users
       const otherIds = Array.from(grouped.keys());
       if (otherIds.length === 0) return [];
 
@@ -246,9 +252,9 @@ export default function ChatHubPage() {
       return otherIds.map((otherId) => {
         const entry = grouped.get(otherId)!;
         const profile = profileMap.get(otherId);
-        // Consider online if last_seen within 2 minutes
         const lastSeen = profile?.last_seen ? new Date(profile.last_seen) : null;
         const isOnline = lastSeen ? (Date.now() - lastSeen.getTime()) < 2 * 60 * 1000 : false;
+        const isSentByMe = entry.lastMsg.sender_id === user!.id;
         return {
           id: otherId,
           name: profile?.full_name || "User",
@@ -257,6 +263,9 @@ export default function ChatHubPage() {
           lastTime: entry.lastMsg.created_at,
           unread: entry.unread,
           isOnline,
+          isSentByMe,
+          isRead: entry.lastMsg.is_read,
+          deliveredAt: entry.lastMsg.delivered_at,
         };
       });
     },
@@ -292,11 +301,6 @@ export default function ChatHubPage() {
             .limit(1)
             .maybeSingle();
 
-          const { data: memberCount } = await (supabase as any)
-            .from("chat_group_members")
-            .select("id", { count: "exact", head: true })
-            .eq("group_id", g.id);
-
           return {
             id: g.id,
             name: g.name,
@@ -314,7 +318,18 @@ export default function ChatHubPage() {
 
   const currentCategory = categories.find((c) => c.id === active)!;
 
-  // Merge personal chats + group chats for the personal tab
+  // Compute unread counts per tab
+  const personalUnread = personalChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
+  const shopUnread = shopChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
+  const rideUnread = rideChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
+  const supportUnread = supportChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
+  const unreadMap: Record<ChatCategory, number> = {
+    personal: personalUnread,
+    shop: shopUnread,
+    ride: rideUnread,
+    support: supportUnread,
+  };
+
   const mergedPersonalList = active === "personal"
     ? [...personalChats, ...groupChats].sort((a: any, b: any) => new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime())
     : [];
@@ -329,7 +344,6 @@ export default function ChatHubPage() {
     ? chatList.filter((c: any) => c.name?.toLowerCase().includes(search.toLowerCase()))
     : chatList;
 
-  // Search profiles when on personal tab with a search term
   const [profileResults, setProfileResults] = useState<any[]>([]);
   const [searchingProfiles, setSearchingProfiles] = useState(false);
 
@@ -371,13 +385,11 @@ export default function ChatHubPage() {
     ? profileResults
     : filtered;
 
-  // Whether the active tab allows user deletion
   const canDelete = active === "personal";
 
   const handleDeleteChat = async (chatId: string, category: ChatCategory) => {
     try {
       if (category === "shop") {
-        // Delete messages first, then the chat
         await supabase.from("store_chat_messages").delete().eq("chat_id", chatId);
         await supabase.from("store_chats").delete().eq("id", chatId).eq("user_id", user!.id);
         queryClient.invalidateQueries({ queryKey: ["chat-hub-shop"] });
@@ -408,21 +420,22 @@ export default function ChatHubPage() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-        <MessageCircle className="w-12 h-12 text-muted-foreground/40 mb-4" />
-        <p className="text-lg font-semibold text-foreground mb-1">Sign in to chat</p>
-        <p className="text-sm text-muted-foreground mb-4">Log in to see your conversations</p>
-        <button onClick={() => navigate(withRedirectParam("/login", "/chat"))} className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-semibold">
+        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-5">
+          <MessageCircle className="w-9 h-9 text-primary" />
+        </div>
+        <p className="text-xl font-bold text-foreground mb-2">Sign in to chat</p>
+        <p className="text-sm text-muted-foreground mb-6 max-w-[260px]">Connect with friends, shops, and support — all in one place</p>
+        <button onClick={() => navigate(withRedirectParam("/login", "/chat"))} className="px-8 py-3 bg-primary text-primary-foreground rounded-full text-sm font-bold shadow-lg shadow-primary/25 active:scale-95 transition-transform">
           Sign In
         </button>
       </div>
     );
   }
 
-
   return (
     <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-xl border-b border-border/30">
+      <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-xl border-b border-border/20">
         <div className="px-5 pt-4 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -431,7 +444,9 @@ export default function ChatHubPage() {
             >
               <ArrowLeft className="w-5 h-5 text-foreground" />
             </button>
-            <h1 className="text-2xl font-bold text-foreground">Chat</h1>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Chat</h1>
+            </div>
           </div>
           <div className="flex items-center gap-1">
             {active === "personal" && (
@@ -457,39 +472,47 @@ export default function ChatHubPage() {
         {/* Search */}
         <div className="px-5 pb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search conversations..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 bg-muted rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground"
+              className="w-full pl-10 pr-4 py-2.5 bg-muted/60 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground transition-all"
             />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Category Tabs */}
-        <div className="flex px-5 gap-1">
+        {/* Category Tabs — pill style with unread badges */}
+        <div className="flex px-5 gap-2 pb-3 overflow-x-auto scrollbar-hide">
           {categories.map((cat) => {
             const isActive = active === cat.id;
+            const unread = unreadMap[cat.id];
             return (
               <button
                 key={cat.id}
                 onClick={() => setActive(cat.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold rounded-t-lg transition-all relative",
+                  "flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full transition-all whitespace-nowrap active:scale-95",
                   isActive
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                    : "bg-muted/60 text-muted-foreground hover:bg-muted"
                 )}
               >
-                <cat.icon className="w-4 h-4" />
+                <cat.icon className="w-3.5 h-3.5" />
                 <span>{cat.label}</span>
-                {isActive && (
-                  <motion.div
-                    layoutId="chat-tab-indicator"
-                    className="absolute bottom-0 left-2 right-2 h-[2px] bg-primary rounded-full"
-                  />
+                {unread > 0 && (
+                  <span className={cn(
+                    "min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full flex items-center justify-center",
+                    isActive ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"
+                  )}>
+                    {unread > 99 ? "99+" : unread}
+                  </span>
                 )}
               </button>
             );
@@ -499,30 +522,34 @@ export default function ChatHubPage() {
 
       {/* Share Mode Banner */}
       {sharePayload && (
-        <div className="mx-5 mb-3 p-3 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+        <div className="mx-5 mt-3 p-3.5 rounded-2xl bg-primary/8 border border-primary/15 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+            <MessageCircle className="w-5 h-5 text-primary" />
+          </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-primary">Share to chat</p>
-            <p className="text-[11px] text-muted-foreground truncate">{sharePayload.shareText || sharePayload.shareUrl}</p>
+            <p className="text-xs font-bold text-primary">Share to chat</p>
+            <p className="text-[11px] text-muted-foreground truncate mt-0.5">{sharePayload.shareText || sharePayload.shareUrl}</p>
           </div>
           <button
             onClick={() => setSharePayload(null)}
-            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0"
+            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform"
           >
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
       )}
+
       <ChatStories />
 
       {/* Chat List */}
       <AnimatePresence mode="wait">
         <motion.div
           key={active}
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.15 }}
-          className="px-5 pt-3"
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.12 }}
+          className="px-4 pt-2"
         >
           {searchingProfiles && active === "personal" ? (
             <div className="flex flex-col items-center justify-center py-20">
@@ -530,25 +557,34 @@ export default function ChatHubPage() {
               <p className="text-sm text-muted-foreground">Searching users...</p>
             </div>
           ) : displayList.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                <currentCategory.icon className="w-7 h-7 text-muted-foreground/50" />
-              </div>
-              <p className="text-base font-semibold text-foreground mb-1">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="text-5xl mb-4">{currentCategory.emptyIcon}</div>
+              <p className="text-base font-bold text-foreground mb-1.5">
                 {active === "personal" && search.trim().length >= 2 ? "No users found" : currentCategory.emptyTitle}
               </p>
-              <p className="text-sm text-muted-foreground max-w-[240px]">
+              <p className="text-sm text-muted-foreground max-w-[260px] leading-relaxed">
                 {active === "personal" && search.trim().length >= 2
                   ? `No results for "${search}"`
                   : currentCategory.emptyDesc}
               </p>
+              {active === "support" && (
+                <button
+                  onClick={() => navigate("/support")}
+                  className="mt-5 px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform"
+                >
+                  Contact Support
+                </button>
+              )}
             </div>
           ) : (
-            <div className="space-y-1">
-              {displayList.map((chat: any) => (
-                <div
+            <div className="space-y-0.5">
+              {displayList.map((chat: any, idx: number) => (
+                <motion.div
                   key={chat.id}
-                  className="relative overflow-hidden rounded-xl"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.02 }}
+                  className="relative overflow-hidden rounded-2xl"
                 >
                   {/* Delete button behind */}
                   {canDelete && swipedId === chat.id && (
@@ -563,25 +599,21 @@ export default function ChatHubPage() {
                   )}
                   <motion.button
                     className={cn(
-                      "w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/60 active:scale-[0.98] transition-all text-left relative z-10 bg-background",
-                      canDelete && swipedId === chat.id && "-translate-x-16"
+                      "w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-muted/40 active:bg-muted/60 active:scale-[0.99] transition-all text-left relative z-10 bg-background",
+                      canDelete && swipedId === chat.id && "-translate-x-16",
+                      chat.unread > 0 && "bg-primary/[0.03]"
                     )}
                     onClick={() => {
                       if (swipedId === chat.id) {
                         setSwipedId(null);
                         return;
                       }
-                      // Share mode: send shared content to this contact
                       if (sharePayload && active === "personal" && !(chat as any).isGroup) {
                         handleShareToContact(chat.id, chat.name, chat.avatar);
                         return;
                       }
                       if (active === "shop") {
-                        setOpenShopChat({
-                          storeId: chat.storeId,
-                          name: chat.name,
-                          logo: chat.avatar,
-                        });
+                        setOpenShopChat({ storeId: chat.storeId, name: chat.name, logo: chat.avatar });
                       } else if (active === "personal") {
                         if ((chat as any).isGroup) {
                           setOpenGroupChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
@@ -601,56 +633,111 @@ export default function ChatHubPage() {
                     dragConstraints={{ left: -70, right: 0 }}
                     dragElastic={0.1}
                     onDragEnd={(_, info) => {
-                      if (info.offset.x < -40) {
-                        setSwipedId(chat.id);
-                      } else {
-                        setSwipedId(null);
-                      }
+                      if (info.offset.x < -40) setSwipedId(chat.id);
+                      else setSwipedId(null);
                     }}
                     style={{ x: 0 }}
                   >
-                    <div className="relative">
-                      <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${(chat as any).isGroup ? 'bg-primary/10' : 'bg-muted'}`}>
+                    {/* Avatar */}
+                    <div className="relative flex-shrink-0">
+                      <div className={cn(
+                        "w-[52px] h-[52px] rounded-full flex items-center justify-center overflow-hidden",
+                        (chat as any).isGroup ? "bg-primary/10" : "bg-muted"
+                      )}>
                         {chat.avatar ? (
                           <img src={chat.avatar} alt="" className="w-full h-full object-cover" />
                         ) : (chat as any).isGroup ? (
                           <Users className="w-5 h-5 text-primary" />
                         ) : active === "personal" ? (
-                          <span className="text-sm font-bold text-muted-foreground">
+                          <span className="text-base font-bold text-muted-foreground">
                             {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
                           </span>
+                        ) : active === "shop" ? (
+                          <Store className="w-5 h-5 text-muted-foreground" />
+                        ) : active === "support" ? (
+                          <Headphones className="w-5 h-5 text-muted-foreground" />
                         ) : (
-                          <currentCategory.icon className="w-5 h-5 text-muted-foreground" />
+                          <Car className="w-5 h-5 text-muted-foreground" />
                         )}
                       </div>
+                      {/* Online indicator */}
                       {active === "personal" && !(chat as any).isGroup && (chat as any).isOnline && (
-                        <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
+                        <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-background" />
                       )}
                     </div>
+
+                    {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-foreground truncate">{chat.name}</span>
-                        <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-2">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className={cn(
+                          "text-[14.5px] truncate",
+                          chat.unread > 0 ? "font-bold text-foreground" : "font-semibold text-foreground"
+                        )}>
+                          {chat.name}
+                        </span>
+                        <span className={cn(
+                          "text-[11px] flex-shrink-0 ml-2",
+                          chat.unread > 0 ? "text-primary font-semibold" : "text-muted-foreground"
+                        )}>
                           {formatChatTime(chat.lastTime)}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between mt-0.5">
-                        <span className="text-xs text-muted-foreground truncate pr-2">{chat.lastMessage}</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center flex-1 min-w-0 pr-2">
+                          {/* Delivery status for sent messages */}
+                          {active === "personal" && (chat as any).isSentByMe && !(chat as any).isGroup && (
+                            <span className="mr-1 flex-shrink-0">
+                              {(chat as any).isRead ? (
+                                <CheckCheck className="w-3.5 h-3.5 text-sky-500" />
+                              ) : (chat as any).deliveredAt ? (
+                                <CheckCheck className="w-3.5 h-3.5 text-muted-foreground/60" />
+                              ) : (
+                                <Check className="w-3.5 h-3.5 text-muted-foreground/60" />
+                              )}
+                            </span>
+                          )}
+                          {getMessagePreviewIcon(chat.lastMessage)}
+                          <span className={cn(
+                            "text-[13px] truncate",
+                            chat.unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"
+                          )}>
+                            {chat.lastMessage}
+                          </span>
+                        </div>
                         {chat.unread > 0 && (
-                          <span className="min-w-[18px] h-[18px] px-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center flex-shrink-0">
-                            {chat.unread}
+                          <span className="min-w-[20px] h-[20px] px-1.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center flex-shrink-0">
+                            {chat.unread > 99 ? "99+" : chat.unread}
                           </span>
                         )}
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                   </motion.button>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
         </motion.div>
       </AnimatePresence>
+
+      {/* FAB — New Chat */}
+      {active === "personal" && !sharePayload && (
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", delay: 0.2 }}
+          onClick={() => {
+            // Focus search to find users
+            const searchInput = document.querySelector<HTMLInputElement>('input[placeholder="Search conversations..."]');
+            if (searchInput) {
+              searchInput.focus();
+              searchInput.scrollIntoView({ behavior: "smooth" });
+            }
+          }}
+          className="fixed bottom-24 right-5 z-30 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform"
+        >
+          <Edit3 className="w-5 h-5" />
+        </motion.button>
+      )}
 
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
@@ -662,25 +749,25 @@ export default function ChatHubPage() {
             className="fixed inset-0 z-[9999] flex items-center justify-center px-6"
             onClick={() => { setDeleteConfirm(null); setSwipedId(null); }}
           >
-            <div className="absolute inset-0 bg-black/50" />
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative bg-background rounded-2xl p-6 w-full max-w-sm shadow-xl"
+              className="relative bg-background rounded-2xl p-6 w-full max-w-sm shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                <div className="w-11 h-11 rounded-full bg-destructive/10 flex items-center justify-center">
                   <Trash2 className="w-5 h-5 text-destructive" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-foreground">Delete Chat</h3>
-                  <p className="text-xs text-muted-foreground">This can't be undone</p>
+                  <p className="text-xs text-muted-foreground">This action can't be undone</p>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mb-5">
-                Are you sure you want to delete your conversation with <strong className="text-foreground">{deleteConfirm.name}</strong>?
+                Delete your conversation with <strong className="text-foreground">{deleteConfirm.name}</strong>?
               </p>
               <div className="flex gap-3">
                 <button
@@ -691,7 +778,7 @@ export default function ChatHubPage() {
                 </button>
                 <button
                   onClick={() => handleDeleteChat(deleteConfirm.id, deleteConfirm.category)}
-                  className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold active:scale-[0.97] transition-transform"
+                  className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-bold active:scale-[0.97] transition-transform"
                 >
                   Delete
                 </button>
@@ -700,6 +787,7 @@ export default function ChatHubPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
       {/* Inline Shop Chat */}
       {openShopChat && (
         <StoreLiveChat
