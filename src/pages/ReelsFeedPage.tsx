@@ -394,35 +394,6 @@ export default function ReelsFeedPage() {
         )}
       </AnimatePresence>
 
-      {/* Create post prompt (logged in) */}
-      {userId && (
-        <button
-          onClick={() => setShowCreate(true)}
-          className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors"
-        >
-          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border-2 border-primary/20 shrink-0">
-            {userProfile?.avatar ? (
-              <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center text-muted-foreground/50">
-                <Camera className="h-4 w-4" />
-              </div>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground flex-1 text-left">What's on your mind?</p>
-          <div className="flex gap-1.5">
-            <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
-              <ImageIcon className="h-3.5 w-3.5 text-emerald-600" />
-            </div>
-            <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-              <Film className="h-3.5 w-3.5 text-blue-600" />
-            </div>
-            <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
-              <Camera className="h-3.5 w-3.5 text-orange-600" />
-            </div>
-          </div>
-        </button>
-      )}
 
 
       {/* Story Rings */}
