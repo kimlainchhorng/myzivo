@@ -62,7 +62,8 @@ export default function ShareSheet({
 
   const handleShareToProfile = () => {
     onClose();
-    toast.info("Share to your profile coming soon!");
+    navigate("/reels", { state: { shareToProfile: true, shareUrl, shareText } });
+    toast.success("Create a post to share");
   };
 
   // ── In-app share options (first row) ────────────────────────────────────
