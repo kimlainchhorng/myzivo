@@ -1334,15 +1334,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     setShowComments(!showComments);
   };
 
-  const submitComment = () => {
-    if (!commentText.trim()) return;
-    setComments((prev) => [
-      ...prev,
-      { id: Date.now().toString(), text: commentText.trim(), author: "You", time: "just now" },
-    ]);
-    setCommentText("");
-    toast.success("Comment added!");
-  };
+  // Comments are now handled by CommentsSheet
 
   const mediaUrl = item.media_urls[currentMedia] || item.media_urls[0];
   const hasMedia = Boolean(mediaUrl);
