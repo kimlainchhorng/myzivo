@@ -23,6 +23,7 @@ type FeedItem = {
   filterCss?: string;
   views?: number;
   user: { name: string; avatar: string };
+  isShared?: boolean;
 };
 
 type NewPostPayload = {
