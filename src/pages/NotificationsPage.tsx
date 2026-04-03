@@ -4,7 +4,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import SEOHead from '@/components/SEOHead';
 import { useNavigate } from 'react-router-dom';
-import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft, UserPlus, Check, X } from 'lucide-react';
+import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft, UserPlus, Check, X, Heart, MessageCircle as MessageCircleIcon, Share2, AtSign, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { useSocialNotifications, SocialNotification } from '@/hooks/useSocialNotifications';
 
 type NotificationCategory = 'all' | 'social' | 'orders' | 'promos' | 'support' | 'delays';
 
@@ -99,6 +100,53 @@ const FriendRequestCard = ({ request, onAccept, onDecline }: { request: FriendRe
   </motion.div>
 );
 
+/* ── Social Notification Item ── */
+const SOCIAL_NOTIF_ICONS: Record<string, typeof Heart> = {
+  like: Heart, comment: MessageCircleIcon, reply: MessageCircleIcon,
+  share: Share2, follow: UserPlus, mention: AtSign, story_reaction: Flame,
+};
+const SOCIAL_NOTIF_COLORS: Record<string, string> = {
+  like: "text-red-500", comment: "text-blue-500", reply: "text-blue-400",
+  share: "text-green-500", follow: "text-primary", mention: "text-purple-500", story_reaction: "text-orange-500",
+};
+
+const SocialNotifItem = ({ notif, index, onClick }: { notif: SocialNotification; index: number; onClick: () => void }) => {
+  const Icon = SOCIAL_NOTIF_ICONS[notif.type] || Heart;
+  const color = SOCIAL_NOTIF_COLORS[notif.type] || "text-primary";
+  const timeAgo = (() => { try { return formatDistanceToNow(new Date(notif.created_at), { addSuffix: true }); } catch { return ""; } })();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.03, duration: 0.3 }}
+    >
+      <GlassCard3D glow={!notif.is_read}>
+        <button onClick={onClick} className="w-full flex items-center gap-3 p-3 text-left touch-manipulation">
+          <div className="relative shrink-0">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={notif.actor_avatar || undefined} />
+              <AvatarFallback className="text-xs font-bold">{notif.actor_name?.[0] || "?"}</AvatarFallback>
+            </Avatar>
+            <div className={cn("absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-card flex items-center justify-center", color)}>
+              <Icon className="h-3 w-3" />
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={cn("text-[13px] leading-snug", !notif.is_read && "font-semibold")}>
+              {notif.message}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{timeAgo}</p>
+          </div>
+          {!notif.is_read && (
+            <div className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
+          )}
+        </button>
+      </GlassCard3D>
+    </motion.div>
+  );
+};
+
 const NotificationsPage = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
@@ -115,6 +163,13 @@ const NotificationsPage = () => {
     markAllAsRead,
     fetchNotifications,
   } = useNotifications(100);
+
+  const {
+    notifications: socialNotifs,
+    unreadCount: socialUnread,
+    markAsRead: markSocialRead,
+    markAllAsRead: markAllSocialRead,
+  } = useSocialNotifications(50);
 
   // Fetch pending friend requests
   const fetchFriendRequests = useCallback(async () => {
@@ -205,7 +260,7 @@ const NotificationsPage = () => {
   }, [notifications, activeTab]);
 
   const categoryCounts = useMemo(() => {
-    const counts = { all: 0, social: friendRequests.length, orders: 0, promos: 0, support: 0, delays: 0 };
+    const counts = { all: 0, social: friendRequests.length + socialUnread, orders: 0, promos: 0, support: 0, delays: 0 };
     notifications.forEach(n => {
       if (!n.is_read) {
         counts.all++;
@@ -215,9 +270,9 @@ const NotificationsPage = () => {
         if (n.template?.toLowerCase().includes('delay') || n.title?.toLowerCase().includes('delay')) counts.delays++;
       }
     });
-    counts.all += friendRequests.length;
+    counts.all += friendRequests.length + socialUnread;
     return counts;
-  }, [notifications, friendRequests]);
+  }, [notifications, friendRequests, socialUnread]);
 
   const handleNotificationClick = (notification: any) => {
     if (!notification.is_read) markAsRead([notification.id]);
@@ -484,8 +539,37 @@ const NotificationsPage = () => {
             </>
           )}
 
+          {/* Social Notifications (likes, comments, shares, follows) */}
+          {(activeTab === 'all' || activeTab === 'social') && socialNotifs.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              {activeTab === 'social' && (
+                <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2">
+                  <Heart className="w-3.5 h-3.5 text-red-500" />
+                  Activity
+                </p>
+              )}
+              <div className="space-y-2">
+                {socialNotifs.map((sn, i) => (
+                  <SocialNotifItem
+                    key={sn.id}
+                    notif={sn}
+                    index={i}
+                    onClick={() => {
+                      if (!sn.is_read) markSocialRead([sn.id]);
+                      if (sn.entity_type === 'post' && sn.entity_id) navigate(`/reels`);
+                    }}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* Social tab empty state */}
-          {activeTab === 'social' && friendRequests.length === 0 && !loadingFR && (
+          {activeTab === 'social' && friendRequests.length === 0 && socialNotifs.length === 0 && !loadingFR && (
             <motion.div
               initial={{ opacity: 0, y: 30, rotateX: 8 }}
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
@@ -495,9 +579,9 @@ const NotificationsPage = () => {
               <GlassCard3D className="shadow-xl">
                 <div className="p-10 text-center">
                   {getEmptyIcon('social')}
-                  <h3 className="font-bold text-base mb-1">No requests</h3>
+                  <h3 className="font-bold text-base mb-1">No activity yet</h3>
                   <p className="text-muted-foreground text-sm max-w-[250px] mx-auto">
-                    {getEmptyMessage('social')}
+                    When people like, comment, or share your posts, you'll see it here.
                   </p>
                 </div>
               </GlassCard3D>

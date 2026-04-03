@@ -25,6 +25,7 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import CommentsSheet from "@/components/social/CommentsSheet";
 
 interface FeedItem {
   id: string;
@@ -874,10 +875,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const [isFollowing, setIsFollowing] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
-  const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
-  const commentInputRef = useRef<HTMLInputElement>(null);
+   const [showComments, setShowComments] = useState(false);
 
   const mediaUrl = item.media_urls[0];
 
@@ -928,15 +926,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     }
   };
 
-  const submitComment = () => {
-    if (!commentText.trim()) return;
-    setComments((prev) => [
-      ...prev,
-      { id: Date.now().toString(), text: commentText.trim(), author: "You", time: "just now" },
-    ]);
-    setCommentText("");
-    toast.success("Comment added!");
-  };
+  // Comments are now handled by CommentsSheet
 
   const timeAgo = (() => {
     try {
@@ -1052,8 +1042,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
         >
           <MessageCircle className="h-7 w-7 text-white drop-shadow-lg" />
-          {(item.comments_count + comments.length) > 0 && (
-            <span className="text-white text-[11px] font-semibold drop-shadow">{item.comments_count + comments.length}</span>
+          {item.comments_count > 0 && (
+            <span className="text-white text-[11px] font-semibold drop-shadow">{item.comments_count}</span>
           )}
         </button>
 
@@ -1160,77 +1150,15 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       </div>
 
       {/* Comments Bottom Sheet */}
-      <AnimatePresence>
-        {showComments && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[80] flex items-end"
-            onClick={() => setShowComments(false)}
-          >
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full bg-background rounded-t-2xl max-h-[60vh] flex flex-col"
-            >
-              <div className="flex justify-center py-3">
-                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
-              </div>
-              <div className="flex items-center justify-between px-4 pb-2">
-                <h3 className="text-sm font-bold text-foreground">Comments</h3>
-                <button onClick={() => setShowComments(false)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-                  <XIcon className="h-5 w-5 text-muted-foreground" />
-                </button>
-              </div>
-
-              {/* Comments list */}
-              <div className="flex-1 overflow-y-auto px-4 pb-2 space-y-3">
-                {comments.length === 0 && item.comments_count === 0 && (
-                  <p className="text-center text-sm text-muted-foreground py-8">No comments yet. Be the first!</p>
-                )}
-                {comments.map((c) => (
-                  <div key={c.id} className="flex items-start gap-2.5">
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground shrink-0 mt-0.5">
-                      {c.author[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] text-foreground">
-                        <span className="font-semibold mr-1.5">{c.author}</span>
-                        {c.text}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{c.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Comment input */}
-              <div className="flex items-center gap-2 px-4 py-3 border-t border-border/30"
-                style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 0.75rem), 0.75rem)' }}
-              >
-                <input
-                  ref={commentInputRef}
-                  type="text"
-                  placeholder="Add a comment..."
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && submitComment()}
-                  className="flex-1 text-[13px] bg-muted/50 text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-h-[44px] rounded-full px-4"
-                />
-                {commentText.trim() && (
-                  <button onClick={submitComment} className="text-primary font-semibold min-h-[44px] min-w-[44px] flex items-center justify-center">
-                    <Send className="h-5 w-5" />
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <CommentsSheet
+        open={showComments}
+        onClose={() => setShowComments(false)}
+        postId={item.id}
+        postSource={item.source}
+        currentUserId={currentUserId}
+        commentsCount={item.comments_count}
+        dark
+      />
 
       {/* Share Sheet */}
       <AnimatePresence>
@@ -1270,8 +1198,6 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const [notificationsOn, setNotificationsOn] = useState(false);
   const [commentSetting, setCommentSetting] = useState<"everyone" | "friends" | "off">(item.comment_control || "everyone");
   const [showCommentSettings, setShowCommentSettings] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1408,15 +1334,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     setShowComments(!showComments);
   };
 
-  const submitComment = () => {
-    if (!commentText.trim()) return;
-    setComments((prev) => [
-      ...prev,
-      { id: Date.now().toString(), text: commentText.trim(), author: "You", time: "just now" },
-    ]);
-    setCommentText("");
-    toast.success("Comment added!");
-  };
+  // Comments are now handled by CommentsSheet
 
   const mediaUrl = item.media_urls[currentMedia] || item.media_urls[0];
   const hasMedia = Boolean(mediaUrl);
@@ -1729,62 +1647,23 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           <MessageSquareOff className="h-3.5 w-3.5 text-muted-foreground/60" />
           <p className="text-[12px] text-muted-foreground/60">Comments are turned off</p>
         </div>
-      ) : (item.comments_count > 0 || comments.length > 0) ? (
+      ) : item.comments_count > 0 ? (
         <button onClick={handleComment} className="px-3 pb-2">
           <p className="text-[12px] text-muted-foreground">
-            View all {item.comments_count + comments.length} comments
+            View all {item.comments_count} comments
           </p>
         </button>
       ) : null}
 
-      {/* Comments section */}
-      <AnimatePresence>
-        {showComments && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            {/* Existing local comments */}
-            {comments.length > 0 && (
-              <div className="px-3 pb-2 space-y-2">
-                {comments.map((c) => (
-                  <div key={c.id} className="flex items-start gap-2">
-                    <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground shrink-0 mt-0.5">
-                      {c.author[0]}
-                    </div>
-                    <div>
-                      <p className="text-[12px] text-foreground">
-                        <span className="font-semibold mr-1">{c.author}</span>
-                        {c.text}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">{c.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Comment input */}
-            <div className="flex items-center gap-2 px-3 py-2 border-t border-border/20">
-              <input
-                type="text"
-                placeholder="Add a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && submitComment()}
-                className="flex-1 text-[13px] bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-h-[44px]"
-              />
-              {commentText.trim() && (
-                <button onClick={submitComment} className="text-primary font-semibold text-[13px] min-h-[44px] min-w-[44px] flex items-center justify-center">
-                  <Send className="h-5 w-5" />
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Comments Sheet */}
+      <CommentsSheet
+        open={showComments}
+        onClose={() => setShowComments(false)}
+        postId={item.id}
+        postSource={item.source}
+        currentUserId={currentUserId}
+        commentsCount={item.comments_count}
+      />
 
       {/* Views */}
       {item.media_type === "video" && item.views_count > 0 && (
