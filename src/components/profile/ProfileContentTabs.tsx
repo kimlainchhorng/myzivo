@@ -256,7 +256,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [profileOwnerId]);
 
   const uploadMediaToSupabase = useCallback(async (file?: File | null) => {
     if (!file) return null;
