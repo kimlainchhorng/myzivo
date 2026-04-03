@@ -147,6 +147,7 @@ const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const Profile = lazy(() => import("./pages/Profile"));
+const MorePage = lazy(() => import("./pages/MorePage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 
@@ -622,6 +623,7 @@ const App = () => (
                 <Route path="/setup" element={<Setup />} />
                 
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/more" element={<ProtectedRoute><MorePage /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
                 <Route path="/user/:userId" element={<PublicProfilePage />} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />

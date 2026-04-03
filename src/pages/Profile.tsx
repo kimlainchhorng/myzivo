@@ -455,18 +455,16 @@ const Profile = () => {
 
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => { setShowQuickAccess((v) => !v); setShowNotifPanel(false); }}
+                onClick={() => navigate("/more")}
                 className={cn(
                   "relative z-20 flex min-h-[36px] items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-xl border text-[11px] font-bold shadow-lg touch-manipulation transition-all",
-                  showQuickAccess
-                    ? "bg-primary text-primary-foreground border-primary/40 shadow-primary/20"
-                    : "bg-card/70 border-border/30 shadow-primary/[0.05] hover:bg-card/90"
+                  "bg-card/70 border-border/30 shadow-primary/[0.05] hover:bg-card/90"
                 )}
                 style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
               >
-                <MoreHorizontal className={cn("w-3.5 h-3.5", showQuickAccess ? "text-primary-foreground" : "text-muted-foreground")} />
+                <MoreHorizontal className={cn("w-3.5 h-3.5", "text-muted-foreground")} />
                 <span>More</span>
-                <ChevronDown className={cn("w-3 h-3 transition-transform duration-300", showQuickAccess ? "rotate-180 text-primary-foreground/70" : "text-muted-foreground")} />
+                <ChevronRight className={cn("w-3 h-3 text-muted-foreground")} />
               </motion.button>
             </div>
 
@@ -859,134 +857,8 @@ const Profile = () => {
               </ParallaxSection>
 
 
-              {/* ── More Panel (Quick Access + Merchant + Sign Out) ── */}
-              <AnimatePresence>
-                {showQuickAccess && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.25, ease: "easeInOut" }}
-                    className="overflow-hidden"
-                  >
-                    {/* Quick Access Links */}
-                    <ParallaxSection index={4}>
-                      <h3 className="font-display font-bold text-base mb-3">{t("profile.quick_access")}</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {quickLinks.map((link, i) => {
-                          const isPartner = link.href === "#partner";
-                          const Wrapper = isPartner ? Fragment : ({ children }: { children: React.ReactNode }) => <Link to={link.href}>{children}</Link>;
-                          return (
-                            <motion.div
-                              key={link.label}
-                              initial={{ opacity: 0, y: 20 }}
-                              whileInView={{ opacity: 1, y: 0 }}
-                              viewport={{ once: true }}
-                              transition={{ delay: i * 0.03, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                              whileTap={{ scale: 0.97 }}
-                              onClick={isPartner ? () => setShowPartnerSheet(true) : undefined}
-                              className={isPartner ? "cursor-pointer" : ""}
-                            >
-                              <Wrapper>
-                                <GlassCard3D className="shadow-sm hover:shadow-md transition-shadow duration-300 group">
-                                  <div className="px-3 py-2.5 flex items-center gap-2.5">
-                                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${link.color} flex items-center justify-center shrink-0`}>
-                                      <link.icon className={`w-4 h-4 ${link.iconColor}`} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="font-medium text-[12px] leading-tight truncate">{link.label}</p>
-                                      <p className="text-[10px] text-muted-foreground/70 truncate leading-tight">{link.description}</p>
-                                    </div>
-                                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-                                  </div>
-                                </GlassCard3D>
-                              </Wrapper>
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-                    </ParallaxSection>
 
-                    {/* Merchant Dashboard */}
-                    {merchantData?.isMerchant && (
-                      <ParallaxSection index={5}>
-                        <motion.button
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => void openExternalUrl(MERCHANT_APP_URL)}
-                          className="block w-full text-left"
-                          style={{ perspective: "800px" }}
-                        >
-                          <GlassCard3D className="shadow-xl hover:shadow-2xl transition-shadow duration-500 group">
-                            <div className="p-4">
-                              <div className="flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-xl shadow-orange-500/25">
-                                    <Store className="w-5 h-5 text-white" />
-                                  </div>
-                                  <div>
-                                    <p className="font-bold text-sm">{t("profile.merchant_dashboard")}</p>
-                                    <p className="text-xs text-muted-foreground">{t("profile.merchant_desc")}</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Badge className="bg-orange-500/12 text-orange-500 border-orange-500/20 font-semibold text-xs rounded-full">{t("profile.partner")}</Badge>
-                                  <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-orange-500 transition-colors" />
-                                </div>
-                              </div>
-                            </div>
-                          </GlassCard3D>
-                        </motion.button>
-                      </ParallaxSection>
-                    )}
 
-                    {/* Partner Attribution */}
-                    {affiliateAttribution.hasAffiliateAttribution && (
-                      <ParallaxSection index={6}>
-                        <GlassCard3D className="shadow-xl">
-                          <div className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500/15 to-violet-600/10 flex items-center justify-center shadow-inner">
-                                <Users className="w-5 h-5 text-violet-500" />
-                              </div>
-                              <div>
-                                <p className="font-bold text-sm">{t("profile.referred_by")}</p>
-                                <p className="text-xs text-muted-foreground">{t("profile.joined_through")} {affiliateAttribution.partnerName}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </GlassCard3D>
-                      </ParallaxSection>
-                    )}
-
-                    {/* Sign Out */}
-                    {user && (
-                      <ParallaxSection index={7}>
-                        <div className="pt-2 pb-4">
-                          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-full h-13 text-base font-semibold rounded-2xl backdrop-blur-xl bg-card/50 border-border/40 shadow-lg shadow-foreground/[0.03] hover:shadow-xl hover:bg-card/70 transition-all duration-300 touch-manipulation"
-                              onClick={async () => { await signOut(); navigate("/"); }}
-                            >
-                              {t("profile.sign_out")}
-                            </Button>
-                          </motion.div>
-                        </div>
-                      </ParallaxSection>
-                    )}
-
-                    {/* Close button */}
-                    <button
-                      onClick={() => setShowQuickAccess(false)}
-                      className="w-full py-2 rounded-xl bg-muted/50 text-muted-foreground text-xs font-bold touch-manipulation active:scale-95 transition-transform hover:bg-muted/70 mb-4"
-                    >
-                      Close
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           )}
         </div>
