@@ -44,6 +44,8 @@ interface FeedItem {
   shared_from_post_id?: string | null;
   shared_from_user_id?: string | null;
   shared_from_user_name?: string | null;
+  shared_from_user_avatar?: string | null;
+  shared_from_caption?: string | null;
   // Interaction controls from profile
   comment_control?: "everyone" | "friends" | "off";
   hide_like_counts?: boolean;
