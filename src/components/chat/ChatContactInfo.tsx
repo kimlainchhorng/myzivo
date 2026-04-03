@@ -11,7 +11,7 @@ import {
   ArrowLeft,
   Bell,
   BellOff,
-  Eye,
+  Bell,
   Search,
   Image as ImageIcon,
   FileText,
