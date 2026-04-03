@@ -24,6 +24,7 @@ const menuItems = [
   { id: "disappearing", label: "24h Mode", icon: Timer, color: "bg-amber-500" },
 ] as const;
 
+
 export default function ChatAttachMenu({
   open, onClose, onImageSelect, onVideoSelect, onLocationShare, onToggleDisappearing, onLockedImageSelect, disappearingEnabled,
 }: ChatAttachMenuProps) {
