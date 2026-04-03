@@ -20,7 +20,7 @@ export default function FollowSuggestions() {
     queryFn: async () => {
       if (!user) return [];
       // Get profiles excluding self and already-followed
-      const { data: following } = await supabase
+      const { data: following } = await (supabase as any)
         .from("follows")
         .select("following_id")
         .eq("follower_id", user.id);
