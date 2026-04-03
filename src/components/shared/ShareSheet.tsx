@@ -31,6 +31,9 @@ export default function ShareSheet({
   zIndex = 60,
   shareMediaUrl,
   shareMediaType,
+  sharePostId,
+  sharePostAuthorId,
+  sharePostAuthorName,
 }: ShareSheetProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const navigate = useNavigate();
